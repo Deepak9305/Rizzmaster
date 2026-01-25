@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../services/supabaseClient';
+import LegalModals from './LegalModals';
 
 interface LoginPageProps {
   onGuestLogin: () => void;
@@ -13,6 +14,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  
+  // State for Legal Modals
+  const [activeLegalModal, setActiveLegalModal] = useState<'privacy' | 'terms' | null>(null);
 
   const handleGoogleLogin = async () => {
     if (!supabase) {
@@ -22,6 +26,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
     }
     await supabase.auth.signInWithOAuth({
       provider: 'google',
+      options: {
+        redirectTo: window.location.origin
+      }
     });
   };
 
@@ -61,6 +68,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
 
   return (
     <div className="min-h-screen flex bg-black overflow-hidden relative">
+      
+      {/* Legal Modals Overlay */}
+      {activeLegalModal && (
+        <LegalModals 
+          type={activeLegalModal} 
+          onClose={() => setActiveLegalModal(null)} 
+        />
+      )}
+
       {/* Background Decor for Mobile/Overlay */}
       <div className="absolute top-0 left-0 w-full h-full md:hidden z-0">
           <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-rose-600/20 rounded-full blur-[120px]" />
@@ -218,7 +234,20 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
 
                 <div className="mt-8 pt-6 border-t border-white/5 text-center">
                     <p className="text-[10px] text-white/20 leading-relaxed max-w-xs mx-auto">
-                        By entering the Rizz Master terminal, you agree to our Terms of Service & Privacy Policy.
+                        By entering the Rizz Master terminal, you agree to our{' '}
+                        <button 
+                          onClick={() => setActiveLegalModal('terms')} 
+                          className="text-white/40 hover:text-white underline decoration-white/10 hover:decoration-white/50 transition-all"
+                        >
+                          Terms of Service
+                        </button>
+                        {' & '}
+                        <button 
+                          onClick={() => setActiveLegalModal('privacy')}
+                          className="text-white/40 hover:text-white underline decoration-white/10 hover:decoration-white/50 transition-all"
+                        >
+                          Privacy Policy
+                        </button>.
                     </p>
                 </div>
             </div>

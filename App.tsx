@@ -237,10 +237,17 @@ const App: React.FC = () => {
 
     if (error) {
       if (error.code === 'PGRST116') {
-        // Profile doesn't exist, create it
+        // Profile doesn't exist, create it.
+        // Explicitly set defaults here to ensure compatibility if SQL defaults are missing.
         const { data: newProfile, error: createError } = await supabase
           .from('profiles')
-          .insert([{ id: userId, email: session?.user.email }])
+          .insert([{ 
+             id: userId, 
+             email: session?.user.email,
+             credits: DAILY_CREDITS,
+             is_premium: false,
+             last_daily_reset: new Date().toISOString().split('T')[0]
+          }])
           .select()
           .single();
         
