@@ -35,6 +35,17 @@ const RizzCard: React.FC<RizzCardProps> = ({
         </div>
         <div className="flex gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
             <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(content);
+                  // Optional: You could trigger a toast here, but simple alert for now as per app style
+                  alert("Copied!");
+                }}
+                className="p-1.5 rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition-colors"
+                title="Copy to Clipboard"
+            >
+               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
+            </button>
+            <button 
                 onClick={onShare}
                 className="p-1.5 rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition-colors"
                 title="Share"
@@ -57,6 +68,7 @@ const RizzCard: React.FC<RizzCardProps> = ({
             navigator.clipboard.writeText(content);
             alert("Copied to clipboard!");
         }}
+        title="Click to Copy"
       >
         "{content}"
       </div>

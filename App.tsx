@@ -7,39 +7,35 @@ import LoginPage from './components/LoginPage';
 import Footer from './components/Footer';
 import PremiumModal from './components/PremiumModal';
 import SavedModal from './components/SavedModal';
-import AdSenseBanner from './components/AdSenseBanner';
 
 const DAILY_CREDITS = 5;
 const REWARD_CREDITS = 5;
-const AD_DURATION = 30;
-
-// TODO: Replace with actual Ad Unit ID
-const GOOGLE_AD_SLOT_ID = "1234567890"; 
+const AD_DURATION = 15; // Reduced wait time since it's no longer an ad
 
 const SplashScreen: React.FC = () => (
   <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center overflow-hidden">
-    {/* Ambient Background Glow */}
-    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] md:w-[800px] md:h-[800px] bg-gradient-to-tr from-purple-900/30 to-pink-900/30 rounded-full blur-[120px] animate-pulse-glow" />
+    {/* Ambient Background Glow - Rose Gold Theme */}
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] md:w-[800px] md:h-[800px] bg-gradient-to-tr from-rose-900/40 to-amber-900/30 rounded-full blur-[120px] animate-pulse-glow" />
     
     <div className="relative z-10 text-center flex flex-col items-center justify-center h-full w-full max-w-4xl px-4">
-      {/* Logo Container */}
-      <div className="relative mb-8 animate-scale-in flex flex-col items-center">
-        <div className="absolute inset-0 bg-pink-500/20 blur-3xl rounded-full animate-pulse-glow"></div>
-        <div className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-pink-500 to-purple-600 rounded-3xl flex items-center justify-center text-6xl md:text-7xl shadow-2xl shadow-pink-500/30 mb-6 z-10 relative">
-            🔥
-        </div>
-        <h1 className="text-4xl md:text-6xl font-black text-white tracking-tight drop-shadow-lg relative z-10">Rizz Master</h1>
+      {/* Text Logo Container */}
+      <div className="relative mb-8 animate-scale-in flex flex-col items-center justify-center">
+        <div className="absolute inset-0 bg-rose-500/10 blur-3xl rounded-full animate-pulse-glow"></div>
+        
+        <h1 className="text-6xl md:text-8xl font-black tracking-tighter bg-gradient-to-r from-rose-400 via-amber-200 to-rose-400 bg-clip-text text-transparent drop-shadow-2xl relative z-10 pb-2">
+            Rizz Master
+        </h1>
       </div>
 
-      {/* Heartbeat Line Animation */}
+      {/* Heartbeat Line Animation - Rose Gold */}
       <div className="w-64 md:w-[500px] h-24 relative flex items-center justify-center">
         <svg viewBox="0 0 500 100" className="w-full h-full overflow-visible opacity-90">
             <defs>
                 <linearGradient id="heartbeatGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor="transparent" />
-                    <stop offset="15%" stopColor="#ec4899" />
-                    <stop offset="50%" stopColor="#a855f7" />
-                    <stop offset="85%" stopColor="#ec4899" />
+                    <stop offset="15%" stopColor="#e11d48" /> {/* Rose 600 */}
+                    <stop offset="50%" stopColor="#fbbf24" /> {/* Amber 400 (Gold) */}
+                    <stop offset="85%" stopColor="#e11d48" />
                     <stop offset="100%" stopColor="transparent" />
                 </linearGradient>
             </defs>
@@ -521,7 +517,7 @@ const App: React.FC = () => {
   if (!profile) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-white p-4 bg-black">
-        <svg className="animate-spin h-8 w-8 text-pink-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <svg className="animate-spin h-8 w-8 text-rose-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
@@ -555,22 +551,23 @@ const App: React.FC = () => {
 
       {isAdPlaying && (
         <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-8">
-          <div className="w-full max-w-md bg-zinc-900 rounded-3xl p-8 text-center border border-white/10 relative overflow-hidden flex flex-col h-[80vh] justify-center">
+          <div className="w-full max-w-md bg-zinc-900 rounded-3xl p-8 text-center border border-white/10 relative overflow-hidden flex flex-col h-[60vh] justify-center">
              <div className="absolute top-0 left-0 w-full h-1 bg-white/20">
                <div 
-                 className="h-full bg-pink-500 transition-all ease-linear w-full" 
+                 className="h-full bg-rose-500 transition-all ease-linear w-full" 
                  style={{ width: '0%', transitionDuration: `${AD_DURATION}s` }}
                ></div>
              </div>
-             <div className="text-4xl font-black text-pink-500 mb-4">{adTimer}s</div>
-             <p className="text-white/60 mb-4">Support us by viewing this ad to earn free credits!</p>
+             <div className="text-4xl font-black text-rose-500 mb-4">{adTimer}s</div>
+             <p className="text-white/60 mb-6">Calibrating Rizz Algorithms...</p>
              
-             {/* Actual Ad Slot inside the wait modal */}
-             <div className="bg-white/5 rounded-xl border border-white/10 min-h-[250px] flex items-center justify-center">
-                 <AdSenseBanner dataAdSlot={GOOGLE_AD_SLOT_ID} />
+             {/* Animation Placeholder for Ad */}
+             <div className="bg-white/5 rounded-xl border border-white/10 min-h-[150px] flex items-center justify-center mb-8 relative overflow-hidden">
+                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" style={{ transform: 'skewX(-20deg) translateX(-150%)' }}></div>
+                 <span className="text-4xl animate-pulse">💘</span>
              </div>
 
-             <p className="mt-8 text-xs text-white/30 uppercase">Do not close window</p>
+             <p className="text-xs text-white/30 uppercase">Do not close window</p>
           </div>
         </div>
       )}
@@ -587,7 +584,7 @@ const App: React.FC = () => {
            
            <button 
               onClick={toggleMusic}
-              className={`p-2 w-10 h-10 rounded-full flex items-center justify-center transition-all border ${isMusicPlaying ? 'bg-pink-500/20 border-pink-500/50 text-pink-400' : 'bg-white/5 border-white/10 text-white/40 hover:text-white'}`}
+              className={`p-2 w-10 h-10 rounded-full flex items-center justify-center transition-all border ${isMusicPlaying ? 'bg-rose-500/20 border-rose-500/50 text-rose-400' : 'bg-white/5 border-white/10 text-white/40 hover:text-white'}`}
               title={isMusicPlaying ? "Pause Music" : "Play Music"}
            >
               {isMusicPlaying ? (
@@ -601,7 +598,7 @@ const App: React.FC = () => {
               onClick={() => setShowSavedModal(true)}
               className="p-2 md:px-4 md:py-2 bg-white/5 hover:bg-white/10 rounded-full flex items-center gap-1.5 transition-all border border-white/5"
            >
-              <span className="text-pink-500 text-base md:text-lg">♥</span>
+              <span className="text-rose-500 text-base md:text-lg">♥</span>
               <span className="hidden md:inline text-xs font-bold text-white">Saved</span>
            </button>
 
@@ -628,12 +625,11 @@ const App: React.FC = () => {
       {/* Hero Header */}
       <header className="text-center mb-8 md:mb-12">
         <div className="inline-block relative">
-           <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-pink-500 to-purple-600 rounded-2xl flex items-center justify-center text-4xl shadow-lg shadow-pink-500/20">
-                🔥
-           </div>
-           <h1 className="text-4xl md:text-5xl font-black mb-2 text-white tracking-tight">Rizz Master</h1>
+           <h1 className="text-5xl md:text-7xl font-black mb-2 tracking-tighter bg-gradient-to-r from-rose-400 via-amber-200 to-rose-400 bg-clip-text text-transparent pb-2">
+             Rizz Master
+           </h1>
           {profile.is_premium && (
-            <div className="absolute -top-2 -right-6 md:-right-8 rotate-12 bg-yellow-500 text-black font-bold text-[10px] md:text-xs px-2 py-1 rounded shadow-lg">PRO</div>
+            <div className="absolute -top-4 -right-6 md:-right-8 rotate-12 bg-yellow-500 text-black font-bold text-[10px] md:text-xs px-2 py-1 rounded shadow-lg">PRO</div>
           )}
         </div>
         <p className="text-white/60 text-sm md:text-xl font-light max-w-md mx-auto leading-relaxed">
@@ -667,7 +663,7 @@ const App: React.FC = () => {
                 if (inputError) setInputError(null);
               }}
               placeholder={mode === InputMode.CHAT ? "Paste the convo or describe the vibe..." : "e.g. Hiking, dogs, software engineer..."}
-              className="w-full h-32 md:h-40 bg-black/40 border border-white/10 rounded-2xl p-4 text-sm md:text-base focus:ring-2 focus:ring-pink-500/50 focus:outline-none resize-none transition-all placeholder:text-white/20"
+              className="w-full h-32 md:h-40 bg-black/40 border border-white/10 rounded-2xl p-4 text-sm md:text-base focus:ring-2 focus:ring-rose-500/50 focus:outline-none resize-none transition-all placeholder:text-white/20"
               style={{ fontSize: '16px' }}
             />
           </div>
@@ -676,7 +672,7 @@ const App: React.FC = () => {
             <div className="mb-4 md:mb-6">
                <div 
                 onClick={() => fileInputRef.current?.click()}
-                className={`group border-2 border-dashed border-white/10 rounded-2xl transition-all cursor-pointer hover:border-pink-500/50 hover:bg-white/5 ${image ? 'p-2' : 'p-6 md:p-8'}`}
+                className={`group border-2 border-dashed border-white/10 rounded-2xl transition-all cursor-pointer hover:border-rose-500/50 hover:bg-white/5 ${image ? 'p-2' : 'p-6 md:p-8'}`}
               >
                 {image ? (
                   <div className="relative w-full">
@@ -726,7 +722,7 @@ const App: React.FC = () => {
           ) : (
             <div className="grid grid-cols-2 gap-3">
              <button onClick={handleWatchAd} className="bg-white/10 border border-white/10 py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base hover:bg-white/20 active:scale-[0.98] transition-all flex flex-col items-center justify-center">
-              <span className="text-xl mb-1">📺</span> <span>Watch Ad (+5)</span>
+              <span className="text-xl mb-1">⏳</span> <span>Wait for Credits (+5)</span>
             </button>
             <button onClick={() => setShowPremiumModal(true)} className="bg-gradient-to-r from-yellow-500 to-amber-600 text-black py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base shadow-xl hover:brightness-110 active:scale-[0.98] transition-all flex flex-col items-center justify-center animate-pulse">
               <span className="text-xl mb-1">👑</span> <span>Go Unlimited</span>
@@ -780,25 +776,18 @@ const App: React.FC = () => {
                 <span className="text-2xl">📝</span>
                 <h3 className="text-xs md:text-sm font-semibold uppercase tracking-widest text-white/60">Bio Result</h3>
                 <div className="ml-auto flex gap-2">
+                    <button onClick={() => { navigator.clipboard.writeText(result.bio); alert('Bio copied!'); }} className="p-2 rounded-full hover:bg-white/10 transition-all text-white/50 hover:text-white"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg></button>
                     <button onClick={() => handleShare(result.bio)} className="p-2 rounded-full hover:bg-white/10 transition-all text-white/50 hover:text-white"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg></button>
-                    <button onClick={() => toggleSave(result.bio, 'bio')} className={`p-2 rounded-full hover:bg-white/10 transition-all ${isSaved(result.bio) ? 'text-pink-500' : 'text-white/50 hover:text-pink-400'}`}><svg className="w-5 h-5" fill={isSaved(result.bio) ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg></button>
+                    <button onClick={() => toggleSave(result.bio, 'bio')} className={`p-2 rounded-full hover:bg-white/10 transition-all ${isSaved(result.bio) ? 'text-rose-500' : 'text-white/50 hover:text-rose-400'}`}><svg className="w-5 h-5" fill={isSaved(result.bio) ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg></button>
                 </div>
               </div>
               <p className="text-lg md:text-xl leading-relaxed font-medium mb-6 md:mb-8 text-white">{result.bio}</p>
-              <div className="p-4 bg-white/5 rounded-2xl border border-white/5 mb-4"><h4 className="text-[10px] uppercase font-bold text-pink-400 mb-1">Why it works</h4><p className="text-xs md:text-sm text-white/60">{result.analysis}</p></div>
+              <div className="p-4 bg-white/5 rounded-2xl border border-white/5 mb-4"><h4 className="text-[10px] uppercase font-bold text-rose-400 mb-1">Why it works</h4><p className="text-xs md:text-sm text-white/60">{result.analysis}</p></div>
               <button onClick={() => { navigator.clipboard.writeText(result.bio); alert('Bio copied!'); }} className="w-full py-3 border border-white/20 rounded-xl hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2"><span>📋</span> Copy Bio</button>
             </div>
           )}
         </section>
       </div>
-      
-      {/* Footer Ad Placement */}
-      {!profile.is_premium && (
-         <div className="mt-8 max-w-2xl mx-auto w-full">
-            <AdSenseBanner dataAdSlot={GOOGLE_AD_SLOT_ID} />
-         </div>
-      )}
-
       <Footer className="mt-12 md:mt-20" />
     </div>
   );

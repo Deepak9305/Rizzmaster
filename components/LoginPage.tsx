@@ -62,15 +62,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden bg-black">
       {/* Ambient Background */}
-      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[120px]" />
+      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-rose-600/20 rounded-full blur-[120px]" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-pink-600/20 rounded-full blur-[120px]" />
 
       <div className="relative z-10 max-w-md w-full glass p-8 rounded-3xl border border-white/10 text-center shadow-2xl">
         <div className="mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-pink-500 to-purple-600 rounded-2xl flex items-center justify-center text-3xl shadow-lg shadow-pink-500/20">
-                🔥
-            </div>
-            <h1 className="text-4xl font-bold mb-2 tracking-tight text-white">Rizz Master</h1>
+            <h1 className="text-4xl md:text-5xl font-black mb-2 tracking-tighter bg-gradient-to-r from-rose-400 via-amber-200 to-rose-400 bg-clip-text text-transparent pb-2">
+                Rizz Master
+            </h1>
             <p className="text-white/60 text-lg">Your AI Wingman</p>
         </div>
 
@@ -105,7 +104,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
                  required
                  value={email}
                  onChange={(e) => setEmail(e.target.value)}
-                 className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 transition-all placeholder:text-white/20"
+                 className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:ring-2 focus:ring-rose-500/50 transition-all placeholder:text-white/20"
                  placeholder="you@example.com"
                />
              </div>
@@ -117,7 +116,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
                  required
                  value={password}
                  onChange={(e) => setPassword(e.target.value)}
-                 className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 transition-all placeholder:text-white/20"
+                 className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:ring-2 focus:ring-rose-500/50 transition-all placeholder:text-white/20"
                  placeholder="••••••••"
                  minLength={6}
                />
@@ -126,7 +125,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
              <button 
                 type="submit"
                 disabled={loading}
-                className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl font-bold hover:brightness-110 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mt-2 shadow-lg shadow-purple-500/20"
+                className="w-full py-3.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-xl font-bold hover:brightness-110 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mt-2 shadow-lg shadow-rose-500/20"
             >
                 {loading ? 'Processing...' : (isSignUp ? 'Create Account' : 'Sign In')}
             </button>
