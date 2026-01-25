@@ -366,6 +366,31 @@ const App: React.FC = () => {
     }
   };
 
+  const handleRestorePurchases = async () => {
+    if (!profile) return;
+    
+    // Simulate restoring purchases using Google Test ID
+    console.log(`[Billing] Restoring purchases... Checking for SKU: ${TEST_PRODUCT_ID}`);
+    
+    // Simulate a network delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    const updatedProfile = { ...profile, is_premium: true };
+    setProfile(updatedProfile);
+    setShowPremiumModal(false);
+    
+    alert(`[TEST MODE] Purchases Restored!\nFound valid subscription: ${TEST_PRODUCT_ID}`);
+    
+    if (supabase && profile.id !== 'guest') {
+        await supabase
+        .from('profiles')
+        .update({ is_premium: true })
+        .eq('id', profile.id);
+    } else {
+        localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
+    }
+  };
+
   const toggleSave = async (content: string, type: 'tease' | 'smooth' | 'chaotic' | 'bio') => {
     if (!profile) return;
 
@@ -602,13 +627,14 @@ const App: React.FC = () => {
       
       {/* Background Music Player */}
       <audio ref={audioRef} loop>
-        <source src="/ambient.mp3" type="audio/mp3" />
+        <source src="https://cdn.pixabay.com/audio/2022/11/22/audio_febc508520.mp3" type="audio/mp3" />
       </audio>
 
       {showPremiumModal && (
         <PremiumModal 
           onClose={() => setShowPremiumModal(false)}
           onUpgrade={handleUpgrade}
+          onRestore={handleRestorePurchases}
         />
       )}
 

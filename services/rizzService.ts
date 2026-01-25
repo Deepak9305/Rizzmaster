@@ -47,43 +47,41 @@ export const generateRizz = async (text: string, imageBase64?: string): Promise<
 
   parts.push({ text: prompt });
 
-  try {
-    const response = await ai.models.generateContent({
-      model: modelName,
-      contents: { parts },
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            tease: { type: Type.STRING },
-            smooth: { type: Type.STRING },
-            chaotic: { type: Type.STRING },
-            loveScore: { type: Type.INTEGER },
-            potentialStatus: { type: Type.STRING },
-            analysis: { type: Type.STRING },
-          },
-          required: ["tease", "smooth", "chaotic", "loveScore", "potentialStatus", "analysis"]
-        }
+  // No try/catch here; let the caller (App.tsx) handle errors to ensure credits are refunded properly.
+  const response = await ai.models.generateContent({
+    model: modelName,
+    contents: { parts },
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          tease: { type: Type.STRING },
+          smooth: { type: Type.STRING },
+          chaotic: { type: Type.STRING },
+          loveScore: { type: Type.INTEGER },
+          potentialStatus: { type: Type.STRING },
+          analysis: { type: Type.STRING },
+        },
+        required: ["tease", "smooth", "chaotic", "loveScore", "potentialStatus", "analysis"]
       }
-    });
+    }
+  });
 
-    let jsonText = response.text || "{}";
-    // Clean up potential markdown code blocks
-    jsonText = jsonText.replace(/```json|```/g, '').trim();
-    return JSON.parse(jsonText) as RizzResponse;
-  } catch (error) {
-    console.error("Rizz Generation Error:", error);
-    // Fallback if API fails
-    return {
-      tease: "Are you a keyboard? Because you're my type.",
-      smooth: "I was just thinking about you.",
-      chaotic: "Do you like bread?",
-      loveScore: 69,
-      potentialStatus: "Connection Error",
-      analysis: "AI is napping. You got this."
-    };
+  const textResponse = response.text || "{}";
+  
+  // Robust JSON extraction: Find the outer braces to ignore any preamble/markdown
+  const firstBrace = textResponse.indexOf('{');
+  const lastBrace = textResponse.lastIndexOf('}');
+  
+  let jsonStr = textResponse;
+  if (firstBrace !== -1 && lastBrace !== -1) {
+    jsonStr = textResponse.substring(firstBrace, lastBrace + 1);
+  } else {
+    throw new Error("Invalid JSON response from model");
   }
+
+  return JSON.parse(jsonStr) as RizzResponse;
 };
 
 /**
@@ -97,32 +95,35 @@ export const generateBio = async (text: string): Promise<BioResponse> => {
     Keep it under 280 chars. High impact.
   `;
 
-  try {
-    const response = await ai.models.generateContent({
-      model: modelName,
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            bio: { type: Type.STRING },
-            analysis: { type: Type.STRING },
-          },
-          required: ["bio", "analysis"]
-        }
+  // No try/catch here; let the caller (App.tsx) handle errors to ensure credits are refunded properly.
+  const response = await ai.models.generateContent({
+    model: modelName,
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          bio: { type: Type.STRING },
+          analysis: { type: Type.STRING },
+        },
+        required: ["bio", "analysis"]
       }
-    });
+    }
+  });
 
-    let jsonText = response.text || "{}";
-    // Clean up potential markdown code blocks
-    jsonText = jsonText.replace(/```json|```/g, '').trim();
-    return JSON.parse(jsonText) as BioResponse;
-  } catch (error) {
-    console.error("Bio Generation Error:", error);
-    return {
-      bio: "Professional napper and snack enthusiast.",
-      analysis: "Fallback bio due to connection error."
-    };
+  const textResponse = response.text || "{}";
+  
+  // Robust JSON extraction
+  const firstBrace = textResponse.indexOf('{');
+  const lastBrace = textResponse.lastIndexOf('}');
+  
+  let jsonStr = textResponse;
+  if (firstBrace !== -1 && lastBrace !== -1) {
+    jsonStr = textResponse.substring(firstBrace, lastBrace + 1);
+  } else {
+    throw new Error("Invalid JSON response from model");
   }
+
+  return JSON.parse(jsonStr) as BioResponse;
 };

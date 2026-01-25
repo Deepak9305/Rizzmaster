@@ -3,9 +3,10 @@ import React, { useState } from 'react';
 interface PremiumModalProps {
   onClose: () => void;
   onUpgrade: (plan: 'WEEKLY' | 'MONTHLY') => void;
+  onRestore: () => void;
 }
 
-const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade }) => {
+const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onRestore }) => {
   const [selectedPlan, setSelectedPlan] = useState<'WEEKLY' | 'MONTHLY'>('WEEKLY');
 
   return (
@@ -71,15 +72,23 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade }) => {
 
         <button 
             onClick={() => onUpgrade(selectedPlan)}
-            className="w-full py-3 bg-gradient-to-r from-yellow-600 to-amber-500 text-black font-bold rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-lg flex flex-col items-center leading-tight"
+            className="w-full py-3 bg-gradient-to-r from-yellow-600 to-amber-500 text-black font-bold rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-lg flex flex-col items-center leading-tight mb-4"
         >
             <span className="text-sm">Subscribe & Upgrade</span>
             <span className="text-[10px] opacity-80 uppercase">{selectedPlan === 'WEEKLY' ? '$4.99 billed weekly' : '$15.99 billed monthly'}</span>
         </button>
         
-        <p className="text-center text-[10px] text-white/20 mt-4">
-            Recurring billing. Cancel anytime.
-        </p>
+        <div className="flex flex-col gap-2 items-center">
+            <button 
+                onClick={onRestore}
+                className="text-xs text-white/40 hover:text-white/80 underline decoration-white/20 underline-offset-4"
+            >
+                Restore Purchases
+            </button>
+            <p className="text-center text-[10px] text-white/20">
+                Recurring billing. Cancel anytime.
+            </p>
+        </div>
       </div>
     </div>
   );
