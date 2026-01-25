@@ -589,9 +589,9 @@ const App: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 md:py-12 pb-24 relative min-h-[100dvh] flex flex-col animate-fade-in">
       
-      {/* Background Music Player */}
+      {/* Background Music Player - Source: Pixabay (Royalty Free) */}
       <audio ref={audioRef} loop>
-        <source src="https://cdn.pixabay.com/audio/2022/11/22/audio_febc508520.mp3" type="audio/mp3" />
+        <source src="https://cdn.pixabay.com/audio/2022/03/24/audio_078f45a709.mp3" type="audio/mp3" />
       </audio>
 
       {showPremiumModal && (
