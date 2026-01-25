@@ -199,6 +199,9 @@ const App: React.FC = () => {
 
   // 2. Broadcast Channel for Single Tab
   useEffect(() => {
+    // Safety check for BroadcastChannel to support older browsers/laptops
+    if (typeof BroadcastChannel === 'undefined') return;
+
     const channel = new BroadcastChannel('rizz_session_sync');
     channel.postMessage({ type: 'NEW_SESSION_STARTED' });
     channel.onmessage = (event) => {
@@ -404,9 +407,11 @@ const App: React.FC = () => {
 
   const handleReclaimSession = () => {
     setIsSessionBlocked(false);
-    const channel = new BroadcastChannel('rizz_session_sync');
-    channel.postMessage({ type: 'NEW_SESSION_STARTED' });
-    channel.close();
+    if (typeof BroadcastChannel !== 'undefined') {
+      const channel = new BroadcastChannel('rizz_session_sync');
+      channel.postMessage({ type: 'NEW_SESSION_STARTED' });
+      channel.close();
+    }
   };
 
   const handleShare = async (content: string) => {
@@ -693,7 +698,7 @@ const App: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 items-start">
         {/* Input Section */}
-        <section className="glass rounded-3xl p-5 md:p-6 border border-white/10 lg:sticky lg:top-8">
+        <section className="glass rounded-3xl p-5 md:p-6 border border-white/10 lg:sticky lg:top-8 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
           <div className="mb-4 md:mb-6">
             <div className="flex justify-between items-center mb-2">
                 <label className="block text-xs font-bold text-white/50 uppercase tracking-widest">
