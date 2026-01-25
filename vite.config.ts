@@ -16,5 +16,8 @@ export default defineConfig(({ mode }) => {
       'process.env.REACT_APP_SUPABASE_URL': JSON.stringify(env.REACT_APP_SUPABASE_URL),
       'process.env.REACT_APP_SUPABASE_ANON_KEY': JSON.stringify(env.REACT_APP_SUPABASE_ANON_KEY),
     },
+    build: {
+      chunkSizeWarningLimit: 1000,
+    },
   };
 });
