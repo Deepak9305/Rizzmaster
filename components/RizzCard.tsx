@@ -8,6 +8,7 @@ interface RizzCardProps {
   isSaved: boolean;
   onSave: () => void;
   onShare: () => void;
+  delay?: number;
 }
 
 const RizzCard: React.FC<RizzCardProps> = ({ 
@@ -17,10 +18,14 @@ const RizzCard: React.FC<RizzCardProps> = ({
   color, 
   isSaved, 
   onSave, 
-  onShare 
+  onShare,
+  delay = 0
 }) => {
   return (
-    <div className="glass rounded-2xl p-4 md:p-5 border border-white/5 hover:border-white/20 transition-all duration-300 group">
+    <div 
+      className="glass rounded-2xl p-4 md:p-5 border border-white/5 hover:border-white/20 transition-all duration-300 group opacity-0 animate-fade-in-up"
+      style={{ animationDelay: `${delay}s`, animationFillMode: 'forwards' }}
+    >
       <div className="flex justify-between items-start mb-2">
         <div className="flex items-center gap-2">
             <span className="text-xl">{icon}</span>

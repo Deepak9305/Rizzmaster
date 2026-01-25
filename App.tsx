@@ -16,7 +16,60 @@ const AD_DURATION = 30;
 // TODO: Replace with actual Ad Unit ID
 const GOOGLE_AD_SLOT_ID = "1234567890"; 
 
+const SplashScreen: React.FC = () => (
+  <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center overflow-hidden">
+    {/* Ambient Background Glow */}
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] md:w-[800px] md:h-[800px] bg-gradient-to-tr from-purple-900/30 to-pink-900/30 rounded-full blur-[120px] animate-pulse-glow" />
+    
+    <div className="relative z-10 text-center flex flex-col items-center justify-center h-full w-full max-w-4xl px-4">
+      {/* Logo Container */}
+      <div className="relative mb-8 animate-scale-in flex flex-col items-center">
+        <div className="absolute inset-0 bg-pink-500/20 blur-3xl rounded-full animate-pulse-glow"></div>
+        <div className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-pink-500 to-purple-600 rounded-3xl flex items-center justify-center text-6xl md:text-7xl shadow-2xl shadow-pink-500/30 mb-6 z-10 relative">
+            🔥
+        </div>
+        <h1 className="text-4xl md:text-6xl font-black text-white tracking-tight drop-shadow-lg relative z-10">Rizz Master</h1>
+      </div>
+
+      {/* Heartbeat Line Animation */}
+      <div className="w-64 md:w-[500px] h-24 relative flex items-center justify-center">
+        <svg viewBox="0 0 500 100" className="w-full h-full overflow-visible opacity-90">
+            <defs>
+                <linearGradient id="heartbeatGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="transparent" />
+                    <stop offset="15%" stopColor="#ec4899" />
+                    <stop offset="50%" stopColor="#a855f7" />
+                    <stop offset="85%" stopColor="#ec4899" />
+                    <stop offset="100%" stopColor="transparent" />
+                </linearGradient>
+            </defs>
+            {/* The Heartbeat Path: Flat -> Pulse -> Flat */}
+            <path 
+                d="M 0 50 L 180 50 L 200 20 L 220 80 L 240 50 L 260 50 L 280 20 L 300 80 L 320 50 L 500 50" 
+                fill="none" 
+                stroke="url(#heartbeatGradient)" 
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="heartbeat-line"
+            />
+        </svg>
+        
+        {/* Status Text */}
+        <div className="absolute -bottom-4 w-full text-center">
+            <div className="text-[10px] md:text-xs font-bold tracking-[0.4em] text-white/30 uppercase animate-fade-in" style={{animationDelay: '1.5s'}}>
+            System Online
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 const App: React.FC = () => {
+  // Splash State - Increased duration for premium feel
+  const [showSplash, setShowSplash] = useState(true);
+
   // Auth State
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -37,6 +90,73 @@ const App: React.FC = () => {
   const [showSavedModal, setShowSavedModal] = useState(false);
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
   const [isSessionBlocked, setIsSessionBlocked] = useState(false);
+
+  // Music State
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+  const [isUserMuted, setIsUserMuted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // 0. Splash Timer
+  useEffect(() => {
+    // 2.8s gives enough time for the heartbeat to flatline and the user to appreciate the intro
+    const timer = setTimeout(() => setShowSplash(false), 2800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Safe play function to handle promises and prevent errors
+  const safePlay = () => {
+    if (audioRef.current) {
+        audioRef.current.volume = 0.2;
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+            playPromise
+            .then(() => setIsMusicPlaying(true))
+            .catch((e) => {
+                // Auto-play was prevented or interrupted, valid browser behavior
+                console.log("Audio playback prevented/interrupted:", e);
+                setIsMusicPlaying(false);
+            });
+        }
+    }
+  };
+
+  // Music Autoplay Logic (User Interaction Fallback)
+  useEffect(() => {
+    // Try to play immediately if allowed
+    if (!isUserMuted && !isMusicPlaying) {
+        safePlay();
+    }
+
+    // Add listener for first interaction to unlock audio context if needed
+    const handleInteraction = () => {
+      if (!isUserMuted && !isMusicPlaying) {
+        safePlay();
+      }
+      window.removeEventListener('click', handleInteraction);
+      window.removeEventListener('keydown', handleInteraction);
+    };
+
+    window.addEventListener('click', handleInteraction);
+    window.addEventListener('keydown', handleInteraction);
+
+    return () => {
+      window.removeEventListener('click', handleInteraction);
+      window.removeEventListener('keydown', handleInteraction);
+    };
+  }, [isUserMuted]); 
+
+  const toggleMusic = () => {
+    if (audioRef.current) {
+      if (isMusicPlaying) {
+        audioRef.current.pause();
+        setIsMusicPlaying(false);
+        setIsUserMuted(true);
+      } else {
+        safePlay();
+        setIsUserMuted(false);
+      }
+    }
+  };
 
   // 1. Session & Auth Listener
   useEffect(() => {
@@ -332,6 +452,12 @@ const App: React.FC = () => {
   };
 
   const handleWatchAd = () => {
+    // Pause music if playing
+    if (isMusicPlaying && audioRef.current) {
+      audioRef.current.pause();
+      setIsMusicPlaying(false); // Update state to reflect pause
+    }
+    
     setShowPremiumModal(false);
     setIsAdPlaying(true);
     setAdTimer(AD_DURATION); 
@@ -350,6 +476,12 @@ const App: React.FC = () => {
       setIsAdPlaying(false);
       updateCredits((profile?.credits || 0) + REWARD_CREDITS);
       alert(`+${REWARD_CREDITS} Credits Added!`);
+      
+      // Resume music if it was playing and not manually muted
+      // Note: We check !isUserMuted, but since we set isMusicPlaying=false above, we can assume the intent is to resume if it wasn't explicitly muted by user before ad.
+      if (!isUserMuted && audioRef.current) {
+        safePlay();
+      }
     }, AD_DURATION * 1000);
   };
 
@@ -357,6 +489,10 @@ const App: React.FC = () => {
   const clear = () => { setInputText(''); setImage(null); setResult(null); setInputError(null); };
 
   // --- Rendering ---
+
+  if (showSplash) {
+    return <SplashScreen />;
+  }
 
   if (isSessionBlocked) {
     return (
@@ -397,6 +533,11 @@ const App: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 md:py-12 pb-24 relative min-h-[100dvh] flex flex-col">
       
+      {/* Background Music Player */}
+      <audio ref={audioRef} loop>
+        <source src="/ambient.mp3" type="audio/mp3" />
+      </audio>
+
       {showPremiumModal && (
         <PremiumModal 
           onClose={() => setShowPremiumModal(false)}
@@ -443,6 +584,19 @@ const App: React.FC = () => {
         </button>
 
         <div className="flex items-center gap-2 md:gap-3">
+           
+           <button 
+              onClick={toggleMusic}
+              className={`p-2 w-10 h-10 rounded-full flex items-center justify-center transition-all border ${isMusicPlaying ? 'bg-pink-500/20 border-pink-500/50 text-pink-400' : 'bg-white/5 border-white/10 text-white/40 hover:text-white'}`}
+              title={isMusicPlaying ? "Pause Music" : "Play Music"}
+           >
+              {isMusicPlaying ? (
+                 <span className="animate-pulse">🎵</span>
+              ) : (
+                 <span className="grayscale opacity-50">🔇</span>
+              )}
+           </button>
+
            <button 
               onClick={() => setShowSavedModal(true)}
               className="p-2 md:px-4 md:py-2 bg-white/5 hover:bg-white/10 rounded-full flex items-center gap-1.5 transition-all border border-white/5"
@@ -474,11 +628,12 @@ const App: React.FC = () => {
       {/* Hero Header */}
       <header className="text-center mb-8 md:mb-12">
         <div className="inline-block relative">
-           <h1 className="text-4xl md:text-7xl font-extrabold mb-2 md:mb-4 tracking-tighter rizz-gradient bg-clip-text text-transparent leading-tight">
-            RIZZ MASTER
-          </h1>
+           <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-pink-500 to-purple-600 rounded-2xl flex items-center justify-center text-4xl shadow-lg shadow-pink-500/20">
+                🔥
+           </div>
+           <h1 className="text-4xl md:text-5xl font-black mb-2 text-white tracking-tight">Rizz Master</h1>
           {profile.is_premium && (
-            <div className="absolute -top-2 -right-4 md:-right-8 rotate-12 bg-yellow-500 text-black font-bold text-[10px] md:text-xs px-2 py-1 rounded shadow-lg">PRO</div>
+            <div className="absolute -top-2 -right-6 md:-right-8 rotate-12 bg-yellow-500 text-black font-bold text-[10px] md:text-xs px-2 py-1 rounded shadow-lg">PRO</div>
           )}
         </div>
         <p className="text-white/60 text-sm md:text-xl font-light max-w-md mx-auto leading-relaxed">
@@ -611,10 +766,10 @@ const App: React.FC = () => {
                  {result.analysis && <p className="mt-4 text-xs md:text-sm text-white/60 leading-relaxed border-t border-white/5 pt-3">{result.analysis}</p>}
               </div>
 
-              <div className="grid gap-3 md:gap-4 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-                <RizzCard label="The Tease" content={result.tease} icon="😏" color="from-purple-500 to-indigo-500" isSaved={isSaved(result.tease)} onSave={() => toggleSave(result.tease, 'tease')} onShare={() => handleShare(result.tease)} />
-                <RizzCard label="The Smooth" content={result.smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved(result.smooth)} onSave={() => toggleSave(result.smooth, 'smooth')} onShare={() => handleShare(result.smooth)} />
-                <RizzCard label="The Chaotic" content={result.chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved(result.chaotic)} onSave={() => toggleSave(result.chaotic, 'chaotic')} onShare={() => handleShare(result.chaotic)} />
+              <div className="grid gap-3 md:gap-4">
+                <RizzCard label="The Tease" content={result.tease} icon="😏" color="from-purple-500 to-indigo-500" isSaved={isSaved(result.tease)} onSave={() => toggleSave(result.tease, 'tease')} onShare={() => handleShare(result.tease)} delay={0.1} />
+                <RizzCard label="The Smooth" content={result.smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved(result.smooth)} onSave={() => toggleSave(result.smooth, 'smooth')} onShare={() => handleShare(result.smooth)} delay={0.2} />
+                <RizzCard label="The Chaotic" content={result.chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved(result.chaotic)} onSave={() => toggleSave(result.chaotic, 'chaotic')} onShare={() => handleShare(result.chaotic)} delay={0.3} />
               </div>
             </>
           )}
