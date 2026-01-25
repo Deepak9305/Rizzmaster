@@ -24,12 +24,22 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
         onGuestLogin();
         return;
     }
-    await supabase.auth.signInWithOAuth({
+    
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: window.location.origin
       }
     });
+
+    if (error) {
+        console.error("Google Login Error:", error);
+        if (error.message.includes("Unsupported provider") || (error as any).msg?.includes("Unsupported provider")) {
+            alert("Google Login is not enabled. Please use Guest Mode or Email.");
+        } else {
+            alert(`Login failed: ${error.message}`);
+        }
+    }
   };
 
   const handleEmailAuth = async (e: React.FormEvent) => {
@@ -96,17 +106,31 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
                     Rizz Master
                 </h1>
              </div>
-             <p className="text-white/60 text-xl font-light tracking-wide max-w-sm mx-auto leading-relaxed">
-                Your unfair advantage.
+             <p className="text-white/60 text-xl font-light tracking-wide max-w-sm mx-auto leading-relaxed mb-10">
+                AI-Powered Dating Assistant
              </p>
-             <div className="mt-12 flex gap-4 justify-center">
-                <div className="bg-white/5 backdrop-blur-md rounded-xl p-4 border border-white/5">
-                    <span className="block text-2xl font-bold text-white mb-1">10k+</span>
-                    <span className="text-xs text-white/40 uppercase tracking-widest">Users</span>
+
+             <div className="grid gap-4 text-left max-w-sm mx-auto">
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 backdrop-blur-sm hover:bg-white/10 transition-colors group">
+                   <div className="w-12 h-12 rounded-full bg-rose-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🚀</div>
+                   <div>
+                      <h3 className="font-bold text-white text-base">Instant Replies</h3>
+                      <p className="text-white/40 text-xs">Generate witty responses in seconds</p>
+                   </div>
                 </div>
-                <div className="bg-white/5 backdrop-blur-md rounded-xl p-4 border border-white/5">
-                    <span className="block text-2xl font-bold text-white mb-1">1M+</span>
-                    <span className="text-xs text-white/40 uppercase tracking-widest">Rizz Generated</span>
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 backdrop-blur-sm hover:bg-white/10 transition-colors group">
+                   <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">📸</div>
+                   <div>
+                      <h3 className="font-bold text-white text-base">Screenshot Analysis</h3>
+                      <p className="text-white/40 text-xs">Upload chats, get context-aware rizz</p>
+                   </div>
+                </div>
+                 <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 backdrop-blur-sm hover:bg-white/10 transition-colors group">
+                   <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">📝</div>
+                   <div>
+                      <h3 className="font-bold text-white text-base">Profile Bios</h3>
+                      <p className="text-white/40 text-xs">Stand out with custom bio generation</p>
+                   </div>
                 </div>
              </div>
           </div>
@@ -120,7 +144,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
                 <h1 className="text-5xl font-black tracking-tighter bg-gradient-to-r from-rose-400 via-amber-200 to-rose-400 bg-clip-text text-transparent pb-2 animate-text-shimmer">
                     Rizz Master
                 </h1>
-                <p className="text-white/60 text-sm">Your unfair advantage.</p>
+                <p className="text-white/60 text-sm">AI-Powered Dating Assistant</p>
             </div>
 
             <div className="glass md:bg-transparent md:backdrop-filter-none p-8 md:p-0 rounded-3xl md:rounded-none border border-white/10 md:border-none shadow-2xl md:shadow-none">
@@ -128,7 +152,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
                     {isSignUp ? 'Create Account' : 'Welcome Back'}
                 </h2>
                 <p className="text-white/40 text-sm mb-8">
-                    {isSignUp ? 'Dominate the dating pool.' : 'Stop getting left on read.'}
+                    {isSignUp ? 'Join Rizz Master today.' : 'Sign in to continue.'}
                 </p>
 
                 {isEmailMode ? (
