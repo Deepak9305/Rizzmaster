@@ -64,7 +64,9 @@ export const generateRizz = async (text: string, imageBase64?: string): Promise<
       }
     });
 
-    const jsonText = response.text || "{}";
+    let jsonText = response.text || "{}";
+    // Clean up potential markdown code blocks
+    jsonText = jsonText.replace(/```json|```/g, '').trim();
     return JSON.parse(jsonText) as RizzResponse;
   } catch (error) {
     console.error("Rizz Generation Error:", error);
@@ -108,7 +110,9 @@ export const generateBio = async (text: string): Promise<BioResponse> => {
       }
     });
 
-    const jsonText = response.text || "{}";
+    let jsonText = response.text || "{}";
+    // Clean up potential markdown code blocks
+    jsonText = jsonText.replace(/```json|```/g, '').trim();
     return JSON.parse(jsonText) as BioResponse;
   } catch (error) {
     console.error("Bio Generation Error:", error);

@@ -207,8 +207,10 @@ const App: React.FC = () => {
 
   // 3. Load User Data
   const loadUserData = async (userId: string) => {
-    // Guest Mode Handler or if supabase not configured
-    if (!supabase) {
+    // Guest Mode Handler
+    // CRITICAL FIX: Explicitly check for 'guest' ID even if Supabase is initialized
+    // This prevents trying to query Supabase with an invalid UUID 'guest'
+    if (!supabase || userId === 'guest') {
         const storedProfile = localStorage.getItem('guest_profile');
         if (storedProfile) {
             setProfile(JSON.parse(storedProfile));
@@ -228,7 +230,7 @@ const App: React.FC = () => {
         return;
     }
 
-    // Fetch Profile
+    // Fetch Profile from Supabase
     let { data: profileData, error } = await supabase
       .from('profiles')
       .select('*')
@@ -285,6 +287,10 @@ const App: React.FC = () => {
         .order('created_at', { ascending: false });
         
         if (!savedError && savedData) setSavedItems(savedData as SavedItem[]);
+    } else {
+      // Fallback if profile creation/fetching failed completely to avoid stuck loading screen
+      console.error("Critical: Failed to load or create profile.");
+      // Force logout or show error state if needed, here we just allow logout in UI
     }
   };
 
@@ -301,6 +307,7 @@ const App: React.FC = () => {
   const handleGuestLogin = () => {
       const guestUser = { id: 'guest', email: 'guest@rizzmaster.ai' };
       setSession({ user: guestUser });
+      // This will now be handled correctly by the updated loadUserData logic
       loadUserData(guestUser.id);
   };
 
@@ -542,6 +549,7 @@ const App: React.FC = () => {
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
         <p className="text-white/50 animate-pulse">Loading Profile...</p>
+        <button onClick={handleLogout} className="mt-8 text-xs text-white/30 hover:text-white underline">Cancel & Logout</button>
       </div>
     );
   }
