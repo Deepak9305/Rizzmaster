@@ -66,8 +66,8 @@ const SplashScreen: React.FC = () => {
         
         {/* Loading Text */}
         <div className="mt-4 h-6 overflow-hidden">
-            <p className="text-[10px] md:text-xs font-bold tracking-[0.3em] text-white/40 uppercase animate-fade-in-up">
-              {progress < 30 ? 'Initializing Engines...' : progress < 70 ? 'Calibrating Charisma...' : 'Rizz Master Online'}
+            <p className="text-[10px] md:text-xs font-bold tracking-[0.5em] text-white/40 uppercase animate-fade-in-up">
+              {progress < 30 ? 'ANALYZING...' : progress < 70 ? 'COOKING...' : 'READY.'}
             </p>
         </div>
       </div>
@@ -646,7 +646,7 @@ const App: React.FC = () => {
           )}
         </div>
         <p className="text-white/60 text-sm md:text-xl font-light max-w-md mx-auto leading-relaxed">
-          Your world-class wingman for the digital age.
+          Never send a boring text again.
         </p>
       </header>
 
@@ -675,7 +675,7 @@ const App: React.FC = () => {
                 setInputText(e.target.value);
                 if (inputError) setInputError(null);
               }}
-              placeholder={mode === InputMode.CHAT ? "Paste the convo or describe the vibe..." : "e.g. Hiking, dogs, software engineer..."}
+              placeholder={mode === InputMode.CHAT ? "Paste chat. Get Rizz." : "Hobbies, job, vibes..."}
               className="w-full h-32 md:h-40 bg-black/40 border border-white/10 rounded-2xl p-4 text-sm md:text-base focus:ring-2 focus:ring-rose-500/50 focus:outline-none resize-none transition-all placeholder:text-white/20"
               style={{ fontSize: '16px' }}
             />
@@ -729,7 +729,7 @@ const App: React.FC = () => {
                   {profile.is_premium ? "Generating Fast..." : "Cooking..."}
                 </span>
               ) : (
-                profile.is_premium ? "Generate Rizz (VIP)" : "Generate Rizz (1 ⚡)"
+                profile.is_premium ? "Get Rizz (VIP)" : "Get Rizz (1 ⚡)"
               )}
             </button>
           ) : (

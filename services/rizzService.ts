@@ -30,14 +30,15 @@ export const generateRizz = async (text: string, imageBase64?: string): Promise<
     
     Context: "${text}"
 
-    Generate 3 distinct reply options:
+    Generate 3 distinct reply options.
+    CRITICAL: Keep replies SHORT, PUNCHY, and UNDER 15 WORDS. High impact only. No fluff.
+
     1. The Tease (playful, slightly roasting, flirty)
     2. The Smooth (charming, direct, confident)
     3. The Chaotic (unpredictable, funny, high risk high reward)
     
-    Also provide a "Love Score" (0-100) based on how well the conversation is going, 
-    a short status label (e.g. "Friendzone Danger", "Soulmates", "It's Complicated"),
-    and a brief 1-sentence analysis.
+    Also provide a "Love Score" (0-100), a short status label (e.g. "Friendzone", "Soulmates"),
+    and a 1-sentence analysis.
   `;
 
   parts.push({ text: prompt });
@@ -69,12 +70,12 @@ export const generateRizz = async (text: string, imageBase64?: string): Promise<
     console.error("Rizz Generation Error:", error);
     // Fallback if API fails
     return {
-      tease: "Hey, are you a keyboard? Because you're my type.",
+      tease: "Are you a keyboard? Because you're my type.",
       smooth: "I was just thinking about you.",
       chaotic: "Do you like bread?",
       loveScore: 69,
-      potentialStatus: "API Error - Using Backup Rizz",
-      analysis: "The AI is taking a nap, but you got this."
+      potentialStatus: "Connection Error",
+      analysis: "AI is napping. You got this."
     };
   }
 };
@@ -86,12 +87,8 @@ export const generateBio = async (text: string): Promise<BioResponse> => {
   const modelName = 'gemini-3-flash-preview';
 
   const prompt = `
-    Create a catchy, witty, and attractive dating profile bio based on these details.
-    
-    User Details: "${text}"
-
-    The bio should be engaging, show personality, and be under 280 characters.
-    Also provide a brief explanation of why this bio works.
+    Create a catchy, witty, and attractive dating profile bio based on these details: "${text}"
+    Keep it under 280 chars. High impact.
   `;
 
   try {

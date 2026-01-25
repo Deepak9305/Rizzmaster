@@ -81,7 +81,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
                 </h1>
              </div>
              <p className="text-white/60 text-xl font-light tracking-wide max-w-sm mx-auto leading-relaxed">
-                Elevate your social game with world-class AI dating assistance.
+                Your unfair advantage.
              </p>
              <div className="mt-12 flex gap-4 justify-center">
                 <div className="bg-white/5 backdrop-blur-md rounded-xl p-4 border border-white/5">
@@ -104,7 +104,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
                 <h1 className="text-5xl font-black tracking-tighter bg-gradient-to-r from-rose-400 via-amber-200 to-rose-400 bg-clip-text text-transparent pb-2 animate-text-shimmer">
                     Rizz Master
                 </h1>
-                <p className="text-white/60 text-sm">Your AI Wingman</p>
+                <p className="text-white/60 text-sm">Your unfair advantage.</p>
             </div>
 
             <div className="glass md:bg-transparent md:backdrop-filter-none p-8 md:p-0 rounded-3xl md:rounded-none border border-white/10 md:border-none shadow-2xl md:shadow-none">
@@ -112,7 +112,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
                     {isSignUp ? 'Create Account' : 'Welcome Back'}
                 </h2>
                 <p className="text-white/40 text-sm mb-8">
-                    {isSignUp ? 'Join the elite club of charmers.' : 'Enter your credentials to access the terminal.'}
+                    {isSignUp ? 'Dominate the dating pool.' : 'Stop getting left on read.'}
                 </p>
 
                 {isEmailMode ? (
