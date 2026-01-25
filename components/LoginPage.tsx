@@ -34,10 +34,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
 
     if (error) {
         console.error("Google Login Error:", error);
-        if (error.message.includes("Unsupported provider") || (error as any).msg?.includes("Unsupported provider")) {
+        // Fix: Safely access error properties to prevent crashes on non-standard error objects
+        const errorMessage = error.message || (error as any).msg || JSON.stringify(error);
+        
+        if (errorMessage.includes("Unsupported provider")) {
             alert("Google Login is not enabled. Please use Guest Mode or Email.");
         } else {
-            alert(`Login failed: ${error.message}`);
+            alert(`Login failed: ${errorMessage}`);
         }
     }
   };

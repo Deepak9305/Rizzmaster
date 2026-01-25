@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 interface PremiumModalProps {
   onClose: () => void;
-  onUpgrade: () => void;
+  onUpgrade: (plan: 'WEEKLY' | 'MONTHLY') => void;
 }
 
 const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade }) => {
+  const [selectedPlan, setSelectedPlan] = useState<'WEEKLY' | 'MONTHLY'>('WEEKLY');
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div 
@@ -13,7 +15,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade }) => {
         onClick={onClose}
       />
       
-      <div className="relative bg-[#111] rounded-3xl p-8 max-w-sm w-full border border-yellow-500/30 overflow-hidden shadow-2xl shadow-yellow-500/10">
+      <div className="relative bg-[#111] rounded-3xl p-6 md:p-8 max-w-sm w-full border border-yellow-500/30 overflow-hidden shadow-2xl shadow-yellow-500/10">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-600" />
         
         <button 
@@ -23,15 +25,15 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade }) => {
           ✕
         </button>
 
-        <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 bg-yellow-500/10 rounded-full flex items-center justify-center text-3xl border border-yellow-500/20">
+        <div className="text-center mb-6">
+            <div className="w-14 h-14 mx-auto mb-3 bg-yellow-500/10 rounded-full flex items-center justify-center text-2xl border border-yellow-500/20">
                 👑
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">Unlock Rizz God Mode</h2>
-            <p className="text-white/50 text-sm">Get unlimited generations and premium models.</p>
+            <h2 className="text-xl md:text-2xl font-bold text-white mb-1">Unlock God Mode</h2>
+            <p className="text-white/50 text-xs md:text-sm">Unlimited Rizz & Premium Models</p>
         </div>
 
-        <ul className="space-y-4 mb-8">
+        <ul className="space-y-2 mb-6">
             <li className="flex items-center gap-3 text-sm text-white/80">
                 <span className="text-green-500">✓</span> Unlimited Daily Generations
             </li>
@@ -46,11 +48,33 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade }) => {
             </li>
         </ul>
 
+        {/* Plan Selection */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+            <button 
+                onClick={() => setSelectedPlan('WEEKLY')}
+                className={`p-3 rounded-xl border transition-all flex flex-col items-center justify-center text-center relative ${selectedPlan === 'WEEKLY' ? 'bg-yellow-500/10 border-yellow-500 text-white' : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/10'}`}
+            >
+                <span className="text-[10px] font-bold uppercase tracking-wider mb-1 opacity-70">Weekly</span>
+                <span className="text-lg font-black text-yellow-400">$4.99</span>
+            </button>
+            <button 
+                onClick={() => setSelectedPlan('MONTHLY')}
+                className={`p-3 rounded-xl border transition-all flex flex-col items-center justify-center text-center relative ${selectedPlan === 'MONTHLY' ? 'bg-yellow-500/10 border-yellow-500 text-white' : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/10'}`}
+            >
+                 <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-gradient-to-r from-rose-500 to-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shadow-lg">
+                    SAVE 20%
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-wider mb-1 opacity-70">Monthly</span>
+                <span className="text-lg font-black text-yellow-400">$15.99</span>
+            </button>
+        </div>
+
         <button 
-            onClick={onUpgrade}
-            className="w-full py-4 bg-gradient-to-r from-yellow-600 to-amber-500 text-black font-bold rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-lg"
+            onClick={() => onUpgrade(selectedPlan)}
+            className="w-full py-3 bg-gradient-to-r from-yellow-600 to-amber-500 text-black font-bold rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-lg flex flex-col items-center leading-tight"
         >
-            Upgrade Now - $4.99/mo
+            <span className="text-sm">Subscribe & Upgrade</span>
+            <span className="text-[10px] opacity-80 uppercase">{selectedPlan === 'WEEKLY' ? '$4.99 billed weekly' : '$15.99 billed monthly'}</span>
         </button>
         
         <p className="text-center text-[10px] text-white/20 mt-4">

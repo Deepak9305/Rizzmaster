@@ -13,6 +13,12 @@ const DAILY_CREDITS = 5;
 const REWARD_CREDITS = 5;
 const AD_DURATION = 15; // Reduced wait time since it's no longer an ad
 
+// --- OFFICIAL GOOGLE TEST IDS ---
+// AdMob Rewarded Video Test Unit ID (Android/iOS)
+const TEST_AD_UNIT_ID = 'ca-app-pub-3940256099942544/5224354917';
+// Google Play Billing Test Product ID (Static Response: Purchased)
+const TEST_PRODUCT_ID = 'android.test.purchased';
+
 type ViewState = 'HOME' | 'PRIVACY' | 'TERMS' | 'SUPPORT';
 
 const SplashScreen: React.FC = () => {
@@ -337,13 +343,18 @@ const App: React.FC = () => {
     }
   };
 
-  const handleUpgrade = async () => {
+  const handleUpgrade = async (plan: 'WEEKLY' | 'MONTHLY') => {
     if (!profile) return;
+    
+    // Simulate connection to Google Play Billing using Test Product ID
+    console.log(`[Billing] Initiating purchase flow for ${plan} plan (SKU: ${TEST_PRODUCT_ID})`);
     
     const updatedProfile = { ...profile, is_premium: true };
     setProfile(updatedProfile);
     setShowPremiumModal(false);
-    alert('Welcome to the Elite Club! 👑');
+    
+    // In a real app, this would trigger a payment processor like Stripe or Google Play Billing
+    alert(`[TEST MODE] Payment Successful!\nSKU: ${TEST_PRODUCT_ID}\nPlan: ${plan}\n\nWelcome to the Elite Club! 👑`);
 
     if (supabase && profile.id !== 'guest') {
         await supabase
@@ -457,8 +468,14 @@ const App: React.FC = () => {
     }
     setInputError(null);
 
-    const hasCredits = profile.credits > 0;
-    if (!profile.is_premium && !hasCredits) {
+    // Calculate token cost: 2 tokens for image, 1 token for text only
+    const cost = (mode === InputMode.CHAT && image) ? 2 : 1;
+
+    // Check Balance
+    if (!profile.is_premium && profile.credits < cost) {
+      if (profile.credits > 0) {
+        alert(`Image analysis requires ${cost} credits. You have ${profile.credits}.`);
+      }
       setShowPremiumModal(true);
       return;
     }
@@ -467,7 +484,7 @@ const App: React.FC = () => {
     try {
       // Deduct Credit only if not premium
       if (!profile.is_premium) {
-        updateCredits(profile.credits - 1);
+        updateCredits(profile.credits - cost);
       }
 
       if (mode === InputMode.CHAT) {
@@ -480,7 +497,7 @@ const App: React.FC = () => {
     } catch (error) {
       console.error(error);
       alert('The wingman tripped! Check API Keys or try again.');
-      // Refund if failed: Restore the original credit amount (profile.credits from closure is the pre-deduction value)
+      // Refund if failed: Restore the original credit amount 
       if (!profile.is_premium) updateCredits(profile.credits);
     } finally {
       setLoading(false);
@@ -488,6 +505,8 @@ const App: React.FC = () => {
   };
 
   const handleWatchAd = () => {
+    console.log(`[AdMob] Requesting Rewarded Video: ${TEST_AD_UNIT_ID}`);
+
     // Pause music if playing
     if (isMusicPlaying && audioRef.current) {
       audioRef.current.pause();
@@ -511,7 +530,7 @@ const App: React.FC = () => {
     setTimeout(() => {
       setIsAdPlaying(false);
       updateCredits((profile?.credits || 0) + REWARD_CREDITS);
-      alert(`+${REWARD_CREDITS} Credits Added!`);
+      alert(`[TEST MODE] Ad Completed (Unit: ${TEST_AD_UNIT_ID})\n+${REWARD_CREDITS} Credits Added!`);
       
       // Resume music if it was playing and not manually muted
       // Note: We check !isUserMuted, but since we set isMusicPlaying=false above, we can assume the intent is to resume if it wasn't explicitly muted by user before ad.
@@ -768,7 +787,7 @@ const App: React.FC = () => {
                   {profile.is_premium ? "Generating Fast..." : "Cooking..."}
                 </span>
               ) : (
-                profile.is_premium ? "Get Rizz (VIP)" : "Get Rizz (1 ⚡)"
+                profile.is_premium ? "Get Rizz (VIP)" : `Get Rizz (${(mode === InputMode.CHAT && image) ? 2 : 1} ⚡)`
               )}
             </button>
           ) : (
