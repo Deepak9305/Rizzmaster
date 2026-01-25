@@ -33,55 +33,71 @@
         100% { background-position: 0% 50%; }
       }
 
-      /* Splash Screen Animations */
-      @keyframes slideUp {
-        0% { transform: translateY(30px); opacity: 0; filter: blur(10px); }
-        100% { transform: translateY(0); opacity: 1; filter: blur(0); }
+      /* --- NEW PREMIUM ANIMATIONS --- */
+
+      /* Text Shimmer Effect */
+      @keyframes shimmer {
+        0% { background-position: -200% center; }
+        100% { background-position: 200% center; }
       }
-      .animate-slide-up {
-        animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-      }
-      
-      @keyframes scaleIn {
-        0% { transform: scale(0.8); opacity: 0; filter: blur(15px); }
-        100% { transform: scale(1); opacity: 1; filter: blur(0); }
-      }
-      .animate-scale-in {
-        animation: scaleIn 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      .animate-text-shimmer {
+        background-size: 200% auto;
+        animation: shimmer 3s linear infinite;
       }
 
-      @keyframes pulse-glow {
-        0%, 100% { opacity: 0.3; transform: scale(1); }
-        50% { opacity: 0.6; transform: scale(1.1); }
+      /* Letter Blur Reveal */
+      @keyframes blurIn {
+        0% { opacity: 0; filter: blur(20px); transform: translateY(10px) scale(0.9); }
+        100% { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
       }
-      .animate-pulse-glow {
-        animation: pulse-glow 3s ease-in-out infinite;
-      }
-
-      /* Heartbeat Line Animation */
-      .heartbeat-line {
-        stroke-dasharray: 1000;
-        stroke-dashoffset: 1000;
-        animation: drawHeartbeat 2.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.6));
+      .animate-blur-in {
+        animation: blurIn 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
       }
 
-      @keyframes drawHeartbeat {
-        0% { stroke-dashoffset: 1000; opacity: 0; }
-        10% { opacity: 1; }
-        100% { stroke-dashoffset: 0; opacity: 1; }
+      /* Slow Float */
+      @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+      }
+      .animate-float {
+        animation: float 6s ease-in-out infinite;
+      }
+
+      /* Curtain Reveal (Exit Splash) */
+      @keyframes curtainUp {
+        0% { transform: translateY(0); }
+        100% { transform: translateY(-100%); }
+      }
+      .animate-curtain-up {
+        animation: curtainUp 0.8s cubic-bezier(0.7, 0, 0.3, 1) forwards;
       }
 
       /* Utility Animations */
       .animate-fade-in {
-        animation: fadeIn 0.5s ease-out forwards;
+        animation: fadeIn 0.8s ease-out forwards;
       }
       @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
       
       .animate-fade-in-up {
-        animation: fadeInUp 0.5s ease-out forwards;
+        animation: fadeInUp 0.8s ease-out forwards;
       }
-      @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+      .animate-scale-in {
+        animation: scaleIn 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      }
+      @keyframes scaleIn {
+        0% { transform: scale(0.95); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      
+      .animate-pulse-glow {
+        animation: pulse-glow 4s ease-in-out infinite;
+      }
+      @keyframes pulse-glow {
+        0%, 100% { opacity: 0.3; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(1.05); }
+      }
     </style>
   <script type="importmap">
 {

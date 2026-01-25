@@ -12,58 +12,71 @@ const DAILY_CREDITS = 5;
 const REWARD_CREDITS = 5;
 const AD_DURATION = 15; // Reduced wait time since it's no longer an ad
 
-const SplashScreen: React.FC = () => (
-  <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center overflow-hidden">
-    {/* Ambient Background Glow - Rose Gold Theme */}
-    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] md:w-[800px] md:h-[800px] bg-gradient-to-tr from-rose-900/40 to-amber-900/30 rounded-full blur-[120px] animate-pulse-glow" />
-    
-    <div className="relative z-10 text-center flex flex-col items-center justify-center h-full w-full max-w-4xl px-4">
-      {/* Text Logo Container */}
-      <div className="relative mb-8 animate-scale-in flex flex-col items-center justify-center">
-        <div className="absolute inset-0 bg-rose-500/10 blur-3xl rounded-full animate-pulse-glow"></div>
-        
-        <h1 className="text-6xl md:text-8xl font-black tracking-tighter bg-gradient-to-r from-rose-400 via-amber-200 to-rose-400 bg-clip-text text-transparent drop-shadow-2xl relative z-10 pb-2">
-            Rizz Master
-        </h1>
-      </div>
+const SplashScreen: React.FC = () => {
+  const [progress, setProgress] = useState(0);
+  const [isExiting, setIsExiting] = useState(false);
 
-      {/* Heartbeat Line Animation - Rose Gold */}
-      <div className="w-64 md:w-[500px] h-24 relative flex items-center justify-center">
-        <svg viewBox="0 0 500 100" className="w-full h-full overflow-visible opacity-90">
-            <defs>
-                <linearGradient id="heartbeatGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="transparent" />
-                    <stop offset="15%" stopColor="#e11d48" /> {/* Rose 600 */}
-                    <stop offset="50%" stopColor="#fbbf24" /> {/* Amber 400 (Gold) */}
-                    <stop offset="85%" stopColor="#e11d48" />
-                    <stop offset="100%" stopColor="transparent" />
-                </linearGradient>
-            </defs>
-            {/* The Heartbeat Path: Flat -> Pulse -> Flat */}
-            <path 
-                d="M 0 50 L 180 50 L 200 20 L 220 80 L 240 50 L 260 50 L 280 20 L 300 80 L 320 50 L 500 50" 
-                fill="none" 
-                stroke="url(#heartbeatGradient)" 
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="heartbeat-line"
-            />
-        </svg>
+  useEffect(() => {
+    // Simulate loading progress
+    const duration = 2500;
+    const interval = 20;
+    const steps = duration / interval;
+    let currentStep = 0;
+
+    const timer = setInterval(() => {
+      currentStep++;
+      const progressValue = Math.min(100, (currentStep / steps) * 100);
+      setProgress(progressValue);
+
+      if (currentStep >= steps) {
+        clearInterval(timer);
+        setTimeout(() => setIsExiting(true), 400); // Slight delay at 100%
+      }
+    }, interval);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  if (isExiting) return null; // Component unmounts, main app reveals
+
+  return (
+    <div className={`fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center overflow-hidden transition-opacity duration-700 ${progress === 100 ? 'pointer-events-none' : ''}`}>
+      {/* Ambient Background Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-rose-900/20 rounded-full blur-[100px] animate-pulse-glow" />
+      <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-amber-900/10 rounded-full blur-[80px] animate-float" />
+
+      <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-4xl px-4">
         
-        {/* Status Text */}
-        <div className="absolute -bottom-4 w-full text-center">
-            <div className="text-[10px] md:text-xs font-bold tracking-[0.4em] text-white/30 uppercase animate-fade-in" style={{animationDelay: '1.5s'}}>
-            System Online
-            </div>
+        {/* Logo Reveal */}
+        <div className="relative mb-12">
+           <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-rose-200 via-amber-100 to-rose-200 animate-text-shimmer drop-shadow-2xl">
+              Rizz Master
+           </h1>
+           {/* Reflection Glow */}
+           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent blur-xl opacity-50 animate-text-shimmer" style={{ backgroundSize: '200% 100%' }}></div>
+        </div>
+
+        {/* Sleek Progress Line */}
+        <div className="w-64 md:w-80 h-[2px] bg-white/10 rounded-full overflow-hidden relative">
+          <div 
+            className="absolute top-0 left-0 h-full bg-gradient-to-r from-rose-500 via-amber-400 to-rose-500 shadow-[0_0_15px_rgba(251,191,36,0.5)] transition-all duration-75 ease-out"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        
+        {/* Loading Text */}
+        <div className="mt-4 h-6 overflow-hidden">
+            <p className="text-[10px] md:text-xs font-bold tracking-[0.3em] text-white/40 uppercase animate-fade-in-up">
+              {progress < 30 ? 'Initializing Engines...' : progress < 70 ? 'Calibrating Charisma...' : 'Rizz Master Online'}
+            </p>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const App: React.FC = () => {
-  // Splash State - Increased duration for premium feel
+  // Splash State controlled by the SplashScreen component's exit logic wrapper
   const [showSplash, setShowSplash] = useState(true);
 
   // Auth State
@@ -92,11 +105,10 @@ const App: React.FC = () => {
   const [isUserMuted, setIsUserMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // 0. Splash Timer
   useEffect(() => {
-    // 2.8s gives enough time for the heartbeat to flatline and the user to appreciate the intro
-    const timer = setTimeout(() => setShowSplash(false), 2800);
-    return () => clearTimeout(timer);
+     // Wait for splash animation timing
+     const timer = setTimeout(() => setShowSplash(false), 3000); // 2.5s load + 0.5s transition
+     return () => clearTimeout(timer);
   }, []);
 
   // Safe play function to handle promises and prevent errors
@@ -486,6 +498,7 @@ const App: React.FC = () => {
 
   // --- Rendering ---
 
+  // Check Splash
   if (showSplash) {
     return <SplashScreen />;
   }
@@ -527,7 +540,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 md:py-12 pb-24 relative min-h-[100dvh] flex flex-col">
+    <div className="max-w-4xl mx-auto px-4 py-6 md:py-12 pb-24 relative min-h-[100dvh] flex flex-col animate-fade-in">
       
       {/* Background Music Player */}
       <audio ref={audioRef} loop>
@@ -625,7 +638,7 @@ const App: React.FC = () => {
       {/* Hero Header */}
       <header className="text-center mb-8 md:mb-12">
         <div className="inline-block relative">
-           <h1 className="text-5xl md:text-7xl font-black mb-2 tracking-tighter bg-gradient-to-r from-rose-400 via-amber-200 to-rose-400 bg-clip-text text-transparent pb-2">
+           <h1 className="text-5xl md:text-7xl font-black mb-2 tracking-tighter bg-gradient-to-r from-rose-400 via-amber-200 to-rose-400 bg-clip-text text-transparent pb-2 animate-text-shimmer">
              Rizz Master
            </h1>
           {profile.is_premium && (
