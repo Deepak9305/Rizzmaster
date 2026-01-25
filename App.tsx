@@ -7,10 +7,13 @@ import LoginPage from './components/LoginPage';
 import Footer from './components/Footer';
 import PremiumModal from './components/PremiumModal';
 import SavedModal from './components/SavedModal';
+import InfoPages from './components/InfoPages';
 
 const DAILY_CREDITS = 5;
 const REWARD_CREDITS = 5;
 const AD_DURATION = 15; // Reduced wait time since it's no longer an ad
+
+type ViewState = 'HOME' | 'PRIVACY' | 'TERMS' | 'SUPPORT';
 
 const SplashScreen: React.FC = () => {
   const [progress, setProgress] = useState(0);
@@ -84,6 +87,7 @@ const App: React.FC = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
 
   // App State
+  const [currentView, setCurrentView] = useState<ViewState>('HOME');
   const [mode, setMode] = useState<InputMode>(InputMode.CHAT);
   const [inputText, setInputText] = useState('');
   const [image, setImage] = useState<string | null>(null);
@@ -302,6 +306,7 @@ const App: React.FC = () => {
     setInputText('');
     setImage(null);
     setInputError(null);
+    setCurrentView('HOME'); // Reset view
   };
 
   const handleGuestLogin = () => {
@@ -423,7 +428,11 @@ const App: React.FC = () => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => setImage(reader.result as string);
+      reader.onloadend = () => {
+        setImage(reader.result as string);
+        // Reset the input value to allow re-uploading the same file if cleared
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      };
       reader.readAsDataURL(file);
       if (inputError) setInputError(null);
     }
@@ -466,8 +475,8 @@ const App: React.FC = () => {
     } catch (error) {
       console.error(error);
       alert('The wingman tripped! Check API Keys or try again.');
-      // Refund if failed
-      if (!profile.is_premium) updateCredits(profile.credits + 1);
+      // Refund if failed: Restore the original credit amount (profile.credits from closure is the pre-deduction value)
+      if (!profile.is_premium) updateCredits(profile.credits);
     } finally {
       setLoading(false);
     }
@@ -530,7 +539,7 @@ const App: React.FC = () => {
              Use Here Instead
            </button>
          </div>
-         <Footer className="fixed bottom-0 w-full z-10" />
+         <Footer className="fixed bottom-0 w-full z-10" onNavigate={() => {}} />
       </div>
     );
   }
@@ -551,6 +560,16 @@ const App: React.FC = () => {
         <p className="text-white/50 animate-pulse">Loading Profile...</p>
         <button onClick={handleLogout} className="mt-8 text-xs text-white/30 hover:text-white underline">Cancel & Logout</button>
       </div>
+    );
+  }
+
+  // Handle Internal Page Views
+  if (currentView !== 'HOME') {
+    return (
+      <InfoPages 
+        page={currentView} 
+        onBack={() => setCurrentView('HOME')} 
+      />
     );
   }
 
@@ -816,7 +835,7 @@ const App: React.FC = () => {
           )}
         </section>
       </div>
-      <Footer className="mt-12 md:mt-20" />
+      <Footer className="mt-12 md:mt-20" onNavigate={setCurrentView} />
     </div>
   );
 };

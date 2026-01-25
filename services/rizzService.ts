@@ -14,11 +14,15 @@ export const generateRizz = async (text: string, imageBase64?: string): Promise<
   const parts: any[] = [];
   
   if (imageBase64) {
-    // Extract base64 data if it contains the prefix
+    // Extract base64 data and mime type
     const base64Data = imageBase64.split(',')[1] || imageBase64;
+    // Try to extract mime type from data URL, default to png if not found
+    const mimeMatch = imageBase64.match(/^data:(.*);base64,/);
+    const mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
+
     parts.push({
       inlineData: {
-        mimeType: 'image/png', // Assuming png/jpeg from input, Gemini handles standard image types
+        mimeType: mimeType,
         data: base64Data
       }
     });
