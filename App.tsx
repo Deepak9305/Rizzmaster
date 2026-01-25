@@ -16,62 +16,10 @@ const AD_DURATION = 30;
 // TODO: Replace with actual Ad Unit ID
 const GOOGLE_AD_SLOT_ID = "1234567890"; 
 
-const REQUIRED_SQL = `
--- Copy and run this in your Supabase SQL Editor
-
--- 1. Create profiles table
-create table if not exists public.profiles (
-  id uuid references auth.users on delete cascade not null primary key,
-  email text,
-  credits integer default 5,
-  is_premium boolean default false,
-  last_daily_reset text default to_char(now(), 'YYYY-MM-DD')
-);
-
--- 2. Create saved_items table
-create table if not exists public.saved_items (
-  id uuid default gen_random_uuid() primary key,
-  user_id uuid references public.profiles(id) on delete cascade not null,
-  content text not null,
-  type text not null,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- 3. Enable RLS
-alter table public.profiles enable row level security;
-alter table public.saved_items enable row level security;
-
--- 4. Policies
--- Allow users to view their own profile
-create policy "Users can view own profile" 
-  on profiles for select using ( auth.uid() = id );
-
--- Allow users to update their own profile
-create policy "Users can update own profile" 
-  on profiles for update using ( auth.uid() = id );
-
--- Allow users to insert their own profile (trigger or manual)
-create policy "Users can insert own profile" 
-  on profiles for insert with check ( auth.uid() = id );
-
--- Allow users to view their own saved items
-create policy "Users can view own saved items" 
-  on saved_items for select using ( auth.uid() = user_id );
-
--- Allow users to insert their own saved items
-create policy "Users can insert own saved items" 
-  on saved_items for insert with check ( auth.uid() = user_id );
-
--- Allow users to delete their own saved items
-create policy "Users can delete own saved items" 
-  on saved_items for delete using ( auth.uid() = user_id );
-`;
-
 const App: React.FC = () => {
   // Auth State
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [dbError, setDbError] = useState<string | null>(null);
 
   // App State
   const [mode, setMode] = useState<InputMode>(InputMode.CHAT);
@@ -111,7 +59,6 @@ const App: React.FC = () => {
       } else {
         setProfile(null);
         setSavedItems([]);
-        setDbError(null);
       }
     });
 
@@ -153,8 +100,6 @@ const App: React.FC = () => {
         return;
     }
 
-    setDbError(null);
-
     // Fetch Profile
     let { data: profileData, error } = await supabase
       .from('profiles')
@@ -175,12 +120,9 @@ const App: React.FC = () => {
            profileData = newProfile;
         } else {
            console.error("Error creating profile:", createError);
-           // Often caused by missing table or RLS policy preventing insert
-           setDbError("Failed to create profile. Tables may be missing.");
         }
       } else {
         console.error("Error loading profile:", error);
-        setDbError(error.message);
       }
     } else if (profileData) {
       // Check for daily reset
@@ -443,51 +385,11 @@ const App: React.FC = () => {
   if (!profile) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-white p-4 bg-black">
-        {dbError ? (
-          <div className="glass border border-red-500/50 rounded-3xl p-6 md:p-8 max-w-2xl w-full text-center shadow-2xl relative overflow-hidden">
-             <div className="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
-            <div className="w-16 h-16 mx-auto mb-4 bg-red-500/10 rounded-full flex items-center justify-center text-3xl">
-                🛠️
-            </div>
-            <h2 className="text-2xl font-bold text-white mb-2">Database Setup Required</h2>
-            <p className="text-white/60 mb-6">
-              It looks like your Supabase database is missing the required tables. <br/>
-              Please run the SQL below in your <a href="https://supabase.com/dashboard/project/_/sql" target="_blank" rel="noopener noreferrer" className="text-pink-400 hover:text-pink-300 underline underline-offset-4">Supabase SQL Editor</a> to initialize the app.
-            </p>
-            
-            <div className="relative group text-left mb-8">
-                <div className="absolute top-3 right-3 z-10">
-                    <button 
-                        onClick={() => {
-                            navigator.clipboard.writeText(REQUIRED_SQL);
-                            alert("SQL copied to clipboard!");
-                        }}
-                        className="bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-1.5 rounded-lg transition-colors border border-white/10 backdrop-blur-md"
-                    >
-                        Copy SQL
-                    </button>
-                </div>
-                <pre className="bg-black/50 p-4 rounded-xl text-xs md:text-sm text-green-400 overflow-x-auto border border-white/10 h-64 font-mono leading-relaxed custom-scrollbar shadow-inner">
-                    {REQUIRED_SQL}
-                </pre>
-            </div>
-
-            <button 
-              onClick={() => window.location.reload()}
-              className="w-full md:w-auto px-8 py-3 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition-all active:scale-95"
-            >
-              I've Ran the SQL, Retry Connection
-            </button>
-          </div>
-        ) : (
-          <>
-            <svg className="animate-spin h-8 w-8 text-pink-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <p className="text-white/50 animate-pulse">Loading Profile...</p>
-          </>
-        )}
+        <svg className="animate-spin h-8 w-8 text-pink-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p className="text-white/50 animate-pulse">Loading Profile...</p>
       </div>
     );
   }
