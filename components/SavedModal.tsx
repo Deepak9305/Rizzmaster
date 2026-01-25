@@ -31,7 +31,7 @@ const SavedModal: React.FC<SavedModalProps> = ({
             <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full text-white/50 hover:text-white">✕</button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
             {savedItems.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-white/30 text-center">
                     <span className="text-4xl mb-4 opacity-50">📂</span>
@@ -44,6 +44,7 @@ const SavedModal: React.FC<SavedModalProps> = ({
                              <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
                                  item.type === 'chaotic' ? 'bg-red-500/20 text-red-400' :
                                  item.type === 'smooth' ? 'bg-blue-500/20 text-blue-400' :
+                                 item.type === 'bio' ? 'bg-emerald-500/20 text-emerald-400' :
                                  'bg-purple-500/20 text-purple-400'
                              }`}>
                                  {item.type}

@@ -21,6 +21,20 @@ const RizzCard: React.FC<RizzCardProps> = ({
   onShare,
   delay = 0
 }) => {
+  
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(content);
+      // We use a simple alert per the app's style, but in a real app a toast would be better.
+      // Doing this inside the try block ensures we only alert on success.
+      alert("Copied!"); 
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      // Fallback for older browsers or non-secure contexts could go here,
+      // but for this MVP we'll just log it.
+    }
+  };
+
   return (
     <div 
       className="glass rounded-2xl p-4 md:p-5 border border-white/5 hover:border-white/20 transition-all duration-300 group opacity-0 animate-fade-in-up"
@@ -35,11 +49,7 @@ const RizzCard: React.FC<RizzCardProps> = ({
         </div>
         <div className="flex gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
             <button 
-                onClick={() => {
-                  navigator.clipboard.writeText(content);
-                  // Optional: You could trigger a toast here, but simple alert for now as per app style
-                  alert("Copied!");
-                }}
+                onClick={handleCopy}
                 className="p-1.5 rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition-colors"
                 title="Copy to Clipboard"
             >
@@ -64,10 +74,7 @@ const RizzCard: React.FC<RizzCardProps> = ({
       
       <div 
         className="text-white text-base md:text-lg font-medium leading-relaxed cursor-pointer hover:opacity-80 transition-opacity"
-        onClick={() => {
-            navigator.clipboard.writeText(content);
-            alert("Copied to clipboard!");
-        }}
+        onClick={handleCopy}
         title="Click to Copy"
       >
         "{content}"

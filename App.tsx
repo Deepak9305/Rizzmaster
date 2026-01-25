@@ -49,16 +49,17 @@ const SplashScreen: React.FC = () => {
   if (isExiting) return null; // Component unmounts, main app reveals
 
   return (
-    <div className={`fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center overflow-hidden transition-opacity duration-700 ${progress === 100 ? 'pointer-events-none' : ''}`}>
-      {/* Ambient Background Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-rose-900/20 rounded-full blur-[100px] animate-pulse-glow" />
-      <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-amber-900/10 rounded-full blur-[80px] animate-float" />
+    <div className={`fixed inset-0 z-[100] bg-[#020202] flex flex-col items-center justify-center overflow-hidden transition-opacity duration-700 ${progress === 100 ? 'pointer-events-none' : ''}`}>
+      {/* Ambient Background Glow - Premium Violet/Fuchsia Theme */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-violet-900/20 rounded-full blur-[120px] animate-pulse-glow" />
+      <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-fuchsia-900/10 rounded-full blur-[80px] animate-float" />
+      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-indigo-900/20 rounded-full blur-[100px] animate-float" style={{ animationDelay: '1s' }} />
 
       <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-4xl px-4">
         
         {/* Logo Reveal */}
         <div className="relative mb-12">
-           <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-rose-200 via-amber-100 to-rose-200 animate-text-shimmer drop-shadow-2xl">
+           <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-violet-200 via-fuchsia-100 to-rose-200 animate-text-shimmer drop-shadow-2xl">
               Rizz Master
            </h1>
            {/* Reflection Glow */}
@@ -66,17 +67,17 @@ const SplashScreen: React.FC = () => {
         </div>
 
         {/* Sleek Progress Line */}
-        <div className="w-64 md:w-80 h-[2px] bg-white/10 rounded-full overflow-hidden relative">
+        <div className="w-64 md:w-80 h-[2px] bg-white/5 rounded-full overflow-hidden relative">
           <div 
-            className="absolute top-0 left-0 h-full bg-gradient-to-r from-rose-500 via-amber-400 to-rose-500 shadow-[0_0_15px_rgba(251,191,36,0.5)] transition-all duration-75 ease-out"
+            className="absolute top-0 left-0 h-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-rose-500 shadow-[0_0_15px_rgba(219,39,119,0.5)] transition-all duration-75 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
         
         {/* Loading Text */}
         <div className="mt-4 h-6 overflow-hidden">
-            <p className="text-[10px] md:text-xs font-bold tracking-[0.5em] text-white/40 uppercase animate-fade-in-up">
-              {progress < 30 ? 'ANALYZING...' : progress < 70 ? 'COOKING...' : 'READY.'}
+            <p className="text-[10px] md:text-xs font-bold tracking-[0.5em] text-white/30 uppercase animate-fade-in-up">
+              {progress < 30 ? 'INITIALIZING AI...' : progress < 70 ? 'LOADING CHARISMA...' : 'READY.'}
             </p>
         </div>
       </div>
@@ -220,28 +221,7 @@ const App: React.FC = () => {
 
   // 3. Load User Data
   const loadUserData = async (userId: string) => {
-    // Guest Mode Handler
-    // CRITICAL FIX: Explicitly check for 'guest' ID even if Supabase is initialized
-    // This prevents trying to query Supabase with an invalid UUID 'guest'
-    if (!supabase || userId === 'guest') {
-        const storedProfile = localStorage.getItem('guest_profile');
-        if (storedProfile) {
-            setProfile(JSON.parse(storedProfile));
-        } else {
-            const newProfile: UserProfile = { 
-              id: 'guest', 
-              email: 'guest@rizzmaster.ai', 
-              credits: DAILY_CREDITS, 
-              is_premium: false, 
-              last_daily_reset: new Date().toISOString().split('T')[0] 
-            };
-            setProfile(newProfile);
-            localStorage.setItem('guest_profile', JSON.stringify(newProfile));
-        }
-        const storedItems = localStorage.getItem('guest_saved_items');
-        setSavedItems(storedItems ? JSON.parse(storedItems) : []);
-        return;
-    }
+    if (!supabase) return;
 
     // Fetch Profile from Supabase
     let { data: profileData, error } = await supabase
@@ -318,13 +298,6 @@ const App: React.FC = () => {
     setCurrentView('HOME'); // Reset view
   };
 
-  const handleGuestLogin = () => {
-      const guestUser = { id: 'guest', email: 'guest@rizzmaster.ai' };
-      setSession({ user: guestUser });
-      // This will now be handled correctly by the updated loadUserData logic
-      loadUserData(guestUser.id);
-  };
-
   // 4. Action Handlers
   const updateCredits = async (newAmount: number) => {
     if (!profile) return;
@@ -333,13 +306,11 @@ const App: React.FC = () => {
     const updatedProfile = { ...profile, credits: newAmount };
     setProfile(updatedProfile);
 
-    if (supabase && profile.id !== 'guest') {
+    if (supabase) {
         await supabase
         .from('profiles')
         .update({ credits: newAmount })
         .eq('id', profile.id);
-    } else {
-        localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
     }
   };
 
@@ -356,13 +327,11 @@ const App: React.FC = () => {
     // In a real app, this would trigger a payment processor like Stripe or Google Play Billing
     alert(`[TEST MODE] Payment Successful!\nSKU: ${TEST_PRODUCT_ID}\nPlan: ${plan}\n\nWelcome to the Elite Club! 👑`);
 
-    if (supabase && profile.id !== 'guest') {
+    if (supabase) {
         await supabase
         .from('profiles')
         .update({ is_premium: true })
         .eq('id', profile.id);
-    } else {
-        localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
     }
   };
 
@@ -381,13 +350,11 @@ const App: React.FC = () => {
     
     alert(`[TEST MODE] Purchases Restored!\nFound valid subscription: ${TEST_PRODUCT_ID}`);
     
-    if (supabase && profile.id !== 'guest') {
+    if (supabase) {
         await supabase
         .from('profiles')
         .update({ is_premium: true })
         .eq('id', profile.id);
-    } else {
-        localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
     }
   };
 
@@ -398,12 +365,11 @@ const App: React.FC = () => {
     
     if (exists) {
       // Delete
-      if (supabase && profile.id !== 'guest') {
+      if (supabase) {
           await supabase.from('saved_items').delete().eq('id', exists.id);
       }
       const newItems = savedItems.filter(item => item.id !== exists.id);
       setSavedItems(newItems);
-      if (!supabase || profile.id === 'guest') localStorage.setItem('guest_saved_items', JSON.stringify(newItems));
 
     } else {
       // Insert
@@ -415,7 +381,7 @@ const App: React.FC = () => {
           created_at: new Date().toISOString()
       };
 
-      if (supabase && profile.id !== 'guest') {
+      if (supabase) {
         const { data } = await supabase
             .from('saved_items')
             .insert([{ user_id: profile.id, content, type }])
@@ -426,17 +392,15 @@ const App: React.FC = () => {
       
       const newItems = [newItem, ...savedItems];
       setSavedItems(newItems);
-      if (!supabase || profile.id === 'guest') localStorage.setItem('guest_saved_items', JSON.stringify(newItems));
     }
   };
 
   const handleDeleteSaved = async (id: string) => {
-    if (supabase && profile?.id !== 'guest') {
+    if (supabase) {
         await supabase.from('saved_items').delete().eq('id', id);
     }
     const newItems = savedItems.filter(item => item.id !== id);
     setSavedItems(newItems);
-    if (!supabase || profile?.id === 'guest') localStorage.setItem('guest_saved_items', JSON.stringify(newItems));
   };
 
   // --- Logic Helpers ---
@@ -595,7 +559,7 @@ const App: React.FC = () => {
 
   // Not Logged In
   if (!session) {
-    return <LoginPage onGuestLogin={handleGuestLogin} />;
+    return <LoginPage />;
   }
 
   // Loading Profile
@@ -722,7 +686,7 @@ const App: React.FC = () => {
       {/* Hero Header */}
       <header className="text-center mb-8 md:mb-12">
         <div className="inline-block relative">
-           <h1 className="text-5xl md:text-7xl font-black mb-2 tracking-tighter bg-gradient-to-r from-rose-400 via-amber-200 to-rose-400 bg-clip-text text-transparent pb-2 animate-text-shimmer">
+           <h1 className="text-5xl md:text-7xl font-black mb-2 tracking-tighter bg-gradient-to-r from-violet-400 via-fuchsia-200 to-rose-400 bg-clip-text text-transparent pb-2 animate-text-shimmer">
              Rizz Master
            </h1>
           {profile.is_premium && (

@@ -5,12 +5,13 @@ import { RizzResponse, BioResponse } from "../types";
 // Note: API Key must be in process.env.API_KEY
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
+// Strictly use Gemini 3.0 Flash for all operations as requested
+const MODEL_NAME = 'gemini-3-flash-preview';
+
 /**
  * Generates Rizz (replies) based on chat context or image
  */
 export const generateRizz = async (text: string, imageBase64?: string): Promise<RizzResponse> => {
-  const modelName = 'gemini-3-flash-preview';
-
   const parts: any[] = [];
   
   if (imageBase64) {
@@ -49,7 +50,7 @@ export const generateRizz = async (text: string, imageBase64?: string): Promise<
 
   // No try/catch here; let the caller (App.tsx) handle errors to ensure credits are refunded properly.
   const response = await ai.models.generateContent({
-    model: modelName,
+    model: MODEL_NAME,
     contents: { parts },
     config: {
       responseMimeType: "application/json",
@@ -88,8 +89,6 @@ export const generateRizz = async (text: string, imageBase64?: string): Promise<
  * Generates a dating profile bio
  */
 export const generateBio = async (text: string): Promise<BioResponse> => {
-  const modelName = 'gemini-3-flash-preview';
-
   const prompt = `
     Create a catchy, witty, and attractive dating profile bio based on these details: "${text}"
     Keep it under 280 chars. High impact.
@@ -97,7 +96,7 @@ export const generateBio = async (text: string): Promise<BioResponse> => {
 
   // No try/catch here; let the caller (App.tsx) handle errors to ensure credits are refunded properly.
   const response = await ai.models.generateContent({
-    model: modelName,
+    model: MODEL_NAME,
     contents: prompt,
     config: {
       responseMimeType: "application/json",
