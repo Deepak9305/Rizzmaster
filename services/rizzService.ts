@@ -4,7 +4,7 @@ import { RizzResponse, BioResponse } from "../types";
 // Initialize Gemini Client
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
-// Strictly use Gemini 3.0 Flash for all operations
+// STRICTLY use Gemini 3.0 Flash Preview as requested
 const MODEL_NAME = 'gemini-3-flash-preview';
 
 /**
@@ -14,12 +14,15 @@ const safeParseJSON = <T>(text: string): T => {
   try {
     return JSON.parse(text) as T;
   } catch (e) {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    // Robustly handle cases where the model might wrap JSON in markdown code blocks
+    const jsonMatch = text.match(/```json\s*(\{[\s\S]*\})\s*```/) || text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       try {
-        return JSON.parse(jsonMatch[0]) as T;
+        const cleanJson = jsonMatch[1] || jsonMatch[0];
+        return JSON.parse(cleanJson) as T;
       } catch (innerErr) {
-        throw new Error("Failed to parse extracted JSON: " + innerErr);
+        console.error("JSON Parse Error:", innerErr);
+        throw new Error("Failed to parse extracted JSON.");
       }
     }
     throw new Error("No valid JSON found in response.");
@@ -45,7 +48,7 @@ export const generateRizz = async (text: string, imageBase64?: string): Promise<
     });
   }
 
-  // Use a separate part for user input to distinguish from system instructions
+  // Use a separate part for user input
   parts.push({ text: `Chat Context to Reply to: "${text}"` });
 
   const response = await ai.models.generateContent({
