@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../services/supabaseClient';
 import LegalModals from './LegalModals';
+import { getAuthRedirectUrl } from '../services/capacitorService';
 
 const LoginPage: React.FC = () => {
   const [isEmailMode, setIsEmailMode] = useState(false);
@@ -23,7 +24,7 @@ const LoginPage: React.FC = () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin
+        redirectTo: getAuthRedirectUrl()
       }
     });
 

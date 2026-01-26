@@ -8,6 +8,8 @@ import Footer from './components/Footer';
 import PremiumModal from './components/PremiumModal';
 import SavedModal from './components/SavedModal';
 import InfoPages from './components/InfoPages';
+// Import new Native Services
+import { initializeNativeFeatures, isNative, selectImageNative, showRewardedAdNative, shareNative, copyToClipboard } from './services/capacitorService';
 
 const DAILY_CREDITS = 5;
 const REWARD_CREDITS = 5;
@@ -117,6 +119,9 @@ const App: React.FC = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+     // Initialize Native Features (Status Bar, AdMob, etc) if on mobile
+     initializeNativeFeatures();
+
      // Wait for splash animation timing
      const timer = setTimeout(() => setShowSplash(false), 3000); // 2.5s load + 0.5s transition
      return () => clearTimeout(timer);
@@ -414,18 +419,22 @@ const App: React.FC = () => {
     }
   };
 
+  // Use Native Share Wrapper
   const handleShare = async (content: string) => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Rizz Master Reply',
-          text: content,
-          url: window.location.href
-        });
-      } catch (err) { console.log('Share canceled'); }
+    await shareNative(content);
+  };
+
+  // Handle Image Selection (Native vs Web)
+  const handleImageSelect = async () => {
+    if (isNative()) {
+      const nativeImage = await selectImageNative();
+      if (nativeImage) {
+        setImage(nativeImage);
+        if (inputError) setInputError(null);
+      }
     } else {
-      navigator.clipboard.writeText(content);
-      alert('Link copied to clipboard!');
+      // Web Fallback: Trigger File Input
+      fileInputRef.current?.click();
     }
   };
 
@@ -493,16 +502,35 @@ const App: React.FC = () => {
     }
   };
 
-  const handleWatchAd = () => {
+  const handleWatchAd = async () => {
     console.log(`[AdMob] Requesting Rewarded Video: ${TEST_AD_UNIT_ID}`);
 
     // Pause music if playing
     if (isMusicPlaying && audioRef.current) {
       audioRef.current.pause();
-      setIsMusicPlaying(false); // Update state to reflect pause
+      setIsMusicPlaying(false);
     }
-    
     setShowPremiumModal(false);
+
+    // Native Ad Check
+    if (isNative()) {
+      setLoading(true); // Show loading while ad preps
+      const reward = await showRewardedAdNative();
+      setLoading(false);
+
+      if (reward) {
+         updateCredits((profile?.credits || 0) + REWARD_CREDITS);
+         alert(`[Native Ad] Success! +${REWARD_CREDITS} Credits Added!`);
+      } else {
+         alert("Ad failed to load or was cancelled.");
+      }
+      
+      // Resume music
+      if (!isUserMuted && audioRef.current) safePlay();
+      return;
+    }
+
+    // Web Fallback (Simulated)
     setIsAdPlaying(true);
     setAdTimer(AD_DURATION); 
 
@@ -521,8 +549,6 @@ const App: React.FC = () => {
       updateCredits((profile?.credits || 0) + REWARD_CREDITS);
       alert(`[TEST MODE] Ad Completed (Unit: ${TEST_AD_UNIT_ID})\n+${REWARD_CREDITS} Credits Added!`);
       
-      // Resume music if it was playing and not manually muted
-      // Note: We check !isUserMuted, but since we set isMusicPlaying=false above, we can assume the intent is to resume if it wasn't explicitly muted by user before ad.
       if (!isUserMuted && audioRef.current) {
         safePlay();
       }
@@ -732,7 +758,7 @@ const App: React.FC = () => {
           {mode === InputMode.CHAT && (
             <div className="mb-4 md:mb-6">
                <div 
-                onClick={() => fileInputRef.current?.click()}
+                onClick={handleImageSelect}
                 className={`group border-2 border-dashed border-white/10 rounded-2xl transition-all cursor-pointer hover:border-rose-500/50 hover:bg-white/5 ${image ? 'p-2' : 'p-6 md:p-8'}`}
               >
                 {image ? (
@@ -746,6 +772,7 @@ const App: React.FC = () => {
                     <span className="text-sm font-medium">Add Screenshot</span>
                   </div>
                 )}
+                {/* Fallback for web */}
                 <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
               </div>
             </div>
@@ -837,14 +864,14 @@ const App: React.FC = () => {
                 <span className="text-2xl">📝</span>
                 <h3 className="text-xs md:text-sm font-semibold uppercase tracking-widest text-white/60">Bio Result</h3>
                 <div className="ml-auto flex gap-2">
-                    <button onClick={() => { navigator.clipboard.writeText(result.bio); alert('Bio copied!'); }} className="p-2 rounded-full hover:bg-white/10 transition-all text-white/50 hover:text-white"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg></button>
+                    <button onClick={() => { copyToClipboard(result.bio); alert('Bio copied!'); }} className="p-2 rounded-full hover:bg-white/10 transition-all text-white/50 hover:text-white"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg></button>
                     <button onClick={() => handleShare(result.bio)} className="p-2 rounded-full hover:bg-white/10 transition-all text-white/50 hover:text-white"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg></button>
                     <button onClick={() => toggleSave(result.bio, 'bio')} className={`p-2 rounded-full hover:bg-white/10 transition-all ${isSaved(result.bio) ? 'text-rose-500' : 'text-white/50 hover:text-rose-400'}`}><svg className="w-5 h-5" fill={isSaved(result.bio) ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg></button>
                 </div>
               </div>
               <p className="text-lg md:text-xl leading-relaxed font-medium mb-6 md:mb-8 text-white">{result.bio}</p>
               <div className="p-4 bg-white/5 rounded-2xl border border-white/5 mb-4"><h4 className="text-[10px] uppercase font-bold text-rose-400 mb-1">Why it works</h4><p className="text-xs md:text-sm text-white/60">{result.analysis}</p></div>
-              <button onClick={() => { navigator.clipboard.writeText(result.bio); alert('Bio copied!'); }} className="w-full py-3 border border-white/20 rounded-xl hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2"><span>📋</span> Copy Bio</button>
+              <button onClick={() => { copyToClipboard(result.bio); alert('Bio copied!'); }} className="w-full py-3 border border-white/20 rounded-xl hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2"><span>📋</span> Copy Bio</button>
             </div>
           )}
         </section>
