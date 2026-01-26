@@ -28,48 +28,110 @@ const SplashScreen: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
-    const duration = 2500;
-    const interval = 20;
-    const steps = duration / interval;
-    let currentStep = 0;
+    const duration = 2400;
+    const startTime = Date.now();
+    let animationFrameId: number;
 
-    const timer = setInterval(() => {
-      currentStep++;
-      const progressValue = Math.min(100, (currentStep / steps) * 100);
-      setProgress(progressValue);
+    const frame = () => {
+      const now = Date.now();
+      const elapsed = now - startTime;
+      const raw = Math.min(1, elapsed / duration);
+      
+      // Cubic ease-out for a smoother, more organic feel
+      const val = 1 - Math.pow(1 - raw, 3); 
+      
+      setProgress(val * 100);
 
-      if (currentStep >= steps) {
-        clearInterval(timer);
+      if (raw < 1) {
+        animationFrameId = requestAnimationFrame(frame);
+      } else {
         setTimeout(() => {
            setIsExiting(true);
-           setTimeout(onExit, 600); // Wait for exit animation
-        }, 400);
+           setTimeout(onExit, 600); 
+        }, 200);
       }
-    }, interval);
+    };
 
-    return () => clearInterval(timer);
+    animationFrameId = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(animationFrameId);
   }, [onExit]);
+
+  const totalPathLength = 350;
+  const strokeDashoffset = totalPathLength - (progress / 100) * totalPathLength;
 
   return (
     <div className={`fixed inset-0 z-[100] bg-[#020202] flex flex-col items-center justify-center overflow-hidden transition-all duration-700 ${isExiting ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100'}`}>
+       {/* Background Grid */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#020202] pointer-events-none" />
+
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-violet-900/20 rounded-full blur-[120px] animate-pulse-glow" />
-      <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-fuchsia-900/10 rounded-full blur-[80px] animate-float" />
+      
       <div className="relative z-10 flex flex-col items-center justify-center w-full px-6">
-        <div className="relative mb-8 text-center">
-           <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-violet-200 via-fuchsia-100 to-rose-200 animate-text-shimmer drop-shadow-2xl">
+        <div className="relative mb-12 text-center scale-110">
+           <h1 className="text-6xl md:text-7xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-violet-200 via-fuchsia-100 to-rose-200 animate-text-shimmer drop-shadow-2xl">
               Rizz Master
            </h1>
-           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent blur-xl opacity-50 animate-text-shimmer" style={{ backgroundSize: '200% 100%' }}></div>
+           <div className="absolute -inset-4 bg-violet-500/20 blur-xl opacity-20 animate-pulse"></div>
         </div>
         
-        {/* Loading Bar */}
-        <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden relative">
-          <div 
-            className="absolute top-0 left-0 h-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-rose-500 shadow-[0_0_10px_rgba(236,72,153,0.5)] transition-all duration-75 ease-out"
-            style={{ width: `${progress}%` }}
-          />
+        {/* Enhanced Heartbeat Line Animation */}
+        <div className="w-[350px] h-[120px] relative flex items-center justify-center">
+            <svg width="100%" height="100%" viewBox="0 0 350 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="overflow-visible">
+                <defs>
+                    <linearGradient id="heartbeatGradient" x1="0" y1="0" x2="100%" y2="0">
+                        <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0" />
+                        <stop offset="20%" stopColor="#8b5cf6" />
+                        <stop offset="60%" stopColor="#ec4899" />
+                        <stop offset="100%" stopColor="#f43f5e" />
+                    </linearGradient>
+                    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                        <feMerge>
+                            <feMergeNode in="coloredBlur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                    </filter>
+                </defs>
+
+                {/* Faint Background Track */}
+                <path 
+                    d="M0 50 L40 50 L50 50 L65 20 L80 80 L95 10 L110 90 L125 50 L150 50 L160 50 L175 20 L190 80 L205 10 L220 90 L235 50 L350 50" 
+                    stroke="rgba(255,255,255,0.05)" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                />
+
+                {/* Animated Gradient Line */}
+                <path 
+                    d="M0 50 L40 50 L50 50 L65 20 L80 80 L95 10 L110 90 L125 50 L150 50 L160 50 L175 20 L190 80 L205 10 L220 90 L235 50 L350 50" 
+                    stroke="url(#heartbeatGradient)" 
+                    strokeWidth="3" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                    strokeDasharray={totalPathLength}
+                    strokeDashoffset={strokeDashoffset}
+                    filter="url(#glow)"
+                />
+                
+                {/* Leading Dot with Glow */}
+                 {progress < 100 && progress > 1 && (
+                    <g style={{ 
+                        offsetPath: "path('M0 50 L40 50 L50 50 L65 20 L80 80 L95 10 L110 90 L125 50 L150 50 L160 50 L175 20 L190 80 L205 10 L220 90 L235 50 L350 50')",
+                        offsetDistance: `${progress}%` 
+                    }}>
+                        <circle r="3" fill="#fff" />
+                        <circle r="6" fill="rgba(236, 72, 153, 0.6)" className="animate-pulse" />
+                    </g>
+                 )}
+            </svg>
         </div>
-        <p className="mt-4 text-[10px] text-white/30 uppercase tracking-[0.2em] font-medium">Initializing AI Core</p>
+
+        <div className="flex items-center gap-2 mt-4">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-ping"></span>
+            <p className="text-[10px] text-white/50 uppercase tracking-[0.3em] font-medium">System Online</p>
+        </div>
       </div>
     </div>
   );
