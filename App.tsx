@@ -4,33 +4,30 @@ import { InputMode, RizzResponse, BioResponse, SavedItem, UserProfile } from './
 import { supabase } from './services/supabaseClient';
 import RizzCard from './components/RizzCard';
 import LoginPage from './components/LoginPage';
-import Footer from './components/Footer';
 import PremiumModal from './components/PremiumModal';
-import SavedModal from './components/SavedModal';
+// Using SavedModal as the View Component
+import SavedView from './components/SavedModal'; 
+import ProfileView from './components/ProfileView';
 import InfoPages from './components/InfoPages';
-// Import new Native Services
+import BottomNav from './components/BottomNav';
 import { initializeNativeFeatures, isNative, selectImageNative, showRewardedAdNative, shareNative, copyToClipboard } from './services/capacitorService';
 import { App as CapacitorApp } from '@capacitor/app';
 import { PluginListenerHandle } from '@capacitor/core';
 
 const DAILY_CREDITS = 5;
 const REWARD_CREDITS = 5;
-const AD_DURATION = 15; // Reduced wait time since it's no longer an ad
-
-// --- OFFICIAL GOOGLE TEST IDS ---
-// AdMob Rewarded Video Test Unit ID (Android/iOS)
+const AD_DURATION = 15;
 const TEST_AD_UNIT_ID = 'ca-app-pub-3940256099942544/5224354917';
-// Google Play Billing Test Product ID (Static Response: Purchased)
 const TEST_PRODUCT_ID = 'android.test.purchased';
 
-type ViewState = 'HOME' | 'PRIVACY' | 'TERMS' | 'SUPPORT';
+type TabView = 'HOME' | 'SAVED' | 'PROFILE';
+type FullScreenView = 'PRIVACY' | 'TERMS' | 'SUPPORT' | null;
 
 const SplashScreen: React.FC = () => {
   const [progress, setProgress] = useState(0);
   const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
-    // Simulate loading progress
     const duration = 2500;
     const interval = 20;
     const steps = duration / interval;
@@ -43,46 +40,31 @@ const SplashScreen: React.FC = () => {
 
       if (currentStep >= steps) {
         clearInterval(timer);
-        setTimeout(() => setIsExiting(true), 400); // Slight delay at 100%
+        setTimeout(() => setIsExiting(true), 400);
       }
     }, interval);
 
     return () => clearInterval(timer);
   }, []);
 
-  if (isExiting) return null; // Component unmounts, main app reveals
+  if (isExiting) return null;
 
   return (
     <div className={`fixed inset-0 z-[100] bg-[#020202] flex flex-col items-center justify-center overflow-hidden transition-opacity duration-700 ${progress === 100 ? 'pointer-events-none' : ''}`}>
-      {/* Ambient Background Glow - Premium Violet/Fuchsia Theme */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-violet-900/20 rounded-full blur-[120px] animate-pulse-glow" />
       <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-fuchsia-900/10 rounded-full blur-[80px] animate-float" />
-      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-indigo-900/20 rounded-full blur-[100px] animate-float" style={{ animationDelay: '1s' }} />
-
       <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-4xl px-4">
-        
-        {/* Logo Reveal */}
         <div className="relative mb-12">
            <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-violet-200 via-fuchsia-100 to-rose-200 animate-text-shimmer drop-shadow-2xl">
               Rizz Master
            </h1>
-           {/* Reflection Glow */}
            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent blur-xl opacity-50 animate-text-shimmer" style={{ backgroundSize: '200% 100%' }}></div>
         </div>
-
-        {/* Sleek Progress Line */}
         <div className="w-64 md:w-80 h-[2px] bg-white/5 rounded-full overflow-hidden relative">
           <div 
             className="absolute top-0 left-0 h-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-rose-500 shadow-[0_0_15px_rgba(219,39,119,0.5)] transition-all duration-75 ease-out"
             style={{ width: `${progress}%` }}
           />
-        </div>
-        
-        {/* Loading Text */}
-        <div className="mt-4 h-6 overflow-hidden">
-            <p className="text-[10px] md:text-xs font-bold tracking-[0.5em] text-white/30 uppercase animate-fade-in-up">
-              {progress < 30 ? 'INITIALIZING AI...' : progress < 70 ? 'LOADING CHARISMA...' : 'READY.'}
-            </p>
         </div>
       </div>
     </div>
@@ -90,16 +72,16 @@ const SplashScreen: React.FC = () => {
 };
 
 const App: React.FC = () => {
-  // Splash State controlled by the SplashScreen component's exit logic wrapper
   const [showSplash, setShowSplash] = useState(true);
-
-  // Auth State
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [profileError, setProfileError] = useState(false); // New state for error handling
+  const [profileError, setProfileError] = useState(false);
 
-  // App State
-  const [currentView, setCurrentView] = useState<ViewState>('HOME');
+  // Navigation State
+  const [activeTab, setActiveTab] = useState<TabView>('HOME');
+  const [fullScreenPage, setFullScreenPage] = useState<FullScreenView>(null);
+
+  // Content State
   const [mode, setMode] = useState<InputMode>(InputMode.CHAT);
   const [inputText, setInputText] = useState('');
   const [image, setImage] = useState<string | null>(null);
@@ -108,11 +90,10 @@ const App: React.FC = () => {
   const [inputError, setInputError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Modals & Flags
+  // UI State
   const [isAdPlaying, setIsAdPlaying] = useState(false);
   const [adTimer, setAdTimer] = useState(0);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [showSavedModal, setShowSavedModal] = useState(false);
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
   const [isSessionBlocked, setIsSessionBlocked] = useState(false);
 
@@ -122,54 +103,26 @@ const App: React.FC = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-     // Initialize Native Features (Status Bar, AdMob, etc) if on mobile
      initializeNativeFeatures();
-
-     // Wait for splash animation timing
-     const timer = setTimeout(() => setShowSplash(false), 3000); // 2.5s load + 0.5s transition
+     const timer = setTimeout(() => setShowSplash(false), 3000);
      return () => clearTimeout(timer);
   }, []);
 
-  // Safe play function to handle promises and prevent errors
   const safePlay = () => {
     if (audioRef.current) {
         audioRef.current.volume = 0.2;
-        const playPromise = audioRef.current.play();
-        if (playPromise !== undefined) {
-            playPromise
-            .then(() => setIsMusicPlaying(true))
-            .catch((e) => {
-                // Auto-play was prevented or interrupted, valid browser behavior
-                console.log("Audio playback prevented/interrupted:", e);
-                setIsMusicPlaying(false);
-            });
-        }
+        audioRef.current.play().then(() => setIsMusicPlaying(true)).catch(() => setIsMusicPlaying(false));
     }
   };
 
-  // Music Autoplay Logic (User Interaction Fallback)
   useEffect(() => {
-    // Try to play immediately if allowed
-    if (!isUserMuted && !isMusicPlaying) {
-        safePlay();
-    }
-
-    // Add listener for first interaction to unlock audio context if needed
+    if (!isUserMuted && !isMusicPlaying) safePlay();
     const handleInteraction = () => {
-      if (!isUserMuted && !isMusicPlaying) {
-        safePlay();
-      }
+      if (!isUserMuted && !isMusicPlaying) safePlay();
       window.removeEventListener('click', handleInteraction);
-      window.removeEventListener('keydown', handleInteraction);
     };
-
     window.addEventListener('click', handleInteraction);
-    window.addEventListener('keydown', handleInteraction);
-
-    return () => {
-      window.removeEventListener('click', handleInteraction);
-      window.removeEventListener('keydown', handleInteraction);
-    };
+    return () => window.removeEventListener('click', handleInteraction);
   }, [isUserMuted]); 
 
   const toggleMusic = () => {
@@ -185,21 +138,14 @@ const App: React.FC = () => {
     }
   };
 
-  // 1. Session & Auth Listener & Deep Links & Back Button
   useEffect(() => {
-    // If supabase is null (keys not set), skip listener
     if (!supabase) return;
-
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) loadUserData(session.user.id);
     });
 
-    // Listen for changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
         loadUserData(session.user.id);
@@ -209,147 +155,80 @@ const App: React.FC = () => {
       }
     });
 
-    // NATIVE LISTENERS
     let urlListener: PluginListenerHandle | undefined;
     let backListener: PluginListenerHandle | undefined;
 
     const setupListeners = async () => {
       if (isNative()) {
-        // 1. Deep Link for Google Auth
         urlListener = await CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
-          console.log("App opened with URL:", url);
           if (url.includes('auth/callback')) {
             try {
                const parsedUrl = new URL(url);
                const code = parsedUrl.searchParams.get('code');
-               const accessToken = parsedUrl.hash.includes('access_token');
-               
-               if (code) {
-                   await supabase?.auth.exchangeCodeForSession(code);
-               } else if (accessToken) {
-                   const params = new URLSearchParams(parsedUrl.hash.substring(1));
-                   const access = params.get('access_token');
-                   const refresh = params.get('refresh_token');
-                   if (access && refresh) {
-                      await supabase?.auth.setSession({ access_token: access, refresh_token: refresh });
-                   }
-               }
-            } catch (err) {
-               console.error("Error processing auth callback", err);
-            }
+               if (code) await supabase?.auth.exchangeCodeForSession(code);
+            } catch (err) { console.error(err); }
           }
         });
 
-        // 2. Hardware Back Button Handling
         backListener = await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
-          if (showPremiumModal) {
-              setShowPremiumModal(false);
-          } else if (showSavedModal) {
-              setShowSavedModal(false);
-          } else if (currentView !== 'HOME') {
-              setCurrentView('HOME');
-          } else {
-              // If on home screen and no modals, exit app
-              CapacitorApp.exitApp();
-          }
+          if (showPremiumModal) setShowPremiumModal(false);
+          else if (fullScreenPage) setFullScreenPage(null);
+          else if (activeTab !== 'HOME') setActiveTab('HOME');
+          else CapacitorApp.exitApp();
         });
       }
     };
 
     setupListeners();
-
     return () => {
         subscription.unsubscribe();
-        // Remove specific listeners instead of all to avoid side effects
         if (urlListener) urlListener.remove();
         if (backListener) backListener.remove();
     };
-  }, [showPremiumModal, showSavedModal, currentView]); 
+  }, [showPremiumModal, fullScreenPage, activeTab]); 
 
-  // 2. Broadcast Channel for Single Tab
   useEffect(() => {
-    // Safety check for BroadcastChannel to support older browsers/laptops
     if (typeof BroadcastChannel === 'undefined') return;
-
     const channel = new BroadcastChannel('rizz_session_sync');
     channel.postMessage({ type: 'NEW_SESSION_STARTED' });
     channel.onmessage = (event) => {
-      if (event.data.type === 'NEW_SESSION_STARTED') {
-        setIsSessionBlocked(true);
-      }
+      if (event.data.type === 'NEW_SESSION_STARTED') setIsSessionBlocked(true);
     };
     return () => channel.close();
   }, []);
 
-  // 3. Load User Data
   const loadUserData = async (userId: string) => {
     if (!supabase) return;
     setProfileError(false);
 
     try {
-        // Fetch Profile from Supabase
-        let { data: profileData, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+        let { data: profileData, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
 
-        if (error) {
-        if (error.code === 'PGRST116') {
-            // Profile doesn't exist, create it.
-            const { data: newProfile, error: createError } = await supabase
-            .from('profiles')
-            .insert([{ 
+        if (error && error.code === 'PGRST116') {
+            const { data: newProfile } = await supabase.from('profiles').insert([{ 
                 id: userId, 
                 email: session?.user.email,
                 credits: DAILY_CREDITS,
                 is_premium: false,
                 last_daily_reset: new Date().toISOString().split('T')[0]
-            }])
-            .select()
-            .single();
-            
-            if (!createError) {
-            profileData = newProfile;
-            } else {
-            console.error("Error creating profile:", createError);
-            setProfileError(true);
-            }
-        } else {
-            console.error("Error loading profile:", error);
-            setProfileError(true);
-        }
-        } else if (profileData) {
-        // Check for daily reset
-        const today = new Date().toISOString().split('T')[0];
-        if (profileData.last_daily_reset !== today) {
-            const { data: updated } = await supabase
-            .from('profiles')
-            .update({ credits: DAILY_CREDITS, last_daily_reset: today })
-            .eq('id', userId)
-            .select()
-            .single();
-            if (updated) profileData = updated;
-        }
+            }]).select().single();
+            if (newProfile) profileData = newProfile;
         }
         
-        // If we have profile data, set it
         if (profileData) {
+            const today = new Date().toISOString().split('T')[0];
+            if (profileData.last_daily_reset !== today) {
+                const { data: updated } = await supabase.from('profiles').update({ credits: DAILY_CREDITS, last_daily_reset: today }).eq('id', userId).select().single();
+                if (updated) profileData = updated;
+            }
             setProfile(profileData as UserProfile);
 
-            // Fetch Saved Items
-            const { data: savedData, error: savedError } = await supabase
-            .from('saved_items')
-            .select('*')
-            .eq('user_id', userId)
-            .order('created_at', { ascending: false });
-            
-            if (!savedError && savedData) setSavedItems(savedData as SavedItem[]);
+            const { data: savedData } = await supabase.from('saved_items').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+            if (savedData) setSavedItems(savedData as SavedItem[]);
         } else {
             setProfileError(true);
         }
     } catch (e) {
-        console.error("Critical Profile Error", e);
         setProfileError(true);
     }
   };
@@ -361,141 +240,62 @@ const App: React.FC = () => {
     setResult(null);
     setInputText('');
     setImage(null);
-    setInputError(null);
-    setCurrentView('HOME'); // Reset view
+    setActiveTab('HOME');
   };
 
-  // 4. Action Handlers
   const updateCredits = async (newAmount: number) => {
     if (!profile) return;
-    
-    // Optimistic UI update
-    const updatedProfile = { ...profile, credits: newAmount };
-    setProfile(updatedProfile);
-
-    if (supabase) {
-        await supabase
-        .from('profiles')
-        .update({ credits: newAmount })
-        .eq('id', profile.id);
-    }
+    setProfile({ ...profile, credits: newAmount });
+    if (supabase) await supabase.from('profiles').update({ credits: newAmount }).eq('id', profile.id);
   };
 
   const handleUpgrade = async (plan: 'WEEKLY' | 'MONTHLY') => {
     if (!profile) return;
-    
-    // Simulate connection to Google Play Billing using Test Product ID
-    console.log(`[Billing] Initiating purchase flow for ${plan} plan (SKU: ${TEST_PRODUCT_ID})`);
-    
-    const updatedProfile = { ...profile, is_premium: true };
-    setProfile(updatedProfile);
+    setProfile({ ...profile, is_premium: true });
     setShowPremiumModal(false);
-    
-    // In a real app, this would trigger a payment processor like Stripe or Google Play Billing
-    alert(`[TEST MODE] Payment Successful!\nSKU: ${TEST_PRODUCT_ID}\nPlan: ${plan}\n\nWelcome to the Elite Club! 👑`);
-
-    if (supabase) {
-        await supabase
-        .from('profiles')
-        .update({ is_premium: true })
-        .eq('id', profile.id);
-    }
+    alert(`[TEST MODE] Payment Successful!\nWelcome to the Elite Club! 👑`);
+    if (supabase) await supabase.from('profiles').update({ is_premium: true }).eq('id', profile.id);
   };
 
   const handleRestorePurchases = async () => {
     if (!profile) return;
-    
-    // Simulate restoring purchases using Google Test ID
-    console.log(`[Billing] Restoring purchases... Checking for SKU: ${TEST_PRODUCT_ID}`);
-    
-    // Simulate a network delay
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const updatedProfile = { ...profile, is_premium: true };
-    setProfile(updatedProfile);
+    setProfile({ ...profile, is_premium: true });
     setShowPremiumModal(false);
-    
-    alert(`[TEST MODE] Purchases Restored!\nFound valid subscription: ${TEST_PRODUCT_ID}`);
-    
-    if (supabase) {
-        await supabase
-        .from('profiles')
-        .update({ is_premium: true })
-        .eq('id', profile.id);
-    }
+    alert(`[TEST MODE] Purchases Restored!`);
+    if (supabase) await supabase.from('profiles').update({ is_premium: true }).eq('id', profile.id);
   };
 
   const toggleSave = async (content: string, type: 'tease' | 'smooth' | 'chaotic' | 'bio') => {
     if (!profile) return;
-
     const exists = savedItems.find(item => item.content === content);
-    
     if (exists) {
-      // Delete
-      if (supabase) {
-          await supabase.from('saved_items').delete().eq('id', exists.id);
-      }
-      const newItems = savedItems.filter(item => item.id !== exists.id);
-      setSavedItems(newItems);
-
+      if (supabase) await supabase.from('saved_items').delete().eq('id', exists.id);
+      setSavedItems(savedItems.filter(item => item.id !== exists.id));
     } else {
-      // Insert
-      const newItem: SavedItem = {
-          id: crypto.randomUUID(),
-          user_id: profile.id,
-          content,
-          type,
-          created_at: new Date().toISOString()
-      };
-
+      const newItem: SavedItem = { id: crypto.randomUUID(), user_id: profile.id, content, type, created_at: new Date().toISOString() };
       if (supabase) {
-        const { data } = await supabase
-            .from('saved_items')
-            .insert([{ user_id: profile.id, content, type }])
-            .select()
-            .single();
+        const { data } = await supabase.from('saved_items').insert([{ user_id: profile.id, content, type }]).select().single();
         if (data) newItem.id = data.id;
       }
-      
-      const newItems = [newItem, ...savedItems];
-      setSavedItems(newItems);
+      setSavedItems([newItem, ...savedItems]);
     }
   };
 
   const handleDeleteSaved = async (id: string) => {
-    if (supabase) {
-        await supabase.from('saved_items').delete().eq('id', id);
-    }
-    const newItems = savedItems.filter(item => item.id !== id);
-    setSavedItems(newItems);
+    if (supabase) await supabase.from('saved_items').delete().eq('id', id);
+    setSavedItems(savedItems.filter(item => item.id !== id));
   };
 
-  // --- Logic Helpers ---
-
-  const handleReclaimSession = () => {
-    setIsSessionBlocked(false);
-    if (typeof BroadcastChannel !== 'undefined') {
-      const channel = new BroadcastChannel('rizz_session_sync');
-      channel.postMessage({ type: 'NEW_SESSION_STARTED' });
-      channel.close();
-    }
-  };
-
-  // Use Native Share Wrapper
   const handleShare = async (content: string) => {
     await shareNative(content);
   };
 
-  // Handle Image Selection (Native vs Web)
   const handleImageSelect = async () => {
     if (isNative()) {
       const nativeImage = await selectImageNative();
-      if (nativeImage) {
-        setImage(nativeImage);
-        if (inputError) setInputError(null);
-      }
+      if (nativeImage) setImage(nativeImage);
     } else {
-      // Web Fallback: Trigger File Input
       fileInputRef.current?.click();
     }
   };
@@ -504,60 +304,35 @@ const App: React.FC = () => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImage(reader.result as string);
-        // Reset the input value to allow re-uploading the same file if cleared
-        if (fileInputRef.current) fileInputRef.current.value = '';
-      };
+      reader.onloadend = () => setImage(reader.result as string);
       reader.readAsDataURL(file);
-      if (inputError) setInputError(null);
     }
   };
 
   const handleGenerate = async () => {
     if (!profile) return;
-    
-    // Input Validation
     if (mode === InputMode.CHAT && !inputText.trim() && !image) {
-      setInputError("Give me some context! Paste the chat or upload a screenshot.");
+      setInputError("Give me some context!");
       return;
     }
     if (mode === InputMode.BIO && !inputText.trim()) {
-      setInputError("I can't write a bio for a ghost! Tell me about your hobbies, job, or vibes.");
+      setInputError("Tell me about yourself!");
       return;
     }
     setInputError(null);
-
-    // Calculate token cost: 2 tokens for image, 1 token for text only
     const cost = (mode === InputMode.CHAT && image) ? 2 : 1;
-
-    // Check Balance
     if (!profile.is_premium && profile.credits < cost) {
-      if (profile.credits > 0) {
-        alert(`Image analysis requires ${cost} credits. You have ${profile.credits}.`);
-      }
       setShowPremiumModal(true);
       return;
     }
-
     setLoading(true);
     try {
-      // Deduct Credit only if not premium
-      if (!profile.is_premium) {
-        updateCredits(profile.credits - cost);
-      }
-
-      if (mode === InputMode.CHAT) {
-        const res = await generateRizz(inputText, image || undefined);
-        setResult(res);
-      } else {
-        const res = await generateBio(inputText);
-        setResult(res);
-      }
+      if (!profile.is_premium) updateCredits(profile.credits - cost);
+      const res = mode === InputMode.CHAT ? await generateRizz(inputText, image || undefined) : await generateBio(inputText);
+      setResult(res);
     } catch (error) {
       console.error(error);
-      alert('The wingman tripped! Check API Keys or try again.');
-      // Refund if failed: Restore the original credit amount 
+      alert('The wingman tripped!');
       if (!profile.is_premium) updateCredits(profile.credits);
     } finally {
       setLoading(false);
@@ -565,395 +340,175 @@ const App: React.FC = () => {
   };
 
   const handleWatchAd = async () => {
-    console.log(`[AdMob] Requesting Rewarded Video: ${TEST_AD_UNIT_ID}`);
-
-    // Pause music if playing
     if (isMusicPlaying && audioRef.current) {
       audioRef.current.pause();
       setIsMusicPlaying(false);
     }
     setShowPremiumModal(false);
 
-    // Native Ad Check
     if (isNative()) {
-      setLoading(true); // Show loading while ad preps
+      setLoading(true);
       const reward = await showRewardedAdNative();
       setLoading(false);
-
       if (reward) {
          updateCredits((profile?.credits || 0) + REWARD_CREDITS);
-         alert(`[Native Ad] Success! +${REWARD_CREDITS} Credits Added!`);
-      } else {
-         alert("Ad failed to load or was cancelled.");
+         alert(`+${REWARD_CREDITS} Credits Added!`);
       }
-      
-      // Resume music
       if (!isUserMuted && audioRef.current) safePlay();
       return;
     }
 
-    // Web Fallback (Simulated)
     setIsAdPlaying(true);
     setAdTimer(AD_DURATION); 
-
     const interval = setInterval(() => {
       setAdTimer((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          return 0;
-        }
+        if (prev <= 1) { clearInterval(interval); return 0; }
         return prev - 1;
       });
     }, 1000);
-
     setTimeout(() => {
       setIsAdPlaying(false);
       updateCredits((profile?.credits || 0) + REWARD_CREDITS);
-      alert(`[TEST MODE] Ad Completed (Unit: ${TEST_AD_UNIT_ID})\n+${REWARD_CREDITS} Credits Added!`);
-      
-      if (!isUserMuted && audioRef.current) {
-        safePlay();
-      }
+      alert(`+${REWARD_CREDITS} Credits Added!`);
+      if (!isUserMuted && audioRef.current) safePlay();
     }, AD_DURATION * 1000);
   };
 
   const isSaved = (content: string) => savedItems.some(item => item.content === content);
   const clear = () => { setInputText(''); setImage(null); setResult(null); setInputError(null); };
 
-  // --- Rendering ---
+  if (showSplash) return <SplashScreen />;
+  if (isSessionBlocked) return <div className="text-white text-center p-10">Session Paused</div>;
+  if (!session) return <LoginPage />;
+  if (!profile) return <div className="text-white text-center p-10">Loading...</div>;
 
-  // Check Splash
-  if (showSplash) {
-    return <SplashScreen />;
-  }
-
-  if (isSessionBlocked) {
-    return (
-      <div className="min-h-[100dvh] flex flex-col items-center justify-center p-4 relative overflow-hidden bg-black pt-[env(safe-area-inset-top)]">
-         <div className="glass max-w-md w-full p-8 rounded-3xl border border-white/10 text-center relative z-10 shadow-2xl">
-           <div className="text-5xl mb-6">✋</div>
-           <h1 className="text-2xl font-bold mb-4 text-white">Session Paused</h1>
-           <p className="text-white/60 mb-8 leading-relaxed">
-             Rizz Master is open in another tab.
-           </p>
-           <button onClick={handleReclaimSession} className="w-full rizz-gradient py-3.5 rounded-xl font-bold text-white hover:opacity-90 transition-opacity">
-             Use Here Instead
-           </button>
-         </div>
-         <Footer className="fixed bottom-0 w-full z-10" onNavigate={() => {}} />
-      </div>
-    );
-  }
-
-  // Not Logged In
-  if (!session) {
-    return <LoginPage />;
-  }
-
-  // Loading Profile
-  if (!profile) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-white p-4 bg-black">
-        {profileError ? (
-           <div className="text-center animate-fade-in">
-              <span className="text-4xl mb-4 block">🔌</span>
-              <p className="text-red-400 mb-4">Connection to HQ failed.</p>
-              <button onClick={() => loadUserData(session.user.id)} className="px-6 py-2 bg-white/10 rounded-full hover:bg-white/20 transition-all text-sm mb-4">Retry</button>
-              <br/>
-              <button onClick={handleLogout} className="text-xs text-white/30 hover:text-white underline">Logout</button>
-           </div>
-        ) : (
-           <>
-            <svg className="animate-spin h-8 w-8 text-rose-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <p className="text-white/50 animate-pulse">Loading Profile...</p>
-            <button onClick={handleLogout} className="mt-8 text-xs text-white/30 hover:text-white underline">Cancel & Logout</button>
-           </>
-        )}
-      </div>
-    );
-  }
-
-  // Handle Internal Page Views
-  if (currentView !== 'HOME') {
-    return (
-      <InfoPages 
-        page={currentView} 
-        onBack={() => setCurrentView('HOME')} 
-      />
-    );
+  if (fullScreenPage) {
+    return <InfoPages page={fullScreenPage} onBack={() => setFullScreenPage(null)} />;
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 md:py-12 pb-24 relative min-h-[100dvh] flex flex-col animate-fade-in pt-[env(safe-area-inset-top)]">
-      
-      {/* Background Music Player - Source: Pixabay (Royalty Free) */}
+    <div className="mx-auto w-full h-[100dvh] bg-black text-white relative flex flex-col">
       <audio ref={audioRef} loop>
         <source src="https://cdn.pixabay.com/audio/2022/03/24/audio_078f45a709.mp3" type="audio/mp3" />
       </audio>
 
-      {showPremiumModal && (
-        <PremiumModal 
-          onClose={() => setShowPremiumModal(false)}
-          onUpgrade={handleUpgrade}
-          onRestore={handleRestorePurchases}
-        />
-      )}
-
-      <SavedModal 
-        isOpen={showSavedModal} 
-        onClose={() => setShowSavedModal(false)}
-        savedItems={savedItems}
-        onDelete={handleDeleteSaved}
-        onShare={handleShare}
-      />
+      {showPremiumModal && <PremiumModal onClose={() => setShowPremiumModal(false)} onUpgrade={handleUpgrade} onRestore={handleRestorePurchases} />}
 
       {isAdPlaying && (
-        <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-8">
-          <div className="w-full max-w-md bg-zinc-900 rounded-3xl p-8 text-center border border-white/10 relative overflow-hidden flex flex-col h-[60vh] justify-center">
-             <div className="absolute top-0 left-0 w-full h-1 bg-white/20">
-               <div 
-                 className="h-full bg-rose-500 transition-all ease-linear w-full" 
-                 style={{ width: '0%', transitionDuration: `${AD_DURATION}s` }}
-               ></div>
-             </div>
+        <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center">
              <div className="text-4xl font-black text-rose-500 mb-4">{adTimer}s</div>
-             <p className="text-white/60 mb-6">Calibrating Rizz Algorithms...</p>
-             
-             {/* Animation Placeholder for Ad */}
-             <div className="bg-white/5 rounded-xl border border-white/10 min-h-[150px] flex items-center justify-center mb-8 relative overflow-hidden">
-                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" style={{ transform: 'skewX(-20deg) translateX(-150%)' }}></div>
-                 <span className="text-4xl animate-pulse">💘</span>
-             </div>
-
-             <p className="text-xs text-white/30 uppercase">Do not close window</p>
-          </div>
+             <p className="text-white/60">Watching Ad...</p>
         </div>
       )}
 
-      <nav className="flex justify-between items-center mb-8 md:mb-12">
-        <button 
-             onClick={handleLogout} 
-             className="px-3 py-1.5 text-xs md:text-sm text-white/40 hover:text-white hover:bg-white/5 rounded-lg transition-all uppercase tracking-widest font-medium border border-transparent hover:border-white/10 flex items-center gap-1"
-        >
-             <span className="text-lg">←</span> <span className="hidden md:inline">Logout</span>
-        </button>
-
-        <div className="flex items-center gap-2 md:gap-3">
-           
-           <button 
-              onClick={toggleMusic}
-              className={`p-2 w-10 h-10 rounded-full flex items-center justify-center transition-all border ${isMusicPlaying ? 'bg-rose-500/20 border-rose-500/50 text-rose-400' : 'bg-white/5 border-white/10 text-white/40 hover:text-white'}`}
-              title={isMusicPlaying ? "Pause Music" : "Play Music"}
-           >
-              {isMusicPlaying ? (
-                 <span className="animate-pulse">🎵</span>
-              ) : (
-                 <span className="grayscale opacity-50">🔇</span>
-              )}
-           </button>
-
-           <button 
-              onClick={() => setShowSavedModal(true)}
-              className="p-2 md:px-4 md:py-2 bg-white/5 hover:bg-white/10 rounded-full flex items-center gap-1.5 transition-all border border-white/5"
-           >
-              <span className="text-rose-500 text-base md:text-lg">♥</span>
-              <span className="hidden md:inline text-xs font-bold text-white">Saved</span>
-           </button>
-
-           {!profile.is_premium && (
-             <button 
-                onClick={() => setShowPremiumModal(true)}
-                className="hidden md:flex px-4 py-2 bg-gradient-to-r from-yellow-600 to-yellow-400 text-black text-xs font-bold rounded-full items-center gap-1 hover:brightness-110 transition-all"
-             >
-                <span>👑</span> Go Premium
-             </button>
-           )}
-
-           <div className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full border backdrop-blur-md ${profile.is_premium ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-white/5 border-white/10'}`}>
-              <span className={profile.is_premium ? "text-yellow-400 text-lg" : "text-yellow-400 text-lg"}>
-                {profile.is_premium ? '👑' : '⚡'}
-              </span>
-              <span className={`font-bold text-xs md:text-sm ${profile.is_premium ? 'text-yellow-400' : 'text-white'}`}>
-                {profile.is_premium ? 'Unlimited' : `${profile.credits} Credits`}
-              </span>
-           </div>
-        </div>
-      </nav>
-
-      {/* Hero Header */}
-      <header className="text-center mb-8 md:mb-12">
-        <div className="inline-block relative">
-           <h1 className="text-5xl md:text-7xl font-black mb-2 tracking-tighter bg-gradient-to-r from-violet-400 via-fuchsia-200 to-rose-400 bg-clip-text text-transparent pb-2 animate-text-shimmer">
-             Rizz Master
-           </h1>
-          {profile.is_premium && (
-            <div className="absolute -top-4 -right-6 md:-right-8 rotate-12 bg-yellow-500 text-black font-bold text-[10px] md:text-xs px-2 py-1 rounded shadow-lg">PRO</div>
-          )}
-        </div>
-        <p className="text-white/60 text-sm md:text-xl font-light max-w-md mx-auto leading-relaxed">
-          Never send a boring text again.
-        </p>
-      </header>
-
-      {/* Mode Switcher */}
-      <div className="flex p-1 bg-white/5 rounded-full mb-8 relative border border-white/10 max-w-md mx-auto w-full">
-        <button onClick={() => { setMode(InputMode.CHAT); clear(); }} className={`flex-1 py-3 rounded-full font-medium text-sm md:text-base transition-all duration-300 relative z-10 ${mode === InputMode.CHAT ? 'text-white shadow-lg' : 'text-white/50 hover:text-white/80'}`}>Chat Reply</button>
-        <button onClick={() => { setMode(InputMode.BIO); clear(); }} className={`flex-1 py-3 rounded-full font-medium text-sm md:text-base transition-all duration-300 relative z-10 ${mode === InputMode.BIO ? 'text-white shadow-lg' : 'text-white/50 hover:text-white/80'}`}>Profile Bio</button>
-        <div className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full rizz-gradient transition-all duration-300 ${mode === InputMode.CHAT ? 'left-1' : 'left-[calc(50%+4px)]'}`} />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 items-start">
-        {/* Input Section */}
-        <section className="glass rounded-3xl p-5 md:p-6 border border-white/10 lg:sticky lg:top-8 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
-          <div className="mb-4 md:mb-6">
-            <div className="flex justify-between items-center mb-2">
-                <label className="block text-xs font-bold text-white/50 uppercase tracking-widest">
-                {mode === InputMode.CHAT ? 'The Context' : 'About You'}
-                </label>
-                {inputText.length > 0 && (
-                    <button onClick={() => setInputText('')} className="text-xs text-white/30 hover:text-white">Clear</button>
-                )}
-            </div>
-            <textarea
-              value={inputText}
-              onChange={(e) => {
-                setInputText(e.target.value);
-                if (inputError) setInputError(null);
-              }}
-              placeholder={mode === InputMode.CHAT ? "Paste chat. Get Rizz." : "Hobbies, job, vibes..."}
-              className="w-full h-32 md:h-40 bg-black/40 border border-white/10 rounded-2xl p-4 text-sm md:text-base focus:ring-2 focus:ring-rose-500/50 focus:outline-none resize-none transition-all placeholder:text-white/20"
-              style={{ fontSize: '16px' }}
-            />
-          </div>
-
-          {mode === InputMode.CHAT && (
-            <div className="mb-4 md:mb-6">
-               <div 
-                onClick={handleImageSelect}
-                className={`group border-2 border-dashed border-white/10 rounded-2xl transition-all cursor-pointer hover:border-rose-500/50 hover:bg-white/5 ${image ? 'p-2' : 'p-6 md:p-8'}`}
-              >
-                {image ? (
-                  <div className="relative w-full">
-                    <img src={image} alt="Preview" className="w-full max-h-48 object-contain rounded-lg mx-auto" />
-                    <button onClick={(e) => { e.stopPropagation(); setImage(null); }} className="absolute top-2 right-2 bg-black/80 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm border border-white/20">✕</button>
-                  </div>
-                ) : (
-                  <div className="flex flex-row items-center justify-center gap-3 opacity-50">
-                    <span className="text-2xl">📸</span>
-                    <span className="text-sm font-medium">Add Screenshot</span>
-                  </div>
-                )}
-                {/* Fallback for web */}
-                <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
-              </div>
-            </div>
-          )}
-
-          {inputError && (
-            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-xl flex items-center justify-center gap-2 animate-pulse">
-              <span className="text-lg">⚠️</span>
-              <p className="text-sm text-red-200 font-medium">{inputError}</p>
-            </div>
-          )}
+      {/* Main Content Area */}
+      <main className="flex-1 overflow-y-auto px-4 pt-[env(safe-area-inset-top)] pb-0 relative">
           
-          {(profile.is_premium || profile.credits > 0) ? (
-            <button
-              onClick={handleGenerate}
-              disabled={loading}
-              className={`w-full py-3.5 md:py-4 rounded-2xl font-bold text-base md:text-lg shadow-xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
-                profile.is_premium 
-                ? "bg-gradient-to-r from-yellow-500 to-amber-600 text-black" 
-                : "rizz-gradient text-white"
-              }`}
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className={`animate-spin h-5 w-5 ${profile.is_premium ? 'text-black' : 'text-white'}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  {profile.is_premium ? "Generating Fast..." : "Cooking..."}
-                </span>
-              ) : (
-                profile.is_premium ? "Get Rizz (VIP)" : `Get Rizz (${(mode === InputMode.CHAT && image) ? 2 : 1} ⚡)`
-              )}
-            </button>
-          ) : (
-            <div className="grid grid-cols-2 gap-3">
-             <button onClick={handleWatchAd} className="bg-white/10 border border-white/10 py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base hover:bg-white/20 active:scale-[0.98] transition-all flex flex-col items-center justify-center">
-              <span className="text-xl mb-1">⏳</span> <span>Wait for Credits (+5)</span>
-            </button>
-            <button onClick={() => setShowPremiumModal(true)} className="bg-gradient-to-r from-yellow-500 to-amber-600 text-black py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base shadow-xl hover:brightness-110 active:scale-[0.98] transition-all flex flex-col items-center justify-center animate-pulse">
-              <span className="text-xl mb-1">👑</span> <span>Go Unlimited</span>
-            </button>
-            </div>
-          )}
+          {/* HOME TAB */}
+          <div className={activeTab === 'HOME' ? 'block pb-24' : 'hidden'}>
+              {/* Compact Header */}
+              <header className="flex justify-between items-center py-4 mb-2">
+                 <h1 className="text-2xl font-black tracking-tighter bg-gradient-to-r from-violet-400 to-rose-400 bg-clip-text text-transparent">Rizz Master</h1>
+                 {!profile.is_premium && (
+                     <button onClick={() => setShowPremiumModal(true)} className="px-3 py-1 bg-gradient-to-r from-yellow-600 to-amber-500 rounded-full text-[10px] font-bold text-black flex items-center gap-1">
+                        <span>👑</span> Upgrade
+                     </button>
+                 )}
+              </header>
 
-          {!profile.is_premium && (
-            <p className="text-center text-[10px] md:text-xs text-white/30 mt-3 md:mt-4">
-              {profile.credits} daily credits remaining. <span className="text-yellow-500/80 cursor-pointer hover:underline" onClick={() => setShowPremiumModal(true)}>Upgrade.</span>
-            </p>
-          )}
-        </section>
-
-        {/* Output Section */}
-        <section className="flex flex-col gap-4 md:gap-6 min-h-[300px]">
-           {!result && !loading && (
-            <div className="h-full flex flex-col items-center justify-center text-white/20 py-12 px-4 text-center border-2 border-dashed border-white/5 rounded-3xl bg-white/[0.02]">
-              <span className="text-5xl md:text-6xl mb-4 grayscale opacity-50">✨</span>
-              <p className="text-sm md:text-xl font-medium max-w-[200px] md:max-w-none mx-auto">Results will appear here.</p>
-            </div>
-          )}
-
-          {/* Wrapper with key to force animation replay on new results */}
-          <div key={JSON.stringify(result)}>
-            {result && 'tease' in result && (
-                <>
-                <div className="glass rounded-3xl p-5 md:p-6 border border-white/10 animate-fade-in-up">
-                  <div className="flex justify-between items-center mb-3">
-                    <h3 className="text-xs font-bold uppercase tracking-widest text-white/40">Analysis</h3>
-                    <span className="text-2xl md:text-3xl font-black text-white">{result.loveScore}%</span>
-                  </div>
-                  <div className="mb-4">
-                      <div className="text-xl md:text-2xl font-black text-rose-500 uppercase italic leading-none">{result.potentialStatus}</div>
-                  </div>
-                  <div className="relative h-3 md:h-4 bg-black/40 rounded-full overflow-hidden border border-white/5">
-                    <div className="absolute top-0 left-0 h-full rizz-gradient transition-all duration-1000 ease-out" style={{ width: `${result.loveScore}%` }}></div>
-                  </div>
-                  {result.analysis && <p className="mt-4 text-xs md:text-sm text-white/60 leading-relaxed border-t border-white/5 pt-3">{result.analysis}</p>}
-                </div>
-
-                <div className="grid gap-3 md:gap-4 mt-4">
-                  <RizzCard label="The Tease" content={result.tease} icon="😏" color="from-purple-500 to-indigo-500" isSaved={isSaved(result.tease)} onSave={() => toggleSave(result.tease, 'tease')} onShare={() => handleShare(result.tease)} delay={0.1} />
-                  <RizzCard label="The Smooth" content={result.smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved(result.smooth)} onSave={() => toggleSave(result.smooth, 'smooth')} onShare={() => handleShare(result.smooth)} delay={0.2} />
-                  <RizzCard label="The Chaotic" content={result.chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved(result.chaotic)} onSave={() => toggleSave(result.chaotic, 'chaotic')} onShare={() => handleShare(result.chaotic)} delay={0.3} />
-                </div>
-              </>
-            )}
-
-            {result && 'bio' in result && (
-              <div className="glass rounded-3xl p-6 md:p-8 border border-white/10 animate-fade-in-up">
-                <div className="flex items-center gap-2 mb-4 md:mb-6">
-                  <span className="text-2xl">📝</span>
-                  <h3 className="text-xs md:text-sm font-semibold uppercase tracking-widest text-white/60">Bio Result</h3>
-                  <div className="ml-auto flex gap-2">
-                      <button onClick={() => { copyToClipboard(result.bio); alert('Bio copied!'); }} className="p-2 rounded-full hover:bg-white/10 transition-all text-white/50 hover:text-white"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg></button>
-                      <button onClick={() => handleShare(result.bio)} className="p-2 rounded-full hover:bg-white/10 transition-all text-white/50 hover:text-white"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg></button>
-                      <button onClick={() => toggleSave(result.bio, 'bio')} className={`p-2 rounded-full hover:bg-white/10 transition-all ${isSaved(result.bio) ? 'text-rose-500' : 'text-white/50 hover:text-rose-400'}`}><svg className="w-5 h-5" fill={isSaved(result.bio) ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg></button>
-                  </div>
-                </div>
-                <p className="text-lg md:text-xl leading-relaxed font-medium mb-6 md:mb-8 text-white">{result.bio}</p>
-                <div className="p-4 bg-white/5 rounded-2xl border border-white/5 mb-4"><h4 className="text-[10px] uppercase font-bold text-rose-400 mb-1">Why it works</h4><p className="text-xs md:text-sm text-white/60">{result.analysis}</p></div>
-                <button onClick={() => { copyToClipboard(result.bio); alert('Bio copied!'); }} className="w-full py-3 border border-white/20 rounded-xl hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2"><span>📋</span> Copy Bio</button>
+              {/* Mode Switcher */}
+              <div className="flex p-1 bg-white/5 rounded-2xl mb-6 relative border border-white/10">
+                <button onClick={() => { setMode(InputMode.CHAT); clear(); }} className={`flex-1 py-2 rounded-xl font-bold text-xs transition-all z-10 ${mode === InputMode.CHAT ? 'text-white' : 'text-white/50'}`}>Chat</button>
+                <button onClick={() => { setMode(InputMode.BIO); clear(); }} className={`flex-1 py-2 rounded-xl font-bold text-xs transition-all z-10 ${mode === InputMode.BIO ? 'text-white' : 'text-white/50'}`}>Bio</button>
+                <div className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-xl rizz-gradient transition-all duration-300 ${mode === InputMode.CHAT ? 'left-1' : 'left-[calc(50%+4px)]'}`} />
               </div>
-            )}
+
+              {/* Input */}
+              <div className="space-y-4">
+                  <textarea
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    placeholder={mode === InputMode.CHAT ? "Paste the chat..." : "Describe yourself..."}
+                    className="w-full h-32 bg-white/5 border border-white/10 rounded-2xl p-4 text-sm focus:ring-1 focus:ring-rose-500/50 focus:outline-none resize-none transition-all placeholder:text-white/20"
+                    style={{ fontSize: '16px' }}
+                  />
+                  
+                  {mode === InputMode.CHAT && (
+                     <div onClick={handleImageSelect} className={`border border-dashed border-white/10 rounded-2xl transition-all cursor-pointer bg-white/[0.02] ${image ? 'p-2' : 'p-4'}`}>
+                        {image ? (
+                          <div className="relative"><img src={image} className="w-full max-h-32 object-contain rounded-lg" /><button onClick={(e) => { e.stopPropagation(); setImage(null); }} className="absolute top-1 right-1 bg-black/80 rounded-full w-6 h-6 flex items-center justify-center text-xs">✕</button></div>
+                        ) : (
+                          <div className="flex items-center justify-center gap-2 opacity-50"><span className="text-xl">📸</span><span className="text-xs font-bold">Add Screenshot</span></div>
+                        )}
+                        <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
+                     </div>
+                  )}
+
+                  {inputError && <p className="text-red-400 text-xs text-center font-bold animate-pulse">{inputError}</p>}
+
+                  <button
+                    onClick={handleGenerate}
+                    disabled={loading}
+                    className={`w-full py-4 rounded-2xl font-black text-sm shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 ${profile.is_premium ? "bg-gradient-to-r from-yellow-500 to-amber-600 text-black" : "rizz-gradient text-white"}`}
+                  >
+                    {loading ? "COOKING..." : (profile.is_premium ? "GENERATE (VIP)" : `GENERATE (${(mode === InputMode.CHAT && image) ? 2 : 1} ⚡)`)}
+                  </button>
+              </div>
+
+              {/* Results */}
+              <div className="mt-8 space-y-4">
+                  {result && 'tease' in result && (
+                      <div className="animate-fade-in-up">
+                          <div className="flex items-center justify-between mb-4 px-1">
+                              <span className="text-xs font-bold text-white/40 uppercase">Rizz Report</span>
+                              <span className="text-xl font-black text-rose-500">{result.loveScore}%</span>
+                          </div>
+                          <div className="grid gap-3">
+                              <RizzCard label="Tease" content={result.tease} icon="😏" color="from-purple-500 to-indigo-500" isSaved={isSaved(result.tease)} onSave={() => toggleSave(result.tease, 'tease')} onShare={() => handleShare(result.tease)} delay={0} />
+                              <RizzCard label="Smooth" content={result.smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved(result.smooth)} onSave={() => toggleSave(result.smooth, 'smooth')} onShare={() => handleShare(result.smooth)} delay={0.1} />
+                              <RizzCard label="Chaotic" content={result.chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved(result.chaotic)} onSave={() => toggleSave(result.chaotic, 'chaotic')} onShare={() => handleShare(result.chaotic)} delay={0.2} />
+                          </div>
+                      </div>
+                  )}
+                  {result && 'bio' in result && (
+                      <div className="glass p-6 rounded-3xl border border-white/10 animate-fade-in-up">
+                          <p className="text-lg font-medium leading-relaxed mb-4">"{result.bio}"</p>
+                          <div className="flex gap-2">
+                             <button onClick={() => { copyToClipboard(result.bio); alert('Copied'); }} className="flex-1 py-3 bg-white/10 rounded-xl font-bold text-xs">Copy</button>
+                             <button onClick={() => toggleSave(result.bio, 'bio')} className={`px-4 rounded-xl font-bold text-xl bg-white/10 ${isSaved(result.bio) ? 'text-rose-500' : 'text-white/50'}`}>♥</button>
+                          </div>
+                      </div>
+                  )}
+              </div>
           </div>
-        </section>
-      </div>
-      <Footer className="mt-12 md:mt-20" onNavigate={setCurrentView} />
+
+          {/* SAVED TAB */}
+          {activeTab === 'SAVED' && (
+             <SavedView 
+                isOpen={true} 
+                onClose={() => setActiveTab('HOME')} 
+                savedItems={savedItems} 
+                onDelete={handleDeleteSaved} 
+                onShare={handleShare} 
+             />
+          )}
+
+          {/* PROFILE TAB */}
+          {activeTab === 'PROFILE' && (
+             <ProfileView 
+                profile={profile} 
+                onLogout={handleLogout} 
+                onUpgrade={() => setShowPremiumModal(true)} 
+                onWatchAd={handleWatchAd} 
+                onNavigate={setFullScreenPage} 
+                isMusicPlaying={isMusicPlaying}
+                onToggleMusic={toggleMusic}
+             />
+          )}
+
+      </main>
+
+      <BottomNav currentView={activeTab} onChange={setActiveTab} />
     </div>
   );
 };
