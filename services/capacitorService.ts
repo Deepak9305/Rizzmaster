@@ -114,18 +114,37 @@ export const showRewardedAdNative = async (): Promise<boolean> => {
 
       await AdMob.prepareRewardVideoAd(options);
       
+      let rewardListener: any = null;
+      let dismissListener: any = null;
+      let failListener: any = null;
+      
+      const cleanupListeners = () => {
+         if (rewardListener) rewardListener.remove();
+         if (dismissListener) dismissListener.remove();
+         if (failListener) failListener.remove();
+      };
+
       // Listeners
-      const onReward = AdMob.addListener(RewardAdPluginEvents.Rewarded, (reward: AdMobRewardItem) => {
+      rewardListener = await AdMob.addListener(RewardAdPluginEvents.Rewarded, (reward: AdMobRewardItem) => {
+        cleanupListeners();
         resolve(true);
       });
       
-      const onDismiss = AdMob.addListener(RewardAdPluginEvents.Dismissed, () => {
-        // If dismissed without reward, we might resolve false, or handle logic
-        // For now, we rely on the Rewarded event to set success
+      dismissListener = await AdMob.addListener(RewardAdPluginEvents.Dismissed, () => {
+        // If dismissed without reward, user gets nothing
+        // We resolve false unless Rewarded fired first (race condition unlikely but possible)
+        // Usually Dismissed fires after Rewarded if watched fully.
+        // However, if user closes early, only Dismissed fires.
+        // We wait a tick to ensure Rewarded didn't fire.
+        setTimeout(() => {
+            cleanupListeners();
+            resolve(false); // If resolve(true) happened already, this is ignored
+        }, 100);
       });
 
-      const onFailed = AdMob.addListener(RewardAdPluginEvents.FailedToLoad, (err) => {
+      failListener = await AdMob.addListener(RewardAdPluginEvents.FailedToLoad, (err) => {
         console.error("Ad Failed to Load:", err);
+        cleanupListeners();
         resolve(false);
       });
 

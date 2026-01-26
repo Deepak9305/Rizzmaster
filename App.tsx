@@ -5,7 +5,6 @@ import { supabase } from './services/supabaseClient';
 import RizzCard from './components/RizzCard';
 import LoginPage from './components/LoginPage';
 import PremiumModal from './components/PremiumModal';
-// Using SavedModal as the View Component
 import SavedView from './components/SavedModal'; 
 import ProfileView from './components/ProfileView';
 import InfoPages from './components/InfoPages';
@@ -23,7 +22,8 @@ const TEST_PRODUCT_ID = 'android.test.purchased';
 type TabView = 'HOME' | 'SAVED' | 'PROFILE';
 type FullScreenView = 'PRIVACY' | 'TERMS' | 'SUPPORT' | null;
 
-const SplashScreen: React.FC = () => {
+// Improved Splash Screen with absolute positioning and matching background
+const SplashScreen: React.FC<{ onExit: () => void }> = ({ onExit }) => {
   const [progress, setProgress] = useState(0);
   const [isExiting, setIsExiting] = useState(false);
 
@@ -40,32 +40,36 @@ const SplashScreen: React.FC = () => {
 
       if (currentStep >= steps) {
         clearInterval(timer);
-        setTimeout(() => setIsExiting(true), 400);
+        setTimeout(() => {
+           setIsExiting(true);
+           setTimeout(onExit, 600); // Wait for exit animation
+        }, 400);
       }
     }, interval);
 
     return () => clearInterval(timer);
-  }, []);
-
-  if (isExiting) return null;
+  }, [onExit]);
 
   return (
-    <div className={`fixed inset-0 z-[100] bg-[#020202] flex flex-col items-center justify-center overflow-hidden transition-opacity duration-700 ${progress === 100 ? 'pointer-events-none' : ''}`}>
+    <div className={`fixed inset-0 z-[100] bg-[#020202] flex flex-col items-center justify-center overflow-hidden transition-all duration-700 ${isExiting ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100'}`}>
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-violet-900/20 rounded-full blur-[120px] animate-pulse-glow" />
       <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-fuchsia-900/10 rounded-full blur-[80px] animate-float" />
-      <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-4xl px-4">
-        <div className="relative mb-12">
-           <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-violet-200 via-fuchsia-100 to-rose-200 animate-text-shimmer drop-shadow-2xl">
+      <div className="relative z-10 flex flex-col items-center justify-center w-full px-6">
+        <div className="relative mb-8 text-center">
+           <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-violet-200 via-fuchsia-100 to-rose-200 animate-text-shimmer drop-shadow-2xl">
               Rizz Master
            </h1>
            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent blur-xl opacity-50 animate-text-shimmer" style={{ backgroundSize: '200% 100%' }}></div>
         </div>
-        <div className="w-64 md:w-80 h-[2px] bg-white/5 rounded-full overflow-hidden relative">
+        
+        {/* Loading Bar */}
+        <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden relative">
           <div 
-            className="absolute top-0 left-0 h-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-rose-500 shadow-[0_0_15px_rgba(219,39,119,0.5)] transition-all duration-75 ease-out"
+            className="absolute top-0 left-0 h-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-rose-500 shadow-[0_0_10px_rgba(236,72,153,0.5)] transition-all duration-75 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
+        <p className="mt-4 text-[10px] text-white/30 uppercase tracking-[0.2em] font-medium">Initializing AI Core</p>
       </div>
     </div>
   );
@@ -104,14 +108,16 @@ const App: React.FC = () => {
 
   useEffect(() => {
      initializeNativeFeatures();
-     const timer = setTimeout(() => setShowSplash(false), 3000);
-     return () => clearTimeout(timer);
+     // REMOVED redundant setTimeout. Splash component now controls exit.
   }, []);
 
   const safePlay = () => {
     if (audioRef.current) {
         audioRef.current.volume = 0.2;
-        audioRef.current.play().then(() => setIsMusicPlaying(true)).catch(() => setIsMusicPlaying(false));
+        audioRef.current.play().then(() => setIsMusicPlaying(true)).catch((e) => {
+            console.log("Autoplay blocked, waiting for interaction", e);
+            setIsMusicPlaying(false);
+        });
     }
   };
 
@@ -119,11 +125,11 @@ const App: React.FC = () => {
     if (!isUserMuted && !isMusicPlaying) safePlay();
     const handleInteraction = () => {
       if (!isUserMuted && !isMusicPlaying) safePlay();
-      window.removeEventListener('click', handleInteraction);
+      // Keep listener attached in case audio is paused and needs to resume
     };
     window.addEventListener('click', handleInteraction);
     return () => window.removeEventListener('click', handleInteraction);
-  }, [isUserMuted]); 
+  }, [isUserMuted, isMusicPlaying]); 
 
   const toggleMusic = () => {
     if (audioRef.current) {
@@ -269,22 +275,58 @@ const App: React.FC = () => {
   const toggleSave = async (content: string, type: 'tease' | 'smooth' | 'chaotic' | 'bio') => {
     if (!profile) return;
     const exists = savedItems.find(item => item.content === content);
+    
     if (exists) {
-      if (supabase) await supabase.from('saved_items').delete().eq('id', exists.id);
+      // Deleting
+      const previousItems = [...savedItems];
+      // Optimistic update
       setSavedItems(savedItems.filter(item => item.id !== exists.id));
-    } else {
-      const newItem: SavedItem = { id: crypto.randomUUID(), user_id: profile.id, content, type, created_at: new Date().toISOString() };
+      
       if (supabase) {
-        const { data } = await supabase.from('saved_items').insert([{ user_id: profile.id, content, type }]).select().single();
-        if (data) newItem.id = data.id;
+        const { error } = await supabase.from('saved_items').delete().eq('id', exists.id);
+        if (error) {
+           console.error("Delete failed", error);
+           setSavedItems(previousItems); // Rollback on error
+        }
       }
-      setSavedItems([newItem, ...savedItems]);
+    } else {
+      // Saving
+      if (supabase) {
+        // Wait for DB response to get the REAL ID
+        const { data, error } = await supabase.from('saved_items').insert([{ user_id: profile.id, content, type }]).select().single();
+        
+        if (data) {
+           const newItem: SavedItem = { 
+               id: data.id, // Use DB ID
+               user_id: profile.id, 
+               content, 
+               type, 
+               created_at: data.created_at 
+            };
+           setSavedItems([newItem, ...savedItems]);
+        } else if (error) {
+            console.error("Save failed", error);
+            alert("Failed to save item.");
+        }
+      } else {
+        // Guest mode fallback (using local UUID)
+        const newItem: SavedItem = { id: crypto.randomUUID(), user_id: profile.id, content, type, created_at: new Date().toISOString() };
+        setSavedItems([newItem, ...savedItems]);
+      }
     }
   };
 
   const handleDeleteSaved = async (id: string) => {
-    if (supabase) await supabase.from('saved_items').delete().eq('id', id);
+    const previousItems = [...savedItems];
     setSavedItems(savedItems.filter(item => item.id !== id));
+    
+    if (supabase) {
+        const { error } = await supabase.from('saved_items').delete().eq('id', id);
+        if (error) {
+            console.error("Delete failed", error);
+            setSavedItems(previousItems); // Rollback
+        }
+    }
   };
 
   const handleShare = async (content: string) => {
@@ -377,23 +419,19 @@ const App: React.FC = () => {
   const isSaved = (content: string) => savedItems.some(item => item.content === content);
   const clear = () => { setInputText(''); setImage(null); setResult(null); setInputError(null); };
 
-  if (showSplash) return <SplashScreen />;
   if (isSessionBlocked) return <div className="text-white text-center p-10">Session Paused</div>;
-  if (!session) return <LoginPage />;
-  if (!profile) return <div className="text-white text-center p-10">Loading...</div>;
-
-  if (fullScreenPage) {
-    return <InfoPages page={fullScreenPage} onBack={() => setFullScreenPage(null)} />;
-  }
 
   return (
-    <div className="mx-auto w-full h-[100dvh] bg-black text-white relative flex flex-col">
+    <div className="mx-auto w-full h-[100dvh] bg-[#020202] text-white relative flex flex-col overflow-hidden">
       <audio ref={audioRef} loop>
         <source src="https://cdn.pixabay.com/audio/2022/03/24/audio_078f45a709.mp3" type="audio/mp3" />
       </audio>
 
-      {showPremiumModal && <PremiumModal onClose={() => setShowPremiumModal(false)} onUpgrade={handleUpgrade} onRestore={handleRestorePurchases} />}
+      {/* 1. Splash Screen Overlay */}
+      {showSplash && <SplashScreen onExit={() => setShowSplash(false)} />}
 
+      {/* 2. Global Modals (Ads, Premium) */}
+      {showPremiumModal && <PremiumModal onClose={() => setShowPremiumModal(false)} onUpgrade={handleUpgrade} onRestore={handleRestorePurchases} />}
       {isAdPlaying && (
         <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center">
              <div className="text-4xl font-black text-rose-500 mb-4">{adTimer}s</div>
@@ -401,114 +439,125 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto px-4 pt-[env(safe-area-inset-top)] pb-0 relative">
-          
-          {/* HOME TAB */}
-          <div className={activeTab === 'HOME' ? 'block pb-24' : 'hidden'}>
-              {/* Compact Header */}
-              <header className="flex justify-between items-center py-4 mb-2">
-                 <h1 className="text-2xl font-black tracking-tighter bg-gradient-to-r from-violet-400 to-rose-400 bg-clip-text text-transparent">Rizz Master</h1>
-                 {!profile.is_premium && (
-                     <button onClick={() => setShowPremiumModal(true)} className="px-3 py-1 bg-gradient-to-r from-yellow-600 to-amber-500 rounded-full text-[10px] font-bold text-black flex items-center gap-1">
-                        <span>👑</span> Upgrade
-                     </button>
-                 )}
-              </header>
-
-              {/* Mode Switcher */}
-              <div className="flex p-1 bg-white/5 rounded-2xl mb-6 relative border border-white/10">
-                <button onClick={() => { setMode(InputMode.CHAT); clear(); }} className={`flex-1 py-2 rounded-xl font-bold text-xs transition-all z-10 ${mode === InputMode.CHAT ? 'text-white' : 'text-white/50'}`}>Chat</button>
-                <button onClick={() => { setMode(InputMode.BIO); clear(); }} className={`flex-1 py-2 rounded-xl font-bold text-xs transition-all z-10 ${mode === InputMode.BIO ? 'text-white' : 'text-white/50'}`}>Bio</button>
-                <div className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-xl rizz-gradient transition-all duration-300 ${mode === InputMode.CHAT ? 'left-1' : 'left-[calc(50%+4px)]'}`} />
-              </div>
-
-              {/* Input */}
-              <div className="space-y-4">
-                  <textarea
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                    placeholder={mode === InputMode.CHAT ? "Paste the chat..." : "Describe yourself..."}
-                    className="w-full h-32 bg-white/5 border border-white/10 rounded-2xl p-4 text-sm focus:ring-1 focus:ring-rose-500/50 focus:outline-none resize-none transition-all placeholder:text-white/20"
-                    style={{ fontSize: '16px' }}
-                  />
-                  
-                  {mode === InputMode.CHAT && (
-                     <div onClick={handleImageSelect} className={`border border-dashed border-white/10 rounded-2xl transition-all cursor-pointer bg-white/[0.02] ${image ? 'p-2' : 'p-4'}`}>
-                        {image ? (
-                          <div className="relative"><img src={image} className="w-full max-h-32 object-contain rounded-lg" /><button onClick={(e) => { e.stopPropagation(); setImage(null); }} className="absolute top-1 right-1 bg-black/80 rounded-full w-6 h-6 flex items-center justify-center text-xs">✕</button></div>
-                        ) : (
-                          <div className="flex items-center justify-center gap-2 opacity-50"><span className="text-xl">📸</span><span className="text-xs font-bold">Add Screenshot</span></div>
+      {/* 3. Main Logic Switcher */}
+      {!session ? (
+         <LoginPage />
+      ) : fullScreenPage ? (
+         <InfoPages page={fullScreenPage} onBack={() => setFullScreenPage(null)} />
+      ) : !profile ? (
+         <div className="flex-1 flex items-center justify-center"><p className="text-white/40 text-sm animate-pulse">Loading Profile...</p></div>
+      ) : (
+         <>
+            {/* Main Content Area */}
+            <main className="flex-1 overflow-y-auto pt-[env(safe-area-inset-top)] pb-0 relative custom-scrollbar">
+                <div className="max-w-xl mx-auto px-4 w-full h-full">
+                    {/* HOME TAB */}
+                    <div className={activeTab === 'HOME' ? 'block pb-24' : 'hidden'}>
+                        {/* Compact Header */}
+                        <header className="flex justify-between items-center py-4 mb-2">
+                        <h1 className="text-2xl font-black tracking-tighter bg-gradient-to-r from-violet-400 to-rose-400 bg-clip-text text-transparent">Rizz Master</h1>
+                        {!profile.is_premium && (
+                            <button onClick={() => setShowPremiumModal(true)} className="px-3 py-1 bg-gradient-to-r from-yellow-600 to-amber-500 rounded-full text-[10px] font-bold text-black flex items-center gap-1">
+                                <span>👑</span> Upgrade
+                            </button>
                         )}
-                        <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
-                     </div>
-                  )}
+                        </header>
 
-                  {inputError && <p className="text-red-400 text-xs text-center font-bold animate-pulse">{inputError}</p>}
+                        {/* Mode Switcher */}
+                        <div className="flex p-1 bg-white/5 rounded-2xl mb-6 relative border border-white/10">
+                        <button onClick={() => { setMode(InputMode.CHAT); clear(); }} className={`flex-1 py-2 rounded-xl font-bold text-xs transition-all z-10 ${mode === InputMode.CHAT ? 'text-white' : 'text-white/50'}`}>Chat</button>
+                        <button onClick={() => { setMode(InputMode.BIO); clear(); }} className={`flex-1 py-2 rounded-xl font-bold text-xs transition-all z-10 ${mode === InputMode.BIO ? 'text-white' : 'text-white/50'}`}>Bio</button>
+                        <div className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-xl rizz-gradient transition-all duration-300 ${mode === InputMode.CHAT ? 'left-1' : 'left-[calc(50%+4px)]'}`} />
+                        </div>
 
-                  <button
-                    onClick={handleGenerate}
-                    disabled={loading}
-                    className={`w-full py-4 rounded-2xl font-black text-sm shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 ${profile.is_premium ? "bg-gradient-to-r from-yellow-500 to-amber-600 text-black" : "rizz-gradient text-white"}`}
-                  >
-                    {loading ? "COOKING..." : (profile.is_premium ? "GENERATE (VIP)" : `GENERATE (${(mode === InputMode.CHAT && image) ? 2 : 1} ⚡)`)}
-                  </button>
-              </div>
+                        {/* Input */}
+                        <div className="space-y-4">
+                            <textarea
+                            value={inputText}
+                            onChange={(e) => setInputText(e.target.value)}
+                            placeholder={mode === InputMode.CHAT ? "Paste the chat..." : "Describe yourself..."}
+                            className="w-full h-32 bg-white/5 border border-white/10 rounded-2xl p-4 text-sm focus:ring-1 focus:ring-rose-500/50 focus:outline-none resize-none transition-all placeholder:text-white/20"
+                            style={{ fontSize: '16px' }}
+                            />
+                            
+                            {mode === InputMode.CHAT && (
+                            <div onClick={handleImageSelect} className={`border border-dashed border-white/10 rounded-2xl transition-all cursor-pointer bg-white/[0.02] ${image ? 'p-2' : 'p-4'}`}>
+                                {image ? (
+                                    <div className="relative"><img src={image} className="w-full max-h-32 object-contain rounded-lg" /><button onClick={(e) => { e.stopPropagation(); setImage(null); }} className="absolute top-1 right-1 bg-black/80 rounded-full w-6 h-6 flex items-center justify-center text-xs">✕</button></div>
+                                ) : (
+                                    <div className="flex items-center justify-center gap-2 opacity-50"><span className="text-xl">📸</span><span className="text-xs font-bold">Add Screenshot</span></div>
+                                )}
+                                <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
+                            </div>
+                            )}
 
-              {/* Results */}
-              <div className="mt-8 space-y-4">
-                  {result && 'tease' in result && (
-                      <div className="animate-fade-in-up">
-                          <div className="flex items-center justify-between mb-4 px-1">
-                              <span className="text-xs font-bold text-white/40 uppercase">Rizz Report</span>
-                              <span className="text-xl font-black text-rose-500">{result.loveScore}%</span>
-                          </div>
-                          <div className="grid gap-3">
-                              <RizzCard label="Tease" content={result.tease} icon="😏" color="from-purple-500 to-indigo-500" isSaved={isSaved(result.tease)} onSave={() => toggleSave(result.tease, 'tease')} onShare={() => handleShare(result.tease)} delay={0} />
-                              <RizzCard label="Smooth" content={result.smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved(result.smooth)} onSave={() => toggleSave(result.smooth, 'smooth')} onShare={() => handleShare(result.smooth)} delay={0.1} />
-                              <RizzCard label="Chaotic" content={result.chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved(result.chaotic)} onSave={() => toggleSave(result.chaotic, 'chaotic')} onShare={() => handleShare(result.chaotic)} delay={0.2} />
-                          </div>
-                      </div>
-                  )}
-                  {result && 'bio' in result && (
-                      <div className="glass p-6 rounded-3xl border border-white/10 animate-fade-in-up">
-                          <p className="text-lg font-medium leading-relaxed mb-4">"{result.bio}"</p>
-                          <div className="flex gap-2">
-                             <button onClick={() => { copyToClipboard(result.bio); alert('Copied'); }} className="flex-1 py-3 bg-white/10 rounded-xl font-bold text-xs">Copy</button>
-                             <button onClick={() => toggleSave(result.bio, 'bio')} className={`px-4 rounded-xl font-bold text-xl bg-white/10 ${isSaved(result.bio) ? 'text-rose-500' : 'text-white/50'}`}>♥</button>
-                          </div>
-                      </div>
-                  )}
-              </div>
-          </div>
+                            {inputError && <p className="text-red-400 text-xs text-center font-bold animate-pulse">{inputError}</p>}
 
-          {/* SAVED TAB */}
-          {activeTab === 'SAVED' && (
-             <SavedView 
-                isOpen={true} 
-                onClose={() => setActiveTab('HOME')} 
-                savedItems={savedItems} 
-                onDelete={handleDeleteSaved} 
-                onShare={handleShare} 
-             />
-          )}
+                            <button
+                            onClick={handleGenerate}
+                            disabled={loading}
+                            className={`w-full py-4 rounded-2xl font-black text-sm shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 ${profile.is_premium ? "bg-gradient-to-r from-yellow-500 to-amber-600 text-black" : "rizz-gradient text-white"}`}
+                            >
+                            {loading ? "COOKING..." : (profile.is_premium ? "GENERATE (VIP)" : `GENERATE (${(mode === InputMode.CHAT && image) ? 2 : 1} ⚡)`)}
+                            </button>
+                        </div>
 
-          {/* PROFILE TAB */}
-          {activeTab === 'PROFILE' && (
-             <ProfileView 
-                profile={profile} 
-                onLogout={handleLogout} 
-                onUpgrade={() => setShowPremiumModal(true)} 
-                onWatchAd={handleWatchAd} 
-                onNavigate={setFullScreenPage} 
-                isMusicPlaying={isMusicPlaying}
-                onToggleMusic={toggleMusic}
-             />
-          )}
+                        {/* Results */}
+                        <div className="mt-8 space-y-4">
+                            {result && 'tease' in result && (
+                                <div className="animate-fade-in-up">
+                                    <div className="flex items-center justify-between mb-4 px-1">
+                                        <span className="text-xs font-bold text-white/40 uppercase">Rizz Report</span>
+                                        <span className="text-xl font-black text-rose-500">{result.loveScore}%</span>
+                                    </div>
+                                    <div className="grid gap-3 md:grid-cols-3">
+                                        <RizzCard label="Tease" content={result.tease} icon="😏" color="from-purple-500 to-indigo-500" isSaved={isSaved(result.tease)} onSave={() => toggleSave(result.tease, 'tease')} onShare={() => handleShare(result.tease)} delay={0} />
+                                        <RizzCard label="Smooth" content={result.smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved(result.smooth)} onSave={() => toggleSave(result.smooth, 'smooth')} onShare={() => handleShare(result.smooth)} delay={0.1} />
+                                        <RizzCard label="Chaotic" content={result.chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved(result.chaotic)} onSave={() => toggleSave(result.chaotic, 'chaotic')} onShare={() => handleShare(result.chaotic)} delay={0.2} />
+                                    </div>
+                                </div>
+                            )}
+                            {result && 'bio' in result && (
+                                <div className="glass p-6 rounded-3xl border border-white/10 animate-fade-in-up">
+                                    <p className="text-lg font-medium leading-relaxed mb-4">"{result.bio}"</p>
+                                    <div className="flex gap-2">
+                                    <button onClick={() => { copyToClipboard(result.bio); alert('Copied'); }} className="flex-1 py-3 bg-white/10 rounded-xl font-bold text-xs">Copy</button>
+                                    <button onClick={() => toggleSave(result.bio, 'bio')} className={`px-4 rounded-xl font-bold text-xl bg-white/10 ${isSaved(result.bio) ? 'text-rose-500' : 'text-white/50'}`}>♥</button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
-      </main>
+                    {/* SAVED TAB */}
+                    {activeTab === 'SAVED' && (
+                    <SavedView 
+                        isOpen={true} 
+                        onClose={() => setActiveTab('HOME')} 
+                        savedItems={savedItems} 
+                        onDelete={handleDeleteSaved} 
+                        onShare={handleShare} 
+                    />
+                    )}
 
-      <BottomNav currentView={activeTab} onChange={setActiveTab} />
+                    {/* PROFILE TAB */}
+                    {activeTab === 'PROFILE' && (
+                    <ProfileView 
+                        profile={profile} 
+                        onLogout={handleLogout} 
+                        onUpgrade={() => setShowPremiumModal(true)} 
+                        onWatchAd={handleWatchAd} 
+                        onNavigate={setFullScreenPage} 
+                        isMusicPlaying={isMusicPlaying}
+                        onToggleMusic={toggleMusic}
+                    />
+                    )}
+                </div>
+            </main>
+
+            <BottomNav currentView={activeTab} onChange={setActiveTab} />
+         </>
+      )}
     </div>
   );
 };
