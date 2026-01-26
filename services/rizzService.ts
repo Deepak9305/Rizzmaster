@@ -9,6 +9,28 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 const MODEL_NAME = 'gemini-3-flash-preview';
 
 /**
+ * Helper to safely parse JSON from AI response, handling Markdown and errors
+ */
+const safeParseJSON = <T>(text: string): T => {
+  try {
+    // 1. Try direct parse
+    return JSON.parse(text) as T;
+  } catch (e) {
+    // 2. Try to find JSON block if markdown is present (```json ... ```)
+    // This regex looks for the outermost { } pair
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        return JSON.parse(jsonMatch[0]) as T;
+      } catch (innerErr) {
+        throw new Error("Failed to parse extracted JSON: " + innerErr);
+      }
+    }
+    throw new Error("No valid JSON found in response.");
+  }
+};
+
+/**
  * Generates Rizz (replies) based on chat context or image
  */
 export const generateRizz = async (text: string, imageBase64?: string): Promise<RizzResponse> => {
@@ -70,19 +92,7 @@ export const generateRizz = async (text: string, imageBase64?: string): Promise<
   });
 
   const textResponse = response.text || "{}";
-  
-  // Robust JSON extraction: Find the outer braces to ignore any preamble/markdown
-  const firstBrace = textResponse.indexOf('{');
-  const lastBrace = textResponse.lastIndexOf('}');
-  
-  let jsonStr = textResponse;
-  if (firstBrace !== -1 && lastBrace !== -1) {
-    jsonStr = textResponse.substring(firstBrace, lastBrace + 1);
-  } else {
-    throw new Error("Invalid JSON response from model");
-  }
-
-  return JSON.parse(jsonStr) as RizzResponse;
+  return safeParseJSON<RizzResponse>(textResponse);
 };
 
 /**
@@ -112,17 +122,5 @@ export const generateBio = async (text: string): Promise<BioResponse> => {
   });
 
   const textResponse = response.text || "{}";
-  
-  // Robust JSON extraction
-  const firstBrace = textResponse.indexOf('{');
-  const lastBrace = textResponse.lastIndexOf('}');
-  
-  let jsonStr = textResponse;
-  if (firstBrace !== -1 && lastBrace !== -1) {
-    jsonStr = textResponse.substring(firstBrace, lastBrace + 1);
-  } else {
-    throw new Error("Invalid JSON response from model");
-  }
-
-  return JSON.parse(jsonStr) as BioResponse;
+  return safeParseJSON<BioResponse>(textResponse);
 };

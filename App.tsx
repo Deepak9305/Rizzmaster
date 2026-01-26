@@ -10,6 +10,8 @@ import SavedModal from './components/SavedModal';
 import InfoPages from './components/InfoPages';
 // Import new Native Services
 import { initializeNativeFeatures, isNative, selectImageNative, showRewardedAdNative, shareNative, copyToClipboard } from './services/capacitorService';
+import { App as CapacitorApp } from '@capacitor/app';
+import { PluginListenerHandle } from '@capacitor/core';
 
 const DAILY_CREDITS = 5;
 const REWARD_CREDITS = 5;
@@ -94,6 +96,7 @@ const App: React.FC = () => {
   // Auth State
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileError, setProfileError] = useState(false); // New state for error handling
 
   // App State
   const [currentView, setCurrentView] = useState<ViewState>('HOME');
@@ -182,7 +185,7 @@ const App: React.FC = () => {
     }
   };
 
-  // 1. Session & Auth Listener
+  // 1. Session & Auth Listener & Deep Links & Back Button
   useEffect(() => {
     // If supabase is null (keys not set), skip listener
     if (!supabase) return;
@@ -206,8 +209,62 @@ const App: React.FC = () => {
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    // NATIVE LISTENERS
+    let urlListener: PluginListenerHandle | undefined;
+    let backListener: PluginListenerHandle | undefined;
+
+    const setupListeners = async () => {
+      if (isNative()) {
+        // 1. Deep Link for Google Auth
+        urlListener = await CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
+          console.log("App opened with URL:", url);
+          if (url.includes('auth/callback')) {
+            try {
+               const parsedUrl = new URL(url);
+               const code = parsedUrl.searchParams.get('code');
+               const accessToken = parsedUrl.hash.includes('access_token');
+               
+               if (code) {
+                   await supabase?.auth.exchangeCodeForSession(code);
+               } else if (accessToken) {
+                   const params = new URLSearchParams(parsedUrl.hash.substring(1));
+                   const access = params.get('access_token');
+                   const refresh = params.get('refresh_token');
+                   if (access && refresh) {
+                      await supabase?.auth.setSession({ access_token: access, refresh_token: refresh });
+                   }
+               }
+            } catch (err) {
+               console.error("Error processing auth callback", err);
+            }
+          }
+        });
+
+        // 2. Hardware Back Button Handling
+        backListener = await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+          if (showPremiumModal) {
+              setShowPremiumModal(false);
+          } else if (showSavedModal) {
+              setShowSavedModal(false);
+          } else if (currentView !== 'HOME') {
+              setCurrentView('HOME');
+          } else {
+              // If on home screen and no modals, exit app
+              CapacitorApp.exitApp();
+          }
+        });
+      }
+    };
+
+    setupListeners();
+
+    return () => {
+        subscription.unsubscribe();
+        // Remove specific listeners instead of all to avoid side effects
+        if (urlListener) urlListener.remove();
+        if (backListener) backListener.remove();
+    };
+  }, [showPremiumModal, showSavedModal, currentView]); 
 
   // 2. Broadcast Channel for Single Tab
   useEffect(() => {
@@ -227,68 +284,73 @@ const App: React.FC = () => {
   // 3. Load User Data
   const loadUserData = async (userId: string) => {
     if (!supabase) return;
+    setProfileError(false);
 
-    // Fetch Profile from Supabase
-    let { data: profileData, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    if (error) {
-      if (error.code === 'PGRST116') {
-        // Profile doesn't exist, create it.
-        // Explicitly set defaults here to ensure compatibility if SQL defaults are missing.
-        const { data: newProfile, error: createError } = await supabase
-          .from('profiles')
-          .insert([{ 
-             id: userId, 
-             email: session?.user.email,
-             credits: DAILY_CREDITS,
-             is_premium: false,
-             last_daily_reset: new Date().toISOString().split('T')[0]
-          }])
-          .select()
-          .single();
-        
-        if (!createError) {
-           profileData = newProfile;
-        } else {
-           console.error("Error creating profile:", createError);
-        }
-      } else {
-        console.error("Error loading profile:", error);
-      }
-    } else if (profileData) {
-      // Check for daily reset
-      const today = new Date().toISOString().split('T')[0];
-      if (profileData.last_daily_reset !== today) {
-        const { data: updated } = await supabase
-          .from('profiles')
-          .update({ credits: DAILY_CREDITS, last_daily_reset: today })
-          .eq('id', userId)
-          .select()
-          .single();
-        if (updated) profileData = updated;
-      }
-    }
-    
-    // If we have profile data, set it, otherwise we stay in error state
-    if (profileData) {
-        setProfile(profileData as UserProfile);
-
-        // Fetch Saved Items
-        const { data: savedData, error: savedError } = await supabase
-        .from('saved_items')
+    try {
+        // Fetch Profile from Supabase
+        let { data: profileData, error } = await supabase
+        .from('profiles')
         .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+        .eq('id', userId)
+        .single();
+
+        if (error) {
+        if (error.code === 'PGRST116') {
+            // Profile doesn't exist, create it.
+            const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert([{ 
+                id: userId, 
+                email: session?.user.email,
+                credits: DAILY_CREDITS,
+                is_premium: false,
+                last_daily_reset: new Date().toISOString().split('T')[0]
+            }])
+            .select()
+            .single();
+            
+            if (!createError) {
+            profileData = newProfile;
+            } else {
+            console.error("Error creating profile:", createError);
+            setProfileError(true);
+            }
+        } else {
+            console.error("Error loading profile:", error);
+            setProfileError(true);
+        }
+        } else if (profileData) {
+        // Check for daily reset
+        const today = new Date().toISOString().split('T')[0];
+        if (profileData.last_daily_reset !== today) {
+            const { data: updated } = await supabase
+            .from('profiles')
+            .update({ credits: DAILY_CREDITS, last_daily_reset: today })
+            .eq('id', userId)
+            .select()
+            .single();
+            if (updated) profileData = updated;
+        }
+        }
         
-        if (!savedError && savedData) setSavedItems(savedData as SavedItem[]);
-    } else {
-      // Fallback if profile creation/fetching failed completely to avoid stuck loading screen
-      console.error("Critical: Failed to load or create profile.");
-      // Force logout or show error state if needed, here we just allow logout in UI
+        // If we have profile data, set it
+        if (profileData) {
+            setProfile(profileData as UserProfile);
+
+            // Fetch Saved Items
+            const { data: savedData, error: savedError } = await supabase
+            .from('saved_items')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+            
+            if (!savedError && savedData) setSavedItems(savedData as SavedItem[]);
+        } else {
+            setProfileError(true);
+        }
+    } catch (e) {
+        console.error("Critical Profile Error", e);
+        setProfileError(true);
     }
   };
 
@@ -567,7 +629,7 @@ const App: React.FC = () => {
 
   if (isSessionBlocked) {
     return (
-      <div className="min-h-[100dvh] flex flex-col items-center justify-center p-4 relative overflow-hidden bg-black">
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center p-4 relative overflow-hidden bg-black pt-[env(safe-area-inset-top)]">
          <div className="glass max-w-md w-full p-8 rounded-3xl border border-white/10 text-center relative z-10 shadow-2xl">
            <div className="text-5xl mb-6">✋</div>
            <h1 className="text-2xl font-bold mb-4 text-white">Session Paused</h1>
@@ -592,12 +654,24 @@ const App: React.FC = () => {
   if (!profile) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-white p-4 bg-black">
-        <svg className="animate-spin h-8 w-8 text-rose-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <p className="text-white/50 animate-pulse">Loading Profile...</p>
-        <button onClick={handleLogout} className="mt-8 text-xs text-white/30 hover:text-white underline">Cancel & Logout</button>
+        {profileError ? (
+           <div className="text-center animate-fade-in">
+              <span className="text-4xl mb-4 block">🔌</span>
+              <p className="text-red-400 mb-4">Connection to HQ failed.</p>
+              <button onClick={() => loadUserData(session.user.id)} className="px-6 py-2 bg-white/10 rounded-full hover:bg-white/20 transition-all text-sm mb-4">Retry</button>
+              <br/>
+              <button onClick={handleLogout} className="text-xs text-white/30 hover:text-white underline">Logout</button>
+           </div>
+        ) : (
+           <>
+            <svg className="animate-spin h-8 w-8 text-rose-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p className="text-white/50 animate-pulse">Loading Profile...</p>
+            <button onClick={handleLogout} className="mt-8 text-xs text-white/30 hover:text-white underline">Cancel & Logout</button>
+           </>
+        )}
       </div>
     );
   }
@@ -613,7 +687,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 md:py-12 pb-24 relative min-h-[100dvh] flex flex-col animate-fade-in">
+    <div className="max-w-4xl mx-auto px-4 py-6 md:py-12 pb-24 relative min-h-[100dvh] flex flex-col animate-fade-in pt-[env(safe-area-inset-top)]">
       
       {/* Background Music Player - Source: Pixabay (Royalty Free) */}
       <audio ref={audioRef} loop>
@@ -834,46 +908,49 @@ const App: React.FC = () => {
             </div>
           )}
 
-          {result && 'tease' in result && (
-              <>
-              <div className="glass rounded-3xl p-5 md:p-6 border border-white/10 animate-fade-in-up">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-xs font-bold uppercase tracking-widest text-white/40">Analysis</h3>
-                   <span className="text-2xl md:text-3xl font-black text-white">{result.loveScore}%</span>
+          {/* Wrapper with key to force animation replay on new results */}
+          <div key={JSON.stringify(result)}>
+            {result && 'tease' in result && (
+                <>
+                <div className="glass rounded-3xl p-5 md:p-6 border border-white/10 animate-fade-in-up">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-white/40">Analysis</h3>
+                    <span className="text-2xl md:text-3xl font-black text-white">{result.loveScore}%</span>
+                  </div>
+                  <div className="mb-4">
+                      <div className="text-xl md:text-2xl font-black text-rose-500 uppercase italic leading-none">{result.potentialStatus}</div>
+                  </div>
+                  <div className="relative h-3 md:h-4 bg-black/40 rounded-full overflow-hidden border border-white/5">
+                    <div className="absolute top-0 left-0 h-full rizz-gradient transition-all duration-1000 ease-out" style={{ width: `${result.loveScore}%` }}></div>
+                  </div>
+                  {result.analysis && <p className="mt-4 text-xs md:text-sm text-white/60 leading-relaxed border-t border-white/5 pt-3">{result.analysis}</p>}
                 </div>
-                <div className="mb-4">
-                     <div className="text-xl md:text-2xl font-black text-rose-500 uppercase italic leading-none">{result.potentialStatus}</div>
-                </div>
-                <div className="relative h-3 md:h-4 bg-black/40 rounded-full overflow-hidden border border-white/5">
-                  <div className="absolute top-0 left-0 h-full rizz-gradient transition-all duration-1000 ease-out" style={{ width: `${result.loveScore}%` }}></div>
-                </div>
-                 {result.analysis && <p className="mt-4 text-xs md:text-sm text-white/60 leading-relaxed border-t border-white/5 pt-3">{result.analysis}</p>}
-              </div>
 
-              <div className="grid gap-3 md:gap-4">
-                <RizzCard label="The Tease" content={result.tease} icon="😏" color="from-purple-500 to-indigo-500" isSaved={isSaved(result.tease)} onSave={() => toggleSave(result.tease, 'tease')} onShare={() => handleShare(result.tease)} delay={0.1} />
-                <RizzCard label="The Smooth" content={result.smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved(result.smooth)} onSave={() => toggleSave(result.smooth, 'smooth')} onShare={() => handleShare(result.smooth)} delay={0.2} />
-                <RizzCard label="The Chaotic" content={result.chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved(result.chaotic)} onSave={() => toggleSave(result.chaotic, 'chaotic')} onShare={() => handleShare(result.chaotic)} delay={0.3} />
-              </div>
-            </>
-          )}
-
-          {result && 'bio' in result && (
-            <div className="glass rounded-3xl p-6 md:p-8 border border-white/10 animate-fade-in-up">
-               <div className="flex items-center gap-2 mb-4 md:mb-6">
-                <span className="text-2xl">📝</span>
-                <h3 className="text-xs md:text-sm font-semibold uppercase tracking-widest text-white/60">Bio Result</h3>
-                <div className="ml-auto flex gap-2">
-                    <button onClick={() => { copyToClipboard(result.bio); alert('Bio copied!'); }} className="p-2 rounded-full hover:bg-white/10 transition-all text-white/50 hover:text-white"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg></button>
-                    <button onClick={() => handleShare(result.bio)} className="p-2 rounded-full hover:bg-white/10 transition-all text-white/50 hover:text-white"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg></button>
-                    <button onClick={() => toggleSave(result.bio, 'bio')} className={`p-2 rounded-full hover:bg-white/10 transition-all ${isSaved(result.bio) ? 'text-rose-500' : 'text-white/50 hover:text-rose-400'}`}><svg className="w-5 h-5" fill={isSaved(result.bio) ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg></button>
+                <div className="grid gap-3 md:gap-4 mt-4">
+                  <RizzCard label="The Tease" content={result.tease} icon="😏" color="from-purple-500 to-indigo-500" isSaved={isSaved(result.tease)} onSave={() => toggleSave(result.tease, 'tease')} onShare={() => handleShare(result.tease)} delay={0.1} />
+                  <RizzCard label="The Smooth" content={result.smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved(result.smooth)} onSave={() => toggleSave(result.smooth, 'smooth')} onShare={() => handleShare(result.smooth)} delay={0.2} />
+                  <RizzCard label="The Chaotic" content={result.chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved(result.chaotic)} onSave={() => toggleSave(result.chaotic, 'chaotic')} onShare={() => handleShare(result.chaotic)} delay={0.3} />
                 </div>
+              </>
+            )}
+
+            {result && 'bio' in result && (
+              <div className="glass rounded-3xl p-6 md:p-8 border border-white/10 animate-fade-in-up">
+                <div className="flex items-center gap-2 mb-4 md:mb-6">
+                  <span className="text-2xl">📝</span>
+                  <h3 className="text-xs md:text-sm font-semibold uppercase tracking-widest text-white/60">Bio Result</h3>
+                  <div className="ml-auto flex gap-2">
+                      <button onClick={() => { copyToClipboard(result.bio); alert('Bio copied!'); }} className="p-2 rounded-full hover:bg-white/10 transition-all text-white/50 hover:text-white"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg></button>
+                      <button onClick={() => handleShare(result.bio)} className="p-2 rounded-full hover:bg-white/10 transition-all text-white/50 hover:text-white"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg></button>
+                      <button onClick={() => toggleSave(result.bio, 'bio')} className={`p-2 rounded-full hover:bg-white/10 transition-all ${isSaved(result.bio) ? 'text-rose-500' : 'text-white/50 hover:text-rose-400'}`}><svg className="w-5 h-5" fill={isSaved(result.bio) ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg></button>
+                  </div>
+                </div>
+                <p className="text-lg md:text-xl leading-relaxed font-medium mb-6 md:mb-8 text-white">{result.bio}</p>
+                <div className="p-4 bg-white/5 rounded-2xl border border-white/5 mb-4"><h4 className="text-[10px] uppercase font-bold text-rose-400 mb-1">Why it works</h4><p className="text-xs md:text-sm text-white/60">{result.analysis}</p></div>
+                <button onClick={() => { copyToClipboard(result.bio); alert('Bio copied!'); }} className="w-full py-3 border border-white/20 rounded-xl hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2"><span>📋</span> Copy Bio</button>
               </div>
-              <p className="text-lg md:text-xl leading-relaxed font-medium mb-6 md:mb-8 text-white">{result.bio}</p>
-              <div className="p-4 bg-white/5 rounded-2xl border border-white/5 mb-4"><h4 className="text-[10px] uppercase font-bold text-rose-400 mb-1">Why it works</h4><p className="text-xs md:text-sm text-white/60">{result.analysis}</p></div>
-              <button onClick={() => { copyToClipboard(result.bio); alert('Bio copied!'); }} className="w-full py-3 border border-white/20 rounded-xl hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2"><span>📋</span> Copy Bio</button>
-            </div>
-          )}
+            )}
+          </div>
         </section>
       </div>
       <Footer className="mt-12 md:mt-20" onNavigate={setCurrentView} />
