@@ -1,5 +1,5 @@
 import React from 'react';
-import { copyToClipboard, shareNative } from '../services/capacitorService';
+import { copyToClipboard } from '../services/capacitorService';
 
 interface RizzCardProps {
   label: string;
@@ -8,7 +8,6 @@ interface RizzCardProps {
   color: string;
   isSaved: boolean;
   onSave: () => void;
-  // onShare is now handled internally via service, but we can keep prop for analytics if needed
   onShare: () => void;
   delay?: number;
 }
@@ -27,7 +26,6 @@ const RizzCard: React.FC<RizzCardProps> = ({
   const handleCopy = async () => {
     try {
       await copyToClipboard(content);
-      // We use a simple alert per the app's style, but in a real app a toast would be better.
       alert("Copied!"); 
     } catch (err) {
       console.error('Failed to copy text: ', err);
@@ -35,10 +33,8 @@ const RizzCard: React.FC<RizzCardProps> = ({
   };
 
   const handleNativeShare = async () => {
-    // Call the parent's onShare first (for saving/analytics)
+    // Only call onShare (parent now handles the logic and title)
     onShare();
-    // Then invoke the native/web share logic
-    await shareNative(content, `Rizz Master: ${label} Reply`);
   };
 
   return (

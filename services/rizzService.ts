@@ -2,10 +2,9 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { RizzResponse, BioResponse } from "../types";
 
 // Initialize Gemini Client
-// Note: API Key must be in process.env.API_KEY
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
-// Strictly use Gemini 3.0 Flash for all operations as requested
+// Strictly use Gemini 3.0 Flash for all operations
 const MODEL_NAME = 'gemini-3-flash-preview';
 
 /**
@@ -13,11 +12,8 @@ const MODEL_NAME = 'gemini-3-flash-preview';
  */
 const safeParseJSON = <T>(text: string): T => {
   try {
-    // 1. Try direct parse
     return JSON.parse(text) as T;
   } catch (e) {
-    // 2. Try to find JSON block if markdown is present (```json ... ```)
-    // This regex looks for the outermost { } pair
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       try {
@@ -37,9 +33,7 @@ export const generateRizz = async (text: string, imageBase64?: string): Promise<
   const parts: any[] = [];
   
   if (imageBase64) {
-    // Extract base64 data and mime type
     const base64Data = imageBase64.split(',')[1] || imageBase64;
-    // Try to extract mime type from data URL, default to png if not found
     const mimeMatch = imageBase64.match(/^data:(.*);base64,/);
     const mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
 
@@ -51,30 +45,20 @@ export const generateRizz = async (text: string, imageBase64?: string): Promise<
     });
   }
 
-  const prompt = `
-    You are a world-class dating coach and "Rizz Master". 
-    Analyze the following chat context (and image if provided). 
-    
-    Context: "${text}"
+  // Use a separate part for user input to distinguish from system instructions
+  parts.push({ text: `Chat Context to Reply to: "${text}"` });
 
-    Generate 3 distinct reply options.
-    CRITICAL: Keep replies SHORT, PUNCHY, and UNDER 15 WORDS. High impact only. No fluff.
-
-    1. The Tease (playful, slightly roasting, flirty)
-    2. The Smooth (charming, direct, confident)
-    3. The Chaotic (unpredictable, funny, high risk high reward)
-    
-    Also provide a "Love Score" (0-100), a short status label (e.g. "Friendzone", "Soulmates"),
-    and a 1-sentence analysis.
-  `;
-
-  parts.push({ text: prompt });
-
-  // No try/catch here; let the caller (App.tsx) handle errors to ensure credits are refunded properly.
   const response = await ai.models.generateContent({
     model: MODEL_NAME,
     contents: { parts },
     config: {
+      systemInstruction: `You are a world-class dating coach and "Rizz Master". 
+      Generate 3 distinct reply options based on the provided context/image.
+      CRITICAL: Keep replies SHORT, PUNCHY, and UNDER 15 WORDS. High impact only. No fluff.
+      1. The Tease (playful, slightly roasting, flirty)
+      2. The Smooth (charming, direct, confident)
+      3. The Chaotic (unpredictable, funny, high risk high reward)
+      Also provide a "Love Score" (0-100), a short status label, and a 1-sentence analysis.`,
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
@@ -99,16 +83,12 @@ export const generateRizz = async (text: string, imageBase64?: string): Promise<
  * Generates a dating profile bio
  */
 export const generateBio = async (text: string): Promise<BioResponse> => {
-  const prompt = `
-    Create a catchy, witty, and attractive dating profile bio based on these details: "${text}"
-    Keep it under 280 chars. High impact.
-  `;
-
-  // No try/catch here; let the caller (App.tsx) handle errors to ensure credits are refunded properly.
   const response = await ai.models.generateContent({
     model: MODEL_NAME,
-    contents: prompt,
+    contents: `User details: "${text}"`,
     config: {
+      systemInstruction: `Create a catchy, witty, and attractive dating profile bio based on the user details provided.
+      Keep it under 280 chars. High impact. Return JSON.`,
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,

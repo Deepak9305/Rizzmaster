@@ -108,7 +108,6 @@ const App: React.FC = () => {
 
   useEffect(() => {
      initializeNativeFeatures();
-     // REMOVED redundant setTimeout. Splash component now controls exit.
   }, []);
 
   const safePlay = () => {
@@ -161,12 +160,13 @@ const App: React.FC = () => {
       }
     });
 
-    let urlListener: PluginListenerHandle | undefined;
-    let backListener: PluginListenerHandle | undefined;
+    // Robust listener handling to prevent race conditions and memory leaks
+    let canceled = false;
+    const listeners: PluginListenerHandle[] = [];
 
     const setupListeners = async () => {
       if (isNative()) {
-        urlListener = await CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
+        const urlListener = await CapacitorApp.addListener('appUrlOpen', async ({ url }) => {
           if (url.includes('auth/callback')) {
             try {
                const parsedUrl = new URL(url);
@@ -175,21 +175,25 @@ const App: React.FC = () => {
             } catch (err) { console.error(err); }
           }
         });
+        if (canceled) { urlListener.remove(); return; }
+        listeners.push(urlListener);
 
-        backListener = await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+        const backListener = await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
           if (showPremiumModal) setShowPremiumModal(false);
           else if (fullScreenPage) setFullScreenPage(null);
           else if (activeTab !== 'HOME') setActiveTab('HOME');
           else CapacitorApp.exitApp();
         });
+        if (canceled) { backListener.remove(); return; }
+        listeners.push(backListener);
       }
     };
 
     setupListeners();
     return () => {
+        canceled = true;
         subscription.unsubscribe();
-        if (urlListener) urlListener.remove();
-        if (backListener) backListener.remove();
+        listeners.forEach(l => l.remove());
     };
   }, [showPremiumModal, fullScreenPage, activeTab]); 
 
@@ -329,8 +333,8 @@ const App: React.FC = () => {
     }
   };
 
-  const handleShare = async (content: string) => {
-    await shareNative(content);
+  const handleShare = async (content: string, title?: string) => {
+    await shareNative(content, title);
   };
 
   const handleImageSelect = async () => {
@@ -511,9 +515,9 @@ const App: React.FC = () => {
                                         <span className="text-xl font-black text-rose-500">{result.loveScore}%</span>
                                     </div>
                                     <div className="grid gap-3 md:grid-cols-3">
-                                        <RizzCard label="Tease" content={result.tease} icon="😏" color="from-purple-500 to-indigo-500" isSaved={isSaved(result.tease)} onSave={() => toggleSave(result.tease, 'tease')} onShare={() => handleShare(result.tease)} delay={0} />
-                                        <RizzCard label="Smooth" content={result.smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved(result.smooth)} onSave={() => toggleSave(result.smooth, 'smooth')} onShare={() => handleShare(result.smooth)} delay={0.1} />
-                                        <RizzCard label="Chaotic" content={result.chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved(result.chaotic)} onSave={() => toggleSave(result.chaotic, 'chaotic')} onShare={() => handleShare(result.chaotic)} delay={0.2} />
+                                        <RizzCard label="Tease" content={result.tease} icon="😏" color="from-purple-500 to-indigo-500" isSaved={isSaved(result.tease)} onSave={() => toggleSave(result.tease, 'tease')} onShare={() => handleShare(result.tease, 'Rizz Master: Tease Reply')} delay={0} />
+                                        <RizzCard label="Smooth" content={result.smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved(result.smooth)} onSave={() => toggleSave(result.smooth, 'smooth')} onShare={() => handleShare(result.smooth, 'Rizz Master: Smooth Reply')} delay={0.1} />
+                                        <RizzCard label="Chaotic" content={result.chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved(result.chaotic)} onSave={() => toggleSave(result.chaotic, 'chaotic')} onShare={() => handleShare(result.chaotic, 'Rizz Master: Chaotic Reply')} delay={0.2} />
                                     </div>
                                 </div>
                             )}
@@ -536,7 +540,7 @@ const App: React.FC = () => {
                         onClose={() => setActiveTab('HOME')} 
                         savedItems={savedItems} 
                         onDelete={handleDeleteSaved} 
-                        onShare={handleShare} 
+                        onShare={(content) => handleShare(content, 'My Rizz Collection')} 
                     />
                     )}
 
