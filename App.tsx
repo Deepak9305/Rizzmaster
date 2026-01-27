@@ -110,71 +110,11 @@ const App: React.FC = () => {
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
   const [isSessionBlocked, setIsSessionBlocked] = useState(false);
 
-  // Music State
-  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
-  const [isUserMuted, setIsUserMuted] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
   useEffect(() => {
      // Wait for splash animation timing
      const timer = setTimeout(() => setShowSplash(false), 3000); // 2.5s load + 0.5s transition
      return () => clearTimeout(timer);
   }, []);
-
-  // Safe play function to handle promises and prevent errors
-  const safePlay = () => {
-    if (audioRef.current) {
-        audioRef.current.volume = 0.2;
-        const playPromise = audioRef.current.play();
-        if (playPromise !== undefined) {
-            playPromise
-            .then(() => setIsMusicPlaying(true))
-            .catch((e) => {
-                // Auto-play was prevented or interrupted, valid browser behavior
-                console.log("Audio playback prevented/interrupted:", e);
-                setIsMusicPlaying(false);
-            });
-        }
-    }
-  };
-
-  // Music Autoplay Logic (User Interaction Fallback)
-  useEffect(() => {
-    // Try to play immediately if allowed
-    if (!isUserMuted && !isMusicPlaying) {
-        safePlay();
-    }
-
-    // Add listener for first interaction to unlock audio context if needed
-    const handleInteraction = () => {
-      if (!isUserMuted && !isMusicPlaying) {
-        safePlay();
-      }
-      window.removeEventListener('click', handleInteraction);
-      window.removeEventListener('keydown', handleInteraction);
-    };
-
-    window.addEventListener('click', handleInteraction);
-    window.addEventListener('keydown', handleInteraction);
-
-    return () => {
-      window.removeEventListener('click', handleInteraction);
-      window.removeEventListener('keydown', handleInteraction);
-    };
-  }, [isUserMuted]); 
-
-  const toggleMusic = () => {
-    if (audioRef.current) {
-      if (isMusicPlaying) {
-        audioRef.current.pause();
-        setIsMusicPlaying(false);
-        setIsUserMuted(true);
-      } else {
-        safePlay();
-        setIsUserMuted(false);
-      }
-    }
-  };
 
   // 1. Session & Auth Listener
   useEffect(() => {
@@ -532,12 +472,6 @@ const App: React.FC = () => {
   const handleWatchAd = () => {
     console.log(`[AdMob] Requesting Rewarded Video: ${TEST_AD_UNIT_ID}`);
 
-    // Pause music if playing
-    if (isMusicPlaying && audioRef.current) {
-      audioRef.current.pause();
-      setIsMusicPlaying(false); // Update state to reflect pause
-    }
-    
     setShowPremiumModal(false);
     setIsAdPlaying(true);
     setAdTimer(AD_DURATION); 
@@ -556,12 +490,6 @@ const App: React.FC = () => {
       setIsAdPlaying(false);
       updateCredits((profile?.credits || 0) + REWARD_CREDITS);
       alert(`[TEST MODE] Ad Completed (Unit: ${TEST_AD_UNIT_ID})\n+${REWARD_CREDITS} Credits Added!`);
-      
-      // Resume music if it was playing and not manually muted
-      // Note: We check !isUserMuted, but since we set isMusicPlaying=false above, we can assume the intent is to resume if it wasn't explicitly muted by user before ad.
-      if (!isUserMuted && audioRef.current) {
-        safePlay();
-      }
     }, AD_DURATION * 1000);
   };
 
@@ -625,11 +553,6 @@ const App: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 md:py-12 pb-24 relative min-h-[100dvh] flex flex-col animate-fade-in">
       
-      {/* Background Music Player */}
-      <audio ref={audioRef} loop>
-        <source src="https://cdn.pixabay.com/audio/2022/11/22/audio_febc508520.mp3" type="audio/mp3" />
-      </audio>
-
       {showPremiumModal && (
         <PremiumModal 
           onClose={() => setShowPremiumModal(false)}
@@ -679,18 +602,6 @@ const App: React.FC = () => {
 
         <div className="flex items-center gap-2 md:gap-3">
            
-           <button 
-              onClick={toggleMusic}
-              className={`p-2 w-10 h-10 rounded-full flex items-center justify-center transition-all border ${isMusicPlaying ? 'bg-rose-500/20 border-rose-500/50 text-rose-400' : 'bg-white/5 border-white/10 text-white/40 hover:text-white'}`}
-              title={isMusicPlaying ? "Pause Music" : "Play Music"}
-           >
-              {isMusicPlaying ? (
-                 <span className="animate-pulse">🎵</span>
-              ) : (
-                 <span className="grayscale opacity-50">🔇</span>
-              )}
-           </button>
-
            <button 
               onClick={() => setShowSavedModal(true)}
               className="p-2 md:px-4 md:py-2 bg-white/5 hover:bg-white/10 rounded-full flex items-center gap-1.5 transition-all border border-white/5"
