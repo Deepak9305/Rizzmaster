@@ -1,5 +1,4 @@
 import React from 'react';
-import { copyToClipboard } from '../services/capacitorService';
 
 interface RizzCardProps {
   label: string;
@@ -25,16 +24,15 @@ const RizzCard: React.FC<RizzCardProps> = ({
   
   const handleCopy = async () => {
     try {
-      await copyToClipboard(content);
+      await navigator.clipboard.writeText(content);
+      // We use a simple alert per the app's style, but in a real app a toast would be better.
+      // Doing this inside the try block ensures we only alert on success.
       alert("Copied!"); 
     } catch (err) {
       console.error('Failed to copy text: ', err);
+      // Fallback for older browsers or non-secure contexts could go here,
+      // but for this MVP we'll just log it.
     }
-  };
-
-  const handleNativeShare = async () => {
-    // Only call onShare (parent now handles the logic and title)
-    onShare();
   };
 
   return (
@@ -58,7 +56,7 @@ const RizzCard: React.FC<RizzCardProps> = ({
                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
             </button>
             <button 
-                onClick={handleNativeShare}
+                onClick={onShare}
                 className="p-1.5 rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition-colors"
                 title="Share"
             >

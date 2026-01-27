@@ -8,8 +8,6 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, (process as any).cwd(), '');
 
   return {
-    // IMPORTANT: Base must be './' for Capacitor to load assets correctly on the device
-    base: './',
     plugins: [react()],
     define: {
       // Define process.env variables so they work in the client-side code
