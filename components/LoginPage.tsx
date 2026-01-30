@@ -26,12 +26,24 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
     }
     
     // Robust check for Hybrid/Native/WebView environments
-    const userAgent = navigator.userAgent.toLowerCase();
+    const userAgent = navigator.userAgent;
     const isCapacitor = !!(window as any).Capacitor;
-    const isWebView = /wv|android.*version\/|iphone.*webkit.*mobile/i.test(userAgent) && !(window as any).chrome;
     const isLocalProtocol = window.location.protocol !== 'http:' && window.location.protocol !== 'https:';
 
-    const isHybrid = isCapacitor || isLocalProtocol || isWebView;
+    // Better WebView detection logic:
+    // 1. iOS: Check if it's an iOS device AND (it is NOT Safari OR it contains specific app tokens like FBAV, Instagram, etc)
+    //    Standard Safari always includes "Safari". WebViews often include "AppleWebKit" but omit "Safari" (though some wrappers add it).
+    //    We check for common embedded app strings just in case.
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
+    const isSafari = /Safari/.test(userAgent);
+    const isIOSWebView = isIOS && (!isSafari || /FBAV|Instagram|Line|Snapchat/i.test(userAgent)); 
+
+    // 2. Android: Check for "wv" token or typical "Version/X.X ... Chrome/..." pattern without being standard Chrome.
+    //    Standard Chrome: "Chrome/100.0..."
+    //    WebView: "Version/4.0 Chrome/100.0..."
+    const isAndroidWebView = /wv/.test(userAgent) || (/Android/.test(userAgent) && /Version\/[\d\.]+/.test(userAgent) && /Chrome\//.test(userAgent));
+
+    const isHybrid = isCapacitor || isLocalProtocol || isIOSWebView || isAndroidWebView;
 
     if (isHybrid) {
         // --- HYBRID / EMBEDDED ENVIRONMENT FIX ---

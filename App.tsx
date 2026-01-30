@@ -111,11 +111,12 @@ const AppContent: React.FC = () => {
   const [isSessionBlocked, setIsSessionBlocked] = useState(false);
 
   useEffect(() => {
-     // If we are returning from an OAuth redirect (detected via URL hash), skip the splash screen
+     // Check for auth redirect hash
      if (window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('error='))) {
         setShowSplash(false);
-        // Clean URL to prevent reparsing on refresh and look cleaner
-        window.history.replaceState(null, '', window.location.pathname); 
+        // CRITICAL FIX: Do NOT clear window.history here. 
+        // Supabase needs to read the hash in the subsequent useEffect.
+        // It will clear it automatically or we can rely on clean redirects.
      } else {
         const timer = setTimeout(() => setShowSplash(false), 3000); 
         return () => clearTimeout(timer);
@@ -124,9 +125,15 @@ const AppContent: React.FC = () => {
 
   useEffect(() => {
     if (!supabase) return;
+    
+    // Check for existing session or handle initial auth state
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session) loadUserData(session.user.id, session.user.email);
+      if (session) {
+        loadUserData(session.user.id, session.user.email);
+        // If we have a session and there's a hash, we can optionally clean it now, but it's safer to leave it 
+        // or use window.history.replaceState(null, '', window.location.pathname) ONLY after confirmation.
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
