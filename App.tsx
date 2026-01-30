@@ -29,7 +29,7 @@ const generateUUID = () => {
     return Date.now().toString(36) + Math.random().toString(36).substring(2);
 };
 
-const SplashScreen: React.FC = () => {
+const SplashScreen: React.FC<{ forceLoading?: boolean }> = ({ forceLoading }) => {
   const [progress, setProgress] = useState(0);
   const [isExiting, setIsExiting] = useState(false);
 
@@ -46,17 +46,27 @@ const SplashScreen: React.FC = () => {
 
       if (currentStep >= steps) {
         clearInterval(timer);
-        setTimeout(() => setIsExiting(true), 400); 
+        // Only exit if not forced to stay loading
+        if (!forceLoading) {
+           setTimeout(() => setIsExiting(true), 400); 
+        }
       }
     }, interval);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [forceLoading]);
+
+  // If forced loading and progress is full, keep it at 100 without exiting
+  useEffect(() => {
+      if (!forceLoading && progress >= 100) {
+          setTimeout(() => setIsExiting(true), 400);
+      }
+  }, [forceLoading, progress]);
 
   if (isExiting) return null;
 
   return (
-    <div className={`fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center overflow-hidden transition-opacity duration-700 ${progress === 100 ? 'pointer-events-none' : ''}`}>
+    <div className={`fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center overflow-hidden transition-opacity duration-700 ${progress === 100 && !forceLoading ? 'pointer-events-none' : ''}`}>
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-rose-900/20 rounded-full blur-[100px] animate-pulse-glow" />
       <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-amber-900/10 rounded-full blur-[80px] animate-float" />
 
@@ -75,7 +85,7 @@ const SplashScreen: React.FC = () => {
         </div>
         <div className="mt-4 h-6 overflow-hidden">
             <p className="text-[10px] md:text-xs font-bold tracking-[0.5em] text-white/40 uppercase animate-fade-in-up">
-              {progress < 30 ? 'ANALYZING...' : progress < 70 ? 'COOKING...' : 'READY.'}
+              {progress < 30 ? 'ANALYZING...' : progress < 70 ? 'COOKING...' : (forceLoading ? 'AUTHENTICATING...' : 'READY.')}
             </p>
         </div>
       </div>
@@ -85,11 +95,11 @@ const SplashScreen: React.FC = () => {
 
 const AppContent: React.FC = () => {
   const { showToast } = useToast();
-  const [showSplash, setShowSplash] = useState(true);
-
+  
   // Auth State
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isAuthReady, setIsAuthReady] = useState(false); // Controls when we stop showing splash
 
   // App State
   const [currentView, setCurrentView] = useState<ViewState>('HOME');
@@ -110,35 +120,35 @@ const AppContent: React.FC = () => {
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
   const [isSessionBlocked, setIsSessionBlocked] = useState(false);
 
-  useEffect(() => {
-     // Check for auth redirect hash
-     if (window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('error='))) {
-        setShowSplash(false);
-        // CRITICAL FIX: Do NOT clear window.history here. 
-        // Supabase needs to read the hash in the subsequent useEffect.
-        // It will clear it automatically or we can rely on clean redirects.
-     } else {
-        const timer = setTimeout(() => setShowSplash(false), 3000); 
-        return () => clearTimeout(timer);
-     }
-  }, []);
+  // Determine if we should hold the splash screen because url has auth params
+  const hasAuthParams = window.location.hash.includes('access_token') || 
+                        window.location.hash.includes('error') || 
+                        window.location.search.includes('code=');
 
   useEffect(() => {
-    if (!supabase) return;
+    if (!supabase) {
+        setIsAuthReady(true);
+        return;
+    }
     
-    // Check for existing session or handle initial auth state
+    // Initialize Auth
+    // We wait for getSession() to resolve before declaring auth ready.
+    // This prevents "flash of login page" when redirecting back from OAuth.
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) {
-        loadUserData(session.user.id, session.user.email);
-        // If we have a session and there's a hash, we can optionally clean it now, but it's safer to leave it 
-        // or use window.history.replaceState(null, '', window.location.pathname) ONLY after confirmation.
+        loadUserData(session.user.id, session.user.email).finally(() => {
+            setIsAuthReady(true);
+        });
+      } else {
+         setIsAuthReady(true);
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
+        // If we get a session update (e.g. after redirect), ensure user data is loaded
         loadUserData(session.user.id, session.user.email);
       } else {
         setProfile(null);
@@ -192,48 +202,52 @@ const AppContent: React.FC = () => {
         return;
     }
 
-    let { data: profileData, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    if (error) {
-      if (error.code === 'PGRST116') {
-        const { data: newProfile, error: createError } = await supabase
-          .from('profiles')
-          .insert([{ 
-             id: userId, 
-             email: email, 
-             credits: DAILY_CREDITS, 
-             is_premium: false,
-             last_daily_reset: new Date().toISOString().split('T')[0]
-          }])
-          .select()
-          .single();
-        if (!createError) profileData = newProfile;
-      }
-    } else if (profileData) {
-      const today = new Date().toISOString().split('T')[0];
-      if (profileData.last_daily_reset !== today) {
-        const { data: updated } = await supabase
-          .from('profiles')
-          .update({ credits: DAILY_CREDITS, last_daily_reset: today })
-          .eq('id', userId)
-          .select()
-          .single();
-        if (updated) profileData = updated;
-      }
-    }
-    
-    if (profileData) {
-        setProfile(profileData as UserProfile);
-        const { data: savedData, error: savedError } = await supabase
-        .from('saved_items')
+    try {
+        let { data: profileData, error } = await supabase
+        .from('profiles')
         .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-        if (!savedError && savedData) setSavedItems(savedData as SavedItem[]);
+        .eq('id', userId)
+        .single();
+
+        if (error) {
+        if (error.code === 'PGRST116') {
+            const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert([{ 
+                id: userId, 
+                email: email, 
+                credits: DAILY_CREDITS, 
+                is_premium: false,
+                last_daily_reset: new Date().toISOString().split('T')[0]
+            }])
+            .select()
+            .single();
+            if (!createError) profileData = newProfile;
+        }
+        } else if (profileData) {
+        const today = new Date().toISOString().split('T')[0];
+        if (profileData.last_daily_reset !== today) {
+            const { data: updated } = await supabase
+            .from('profiles')
+            .update({ credits: DAILY_CREDITS, last_daily_reset: today })
+            .eq('id', userId)
+            .select()
+            .single();
+            if (updated) profileData = updated;
+        }
+        }
+        
+        if (profileData) {
+            setProfile(profileData as UserProfile);
+            const { data: savedData, error: savedError } = await supabase
+            .from('saved_items')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+            if (!savedError && savedData) setSavedItems(savedData as SavedItem[]);
+        }
+    } catch (e) {
+        console.error("Error loading user data", e);
     }
   };
 
@@ -495,7 +509,16 @@ const AppContent: React.FC = () => {
   const isSaved = (content: string) => savedItems.some(item => item.content === content);
   const clear = () => { setInputText(''); setImage(null); setResult(null); setInputError(null); NativeBridge.haptic('light'); };
 
-  if (showSplash) return <SplashScreen />;
+  // If Auth check is not ready, FORCE the splash screen to stay visible/loading
+  // This prevents the LoginPage from rendering momentarily while Supabase parses the hash
+  if (!isAuthReady) {
+      return <SplashScreen forceLoading={true} />;
+  }
+
+  // If Auth is ready but we still want to show splash animation (and no auth params pending)
+  // We can return SplashScreen without forceLoading (it will exit naturally)
+  // However, since we now control `isAuthReady` which includes the data load, we can just transition.
+  // Ideally, if `isAuthReady` took a long time, the splash is still there.
 
   if (isSessionBlocked) {
     return (
@@ -517,6 +540,8 @@ const AppContent: React.FC = () => {
   if (!session) return <LoginPage onGuestLogin={handleGuestLogin} />;
 
   if (!profile) {
+    // If session exists but profile is loading (should be rare given wait logic above)
+    // fallback to spinner
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-white p-4 bg-black safe-top safe-bottom">
         <svg className="animate-spin h-8 w-8 text-rose-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
