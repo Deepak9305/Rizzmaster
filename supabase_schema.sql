@@ -33,6 +33,10 @@ create policy "Users can update own profile"
   on public.profiles for update 
   using ( auth.uid() = id );
 
+create policy "Users can delete own profile" 
+  on public.profiles for delete 
+  using ( auth.uid() = id );
+
 -- Policies for saved_items
 create policy "Users can view own saved items" 
   on public.saved_items for select 

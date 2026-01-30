@@ -2,7 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Updated viewport for Native Mobile: prevent zoom, handle notches (viewport-fit=cover) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <!-- Native Status Bar Colors -->
+    <meta name="theme-color" content="#050505" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>Rizz Master AI</title>
     <!-- Keeping Tailwind CDN for simplicity as requested, though installing it via package.json is also an option with Vite -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,8 +17,20 @@
         font-family: 'Space Grotesk', sans-serif;
         background-color: #050505;
         color: #ffffff;
+        /* Mobile: Prevent rubber-banding on scroll in some webviews */
+        overscroll-behavior-y: none;
+        /* Mobile: Optimize tap highlight */
+        -webkit-tap-highlight-color: transparent;
       }
       
+      /* Safe Area Utilities */
+      .safe-top {
+        padding-top: env(safe-area-inset-top);
+      }
+      .safe-bottom {
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+
       .glass {
         background: rgba(255, 255, 255, 0.03);
         backdrop-filter: blur(16px);
@@ -97,6 +113,15 @@
       @keyframes pulse-glow {
         0%, 100% { opacity: 0.3; transform: scale(1); }
         50% { opacity: 0.5; transform: scale(1.05); }
+      }
+      
+      /* Toast Animation */
+      .animate-slide-up-fade {
+        animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+      @keyframes slideUpFade {
+        from { opacity: 0; transform: translateY(10px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
       }
 
       /* Custom Scrollbar for Sticky Containers */

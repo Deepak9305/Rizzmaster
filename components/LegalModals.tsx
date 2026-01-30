@@ -32,39 +32,25 @@ const LegalModals: React.FC<LegalModalProps> = ({ type, onClose }) => {
           {type === 'privacy' ? (
             <>
               <section>
-                <h3 className="text-white font-bold mb-2">1. Data Collection</h3>
-                <p>We collect minimal data necessary to operate Rizz Master. This includes your email (for authentication), generated content history, and usage credits. We do not sell your personal data to third parties.</p>
+                <h3 className="text-white font-bold mb-2">Privacy Summary</h3>
+                <p>We respect your privacy. This app collects minimal data (e.g., email, credits) to operate the service. User inputs are processed by third-party AI providers for generation only. We do not sell your personal data.</p>
+                <p className="mt-4 text-xs opacity-50">For full details, please check the Privacy Policy link on our App Store / Play Store listing.</p>
               </section>
               <section>
-                <h3 className="text-white font-bold mb-2">2. AI Processing</h3>
-                <p>User inputs (chat logs, bio details, and images) are sent to Google's Gemini API for processing. These inputs are not used by us to train models, but are subject to Google's data processing terms.</p>
-              </section>
-              <section>
-                <h3 className="text-white font-bold mb-2">3. Local Storage</h3>
-                <p>For guest users, data is stored locally on your device. Clearing your browser cache will result in data loss.</p>
-              </section>
-              <section>
-                <h3 className="text-white font-bold mb-2">4. Account Deletion</h3>
-                <p>You may request full account deletion at any time by contacting support.</p>
+                <h3 className="text-white font-bold mb-2">Account Deletion</h3>
+                <p>You may request the deletion of your account and all associated data at any time via the in-app support or by contacting us.</p>
               </section>
             </>
           ) : (
             <>
                <section>
-                <h3 className="text-white font-bold mb-2">1. Acceptance of Terms</h3>
-                <p>By accessing Rizz Master, you agree to these terms. This service is for entertainment purposes only.</p>
+                <h3 className="text-white font-bold mb-2">Terms Overview</h3>
+                <p>Rizz Master is for entertainment purposes only. AI-generated advice may be inaccurate or inappropriate; please use your own judgment.</p>
               </section>
               <section>
-                <h3 className="text-white font-bold mb-2">2. AI Disclaimer</h3>
-                <p>Generations are created by Artificial Intelligence. The advice given may be inaccurate, inappropriate, or ineffective. Use your own judgment in real-world social interactions. We are not responsible for rejected dates or awkward conversations.</p>
-              </section>
-              <section>
-                <h3 className="text-white font-bold mb-2">3. User Conduct</h3>
-                <p>You agree not to use this service to generate harassment, hate speech, or illegal content. We reserve the right to ban users who violate this policy.</p>
-              </section>
-              <section>
-                <h3 className="text-white font-bold mb-2">4. Subscriptions & Refunds</h3>
-                <p>Premium features are provided on an "as is" basis. Refunds are handled at our discretion for technical failures only.</p>
+                <h3 className="text-white font-bold mb-2">User Conduct</h3>
+                <p>You agree not to use this service to generate harmful, illegal, or harassing content. We reserve the right to ban users who violate this policy.</p>
+                <p className="mt-4 text-xs opacity-50">For full terms, please check the Terms of Service link on our App Store / Play Store listing.</p>
               </section>
             </>
           )}

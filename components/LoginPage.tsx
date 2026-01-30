@@ -25,16 +25,36 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
         return;
     }
     
+    // --- AUTH REDIRECT CONFIGURATION ---
+    // Your live production URL. This is critical for the "Wrapper" strategy.
+    // When running on Android (Capacitor), we cannot redirect to 'file://'.
+    // We must redirect to the live website where the auth cookie/token can be set correctly.
+    const PRODUCTION_URL = 'https://rizzmaster.vercel.app';
+    
+    const envRedirect = (import.meta as any).env?.VITE_AUTH_REDIRECT_URL;
+    const isHybrid = window.location.protocol !== 'http:' && window.location.protocol !== 'https:';
+    
+    // Logic:
+    // 1. If an Env Var is set, use it (Developer override).
+    // 2. If running on Mobile (Hybrid), use the PRODUCTION_URL.
+    // 3. If running on Localhost/Web, use the current window location.
+    const redirectUrl = envRedirect 
+        ? envRedirect 
+        : (isHybrid ? PRODUCTION_URL : window.location.origin);
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin
+        redirectTo: redirectUrl,
+        queryParams: {
+            access_type: 'offline',
+            prompt: 'consent', // Forces standard web consent
+        }
       }
     });
 
     if (error) {
         console.error("Google Login Error:", error);
-        // Fix: Safely access error properties to prevent crashes on non-standard error objects
         const errorMessage = error.message || (error as any).msg || JSON.stringify(error);
         
         if (errorMessage.includes("Unsupported provider")) {
