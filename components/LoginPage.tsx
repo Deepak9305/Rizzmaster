@@ -25,20 +25,33 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
         return;
     }
     
-    // Check if we are in a Hybrid/Native environment (Capacitor/Cordova/WebView)
-    const isHybrid = window.location.protocol !== 'http:' && window.location.protocol !== 'https:';
+    // Robust check for Hybrid/Native/WebView environments
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isCapacitor = !!(window as any).Capacitor;
+    const isWebView = /wv|android.*version\/|iphone.*webkit.*mobile/i.test(userAgent) && !(window as any).chrome;
+    const isLocalProtocol = window.location.protocol !== 'http:' && window.location.protocol !== 'https:';
+
+    const isHybrid = isCapacitor || isLocalProtocol || isWebView;
 
     if (isHybrid) {
-        // --- HYBRID ENVIRONMENT FIX ---
+        // --- HYBRID / EMBEDDED ENVIRONMENT FIX ---
         // Google blocks OAuth in embedded WebViews (403 disallowed_useragent).
-        // Solution: Generate the OAuth URL and open it in the System Browser (Chrome/Safari).
-        // The redirectTo points to the PWA version of the app to ensure a successful landing.
+        // Solution: Generate the OAuth URL and open it in the System Browser.
         
         try {
+            // Determine redirect URL:
+            // 1. If VITE_AUTH_REDIRECT_URL is set, use it.
+            // 2. If running on localhost/file, try a known production URL or deep link scheme.
+            // 3. Fallback to current origin (might not work well if origin is file://)
+            const envRedirect = (import.meta as any).env?.VITE_AUTH_REDIRECT_URL;
+            const fallbackRedirect = 'https://rizzmaster.vercel.app'; // Fallback for native apps without deep links
+            
+            const redirectUrl = envRedirect || (isLocalProtocol ? fallbackRedirect : window.location.origin);
+
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: 'https://rizzmaster.vercel.app', // Force redirect to live site
+                    redirectTo: redirectUrl,
                     skipBrowserRedirect: true, // Do not auto-navigate the WebView
                     queryParams: {
                         access_type: 'offline',
@@ -50,15 +63,18 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
             if (error) throw error;
 
             if (data?.url) {
-                // Open in system browser (use '_system' for Capacitor/Cordova, '_blank' fallback)
-                // This breaks the user out of the app to the browser where Google Login is allowed.
-                const opened = window.open(data.url, '_system');
+                // Try to open in system browser
+                // '_system' works for Capacitor/Cordova to break out of WebView
+                const target = isCapacitor ? '_system' : '_blank';
+                const opened = window.open(data.url, target);
                 
                 if (!opened) {
-                    alert("Please allow popups to sign in with Google.");
+                    // Fallback if popup blocker catches it
+                    window.location.href = data.url; 
                 } else {
-                    // Inform the user since we can't deep-link back easily without native config
-                    alert("Google Login opened in your browser. Please continue there. Note: You will be logged into the web version.");
+                     // Note: If using a wrapper without deep linking, the user will be logged in 
+                     // on the browser, not the app. This is a limitation of simple wrappers.
+                     console.log("Opened Google Auth in system browser/popup");
                 }
             }
         } catch (err: any) {

@@ -14,12 +14,19 @@ interface ToastContextType {
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
+// Simple UUID fallback for environments without crypto.randomUUID (e.g. older WebViews)
+const generateId = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return Date.now().toString(36) + Math.random().toString(36).substring(2);
+};
+
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [toasts, setToasts] = useState<Toast[]>([]);
-  // Use a ref to keep track of timeouts so we can clear them if needed (optional)
 
   const showToast = useCallback((message: string, type: ToastType = 'info') => {
-    const id = crypto.randomUUID();
+    const id = generateId();
     setToasts((prev) => [...prev, { id, message, type }]);
 
     // Auto dismiss after 3 seconds
@@ -32,8 +39,11 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     <ToastContext.Provider value={{ showToast }}>
       {children}
       
-      {/* Toast Container - Safe Area aware */}
-      <div className="fixed top-0 left-0 right-0 z-[100] pointer-events-none flex flex-col items-center gap-2 p-4 pt-safe-top">
+      {/* Toast Container - Safe Area aware
+          Updated z-index to 9999 to be above Splash (100) and Modals
+          Fixed padding-top to use inline style for safe-area env var or arbitrary tailwind value
+      */}
+      <div className="fixed top-0 left-0 right-0 z-[9999] pointer-events-none flex flex-col items-center gap-2 p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
         {toasts.map((toast) => (
           <div
             key={toast.id}

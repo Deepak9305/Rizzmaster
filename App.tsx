@@ -21,6 +21,14 @@ const TEST_PRODUCT_ID = 'android.test.purchased';
 
 type ViewState = 'HOME' | 'PRIVACY' | 'TERMS' | 'SUPPORT';
 
+// Helper for UUID generation with fallback
+const generateUUID = () => {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
+    return Date.now().toString(36) + Math.random().toString(36).substring(2);
+};
+
 const SplashScreen: React.FC = () => {
   const [progress, setProgress] = useState(0);
   const [isExiting, setIsExiting] = useState(false);
@@ -118,14 +126,12 @@ const AppContent: React.FC = () => {
     if (!supabase) return;
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      // Fix: Pass email directly as state might not be updated yet
       if (session) loadUserData(session.user.id, session.user.email);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
-        // Fix: Pass email directly
         loadUserData(session.user.id, session.user.email);
       } else {
         setProfile(null);
@@ -191,7 +197,7 @@ const AppContent: React.FC = () => {
           .from('profiles')
           .insert([{ 
              id: userId, 
-             email: email, // Use passed email instead of state
+             email: email, 
              credits: DAILY_CREDITS, 
              is_premium: false,
              last_daily_reset: new Date().toISOString().split('T')[0]
@@ -306,7 +312,7 @@ const AppContent: React.FC = () => {
       showToast("Removed from saved", 'info');
     } else {
       const newItem: SavedItem = {
-          id: crypto.randomUUID(),
+          id: generateUUID(),
           user_id: profile.id,
           content,
           type,
@@ -739,9 +745,9 @@ const AppContent: React.FC = () => {
               </div>
 
               <div className="grid gap-3 md:gap-4 pb-12">
-                <RizzCard label="The Tease" content={result.tease} icon="😏" color="from-purple-500 to-indigo-500" isSaved={isSaved(result.tease)} onSave={() => toggleSave(result.tease, 'tease')} onShare={() => handleShare(result.tease)} delay={0.1} />
-                <RizzCard label="The Smooth" content={result.smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved(result.smooth)} onSave={() => toggleSave(result.smooth, 'smooth')} onShare={() => handleShare(result.smooth)} delay={0.2} />
-                <RizzCard label="The Chaotic" content={result.chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved(result.chaotic)} onSave={() => toggleSave(result.chaotic, 'chaotic')} onShare={() => handleShare(result.chaotic)} delay={0.3} />
+                <RizzCard label="Tease" content={result.tease} icon="😏" color="from-purple-500 to-indigo-500" isSaved={isSaved(result.tease)} onSave={() => toggleSave(result.tease, 'tease')} onShare={() => handleShare(result.tease)} delay={0.1} />
+                <RizzCard label="Smooth" content={result.smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved(result.smooth)} onSave={() => toggleSave(result.smooth, 'smooth')} onShare={() => handleShare(result.smooth)} delay={0.2} />
+                <RizzCard label="Chaotic" content={result.chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved(result.chaotic)} onSave={() => toggleSave(result.chaotic, 'chaotic')} onShare={() => handleShare(result.chaotic)} delay={0.3} />
               </div>
             </>
           )}
