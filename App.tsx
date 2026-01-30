@@ -569,7 +569,7 @@ const AppContent: React.FC = () => {
               <span className="hidden md:inline text-xs font-bold text-white">Saved</span>
            </button>
 
-           {!profile.is_premium && (
+           {!profile?.is_premium && (
              <button 
                 onClick={() => { setShowPremiumModal(true); NativeBridge.haptic('medium'); }}
                 className="hidden md:flex px-4 py-2 bg-gradient-to-r from-yellow-600 to-yellow-400 text-black text-xs font-bold rounded-full items-center gap-1 hover:brightness-110 transition-all active:scale-95"
@@ -578,12 +578,12 @@ const AppContent: React.FC = () => {
              </button>
            )}
 
-           <div className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full border backdrop-blur-md ${profile.is_premium ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-white/5 border-white/10'}`}>
-              <span className={profile.is_premium ? "text-yellow-400 text-lg" : "text-yellow-400 text-lg"}>
-                {profile.is_premium ? '👑' : '⚡'}
+           <div className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full border backdrop-blur-md ${profile?.is_premium ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-white/5 border-white/10'}`}>
+              <span className={profile?.is_premium ? "text-yellow-400 text-lg" : "text-yellow-400 text-lg"}>
+                {profile?.is_premium ? '👑' : '⚡'}
               </span>
-              <span className={`font-bold text-xs md:text-sm ${profile.is_premium ? 'text-yellow-400' : 'text-white'}`}>
-                {profile.is_premium ? 'Unlimited' : `${profile.credits} Credits`}
+              <span className={`font-bold text-xs md:text-sm ${profile?.is_premium ? 'text-yellow-400' : 'text-white'}`}>
+                {profile?.is_premium ? 'Unlimited' : `${profile?.credits} Credits`}
               </span>
            </div>
         </div>
@@ -595,7 +595,7 @@ const AppContent: React.FC = () => {
            <h1 className="text-5xl md:text-7xl font-black mb-2 tracking-tighter bg-gradient-to-r from-rose-400 via-amber-200 to-rose-400 bg-clip-text text-transparent pb-2 animate-text-shimmer">
              Rizz Master
            </h1>
-          {profile.is_premium && (
+          {profile?.is_premium && (
             <div className="absolute -top-4 -right-6 md:-right-8 rotate-12 bg-yellow-500 text-black font-bold text-[10px] md:text-xs px-2 py-1 rounded shadow-lg">PRO</div>
           )}
         </div>
@@ -661,26 +661,26 @@ const AppContent: React.FC = () => {
             </div>
           )}
           
-          {(profile.is_premium || profile.credits > 0) ? (
+          {(profile?.is_premium || (profile?.credits || 0) > 0) ? (
             <button
               onClick={handleGenerate}
               disabled={loading}
               className={`w-full py-3.5 md:py-4 rounded-2xl font-bold text-base md:text-lg shadow-xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
-                profile.is_premium 
+                profile?.is_premium 
                 ? "bg-gradient-to-r from-yellow-500 to-amber-600 text-black" 
                 : "rizz-gradient text-white"
               }`}
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
-                  <svg className={`animate-spin h-5 w-5 ${profile.is_premium ? 'text-black' : 'text-white'}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg className={`animate-spin h-5 w-5 ${profile?.is_premium ? 'text-black' : 'text-white'}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  {profile.is_premium ? "Generating Fast..." : "Cooking..."}
+                  {profile?.is_premium ? "Generating Fast..." : "Cooking..."}
                 </span>
               ) : (
-                profile.is_premium ? "Get Rizz (VIP)" : `Get Rizz (${(mode === InputMode.CHAT && image) ? 2 : 1} ⚡)`
+                profile?.is_premium ? "Get Rizz (VIP)" : `Get Rizz (${(mode === InputMode.CHAT && image) ? 2 : 1} ⚡)`
               )}
             </button>
           ) : (
@@ -694,9 +694,9 @@ const AppContent: React.FC = () => {
             </div>
           )}
 
-          {!profile.is_premium && (
+          {!profile?.is_premium && (
             <p className="text-center text-[10px] md:text-xs text-white/30 mt-3 md:mt-4">
-              {profile.credits} daily credits remaining. <span className="text-yellow-500/80 cursor-pointer hover:underline" onClick={() => setShowPremiumModal(true)}>Upgrade.</span>
+              {profile?.credits} daily credits remaining. <span className="text-yellow-500/80 cursor-pointer hover:underline" onClick={() => setShowPremiumModal(true)}>Upgrade.</span>
             </p>
           )}
         </section>
