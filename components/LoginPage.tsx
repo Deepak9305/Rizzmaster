@@ -25,22 +25,51 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
         return;
     }
     
-    // --- AUTH REDIRECT CONFIGURATION ---
-    // Your live production URL. This is critical for the "Wrapper" strategy.
-    // When running on Android (Capacitor), we cannot redirect to 'file://'.
-    // We must redirect to the live website where the auth cookie/token can be set correctly.
-    const PRODUCTION_URL = 'https://rizzmaster.vercel.app';
-    
-    const envRedirect = (import.meta as any).env?.VITE_AUTH_REDIRECT_URL;
+    // Check if we are in a Hybrid/Native environment (Capacitor/Cordova/WebView)
     const isHybrid = window.location.protocol !== 'http:' && window.location.protocol !== 'https:';
+
+    if (isHybrid) {
+        // --- HYBRID ENVIRONMENT FIX ---
+        // Google blocks OAuth in embedded WebViews (403 disallowed_useragent).
+        // Solution: Generate the OAuth URL and open it in the System Browser (Chrome/Safari).
+        // The redirectTo points to the PWA version of the app to ensure a successful landing.
+        
+        try {
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: 'https://rizzmaster.vercel.app', // Force redirect to live site
+                    skipBrowserRedirect: true, // Do not auto-navigate the WebView
+                    queryParams: {
+                        access_type: 'offline',
+                        prompt: 'consent',
+                    }
+                }
+            });
+
+            if (error) throw error;
+
+            if (data?.url) {
+                // Open in system browser (use '_system' for Capacitor/Cordova, '_blank' fallback)
+                // This breaks the user out of the app to the browser where Google Login is allowed.
+                const opened = window.open(data.url, '_system');
+                
+                if (!opened) {
+                    alert("Please allow popups to sign in with Google.");
+                } else {
+                    // Inform the user since we can't deep-link back easily without native config
+                    alert("Google Login opened in your browser. Please continue there. Note: You will be logged into the web version.");
+                }
+            }
+        } catch (err: any) {
+            console.error("Google Hybrid Login Error:", err);
+            alert(`Login failed: ${err.message || err}`);
+        }
+        return;
+    }
     
-    // Logic:
-    // 1. If an Env Var is set, use it (Developer override).
-    // 2. If running on Mobile (Hybrid), use the PRODUCTION_URL.
-    // 3. If running on Localhost/Web, use the current window location.
-    const redirectUrl = envRedirect 
-        ? envRedirect 
-        : (isHybrid ? PRODUCTION_URL : window.location.origin);
+    // --- STANDARD WEB ENVIRONMENT ---
+    const redirectUrl = (import.meta as any).env?.VITE_AUTH_REDIRECT_URL || window.location.origin;
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -48,7 +77,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
         redirectTo: redirectUrl,
         queryParams: {
             access_type: 'offline',
-            prompt: 'consent', // Forces standard web consent
+            prompt: 'consent',
         }
       }
     });
@@ -56,12 +85,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
     if (error) {
         console.error("Google Login Error:", error);
         const errorMessage = error.message || (error as any).msg || JSON.stringify(error);
-        
-        if (errorMessage.includes("Unsupported provider")) {
-            alert("Google Login is not enabled. Please use Guest Mode or Email.");
-        } else {
-            alert(`Login failed: ${errorMessage}`);
-        }
+        alert(`Login failed: ${errorMessage}`);
     }
   };
 

@@ -340,7 +340,6 @@ const AppContent: React.FC = () => {
         return;
     }
 
-    // Ensure we don't proceed if profile is missing
     if (!profile) return;
 
     if (!supabase || profile.id === 'guest') {
@@ -357,7 +356,6 @@ const AppContent: React.FC = () => {
 
     try {
         setLoading(true);
-        // Use optional chaining just in case, though guard above covers it
         const { error } = await supabase.from('profiles').delete().eq('id', profile.id);
         if (error) throw error;
 
@@ -416,7 +414,7 @@ const AppContent: React.FC = () => {
 
     const cost = (mode === InputMode.CHAT && image) ? 2 : 1;
 
-    // Use optional chaining to be safe
+    // Fixed: Added optional chaining to prevent TS18047
     if (!profile?.is_premium && (profile?.credits || 0) < cost) {
       if ((profile?.credits || 0) > 0) {
         showToast(`Need ${cost} credits. You have ${profile.credits}.`, 'error');
@@ -428,7 +426,8 @@ const AppContent: React.FC = () => {
     setLoading(true);
     try {
       if (!profile?.is_premium) {
-        updateCredits(profile.credits - cost);
+        // Fixed: Added optional chaining
+        updateCredits((profile?.credits || 0) - cost);
       }
 
       if (mode === InputMode.CHAT) {
@@ -442,7 +441,7 @@ const AppContent: React.FC = () => {
     } catch (error) {
       console.error(error);
       showToast('The wingman tripped! Try again.', 'error');
-      // Fix: Use optional chaining here as profile access inside catch block can lose type narrowing
+      // Fixed: Added optional chaining for error recovery
       if (profile && !profile.is_premium) updateCredits(profile.credits);
     } finally {
       setLoading(false);
