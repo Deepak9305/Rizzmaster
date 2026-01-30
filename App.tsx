@@ -340,7 +340,10 @@ const AppContent: React.FC = () => {
         return;
     }
 
-    if (!supabase || profile?.id === 'guest') {
+    // Ensure we don't proceed if profile is missing
+    if (!profile) return;
+
+    if (!supabase || profile.id === 'guest') {
         localStorage.removeItem('guest_profile');
         localStorage.removeItem('guest_saved_items');
         setProfile(null);
@@ -354,6 +357,7 @@ const AppContent: React.FC = () => {
 
     try {
         setLoading(true);
+        // Use optional chaining just in case, though guard above covers it
         const { error } = await supabase.from('profiles').delete().eq('id', profile.id);
         if (error) throw error;
 
@@ -412,8 +416,9 @@ const AppContent: React.FC = () => {
 
     const cost = (mode === InputMode.CHAT && image) ? 2 : 1;
 
-    if (!profile.is_premium && profile.credits < cost) {
-      if (profile.credits > 0) {
+    // Use optional chaining to be safe
+    if (!profile?.is_premium && (profile?.credits || 0) < cost) {
+      if ((profile?.credits || 0) > 0) {
         showToast(`Need ${cost} credits. You have ${profile.credits}.`, 'error');
       }
       setShowPremiumModal(true);
@@ -422,7 +427,7 @@ const AppContent: React.FC = () => {
 
     setLoading(true);
     try {
-      if (!profile.is_premium) {
+      if (!profile?.is_premium) {
         updateCredits(profile.credits - cost);
       }
 
@@ -437,7 +442,8 @@ const AppContent: React.FC = () => {
     } catch (error) {
       console.error(error);
       showToast('The wingman tripped! Try again.', 'error');
-      if (!profile.is_premium) updateCredits(profile.credits);
+      // Fix: Use optional chaining here as profile access inside catch block can lose type narrowing
+      if (profile && !profile.is_premium) updateCredits(profile.credits);
     } finally {
       setLoading(false);
     }
