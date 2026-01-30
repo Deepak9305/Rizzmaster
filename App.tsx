@@ -118,13 +118,15 @@ const AppContent: React.FC = () => {
     if (!supabase) return;
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session) loadUserData(session.user.id);
+      // Fix: Pass email directly as state might not be updated yet
+      if (session) loadUserData(session.user.id, session.user.email);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
-        loadUserData(session.user.id);
+        // Fix: Pass email directly
+        loadUserData(session.user.id, session.user.email);
       } else {
         setProfile(null);
         setSavedItems([]);
@@ -156,7 +158,7 @@ const AppContent: React.FC = () => {
     sessionChannelRef.current?.postMessage({ type: 'NEW_SESSION_STARTED' });
   };
 
-  const loadUserData = async (userId: string) => {
+  const loadUserData = async (userId: string, email?: string) => {
     if (!supabase || userId === 'guest') {
         const storedProfile = localStorage.getItem('guest_profile');
         if (storedProfile) {
@@ -189,7 +191,7 @@ const AppContent: React.FC = () => {
           .from('profiles')
           .insert([{ 
              id: userId, 
-             email: session?.user.email,
+             email: email, // Use passed email instead of state
              credits: DAILY_CREDITS, 
              is_premium: false,
              last_daily_reset: new Date().toISOString().split('T')[0]
@@ -385,6 +387,11 @@ const AppContent: React.FC = () => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+          NativeBridge.haptic('error');
+          showToast('Image too large. Max 5MB.', 'error');
+          return;
+      }
       NativeBridge.haptic('light');
       const reader = new FileReader();
       reader.onloadend = () => {

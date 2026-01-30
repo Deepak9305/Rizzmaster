@@ -60,6 +60,11 @@
         background-size: 200% auto;
         animation: shimmer 3s linear infinite;
       }
+      /* Generic Shimmer for Backgrounds/Borders */
+      .animate-shimmer {
+        background-size: 200% 100%;
+        animation: shimmer 2s linear infinite;
+      }
 
       /* Letter Blur Reveal */
       @keyframes blurIn {
@@ -122,6 +127,15 @@
       @keyframes slideUpFade {
         from { opacity: 0; transform: translateY(10px) scale(0.95); }
         to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+
+      /* Slide In Right (for Saved Modal) */
+      @keyframes slideInRight {
+        from { opacity: 0; transform: translateX(100%); }
+        to { opacity: 1; transform: translateX(0); }
+      }
+      .animate-slide-in-right {
+        animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       }
 
       /* Custom Scrollbar for Sticky Containers */
