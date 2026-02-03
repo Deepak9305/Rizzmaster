@@ -21,20 +21,16 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
   const [activeLegalModal, setActiveLegalModal] = useState<'privacy' | 'terms' | null>(null);
 
   useEffect(() => {
-    // Initialize Google Auth only if native.
-    // NOTE: You must provide the Web Client ID here for Supabase to verify the token correctly.
-    // Even for Android, we initialize with the Web Client ID.
+    // Initialize Google Auth logic
+    // We try to initialize with the Web Client ID if available in environment variables.
+    // The native plugin might use capacitor.config.json, but explicit init is safer for hybrid contexts.
     if (Capacitor.isNativePlatform()) {
        const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
-       if (clientId) {
-           GoogleAuth.initialize({
-               clientId: clientId,
-               scopes: ['profile', 'email'],
-               grantOfflineAccess: true,
-           });
-       } else {
-           console.warn("VITE_GOOGLE_CLIENT_ID missing. Native Google Auth may fail.");
-       }
+       GoogleAuth.initialize({
+           clientId: clientId || 'YOUR_WEB_CLIENT_ID_PLACEHOLDER', // Fallback or force strict config
+           scopes: ['profile', 'email'],
+           grantOfflineAccess: true,
+       });
     }
   }, []);
 
@@ -46,8 +42,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
     }
 
     try {
-        // --- NATIVE LOGIN (ANDROID/iOS) ---
         if (Capacitor.isNativePlatform()) {
+            // --- NATIVE AUTH (Android/iOS) ---
+            // Uses the Native Plugin to get an ID Token, then signs in to Supabase.
+            // No deep links or redirects required.
             console.log("Starting Native Google Sign-In");
             const googleUser = await GoogleAuth.signIn();
             
@@ -57,82 +55,32 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
                     token: googleUser.authentication.idToken,
                 });
                 if (error) throw error;
-                // Success: Auth state listener in App.tsx will handle the rest
+                // Success - auth state listener in App.tsx will handle the rest
                 return;
             } else {
                 throw new Error("No ID token returned from Google Sign-In");
             }
-        }
-    } catch (nativeError: any) {
-        console.error("Native Google Login failed:", nativeError);
-        alert(`Native Login Error: ${nativeError.message || JSON.stringify(nativeError)}`);
-        return;
-    }
-    
-    // --- WEB / HYBRID FALLBACK ---
-    // If we are here, we are on the Web or a non-Capacitor environment.
-    
-    const userAgent = navigator.userAgent;
-    const isLocalProtocol = window.location.protocol !== 'http:' && window.location.protocol !== 'https:';
-
-    // Better WebView detection logic
-    const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
-    const isSafari = /Safari/.test(userAgent);
-    const isIOSWebView = isIOS && (!isSafari || /FBAV|Instagram|Line|Snapchat/i.test(userAgent)); 
-    const isAndroidWebView = /wv/.test(userAgent) || (/Android/.test(userAgent) && /Version\/[\d\.]+/.test(userAgent) && /Chrome\//.test(userAgent));
-
-    const isHybrid = isLocalProtocol || isIOSWebView || isAndroidWebView;
-
-    if (isHybrid) {
-        // --- HYBRID / EMBEDDED ENVIRONMENT FIX ---
-        try {
-            const envRedirect = (import.meta as any).env?.VITE_AUTH_REDIRECT_URL;
-            const fallbackRedirect = 'https://rizzmaster.vercel.app'; 
+        } else {
+            // --- STANDARD WEB AUTH ---
+            // Uses standard browser redirect. No custom deep links needed.
+            const redirectUrl = (import.meta as any).env?.VITE_AUTH_REDIRECT_URL || window.location.origin;
             
-            const redirectUrl = envRedirect || (isLocalProtocol ? fallbackRedirect : window.location.origin);
-
-            const { data, error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo: redirectUrl,
-                    skipBrowserRedirect: true,
-                    queryParams: {
-                        access_type: 'offline',
-                        prompt: 'consent',
-                    }
+            const { error } = await supabase.auth.signInWithOAuth({
+              provider: 'google',
+              options: {
+                redirectTo: redirectUrl,
+                queryParams: {
+                    access_type: 'offline',
+                    prompt: 'consent',
                 }
+              }
             });
-
+            
             if (error) throw error;
-
-            if (data?.url) {
-                const opened = window.open(data.url, '_system');
-                if (!opened) window.location.href = data.url; 
-            }
-        } catch (err: any) {
-            console.error("Google Hybrid Login Error:", err);
-            alert(`Login failed: ${err.message || err}`);
         }
-        return;
-    }
-    
-    // --- STANDARD WEB ENVIRONMENT ---
-    const redirectUrl = (import.meta as any).env?.VITE_AUTH_REDIRECT_URL || window.location.origin;
-    
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: redirectUrl,
-        queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-        }
-      }
-    });
-
-    if (error) {
-        console.error("Google Login Error:", error);
-        const errorMessage = error.message || (error as any).msg || JSON.stringify(error);
+    } catch (err: any) {
+        console.error("Google Login Error:", err);
+        const errorMessage = err.message || (err as any).msg || JSON.stringify(err);
         alert(`Login failed: ${errorMessage}`);
     }
   };
