@@ -1,8 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '../services/supabaseClient';
 import LegalModals from './LegalModals';
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
-import { Capacitor } from '@capacitor/core';
 
 interface LoginPageProps {
   onGuestLogin: () => void;
@@ -20,74 +18,45 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
   // State for Legal Modals
   const [activeLegalModal, setActiveLegalModal] = useState<'privacy' | 'terms' | null>(null);
 
-  useEffect(() => {
-    // Initialize Google Auth only if native.
-    // NOTE: You must provide the Web Client ID here for Supabase to verify the token correctly.
-    // Even for Android, we initialize with the Web Client ID.
-    if (Capacitor.isNativePlatform()) {
-       const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
-       if (clientId) {
-           GoogleAuth.initialize({
-               clientId: clientId,
-               scopes: ['profile', 'email'],
-               grantOfflineAccess: true,
-           });
-       } else {
-           console.warn("VITE_GOOGLE_CLIENT_ID missing. Native Google Auth may fail.");
-       }
-    }
-  }, []);
-
   const handleGoogleLogin = async () => {
     if (!supabase) {
         alert("Supabase not configured. Using Guest Mode.");
         onGuestLogin();
         return;
     }
-
-    try {
-        // --- NATIVE LOGIN (ANDROID/iOS) ---
-        if (Capacitor.isNativePlatform()) {
-            console.log("Starting Native Google Sign-In");
-            const googleUser = await GoogleAuth.signIn();
-            
-            if (googleUser.authentication.idToken) {
-                const { error } = await supabase.auth.signInWithIdToken({
-                    provider: 'google',
-                    token: googleUser.authentication.idToken,
-                });
-                if (error) throw error;
-                // Success: Auth state listener in App.tsx will handle the rest
-                return;
-            } else {
-                throw new Error("No ID token returned from Google Sign-In");
-            }
-        }
-    } catch (nativeError: any) {
-        console.error("Native Google Login failed:", nativeError);
-        alert(`Native Login Error: ${nativeError.message || JSON.stringify(nativeError)}`);
-        return;
-    }
     
-    // --- WEB / HYBRID FALLBACK ---
-    // If we are here, we are on the Web or a non-Capacitor environment.
-    
+    // Robust check for Hybrid/Native/WebView environments
     const userAgent = navigator.userAgent;
+    const isCapacitor = !!(window as any).Capacitor;
     const isLocalProtocol = window.location.protocol !== 'http:' && window.location.protocol !== 'https:';
 
-    // Better WebView detection logic
+    // Better WebView detection logic:
+    // 1. iOS: Check if it's an iOS device AND (it is NOT Safari OR it contains specific app tokens like FBAV, Instagram, etc)
+    //    Standard Safari always includes "Safari". WebViews often include "AppleWebKit" but omit "Safari" (though some wrappers add it).
+    //    We check for common embedded app strings just in case.
     const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
     const isSafari = /Safari/.test(userAgent);
     const isIOSWebView = isIOS && (!isSafari || /FBAV|Instagram|Line|Snapchat/i.test(userAgent)); 
+
+    // 2. Android: Check for "wv" token or typical "Version/X.X ... Chrome/..." pattern without being standard Chrome.
+    //    Standard Chrome: "Chrome/100.0..."
+    //    WebView: "Version/4.0 Chrome/100.0..."
     const isAndroidWebView = /wv/.test(userAgent) || (/Android/.test(userAgent) && /Version\/[\d\.]+/.test(userAgent) && /Chrome\//.test(userAgent));
 
-    const isHybrid = isLocalProtocol || isIOSWebView || isAndroidWebView;
+    const isHybrid = isCapacitor || isLocalProtocol || isIOSWebView || isAndroidWebView;
 
     if (isHybrid) {
         // --- HYBRID / EMBEDDED ENVIRONMENT FIX ---
+        // Google blocks OAuth in embedded WebViews (403 disallowed_useragent).
+        // Solution: Generate the OAuth URL and open it in the System Browser.
+        
         try {
+            // Determine redirect URL:
+            // 1. If VITE_AUTH_REDIRECT_URL is set, use it.
+            // 2. If running on localhost/file, try a known production URL or deep link scheme.
+            // 3. Fallback to current origin (might not work well if origin is file://)
             const envRedirect = (import.meta as any).env?.VITE_AUTH_REDIRECT_URL;
-            const fallbackRedirect = 'https://rizzmaster.vercel.app'; 
+            const fallbackRedirect = 'https://rizzmaster.vercel.app'; // Fallback for native apps without deep links
             
             const redirectUrl = envRedirect || (isLocalProtocol ? fallbackRedirect : window.location.origin);
 
@@ -95,7 +64,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
                 provider: 'google',
                 options: {
                     redirectTo: redirectUrl,
-                    skipBrowserRedirect: true,
+                    skipBrowserRedirect: true, // Do not auto-navigate the WebView
                     queryParams: {
                         access_type: 'offline',
                         prompt: 'consent',
@@ -106,8 +75,19 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
             if (error) throw error;
 
             if (data?.url) {
-                const opened = window.open(data.url, '_system');
-                if (!opened) window.location.href = data.url; 
+                // Try to open in system browser
+                // '_system' works for Capacitor/Cordova to break out of WebView
+                const target = isCapacitor ? '_system' : '_blank';
+                const opened = window.open(data.url, target);
+                
+                if (!opened) {
+                    // Fallback if popup blocker catches it
+                    window.location.href = data.url; 
+                } else {
+                     // Note: If using a wrapper without deep linking, the user will be logged in 
+                     // on the browser, not the app. This is a limitation of simple wrappers.
+                     console.log("Opened Google Auth in system browser/popup");
+                }
             }
         } catch (err: any) {
             console.error("Google Hybrid Login Error:", err);
