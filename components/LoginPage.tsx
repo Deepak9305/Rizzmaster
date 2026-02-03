@@ -22,14 +22,19 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
 
   useEffect(() => {
     // Initialize Google Auth logic
-    // We try to initialize with the Web Client ID if available in environment variables.
-    // The native plugin might use capacitor.config.json, but explicit init is safer for hybrid contexts.
     if (Capacitor.isNativePlatform()) {
        const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
+       
+       if (!clientId) {
+         console.warn("VITE_GOOGLE_CLIENT_ID is missing in environment variables!");
+       }
+
+       // We explicitly set the clientId (which maps to serverClientId on Android)
+       // This ensures the ID Token is issued for the Web Client, which Supabase expects.
        GoogleAuth.initialize({
-           clientId: clientId || 'YOUR_WEB_CLIENT_ID_PLACEHOLDER', // Fallback or force strict config
+           clientId: clientId || 'YOUR_WEB_CLIENT_ID_PLACEHOLDER',
            scopes: ['profile', 'email'],
-           grantOfflineAccess: true,
+           grantOfflineAccess: false, // Set to false to simplify ID Token flow
        });
     }
   }, []);
@@ -44,25 +49,54 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
     try {
         if (Capacitor.isNativePlatform()) {
             // --- NATIVE AUTH (Android/iOS) ---
-            // Uses the Native Plugin to get an ID Token, then signs in to Supabase.
-            // No deep links or redirects required.
             console.log("Starting Native Google Sign-In");
-            const googleUser = await GoogleAuth.signIn();
+            
+            // Check for Client ID Config
+            const webClientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
+            if (!webClientId) {
+                alert("Config Error: VITE_GOOGLE_CLIENT_ID is missing. Google Login cannot proceed.");
+                return;
+            }
+
+            let googleUser;
+            try {
+                googleUser = await GoogleAuth.signIn();
+                console.log("Google Plugin Success:", googleUser);
+            } catch (pluginError: any) {
+                console.error("Google Plugin Error:", pluginError);
+                // Detect common SHA-1 Mismatch error (Code 10)
+                const errStr = JSON.stringify(pluginError);
+                if (errStr.includes('10') || (pluginError.code && pluginError.code === '10')) {
+                    alert("Google Sign-In Failed (Error 10).\n\nThis is a SHA-1 FINGERPRINT MISMATCH.\n\nYou are likely running a Debug build but registered the Release SHA-1.\n\nFix: Add your DEBUG Keystore SHA-1 to Google Cloud Console.");
+                } else {
+                    alert(`Google Sign-In Failed: ${pluginError.message || errStr}`);
+                }
+                return;
+            }
             
             if (googleUser.authentication.idToken) {
-                const { error } = await supabase.auth.signInWithIdToken({
+                const { error: supabaseError } = await supabase.auth.signInWithIdToken({
                     provider: 'google',
                     token: googleUser.authentication.idToken,
                 });
-                if (error) throw error;
+                
+                if (supabaseError) {
+                    console.error("Supabase Auth Error:", supabaseError);
+                    // Detect Audience Mismatch (Wrong Client ID)
+                    if (supabaseError.message.includes("audience")) {
+                        alert("Login Failed: AUDIENCE MISMATCH.\n\nThe ID Token was issued for the wrong Client ID.\nEnsure 'serverClientId' in capacitor.config.json matches your Supabase Web Client ID.");
+                    } else {
+                        alert(`Supabase Login Failed: ${supabaseError.message}`);
+                    }
+                    throw supabaseError;
+                }
                 // Success - auth state listener in App.tsx will handle the rest
                 return;
             } else {
-                throw new Error("No ID token returned from Google Sign-In");
+                throw new Error("No ID token returned from Google. Ensure 'serverClientId' is configured.");
             }
         } else {
             // --- STANDARD WEB AUTH ---
-            // Uses standard browser redirect. No custom deep links needed.
             const redirectUrl = (import.meta as any).env?.VITE_AUTH_REDIRECT_URL || window.location.origin;
             
             const { error } = await supabase.auth.signInWithOAuth({
@@ -79,9 +113,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
             if (error) throw error;
         }
     } catch (err: any) {
-        console.error("Google Login Error:", err);
-        const errorMessage = err.message || (err as any).msg || JSON.stringify(err);
-        alert(`Login failed: ${errorMessage}`);
+        console.error("General Login Error:", err);
+        // Only alert if we haven't already alerted above
+        if (!Capacitor.isNativePlatform()) {
+            const errorMessage = err.message || (err as any).msg || JSON.stringify(err);
+            alert(`Login failed: ${errorMessage}`);
+        }
     }
   };
 
