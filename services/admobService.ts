@@ -10,8 +10,14 @@ export const AdMobService = {
         if (this.initialized) return;
 
         try {
+            // Request tracking authorization (iOS 14+)
+            try {
+                await AdMob.requestTrackingAuthorization();
+            } catch (e) {
+                console.warn("Tracking authorization skipped:", e);
+            }
+
             await AdMob.initialize({
-                requestTrackingAuthorization: true,
                 initializeForTesting: true, // Forces test mode
             });
             this.initialized = true;
@@ -42,7 +48,7 @@ export const AdMobService = {
 
             try {
                 // Set up Listeners
-                const onReward = await AdMob.addListener(RewardAdPluginEvents.OnRewarded, (reward: AdMobRewardItem) => {
+                const onReward = await AdMob.addListener(RewardAdPluginEvents.Rewarded, (reward: AdMobRewardItem) => {
                     console.log('AdMob Reward Earned', reward);
                     earnedReward = true;
                 });
@@ -77,8 +83,7 @@ export const AdMobService = {
                 };
 
                 await AdMob.prepareRewardVideoAd(options);
-                const result = await AdMob.showRewardVideoAd();
-                // If show returns explicitly, we might wait for dismiss, but usually we wait for events.
+                await AdMob.showRewardVideoAd();
                 
             } catch (error) {
                 console.error('AdMob Execution Error', error);
