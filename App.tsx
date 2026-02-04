@@ -127,6 +127,20 @@ const AppContent: React.FC = () => {
                         window.location.hash.includes('error') || 
                         window.location.search.includes('code=');
 
+  // Initialize Native Google Auth on App Start (fixes crash on logout if auto-logged in)
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+       const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
+       if (!clientId) console.warn("VITE_GOOGLE_CLIENT_ID missing");
+       
+       GoogleAuth.initialize({
+           clientId: clientId || 'YOUR_WEB_CLIENT_ID_PLACEHOLDER',
+           scopes: ['profile', 'email'],
+           grantOfflineAccess: false,
+       });
+    }
+  }, []);
+
   useEffect(() => {
     if (!supabase) {
         setIsAuthReady(true);
@@ -134,8 +148,6 @@ const AppContent: React.FC = () => {
     }
     
     // Initialize Auth
-    // We wait for getSession() to resolve before declaring auth ready.
-    // This prevents "flash of login page" when redirecting back from OAuth.
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) {
@@ -264,7 +276,6 @@ const AppContent: React.FC = () => {
         try {
             await GoogleAuth.signOut();
         } catch (error) {
-            // This might fail if user wasn't logged in with Google, which is fine
             console.log("Native Google Logout skipped or failed:", error);
         }
     }

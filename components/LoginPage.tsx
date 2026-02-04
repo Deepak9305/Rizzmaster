@@ -20,25 +20,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
   // State for Legal Modals
   const [activeLegalModal, setActiveLegalModal] = useState<'privacy' | 'terms' | null>(null);
 
-  useEffect(() => {
-    // Initialize Google Auth logic
-    if (Capacitor.isNativePlatform()) {
-       const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
-       
-       if (!clientId) {
-         console.warn("VITE_GOOGLE_CLIENT_ID is missing in environment variables!");
-       }
-
-       // We explicitly set the clientId (which maps to serverClientId on Android)
-       // This ensures the ID Token is issued for the Web Client, which Supabase expects.
-       GoogleAuth.initialize({
-           clientId: clientId || 'YOUR_WEB_CLIENT_ID_PLACEHOLDER',
-           scopes: ['profile', 'email'],
-           grantOfflineAccess: false, // Set to false to simplify ID Token flow
-       });
-    }
-  }, []);
-
   const handleGoogleLogin = async () => {
     if (!supabase) {
         alert("Supabase not configured. Using Guest Mode.");
