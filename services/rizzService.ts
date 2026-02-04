@@ -1,17 +1,14 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { RizzResponse, BioResponse } from "../types";
 
 // Initialize Gemini Client
-// Note: API Key must be obtained exclusively from process.env.API_KEY
-// Use process.env.API_KEY string directly when initializing
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Note: API Key must be in process.env.API_KEY
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
 /**
  * Generates Rizz (replies) based on chat context or image
  */
 export const generateRizz = async (text: string, imageBase64?: string): Promise<RizzResponse> => {
-  // Using gemini-3-flash-preview for basic text and reasoning tasks
   const modelName = 'gemini-3-flash-preview';
 
   const parts: any[] = [];
@@ -50,7 +47,7 @@ export const generateRizz = async (text: string, imageBase64?: string): Promise<
 
   parts.push({ text: prompt });
 
-  // Use ai.models.generateContent to query GenAI with both the model name and prompt.
+  // No try/catch here; let the caller (App.tsx) handle errors to ensure credits are refunded properly.
   const response = await ai.models.generateContent({
     model: modelName,
     contents: { parts },
@@ -71,7 +68,6 @@ export const generateRizz = async (text: string, imageBase64?: string): Promise<
     }
   });
 
-  // Extract text content from the property (not method)
   const textResponse = response.text || "{}";
   
   // Robust JSON extraction: Find the outer braces to ignore any preamble/markdown
@@ -99,7 +95,7 @@ export const generateBio = async (text: string): Promise<BioResponse> => {
     Keep it under 280 chars. High impact.
   `;
 
-  // Use ai.models.generateContent to query GenAI with both the model name and prompt.
+  // No try/catch here; let the caller (App.tsx) handle errors to ensure credits are refunded properly.
   const response = await ai.models.generateContent({
     model: modelName,
     contents: prompt,
@@ -116,7 +112,6 @@ export const generateBio = async (text: string): Promise<BioResponse> => {
     }
   });
 
-  // Extract text content from the property (not method)
   const textResponse = response.text || "{}";
   
   // Robust JSON extraction

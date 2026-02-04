@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { generateRizz, generateBio } from './services/rizzService';
 import { NativeBridge } from './services/nativeBridge';
@@ -11,14 +10,20 @@ import Footer from './components/Footer';
 import PremiumModal from './components/PremiumModal';
 import SavedModal from './components/SavedModal';
 import InfoPages from './components/InfoPages';
-import AdSenseBanner from './components/AdSenseBanner';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { Capacitor } from '@capacitor/core';
 
 const DAILY_CREDITS = 5;
+const REWARD_CREDITS = 3;
+const AD_DURATION = 15;
+
+// --- OFFICIAL GOOGLE TEST IDS ---
+const TEST_AD_UNIT_ID = 'ca-app-pub-3940256099942544/5224354917';
+const TEST_PRODUCT_ID = 'android.test.purchased';
 
 type ViewState = 'HOME' | 'PRIVACY' | 'TERMS' | 'SUPPORT';
 
+// Helper for UUID generation with fallback
 const generateUUID = () => {
     if (typeof crypto !== 'undefined' && crypto.randomUUID) {
         return crypto.randomUUID();
@@ -43,6 +48,7 @@ const SplashScreen: React.FC<{ forceLoading?: boolean }> = ({ forceLoading }) =>
 
       if (currentStep >= steps) {
         clearInterval(timer);
+        // Only exit if not forced to stay loading
         if (!forceLoading) {
            setTimeout(() => setIsExiting(true), 400); 
         }
@@ -52,25 +58,35 @@ const SplashScreen: React.FC<{ forceLoading?: boolean }> = ({ forceLoading }) =>
     return () => clearInterval(timer);
   }, [forceLoading]);
 
+  // If forced loading and progress is full, keep it at 100 without exiting
+  useEffect(() => {
+      if (!forceLoading && progress >= 100) {
+          setTimeout(() => setIsExiting(true), 400);
+      }
+  }, [forceLoading, progress]);
+
   if (isExiting) return null;
 
   return (
     <div className={`fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center overflow-hidden transition-opacity duration-700 ${progress === 100 && !forceLoading ? 'pointer-events-none' : ''}`}>
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-rose-900/20 rounded-full blur-[100px] animate-pulse-glow" />
+      <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-amber-900/10 rounded-full blur-[80px] animate-float" />
+
       <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-4xl px-4">
-        <div className="relative mb-12 text-center">
+        <div className="relative mb-12">
            <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-rose-200 via-amber-100 to-rose-200 animate-text-shimmer drop-shadow-2xl">
               Rizz Master
            </h1>
+           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent blur-xl opacity-50 animate-text-shimmer" style={{ backgroundSize: '200% 100%' }}></div>
         </div>
         <div className="w-64 md:w-80 h-[2px] bg-white/10 rounded-full overflow-hidden relative">
           <div 
-            className="absolute top-0 left-0 h-full bg-gradient-to-r from-rose-500 via-amber-400 to-rose-500 transition-all duration-75 ease-out"
+            className="absolute top-0 left-0 h-full bg-gradient-to-r from-rose-500 via-amber-400 to-rose-500 shadow-[0_0_15px_rgba(251,191,36,0.5)] transition-all duration-75 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
-        <div className="mt-4 h-6">
-            <p className="text-[10px] md:text-xs font-bold tracking-[0.5em] text-white/40 uppercase">
+        <div className="mt-4 h-6 overflow-hidden">
+            <p className="text-[10px] md:text-xs font-bold tracking-[0.5em] text-white/40 uppercase animate-fade-in-up">
               {progress < 30 ? 'ANALYZING...' : progress < 70 ? 'COOKING...' : (forceLoading ? 'AUTHENTICATING...' : 'READY.')}
             </p>
         </div>
@@ -81,9 +97,13 @@ const SplashScreen: React.FC<{ forceLoading?: boolean }> = ({ forceLoading }) =>
 
 const AppContent: React.FC = () => {
   const { showToast } = useToast();
+  
+  // Auth State
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isAuthReady, setIsAuthReady] = useState(false);
+  const [isAuthReady, setIsAuthReady] = useState(false); // Controls when we stop showing splash
+
+  // App State
   const [currentView, setCurrentView] = useState<ViewState>('HOME');
   const [mode, setMode] = useState<InputMode>(InputMode.CHAT);
   const [inputText, setInputText] = useState('');
@@ -93,22 +113,31 @@ const AppContent: React.FC = () => {
   const [inputError, setInputError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const sessionChannelRef = useRef<BroadcastChannel | null>(null);
-  const isAuthInitialized = useRef(false);
 
+  // Modals & Flags
+  const [isAdPlaying, setIsAdPlaying] = useState(false);
+  const [adTimer, setAdTimer] = useState(0);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showSavedModal, setShowSavedModal] = useState(false);
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
   const [isSessionBlocked, setIsSessionBlocked] = useState(false);
 
+  // Determine if we should hold the splash screen because url has auth params
+  const hasAuthParams = window.location.hash.includes('access_token') || 
+                        window.location.hash.includes('error') || 
+                        window.location.search.includes('code=');
+
+  // Initialize Native Google Auth on App Start (fixes crash on logout if auto-logged in)
   useEffect(() => {
-    if (Capacitor.isNativePlatform() && !isAuthInitialized.current) {
-       isAuthInitialized.current = true;
+    if (Capacitor.isNativePlatform()) {
        const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
+       if (!clientId) console.warn("VITE_GOOGLE_CLIENT_ID missing");
+       
        GoogleAuth.initialize({
            clientId: clientId || 'YOUR_WEB_CLIENT_ID_PLACEHOLDER',
            scopes: ['profile', 'email'],
            grantOfflineAccess: false,
-       }).catch(e => console.warn("GoogleAuth Init Error:", e));
+       });
     }
   }, []);
 
@@ -118,6 +147,7 @@ const AppContent: React.FC = () => {
         return;
     }
     
+    // Initialize Auth
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) {
@@ -132,6 +162,7 @@ const AppContent: React.FC = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
+        // If we get a session update (e.g. after redirect), ensure user data is loaded
         loadUserData(session.user.id, session.user.email);
       } else {
         setProfile(null);
@@ -192,7 +223,8 @@ const AppContent: React.FC = () => {
         .eq('id', userId)
         .single();
 
-        if (error && error.code === 'PGRST116') {
+        if (error) {
+        if (error.code === 'PGRST116') {
             const { data: newProfile, error: createError } = await supabase
             .from('profiles')
             .insert([{ 
@@ -205,17 +237,18 @@ const AppContent: React.FC = () => {
             .select()
             .single();
             if (!createError) profileData = newProfile;
+        }
         } else if (profileData) {
-            const today = new Date().toISOString().split('T')[0];
-            if (profileData.last_daily_reset !== today) {
-                const { data: updated } = await supabase
-                .from('profiles')
-                .update({ credits: DAILY_CREDITS, last_daily_reset: today })
-                .eq('id', userId)
-                .select()
-                .single();
-                if (updated) profileData = updated;
-            }
+        const today = new Date().toISOString().split('T')[0];
+        if (profileData.last_daily_reset !== today) {
+            const { data: updated } = await supabase
+            .from('profiles')
+            .update({ credits: DAILY_CREDITS, last_daily_reset: today })
+            .eq('id', userId)
+            .select()
+            .single();
+            if (updated) profileData = updated;
+        }
         }
         
         if (profileData) {
@@ -223,226 +256,591 @@ const AppContent: React.FC = () => {
             const { data: savedData, error: savedError } = await supabase
             .from('saved_items')
             .select('*')
-            .eq('user_id', userId);
-            if (!savedError) setSavedItems(savedData || []);
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+            if (!savedError && savedData) setSavedItems(savedData as SavedItem[]);
         }
-    } catch (err) {
-        console.error("Error loading user data:", err);
+    } catch (e) {
+        console.error("Error loading user data", e);
     }
   };
 
+  const handleLogout = async () => {
+    NativeBridge.haptic('medium');
+    
+    // 1. Sign out from Supabase (clears local session)
+    if (supabase) await supabase.auth.signOut();
+
+    // 2. Sign out from Native Google Plugin (forces account chooser next time)
+    if (Capacitor.isNativePlatform()) {
+        try {
+            await GoogleAuth.signOut();
+        } catch (error) {
+            console.log("Native Google Logout skipped or failed:", error);
+        }
+    }
+
+    // 3. Reset Local State
+    setSession(null);
+    setProfile(null);
+    setResult(null);
+    setInputText('');
+    setImage(null);
+    setInputError(null);
+    setCurrentView('HOME');
+  };
+
   const handleGuestLogin = () => {
-    loadUserData('guest');
+      NativeBridge.haptic('light');
+      const guestUser = { id: 'guest', email: 'guest@rizzmaster.ai' };
+      setSession({ user: guestUser });
+      loadUserData(guestUser.id);
+  };
+
+  const updateCredits = async (newAmount: number) => {
+    if (!profile) return;
+    const updatedProfile = { ...profile, credits: newAmount };
+    setProfile(updatedProfile);
+    if (supabase && profile.id !== 'guest') {
+        await supabase.from('profiles').update({ credits: newAmount }).eq('id', profile.id);
+    } else {
+        localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
+    }
+  };
+
+  const handleUpgrade = async (plan: 'WEEKLY' | 'MONTHLY') => {
+    if (!profile) return;
+    NativeBridge.haptic('success');
+    console.log(`[Billing] Initiating purchase flow for ${plan} plan (SKU: ${TEST_PRODUCT_ID})`);
+    
+    const updatedProfile = { ...profile, is_premium: true };
+    setProfile(updatedProfile);
+    setShowPremiumModal(false);
+    
+    showToast(`Welcome to the Elite Club! 👑`, 'success');
+
+    if (supabase && profile.id !== 'guest') {
+        await supabase.from('profiles').update({ is_premium: true }).eq('id', profile.id);
+    } else {
+        localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
+    }
+  };
+
+  const handleRestorePurchases = async () => {
+    if (!profile) return;
+    NativeBridge.haptic('medium');
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    const updatedProfile = { ...profile, is_premium: true };
+    setProfile(updatedProfile);
+    setShowPremiumModal(false);
+    
+    showToast(`Purchases Restored!`, 'success');
+    
+    if (supabase && profile.id !== 'guest') {
+        await supabase.from('profiles').update({ is_premium: true }).eq('id', profile.id);
+    } else {
+        localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
+    }
+  };
+
+  const toggleSave = async (content: string, type: 'tease' | 'smooth' | 'chaotic' | 'bio') => {
+    if (!profile) return;
+    NativeBridge.haptic('light');
+
+    const exists = savedItems.find(item => item.content === content);
+    
+    if (exists) {
+      if (supabase && profile.id !== 'guest') {
+          await supabase.from('saved_items').delete().eq('id', exists.id);
+      }
+      const newItems = savedItems.filter(item => item.id !== exists.id);
+      setSavedItems(newItems);
+      if (!supabase || profile.id === 'guest') localStorage.setItem('guest_saved_items', JSON.stringify(newItems));
+      showToast("Removed from saved", 'info');
+    } else {
+      const newItem: SavedItem = {
+          id: generateUUID(),
+          user_id: profile.id,
+          content,
+          type,
+          created_at: new Date().toISOString()
+      };
+
+      if (supabase && profile.id !== 'guest') {
+        const { data } = await supabase.from('saved_items').insert([{ user_id: profile.id, content, type }]).select().single();
+        if (data) newItem.id = data.id;
+      }
+      
+      const newItems = [newItem, ...savedItems];
+      setSavedItems(newItems);
+      if (!supabase || profile.id === 'guest') localStorage.setItem('guest_saved_items', JSON.stringify(newItems));
+      showToast("Saved to your gems", 'success');
+    }
+  };
+
+  const handleDeleteSaved = async (id: string) => {
+    NativeBridge.haptic('medium');
+    if (supabase && profile?.id !== 'guest') {
+        await supabase.from('saved_items').delete().eq('id', id);
+    }
+    const newItems = savedItems.filter(item => item.id !== id);
+    setSavedItems(newItems);
+    if (!supabase || profile?.id === 'guest') localStorage.setItem('guest_saved_items', JSON.stringify(newItems));
+    showToast("Item deleted", 'info');
+  };
+
+  const handleDeleteAccount = async () => {
+    NativeBridge.haptic('error');
+    if (!window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+        return;
+    }
+
+    if (!profile) return;
+
+    if (!supabase || profile.id === 'guest') {
+        localStorage.removeItem('guest_profile');
+        localStorage.removeItem('guest_saved_items');
+        setProfile(null);
+        setSession(null);
+        setSavedItems([]);
+        setResult(null);
+        setCurrentView('HOME');
+        showToast("Guest account data deleted", 'info');
+        return;
+    }
+
+    try {
+        setLoading(true);
+        const { error } = await supabase.from('profiles').delete().eq('id', profile.id);
+        if (error) throw error;
+
+        await supabase.auth.signOut();
+        setSession(null);
+        setProfile(null);
+        setSavedItems([]);
+        setResult(null);
+        setCurrentView('HOME');
+        showToast("Account deleted successfully", 'success');
+    } catch (err: any) {
+        console.error("Delete account error:", err);
+        showToast("Failed to delete account", 'error');
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  const handleShare = async (content: string) => {
+    NativeBridge.haptic('light');
+    const shared = await NativeBridge.share('Rizz Master Reply', content);
+    if (!shared) {
+       showToast('Link copied to clipboard!', 'success');
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+          NativeBridge.haptic('error');
+          showToast('Image too large. Max 5MB.', 'error');
+          return;
+      }
+      NativeBridge.haptic('light');
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImage(reader.result as string);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      };
+      reader.readAsDataURL(file);
+      if (inputError) setInputError(null);
+    }
   };
 
   const handleGenerate = async () => {
     if (!profile) return;
-    if (profile.credits <= 0 && !profile.is_premium) {
+    
+    if (mode === InputMode.CHAT && !inputText.trim() && !image) {
+      NativeBridge.haptic('error');
+      setInputError("Give me some context! Paste the chat or upload a screenshot.");
+      return;
+    }
+    if (mode === InputMode.BIO && !inputText.trim()) {
+      NativeBridge.haptic('error');
+      setInputError("I can't write a bio for a ghost! Tell me about your hobbies, job, or vibes.");
+      return;
+    }
+    setInputError(null);
+    NativeBridge.haptic('medium');
+
+    const cost = (mode === InputMode.CHAT && image) ? 2 : 1;
+
+    // Fixed: Added optional chaining to prevent TS18047
+    if (!profile?.is_premium && (profile?.credits || 0) < cost) {
+      if ((profile?.credits || 0) > 0) {
+        showToast(`Need ${cost} credits. You have ${profile.credits}.`, 'error');
+      }
       setShowPremiumModal(true);
       return;
     }
 
-    if (!inputText.trim() && !image) {
-      setInputError("Please provide context or an image.");
-      return;
-    }
-
     setLoading(true);
-    setInputError(null);
-    NativeBridge.haptic('medium');
-
     try {
-      let res;
-      if (mode === InputMode.CHAT) {
-        res = await generateRizz(inputText, image || undefined);
-      } else {
-        res = await generateBio(inputText);
+      if (!profile?.is_premium) {
+        // Fixed: Added optional chaining
+        updateCredits((profile?.credits || 0) - cost);
       }
-      setResult(res);
 
-      if (!profile.is_premium) {
-        const newCredits = profile.credits - 1;
-        setProfile({ ...profile, credits: newCredits });
-        if (supabase && profile.id !== 'guest') {
-          await supabase.from('profiles').update({ credits: newCredits }).eq('id', profile.id);
-        } else {
-          localStorage.setItem('guest_profile', JSON.stringify({ ...profile, credits: newCredits }));
-        }
+      if (mode === InputMode.CHAT) {
+        const res = await generateRizz(inputText, image || undefined);
+        setResult(res);
+      } else {
+        const res = await generateBio(inputText);
+        setResult(res);
       }
-      showToast("Rizz generated!", "success");
-    } catch (err: any) {
-      showToast(err.message || "Failed to generate", "error");
+      NativeBridge.haptic('success');
+    } catch (error) {
+      console.error(error);
+      showToast('The wingman tripped! Try again.', 'error');
+      // Fixed: Added optional chaining for error recovery
+      if (profile && !profile.is_premium) updateCredits(profile.credits);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSave = async (content: string, type: 'tease' | 'smooth' | 'chaotic' | 'bio') => {
-    if (!profile) return;
-    const newItem: SavedItem = {
-        id: generateUUID(),
-        user_id: profile.id,
-        content,
-        type,
-        created_at: new Date().toISOString()
-    };
+  const handleWatchAd = () => {
+    NativeBridge.haptic('medium');
+    setShowPremiumModal(false);
+    setIsAdPlaying(true);
+    setAdTimer(AD_DURATION); 
 
-    if (!supabase || profile.id === 'guest') {
-        const newSaved = [newItem, ...savedItems];
-        setSavedItems(newSaved);
-        localStorage.setItem('guest_saved_items', JSON.stringify(newSaved));
-    } else {
-        const { error } = await supabase.from('saved_items').insert([newItem]);
-        if (!error) setSavedItems([newItem, ...savedItems]);
-    }
-    showToast("Saved!", "success");
-    NativeBridge.haptic('light');
+    const interval = setInterval(() => {
+      setAdTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    setTimeout(() => {
+      setIsAdPlaying(false);
+      updateCredits((profile?.credits || 0) + REWARD_CREDITS);
+      NativeBridge.haptic('success');
+      showToast(`+${REWARD_CREDITS} Credits Added!`, 'success');
+    }, AD_DURATION * 1000);
   };
 
-  const handleDeleteSaved = async (id: string) => {
-      if (!supabase || profile?.id === 'guest') {
-          const newSaved = savedItems.filter(i => i.id !== id);
-          setSavedItems(newSaved);
-          localStorage.setItem('guest_saved_items', JSON.stringify(newSaved));
-      } else {
-          await supabase.from('saved_items').delete().eq('id', id);
-          setSavedItems(savedItems.filter(i => i.id !== id));
-      }
-      showToast("Deleted", "info");
-  };
+  const isSaved = (content: string) => savedItems.some(item => item.content === content);
+  const clear = () => { setInputText(''); setImage(null); setResult(null); setInputError(null); NativeBridge.haptic('light'); };
 
-  const handleImageUpload = () => fileInputRef.current?.click();
+  // If Auth check is not ready, FORCE the splash screen to stay visible/loading
+  // This prevents the LoginPage from rendering momentarily while Supabase parses the hash
+  if (!isAuthReady) {
+      return <SplashScreen forceLoading={true} />;
+  }
 
-  const onImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setImage(reader.result as string);
-      reader.readAsDataURL(file);
-    }
-  };
+  // If Auth is ready but we still want to show splash animation (and no auth params pending)
+  // We can return SplashScreen without forceLoading (it will exit naturally)
+  // However, since we now control `isAuthReady` which includes the data load, we can just transition.
+  // Ideally, if `isAuthReady` took a long time, the splash is still there.
 
   if (isSessionBlocked) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-6 text-center">
-        <div className="glass p-8 rounded-3xl border border-white/10 max-w-sm">
-          <h2 className="text-2xl font-bold mb-4">Session Active Elsewhere</h2>
-          <p className="text-white/60 mb-6">Rizz Master is open in another tab.</p>
-          <button onClick={handleReclaimSession} className="w-full py-3 bg-white text-black font-bold rounded-xl">
-            Use Here
-          </button>
-        </div>
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center p-4 relative overflow-hidden bg-black safe-top safe-bottom">
+         <div className="glass max-w-md w-full p-8 rounded-3xl border border-white/10 text-center relative z-10 shadow-2xl">
+           <div className="text-5xl mb-6">✋</div>
+           <h1 className="text-2xl font-bold mb-4 text-white">Session Paused</h1>
+           <p className="text-white/60 mb-8 leading-relaxed">
+             Rizz Master is open in another tab.
+           </p>
+           <button onClick={() => { handleReclaimSession(); NativeBridge.haptic('medium'); }} className="w-full rizz-gradient py-3.5 rounded-xl font-bold text-white hover:opacity-90 transition-opacity">
+             Use Here Instead
+           </button>
+         </div>
       </div>
     );
   }
 
-  if (!isAuthReady) return <SplashScreen forceLoading />;
+  if (!session) return <LoginPage onGuestLogin={handleGuestLogin} />;
 
-  if (!session && (!profile || profile.id !== 'guest')) {
-    return <LoginPage onGuestLogin={handleGuestLogin} />;
+  if (!profile) {
+    // If session exists but profile is loading (should be rare given wait logic above)
+    // fallback to spinner
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center text-white p-4 bg-black safe-top safe-bottom">
+        <svg className="animate-spin h-8 w-8 text-rose-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p className="text-white/50 animate-pulse">Loading Profile...</p>
+        <button onClick={handleLogout} className="mt-8 text-xs text-white/30 hover:text-white underline">Cancel & Logout</button>
+      </div>
+    );
   }
 
   if (currentView !== 'HOME') {
     return (
-      <InfoPages 
-        page={currentView} 
-        onBack={() => setCurrentView('HOME')} 
-        onDeleteAccount={() => confirm("Permanently delete account?") && showToast("Contact support to delete.", "info")}
-      />
+      <div className="safe-top safe-bottom">
+        <InfoPages 
+          page={currentView} 
+          onBack={() => { setCurrentView('HOME'); NativeBridge.haptic('light'); }}
+          onDeleteAccount={handleDeleteAccount}
+        />
+      </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
-      <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-lg border-b border-white/5 px-4 py-4">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-           <div className="flex items-center gap-2">
-              <span className="text-2xl">✨</span>
-              <span className="font-black tracking-tighter text-xl">Rizz Master</span>
-           </div>
-           
-           <div className="flex items-center gap-3">
-              <button onClick={() => setShowSavedModal(true)} className="p-2 bg-white/5 rounded-full hover:bg-white/10 relative">
-                📂 {savedItems.length > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full text-[10px] flex items-center justify-center">{savedItems.length}</span>}
-              </button>
-              <div onClick={() => setShowPremiumModal(true)} className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full border border-white/10 cursor-pointer hover:bg-white/10">
-                <span className="text-amber-400">👑</span>
-                <span className="text-xs font-bold">{profile?.is_premium ? 'PREMIUM' : `${profile?.credits} left`}</span>
-              </div>
-           </div>
-        </div>
-      </header>
-
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-8">
-        <div className="flex bg-white/5 p-1 rounded-2xl mb-8 border border-white/5">
-            <button onClick={() => { setMode(InputMode.CHAT); setResult(null); }} className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${mode === InputMode.CHAT ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white'}`}>Rizz Reply</button>
-            <button onClick={() => { setMode(InputMode.BIO); setResult(null); }} className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${mode === InputMode.BIO ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white'}`}>Bio Gen</button>
-        </div>
-
-        <div className="glass p-6 rounded-3xl border border-white/10 mb-8">
-            <textarea value={inputText} onChange={(e) => setInputText(e.target.value)} placeholder={mode === InputMode.CHAT ? "Paste chat or describe scenario..." : "Tell us about yourself..."} className="w-full bg-transparent border-none resize-none h-32 focus:outline-none text-lg placeholder:text-white/20" />
-            <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/5">
-                <div className="flex gap-2">
-                    {mode === InputMode.CHAT && (
-                        <button onClick={handleImageUpload} className={`p-3 rounded-xl transition-all ${image ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'bg-white/5 text-white/50 hover:bg-white/10'}`}>📸</button>
-                    )}
-                    <input type="file" ref={fileInputRef} onChange={onImageChange} accept="image/*" className="hidden" />
-                </div>
-                <button onClick={handleGenerate} disabled={loading} className="px-8 py-3 bg-gradient-to-r from-rose-500 to-amber-500 text-white font-bold rounded-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50">{loading ? 'Thinking...' : 'Generate ✨'}</button>
-            </div>
-            {image && <div className="mt-4 relative inline-block"><img src={image} className="h-20 w-20 object-cover rounded-xl border border-white/10" alt="Preview" /><button onClick={() => setImage(null)} className="absolute -top-2 -right-2 bg-black rounded-full p-1 border border-white/20 text-[10px]">✕</button></div>}
-        </div>
-
-        {result && (
-            <div className="space-y-4 animate-fade-in">
-                {mode === InputMode.CHAT ? (
-                    <>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <RizzCard label="The Tease" icon="😏" color="from-purple-400 to-pink-400" content={(result as RizzResponse).tease} isSaved={savedItems.some(i => i.content === (result as RizzResponse).tease)} onSave={() => handleSave((result as RizzResponse).tease, 'tease')} onShare={() => NativeBridge.share('Tease Reply', (result as RizzResponse).tease)} delay={0.1} />
-                            <RizzCard label="The Smooth" icon="✨" color="from-blue-400 to-emerald-400" content={(result as RizzResponse).smooth} isSaved={savedItems.some(i => i.content === (result as RizzResponse).smooth)} onSave={() => handleSave((result as RizzResponse).smooth, 'smooth')} onShare={() => NativeBridge.share('Smooth Reply', (result as RizzResponse).smooth)} delay={0.2} />
-                            <RizzCard label="The Chaotic" icon="😈" color="from-red-400 to-orange-400" content={(result as RizzResponse).chaotic} isSaved={savedItems.some(i => i.content === (result as RizzResponse).chaotic)} onSave={() => handleSave((result as RizzResponse).chaotic, 'chaotic')} onShare={() => NativeBridge.share('Chaotic Reply', (result as RizzResponse).chaotic)} delay={0.3} />
-                        </div>
-                        <div className="glass p-6 rounded-3xl border border-white/10 text-center">
-                            <div className="flex items-center justify-center gap-8 mb-4">
-                                <div><div className="text-3xl font-black text-rose-500">{(result as RizzResponse).loveScore}%</div><div className="text-[10px] uppercase font-bold text-white/40">Love Score</div></div>
-                                <div className="h-10 w-px bg-white/10" />
-                                <div><div className="text-xl font-bold text-amber-400">{(result as RizzResponse).potentialStatus}</div><div className="text-[10px] uppercase font-bold text-white/40">Status</div></div>
-                            </div>
-                            <p className="text-sm text-white/60 italic">"{(result as RizzResponse).analysis}"</p>
-                        </div>
-                    </>
-                ) : (
-                    <div className="space-y-4">
-                        <RizzCard label="Your Bio" icon="📝" color="from-emerald-400 to-teal-400" content={(result as BioResponse).bio} isSaved={savedItems.some(i => i.content === (result as BioResponse).bio)} onSave={() => handleSave((result as BioResponse).bio, 'bio')} onShare={() => NativeBridge.share('My New Bio', (result as BioResponse).bio)} />
-                        <div className="glass p-6 rounded-3xl border border-white/10"><p className="text-sm text-white/60 text-center italic">"{(result as BioResponse).analysis}"</p></div>
-                    </div>
-                )}
-            </div>
-        )}
-        <AdSenseBanner dataAdSlot="rizz-main-banner" />
-      </main>
-
-      <Footer onNavigate={setCurrentView} />
-
+    <div className="max-w-4xl mx-auto px-4 py-6 md:py-12 pb-24 relative min-h-[100dvh] flex flex-col animate-fade-in safe-top safe-bottom">
+      
       {showPremiumModal && (
         <PremiumModal 
-          onClose={() => setShowPremiumModal(false)}
-          onUpgrade={() => { setProfile(p => p ? { ...p, is_premium: true } : null); setShowPremiumModal(false); }}
-          onRestore={() => showToast("Restored", "success")}
+          onClose={() => { setShowPremiumModal(false); NativeBridge.haptic('light'); }}
+          onUpgrade={handleUpgrade}
+          onRestore={handleRestorePurchases}
         />
       )}
 
-      {showSavedModal && (
-        <SavedModal isOpen={showSavedModal} onClose={() => setShowSavedModal(false)} savedItems={savedItems} onDelete={handleDeleteSaved} onShare={(c) => NativeBridge.share('Saved Rizz', c)} />
+      <SavedModal 
+        isOpen={showSavedModal} 
+        onClose={() => { setShowSavedModal(false); NativeBridge.haptic('light'); }}
+        savedItems={savedItems}
+        onDelete={handleDeleteSaved}
+        onShare={handleShare}
+      />
+
+      {isAdPlaying && (
+        <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-8 safe-top safe-bottom">
+          <div className="w-full max-w-md bg-zinc-900 rounded-3xl p-8 text-center border border-white/10 relative overflow-hidden flex flex-col h-[60vh] justify-center">
+             <div className="absolute top-0 left-0 w-full h-1 bg-white/20">
+               <div className="h-full bg-rose-500 transition-all ease-linear w-full" style={{ width: '0%', transitionDuration: `${AD_DURATION}s` }}></div>
+             </div>
+             <div className="text-4xl font-black text-rose-500 mb-4">{adTimer}s</div>
+             <p className="text-white/60 mb-6">Watching Rewarded Ad...</p>
+             <div className="bg-white/5 rounded-xl border border-white/10 min-h-[150px] flex items-center justify-center mb-8 relative overflow-hidden">
+                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" style={{ transform: 'skewX(-20deg) translateX(-150%)' }}></div>
+                 <span className="text-4xl animate-pulse">📺</span>
+             </div>
+             <p className="text-xs text-white/30 uppercase">Do not close window</p>
+          </div>
+        </div>
       )}
+
+      <nav className="flex justify-between items-center mb-8 md:mb-12">
+        <button 
+             onClick={handleLogout} 
+             className="px-3 py-1.5 text-xs md:text-sm text-white/40 hover:text-white hover:bg-white/5 rounded-lg transition-all uppercase tracking-widest font-medium border border-transparent hover:border-white/10 flex items-center gap-1 active:scale-95"
+        >
+             <span className="text-lg">←</span> <span className="hidden md:inline">Logout</span>
+        </button>
+
+        <div className="flex items-center gap-2 md:gap-3">
+           <button 
+              onClick={() => { setShowSavedModal(true); NativeBridge.haptic('light'); }}
+              className="p-2 md:px-4 md:py-2 bg-white/5 hover:bg-white/10 rounded-full flex items-center gap-1.5 transition-all border border-white/5 active:scale-95"
+           >
+              <span className="text-rose-500 text-base md:text-lg">♥</span>
+              <span className="hidden md:inline text-xs font-bold text-white">Saved</span>
+           </button>
+
+           {!profile?.is_premium && (
+             <button 
+                onClick={() => { setShowPremiumModal(true); NativeBridge.haptic('medium'); }}
+                className="hidden md:flex px-4 py-2 bg-gradient-to-r from-yellow-600 to-yellow-400 text-black text-xs font-bold rounded-full items-center gap-1 hover:brightness-110 transition-all active:scale-95"
+             >
+                <span>👑</span> Go Premium
+             </button>
+           )}
+
+           <div className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full border backdrop-blur-md ${profile?.is_premium ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-white/5 border-white/10'}`}>
+              <span className={profile?.is_premium ? "text-yellow-400 text-lg" : "text-yellow-400 text-lg"}>
+                {profile?.is_premium ? '👑' : '⚡'}
+              </span>
+              <span className={`font-bold text-xs md:text-sm ${profile?.is_premium ? 'text-yellow-400' : 'text-white'}`}>
+                {profile?.is_premium ? 'Unlimited' : `${profile?.credits} Credits`}
+              </span>
+           </div>
+        </div>
+      </nav>
+
+      {/* Hero Header */}
+      <header className="text-center mb-8 md:mb-12">
+        <div className="inline-block relative">
+           <h1 className="text-5xl md:text-7xl font-black mb-2 tracking-tighter bg-gradient-to-r from-rose-400 via-amber-200 to-rose-400 bg-clip-text text-transparent pb-2 animate-text-shimmer">
+             Rizz Master
+           </h1>
+          {profile?.is_premium && (
+            <div className="absolute -top-4 -right-6 md:-right-8 rotate-12 bg-yellow-500 text-black font-bold text-[10px] md:text-xs px-2 py-1 rounded shadow-lg">PRO</div>
+          )}
+        </div>
+        <p className="text-white/60 text-sm md:text-xl font-light max-w-md mx-auto leading-relaxed">
+          Never send a boring text again.
+        </p>
+      </header>
+
+      {/* Mode Switcher */}
+      <div className="flex p-1 bg-white/5 rounded-full mb-8 relative border border-white/10 max-w-md mx-auto w-full select-none">
+        <button onClick={() => { setMode(InputMode.CHAT); clear(); }} className={`flex-1 py-3 rounded-full font-medium text-sm md:text-base transition-all duration-300 relative z-10 ${mode === InputMode.CHAT ? 'text-white shadow-lg' : 'text-white/50 hover:text-white/80'}`}>Chat Reply</button>
+        <button onClick={() => { setMode(InputMode.BIO); clear(); }} className={`flex-1 py-3 rounded-full font-medium text-sm md:text-base transition-all duration-300 relative z-10 ${mode === InputMode.BIO ? 'text-white shadow-lg' : 'text-white/50 hover:text-white/80'}`}>Profile Bio</button>
+        <div className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full rizz-gradient transition-all duration-300 ${mode === InputMode.CHAT ? 'left-1' : 'left-[calc(50%+4px)]'}`} />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 items-start">
+        {/* Input Section */}
+        <section className="glass rounded-3xl p-5 md:p-6 border border-white/10 lg:sticky lg:top-8 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
+          <div className="mb-4 md:mb-6">
+            <div className="flex justify-between items-center mb-2">
+                <label className="block text-xs font-bold text-white/50 uppercase tracking-widest">
+                {mode === InputMode.CHAT ? 'The Context' : 'About You'}
+                </label>
+                {inputText.length > 0 && (
+                    <button onClick={() => setInputText('')} className="text-xs text-white/30 hover:text-white">Clear</button>
+                )}
+            </div>
+            <textarea
+              value={inputText}
+              onChange={(e) => { setInputText(e.target.value); if (inputError) setInputError(null); }}
+              placeholder={mode === InputMode.CHAT ? "Paste chat. Get Rizz." : "Hobbies, job, vibes..."}
+              className="w-full h-32 md:h-40 bg-black/40 border border-white/10 rounded-2xl p-4 text-sm md:text-base focus:ring-2 focus:ring-rose-500/50 focus:outline-none resize-none transition-all placeholder:text-white/20"
+              style={{ fontSize: '16px' }}
+            />
+          </div>
+
+          {mode === InputMode.CHAT && (
+            <div className="mb-4 md:mb-6">
+               <div 
+                onClick={() => fileInputRef.current?.click()}
+                className={`group border-2 border-dashed border-white/10 rounded-2xl transition-all cursor-pointer hover:border-rose-500/50 hover:bg-white/5 active:scale-[0.99] ${image ? 'p-2' : 'p-6 md:p-8'}`}
+              >
+                {image ? (
+                  <div className="relative w-full">
+                    <img src={image} alt="Preview" className="w-full max-h-48 object-contain rounded-lg mx-auto" />
+                    <button onClick={(e) => { e.stopPropagation(); setImage(null); }} className="absolute top-2 right-2 bg-black/80 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm border border-white/20">✕</button>
+                  </div>
+                ) : (
+                  <div className="flex flex-row items-center justify-center gap-3 opacity-50">
+                    <span className="text-2xl">📸</span>
+                    <span className="text-sm font-medium">Add Screenshot</span>
+                  </div>
+                )}
+                <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
+              </div>
+            </div>
+          )}
+
+          {inputError && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-xl flex items-center justify-center gap-2 animate-pulse">
+              <span className="text-lg">⚠️</span>
+              <p className="text-sm text-red-200 font-medium">{inputError}</p>
+            </div>
+          )}
+          
+          {(profile?.is_premium || (profile?.credits || 0) > 0) ? (
+            <button
+              onClick={handleGenerate}
+              disabled={loading}
+              className={`w-full py-3.5 md:py-4 rounded-2xl font-bold text-base md:text-lg shadow-xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
+                profile?.is_premium 
+                ? "bg-gradient-to-r from-yellow-500 to-amber-600 text-black" 
+                : "rizz-gradient text-white"
+              }`}
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className={`animate-spin h-5 w-5 ${profile?.is_premium ? 'text-black' : 'text-white'}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  {profile?.is_premium ? "Generating Fast..." : "Cooking..."}
+                </span>
+              ) : (
+                profile?.is_premium ? "Get Rizz (VIP)" : `Get Rizz (${(mode === InputMode.CHAT && image) ? 2 : 1} ⚡)`
+              )}
+            </button>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+             <button onClick={handleWatchAd} className="bg-white/10 border border-white/10 py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base hover:bg-white/20 active:scale-[0.98] transition-all flex flex-col items-center justify-center">
+              <span className="text-xl mb-1">📺</span> <span>Watch Ad (+3)</span>
+            </button>
+            <button onClick={() => { setShowPremiumModal(true); NativeBridge.haptic('medium'); }} className="bg-gradient-to-r from-yellow-500 to-amber-600 text-black py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base shadow-xl hover:brightness-110 active:scale-[0.98] transition-all flex flex-col items-center justify-center animate-pulse">
+              <span className="text-xl mb-1">👑</span> <span>Go Unlimited</span>
+            </button>
+            </div>
+          )}
+
+          {!profile?.is_premium && (
+            <p className="text-center text-[10px] md:text-xs text-white/30 mt-3 md:mt-4">
+              {profile?.credits} daily credits remaining. <span className="text-yellow-500/80 cursor-pointer hover:underline" onClick={() => setShowPremiumModal(true)}>Upgrade.</span>
+            </p>
+          )}
+        </section>
+
+        {/* Output Section */}
+        <section className="flex flex-col gap-4 md:gap-6 min-h-[300px]">
+           {!result && !loading && (
+            <div className="h-full flex flex-col items-center justify-center text-white/20 py-12 px-4 text-center border-2 border-dashed border-white/5 rounded-3xl bg-white/[0.02] select-none">
+              <span className="text-5xl md:text-6xl mb-4 grayscale opacity-50">✨</span>
+              <p className="text-sm md:text-xl font-medium max-w-[200px] md:max-w-none mx-auto">Results will appear here.</p>
+            </div>
+          )}
+
+          {result && 'tease' in result && (
+              <>
+              <div className="glass rounded-3xl p-5 md:p-6 border border-white/10 animate-fade-in-up">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-white/40">Analysis</h3>
+                   <span className="text-2xl md:text-3xl font-black text-white">{result.loveScore}%</span>
+                </div>
+                <div className="mb-4">
+                     <div className="text-xl md:text-2xl font-black text-rose-500 uppercase italic leading-none">{result.potentialStatus}</div>
+                </div>
+                <div className="relative h-3 md:h-4 bg-black/40 rounded-full overflow-hidden border border-white/5">
+                  <div className="absolute top-0 left-0 h-full rizz-gradient transition-all duration-1000 ease-out" style={{ width: `${result.loveScore}%` }}></div>
+                </div>
+                 {result.analysis && <p className="mt-4 text-xs md:text-sm text-white/60 leading-relaxed border-t border-white/5 pt-3">{result.analysis}</p>}
+              </div>
+
+              <div className="grid gap-3 md:gap-4 pb-12">
+                <RizzCard label="Tease" content={result.tease} icon="😏" color="from-purple-500 to-indigo-500" isSaved={isSaved(result.tease)} onSave={() => toggleSave(result.tease, 'tease')} onShare={() => handleShare(result.tease)} delay={0.1} />
+                <RizzCard label="Smooth" content={result.smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved(result.smooth)} onSave={() => toggleSave(result.smooth, 'smooth')} onShare={() => handleShare(result.smooth)} delay={0.2} />
+                <RizzCard label="Chaotic" content={result.chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved(result.chaotic)} onSave={() => toggleSave(result.chaotic, 'chaotic')} onShare={() => handleShare(result.chaotic)} delay={0.3} />
+              </div>
+            </>
+          )}
+
+          {result && 'bio' in result && (
+            <div className="glass rounded-3xl p-6 md:p-8 border border-white/10 animate-fade-in-up pb-12">
+               <div className="flex items-center gap-2 mb-4 md:mb-6">
+                <span className="text-2xl">📝</span>
+                <h3 className="text-xs md:text-sm font-semibold uppercase tracking-widest text-white/60">Bio Result</h3>
+                <div className="ml-auto flex gap-2">
+                    <button onClick={() => { NativeBridge.copyToClipboard(result.bio); showToast('Bio copied!', 'success'); NativeBridge.haptic('light'); }} className="p-2 rounded-full hover:bg-white/10 transition-all text-white/50 hover:text-white"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg></button>
+                    <button onClick={() => handleShare(result.bio)} className="p-2 rounded-full hover:bg-white/10 transition-all text-white/50 hover:text-white"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg></button>
+                    <button onClick={() => toggleSave(result.bio, 'bio')} className={`p-2 rounded-full hover:bg-white/10 transition-all ${isSaved(result.bio) ? 'text-rose-500' : 'text-white/50 hover:text-rose-400'}`}><svg className="w-5 h-5" fill={isSaved(result.bio) ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg></button>
+                </div>
+              </div>
+              <p className="text-lg md:text-xl leading-relaxed font-medium mb-6 md:mb-8 text-white">{result.bio}</p>
+              <div className="p-4 bg-white/5 rounded-2xl border border-white/5 mb-4"><h4 className="text-[10px] uppercase font-bold text-rose-400 mb-1">Why it works</h4><p className="text-xs md:text-sm text-white/60">{result.analysis}</p></div>
+              <button onClick={() => { NativeBridge.copyToClipboard(result.bio); showToast('Bio copied!', 'success'); NativeBridge.haptic('light'); }} className="w-full py-3 border border-white/20 rounded-xl hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2"><span>📋</span> Copy Bio</button>
+            </div>
+          )}
+        </section>
+      </div>
+      <Footer className="mt-12 md:mt-20" onNavigate={(page) => { setCurrentView(page); NativeBridge.haptic('light'); }} />
     </div>
   );
-};
+}
 
-const App = () => (
+// Wrapper to provide Toast Context
+const App: React.FC = () => {
+  return (
     <ToastProvider>
-        <AppContent />
+      <AppContent />
     </ToastProvider>
-);
+  );
+};
 
 export default App;
