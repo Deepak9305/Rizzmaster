@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { generateRizz, generateBio } from './services/rizzService';
 import { NativeBridge } from './services/nativeBridge';
@@ -103,16 +104,11 @@ const AppContent: React.FC = () => {
     if (Capacitor.isNativePlatform() && !isAuthInitialized.current) {
        isAuthInitialized.current = true;
        const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
-       // GoogleAuth.initialize is void, so we do not use .catch()
-       try {
-           GoogleAuth.initialize({
-               clientId: clientId || 'YOUR_WEB_CLIENT_ID_PLACEHOLDER',
-               scopes: ['profile', 'email'],
-               grantOfflineAccess: false,
-           });
-       } catch (e) {
-           console.warn("GoogleAuth Init Error:", e);
-       }
+       GoogleAuth.initialize({
+           clientId: clientId || 'YOUR_WEB_CLIENT_ID_PLACEHOLDER',
+           scopes: ['profile', 'email'],
+           grantOfflineAccess: false,
+       }).catch(e => console.warn("GoogleAuth Init Error:", e));
     }
   }, []);
 
