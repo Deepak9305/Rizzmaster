@@ -20,7 +20,8 @@ const REWARD_CREDITS = 3;
 const AD_DURATION = 15;
 
 // --- OFFICIAL GOOGLE TEST IDS ---
-const TEST_AD_UNIT_ID = 'ca-app-pub-3940256099942544/5224354917';
+const TEST_AD_UNIT_ID_ANDROID = 'ca-app-pub-3940256099942544/5224354917';
+const TEST_AD_UNIT_ID_IOS = 'ca-app-pub-3940256099942544/1712485313';
 const TEST_PRODUCT_ID = 'android.test.purchased';
 
 type ViewState = 'HOME' | 'PRIVACY' | 'TERMS' | 'SUPPORT';
@@ -523,7 +524,8 @@ const AppContent: React.FC = () => {
     if (Capacitor.isNativePlatform()) {
         setIsAdLoading(true);
         try {
-            const rewardEarned = await AdMobService.showRewardVideo(TEST_AD_UNIT_ID);
+            const adUnitId = Capacitor.getPlatform() === 'ios' ? TEST_AD_UNIT_ID_IOS : TEST_AD_UNIT_ID_ANDROID;
+            const rewardEarned = await AdMobService.showRewardVideo(adUnitId);
             setIsAdLoading(false);
             
             if (rewardEarned) {
