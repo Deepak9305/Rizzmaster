@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { memo } from 'react';
 import { NativeBridge } from '../services/nativeBridge';
 import { useToast } from '../context/ToastContext';
 
@@ -13,7 +14,7 @@ interface RizzCardProps {
   delay?: number;
 }
 
-const RizzCard: React.FC<RizzCardProps> = ({ 
+const RizzCard: React.FC<RizzCardProps> = memo(({ 
   label, 
   content, 
   icon, 
@@ -79,6 +80,6 @@ const RizzCard: React.FC<RizzCardProps> = ({
       </div>
     </div>
   );
-};
+});
 
 export default RizzCard;

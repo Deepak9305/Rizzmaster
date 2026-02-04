@@ -1,9 +1,35 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { RizzResponse, BioResponse } from "../types";
 
 // Initialize Gemini Client
 // Note: API Key must be in process.env.API_KEY
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+
+/**
+ * Clean and parse JSON from AI response, handling Markdown code blocks.
+ */
+const parseJSON = (text: string): any => {
+  let cleaned = text.trim();
+  
+  // Remove markdown code blocks if present (e.g. ```json ... ```)
+  cleaned = cleaned.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '');
+  
+  // Locate the first '{' and last '}' to strip any preamble/postscript
+  const firstBrace = cleaned.indexOf('{');
+  const lastBrace = cleaned.lastIndexOf('}');
+  
+  if (firstBrace !== -1 && lastBrace !== -1) {
+    cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+  }
+
+  try {
+    return JSON.parse(cleaned);
+  } catch (e) {
+    console.error("JSON Parse Error. Raw text:", text);
+    throw new Error("Failed to parse AI response.");
+  }
+};
 
 /**
  * Generates Rizz (replies) based on chat context or image
@@ -47,7 +73,6 @@ export const generateRizz = async (text: string, imageBase64?: string): Promise<
 
   parts.push({ text: prompt });
 
-  // No try/catch here; let the caller (App.tsx) handle errors to ensure credits are refunded properly.
   const response = await ai.models.generateContent({
     model: modelName,
     contents: { parts },
@@ -68,20 +93,7 @@ export const generateRizz = async (text: string, imageBase64?: string): Promise<
     }
   });
 
-  const textResponse = response.text || "{}";
-  
-  // Robust JSON extraction: Find the outer braces to ignore any preamble/markdown
-  const firstBrace = textResponse.indexOf('{');
-  const lastBrace = textResponse.lastIndexOf('}');
-  
-  let jsonStr = textResponse;
-  if (firstBrace !== -1 && lastBrace !== -1) {
-    jsonStr = textResponse.substring(firstBrace, lastBrace + 1);
-  } else {
-    throw new Error("Invalid JSON response from model");
-  }
-
-  return JSON.parse(jsonStr) as RizzResponse;
+  return parseJSON(response.text || "{}") as RizzResponse;
 };
 
 /**
@@ -95,7 +107,6 @@ export const generateBio = async (text: string): Promise<BioResponse> => {
     Keep it under 280 chars. High impact.
   `;
 
-  // No try/catch here; let the caller (App.tsx) handle errors to ensure credits are refunded properly.
   const response = await ai.models.generateContent({
     model: modelName,
     contents: prompt,
@@ -112,18 +123,5 @@ export const generateBio = async (text: string): Promise<BioResponse> => {
     }
   });
 
-  const textResponse = response.text || "{}";
-  
-  // Robust JSON extraction
-  const firstBrace = textResponse.indexOf('{');
-  const lastBrace = textResponse.lastIndexOf('}');
-  
-  let jsonStr = textResponse;
-  if (firstBrace !== -1 && lastBrace !== -1) {
-    jsonStr = textResponse.substring(firstBrace, lastBrace + 1);
-  } else {
-    throw new Error("Invalid JSON response from model");
-  }
-
-  return JSON.parse(jsonStr) as BioResponse;
+  return parseJSON(response.text || "{}") as BioResponse;
 };

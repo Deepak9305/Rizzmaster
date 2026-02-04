@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, lazy, Suspense, useCallback } from 'react';
 import { generateRizz, generateBio } from './services/rizzService';
 import { NativeBridge } from './services/nativeBridge';
 import { ToastProvider, useToast } from './context/ToastContext';
@@ -8,12 +8,14 @@ import { supabase } from './services/supabaseClient';
 import RizzCard from './components/RizzCard';
 import LoginPage from './components/LoginPage';
 import Footer from './components/Footer';
-import PremiumModal from './components/PremiumModal';
-import SavedModal from './components/SavedModal';
-import InfoPages from './components/InfoPages';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { Capacitor } from '@capacitor/core';
 import { AdMobService } from './services/admobService';
+
+// Lazy Load Heavy Components / Modals
+const PremiumModal = lazy(() => import('./components/PremiumModal'));
+const SavedModal = lazy(() => import('./components/SavedModal'));
+const InfoPages = lazy(() => import('./components/InfoPages'));
 
 const DAILY_CREDITS = 5;
 const REWARD_CREDITS = 3;
@@ -51,7 +53,6 @@ const SplashScreen: React.FC<{ forceLoading?: boolean }> = ({ forceLoading }) =>
 
       if (currentStep >= steps) {
         clearInterval(timer);
-        // Only exit if not forced to stay loading
         if (!forceLoading) {
            setTimeout(() => setIsExiting(true), 400); 
         }
@@ -61,7 +62,6 @@ const SplashScreen: React.FC<{ forceLoading?: boolean }> = ({ forceLoading }) =>
     return () => clearInterval(timer);
   }, [forceLoading]);
 
-  // If forced loading and progress is full, keep it at 100 without exiting
   useEffect(() => {
       if (!forceLoading && progress >= 100) {
           setTimeout(() => setIsExiting(true), 400);
@@ -104,7 +104,7 @@ const AppContent: React.FC = () => {
   // Auth State
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isAuthReady, setIsAuthReady] = useState(false); // Controls when we stop showing splash
+  const [isAuthReady, setIsAuthReady] = useState(false);
 
   // App State
   const [currentView, setCurrentView] = useState<ViewState>('HOME');
@@ -126,12 +126,7 @@ const AppContent: React.FC = () => {
   const [isSessionBlocked, setIsSessionBlocked] = useState(false);
   const [isAdLoading, setIsAdLoading] = useState(false);
 
-  // Determine if we should hold the splash screen because url has auth params
-  const hasAuthParams = window.location.hash.includes('access_token') || 
-                        window.location.hash.includes('error') || 
-                        window.location.search.includes('code=');
-
-  // Initialize Native Google Auth & AdMob on App Start
+  // Initialize Native Google Auth & AdMob
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
        const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
@@ -154,13 +149,10 @@ const AppContent: React.FC = () => {
         return;
     }
     
-    // Initialize Auth
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) {
-        loadUserData(session.user.id, session.user.email).finally(() => {
-            setIsAuthReady(true);
-        });
+        loadUserData(session.user.id, session.user.email).finally(() => setIsAuthReady(true));
       } else {
          setIsAuthReady(true);
       }
@@ -169,7 +161,6 @@ const AppContent: React.FC = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
-        // If we get a session update (e.g. after redirect), ensure user data is loaded
         loadUserData(session.user.id, session.user.email);
       } else {
         setProfile(null);
@@ -197,14 +188,17 @@ const AppContent: React.FC = () => {
     };
   }, []);
 
-  const handleReclaimSession = () => {
+  const handleReclaimSession = useCallback(() => {
     setIsSessionBlocked(false);
     sessionChannelRef.current?.postMessage({ type: 'NEW_SESSION_STARTED' });
-  };
+  }, []);
 
+  // Optimized User Data Loading: Parallel Fetching
   const loadUserData = async (userId: string, email?: string) => {
     if (!supabase || userId === 'guest') {
         const storedProfile = localStorage.getItem('guest_profile');
+        const storedItems = localStorage.getItem('guest_saved_items');
+        
         if (storedProfile) {
             setProfile(JSON.parse(storedProfile));
         } else {
@@ -218,76 +212,53 @@ const AppContent: React.FC = () => {
             setProfile(newProfile);
             localStorage.setItem('guest_profile', JSON.stringify(newProfile));
         }
-        const storedItems = localStorage.getItem('guest_saved_items');
         setSavedItems(storedItems ? JSON.parse(storedItems) : []);
         return;
     }
 
     try {
-        let { data: profileData, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+        // Parallel fetch for speed
+        const profilePromise = supabase.from('profiles').select('*').eq('id', userId).single();
+        const savedPromise = supabase.from('saved_items').select('*').eq('user_id', userId).order('created_at', { ascending: false });
 
-        if (error) {
-        if (error.code === 'PGRST116') {
-            const { data: newProfile, error: createError } = await supabase
-            .from('profiles')
-            .insert([{ 
+        const [profileResult, savedResult] = await Promise.all([profilePromise, savedPromise]);
+
+        let profileData = profileResult.data;
+        const savedData = savedResult.data;
+
+        // Handle profile creation if missing
+        if (profileResult.error?.code === 'PGRST116') {
+            const { data: newProfile } = await supabase.from('profiles').insert([{ 
                 id: userId, 
                 email: email, 
                 credits: DAILY_CREDITS, 
                 is_premium: false,
                 last_daily_reset: new Date().toISOString().split('T')[0]
-            }])
-            .select()
-            .single();
-            if (!createError) profileData = newProfile;
-        }
+            }]).select().single();
+            if (newProfile) profileData = newProfile;
         } else if (profileData) {
-        const today = new Date().toISOString().split('T')[0];
-        if (profileData.last_daily_reset !== today) {
-            const { data: updated } = await supabase
-            .from('profiles')
-            .update({ credits: DAILY_CREDITS, last_daily_reset: today })
-            .eq('id', userId)
-            .select()
-            .single();
-            if (updated) profileData = updated;
+            // Check daily reset
+            const today = new Date().toISOString().split('T')[0];
+            if (profileData.last_daily_reset !== today) {
+                const { data: updated } = await supabase.from('profiles').update({ credits: DAILY_CREDITS, last_daily_reset: today }).eq('id', userId).select().single();
+                if (updated) profileData = updated;
+            }
         }
-        }
-        
-        if (profileData) {
-            setProfile(profileData as UserProfile);
-            const { data: savedData, error: savedError } = await supabase
-            .from('saved_items')
-            .select('*')
-            .eq('user_id', userId)
-            .order('created_at', { ascending: false });
-            if (!savedError && savedData) setSavedItems(savedData as SavedItem[]);
-        }
+
+        if (profileData) setProfile(profileData as UserProfile);
+        if (savedData) setSavedItems(savedData as SavedItem[]);
+
     } catch (e) {
         console.error("Error loading user data", e);
     }
   };
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     NativeBridge.haptic('medium');
-    
-    // 1. Sign out from Supabase (clears local session)
     if (supabase) await supabase.auth.signOut();
-
-    // 2. Sign out from Native Google Plugin (forces account chooser next time)
     if (Capacitor.isNativePlatform()) {
-        try {
-            await GoogleAuth.signOut();
-        } catch (error) {
-            console.log("Native Google Logout skipped or failed:", error);
-        }
+        try { await GoogleAuth.signOut(); } catch (error) { console.log("Native Logout err", error); }
     }
-
-    // 3. Reset Local State
     setSession(null);
     setProfile(null);
     setResult(null);
@@ -295,35 +266,32 @@ const AppContent: React.FC = () => {
     setImage(null);
     setInputError(null);
     setCurrentView('HOME');
-  };
+  }, []);
 
-  const handleGuestLogin = () => {
+  const handleGuestLogin = useCallback(() => {
       NativeBridge.haptic('light');
       const guestUser = { id: 'guest', email: 'guest@rizzmaster.ai' };
       setSession({ user: guestUser });
       loadUserData(guestUser.id);
-  };
+  }, []);
 
-  const updateCredits = async (newAmount: number) => {
+  const updateCredits = useCallback(async (newAmount: number) => {
     if (!profile) return;
     const updatedProfile = { ...profile, credits: newAmount };
-    setProfile(updatedProfile);
+    setProfile(updatedProfile); // Optimistic Update
     if (supabase && profile.id !== 'guest') {
         await supabase.from('profiles').update({ credits: newAmount }).eq('id', profile.id);
     } else {
         localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
     }
-  };
+  }, [profile]);
 
-  const handleUpgrade = async (plan: 'WEEKLY' | 'MONTHLY') => {
+  const handleUpgrade = useCallback(async (plan: 'WEEKLY' | 'MONTHLY') => {
     if (!profile) return;
     NativeBridge.haptic('success');
-    console.log(`[Billing] Initiating purchase flow for ${plan} plan (SKU: ${TEST_PRODUCT_ID})`);
-    
     const updatedProfile = { ...profile, is_premium: true };
     setProfile(updatedProfile);
     setShowPremiumModal(false);
-    
     showToast(`Welcome to the Elite Club! 👑`, 'success');
 
     if (supabase && profile.id !== 'guest') {
@@ -331,17 +299,15 @@ const AppContent: React.FC = () => {
     } else {
         localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
     }
-  };
+  }, [profile, showToast]);
 
-  const handleRestorePurchases = async () => {
+  const handleRestorePurchases = useCallback(async () => {
     if (!profile) return;
     NativeBridge.haptic('medium');
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
     const updatedProfile = { ...profile, is_premium: true };
     setProfile(updatedProfile);
     setShowPremiumModal(false);
-    
     showToast(`Purchases Restored!`, 'success');
     
     if (supabase && profile.id !== 'guest') {
@@ -349,23 +315,27 @@ const AppContent: React.FC = () => {
     } else {
         localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
     }
-  };
+  }, [profile, showToast]);
 
-  const toggleSave = async (content: string, type: 'tease' | 'smooth' | 'chaotic' | 'bio') => {
+  const toggleSave = useCallback(async (content: string, type: 'tease' | 'smooth' | 'chaotic' | 'bio') => {
     if (!profile) return;
     NativeBridge.haptic('light');
 
     const exists = savedItems.find(item => item.content === content);
     
     if (exists) {
-      if (supabase && profile.id !== 'guest') {
-          await supabase.from('saved_items').delete().eq('id', exists.id);
-      }
+      // Optimistic Remove
       const newItems = savedItems.filter(item => item.id !== exists.id);
       setSavedItems(newItems);
-      if (!supabase || profile.id === 'guest') localStorage.setItem('guest_saved_items', JSON.stringify(newItems));
       showToast("Removed from saved", 'info');
+      
+      if (supabase && profile.id !== 'guest') {
+          await supabase.from('saved_items').delete().eq('id', exists.id);
+      } else {
+          localStorage.setItem('guest_saved_items', JSON.stringify(newItems));
+      }
     } else {
+      // Optimistic Add
       const newItem: SavedItem = {
           id: generateUUID(),
           user_id: profile.id,
@@ -373,36 +343,39 @@ const AppContent: React.FC = () => {
           type,
           created_at: new Date().toISOString()
       };
-
-      if (supabase && profile.id !== 'guest') {
-        const { data } = await supabase.from('saved_items').insert([{ user_id: profile.id, content, type }]).select().single();
-        if (data) newItem.id = data.id;
-      }
       
       const newItems = [newItem, ...savedItems];
       setSavedItems(newItems);
-      if (!supabase || profile.id === 'guest') localStorage.setItem('guest_saved_items', JSON.stringify(newItems));
       showToast("Saved to your gems", 'success');
-    }
-  };
 
-  const handleDeleteSaved = async (id: string) => {
+      if (supabase && profile.id !== 'guest') {
+        const { data } = await supabase.from('saved_items').insert([{ user_id: profile.id, content, type }]).select().single();
+        // Update ID if server returns one
+        if (data) {
+             setSavedItems(current => current.map(i => i.id === newItem.id ? { ...i, id: data.id } : i));
+        }
+      } else {
+        localStorage.setItem('guest_saved_items', JSON.stringify(newItems));
+      }
+    }
+  }, [profile, savedItems, showToast]);
+
+  const handleDeleteSaved = useCallback(async (id: string) => {
     NativeBridge.haptic('medium');
+    const newItems = savedItems.filter(item => item.id !== id);
+    setSavedItems(newItems); // Optimistic
+    showToast("Item deleted", 'info');
+
     if (supabase && profile?.id !== 'guest') {
         await supabase.from('saved_items').delete().eq('id', id);
+    } else {
+        localStorage.setItem('guest_saved_items', JSON.stringify(newItems));
     }
-    const newItems = savedItems.filter(item => item.id !== id);
-    setSavedItems(newItems);
-    if (!supabase || profile?.id === 'guest') localStorage.setItem('guest_saved_items', JSON.stringify(newItems));
-    showToast("Item deleted", 'info');
-  };
+  }, [profile, savedItems, showToast]);
 
-  const handleDeleteAccount = async () => {
+  const handleDeleteAccount = useCallback(async () => {
     NativeBridge.haptic('error');
-    if (!window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
-        return;
-    }
-
+    if (!window.confirm("Are you sure? This cannot be undone.")) return;
     if (!profile) return;
 
     if (!supabase || profile.id === 'guest') {
@@ -413,7 +386,7 @@ const AppContent: React.FC = () => {
         setSavedItems([]);
         setResult(null);
         setCurrentView('HOME');
-        showToast("Guest account data deleted", 'info');
+        showToast("Guest account deleted", 'info');
         return;
     }
 
@@ -421,29 +394,25 @@ const AppContent: React.FC = () => {
         setLoading(true);
         const { error } = await supabase.from('profiles').delete().eq('id', profile.id);
         if (error) throw error;
-
         await supabase.auth.signOut();
         setSession(null);
         setProfile(null);
         setSavedItems([]);
         setResult(null);
         setCurrentView('HOME');
-        showToast("Account deleted successfully", 'success');
+        showToast("Account deleted", 'success');
     } catch (err: any) {
-        console.error("Delete account error:", err);
         showToast("Failed to delete account", 'error');
     } finally {
         setLoading(false);
     }
-  };
+  }, [profile, showToast]);
 
-  const handleShare = async (content: string) => {
+  const handleShare = useCallback(async (content: string) => {
     NativeBridge.haptic('light');
     const shared = await NativeBridge.share('Rizz Master Reply', content);
-    if (!shared) {
-       showToast('Link copied to clipboard!', 'success');
-    }
-  };
+    if (!shared) showToast('Link copied!', 'success');
+  }, [showToast]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -482,11 +451,8 @@ const AppContent: React.FC = () => {
 
     const cost = (mode === InputMode.CHAT && image) ? 2 : 1;
 
-    // Fixed: Added optional chaining to prevent TS18047
     if (!profile?.is_premium && (profile?.credits || 0) < cost) {
-      if ((profile?.credits || 0) > 0) {
-        showToast(`Need ${cost} credits. You have ${profile.credits}.`, 'error');
-      }
+      if ((profile?.credits || 0) > 0) showToast(`Need ${cost} credits.`, 'error');
       setShowPremiumModal(true);
       return;
     }
@@ -494,7 +460,6 @@ const AppContent: React.FC = () => {
     setLoading(true);
     try {
       if (!profile?.is_premium) {
-        // Fixed: Added optional chaining
         updateCredits((profile?.credits || 0) - cost);
       }
 
@@ -509,8 +474,8 @@ const AppContent: React.FC = () => {
     } catch (error) {
       console.error(error);
       showToast('The wingman tripped! Try again.', 'error');
-      // Fixed: Added optional chaining for error recovery
-      if (profile && !profile.is_premium) updateCredits(profile.credits);
+      // Refund if error
+      if (profile && !profile.is_premium) updateCredits((profile.credits || 0));
     } finally {
       setLoading(false);
     }
@@ -520,7 +485,6 @@ const AppContent: React.FC = () => {
     NativeBridge.haptic('medium');
     setShowPremiumModal(false);
 
-    // 1. Try Native Ad (AdMob)
     if (Capacitor.isNativePlatform()) {
         setIsAdLoading(true);
         try {
@@ -535,18 +499,16 @@ const AppContent: React.FC = () => {
             } else {
                  showToast('Ad was canceled or failed.', 'info');
             }
-            return; // Exit, do not show web simulation
+            return; 
         } catch (e) {
-            console.warn("Native Ad failed, falling back to web simulation.", e);
+            console.warn("Native Ad failed, fallback to web.", e);
             setIsAdLoading(false);
-            // Fallthrough to web simulation
         }
     }
 
-    // 2. Web Simulation (Fallback)
+    // Web Simulation
     setIsAdPlaying(true);
     setAdTimer(AD_DURATION); 
-
     const interval = setInterval(() => {
       setAdTimer((prev) => {
         if (prev <= 1) {
@@ -565,10 +527,9 @@ const AppContent: React.FC = () => {
     }, AD_DURATION * 1000);
   };
 
-  const isSaved = (content: string) => savedItems.some(item => item.content === content);
-  const clear = () => { setInputText(''); setImage(null); setResult(null); setInputError(null); NativeBridge.haptic('light'); };
+  const isSaved = useCallback((content: string) => savedItems.some(item => item.content === content), [savedItems]);
+  const clear = useCallback(() => { setInputText(''); setImage(null); setResult(null); setInputError(null); NativeBridge.haptic('light'); }, []);
 
-  // If Auth check is not ready, FORCE the splash screen to stay visible/loading
   if (!isAuthReady) {
       return <SplashScreen forceLoading={true} />;
   }
@@ -577,12 +538,8 @@ const AppContent: React.FC = () => {
     return (
       <div className="min-h-[100dvh] flex flex-col items-center justify-center p-4 relative overflow-hidden bg-black safe-top safe-bottom">
          <div className="glass max-w-md w-full p-8 rounded-3xl border border-white/10 text-center relative z-10 shadow-2xl">
-           <div className="text-5xl mb-6">✋</div>
            <h1 className="text-2xl font-bold mb-4 text-white">Session Paused</h1>
-           <p className="text-white/60 mb-8 leading-relaxed">
-             Rizz Master is open in another tab.
-           </p>
-           <button onClick={() => { handleReclaimSession(); NativeBridge.haptic('medium'); }} className="w-full rizz-gradient py-3.5 rounded-xl font-bold text-white hover:opacity-90 transition-opacity">
+           <button onClick={() => { handleReclaimSession(); NativeBridge.haptic('medium'); }} className="w-full rizz-gradient py-3.5 rounded-xl font-bold text-white">
              Use Here Instead
            </button>
          </div>
@@ -595,12 +552,9 @@ const AppContent: React.FC = () => {
   if (!profile) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-white p-4 bg-black safe-top safe-bottom">
-        <svg className="animate-spin h-8 w-8 text-rose-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
+        <svg className="animate-spin h-8 w-8 text-rose-500 mb-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
         <p className="text-white/50 animate-pulse">Loading Profile...</p>
-        <button onClick={handleLogout} className="mt-8 text-xs text-white/30 hover:text-white underline">Cancel & Logout</button>
+        <button onClick={handleLogout} className="mt-8 text-xs text-white/30 hover:text-white underline">Cancel</button>
       </div>
     );
   }
@@ -608,11 +562,13 @@ const AppContent: React.FC = () => {
   if (currentView !== 'HOME') {
     return (
       <div className="safe-top safe-bottom">
-        <InfoPages 
-          page={currentView} 
-          onBack={() => { setCurrentView('HOME'); NativeBridge.haptic('light'); }}
-          onDeleteAccount={handleDeleteAccount}
-        />
+        <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white">Loading...</div>}>
+            <InfoPages 
+            page={currentView} 
+            onBack={() => { setCurrentView('HOME'); NativeBridge.haptic('light'); }}
+            onDeleteAccount={handleDeleteAccount}
+            />
+        </Suspense>
       </div>
     );
   }
@@ -620,29 +576,27 @@ const AppContent: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 md:py-12 pb-24 relative min-h-[100dvh] flex flex-col animate-fade-in safe-top safe-bottom">
       
-      {showPremiumModal && (
-        <PremiumModal 
-          onClose={() => { setShowPremiumModal(false); NativeBridge.haptic('light'); }}
-          onUpgrade={handleUpgrade}
-          onRestore={handleRestorePurchases}
+      <Suspense fallback={null}>
+        {showPremiumModal && (
+            <PremiumModal 
+            onClose={() => { setShowPremiumModal(false); NativeBridge.haptic('light'); }}
+            onUpgrade={handleUpgrade}
+            onRestore={handleRestorePurchases}
+            />
+        )}
+        <SavedModal 
+            isOpen={showSavedModal} 
+            onClose={() => { setShowSavedModal(false); NativeBridge.haptic('light'); }}
+            savedItems={savedItems}
+            onDelete={handleDeleteSaved}
+            onShare={handleShare}
         />
-      )}
-
-      <SavedModal 
-        isOpen={showSavedModal} 
-        onClose={() => { setShowSavedModal(false); NativeBridge.haptic('light'); }}
-        savedItems={savedItems}
-        onDelete={handleDeleteSaved}
-        onShare={handleShare}
-      />
+      </Suspense>
 
       {isAdLoading && (
         <div className="fixed inset-0 z-[100] bg-black/80 flex flex-col items-center justify-center p-8 backdrop-blur-sm">
            <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 flex flex-col items-center">
-               <svg className="animate-spin h-8 w-8 text-rose-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-               </svg>
+               <svg className="animate-spin h-8 w-8 text-rose-500 mb-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                <p className="text-white font-bold">Loading Ad...</p>
            </div>
         </div>
@@ -656,37 +610,23 @@ const AppContent: React.FC = () => {
              </div>
              <div className="text-4xl font-black text-rose-500 mb-4">{adTimer}s</div>
              <p className="text-white/60 mb-6">Watching Rewarded Ad...</p>
-             <div className="bg-white/5 rounded-xl border border-white/10 min-h-[150px] flex items-center justify-center mb-8 relative overflow-hidden">
-                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" style={{ transform: 'skewX(-20deg) translateX(-150%)' }}></div>
-                 <span className="text-4xl animate-pulse">📺</span>
-             </div>
-             <p className="text-xs text-white/30 uppercase">Do not close window</p>
           </div>
         </div>
       )}
 
       <nav className="flex justify-between items-center mb-8 md:mb-12">
-        <button 
-             onClick={handleLogout} 
-             className="px-3 py-1.5 text-xs md:text-sm text-white/40 hover:text-white hover:bg-white/5 rounded-lg transition-all uppercase tracking-widest font-medium border border-transparent hover:border-white/10 flex items-center gap-1 active:scale-95"
-        >
+        <button onClick={handleLogout} className="px-3 py-1.5 text-xs md:text-sm text-white/40 hover:text-white hover:bg-white/5 rounded-lg transition-all uppercase tracking-widest font-medium border border-transparent hover:border-white/10 flex items-center gap-1 active:scale-95">
              <span className="text-lg">←</span> <span className="hidden md:inline">Logout</span>
         </button>
 
         <div className="flex items-center gap-2 md:gap-3">
-           <button 
-              onClick={() => { setShowSavedModal(true); NativeBridge.haptic('light'); }}
-              className="p-2 md:px-4 md:py-2 bg-white/5 hover:bg-white/10 rounded-full flex items-center gap-1.5 transition-all border border-white/5 active:scale-95"
-           >
+           <button onClick={() => { setShowSavedModal(true); NativeBridge.haptic('light'); }} className="p-2 md:px-4 md:py-2 bg-white/5 hover:bg-white/10 rounded-full flex items-center gap-1.5 transition-all border border-white/5 active:scale-95">
               <span className="text-rose-500 text-base md:text-lg">♥</span>
               <span className="hidden md:inline text-xs font-bold text-white">Saved</span>
            </button>
 
            {!profile?.is_premium && (
-             <button 
-                onClick={() => { setShowPremiumModal(true); NativeBridge.haptic('medium'); }}
-                className="hidden md:flex px-4 py-2 bg-gradient-to-r from-yellow-600 to-yellow-400 text-black text-xs font-bold rounded-full items-center gap-1 hover:brightness-110 transition-all active:scale-95"
-             >
+             <button onClick={() => { setShowPremiumModal(true); NativeBridge.haptic('medium'); }} className="hidden md:flex px-4 py-2 bg-gradient-to-r from-yellow-600 to-yellow-400 text-black text-xs font-bold rounded-full items-center gap-1 hover:brightness-110 transition-all active:scale-95">
                 <span>👑</span> Go Premium
              </button>
            )}
@@ -702,22 +642,18 @@ const AppContent: React.FC = () => {
         </div>
       </nav>
 
-      {/* Hero Header */}
       <header className="text-center mb-8 md:mb-12">
         <div className="inline-block relative">
            <h1 className="text-5xl md:text-7xl font-black mb-2 tracking-tighter bg-gradient-to-r from-rose-400 via-amber-200 to-rose-400 bg-clip-text text-transparent pb-2 animate-text-shimmer">
              Rizz Master
            </h1>
-          {profile?.is_premium && (
-            <div className="absolute -top-4 -right-6 md:-right-8 rotate-12 bg-yellow-500 text-black font-bold text-[10px] md:text-xs px-2 py-1 rounded shadow-lg">PRO</div>
-          )}
+          {profile?.is_premium && <div className="absolute -top-4 -right-6 md:-right-8 rotate-12 bg-yellow-500 text-black font-bold text-[10px] md:text-xs px-2 py-1 rounded shadow-lg">PRO</div>}
         </div>
         <p className="text-white/60 text-sm md:text-xl font-light max-w-md mx-auto leading-relaxed">
           Never send a boring text again.
         </p>
       </header>
 
-      {/* Mode Switcher */}
       <div className="flex p-1 bg-white/5 rounded-full mb-8 relative border border-white/10 max-w-md mx-auto w-full select-none">
         <button onClick={() => { setMode(InputMode.CHAT); clear(); }} className={`flex-1 py-3 rounded-full font-medium text-sm md:text-base transition-all duration-300 relative z-10 ${mode === InputMode.CHAT ? 'text-white shadow-lg' : 'text-white/50 hover:text-white/80'}`}>Chat Reply</button>
         <button onClick={() => { setMode(InputMode.BIO); clear(); }} className={`flex-1 py-3 rounded-full font-medium text-sm md:text-base transition-all duration-300 relative z-10 ${mode === InputMode.BIO ? 'text-white shadow-lg' : 'text-white/50 hover:text-white/80'}`}>Profile Bio</button>
@@ -725,7 +661,6 @@ const AppContent: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 items-start">
-        {/* Input Section */}
         <section className="glass rounded-3xl p-5 md:p-6 border border-white/10 lg:sticky lg:top-8 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
           <div className="mb-4 md:mb-6">
             <div className="flex justify-between items-center mb-2">
@@ -786,10 +721,7 @@ const AppContent: React.FC = () => {
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
-                  <svg className={`animate-spin h-5 w-5 ${profile?.is_premium ? 'text-black' : 'text-white'}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+                  <svg className={`animate-spin h-5 w-5 ${profile?.is_premium ? 'text-black' : 'text-white'}`} viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                   {profile?.is_premium ? "Generating Fast..." : "Cooking..."}
                 </span>
               ) : (
@@ -799,28 +731,16 @@ const AppContent: React.FC = () => {
           ) : (
             <div className="grid grid-cols-2 gap-3">
              <button onClick={handleWatchAd} disabled={isAdLoading} className="bg-white/10 border border-white/10 py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base hover:bg-white/20 active:scale-[0.98] transition-all flex flex-col items-center justify-center">
-              {isAdLoading ? (
-                  <span className="text-white/50 text-xs">Loading...</span>
-              ) : (
-                  <>
-                    <span className="text-xl mb-1">📺</span> <span>Watch Ad (+3)</span>
-                  </>
-              )}
+              {isAdLoading ? <span className="text-white/50 text-xs">Loading...</span> : <><span className="text-xl mb-1">📺</span> <span>Watch Ad (+3)</span></>}
             </button>
             <button onClick={() => { setShowPremiumModal(true); NativeBridge.haptic('medium'); }} className="bg-gradient-to-r from-yellow-500 to-amber-600 text-black py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base shadow-xl hover:brightness-110 active:scale-[0.98] transition-all flex flex-col items-center justify-center animate-pulse">
               <span className="text-xl mb-1">👑</span> <span>Go Unlimited</span>
             </button>
             </div>
           )}
-
-          {!profile?.is_premium && (
-            <p className="text-center text-[10px] md:text-xs text-white/30 mt-3 md:mt-4">
-              {profile?.credits} daily credits remaining. <span className="text-yellow-500/80 cursor-pointer hover:underline" onClick={() => setShowPremiumModal(true)}>Upgrade.</span>
-            </p>
-          )}
+          {!profile?.is_premium && <p className="text-center text-[10px] md:text-xs text-white/30 mt-3 md:mt-4">{profile?.credits} daily credits remaining. <span className="text-yellow-500/80 cursor-pointer hover:underline" onClick={() => setShowPremiumModal(true)}>Upgrade.</span></p>}
         </section>
 
-        {/* Output Section */}
         <section className="flex flex-col gap-4 md:gap-6 min-h-[300px]">
            {!result && !loading && (
             <div className="h-full flex flex-col items-center justify-center text-white/20 py-12 px-4 text-center border-2 border-dashed border-white/5 rounded-3xl bg-white/[0.02] select-none">
