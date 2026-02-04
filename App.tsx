@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { generateRizz, generateBio } from './services/rizzService';
 import { NativeBridge } from './services/nativeBridge';
@@ -12,6 +13,7 @@ import SavedModal from './components/SavedModal';
 import InfoPages from './components/InfoPages';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { Capacitor } from '@capacitor/core';
+import { AdMobService } from './services/admobService';
 
 const DAILY_CREDITS = 5;
 const REWARD_CREDITS = 3;
@@ -121,13 +123,14 @@ const AppContent: React.FC = () => {
   const [showSavedModal, setShowSavedModal] = useState(false);
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
   const [isSessionBlocked, setIsSessionBlocked] = useState(false);
+  const [isAdLoading, setIsAdLoading] = useState(false);
 
   // Determine if we should hold the splash screen because url has auth params
   const hasAuthParams = window.location.hash.includes('access_token') || 
                         window.location.hash.includes('error') || 
                         window.location.search.includes('code=');
 
-  // Initialize Native Google Auth on App Start (fixes crash on logout if auto-logged in)
+  // Initialize Native Google Auth & AdMob on App Start
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
        const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
@@ -138,6 +141,9 @@ const AppContent: React.FC = () => {
            scopes: ['profile', 'email'],
            grantOfflineAccess: false,
        });
+
+       // Init AdMob
+       AdMobService.initialize();
     }
   }, []);
 
@@ -509,9 +515,33 @@ const AppContent: React.FC = () => {
     }
   };
 
-  const handleWatchAd = () => {
+  const handleWatchAd = async () => {
     NativeBridge.haptic('medium');
     setShowPremiumModal(false);
+
+    // 1. Try Native Ad (AdMob)
+    if (Capacitor.isNativePlatform()) {
+        setIsAdLoading(true);
+        try {
+            const rewardEarned = await AdMobService.showRewardVideo(TEST_AD_UNIT_ID);
+            setIsAdLoading(false);
+            
+            if (rewardEarned) {
+                 updateCredits((profile?.credits || 0) + REWARD_CREDITS);
+                 NativeBridge.haptic('success');
+                 showToast(`+${REWARD_CREDITS} Credits Added!`, 'success');
+            } else {
+                 showToast('Ad was canceled or failed.', 'info');
+            }
+            return; // Exit, do not show web simulation
+        } catch (e) {
+            console.warn("Native Ad failed, falling back to web simulation.", e);
+            setIsAdLoading(false);
+            // Fallthrough to web simulation
+        }
+    }
+
+    // 2. Web Simulation (Fallback)
     setIsAdPlaying(true);
     setAdTimer(AD_DURATION); 
 
@@ -537,15 +567,9 @@ const AppContent: React.FC = () => {
   const clear = () => { setInputText(''); setImage(null); setResult(null); setInputError(null); NativeBridge.haptic('light'); };
 
   // If Auth check is not ready, FORCE the splash screen to stay visible/loading
-  // This prevents the LoginPage from rendering momentarily while Supabase parses the hash
   if (!isAuthReady) {
       return <SplashScreen forceLoading={true} />;
   }
-
-  // If Auth is ready but we still want to show splash animation (and no auth params pending)
-  // We can return SplashScreen without forceLoading (it will exit naturally)
-  // However, since we now control `isAuthReady` which includes the data load, we can just transition.
-  // Ideally, if `isAuthReady` took a long time, the splash is still there.
 
   if (isSessionBlocked) {
     return (
@@ -567,8 +591,6 @@ const AppContent: React.FC = () => {
   if (!session) return <LoginPage onGuestLogin={handleGuestLogin} />;
 
   if (!profile) {
-    // If session exists but profile is loading (should be rare given wait logic above)
-    // fallback to spinner
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-white p-4 bg-black safe-top safe-bottom">
         <svg className="animate-spin h-8 w-8 text-rose-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -611,6 +633,18 @@ const AppContent: React.FC = () => {
         onDelete={handleDeleteSaved}
         onShare={handleShare}
       />
+
+      {isAdLoading && (
+        <div className="fixed inset-0 z-[100] bg-black/80 flex flex-col items-center justify-center p-8 backdrop-blur-sm">
+           <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 flex flex-col items-center">
+               <svg className="animate-spin h-8 w-8 text-rose-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+               </svg>
+               <p className="text-white font-bold">Loading Ad...</p>
+           </div>
+        </div>
+      )}
 
       {isAdPlaying && (
         <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-8 safe-top safe-bottom">
@@ -762,8 +796,14 @@ const AppContent: React.FC = () => {
             </button>
           ) : (
             <div className="grid grid-cols-2 gap-3">
-             <button onClick={handleWatchAd} className="bg-white/10 border border-white/10 py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base hover:bg-white/20 active:scale-[0.98] transition-all flex flex-col items-center justify-center">
-              <span className="text-xl mb-1">📺</span> <span>Watch Ad (+3)</span>
+             <button onClick={handleWatchAd} disabled={isAdLoading} className="bg-white/10 border border-white/10 py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base hover:bg-white/20 active:scale-[0.98] transition-all flex flex-col items-center justify-center">
+              {isAdLoading ? (
+                  <span className="text-white/50 text-xs">Loading...</span>
+              ) : (
+                  <>
+                    <span className="text-xl mb-1">📺</span> <span>Watch Ad (+3)</span>
+                  </>
+              )}
             </button>
             <button onClick={() => { setShowPremiumModal(true); NativeBridge.haptic('medium'); }} className="bg-gradient-to-r from-yellow-500 to-amber-600 text-black py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base shadow-xl hover:brightness-110 active:scale-[0.98] transition-all flex flex-col items-center justify-center animate-pulse">
               <span className="text-xl mb-1">👑</span> <span>Go Unlimited</span>
@@ -834,7 +874,6 @@ const AppContent: React.FC = () => {
   );
 }
 
-// Wrapper to provide Toast Context
 const App: React.FC = () => {
   return (
     <ToastProvider>
