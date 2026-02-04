@@ -10,6 +10,8 @@ import Footer from './components/Footer';
 import PremiumModal from './components/PremiumModal';
 import SavedModal from './components/SavedModal';
 import InfoPages from './components/InfoPages';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { Capacitor } from '@capacitor/core';
 
 const DAILY_CREDITS = 5;
 const REWARD_CREDITS = 3;
@@ -253,7 +255,21 @@ const AppContent: React.FC = () => {
 
   const handleLogout = async () => {
     NativeBridge.haptic('medium');
+    
+    // 1. Sign out from Supabase (clears local session)
     if (supabase) await supabase.auth.signOut();
+
+    // 2. Sign out from Native Google Plugin (forces account chooser next time)
+    if (Capacitor.isNativePlatform()) {
+        try {
+            await GoogleAuth.signOut();
+        } catch (error) {
+            // This might fail if user wasn't logged in with Google, which is fine
+            console.log("Native Google Logout skipped or failed:", error);
+        }
+    }
+
+    // 3. Reset Local State
     setSession(null);
     setProfile(null);
     setResult(null);
