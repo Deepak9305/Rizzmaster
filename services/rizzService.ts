@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { RizzResponse, BioResponse } from "../types";
 
@@ -6,7 +5,6 @@ import { RizzResponse, BioResponse } from "../types";
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
 // --- FALLBACK OBJECTS ---
-// Used when the API blocks generation (Safety Filter) or fails to parse
 const SAFE_REFUSAL_RIZZ: RizzResponse = {
   tease: "I cannot generate content for that request as it involves a minor. Please keep things age-appropriate.",
   smooth: "I cannot generate content for that request as it involves a minor. Please keep things age-appropriate.",
@@ -17,12 +15,12 @@ const SAFE_REFUSAL_RIZZ: RizzResponse = {
 };
 
 const ERROR_RIZZ: RizzResponse = {
-  tease: "Error generating response.",
-  smooth: "Error generating response.",
-  chaotic: "Error generating response.",
+  tease: "The AI is overloaded. Please try again.",
+  smooth: "The AI is overloaded. Please try again.",
+  chaotic: "The AI is overloaded. Please try again.",
   loveScore: 0,
   potentialStatus: "Error",
-  analysis: "Please try again."
+  analysis: "Service temporarily unavailable."
 };
 
 const SAFE_REFUSAL_BIO: BioResponse = {
@@ -38,12 +36,15 @@ const ERROR_BIO: BioResponse = {
 /**
  * Clean and parse JSON from AI response, handling Markdown code blocks.
  */
-const parseJSON = (text: string): any => {
+const parseJSON = (text: string | undefined): any => {
   if (!text) return null;
   
+  // Aggressively clean markdown and whitespace
   let cleaned = text.trim();
-  // Remove markdown code blocks if present (e.g. ```json ... ```)
-  cleaned = cleaned.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '');
+  
+  // Remove markdown wrapping
+  // Handles ```json \n { ... } \n ``` or just ``` { ... } ```
+  cleaned = cleaned.replace(/^```(json)?/i, '').replace(/```$/, '');
   
   // Locate the first '{' and last '}' to strip any preamble/postscript
   const firstBrace = cleaned.indexOf('{');
@@ -70,10 +71,17 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
   const parts: any[] = [];
   
   if (imageBase64) {
-    const base64Data = imageBase64.split(',')[1] || imageBase64;
-    const mimeMatch = imageBase64.match(/^data:(.*);base64,/);
-    const mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
-    parts.push({ inlineData: { mimeType, data: base64Data } });
+    // Basic cleanup of base64 if needed
+    const base64Data = imageBase64.includes('base64,') 
+        ? imageBase64.split('base64,')[1] 
+        : imageBase64;
+        
+    parts.push({ 
+        inlineData: { 
+            mimeType: 'image/png', // Defaulting to png, usually safe for Gemini even if jpeg
+            data: base64Data 
+        } 
+    });
   }
 
   const vibeInstruction = vibe 
@@ -95,11 +103,12 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
     Do NOT return plain text. You must ALWAYS return JSON.
   `;
 
-  const prompt = `
+  // Ensure prompt has some text even if empty string passed
+  const promptText = `
     Analyze the following chat context (and image if provided). 
     ${vibeInstruction}
     
-    Context: "${text}"
+    Context: "${text || 'No text context provided, analyze image.'}"
 
     If the context is SAFE (adults only):
     Generate 3 distinct reply options.
@@ -112,8 +121,8 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
     Also provide a "Love Score" (0-100), a short status label (e.g. "Friendzone", "Soulmates"),
     and a 1-sentence analysis.
   `;
-
-  parts.push({ text: prompt });
+  
+  parts.push({ text: promptText });
 
   try {
     const response = await ai.models.generateContent({
@@ -137,7 +146,6 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       }
     });
 
-    // Check for empty text (Safety Block)
     const outputText = response.text;
     if (!outputText) {
         console.warn("Empty response text received (likely safety block). Returning refusal.");
@@ -156,9 +164,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
 
   } catch (error: any) {
     console.error("Rizz Generation Error:", error);
-    // If it's a safety-related error from the SDK, return the refusal message
-    // Otherwise return generic error
-    return SAFE_REFUSAL_RIZZ; 
+    return ERROR_RIZZ; 
   }
 };
 
@@ -210,7 +216,6 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
 
     const outputText = response.text;
     if (!outputText) {
-        console.warn("Empty bio response text received. Returning refusal.");
         return SAFE_REFUSAL_BIO;
     }
 
@@ -221,6 +226,6 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
 
   } catch (error: any) {
     console.error("Bio Generation Error:", error);
-    return SAFE_REFUSAL_BIO;
+    return ERROR_BIO;
   }
 };
