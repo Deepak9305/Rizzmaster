@@ -3,15 +3,45 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { RizzResponse, BioResponse } from "../types";
 
 // Initialize Gemini Client
-// Note: API Key must be in process.env.API_KEY
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+
+// --- FALLBACK OBJECTS ---
+// Used when the API blocks generation (Safety Filter) or fails to parse
+const SAFE_REFUSAL_RIZZ: RizzResponse = {
+  tease: "I cannot generate content for that request as it involves a minor. Please keep things age-appropriate.",
+  smooth: "I cannot generate content for that request as it involves a minor. Please keep things age-appropriate.",
+  chaotic: "I cannot generate content for that request as it involves a minor. Please keep things age-appropriate.",
+  loveScore: 0,
+  potentialStatus: "Blocked",
+  analysis: "Safety Policy Violation"
+};
+
+const ERROR_RIZZ: RizzResponse = {
+  tease: "Error generating response.",
+  smooth: "Error generating response.",
+  chaotic: "Error generating response.",
+  loveScore: 0,
+  potentialStatus: "Error",
+  analysis: "Please try again."
+};
+
+const SAFE_REFUSAL_BIO: BioResponse = {
+  bio: "I cannot generate content for that request as it involves a minor. Please keep things age-appropriate.",
+  analysis: "Safety Policy Violation"
+};
+
+const ERROR_BIO: BioResponse = {
+  bio: "Error generating bio. Please try again.",
+  analysis: "System Error"
+};
 
 /**
  * Clean and parse JSON from AI response, handling Markdown code blocks.
  */
 const parseJSON = (text: string): any => {
-  let cleaned = text.trim();
+  if (!text) return null;
   
+  let cleaned = text.trim();
   // Remove markdown code blocks if present (e.g. ```json ... ```)
   cleaned = cleaned.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '');
   
@@ -27,7 +57,6 @@ const parseJSON = (text: string): any => {
     return JSON.parse(cleaned);
   } catch (e) {
     console.error("JSON Parse Error. Raw text:", text);
-    // Return a safe fallback object to prevent app crash if parsing fails entirely
     return null;
   }
 };
@@ -41,18 +70,10 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
   const parts: any[] = [];
   
   if (imageBase64) {
-    // Extract base64 data and mime type
     const base64Data = imageBase64.split(',')[1] || imageBase64;
-    // Try to extract mime type from data URL, default to png if not found
     const mimeMatch = imageBase64.match(/^data:(.*);base64,/);
     const mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
-
-    parts.push({
-      inlineData: {
-        mimeType: mimeType,
-        data: base64Data
-      }
-    });
+    parts.push({ inlineData: { mimeType, data: base64Data } });
   }
 
   const vibeInstruction = vibe 
@@ -94,42 +115,51 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
 
   parts.push({ text: prompt });
 
-  const response = await ai.models.generateContent({
-    model: modelName,
-    contents: { parts },
-    config: {
-      systemInstruction: systemInstruction,
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          tease: { type: Type.STRING },
-          smooth: { type: Type.STRING },
-          chaotic: { type: Type.STRING },
-          loveScore: { type: Type.INTEGER },
-          potentialStatus: { type: Type.STRING },
-          analysis: { type: Type.STRING },
-        },
-        required: ["tease", "smooth", "chaotic", "loveScore", "potentialStatus", "analysis"]
+  try {
+    const response = await ai.models.generateContent({
+      model: modelName,
+      contents: { parts },
+      config: {
+        systemInstruction: systemInstruction,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            tease: { type: Type.STRING },
+            smooth: { type: Type.STRING },
+            chaotic: { type: Type.STRING },
+            loveScore: { type: Type.INTEGER },
+            potentialStatus: { type: Type.STRING },
+            analysis: { type: Type.STRING },
+          },
+          required: ["tease", "smooth", "chaotic", "loveScore", "potentialStatus", "analysis"]
+        }
       }
-    }
-  });
+    });
 
-  const parsed = parseJSON(response.text || "{}");
-  
-  // Fallback if parsing failed or returned null
-  if (!parsed) {
-     return {
-         tease: "Error generating response.",
-         smooth: "Error generating response.",
-         chaotic: "Error generating response.",
-         loveScore: 0,
-         potentialStatus: "Error",
-         analysis: "Please try again."
-     };
+    // Check for empty text (Safety Block)
+    const outputText = response.text;
+    if (!outputText) {
+        console.warn("Empty response text received (likely safety block). Returning refusal.");
+        return SAFE_REFUSAL_RIZZ;
+    }
+
+    const parsed = parseJSON(outputText);
+    if (!parsed) return ERROR_RIZZ;
+    
+    // Validate keys exist to prevent blank UI
+    if (!parsed.tease || !parsed.smooth) {
+        return ERROR_RIZZ;
+    }
+
+    return parsed as RizzResponse;
+
+  } catch (error: any) {
+    console.error("Rizz Generation Error:", error);
+    // If it's a safety-related error from the SDK, return the refusal message
+    // Otherwise return generic error
+    return SAFE_REFUSAL_RIZZ; 
   }
-  
-  return parsed as RizzResponse;
 };
 
 /**
@@ -160,32 +190,37 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
     Keep it under 280 chars. High impact.
   `;
 
-  const response = await ai.models.generateContent({
-    model: modelName,
-    contents: prompt,
-    config: {
-      systemInstruction: systemInstruction,
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          bio: { type: Type.STRING },
-          analysis: { type: Type.STRING },
-        },
-        required: ["bio", "analysis"]
+  try {
+    const response = await ai.models.generateContent({
+      model: modelName,
+      contents: prompt,
+      config: {
+        systemInstruction: systemInstruction,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            bio: { type: Type.STRING },
+            analysis: { type: Type.STRING },
+          },
+          required: ["bio", "analysis"]
+        }
       }
+    });
+
+    const outputText = response.text;
+    if (!outputText) {
+        console.warn("Empty bio response text received. Returning refusal.");
+        return SAFE_REFUSAL_BIO;
     }
-  });
 
-  const parsed = parseJSON(response.text || "{}");
+    const parsed = parseJSON(outputText);
+    if (!parsed) return ERROR_BIO;
 
-  // Fallback if parsing failed
-  if (!parsed) {
-      return {
-          bio: "Error generating bio. Please try again.",
-          analysis: "System Error"
-      };
+    return parsed as BioResponse;
+
+  } catch (error: any) {
+    console.error("Bio Generation Error:", error);
+    return SAFE_REFUSAL_BIO;
   }
-
-  return parsed as BioResponse;
 };

@@ -38,8 +38,8 @@ const LOADING_MESSAGES = [
   "Cooking..."
 ];
 
-const VIBES_CHAT = ["Flirty", "Funny", "Savage", "Wholesome", "Nonchalant", "Intellectual"];
-const VIBES_BIO = ["Confident", "Chill", "Funny", "Mysterious", "Adventurous", "Direct"];
+const VIBES_CHAT = ["Flirty", "Funny", "Savage", "Wholesome", "Nonchalant", "Intellectual", "Romantic"];
+const VIBES_BIO = ["Confident", "Chill", "Funny", "Mysterious", "Adventurous", "Direct", "Witty"];
 
 // Helper for UUID generation with fallback
 const generateUUID = () => {
