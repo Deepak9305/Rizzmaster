@@ -28,6 +28,19 @@ const TEST_PRODUCT_ID = 'android.test.purchased';
 
 type ViewState = 'HOME' | 'PRIVACY' | 'TERMS' | 'SUPPORT';
 
+const LOADING_MESSAGES = [
+  "Analyzing context...",
+  "Reading between the lines...",
+  "Scanning for red flags...",
+  "Consulting the Rizz God...",
+  "Drafting fire replies...",
+  "Polishing the charm...",
+  "Cooking..."
+];
+
+const VIBES_CHAT = ["Flirty", "Funny", "Savage", "Wholesome", "Nonchalant", "Intellectual"];
+const VIBES_BIO = ["Confident", "Chill", "Funny", "Mysterious", "Adventurous", "Direct"];
+
 // Helper for UUID generation with fallback
 const generateUUID = () => {
     if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -111,7 +124,12 @@ const AppContent: React.FC = () => {
   const [mode, setMode] = useState<InputMode>(InputMode.CHAT);
   const [inputText, setInputText] = useState('');
   const [image, setImage] = useState<string | null>(null);
+  const [selectedVibe, setSelectedVibe] = useState<string | null>(null);
+  
+  // Loading State
   const [loading, setLoading] = useState(false);
+  const [loadingMsg, setLoadingMsg] = useState("Cooking...");
+  
   const [result, setResult] = useState<RizzResponse | BioResponse | null>(null);
   const [inputError, setInputError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -188,12 +206,25 @@ const AppContent: React.FC = () => {
     };
   }, []);
 
+  // Loading Message Rotation
+  useEffect(() => {
+    let interval: any;
+    if (loading) {
+      let i = 0;
+      setLoadingMsg(LOADING_MESSAGES[0]);
+      interval = setInterval(() => {
+        i = (i + 1) % LOADING_MESSAGES.length;
+        setLoadingMsg(LOADING_MESSAGES[i]);
+      }, 1500);
+    }
+    return () => clearInterval(interval);
+  }, [loading]);
+
   const handleReclaimSession = useCallback(() => {
     setIsSessionBlocked(false);
     sessionChannelRef.current?.postMessage({ type: 'NEW_SESSION_STARTED' });
   }, []);
 
-  // Optimized User Data Loading: Parallel Fetching
   const loadUserData = async (userId: string, email?: string) => {
     if (!supabase || userId === 'guest') {
         const storedProfile = localStorage.getItem('guest_profile');
@@ -217,7 +248,6 @@ const AppContent: React.FC = () => {
     }
 
     try {
-        // Parallel fetch for speed
         const profilePromise = supabase.from('profiles').select('*').eq('id', userId).single();
         const savedPromise = supabase.from('saved_items').select('*').eq('user_id', userId).order('created_at', { ascending: false });
 
@@ -226,7 +256,6 @@ const AppContent: React.FC = () => {
         let profileData = profileResult.data;
         const savedData = savedResult.data;
 
-        // Handle profile creation if missing
         if (profileResult.error?.code === 'PGRST116') {
             const { data: newProfile } = await supabase.from('profiles').insert([{ 
                 id: userId, 
@@ -237,7 +266,6 @@ const AppContent: React.FC = () => {
             }]).select().single();
             if (newProfile) profileData = newProfile;
         } else if (profileData) {
-            // Check daily reset
             const today = new Date().toISOString().split('T')[0];
             if (profileData.last_daily_reset !== today) {
                 const { data: updated } = await supabase.from('profiles').update({ credits: DAILY_CREDITS, last_daily_reset: today }).eq('id', userId).select().single();
@@ -265,6 +293,7 @@ const AppContent: React.FC = () => {
     setInputText('');
     setImage(null);
     setInputError(null);
+    setSelectedVibe(null);
     setCurrentView('HOME');
   }, []);
 
@@ -324,7 +353,6 @@ const AppContent: React.FC = () => {
     const exists = savedItems.find(item => item.content === content);
     
     if (exists) {
-      // Optimistic Remove
       const newItems = savedItems.filter(item => item.id !== exists.id);
       setSavedItems(newItems);
       showToast("Removed from saved", 'info');
@@ -335,7 +363,6 @@ const AppContent: React.FC = () => {
           localStorage.setItem('guest_saved_items', JSON.stringify(newItems));
       }
     } else {
-      // Optimistic Add
       const newItem: SavedItem = {
           id: generateUUID(),
           user_id: profile.id,
@@ -350,7 +377,6 @@ const AppContent: React.FC = () => {
 
       if (supabase && profile.id !== 'guest') {
         const { data } = await supabase.from('saved_items').insert([{ user_id: profile.id, content, type }]).select().single();
-        // Update ID if server returns one
         if (data) {
              setSavedItems(current => current.map(i => i.id === newItem.id ? { ...i, id: data.id } : i));
         }
@@ -363,7 +389,7 @@ const AppContent: React.FC = () => {
   const handleDeleteSaved = useCallback(async (id: string) => {
     NativeBridge.haptic('medium');
     const newItems = savedItems.filter(item => item.id !== id);
-    setSavedItems(newItems); // Optimistic
+    setSavedItems(newItems);
     showToast("Item deleted", 'info');
 
     if (supabase && profile?.id !== 'guest') {
@@ -464,10 +490,10 @@ const AppContent: React.FC = () => {
       }
 
       if (mode === InputMode.CHAT) {
-        const res = await generateRizz(inputText, image || undefined);
+        const res = await generateRizz(inputText, image || undefined, selectedVibe || undefined);
         setResult(res);
       } else {
-        const res = await generateBio(inputText);
+        const res = await generateBio(inputText, selectedVibe || undefined);
         setResult(res);
       }
       NativeBridge.haptic('success');
@@ -528,7 +554,14 @@ const AppContent: React.FC = () => {
   };
 
   const isSaved = useCallback((content: string) => savedItems.some(item => item.content === content), [savedItems]);
-  const clear = useCallback(() => { setInputText(''); setImage(null); setResult(null); setInputError(null); NativeBridge.haptic('light'); }, []);
+  const clear = useCallback(() => { 
+      setInputText(''); 
+      setImage(null); 
+      setResult(null); 
+      setInputError(null); 
+      setSelectedVibe(null);
+      NativeBridge.haptic('light'); 
+  }, []);
 
   if (!isAuthReady) {
       return <SplashScreen forceLoading={true} />;
@@ -662,7 +695,7 @@ const AppContent: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 items-start">
         <section className="glass rounded-3xl p-5 md:p-6 border border-white/10 lg:sticky lg:top-8 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
-          <div className="mb-4 md:mb-6">
+          <div className="mb-4">
             <div className="flex justify-between items-center mb-2">
                 <label className="block text-xs font-bold text-white/50 uppercase tracking-widest">
                 {mode === InputMode.CHAT ? 'The Context' : 'About You'}
@@ -678,6 +711,27 @@ const AppContent: React.FC = () => {
               className="w-full h-32 md:h-40 bg-black/40 border border-white/10 rounded-2xl p-4 text-sm md:text-base focus:ring-2 focus:ring-rose-500/50 focus:outline-none resize-none transition-all placeholder:text-white/20"
               style={{ fontSize: '16px' }}
             />
+          </div>
+
+          <div className="mb-6">
+              <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-3">
+                  Select Vibe (Optional)
+              </label>
+              <div className="flex flex-wrap gap-2">
+                  {(mode === InputMode.CHAT ? VIBES_CHAT : VIBES_BIO).map((vibe) => (
+                      <button 
+                        key={vibe} 
+                        onClick={() => { setSelectedVibe(selectedVibe === vibe ? null : vibe); NativeBridge.haptic('light'); }}
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all active:scale-95 ${
+                            selectedVibe === vibe 
+                            ? 'bg-rose-500/20 border-rose-500 text-rose-300' 
+                            : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+                        }`}
+                      >
+                          {vibe}
+                      </button>
+                  ))}
+              </div>
           </div>
 
           {mode === InputMode.CHAT && (
@@ -720,9 +774,9 @@ const AppContent: React.FC = () => {
               }`}
             >
               {loading ? (
-                <span className="flex items-center justify-center gap-2">
+                <span className="flex items-center justify-center gap-2 animate-pulse">
                   <svg className={`animate-spin h-5 w-5 ${profile?.is_premium ? 'text-black' : 'text-white'}`} viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                  {profile?.is_premium ? "Generating Fast..." : "Cooking..."}
+                  {loadingMsg}
                 </span>
               ) : (
                 profile?.is_premium ? "Get Rizz (VIP)" : `Get Rizz (${(mode === InputMode.CHAT && image) ? 2 : 1} ⚡)`

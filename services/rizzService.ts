@@ -34,7 +34,7 @@ const parseJSON = (text: string): any => {
 /**
  * Generates Rizz (replies) based on chat context or image
  */
-export const generateRizz = async (text: string, imageBase64?: string): Promise<RizzResponse> => {
+export const generateRizz = async (text: string, imageBase64?: string, vibe?: string): Promise<RizzResponse> => {
   const modelName = 'gemini-3-flash-preview';
 
   const parts: any[] = [];
@@ -54,9 +54,14 @@ export const generateRizz = async (text: string, imageBase64?: string): Promise<
     });
   }
 
+  const vibeInstruction = vibe 
+    ? `IMPORTANT: The user specifically wants a "${vibe}" tone for these replies. Adjust the style accordingly.` 
+    : '';
+
   const prompt = `
     You are a world-class dating coach and "Rizz Master". 
     Analyze the following chat context (and image if provided). 
+    ${vibeInstruction}
     
     Context: "${text}"
 
@@ -99,11 +104,16 @@ export const generateRizz = async (text: string, imageBase64?: string): Promise<
 /**
  * Generates a dating profile bio
  */
-export const generateBio = async (text: string): Promise<BioResponse> => {
+export const generateBio = async (text: string, vibe?: string): Promise<BioResponse> => {
   const modelName = 'gemini-3-flash-preview';
+
+  const vibeInstruction = vibe 
+    ? `The user specifically wants a "${vibe}" vibe for this bio.` 
+    : '';
 
   const prompt = `
     Create a catchy, witty, and attractive dating profile bio based on these details: "${text}"
+    ${vibeInstruction}
     Keep it under 280 chars. High impact.
   `;
 
