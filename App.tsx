@@ -282,20 +282,38 @@ const AppContent: React.FC = () => {
   };
 
   const handleLogout = useCallback(async () => {
+    // 1. Prevent accidental clicks - UPDATED with specific text
+    if (!window.confirm("Are you sure you want to log out of Rizz Master?")) return;
+    
     NativeBridge.haptic('medium');
-    if (supabase) await supabase.auth.signOut();
-    if (Capacitor.isNativePlatform()) {
-        try { await GoogleAuth.signOut(); } catch (error) { console.log("Native Logout err", error); }
+    
+    // 2. Attempt server-side sign out
+    try {
+        if (supabase) await supabase.auth.signOut();
+        if (Capacitor.isNativePlatform()) {
+            try { await GoogleAuth.signOut(); } catch (error) { console.warn("Native Logout err", error); }
+        }
+    } catch (err) {
+        console.error("Logout failed:", err);
+    } finally {
+        // 3. Client-side cleanup (Always execute)
+        setSession(null);
+        setProfile(null);
+        setSavedItems([]);
+        setResult(null);
+        setInputText('');
+        setImage(null);
+        setInputError(null);
+        setSelectedVibe(null);
+        setCurrentView('HOME');
+        
+        // Close any open modals
+        setShowPremiumModal(false);
+        setShowSavedModal(false);
+        
+        showToast("Successfully logged out 👋", 'success');
     }
-    setSession(null);
-    setProfile(null);
-    setResult(null);
-    setInputText('');
-    setImage(null);
-    setInputError(null);
-    setSelectedVibe(null);
-    setCurrentView('HOME');
-  }, []);
+  }, [showToast]);
 
   const handleGuestLogin = useCallback(() => {
       NativeBridge.haptic('light');
@@ -680,8 +698,8 @@ const AppContent: React.FC = () => {
       )}
 
       <nav className="flex justify-between items-center mb-8 md:mb-12">
-        <button onClick={handleLogout} className="px-3 py-1.5 text-xs md:text-sm text-white/40 hover:text-white hover:bg-white/5 rounded-lg transition-all uppercase tracking-widest font-medium border border-transparent hover:border-white/10 flex items-center gap-1 active:scale-95">
-             <span className="text-lg">←</span> <span className="hidden md:inline">Logout</span>
+        <button onClick={handleLogout} className="px-3 py-1.5 text-xs md:text-sm text-white/40 hover:text-white hover:bg-white/5 rounded-lg transition-all uppercase tracking-widest font-medium border border-transparent hover:border-white/10 flex items-center gap-2 active:scale-95">
+             <span className="text-lg">←</span> <span>Logout</span>
         </button>
 
         <div className="flex items-center gap-2 md:gap-3">
