@@ -1,3 +1,4 @@
+
 /**
  * Native Bridge Service
  * 
@@ -27,21 +28,30 @@ export const NativeBridge = {
 
   /**
    * Share content using native share sheet if available
+   * Returns a status string: 'SHARED', 'COPIED', 'DISMISSED', 'FAILED'
    */
-  share: async (title: string, text: string, url: string = window.location.href): Promise<boolean> => {
-    if (navigator.share) {
+  share: async (title: string, text: string, url?: string): Promise<'SHARED' | 'COPIED' | 'DISMISSED' | 'FAILED'> => {
+    // Prepare data
+    const shareData: any = { title, text };
+    if (url) shareData.url = url;
+
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
       try {
-        await navigator.share({ title, text, url });
-        return true;
-      } catch (err) {
-        console.log('Share canceled or failed', err);
-        return false;
+        await navigator.share(shareData);
+        return 'SHARED';
+      } catch (err: any) {
+        if (err.name === 'AbortError') {
+          return 'DISMISSED'; // User cancelled
+        }
+        // If share failed for other reasons, fall through to clipboard
+        console.warn('Share failed, attempting fallback:', err);
       }
-    } else {
-      // Fallback for desktop/unsupported browsers
-      await NativeBridge.copyToClipboard(`${text} ${url}`);
-      return false; // Return false to indicate we didn't open the share sheet
     }
+    
+    // Fallback: Copy text only (append URL if meaningful context, but for Rizz we usually just want text)
+    const contentToCopy = url ? `${text}\n${url}` : text;
+    const copied = await NativeBridge.copyToClipboard(contentToCopy);
+    return copied ? 'COPIED' : 'FAILED';
   },
 
   /**
@@ -49,8 +59,26 @@ export const NativeBridge = {
    */
   copyToClipboard: async (text: string): Promise<boolean> => {
     try {
-      await navigator.clipboard.writeText(text);
-      return true;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } else {
+        // Legacy fallback
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            return true;
+        } catch (err) {
+            document.body.removeChild(textArea);
+            return false;
+        }
+      }
     } catch (err) {
       console.error('Clipboard failed', err);
       return false;

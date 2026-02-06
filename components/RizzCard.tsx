@@ -11,6 +11,7 @@ interface RizzCardProps {
   isSaved: boolean;
   onSave: () => void;
   onShare: () => void;
+  onReport: () => void;
   delay?: number;
 }
 
@@ -22,6 +23,7 @@ const RizzCard: React.FC<RizzCardProps> = memo(({
   isSaved, 
   onSave, 
   onShare,
+  onReport,
   delay = 0
 }) => {
   const { showToast } = useToast();
@@ -67,6 +69,13 @@ const RizzCard: React.FC<RizzCardProps> = memo(({
                 title="Save"
             >
                 <svg className="w-4 h-4" fill={isSaved ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+            </button>
+            <button 
+                onClick={onReport}
+                className="p-1.5 rounded-lg hover:bg-white/10 text-white/70 hover:text-red-400 transition-colors active:scale-95"
+                title="Report Issue"
+            >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" /></svg>
             </button>
         </div>
       </div>

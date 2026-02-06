@@ -436,8 +436,21 @@ const AppContent: React.FC = () => {
 
   const handleShare = useCallback(async (content: string) => {
     NativeBridge.haptic('light');
-    const shared = await NativeBridge.share('Rizz Master Reply', content);
-    if (!shared) showToast('Link copied!', 'success');
+    // Using default URL param undefined to ensure we share text only, avoiding weird sharing behavior
+    const status = await NativeBridge.share('Rizz Master Reply', content);
+    
+    if (status === 'COPIED') {
+        showToast('Link copied to clipboard!', 'success');
+    } else if (status === 'FAILED') {
+        showToast('Could not share content.', 'error');
+    }
+    // If SHARED or DISMISSED, we generally don't need to show a toast
+  }, [showToast]);
+
+  const handleReport = useCallback(() => {
+    NativeBridge.haptic('medium');
+    // In a real app, this would send data to backend. For now, just user feedback.
+    showToast('Report submitted. We will review this.', 'info');
   }, [showToast]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -820,9 +833,9 @@ const AppContent: React.FC = () => {
               </div>
 
               <div className="grid gap-3 md:gap-4 pb-12">
-                <RizzCard label="Tease" content={result.tease} icon="😏" color="from-purple-500 to-indigo-500" isSaved={isSaved(result.tease)} onSave={() => toggleSave(result.tease, 'tease')} onShare={() => handleShare(result.tease)} delay={0.1} />
-                <RizzCard label="Smooth" content={result.smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved(result.smooth)} onSave={() => toggleSave(result.smooth, 'smooth')} onShare={() => handleShare(result.smooth)} delay={0.2} />
-                <RizzCard label="Chaotic" content={result.chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved(result.chaotic)} onSave={() => toggleSave(result.chaotic, 'chaotic')} onShare={() => handleShare(result.chaotic)} delay={0.3} />
+                <RizzCard label="Tease" content={result.tease} icon="😏" color="from-purple-500 to-indigo-500" isSaved={isSaved(result.tease)} onSave={() => toggleSave(result.tease, 'tease')} onShare={() => handleShare(result.tease)} onReport={handleReport} delay={0.1} />
+                <RizzCard label="Smooth" content={result.smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved(result.smooth)} onSave={() => toggleSave(result.smooth, 'smooth')} onShare={() => handleShare(result.smooth)} onReport={handleReport} delay={0.2} />
+                <RizzCard label="Chaotic" content={result.chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved(result.chaotic)} onSave={() => toggleSave(result.chaotic, 'chaotic')} onShare={() => handleShare(result.chaotic)} onReport={handleReport} delay={0.3} />
               </div>
             </>
           )}
