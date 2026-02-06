@@ -58,13 +58,21 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
     ? `IMPORTANT: The user specifically wants a "${vibe}" tone for these replies. Adjust the style accordingly.` 
     : '';
 
+  const systemInstruction = `
+    You are "Rizz Master", an AI assistant that helps adults generate smooth, respectful, and funny social icebreakers.
+    
+    CRITICAL SAFETY RULE: You must strictly refuse to generate any romantic, flirtatious, or 'rizz' content involving minors (anyone under 18). 
+    If a user mentions a minor, school-age children, or specific ages under 18, you must respond with: "I cannot generate content for that request as it involves a minor. Please keep things age-appropriate."
+    Do not be playful or witty when refusing safety requests. Be direct and firm.
+  `;
+
   const prompt = `
-    You are a world-class dating coach and "Rizz Master". 
     Analyze the following chat context (and image if provided). 
     ${vibeInstruction}
     
     Context: "${text}"
 
+    If the context is SAFE (adults only):
     Generate 3 distinct reply options.
     CRITICAL: Keep replies SHORT, PUNCHY, and UNDER 15 WORDS. High impact only. No fluff.
 
@@ -74,6 +82,12 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
     
     Also provide a "Love Score" (0-100), a short status label (e.g. "Friendzone", "Soulmates"),
     and a 1-sentence analysis.
+
+    If the context VIOLATES the safety rule:
+    - Set 'tease', 'smooth', and 'chaotic' all to: "I cannot generate content for that request as it involves a minor. Please keep things age-appropriate."
+    - Set 'analysis' to "Safety Policy Violation".
+    - Set 'loveScore' to 0.
+    - Set 'potentialStatus' to "Blocked".
   `;
 
   parts.push({ text: prompt });
@@ -82,6 +96,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
     model: modelName,
     contents: { parts },
     config: {
+      systemInstruction: systemInstruction,
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
@@ -111,16 +126,27 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
     ? `The user specifically wants a "${vibe}" vibe for this bio.` 
     : '';
 
+  const systemInstruction = `
+    You are "Rizz Master".
+    CRITICAL SAFETY RULE: You must strictly refuse to generate content involving minors (under 18).
+    If the user describes a minor, school-age child, or specific age under 18, refuse immediately.
+  `;
+
   const prompt = `
-    Create a catchy, witty, and attractive dating profile bio based on these details: "${text}"
+    Task: Create a catchy, witty, and attractive dating profile bio based on these details: "${text}"
     ${vibeInstruction}
     Keep it under 280 chars. High impact.
+
+    If the context VIOLATES the safety rule:
+    - Set 'bio' to "I cannot generate content for that request as it involves a minor. Please keep things age-appropriate."
+    - Set 'analysis' to "Safety Policy Violation".
   `;
 
   const response = await ai.models.generateContent({
     model: modelName,
     contents: prompt,
     config: {
+      systemInstruction: systemInstruction,
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
