@@ -27,7 +27,8 @@ const parseJSON = (text: string): any => {
     return JSON.parse(cleaned);
   } catch (e) {
     console.error("JSON Parse Error. Raw text:", text);
-    throw new Error("Failed to parse AI response.");
+    // Return a safe fallback object to prevent app crash if parsing fails entirely
+    return null;
   }
 };
 
@@ -62,8 +63,15 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
     You are "Rizz Master", an AI assistant that helps adults generate smooth, respectful, and funny social icebreakers.
     
     CRITICAL SAFETY RULE: You must strictly refuse to generate any romantic, flirtatious, or 'rizz' content involving minors (anyone under 18). 
-    If a user mentions a minor, school-age children, or specific ages under 18, you must respond with: "I cannot generate content for that request as it involves a minor. Please keep things age-appropriate."
-    Do not be playful or witty when refusing safety requests. Be direct and firm.
+    
+    HOW TO REFUSE:
+    If a user mentions a minor, school-age children, or specific ages under 18, you MUST return a VALID JSON object matching the defined schema.
+    - Set 'tease', 'smooth', and 'chaotic' fields ALL to exactly: "I cannot generate content for that request as it involves a minor. Please keep things age-appropriate."
+    - Set 'loveScore' to 0.
+    - Set 'potentialStatus' to "Blocked".
+    - Set 'analysis' to "Safety Policy Violation".
+    
+    Do NOT return plain text. You must ALWAYS return JSON.
   `;
 
   const prompt = `
@@ -82,12 +90,6 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
     
     Also provide a "Love Score" (0-100), a short status label (e.g. "Friendzone", "Soulmates"),
     and a 1-sentence analysis.
-
-    If the context VIOLATES the safety rule:
-    - Set 'tease', 'smooth', and 'chaotic' all to: "I cannot generate content for that request as it involves a minor. Please keep things age-appropriate."
-    - Set 'analysis' to "Safety Policy Violation".
-    - Set 'loveScore' to 0.
-    - Set 'potentialStatus' to "Blocked".
   `;
 
   parts.push({ text: prompt });
@@ -113,7 +115,21 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
     }
   });
 
-  return parseJSON(response.text || "{}") as RizzResponse;
+  const parsed = parseJSON(response.text || "{}");
+  
+  // Fallback if parsing failed or returned null
+  if (!parsed) {
+     return {
+         tease: "Error generating response.",
+         smooth: "Error generating response.",
+         chaotic: "Error generating response.",
+         loveScore: 0,
+         potentialStatus: "Error",
+         analysis: "Please try again."
+     };
+  }
+  
+  return parsed as RizzResponse;
 };
 
 /**
@@ -129,17 +145,19 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
   const systemInstruction = `
     You are "Rizz Master".
     CRITICAL SAFETY RULE: You must strictly refuse to generate content involving minors (under 18).
-    If the user describes a minor, school-age child, or specific age under 18, refuse immediately.
+    
+    HOW TO REFUSE:
+    If the user describes a minor, school-age child, or specific age under 18, you MUST return a VALID JSON object.
+    - Set 'bio' to: "I cannot generate content for that request as it involves a minor. Please keep things age-appropriate."
+    - Set 'analysis' to "Safety Policy Violation".
+
+    Do NOT return plain text. You must ALWAYS return JSON.
   `;
 
   const prompt = `
     Task: Create a catchy, witty, and attractive dating profile bio based on these details: "${text}"
     ${vibeInstruction}
     Keep it under 280 chars. High impact.
-
-    If the context VIOLATES the safety rule:
-    - Set 'bio' to "I cannot generate content for that request as it involves a minor. Please keep things age-appropriate."
-    - Set 'analysis' to "Safety Policy Violation".
   `;
 
   const response = await ai.models.generateContent({
@@ -159,5 +177,15 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
     }
   });
 
-  return parseJSON(response.text || "{}") as BioResponse;
+  const parsed = parseJSON(response.text || "{}");
+
+  // Fallback if parsing failed
+  if (!parsed) {
+      return {
+          bio: "Error generating bio. Please try again.",
+          analysis: "System Error"
+      };
+  }
+
+  return parsed as BioResponse;
 };
