@@ -502,18 +502,37 @@ const AppContent: React.FC = () => {
         updateCredits((profile?.credits || 0) - cost);
       }
 
+      let res;
       if (mode === InputMode.CHAT) {
-        const res = await generateRizz(inputText, image || undefined, selectedVibe || undefined);
-        setResult(res);
+        res = await generateRizz(inputText, image || undefined, selectedVibe || undefined);
       } else {
-        const res = await generateBio(inputText, selectedVibe || undefined);
-        setResult(res);
+        res = await generateBio(inputText, selectedVibe || undefined);
       }
-      NativeBridge.haptic('success');
+
+      // Handle Soft Errors (Blocked/System Error returns from Service)
+      if ('potentialStatus' in res && (res.potentialStatus === 'Error' || res.potentialStatus === 'Blocked')) {
+         // Refund
+         if (profile && !profile.is_premium) updateCredits(profile.credits);
+         if (res.potentialStatus === 'Blocked') {
+            showToast('Request blocked by Safety Policy.', 'error');
+         } else {
+            showToast('Service unavailable. Credits refunded.', 'error');
+         }
+         setResult(res); // Show the safety message in the UI cards
+      } else if ('analysis' in res && (res.analysis === 'System Error' || res.analysis === 'Safety Policy Violation')) {
+         // Refund Bio Error
+         if (profile && !profile.is_premium) updateCredits(profile.credits);
+         showToast(res.analysis, 'error');
+         setResult(res);
+      } else {
+         setResult(res);
+         NativeBridge.haptic('success');
+      }
+
     } catch (error) {
       console.error(error);
       showToast('The wingman tripped! Try again.', 'error');
-      // Refund if error
+      // Refund if hard error
       if (profile && !profile.is_premium) updateCredits((profile.credits || 0));
     } finally {
       setLoading(false);

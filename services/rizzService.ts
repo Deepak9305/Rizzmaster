@@ -6,9 +6,9 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
 // --- FALLBACK OBJECTS ---
 const SAFE_REFUSAL_RIZZ: RizzResponse = {
-  tease: "I cannot generate content for that request as it involves a minor. Please keep things age-appropriate.",
-  smooth: "I cannot generate content for that request as it involves a minor. Please keep things age-appropriate.",
-  chaotic: "I cannot generate content for that request as it involves a minor. Please keep things age-appropriate.",
+  tease: "I cannot generate content for that request as it involves a minor or policy violation. Please keep things safe.",
+  smooth: "I cannot generate content for that request as it involves a minor or policy violation. Please keep things safe.",
+  chaotic: "I cannot generate content for that request as it involves a minor or policy violation. Please keep things safe.",
   loveScore: 0,
   potentialStatus: "Blocked",
   analysis: "Safety Policy Violation"
@@ -24,7 +24,7 @@ const ERROR_RIZZ: RizzResponse = {
 };
 
 const SAFE_REFUSAL_BIO: BioResponse = {
-  bio: "I cannot generate content for that request as it involves a minor. Please keep things age-appropriate.",
+  bio: "I cannot generate content for that request as it involves a minor or policy violation.",
   analysis: "Safety Policy Violation"
 };
 
@@ -63,6 +63,19 @@ const parseJSON = (text: string | undefined): any => {
 };
 
 /**
+ * Helper to extract mime type from base64 string
+ */
+const getMimeType = (base64: string): string => {
+    if (base64.startsWith('data:')) {
+        const matches = base64.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,/);
+        if (matches && matches.length > 1) {
+            return matches[1];
+        }
+    }
+    return 'image/png'; // Default fallback
+};
+
+/**
  * Generates Rizz (replies) based on chat context or image
  */
 export const generateRizz = async (text: string, imageBase64?: string, vibe?: string): Promise<RizzResponse> => {
@@ -71,14 +84,14 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
   const parts: any[] = [];
   
   if (imageBase64) {
-    // Basic cleanup of base64 if needed
+    const mimeType = getMimeType(imageBase64);
     const base64Data = imageBase64.includes('base64,') 
         ? imageBase64.split('base64,')[1] 
         : imageBase64;
         
     parts.push({ 
         inlineData: { 
-            mimeType: 'image/png', // Defaulting to png, usually safe for Gemini even if jpeg
+            mimeType: mimeType,
             data: base64Data 
         } 
     });
@@ -91,11 +104,11 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
   const systemInstruction = `
     You are "Rizz Master", an AI assistant that helps adults generate smooth, respectful, and funny social icebreakers.
     
-    CRITICAL SAFETY RULE: You must strictly refuse to generate any romantic, flirtatious, or 'rizz' content involving minors (anyone under 18). 
+    CRITICAL SAFETY RULE: You must strictly refuse to generate any romantic, flirtatious, or 'rizz' content involving minors (anyone under 18) or non-consensual contexts.
     
     HOW TO REFUSE:
-    If a user mentions a minor, school-age children, or specific ages under 18, you MUST return a VALID JSON object matching the defined schema.
-    - Set 'tease', 'smooth', and 'chaotic' fields ALL to exactly: "I cannot generate content for that request as it involves a minor. Please keep things age-appropriate."
+    If a user mentions a minor, school-age children, specific ages under 18, or harmful content, you MUST return a VALID JSON object matching the defined schema.
+    - Set 'tease', 'smooth', and 'chaotic' fields ALL to exactly: "I cannot generate content for that request due to safety policies."
     - Set 'loveScore' to 0.
     - Set 'potentialStatus' to "Blocked".
     - Set 'analysis' to "Safety Policy Violation".
@@ -180,11 +193,11 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
 
   const systemInstruction = `
     You are "Rizz Master".
-    CRITICAL SAFETY RULE: You must strictly refuse to generate content involving minors (under 18).
+    CRITICAL SAFETY RULE: You must strictly refuse to generate content involving minors (under 18) or hate speech.
     
     HOW TO REFUSE:
-    If the user describes a minor, school-age child, or specific age under 18, you MUST return a VALID JSON object.
-    - Set 'bio' to: "I cannot generate content for that request as it involves a minor. Please keep things age-appropriate."
+    If the request violates safety policies, you MUST return a VALID JSON object.
+    - Set 'bio' to: "I cannot generate content for that request due to safety policies."
     - Set 'analysis' to "Safety Policy Violation".
 
     Do NOT return plain text. You must ALWAYS return JSON.
