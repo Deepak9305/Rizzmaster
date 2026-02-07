@@ -118,6 +118,7 @@ const AppContent: React.FC = () => {
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
+  const profileRef = useRef<UserProfile | null>(null); // To track current profile for async operations
 
   // App State
   const [currentView, setCurrentView] = useState<ViewState>('HOME');
@@ -143,6 +144,11 @@ const AppContent: React.FC = () => {
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
   const [isSessionBlocked, setIsSessionBlocked] = useState(false);
   const [isAdLoading, setIsAdLoading] = useState(false);
+
+  // Sync profile ref
+  useEffect(() => {
+    profileRef.current = profile;
+  }, [profile]);
 
   // Initialize Native Google Auth & AdMob
   useEffect(() => {
@@ -282,12 +288,10 @@ const AppContent: React.FC = () => {
   };
 
   const handleLogout = useCallback(async () => {
-    // 1. Prevent accidental clicks - UPDATED with specific text
     if (!window.confirm("Are you sure you want to log out of Rizz Master?")) return;
     
     NativeBridge.haptic('medium');
     
-    // 2. Attempt server-side sign out
     try {
         if (supabase) await supabase.auth.signOut();
         if (Capacitor.isNativePlatform()) {
@@ -296,7 +300,6 @@ const AppContent: React.FC = () => {
     } catch (err) {
         console.error("Logout failed:", err);
     } finally {
-        // 3. Client-side cleanup (Always execute)
         setSession(null);
         setProfile(null);
         setSavedItems([]);
@@ -306,11 +309,8 @@ const AppContent: React.FC = () => {
         setInputError(null);
         setSelectedVibe(null);
         setCurrentView('HOME');
-        
-        // Close any open modals
         setShowPremiumModal(false);
         setShowSavedModal(false);
-        
         showToast("Successfully logged out 👋", 'success');
     }
   }, [showToast]);
@@ -323,15 +323,21 @@ const AppContent: React.FC = () => {
   }, []);
 
   const updateCredits = useCallback(async (newAmount: number) => {
-    if (!profile) return;
-    const updatedProfile = { ...profile, credits: newAmount };
+    // Safety check: ensure we are updating the current user's profile
+    // If profileRef is null (logged out), abort
+    if (!profileRef.current) return;
+    
+    const currentProfile = profileRef.current;
+    const updatedProfile = { ...currentProfile, credits: newAmount };
+    
     setProfile(updatedProfile); // Optimistic Update
-    if (supabase && profile.id !== 'guest') {
-        await supabase.from('profiles').update({ credits: newAmount }).eq('id', profile.id);
+    
+    if (supabase && currentProfile.id !== 'guest') {
+        await supabase.from('profiles').update({ credits: newAmount }).eq('id', currentProfile.id);
     } else {
         localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
     }
-  }, [profile]);
+  }, []);
 
   const handleUpgrade = useCallback(async (plan: 'WEEKLY' | 'MONTHLY') => {
     if (!profile) return;
@@ -452,22 +458,23 @@ const AppContent: React.FC = () => {
     }
   }, [profile, showToast]);
 
+  // Wrap handlers to prevent RizzCard re-renders
+  const handleSaveWrapper = useCallback((content: string, type: 'tease' | 'smooth' | 'chaotic' | 'bio') => {
+      toggleSave(content, type);
+  }, [toggleSave]);
+
   const handleShare = useCallback(async (content: string) => {
     NativeBridge.haptic('light');
-    // Using default URL param undefined to ensure we share text only, avoiding weird sharing behavior
     const status = await NativeBridge.share('Rizz Master Reply', content);
-    
     if (status === 'COPIED') {
         showToast('Link copied to clipboard!', 'success');
     } else if (status === 'FAILED') {
         showToast('Could not share content.', 'error');
     }
-    // If SHARED or DISMISSED, we generally don't need to show a toast
   }, [showToast]);
 
   const handleReport = useCallback(() => {
     NativeBridge.haptic('medium');
-    // In a real app, this would send data to backend. For now, just user feedback.
     showToast('Report submitted. We will review this.', 'info');
   }, [showToast]);
 
@@ -515,9 +522,13 @@ const AppContent: React.FC = () => {
     }
 
     setLoading(true);
+    
+    // Snapshot current credits for refund logic
+    const creditsBefore = profile.credits || 0;
+
     try {
       if (!profile?.is_premium) {
-        updateCredits((profile?.credits || 0) - cost);
+        updateCredits(creditsBefore - cost);
       }
 
       let res;
@@ -527,19 +538,19 @@ const AppContent: React.FC = () => {
         res = await generateBio(inputText, selectedVibe || undefined);
       }
 
-      // Handle Soft Errors (Blocked/System Error returns from Service)
+      // Handle Soft Errors
       if ('potentialStatus' in res && (res.potentialStatus === 'Error' || res.potentialStatus === 'Blocked')) {
-         // Refund
-         if (profile && !profile.is_premium) updateCredits(profile.credits);
+         // Refund if needed - use safe check against profileRef
+         if (profileRef.current && !profileRef.current.is_premium) updateCredits(creditsBefore);
+         
          if (res.potentialStatus === 'Blocked') {
             showToast('Request blocked by Safety Policy.', 'error');
          } else {
             showToast('Service unavailable. Credits refunded.', 'error');
          }
-         setResult(res); // Show the safety message in the UI cards
+         setResult(res);
       } else if ('analysis' in res && (res.analysis === 'System Error' || res.analysis === 'Safety Policy Violation')) {
-         // Refund Bio Error
-         if (profile && !profile.is_premium) updateCredits(profile.credits);
+         if (profileRef.current && !profileRef.current.is_premium) updateCredits(creditsBefore);
          showToast(res.analysis, 'error');
          setResult(res);
       } else {
@@ -550,8 +561,7 @@ const AppContent: React.FC = () => {
     } catch (error) {
       console.error(error);
       showToast('The wingman tripped! Try again.', 'error');
-      // Refund if hard error
-      if (profile && !profile.is_premium) updateCredits((profile.credits || 0));
+      if (profileRef.current && !profileRef.current.is_premium) updateCredits(creditsBefore);
     } finally {
       setLoading(false);
     }
@@ -597,9 +607,12 @@ const AppContent: React.FC = () => {
 
     setTimeout(() => {
       setIsAdPlaying(false);
-      updateCredits((profile?.credits || 0) + REWARD_CREDITS);
-      NativeBridge.haptic('success');
-      showToast(`+${REWARD_CREDITS} Credits Added!`, 'success');
+      // Safety check in case user logged out during ad
+      if (profileRef.current) {
+          updateCredits((profileRef.current.credits || 0) + REWARD_CREDITS);
+          NativeBridge.haptic('success');
+          showToast(`+${REWARD_CREDITS} Credits Added!`, 'success');
+      }
     }, AD_DURATION * 1000);
   };
 
@@ -659,6 +672,12 @@ const AppContent: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 md:py-12 pb-24 relative min-h-[100dvh] flex flex-col animate-fade-in safe-top safe-bottom">
       
+      {/* Background Animation Layer - RESTORED */}
+       <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden">
+          <div className="absolute top-[-10%] left-[-20%] w-[600px] h-[600px] bg-rose-900/10 rounded-full blur-[120px] animate-pulse-glow" />
+          <div className="absolute bottom-[-10%] right-[-20%] w-[500px] h-[500px] bg-amber-900/10 rounded-full blur-[100px] animate-float" />
+       </div>
+
       <Suspense fallback={null}>
         {showPremiumModal && (
             <PremiumModal 
@@ -870,9 +889,9 @@ const AppContent: React.FC = () => {
               </div>
 
               <div className="grid gap-3 md:gap-4 pb-12">
-                <RizzCard label="Tease" content={result.tease} icon="😏" color="from-purple-500 to-indigo-500" isSaved={isSaved(result.tease)} onSave={() => toggleSave(result.tease, 'tease')} onShare={() => handleShare(result.tease)} onReport={handleReport} delay={0.1} />
-                <RizzCard label="Smooth" content={result.smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved(result.smooth)} onSave={() => toggleSave(result.smooth, 'smooth')} onShare={() => handleShare(result.smooth)} onReport={handleReport} delay={0.2} />
-                <RizzCard label="Chaotic" content={result.chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved(result.chaotic)} onSave={() => toggleSave(result.chaotic, 'chaotic')} onShare={() => handleShare(result.chaotic)} onReport={handleReport} delay={0.3} />
+                <RizzCard label="Tease" content={result.tease} icon="😏" color="from-purple-500 to-indigo-500" isSaved={isSaved(result.tease)} onSave={() => handleSaveWrapper(result.tease, 'tease')} onShare={() => handleShare(result.tease)} onReport={handleReport} delay={0.1} />
+                <RizzCard label="Smooth" content={result.smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved(result.smooth)} onSave={() => handleSaveWrapper(result.smooth, 'smooth')} onShare={() => handleShare(result.smooth)} onReport={handleReport} delay={0.2} />
+                <RizzCard label="Chaotic" content={result.chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved(result.chaotic)} onSave={() => handleSaveWrapper(result.chaotic, 'chaotic')} onShare={() => handleShare(result.chaotic)} onReport={handleReport} delay={0.3} />
               </div>
             </>
           )}

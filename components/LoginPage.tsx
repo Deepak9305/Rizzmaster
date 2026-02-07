@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabaseClient';
 import LegalModals from './LegalModals';
@@ -148,10 +149,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
         />
       )}
 
-      {/* Background Decor for Mobile/Overlay */}
-      <div className="absolute top-0 left-0 w-full h-full md:hidden z-0">
-          <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-rose-600/20 rounded-full blur-[120px]" />
-          <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-pink-600/20 rounded-full blur-[120px]" />
+      {/* Background Decor for Mobile/Overlay - ANIMATED */}
+      <div className="absolute top-0 left-0 w-full h-full md:hidden z-0 pointer-events-none">
+          <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-rose-600/20 rounded-full blur-[120px] animate-pulse-glow" />
+          <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-pink-600/20 rounded-full blur-[120px] animate-float" />
       </div>
 
       {/* Left Panel: Branding (Desktop) */}
