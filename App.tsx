@@ -10,6 +10,7 @@ import LoginPage from './components/LoginPage';
 import Footer from './components/Footer';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
 import { AdMobService } from './services/admobService';
 
 // Lazy Load Heavy Components / Modals
@@ -157,6 +158,18 @@ const AppContent: React.FC = () => {
   const [isSessionBlocked, setIsSessionBlocked] = useState(false);
   const [isAdLoading, setIsAdLoading] = useState(false);
 
+  // Ref to track state for event listeners without re-binding
+  const stateRef = useRef({
+      currentView,
+      showPremiumModal,
+      showSavedModal
+  });
+
+  // Keep stateRef in sync
+  useEffect(() => {
+      stateRef.current = { currentView, showPremiumModal, showSavedModal };
+  }, [currentView, showPremiumModal, showSavedModal]);
+
   // Sync profile ref
   useEffect(() => {
     profileRef.current = profile;
@@ -182,6 +195,47 @@ const AppContent: React.FC = () => {
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Native Back Button Handler (Exit App Logic)
+  useEffect(() => {
+      if (!Capacitor.isNativePlatform()) return;
+
+      const setupBackListener = async () => {
+          // Remove any existing listeners first to prevent duplicates if component remounts
+          await CapacitorApp.removeAllListeners();
+
+          CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+              const { currentView, showPremiumModal, showSavedModal } = stateRef.current;
+              
+              // 1. If Modals are open, close them (which aligns with history.back)
+              if (showPremiumModal || showSavedModal) {
+                  window.history.back();
+                  return;
+              }
+
+              // 2. If not on HOME view, go back to HOME (aligns with history.back)
+              if (currentView !== 'HOME') {
+                  window.history.back();
+                  return;
+              }
+
+              // 3. If on HOME and no modals, confirm Exit
+              // We use window.confirm here. For a native feel, Capacitor Dialog plugin could be used, 
+              // but standard confirm works on most webviews.
+              const shouldExit = window.confirm("Do you want to exit Rizz Master?");
+              if (shouldExit) {
+                  CapacitorApp.exitApp();
+              }
+          });
+      };
+
+      setupBackListener();
+
+      // Cleanup
+      return () => {
+          CapacitorApp.removeAllListeners();
+      };
   }, []);
 
   // Navigation Wrappers
@@ -737,11 +791,8 @@ const AppContent: React.FC = () => {
           ) : (
             <div className="max-w-4xl mx-auto px-4 py-6 md:py-12 pb-24 relative min-h-[100dvh] flex flex-col animate-fade-in safe-top safe-bottom">
             
-            {/* Background Animation Layer */}
-            <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden">
-                <div className="absolute top-[-10%] left-[-20%] w-[600px] h-[600px] bg-rose-900/10 rounded-full blur-[120px] animate-pulse-glow" />
-                <div className="absolute bottom-[-10%] right-[-20%] w-[500px] h-[500px] bg-amber-900/10 rounded-full blur-[100px] animate-float" />
-            </div>
+            {/* Background Animation Layer - REMOVED BLOBS to ensure pure black theme */}
+            <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden bg-black" />
 
             <Suspense fallback={null}>
                 {showPremiumModal && (
