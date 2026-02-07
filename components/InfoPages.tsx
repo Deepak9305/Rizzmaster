@@ -15,64 +15,19 @@ const InfoPages: React.FC<InfoPagesProps> = ({ page, onBack, onDeleteAccount }) 
         return (
           <>
             <h1 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-amber-200 mb-6">Privacy Policy</h1>
-            <div className="space-y-6 text-white/80 leading-relaxed text-sm">
-              <p className="opacity-60 text-xs">Last Updated: {new Date().toLocaleDateString()}</p>
-              
+            <div className="space-y-6 text-white/80 leading-relaxed">
               <section className="bg-white/5 p-6 rounded-2xl border border-white/5">
-                <h3 className="text-xl font-bold text-white mb-3">1. Introduction</h3>
-                <p>Welcome to Rizz Master ("we," "our," or "us"). We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains what information we collect, how we use it, and your rights.</p>
+                <h3 className="text-xl font-bold text-white mb-3">Summary</h3>
+                <p>We respect your privacy. This app collects only the minimal data necessary for operation, such as your email for login and your generated history.</p>
+                <br />
+                <p>User inputs are processed by third-party AI providers solely to generate your results. We do not sell your personal data.</p>
+                <br />
+                <p className="text-sm text-white/50 italic">For the detailed Privacy Policy, please refer to the link provided on our App Store / Play Store listing.</p>
               </section>
 
               <section className="bg-white/5 p-6 rounded-2xl border border-white/5">
-                <h3 className="text-xl font-bold text-white mb-3">2. Information We Collect</h3>
-                <ul className="list-disc pl-5 space-y-2 opacity-90">
-                  <li><strong>Account Data:</strong> If you sign in via Google or Email, we store your email address and a unique user ID to manage your credits and subscription status.</li>
-                  <li><strong>User Inputs:</strong> Text and images you upload (screenshots) are processed transiently. We do not permanently store your chat screenshots or the text context on our servers. They are sent to our AI provider for analysis and immediately discarded after the response is generated.</li>
-                  <li><strong>Generated Content:</strong> We store the results (replies, bios) that you explicitly choose to "Save" within the app.</li>
-                  <li><strong>Device Data:</strong> We may collect basic device information (model, OS version) for debugging and app optimization.</li>
-                </ul>
-              </section>
-
-              <section className="bg-white/5 p-6 rounded-2xl border border-white/5">
-                <h3 className="text-xl font-bold text-white mb-3">3. How We Use Your Data</h3>
-                <p>We use your information solely to:</p>
-                <ul className="list-disc pl-5 mt-2 space-y-1 opacity-90">
-                    <li>Provide the AI generation service.</li>
-                    <li>Manage your credit balance and premium subscription.</li>
-                    <li>Improve app performance and fix bugs.</li>
-                    <li>Show rewarded advertisements (via AdMob) if you choose to watch them.</li>
-                </ul>
-              </section>
-
-              <section className="bg-white/5 p-6 rounded-2xl border border-white/5">
-                <h3 className="text-xl font-bold text-white mb-3">4. Third-Party Services</h3>
-                <p>We share data with the following trusted third-party providers:</p>
-                <ul className="list-disc pl-5 mt-2 space-y-1 opacity-90">
-                    <li><strong>Google Gemini API:</strong> For AI text and image analysis.</li>
-                    <li><strong>Supabase:</strong> For authentication and database hosting.</li>
-                    <li><strong>Google AdMob:</strong> For displaying advertisements.</li>
-                </ul>
-              </section>
-
-              <section className="bg-white/5 p-6 rounded-2xl border border-white/5">
-                 <h3 className="text-xl font-bold text-white mb-3">5. Data Retention & Deletion</h3>
-                 <p className="mb-4">We retain your account data only as long as your account is active. You have the right to request the deletion of your account and all associated data at any time.</p>
-                 
-                 <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
-                    <h4 className="text-red-400 font-bold mb-2">Delete Account</h4>
-                    <p className="text-xs text-white/60 mb-4">This action is irreversible. All your credits, saved items, and account details will be permanently removed.</p>
-                    <button 
-                        onClick={onDeleteAccount}
-                        className="px-6 py-2 bg-red-500/20 text-red-300 font-bold rounded-lg hover:bg-red-500/30 transition-colors border border-red-500/30"
-                    >
-                        Delete My Account
-                    </button>
-                 </div>
-              </section>
-              
-              <section className="bg-white/5 p-6 rounded-2xl border border-white/5">
-                <h3 className="text-xl font-bold text-white mb-3">6. Contact Us</h3>
-                <p>If you have questions about this policy, please contact us at <a href="mailto:support@rizzmaster.ai" className="text-rose-400 hover:underline">support@rizzmaster.ai</a>.</p>
+                <h3 className="text-xl font-bold text-white mb-3">Account Deletion</h3>
+                <p>You have full control over your data. You may delete your account and all associated information at any time via the Support section.</p>
               </section>
             </div>
           </>
@@ -81,39 +36,18 @@ const InfoPages: React.FC<InfoPagesProps> = ({ page, onBack, onDeleteAccount }) 
         return (
           <>
             <h1 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-amber-200 mb-6">Terms of Service</h1>
-            <div className="space-y-6 text-white/80 leading-relaxed text-sm">
-               <p className="opacity-60 text-xs">Last Updated: {new Date().toLocaleDateString()}</p>
-
+            <div className="space-y-6 text-white/80 leading-relaxed">
               <section className="bg-white/5 p-6 rounded-2xl border border-white/5">
-                <h3 className="text-xl font-bold text-white mb-3">1. Acceptance of Terms</h3>
-                <p>By downloading or using the Rizz Master app, you agree to be bound by these Terms. If you do not agree, please discontinue use of the app immediately.</p>
+                <h3 className="text-xl font-bold text-white mb-3">Usage</h3>
+                <p>Rizz Master is provided for entertainment purposes only. The content is generated by AI and may be inaccurate. Please use your own judgment in real-world interactions.</p>
               </section>
 
               <section className="bg-white/5 p-6 rounded-2xl border border-white/5">
-                <h3 className="text-xl font-bold text-white mb-3">2. Description of Service</h3>
-                <p>Rizz Master uses Artificial Intelligence to generate conversation replies and bios. The content is for entertainment purposes only. We do not guarantee the accuracy, effectiveness, or appropriateness of the AI-generated content in real-world interactions.</p>
+                <h3 className="text-xl font-bold text-white mb-3">Conduct</h3>
+                <p>You agree not to use this service to generate harmful, illegal, or harassing content. Violation of this policy may result in account termination.</p>
               </section>
 
-              <section className="bg-white/5 p-6 rounded-2xl border border-white/5">
-                <h3 className="text-xl font-bold text-white mb-3">3. User Conduct</h3>
-                <p>You agree NOT to use the App to:</p>
-                <ul className="list-disc pl-5 mt-2 space-y-1 opacity-90">
-                    <li>Generate content that is illegal, harmful, threatening, abusive, harassment, defamatory, or hateful.</li>
-                    <li>Generate content involving minors or sexual exploitation.</li>
-                    <li>Upload images that contain illegal or non-consensual content.</li>
-                </ul>
-                <p className="mt-2 text-red-300">We reserve the right to terminate accounts that violate these rules without notice.</p>
-              </section>
-
-               <section className="bg-white/5 p-6 rounded-2xl border border-white/5">
-                <h3 className="text-xl font-bold text-white mb-3">4. Subscriptions & Credits</h3>
-                <p>Credits are used to generate content. Free credits replenish daily. Paid subscriptions or credit packs are final and non-refundable, except where required by law. We reserve the right to modify credit costs at any time.</p>
-              </section>
-
-              <section className="bg-white/5 p-6 rounded-2xl border border-white/5">
-                <h3 className="text-xl font-bold text-white mb-3">5. Limitation of Liability</h3>
-                <p className="uppercase text-xs tracking-wide">THE APP IS PROVIDED "AS IS". WE SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES RESULTING FROM YOUR USE OF THE SERVICE.</p>
-              </section>
+              <p className="text-sm text-white/50 italic">For the full Terms of Service, please refer to our App Store / Play Store listing.</p>
             </div>
           </>
         );
@@ -127,7 +61,7 @@ const InfoPages: React.FC<InfoPagesProps> = ({ page, onBack, onDeleteAccount }) 
                   <div className="w-16 h-16 bg-rose-500/20 rounded-full flex items-center justify-center text-3xl mb-4 text-rose-400">✉️</div>
                   <h3 className="text-xl font-bold text-white mb-2">Contact Us</h3>
                   <p className="text-white/60 mb-6 text-sm">Found a bug? Billing issue? Just want to say hi?</p>
-                  <a href="mailto:support@rizzmaster.ai" className="px-6 py-3 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition-colors w-full">
+                  <a href="mailto:rizzmasterhelpteam@gmail.com" className="px-6 py-3 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition-colors w-full">
                     Email Support
                   </a>
                </div>
@@ -136,7 +70,7 @@ const InfoPages: React.FC<InfoPagesProps> = ({ page, onBack, onDeleteAccount }) 
                   <div className="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center text-3xl mb-4 text-amber-400">💡</div>
                   <h3 className="text-xl font-bold text-white mb-2">Feature Request</h3>
                   <p className="text-white/60 mb-6 text-sm">Have an idea to make the Rizz Master even better?</p>
-                  <a href="mailto:support@rizzmaster.ai?subject=Feature Request" className="px-6 py-3 border border-white/20 text-white font-bold rounded-xl hover:bg-white/5 transition-colors w-full">
+                  <a href="mailto:rizzmasterhelpteam@gmail.com?subject=Feature Request" className="px-6 py-3 border border-white/20 text-white font-bold rounded-xl hover:bg-white/5 transition-colors w-full">
                     Submit Idea
                   </a>
                </div>
@@ -197,7 +131,7 @@ const InfoPages: React.FC<InfoPagesProps> = ({ page, onBack, onDeleteAccount }) 
   };
 
   return (
-    <div className="min-h-screen w-full bg-black text-white animate-fade-in pb-20 safe-top">
+    <div className="min-h-screen w-full bg-black text-white animate-fade-in pb-20">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <button 
           onClick={onBack}

@@ -672,12 +672,6 @@ const AppContent: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 md:py-12 pb-24 relative min-h-[100dvh] flex flex-col animate-fade-in safe-top safe-bottom">
       
-      {/* Background Animation Layer - RESTORED */}
-       <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden">
-          <div className="absolute top-[-10%] left-[-20%] w-[600px] h-[600px] bg-rose-900/10 rounded-full blur-[120px] animate-pulse-glow" />
-          <div className="absolute bottom-[-10%] right-[-20%] w-[500px] h-[500px] bg-amber-900/10 rounded-full blur-[100px] animate-float" />
-       </div>
-
       <Suspense fallback={null}>
         {showPremiumModal && (
             <PremiumModal 
