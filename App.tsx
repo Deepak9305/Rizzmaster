@@ -162,6 +162,53 @@ const AppContent: React.FC = () => {
     profileRef.current = profile;
   }, [profile]);
 
+  // Handle History API for Mobile Back Button support
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      const state = event.state || {};
+      
+      // Update Views
+      setCurrentView(state.view || 'HOME');
+      
+      // Update Modals
+      setShowPremiumModal(!!state.premium);
+      setShowSavedModal(!!state.saved);
+    };
+
+    // Initialize state if needed
+    if (!window.history.state) {
+      window.history.replaceState({ view: 'HOME' }, '');
+    }
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Navigation Wrappers
+  const handleViewNavigation = useCallback((view: ViewState) => {
+    if (view === currentView) return;
+    window.history.pushState({ view }, '');
+    setCurrentView(view);
+    NativeBridge.haptic('light');
+  }, [currentView]);
+
+  const handleBackNavigation = useCallback(() => {
+    NativeBridge.haptic('light');
+    window.history.back();
+  }, []);
+
+  const handleOpenPremium = useCallback(() => {
+    window.history.pushState({ view: currentView, premium: true }, '');
+    setShowPremiumModal(true);
+    NativeBridge.haptic('medium');
+  }, [currentView]);
+
+  const handleOpenSaved = useCallback(() => {
+    window.history.pushState({ view: currentView, saved: true }, '');
+    setShowSavedModal(true);
+    NativeBridge.haptic('light');
+  }, [currentView]);
+
   // Initialize Native Google Auth & AdMob
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
@@ -324,6 +371,9 @@ const AppContent: React.FC = () => {
         setShowPremiumModal(false);
         setShowSavedModal(false);
         showToast("Successfully logged out 👋", 'success');
+        
+        // Reset history to clean slate
+        window.history.replaceState({ view: 'HOME' }, '', '/');
     }
   }, [showToast]);
 
@@ -354,7 +404,10 @@ const AppContent: React.FC = () => {
     NativeBridge.haptic('success');
     const updatedProfile = { ...profile, is_premium: true };
     setProfile(updatedProfile);
-    setShowPremiumModal(false);
+    
+    // Close modal via back navigation to keep history clean
+    handleBackNavigation();
+    
     showToast(`Welcome to the Elite Club! 👑`, 'success');
 
     if (supabase && profile.id !== 'guest') {
@@ -362,7 +415,7 @@ const AppContent: React.FC = () => {
     } else {
         localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
     }
-  }, [profile, showToast]);
+  }, [profile, showToast, handleBackNavigation]);
 
   const handleRestorePurchases = useCallback(async () => {
     if (!profile) return;
@@ -370,7 +423,9 @@ const AppContent: React.FC = () => {
     await new Promise(resolve => setTimeout(resolve, 1500));
     const updatedProfile = { ...profile, is_premium: true };
     setProfile(updatedProfile);
-    setShowPremiumModal(false);
+    
+    handleBackNavigation();
+    
     showToast(`Purchases Restored!`, 'success');
     
     if (supabase && profile.id !== 'guest') {
@@ -378,7 +433,7 @@ const AppContent: React.FC = () => {
     } else {
         localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
     }
-  }, [profile, showToast]);
+  }, [profile, showToast, handleBackNavigation]);
 
   const toggleSave = useCallback(async (content: string, type: 'tease' | 'smooth' | 'chaotic' | 'bio') => {
     if (!profile) return;
@@ -447,6 +502,7 @@ const AppContent: React.FC = () => {
         setResult(null);
         setCurrentView('HOME');
         showToast("Guest account deleted", 'info');
+        window.history.replaceState({ view: 'HOME' }, '', '/');
         return;
     }
 
@@ -461,6 +517,7 @@ const AppContent: React.FC = () => {
         setResult(null);
         setCurrentView('HOME');
         showToast("Account deleted", 'success');
+        window.history.replaceState({ view: 'HOME' }, '', '/');
     } catch (err: any) {
         showToast("Failed to delete account", 'error');
     } finally {
@@ -526,7 +583,7 @@ const AppContent: React.FC = () => {
 
     if (!profile?.is_premium && (profile?.credits || 0) < cost) {
       if ((profile?.credits || 0) > 0) showToast(`Need ${cost} credits.`, 'error');
-      setShowPremiumModal(true);
+      handleOpenPremium();
       return;
     }
 
@@ -575,7 +632,8 @@ const AppContent: React.FC = () => {
 
   const handleWatchAd = async () => {
     NativeBridge.haptic('medium');
-    setShowPremiumModal(false);
+    // Close modal first via back navigation to keep history clean
+    handleBackNavigation();
 
     if (Capacitor.isNativePlatform()) {
         setIsAdLoading(true);
@@ -671,7 +729,7 @@ const AppContent: React.FC = () => {
                 <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white">Loading...</div>}>
                     <InfoPages 
                     page={currentView} 
-                    onBack={() => { setCurrentView('HOME'); NativeBridge.haptic('light'); }}
+                    onBack={handleBackNavigation}
                     onDeleteAccount={handleDeleteAccount}
                     />
                 </Suspense>
@@ -688,14 +746,14 @@ const AppContent: React.FC = () => {
             <Suspense fallback={null}>
                 {showPremiumModal && (
                     <PremiumModal 
-                    onClose={() => { setShowPremiumModal(false); NativeBridge.haptic('light'); }}
+                    onClose={handleBackNavigation}
                     onUpgrade={handleUpgrade}
                     onRestore={handleRestorePurchases}
                     />
                 )}
                 <SavedModal 
                     isOpen={showSavedModal} 
-                    onClose={() => { setShowSavedModal(false); NativeBridge.haptic('light'); }}
+                    onClose={handleBackNavigation}
                     savedItems={savedItems}
                     onDelete={handleDeleteSaved}
                     onShare={handleShare}
@@ -729,13 +787,13 @@ const AppContent: React.FC = () => {
                 </button>
 
                 <div className="flex items-center gap-2 md:gap-3">
-                <button onClick={() => { setShowSavedModal(true); NativeBridge.haptic('light'); }} className="p-2 md:px-4 md:py-2 bg-white/5 hover:bg-white/10 rounded-full flex items-center gap-1.5 transition-all border border-white/5 active:scale-95">
+                <button onClick={handleOpenSaved} className="p-2 md:px-4 md:py-2 bg-white/5 hover:bg-white/10 rounded-full flex items-center gap-1.5 transition-all border border-white/5 active:scale-95">
                     <span className="text-rose-500 text-base md:text-lg">♥</span>
                     <span className="hidden md:inline text-xs font-bold text-white">Saved</span>
                 </button>
 
                 {!profile?.is_premium && (
-                    <button onClick={() => { setShowPremiumModal(true); NativeBridge.haptic('medium'); }} className="hidden md:flex px-4 py-2 bg-gradient-to-r from-yellow-600 to-yellow-400 text-black text-xs font-bold rounded-full items-center gap-1 hover:brightness-110 transition-all active:scale-95">
+                    <button onClick={handleOpenPremium} className="hidden md:flex px-4 py-2 bg-gradient-to-r from-yellow-600 to-yellow-400 text-black text-xs font-bold rounded-full items-center gap-1 hover:brightness-110 transition-all active:scale-95">
                         <span>👑</span> Go Premium
                     </button>
                 )}
@@ -863,12 +921,12 @@ const AppContent: React.FC = () => {
                     <button onClick={handleWatchAd} disabled={isAdLoading} className="bg-white/10 border border-white/10 py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base hover:bg-white/20 active:scale-[0.98] transition-all flex flex-col items-center justify-center">
                     {isAdLoading ? <span className="text-white/50 text-xs">Loading...</span> : <><span className="text-xl mb-1">📺</span> <span>Watch Ad (+3)</span></>}
                     </button>
-                    <button onClick={() => { setShowPremiumModal(true); NativeBridge.haptic('medium'); }} className="bg-gradient-to-r from-yellow-500 to-amber-600 text-black py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base shadow-xl hover:brightness-110 active:scale-[0.98] transition-all flex flex-col items-center justify-center animate-pulse">
+                    <button onClick={handleOpenPremium} className="bg-gradient-to-r from-yellow-500 to-amber-600 text-black py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base shadow-xl hover:brightness-110 active:scale-[0.98] transition-all flex flex-col items-center justify-center animate-pulse">
                     <span className="text-xl mb-1">👑</span> <span>Go Unlimited</span>
                     </button>
                     </div>
                 )}
-                {!profile?.is_premium && <p className="text-center text-[10px] md:text-xs text-white/30 mt-3 md:mt-4">{profile?.credits} daily credits remaining. <span className="text-yellow-500/80 cursor-pointer hover:underline" onClick={() => setShowPremiumModal(true)}>Upgrade.</span></p>}
+                {!profile?.is_premium && <p className="text-center text-[10px] md:text-xs text-white/30 mt-3 md:mt-4">{profile?.credits} daily credits remaining. <span className="text-yellow-500/80 cursor-pointer hover:underline" onClick={handleOpenPremium}>Upgrade.</span></p>}
                 </section>
 
                 <section className="flex flex-col gap-4 md:gap-6 min-h-[300px]">
@@ -921,7 +979,7 @@ const AppContent: React.FC = () => {
                 )}
                 </section>
             </div>
-            <Footer className="mt-12 md:mt-20" onNavigate={(page) => { setCurrentView(page); NativeBridge.haptic('light'); }} />
+            <Footer className="mt-12 md:mt-20" onNavigate={handleViewNavigation} />
             </div>
           )}
       </div>
