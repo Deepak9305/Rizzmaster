@@ -17,6 +17,7 @@
     "@capacitor/android": "^5.7.0",
     "@capacitor/ios": "^5.7.0",
     "@capacitor/app": "^5.0.0",
+    "@capacitor/share": "^5.0.0",
     "@codetrix-studio/capacitor-google-auth": "^3.3.2",
     "@capacitor-community/admob": "^5.0.0"
   },

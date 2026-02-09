@@ -1,4 +1,7 @@
 
+import { Share } from '@capacitor/share';
+import { Capacitor } from '@capacitor/core';
+
 /**
  * Native Bridge Service
  * 
@@ -31,7 +34,24 @@ export const NativeBridge = {
    * Returns a status string: 'SHARED', 'COPIED', 'DISMISSED', 'FAILED'
    */
   share: async (title: string, text: string, url?: string): Promise<'SHARED' | 'COPIED' | 'DISMISSED' | 'FAILED'> => {
-    // Prepare data
+    // 1. Try Capacitor Native Share (Plugin)
+    if (Capacitor.isNativePlatform()) {
+        try {
+            await Share.share({
+                title,
+                text,
+                url,
+                dialogTitle: 'Share' // Android only
+            });
+            return 'SHARED';
+        } catch (err: any) {
+            console.warn('Native share dismissed/failed', err);
+            // User likely cancelled or plugin failed
+            return 'DISMISSED';
+        }
+    }
+
+    // 2. Try Web Share API (Desktop/Mobile Web)
     const shareData: any = { title, text };
     if (url) shareData.url = url;
 
@@ -44,11 +64,11 @@ export const NativeBridge = {
           return 'DISMISSED'; // User cancelled
         }
         // If share failed for other reasons, fall through to clipboard
-        console.warn('Share failed, attempting fallback:', err);
+        console.warn('Web Share failed, attempting fallback:', err);
       }
     }
     
-    // Fallback: Copy text only (append URL if meaningful context, but for Rizz we usually just want text)
+    // 3. Fallback: Copy to Clipboard
     const contentToCopy = url ? `${text}\n${url}` : text;
     const copied = await NativeBridge.copyToClipboard(contentToCopy);
     return copied ? 'COPIED' : 'FAILED';
@@ -67,6 +87,7 @@ export const NativeBridge = {
         const textArea = document.createElement("textarea");
         textArea.value = text;
         textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
