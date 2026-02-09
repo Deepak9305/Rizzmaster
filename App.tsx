@@ -564,11 +564,14 @@ const AppContent: React.FC = () => {
         const { error: rpcError } = await supabase.rpc('delete_user');
 
         if (rpcError) {
-            console.error("Account Deletion Failed:", rpcError);
-            if (rpcError.message?.includes('function') && rpcError.message?.includes('does not exist')) {
-                 throw new Error("Config Error: Database function 'delete_user' is missing. Please run the provided SQL.");
+            console.error("RPC Error:", rpcError);
+            // PGRST202 or code 42883 = Function not found
+            if (rpcError.code === '42883' || rpcError.message?.includes('does not exist')) {
+                 alert("CRITICAL ERROR: The database function 'delete_user' is missing.\n\nYou must run the SQL script in your Supabase SQL Editor to enable account deletion.");
+                 setLoading(false);
+                 return;
             }
-            throw new Error(`Deletion failed: ${rpcError.message}`);
+            throw new Error(rpcError.message);
         }
 
         // 2. Sign Out & Cleanup (Only if RPC succeeded)

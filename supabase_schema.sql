@@ -52,15 +52,17 @@ create policy "Users can delete own saved items"
   using ( auth.uid() = user_id );
 
 -- RPC Function for Complete Account Deletion
--- Run this in your Supabase SQL Editor
-create or replace function delete_user()
+-- Run this in your Supabase SQL Editor to fix the "function not found" error
+drop function if exists public.delete_user();
+
+create or replace function public.delete_user()
 returns void
 language plpgsql
 security definer
 set search_path = public
 as $$
 begin
-  -- 1. Delete user data
+  -- 1. Delete user data (Explicit cleanup)
   delete from public.saved_items where user_id = auth.uid();
   delete from public.profiles where id = auth.uid();
   
@@ -70,4 +72,5 @@ end;
 $$;
 
 -- Grant execute permission to authenticated users
-grant execute on function delete_user() to authenticated;
+grant execute on function public.delete_user() to authenticated;
+grant execute on function public.delete_user() to service_role;
