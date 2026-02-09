@@ -61,7 +61,6 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ isAppReady, onComplete }) =
 
   useEffect(() => {
     // Duration of the progress bar animation in ms
-    // Increased to 2200ms to ensure it's not too fast ("flash")
     const duration = 2200; 
     const interval = 20;
     const steps = duration / interval;
@@ -128,7 +127,11 @@ const AppContent: React.FC = () => {
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
+  
+  // Refs
   const profileRef = useRef<UserProfile | null>(null); 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const sessionChannelRef = useRef<BroadcastChannel | null>(null);
 
   // Splash State
   const [showSplash, setShowSplash] = useState(true);
@@ -146,8 +149,6 @@ const AppContent: React.FC = () => {
   
   const [result, setResult] = useState<RizzResponse | BioResponse | null>(null);
   const [inputError, setInputError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const sessionChannelRef = useRef<BroadcastChannel | null>(null);
 
   // Modals & Flags
   const [isAdPlaying, setIsAdPlaying] = useState(false);
@@ -175,26 +176,29 @@ const AppContent: React.FC = () => {
     profileRef.current = profile;
   }, [profile]);
 
-  // Define handleUpgrade first so it can be passed to IAPService
+  // Define handleUpgrade using REF to avoid stale closures
   const handleUpgrade = useCallback(async () => {
-    if (!profile) return;
+    const currentProfile = profileRef.current;
+    if (!currentProfile) return;
+    
     NativeBridge.haptic('success');
-    const updatedProfile = { ...profile, is_premium: true };
+    
+    const updatedProfile = { ...currentProfile, is_premium: true };
     setProfile(updatedProfile);
     
-    // Close modal via back navigation
+    // Close modal via back navigation if open
     if (stateRef.current.showPremiumModal) {
         window.history.back();
     }
     
     showToast(`Welcome to the Elite Club! 👑`, 'success');
 
-    if (supabase && profile.id !== 'guest') {
-        await supabase.from('profiles').update({ is_premium: true }).eq('id', profile.id);
+    if (supabase && currentProfile.id !== 'guest') {
+        await supabase.from('profiles').update({ is_premium: true }).eq('id', currentProfile.id);
     } else {
         localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
     }
-  }, [profile, showToast]);
+  }, [showToast]);
 
   // Initialize Native Services
   useEffect(() => {
@@ -211,7 +215,6 @@ const AppContent: React.FC = () => {
        AdMobService.initialize();
 
        // In-App Purchases
-       // We pass the handleUpgrade function as the success callback
        IAPService.initialize(
            () => {
                // On successful purchase/restore
@@ -453,10 +456,12 @@ const AppContent: React.FC = () => {
   }, []);
 
   const updateCredits = useCallback(async (newAmount: number) => {
-    if (!profileRef.current) return;
     const currentProfile = profileRef.current;
+    if (!currentProfile) return;
+
     const updatedProfile = { ...currentProfile, credits: newAmount };
     setProfile(updatedProfile); 
+    
     if (supabase && currentProfile.id !== 'guest') {
         await supabase.from('profiles').update({ credits: newAmount }).eq('id', currentProfile.id);
     } else {
@@ -464,11 +469,8 @@ const AppContent: React.FC = () => {
     }
   }, []);
 
-  // Pass handleUpgrade to PremiumModal via props but logic is handled by listener now mostly
-  // We keep it here just in case modal needs to force it manually in dev
-  
   const handleRestorePurchases = useCallback(async () => {
-    if (!profile) return;
+    if (!profileRef.current) return;
     NativeBridge.haptic('medium');
     if (Capacitor.isNativePlatform()) {
         IAPService.restore();
@@ -476,10 +478,12 @@ const AppContent: React.FC = () => {
         // Dev fallback
         setTimeout(() => handleUpgrade(), 1500);
     }
-  }, [profile, handleUpgrade]);
+  }, [handleUpgrade]);
 
   const toggleSave = useCallback(async (content: string, type: 'tease' | 'smooth' | 'chaotic' | 'bio') => {
-    if (!profile) return;
+    const currentProfile = profileRef.current;
+    if (!currentProfile) return;
+    
     NativeBridge.haptic('light');
 
     const exists = savedItems.find(item => item.content === content);
@@ -489,7 +493,7 @@ const AppContent: React.FC = () => {
       setSavedItems(newItems);
       showToast("Removed from saved", 'info');
       
-      if (supabase && profile.id !== 'guest') {
+      if (supabase && currentProfile.id !== 'guest') {
           await supabase.from('saved_items').delete().eq('id', exists.id);
       } else {
           localStorage.setItem('guest_saved_items', JSON.stringify(newItems));
@@ -497,7 +501,7 @@ const AppContent: React.FC = () => {
     } else {
       const newItem: SavedItem = {
           id: generateUUID(),
-          user_id: profile.id,
+          user_id: currentProfile.id,
           content,
           type,
           created_at: new Date().toISOString()
@@ -507,8 +511,8 @@ const AppContent: React.FC = () => {
       setSavedItems(newItems);
       showToast("Saved to your gems", 'success');
 
-      if (supabase && profile.id !== 'guest') {
-        const { data } = await supabase.from('saved_items').insert([{ user_id: profile.id, content, type }]).select().single();
+      if (supabase && currentProfile.id !== 'guest') {
+        const { data } = await supabase.from('saved_items').insert([{ user_id: currentProfile.id, content, type }]).select().single();
         if (data) {
              setSavedItems(current => current.map(i => i.id === newItem.id ? { ...i, id: data.id } : i));
         }
@@ -516,7 +520,7 @@ const AppContent: React.FC = () => {
         localStorage.setItem('guest_saved_items', JSON.stringify(newItems));
       }
     }
-  }, [profile, savedItems, showToast]);
+  }, [savedItems, showToast]);
 
   const handleDeleteSaved = useCallback(async (id: string) => {
     NativeBridge.haptic('medium');
@@ -524,19 +528,22 @@ const AppContent: React.FC = () => {
     setSavedItems(newItems);
     showToast("Item deleted", 'info');
 
-    if (supabase && profile?.id !== 'guest') {
+    if (supabase && profileRef.current?.id !== 'guest') {
         await supabase.from('saved_items').delete().eq('id', id);
     } else {
         localStorage.setItem('guest_saved_items', JSON.stringify(newItems));
     }
-  }, [profile, savedItems, showToast]);
+  }, [savedItems, showToast]);
 
   const handleDeleteAccount = useCallback(async () => {
     NativeBridge.haptic('error');
-    if (!window.confirm("Are you sure? This cannot be undone.")) return;
-    if (!profile) return;
+    if (!window.confirm("Are you sure? This cannot be undone. Your account and data will be permanently deleted.")) return;
+    
+    const currentProfile = profileRef.current;
+    if (!currentProfile) return;
 
-    if (!supabase || profile.id === 'guest') {
+    // Handle Guest
+    if (!supabase || currentProfile.id === 'guest') {
         localStorage.removeItem('guest_profile');
         localStorage.removeItem('guest_saved_items');
         setProfile(null);
@@ -549,24 +556,55 @@ const AppContent: React.FC = () => {
         return;
     }
 
+    setLoading(true);
+
     try {
-        setLoading(true);
-        const { error } = await supabase.from('profiles').delete().eq('id', profile.id);
-        if (error) throw error;
+        // 1. Try to fully delete the user (Auth + Data) via RPC
+        // This requires the 'delete_user' function to be set up in Supabase
+        const { error: rpcError } = await supabase.rpc('delete_user');
+
+        if (rpcError) {
+            // 2. Fallback: Manual Data Deletion (Data Only, Auth remains)
+            // Useful if the RPC function isn't created yet
+            console.warn("Account deletion RPC failed, falling back to data cleanup:", rpcError.message);
+            
+            // Delete saved items
+            const { error: savedError } = await supabase
+                .from('saved_items')
+                .delete()
+                .eq('user_id', currentProfile.id);
+            
+            if (savedError) throw new Error(`Failed to delete saved items: ${savedError.message}`);
+
+            // Delete profile
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .delete()
+                .eq('id', currentProfile.id);
+
+            if (profileError) throw new Error(`Failed to delete profile: ${profileError.message}`);
+        }
+
+        // 3. Sign Out & Cleanup
         await supabase.auth.signOut();
+        
+        // Clear Local State
         setSession(null);
         setProfile(null);
         setSavedItems([]);
         setResult(null);
         setCurrentView('HOME');
-        showToast("Account deleted", 'success');
+        
+        showToast("Account successfully deleted", 'success');
         window.history.replaceState({ view: 'HOME' }, '', '/');
+
     } catch (err: any) {
-        showToast("Failed to delete account", 'error');
+        console.error("Delete Account Error:", err);
+        showToast(`Failed to delete account: ${err.message || 'Unknown error'}`, 'error');
     } finally {
         setLoading(false);
     }
-  }, [profile, showToast]);
+  }, [showToast]);
 
   const handleSaveWrapper = useCallback((content: string, type: 'tease' | 'smooth' | 'chaotic' | 'bio') => {
       toggleSave(content, type);
@@ -607,7 +645,8 @@ const AppContent: React.FC = () => {
   };
 
   const handleGenerate = async () => {
-    if (!profile) return;
+    const currentProfile = profileRef.current;
+    if (!currentProfile) return;
     
     if (mode === InputMode.CHAT && !inputText.trim() && !image) {
       NativeBridge.haptic('error');
@@ -624,18 +663,18 @@ const AppContent: React.FC = () => {
 
     const cost = (mode === InputMode.CHAT && image) ? 2 : 1;
 
-    if (!profile?.is_premium && (profile?.credits || 0) < cost) {
-      if ((profile?.credits || 0) > 0) showToast(`Need ${cost} credits.`, 'error');
+    if (!currentProfile.is_premium && (currentProfile.credits || 0) < cost) {
+      if ((currentProfile.credits || 0) > 0) showToast(`Need ${cost} credits.`, 'error');
       handleOpenPremium();
       return;
     }
 
     setLoading(true);
     
-    const creditsBefore = profile.credits || 0;
+    const creditsBefore = currentProfile.credits || 0;
 
     try {
-      if (!profile?.is_premium) {
+      if (!currentProfile.is_premium) {
         updateCredits(creditsBefore - cost);
       }
 
@@ -647,7 +686,7 @@ const AppContent: React.FC = () => {
       }
 
       if ('potentialStatus' in res && (res.potentialStatus === 'Error' || res.potentialStatus === 'Blocked')) {
-         if (profileRef.current && !profileRef.current.is_premium) updateCredits(creditsBefore);
+         if (!currentProfile.is_premium) updateCredits(creditsBefore);
          
          if (res.potentialStatus === 'Blocked') {
             showToast('Request blocked by Safety Policy.', 'error');
@@ -656,7 +695,7 @@ const AppContent: React.FC = () => {
          }
          setResult(res);
       } else if ('analysis' in res && (res.analysis === 'System Error' || res.analysis === 'Safety Policy Violation')) {
-         if (profileRef.current && !profileRef.current.is_premium) updateCredits(creditsBefore);
+         if (!currentProfile.is_premium) updateCredits(creditsBefore);
          showToast(res.analysis, 'error');
          setResult(res);
       } else {
@@ -667,7 +706,7 @@ const AppContent: React.FC = () => {
     } catch (error) {
       console.error(error);
       showToast('The wingman tripped! Try again.', 'error');
-      if (profileRef.current && !profileRef.current.is_premium) updateCredits(creditsBefore);
+      if (!currentProfile.is_premium) updateCredits(creditsBefore);
     } finally {
       setLoading(false);
     }
@@ -685,7 +724,7 @@ const AppContent: React.FC = () => {
             setIsAdLoading(false);
             
             if (rewardEarned) {
-                 updateCredits((profile?.credits || 0) + REWARD_CREDITS);
+                 updateCredits((profileRef.current?.credits || 0) + REWARD_CREDITS);
                  NativeBridge.haptic('success');
                  showToast(`+${REWARD_CREDITS} Credits Added!`, 'success');
             } else {
@@ -1016,12 +1055,13 @@ const AppContent: React.FC = () => {
   );
 }
 
+// Wrap AppContent with Provider
 const App: React.FC = () => {
-  return (
-    <ToastProvider>
-      <AppContent />
-    </ToastProvider>
-  );
+    return (
+        <ToastProvider>
+            <AppContent />
+        </ToastProvider>
+    );
 };
 
 export default App;

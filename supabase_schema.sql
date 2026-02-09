@@ -1,3 +1,4 @@
+
 -- Create profiles table
 create table public.profiles (
   id uuid references auth.users not null primary key,
@@ -49,3 +50,20 @@ create policy "Users can insert own saved items"
 create policy "Users can delete own saved items" 
   on public.saved_items for delete 
   using ( auth.uid() = user_id );
+
+-- RPC Function for Complete Account Deletion
+-- Run this in your Supabase SQL Editor
+create or replace function delete_user()
+returns void
+language plpgsql
+security definer
+as $$
+begin
+  -- 1. Delete user data (Explicitly to ensure cleanup even if cascade fails)
+  delete from public.saved_items where user_id = auth.uid();
+  delete from public.profiles where id = auth.uid();
+  
+  -- 2. Delete the auth user (Removes login credentials)
+  delete from auth.users where id = auth.uid();
+end;
+$$;
