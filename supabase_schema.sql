@@ -57,9 +57,10 @@ create or replace function delete_user()
 returns void
 language plpgsql
 security definer
+set search_path = public
 as $$
 begin
-  -- 1. Delete user data (Explicitly to ensure cleanup even if cascade fails)
+  -- 1. Delete user data
   delete from public.saved_items where user_id = auth.uid();
   delete from public.profiles where id = auth.uid();
   
@@ -67,3 +68,6 @@ begin
   delete from auth.users where id = auth.uid();
 end;
 $$;
+
+-- Grant execute permission to authenticated users
+grant execute on function delete_user() to authenticated;

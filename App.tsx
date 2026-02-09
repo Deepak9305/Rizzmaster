@@ -564,28 +564,14 @@ const AppContent: React.FC = () => {
         const { error: rpcError } = await supabase.rpc('delete_user');
 
         if (rpcError) {
-            // 2. Fallback: Manual Data Deletion (Data Only, Auth remains)
-            // Useful if the RPC function isn't created yet
-            console.warn("Account deletion RPC failed, falling back to data cleanup:", rpcError.message);
-            
-            // Delete saved items
-            const { error: savedError } = await supabase
-                .from('saved_items')
-                .delete()
-                .eq('user_id', currentProfile.id);
-            
-            if (savedError) throw new Error(`Failed to delete saved items: ${savedError.message}`);
-
-            // Delete profile
-            const { error: profileError } = await supabase
-                .from('profiles')
-                .delete()
-                .eq('id', currentProfile.id);
-
-            if (profileError) throw new Error(`Failed to delete profile: ${profileError.message}`);
+            console.error("Account Deletion Failed:", rpcError);
+            if (rpcError.message?.includes('function') && rpcError.message?.includes('does not exist')) {
+                 throw new Error("Config Error: Database function 'delete_user' is missing. Please run the provided SQL.");
+            }
+            throw new Error(`Deletion failed: ${rpcError.message}`);
         }
 
-        // 3. Sign Out & Cleanup
+        // 2. Sign Out & Cleanup (Only if RPC succeeded)
         await supabase.auth.signOut();
         
         // Clear Local State
@@ -595,12 +581,12 @@ const AppContent: React.FC = () => {
         setResult(null);
         setCurrentView('HOME');
         
-        showToast("Account successfully deleted", 'success');
+        showToast("Account permanently deleted", 'success');
         window.history.replaceState({ view: 'HOME' }, '', '/');
 
     } catch (err: any) {
-        console.error("Delete Account Error:", err);
-        showToast(`Failed to delete account: ${err.message || 'Unknown error'}`, 'error');
+        console.error("Delete Account Critical Error:", err);
+        showToast(err.message || 'Failed to delete account.', 'error');
     } finally {
         setLoading(false);
     }
