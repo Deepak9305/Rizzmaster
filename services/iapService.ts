@@ -14,9 +14,11 @@ const CdvPurchase = (window as any).CdvPurchase || {
             approved: () => {}, 
             verified: () => ({ finish: () => {} }), 
             finished: () => {}, 
-            productUpdated: () => {} 
+            productUpdated: () => {},
+            updated: () => {}
         }),
         initialize: async () => {},
+        update: async () => {},
         get: () => null,
         restore: async () => {},
         products: [],
@@ -62,7 +64,11 @@ class IAPService {
             return;
         }
 
-        if (this.isInitialized) return;
+        if (this.isInitialized) {
+            // Even if initialized, refreshing callbacks is key. 
+            // We might also want to trigger a refresh of products.
+            return;
+        }
 
         const { store, Platform } = CdvPurchase;
 
@@ -71,6 +77,7 @@ class IAPService {
         const registeredIds = new Set<string>();
 
         const addProduct = (id: string, type: string, platform: string) => {
+            if (!id) return;
             const key = `${platform}_${id}`;
             if (!registeredIds.has(key)) {
                 productsToRegister.push({ id, type, platform });
@@ -78,14 +85,19 @@ class IAPService {
             }
         };
 
-        // Android Weekly & Monthly
-        addProduct(IAP_CONFIG.WEEKLY.androidId, IAP_CONFIG.WEEKLY.type, Platform.GOOGLE_PLAY);
-        addProduct(IAP_CONFIG.MONTHLY.androidId, IAP_CONFIG.MONTHLY.type, Platform.GOOGLE_PLAY);
-        // iOS Weekly & Monthly
-        addProduct(IAP_CONFIG.WEEKLY.iosId, IAP_CONFIG.WEEKLY.type, Platform.APPLE_APPSTORE);
-        addProduct(IAP_CONFIG.MONTHLY.iosId, IAP_CONFIG.MONTHLY.type, Platform.APPLE_APPSTORE);
+        // Register products for both platforms to be safe, or conditionally based on OS
+        // The plugin handles platform filtering, but being specific helps.
+        if (Capacitor.getPlatform() === 'android') {
+             addProduct(IAP_CONFIG.WEEKLY.androidId, IAP_CONFIG.WEEKLY.type, Platform.GOOGLE_PLAY);
+             addProduct(IAP_CONFIG.MONTHLY.androidId, IAP_CONFIG.MONTHLY.type, Platform.GOOGLE_PLAY);
+        } else if (Capacitor.getPlatform() === 'ios') {
+             addProduct(IAP_CONFIG.WEEKLY.iosId, IAP_CONFIG.WEEKLY.type, Platform.APPLE_APPSTORE);
+             addProduct(IAP_CONFIG.MONTHLY.iosId, IAP_CONFIG.MONTHLY.type, Platform.APPLE_APPSTORE);
+        }
 
-        store.register(productsToRegister);
+        if (productsToRegister.length > 0) {
+            store.register(productsToRegister);
+        }
 
         // 2. Setup Listeners
         store.when().approved((transaction: any) => {
@@ -103,21 +115,32 @@ class IAPService {
             console.log("IAP: Transaction finished", transaction);
         });
 
+        // Track product updates to keep local cache sync
         store.when().productUpdated((product: any) => {
+            console.log(`IAP: Product Updated: ${product.id} [${product.state}] CanPurchase: ${product.canPurchase}`);
+            this.products = store.products;
+        });
+
+        store.when().updated((root: any) => {
+            // General store update
             this.products = store.products;
         });
 
         store.error((error: any) => {
             console.error('IAP Error:', error);
+            // Ignore cancel errors (user closed modal)
             if (error.code !== CdvPurchase.ErrorCode.PAYMENT_CANCELLED) {
+                 // Only show toast for actual errors
                  if (this.onError) this.onError(`Store Error: ${error.message}`);
             }
         });
 
-        // 3. Refresh Store
+        // 3. Initialize Store
         store.initialize().then(() => {
             this.isInitialized = true;
             console.log("IAP: Store initialized");
+            // Force a refresh to pull latest prices/validity
+            store.update(); 
         });
     }
 
@@ -134,27 +157,43 @@ class IAPService {
         const productId = isIOS ? config.iosId : config.androidId;
         const basePlanId = isIOS ? null : config.androidBasePlanId;
 
+        console.log(`IAP: Attempting purchase for ${productId} (BasePlan: ${basePlanId || 'N/A'})`);
+
+        // Check if store is ready
+        if (!this.isInitialized) {
+            console.warn("IAP: Store not initialized yet, attempting to update...");
+            await store.update();
+        }
+
         const product = store.get(productId);
 
         if (product && product.canPurchase) {
             try {
                 if (basePlanId) {
+                    // Android Subscriptions with Base Plans
                     if (!product.offers || product.offers.length === 0) {
+                        // Fallback if offers aren't loaded yet
+                        console.log("IAP: No offers found, ordering product directly.");
                         await store.order(productId);
                         return;
                     }
+
+                    // Find specific offer
                     const offer = product.offers.find((o: any) => o.id === basePlanId || o.id.includes(basePlanId));
                     if (offer) {
+                        console.log(`IAP: Ordering offer ${offer.id}`);
                         await offer.order();
                     } else {
+                        console.warn(`IAP: Offer ${basePlanId} not found, ordering default product.`);
                         await store.order(productId);
                     }
                 } else {
+                    // iOS or Simple Android Product
                     const offer = product.getOffer();
                     if (offer) {
-                        await offer.order();
+                         await offer.order();
                     } else {
-                        await store.order(productId);
+                         await store.order(productId);
                     }
                 }
             } catch (err: any) {
@@ -162,15 +201,29 @@ class IAPService {
                 if (this.onError) this.onError(err.message || "Purchase failed");
             }
         } else {
-            console.error("IAP Product not found:", productId);
-            if (this.onError) this.onError("Store not ready. Please try again.");
+            // Diagnostics
+            if (!product) {
+                console.error(`IAP: Product ${productId} NOT FOUND in store. Check console for 'register' calls.`);
+            } else {
+                console.error(`IAP: Product ${productId} found but cannot purchase. State: ${product.state}, Valid: ${product.valid}`);
+            }
+            
+            // Force update for next attempt
+            store.update();
+
+            if (this.onError) {
+                 this.onError("Store not connected or product unavailable. Retrying connection...");
+            }
         }
     }
 
     async restore() {
         if (!Capacitor.isNativePlatform()) return;
         try {
+            console.log("IAP: Restoring purchases...");
             await CdvPurchase.store.restore();
+            // Force update to refresh state
+            await CdvPurchase.store.update();
         } catch (e) {
             console.error("IAP: Restore failed", e);
         }
