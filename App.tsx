@@ -12,6 +12,7 @@ import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { AdMobService } from './services/admobService';
+import IAPService from './services/iapService';
 
 // Lazy Load Heavy Components / Modals
 const PremiumModal = lazy(() => import('./components/PremiumModal'));
@@ -25,7 +26,6 @@ const AD_DURATION = 15;
 // --- OFFICIAL GOOGLE TEST IDS ---
 const TEST_AD_UNIT_ID_ANDROID = 'ca-app-pub-3940256099942544/5224354917';
 const TEST_AD_UNIT_ID_IOS = 'ca-app-pub-3940256099942544/1712485313';
-const TEST_PRODUCT_ID = 'android.test.purchased';
 
 type ViewState = 'HOME' | 'PRIVACY' | 'TERMS' | 'SUPPORT';
 
@@ -175,20 +175,64 @@ const AppContent: React.FC = () => {
     profileRef.current = profile;
   }, [profile]);
 
+  // Define handleUpgrade first so it can be passed to IAPService
+  const handleUpgrade = useCallback(async () => {
+    if (!profile) return;
+    NativeBridge.haptic('success');
+    const updatedProfile = { ...profile, is_premium: true };
+    setProfile(updatedProfile);
+    
+    // Close modal via back navigation
+    if (stateRef.current.showPremiumModal) {
+        window.history.back();
+    }
+    
+    showToast(`Welcome to the Elite Club! 👑`, 'success');
+
+    if (supabase && profile.id !== 'guest') {
+        await supabase.from('profiles').update({ is_premium: true }).eq('id', profile.id);
+    } else {
+        localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
+    }
+  }, [profile, showToast]);
+
+  // Initialize Native Services
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+       // Google Auth
+       const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
+       GoogleAuth.initialize({
+           clientId: clientId || 'YOUR_WEB_CLIENT_ID_PLACEHOLDER',
+           scopes: ['profile', 'email'],
+           grantOfflineAccess: false,
+       });
+
+       // AdMob
+       AdMobService.initialize();
+
+       // In-App Purchases
+       // We pass the handleUpgrade function as the success callback
+       IAPService.initialize(
+           () => {
+               // On successful purchase/restore
+               handleUpgrade();
+           },
+           (errorMessage) => {
+               showToast(errorMessage, 'error');
+           }
+       );
+    }
+  }, [handleUpgrade, showToast]);
+
   // Handle History API for Mobile Back Button support
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
       const state = event.state || {};
-      
-      // Update Views
       setCurrentView(state.view || 'HOME');
-      
-      // Update Modals
       setShowPremiumModal(!!state.premium);
       setShowSavedModal(!!state.saved);
     };
 
-    // Initialize state if needed
     if (!window.history.state) {
       window.history.replaceState({ view: 'HOME' }, '');
     }
@@ -197,32 +241,26 @@ const AppContent: React.FC = () => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Native Back Button Handler (Exit App Logic)
+  // Native Back Button Handler
   useEffect(() => {
       if (!Capacitor.isNativePlatform()) return;
 
       const setupBackListener = async () => {
-          // Remove any existing listeners first to prevent duplicates if component remounts
           await CapacitorApp.removeAllListeners();
 
           CapacitorApp.addListener('backButton', ({ canGoBack }) => {
               const { currentView, showPremiumModal, showSavedModal } = stateRef.current;
               
-              // 1. If Modals are open, close them (which aligns with history.back)
               if (showPremiumModal || showSavedModal) {
                   window.history.back();
                   return;
               }
 
-              // 2. If not on HOME view, go back to HOME (aligns with history.back)
               if (currentView !== 'HOME') {
                   window.history.back();
                   return;
               }
 
-              // 3. If on HOME and no modals, confirm Exit
-              // We use window.confirm here. For a native feel, Capacitor Dialog plugin could be used, 
-              // but standard confirm works on most webviews.
               const shouldExit = window.confirm("Do you want to exit Rizz Master?");
               if (shouldExit) {
                   CapacitorApp.exitApp();
@@ -231,11 +269,7 @@ const AppContent: React.FC = () => {
       };
 
       setupBackListener();
-
-      // Cleanup
-      return () => {
-          CapacitorApp.removeAllListeners();
-      };
+      return () => { CapacitorApp.removeAllListeners(); };
   }, []);
 
   // Navigation Wrappers
@@ -262,23 +296,6 @@ const AppContent: React.FC = () => {
     setShowSavedModal(true);
     NativeBridge.haptic('light');
   }, [currentView]);
-
-  // Initialize Native Google Auth & AdMob
-  useEffect(() => {
-    if (Capacitor.isNativePlatform()) {
-       const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
-       if (!clientId) console.warn("VITE_GOOGLE_CLIENT_ID missing");
-       
-       GoogleAuth.initialize({
-           clientId: clientId || 'YOUR_WEB_CLIENT_ID_PLACEHOLDER',
-           scopes: ['profile', 'email'],
-           grantOfflineAccess: false,
-       });
-
-       // Init AdMob
-       AdMobService.initialize();
-    }
-  }, []);
 
   useEffect(() => {
     if (!supabase) {
@@ -325,7 +342,6 @@ const AppContent: React.FC = () => {
     };
   }, []);
 
-  // Loading Message Rotation
   useEffect(() => {
     let interval: any;
     if (loading) {
@@ -425,8 +441,6 @@ const AppContent: React.FC = () => {
         setShowPremiumModal(false);
         setShowSavedModal(false);
         showToast("Successfully logged out 👋", 'success');
-        
-        // Reset history to clean slate
         window.history.replaceState({ view: 'HOME' }, '', '/');
     }
   }, [showToast]);
@@ -440,12 +454,9 @@ const AppContent: React.FC = () => {
 
   const updateCredits = useCallback(async (newAmount: number) => {
     if (!profileRef.current) return;
-    
     const currentProfile = profileRef.current;
     const updatedProfile = { ...currentProfile, credits: newAmount };
-    
     setProfile(updatedProfile); 
-    
     if (supabase && currentProfile.id !== 'guest') {
         await supabase.from('profiles').update({ credits: newAmount }).eq('id', currentProfile.id);
     } else {
@@ -453,41 +464,19 @@ const AppContent: React.FC = () => {
     }
   }, []);
 
-  const handleUpgrade = useCallback(async (plan: 'WEEKLY' | 'MONTHLY') => {
-    if (!profile) return;
-    NativeBridge.haptic('success');
-    const updatedProfile = { ...profile, is_premium: true };
-    setProfile(updatedProfile);
-    
-    // Close modal via back navigation to keep history clean
-    handleBackNavigation();
-    
-    showToast(`Welcome to the Elite Club! 👑`, 'success');
-
-    if (supabase && profile.id !== 'guest') {
-        await supabase.from('profiles').update({ is_premium: true }).eq('id', profile.id);
-    } else {
-        localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
-    }
-  }, [profile, showToast, handleBackNavigation]);
-
+  // Pass handleUpgrade to PremiumModal via props but logic is handled by listener now mostly
+  // We keep it here just in case modal needs to force it manually in dev
+  
   const handleRestorePurchases = useCallback(async () => {
     if (!profile) return;
     NativeBridge.haptic('medium');
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    const updatedProfile = { ...profile, is_premium: true };
-    setProfile(updatedProfile);
-    
-    handleBackNavigation();
-    
-    showToast(`Purchases Restored!`, 'success');
-    
-    if (supabase && profile.id !== 'guest') {
-        await supabase.from('profiles').update({ is_premium: true }).eq('id', profile.id);
+    if (Capacitor.isNativePlatform()) {
+        IAPService.restore();
     } else {
-        localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
+        // Dev fallback
+        setTimeout(() => handleUpgrade(), 1500);
     }
-  }, [profile, showToast, handleBackNavigation]);
+  }, [profile, handleUpgrade]);
 
   const toggleSave = useCallback(async (content: string, type: 'tease' | 'smooth' | 'chaotic' | 'bio') => {
     if (!profile) return;
@@ -686,7 +675,6 @@ const AppContent: React.FC = () => {
 
   const handleWatchAd = async () => {
     NativeBridge.haptic('medium');
-    // Close modal first via back navigation to keep history clean
     handleBackNavigation();
 
     if (Capacitor.isNativePlatform()) {
@@ -745,11 +733,6 @@ const AppContent: React.FC = () => {
   return (
     <div className="relative min-h-screen bg-black overflow-x-hidden">
       
-      {/* 
-        SPLASH SCREEN OVERLAY 
-        Render conditionally but sits on top (z-50+). 
-        The app content is rendered beneath it to prevent "pop-in" of elements.
-      */}
       {showSplash && (
           <SplashScreen 
             isAppReady={isAuthReady} 
@@ -757,10 +740,6 @@ const AppContent: React.FC = () => {
           />
       )}
 
-      {/* 
-        MAIN CONTENT
-        Only interactive when splash is gone, but rendered to allow background loading 
-      */}
       <div className={showSplash ? 'pointer-events-none' : ''}>
           {isSessionBlocked ? (
             <div className="min-h-[100dvh] flex flex-col items-center justify-center p-4 relative overflow-hidden bg-black safe-top safe-bottom">
@@ -791,7 +770,6 @@ const AppContent: React.FC = () => {
           ) : (
             <div className="max-w-4xl mx-auto px-4 py-6 md:py-12 pb-24 relative min-h-[100dvh] flex flex-col animate-fade-in safe-top safe-bottom">
             
-            {/* Background Animation Layer - REMOVED BLOBS to ensure pure black theme */}
             <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden bg-black" />
 
             <Suspense fallback={null}>

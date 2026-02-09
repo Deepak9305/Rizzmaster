@@ -1,11 +1,8 @@
-import React, { useState } from 'react';
 
-// --- CONFIGURATION ---
-const PRICING_CONFIG = {
-    currency: '$',
-    weekly: { price: '4.99', link: 'https://buy.stripe.com/test_global_weekly' },
-    monthly: { price: '15.99', link: 'https://buy.stripe.com/test_global_monthly' }
-};
+import React, { useState, useEffect } from 'react';
+import IAPService from '../services/iapService';
+import { Capacitor } from '@capacitor/core';
+import { NativeBridge } from '../services/nativeBridge';
 
 interface PremiumModalProps {
   onClose: () => void;
@@ -15,19 +12,42 @@ interface PremiumModalProps {
 
 const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onRestore }) => {
   const [selectedPlan, setSelectedPlan] = useState<'WEEKLY' | 'MONTHLY'>('WEEKLY');
+  // Default to user's specified prices as fallback
+  const [prices, setPrices] = useState({ weekly: '$4.99', monthly: '$15.99' });
+
+  useEffect(() => {
+    // Fetch real prices if native
+    if (Capacitor.isNativePlatform()) {
+        const fetchPrices = () => {
+            const weeklyPrice = IAPService.getPrice('WEEKLY');
+            const monthlyPrice = IAPService.getPrice('MONTHLY');
+            
+            if (weeklyPrice || monthlyPrice) {
+                setPrices(prev => ({
+                    weekly: weeklyPrice || prev.weekly,
+                    monthly: monthlyPrice || prev.monthly
+                }));
+            }
+        };
+
+        // Try immediately
+        fetchPrices();
+
+        // Retry after a second in case store was initializing
+        const timer = setTimeout(fetchPrices, 1500);
+        return () => clearTimeout(timer);
+    }
+  }, []);
 
   const handleSubscribe = () => {
-    // In production, verify the link is valid before opening
-    const link = selectedPlan === 'WEEKLY' ? PRICING_CONFIG.weekly.link : PRICING_CONFIG.monthly.link;
+    NativeBridge.haptic('medium');
     
-    if (link.includes('http')) {
-        window.open(link, '_blank');
-        // Simulate success for demo purposes
-        setTimeout(() => onUpgrade(selectedPlan), 1000);
+    if (Capacitor.isNativePlatform()) {
+        IAPService.purchase(selectedPlan);
     } else {
-        // Fallback for demo
+        // Fallback for web demo
         console.log(`Simulating upgrade for ${selectedPlan}`);
-        onUpgrade(selectedPlan);
+        setTimeout(() => onUpgrade(selectedPlan), 1000);
     }
   };
 
@@ -77,7 +97,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onResto
                 className={`p-3 rounded-xl border transition-all flex flex-col items-center justify-center text-center relative ${selectedPlan === 'WEEKLY' ? 'bg-yellow-500/10 border-yellow-500 text-white shadow-[0_0_15px_rgba(234,179,8,0.2)]' : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/10'}`}
             >
                 <span className="text-[10px] font-bold uppercase tracking-wider mb-1 opacity-70">Weekly</span>
-                <span className="text-lg font-black text-yellow-400">{PRICING_CONFIG.currency}{PRICING_CONFIG.weekly.price}</span>
+                <span className="text-lg font-black text-yellow-400">{prices.weekly}</span>
             </button>
             <button 
                 onClick={() => setSelectedPlan('MONTHLY')}
@@ -87,7 +107,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onResto
                     SAVE 20%
                 </div>
                 <span className="text-[10px] font-bold uppercase tracking-wider mb-1 opacity-70">Monthly</span>
-                <span className="text-lg font-black text-yellow-400">{PRICING_CONFIG.currency}{PRICING_CONFIG.monthly.price}</span>
+                <span className="text-lg font-black text-yellow-400">{prices.monthly}</span>
             </button>
         </div>
 
@@ -98,8 +118,8 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onResto
             <span className="text-sm">Subscribe & Upgrade</span>
             <span className="text-[10px] opacity-80 uppercase">
                 {selectedPlan === 'WEEKLY' 
-                    ? `${PRICING_CONFIG.currency}${PRICING_CONFIG.weekly.price} billed weekly` 
-                    : `${PRICING_CONFIG.currency}${PRICING_CONFIG.monthly.price} billed monthly`}
+                    ? `${prices.weekly} billed weekly` 
+                    : `${prices.monthly} billed monthly`}
             </span>
         </button>
         
