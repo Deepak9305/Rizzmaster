@@ -1,3 +1,4 @@
+
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -9,6 +10,8 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    // CRITICAL for Capacitor: Use relative paths for assets
+    base: './',
     define: {
       // Define process.env variables so they work in the client-side code
       // This maintains compatibility with your existing service files
@@ -18,6 +21,10 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       chunkSizeWarningLimit: 1000,
+      outDir: 'dist',
+      assetsDir: 'assets',
+      // Ensure empty output directory before building
+      emptyOutDir: true,
     },
   };
 });

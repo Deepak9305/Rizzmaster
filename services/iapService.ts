@@ -2,47 +2,57 @@
 import 'cordova-plugin-purchase';
 import { Capacitor } from '@capacitor/core';
 
-// Access the global CdvPurchase object attached by the plugin.
-// Provide a robust mock for Web/Dev environments.
-const CdvPurchase = (window as any).CdvPurchase || {
-    ProductType: { PAID_SUBSCRIPTION: 'paid subscription' },
-    Platform: { GOOGLE_PLAY: 'google-play', APPLE_APPSTORE: 'apple-appstore' },
-    ErrorCode: { PAYMENT_CANCELLED: 6777006 },
-    store: {
-        register: () => {},
-        when: () => ({ 
-            approved: () => {}, 
-            verified: () => ({ finish: () => {} }), 
-            finished: () => {}, 
-            productUpdated: () => {},
-            updated: () => {}
-        }),
-        initialize: async () => {},
-        update: async () => {},
-        get: () => null,
-        restore: async () => {},
-        products: [],
-        error: () => {}
-    }
+// Helper to safely get the CdvPurchase object (Native or Mock)
+// We access this dynamically to ensure the native plugin has injected it into window
+const getCdvPurchase = () => {
+    const native = (window as any).CdvPurchase;
+    if (native) return native;
+
+    // Robust Mock for Web/Dev environments
+    return {
+        ProductType: { PAID_SUBSCRIPTION: 'paid subscription' },
+        Platform: { GOOGLE_PLAY: 'google-play', APPLE_APPSTORE: 'apple-appstore' },
+        ErrorCode: { PAYMENT_CANCELLED: 6777006 },
+        store: {
+            register: () => {},
+            when: () => ({ 
+                approved: () => {}, 
+                verified: () => ({ finish: () => {} }), 
+                finished: () => {}, 
+                productUpdated: () => {},
+                updated: () => {}
+            }),
+            initialize: async () => {},
+            update: async () => {},
+            get: () => null,
+            restore: async () => {},
+            products: [],
+            error: () => {},
+            order: async () => {}
+        }
+    };
 };
 
 /**
  * IN-APP PURCHASE CONFIGURATION
+ * We access constants via a getter or verify existence to avoid crash on import
  */
+const getProductType = () => getCdvPurchase().ProductType.PAID_SUBSCRIPTION;
+
 export const IAP_CONFIG = {
     WEEKLY: {
         alias: 'weekly_sub', 
         androidId: 'godmode',               
         androidBasePlanId: 'godmode4-99',   
         iosId: 'godmode4-99',               
-        type: CdvPurchase.ProductType.PAID_SUBSCRIPTION
+        get type() { return getProductType(); }
     },
     MONTHLY: {
         alias: 'monthly_sub',
         androidId: 'godmode',               
         androidBasePlanId: 'godmode15-99',  
         iosId: 'godmode15-99',              
-        type: CdvPurchase.ProductType.PAID_SUBSCRIPTION
+        get type() { return getProductType(); }
     }
 };
 
@@ -70,6 +80,7 @@ class IAPService {
             return;
         }
 
+        const CdvPurchase = getCdvPurchase();
         const { store, Platform } = CdvPurchase;
 
         // 1. Prepare Registration List
@@ -129,7 +140,7 @@ class IAPService {
         store.error((error: any) => {
             console.error('IAP Error:', error);
             // Ignore cancel errors (user closed modal)
-            if (error.code !== CdvPurchase.ErrorCode.PAYMENT_CANCELLED) {
+            if (error && error.code !== CdvPurchase.ErrorCode.PAYMENT_CANCELLED) {
                  // Only show toast for actual errors
                  if (this.onError) this.onError(`Store Error: ${error.message}`);
             }
@@ -150,6 +161,7 @@ class IAPService {
             return;
         }
         
+        const CdvPurchase = getCdvPurchase();
         const { store } = CdvPurchase;
         const isIOS = Capacitor.getPlatform() === 'ios';
         const config = plan === 'WEEKLY' ? IAP_CONFIG.WEEKLY : IAP_CONFIG.MONTHLY;
@@ -219,6 +231,7 @@ class IAPService {
 
     async restore() {
         if (!Capacitor.isNativePlatform()) return;
+        const CdvPurchase = getCdvPurchase();
         try {
             console.log("IAP: Restoring purchases...");
             await CdvPurchase.store.restore();
