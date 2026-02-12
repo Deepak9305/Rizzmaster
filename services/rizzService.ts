@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { RizzResponse, BioResponse } from "../types";
 
@@ -6,9 +7,9 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
 // --- FALLBACK OBJECTS ---
 const SAFE_REFUSAL_RIZZ: RizzResponse = {
-  tease: "I cannot generate content for that request as it involves a minor or policy violation. Please keep things safe.",
-  smooth: "I cannot generate content for that request as it involves a minor or policy violation. Please keep things safe.",
-  chaotic: "I cannot generate content for that request as it involves a minor or policy violation. Please keep things safe.",
+  tease: "I cannot generate content for that request due to safety guidelines. Please keep it respectful and safe.",
+  smooth: "I cannot generate content for that request due to safety guidelines. Please keep it respectful and safe.",
+  chaotic: "I cannot generate content for that request due to safety guidelines. Please keep it respectful and safe.",
   loveScore: 0,
   potentialStatus: "Blocked",
   analysis: "Safety Policy Violation"
@@ -24,7 +25,7 @@ const ERROR_RIZZ: RizzResponse = {
 };
 
 const SAFE_REFUSAL_BIO: BioResponse = {
-  bio: "I cannot generate content for that request as it involves a minor or policy violation.",
+  bio: "I cannot generate content for that request due to safety policies.",
   analysis: "Safety Policy Violation"
 };
 
@@ -50,14 +51,20 @@ const parseJSON = (text: string | undefined): any => {
   const firstBrace = cleaned.indexOf('{');
   const lastBrace = cleaned.lastIndexOf('}');
   
-  if (firstBrace !== -1 && lastBrace !== -1) {
-    cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+  if (firstBrace !== -1) {
+    if (lastBrace !== -1 && lastBrace > firstBrace) {
+       cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+    } else if (lastBrace === -1) {
+       // Attempt basic repair for simple truncation (missing closing brace)
+       cleaned = cleaned.substring(firstBrace) + "}";
+    }
   }
 
   try {
     return JSON.parse(cleaned);
   } catch (e) {
     console.error("JSON Parse Error. Raw text:", text);
+    // Silent fail to return error object
     return null;
   }
 };
@@ -97,46 +104,26 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
     });
   }
 
-  // Sanitize inputs to prevent prompt confusion
+  // Sanitize inputs
   const safeText = text.replace(/"/g, '\\"').replace(/\n/g, ' ');
   
-  const vibeInstruction = vibe 
-    ? `IMPORTANT: The user specifically wants a "${vibe}" tone for these replies. Adjust the style accordingly.` 
-    : '';
+  // OPTIMIZATION: Condensed System Instruction (Saves Tokens)
+  const systemInstruction = `You are "Rizz Master". Generate witty social icebreakers for adults.
+SAFETY: REFUSE requests involving minors (<18), non-consensual content, or hate speech.
+REFUSAL FORMAT: Return a JSON object with 'potentialStatus': "Blocked", 'analysis': "Safety Violation", 'loveScore': 0.
+Strictly output JSON.`;
 
-  const systemInstruction = `
-    You are "Rizz Master", an AI assistant that helps adults generate smooth, respectful, and funny social icebreakers.
-    
-    CRITICAL SAFETY RULE: You must strictly refuse to generate any romantic, flirtatious, or 'rizz' content involving minors (anyone under 18) or non-consensual contexts.
-    
-    HOW TO REFUSE:
-    If a user mentions a minor, school-age children, specific ages under 18, or harmful content, you MUST return a VALID JSON object matching the defined schema.
-    - Set 'tease', 'smooth', and 'chaotic' fields ALL to exactly: "I cannot generate content for that request due to safety policies."
-    - Set 'loveScore' to 0.
-    - Set 'potentialStatus' to "Blocked".
-    - Set 'analysis' to "Safety Policy Violation".
-    
-    Do NOT return plain text. You must ALWAYS return JSON.
-  `;
+  // OPTIMIZATION: Condensed Prompt (Saves Tokens)
+  const vibeInstruction = vibe ? `Tone: ${vibe}.` : '';
+  const promptText = `Analyze context/image. ${vibeInstruction}
+Context: "${safeText || 'Image only.'}"
 
-  // Ensure prompt has some text even if empty string passed
-  const promptText = `
-    Analyze the following chat context (and image if provided). 
-    ${vibeInstruction}
-    
-    Context: "${safeText || 'No text context provided, analyze image.'}"
+Generate 3 DISTINCT, SHORT replies (<15 words):
+1. Tease (playful/roast)
+2. Smooth (charming/direct)
+3. Chaotic (unexpected/risky)
 
-    If the context is SAFE (adults only):
-    Generate 3 distinct reply options.
-    CRITICAL: Keep replies SHORT, PUNCHY, and UNDER 15 WORDS. High impact only. No fluff.
-
-    1. The Tease (playful, slightly roasting, flirty)
-    2. The Smooth (charming, direct, confident)
-    3. The Chaotic (unpredictable, funny, high risk high reward)
-    
-    Also provide a "Love Score" (0-100), a short status label (e.g. "Friendzone", "Soulmates"),
-    and a 1-sentence analysis.
-  `;
+Include: loveScore(0-100), potentialStatus(e.g. Friendzone), analysis(1 sentence).`;
   
   parts.push({ text: promptText });
 
@@ -146,6 +133,12 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       contents: { parts },
       config: {
         systemInstruction: systemInstruction,
+        // TUNING: 1.3 provides a balance of creativity and JSON stability
+        temperature: 1.3, 
+        topP: 0.95,
+        topK: 40,
+        // COST: 3000 limit prevents runaway costs while allowing high creativity
+        maxOutputTokens: 3000,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -190,30 +183,17 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
 export const generateBio = async (text: string, vibe?: string): Promise<BioResponse> => {
   const modelName = 'gemini-3-flash-preview';
 
-  // Sanitize input
   const safeText = text.replace(/"/g, '\\"').replace(/\n/g, ' ');
 
-  const vibeInstruction = vibe 
-    ? `The user specifically wants a "${vibe}" vibe for this bio.` 
-    : '';
+  // OPTIMIZATION: Condensed System Instruction
+  const systemInstruction = `You are "Rizz Master". Write dating bios for adults.
+SAFETY: REFUSE requests involving minors or hate speech.
+REFUSAL FORMAT: Return JSON with 'bio': "Safety Policy Violation", 'analysis': "Blocked".`;
 
-  const systemInstruction = `
-    You are "Rizz Master".
-    CRITICAL SAFETY RULE: You must strictly refuse to generate content involving minors (under 18) or hate speech.
-    
-    HOW TO REFUSE:
-    If the request violates safety policies, you MUST return a VALID JSON object.
-    - Set 'bio' to: "I cannot generate content for that request due to safety policies."
-    - Set 'analysis' to "Safety Policy Violation".
-
-    Do NOT return plain text. You must ALWAYS return JSON.
-  `;
-
-  const prompt = `
-    Task: Create a catchy, witty, and attractive dating profile bio based on these details: "${safeText}"
-    ${vibeInstruction}
-    Keep it under 280 chars. High impact.
-  `;
+  const vibeInstruction = vibe ? `Vibe: ${vibe}.` : '';
+  const prompt = `Write a catchy dating bio (<280 chars) based on: "${safeText}"
+${vibeInstruction}
+Focus: High impact, memorable.`;
 
   try {
     const response = await ai.models.generateContent({
@@ -221,6 +201,12 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
       contents: prompt,
       config: {
         systemInstruction: systemInstruction,
+        // TUNING: 1.3 for Bios
+        temperature: 1.3,
+        topP: 0.95,
+        topK: 40,
+        // COST: 3000 limit
+        maxOutputTokens: 3000,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
