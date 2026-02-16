@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
 import { RizzResponse, BioResponse } from "../types";
 
 // Initialize Gemini Client
@@ -42,9 +42,10 @@ const parseJSON = (text: string | undefined): any => {
   // Aggressively clean markdown and whitespace
   let cleaned = text.trim();
   
-  // Remove markdown wrapping
-  // Handles ```json \n { ... } \n ``` or just ``` { ... } ```
-  cleaned = cleaned.replace(/^```(json)?/i, '').replace(/```$/, '');
+  // Remove markdown wrapping (case insensitive, global)
+  cleaned = cleaned.replace(/```json/gi, '').replace(/```/g, '');
+  
+  cleaned = cleaned.trim();
   
   // Locate the first '{' and last '}' to strip any preamble/postscript
   const firstBrace = cleaned.indexOf('{');
@@ -63,7 +64,6 @@ const parseJSON = (text: string | undefined): any => {
     return JSON.parse(cleaned);
   } catch (e) {
     console.error("JSON Parse Error. Raw text:", text);
-    // Silent fail to return error object
     return null;
   }
 };
@@ -85,7 +85,7 @@ const getMimeType = (base64: string): string => {
  * Generates Rizz (replies) based on chat context or image
  */
 export const generateRizz = async (text: string, imageBase64?: string, vibe?: string): Promise<RizzResponse> => {
-  // COST OPTIMIZATION: Always use Flash 3
+  // Always use Flash 3
   const modelName = 'gemini-3-flash-preview';
 
   const parts: any[] = [];
@@ -104,82 +104,86 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
     });
   }
 
-  // Sanitize inputs
-  const safeText = text.replace(/"/g, '\\"').replace(/\n/g, ' ');
+  // Sanitize inputs: Escape backslashes first, then quotes, replace newlines
+  const safeText = text.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, ' ');
   
-  // COST OPTIMIZATION: Ultra-short system instruction (~15 tokens)
   const systemInstruction = `Role: Dating coach. Target: Adults.
+Output STRICT JSON. No markdown. No chatter.
 Refuse unsafe/minor content with {"potentialStatus":"Blocked","analysis":"Safety","loveScore":0}.`;
 
-  // COST OPTIMIZATION: Condensed Prompt (~30 tokens + input)
   const vibeInstruction = vibe ? `Vibe:${vibe}` : '';
   const promptText = `Context:"${safeText || 'Image'}".${vibeInstruction}
-Output JSON:
+Generate JSON:
 tease,smooth,chaotic (<15 words).
 loveScore(0-100),potentialStatus,analysis.`;
   
   parts.push({ text: promptText });
 
-  try {
-    const response = await ai.models.generateContent({
-      model: modelName,
-      contents: { parts },
-      config: {
-        systemInstruction: systemInstruction,
-        temperature: 1.2, 
-        topP: 0.95,
-        topK: 40,
-        // INCREASED BUFFER: 1000 tokens prevents JSON truncation while keeping costs low
-        maxOutputTokens: 1000,
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            tease: { type: Type.STRING },
-            smooth: { type: Type.STRING },
-            chaotic: { type: Type.STRING },
-            loveScore: { type: Type.INTEGER },
-            potentialStatus: { type: Type.STRING },
-            analysis: { type: Type.STRING },
-          },
-          required: ["tease", "smooth", "chaotic", "loveScore", "potentialStatus", "analysis"]
+  // Retry logic for stability
+  for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: { parts },
+          config: {
+            systemInstruction: systemInstruction,
+            temperature: 1.2, 
+            topP: 0.95,
+            topK: 40,
+            // Safe buffer to prevent truncation
+            maxOutputTokens: 2048,
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                tease: { type: Type.STRING },
+                smooth: { type: Type.STRING },
+                chaotic: { type: Type.STRING },
+                loveScore: { type: Type.INTEGER },
+                potentialStatus: { type: Type.STRING },
+                analysis: { type: Type.STRING },
+              },
+              required: ["tease", "smooth", "chaotic", "loveScore", "potentialStatus", "analysis"]
+            }
+          }
+        });
+
+        const outputText = response.text;
+        if (!outputText) {
+            console.warn("Empty response text received.");
+            if (attempt === 1) return SAFE_REFUSAL_RIZZ;
+            continue;
         }
+
+        const parsed = parseJSON(outputText);
+        if (parsed) {
+             // Validate keys exist
+            if (!parsed.tease || !parsed.smooth) {
+                if (attempt === 1) return ERROR_RIZZ;
+                continue;
+            }
+            return parsed as RizzResponse;
+        }
+        
+        console.warn(`Attempt ${attempt + 1} failed to parse JSON.`);
+
+      } catch (error: any) {
+        console.error("Rizz Generation Error:", error);
+        if (attempt === 1) return ERROR_RIZZ; 
       }
-    });
-
-    const outputText = response.text;
-    if (!outputText) {
-        console.warn("Empty response text received (likely safety block). Returning refusal.");
-        return SAFE_REFUSAL_RIZZ;
-    }
-
-    const parsed = parseJSON(outputText);
-    if (!parsed) return ERROR_RIZZ;
-    
-    // Validate keys exist to prevent blank UI
-    if (!parsed.tease || !parsed.smooth) {
-        return ERROR_RIZZ;
-    }
-
-    return parsed as RizzResponse;
-
-  } catch (error: any) {
-    console.error("Rizz Generation Error:", error);
-    return ERROR_RIZZ; 
   }
+  return ERROR_RIZZ;
 };
 
 /**
  * Generates a dating profile bio
  */
 export const generateBio = async (text: string, vibe?: string): Promise<BioResponse> => {
-  // COST OPTIMIZATION: Always use Flash 3
   const modelName = 'gemini-3-flash-preview';
+  const safeText = text.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, ' ');
 
-  const safeText = text.replace(/"/g, '\\"').replace(/\n/g, ' ');
-
-  // COST OPTIMIZATION: Ultra-short system instruction
   const systemInstruction = `Role: Dating coach. Target: Adults.
+Output STRICT JSON. No markdown.
 Refuse unsafe with {"bio":"Safety Violation","analysis":"Blocked"}.`;
 
   const vibeInstruction = vibe ? `Vibe:${vibe}` : '';
@@ -195,8 +199,7 @@ Bio <280 chars. Catchy.`;
         temperature: 1.2,
         topP: 0.95,
         topK: 40,
-        // INCREASED BUFFER: 800 tokens prevents JSON truncation
-        maxOutputTokens: 800,
+        maxOutputTokens: 1024,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -210,9 +213,7 @@ Bio <280 chars. Catchy.`;
     });
 
     const outputText = response.text;
-    if (!outputText) {
-        return SAFE_REFUSAL_BIO;
-    }
+    if (!outputText) return SAFE_REFUSAL_BIO;
 
     const parsed = parseJSON(outputText);
     if (!parsed) return ERROR_BIO;

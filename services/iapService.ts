@@ -1,9 +1,7 @@
-
 import 'cordova-plugin-purchase';
 import { Capacitor } from '@capacitor/core';
 
 // Helper to safely get the CdvPurchase object (Native or Mock)
-// We access this dynamically to ensure the native plugin has injected it into window
 const getCdvPurchase = () => {
     const native = (window as any).CdvPurchase;
     if (native) return native;
@@ -35,7 +33,6 @@ const getCdvPurchase = () => {
 
 /**
  * IN-APP PURCHASE CONFIGURATION
- * We access constants via a getter or verify existence to avoid crash on import
  */
 const getProductType = () => getCdvPurchase().ProductType.PAID_SUBSCRIPTION;
 
@@ -65,7 +62,6 @@ class IAPService {
     onError: ((msg: string) => void) | null = null;
 
     initialize(onSuccess: () => void, onError: (msg: string) => void) {
-        // ALWAYS update callbacks to ensure we use the latest closures/state from React
         this.onSuccess = onSuccess;
         this.onError = onError;
 
@@ -74,13 +70,11 @@ class IAPService {
             return;
         }
 
-        if (this.isInitialized) {
-            // Even if initialized, refreshing callbacks is key. 
-            // We might also want to trigger a refresh of products.
-            return;
-        }
+        if (this.isInitialized) return;
 
         const CdvPurchase = getCdvPurchase();
+        if (!CdvPurchase) return; // Safety check
+
         const { store, Platform } = CdvPurchase;
 
         // 1. Prepare Registration List
@@ -96,8 +90,6 @@ class IAPService {
             }
         };
 
-        // Register products for both platforms to be safe, or conditionally based on OS
-        // The plugin handles platform filtering, but being specific helps.
         if (Capacitor.getPlatform() === 'android') {
              addProduct(IAP_CONFIG.WEEKLY.androidId, IAP_CONFIG.WEEKLY.type, Platform.GOOGLE_PLAY);
              addProduct(IAP_CONFIG.MONTHLY.androidId, IAP_CONFIG.MONTHLY.type, Platform.GOOGLE_PLAY);
@@ -126,22 +118,18 @@ class IAPService {
             console.log("IAP: Transaction finished", transaction);
         });
 
-        // Track product updates to keep local cache sync
         store.when().productUpdated((product: any) => {
             console.log(`IAP: Product Updated: ${product.id} [${product.state}] CanPurchase: ${product.canPurchase}`);
             this.products = store.products;
         });
 
         store.when().updated((root: any) => {
-            // General store update
             this.products = store.products;
         });
 
         store.error((error: any) => {
             console.error('IAP Error:', error);
-            // Ignore cancel errors (user closed modal)
             if (error && error.code !== CdvPurchase.ErrorCode.PAYMENT_CANCELLED) {
-                 // Only show toast for actual errors
                  if (this.onError) this.onError(`Store Error: ${error.message}`);
             }
         });
@@ -150,7 +138,6 @@ class IAPService {
         store.initialize().then(() => {
             this.isInitialized = true;
             console.log("IAP: Store initialized");
-            // Force a refresh to pull latest prices/validity
             store.update(); 
         });
     }
@@ -171,9 +158,7 @@ class IAPService {
 
         console.log(`IAP: Attempting purchase for ${productId} (BasePlan: ${basePlanId || 'N/A'})`);
 
-        // Check if store is ready
         if (!this.isInitialized) {
-            console.warn("IAP: Store not initialized yet, attempting to update...");
             await store.update();
         }
 
@@ -182,25 +167,18 @@ class IAPService {
         if (product && product.canPurchase) {
             try {
                 if (basePlanId) {
-                    // Android Subscriptions with Base Plans
                     if (!product.offers || product.offers.length === 0) {
-                        // Fallback if offers aren't loaded yet
-                        console.log("IAP: No offers found, ordering product directly.");
                         await store.order(productId);
                         return;
                     }
 
-                    // Find specific offer
                     const offer = product.offers.find((o: any) => o.id === basePlanId || o.id.includes(basePlanId));
                     if (offer) {
-                        console.log(`IAP: Ordering offer ${offer.id}`);
                         await offer.order();
                     } else {
-                        console.warn(`IAP: Offer ${basePlanId} not found, ordering default product.`);
                         await store.order(productId);
                     }
                 } else {
-                    // iOS or Simple Android Product
                     const offer = product.getOffer();
                     if (offer) {
                          await offer.order();
@@ -213,18 +191,9 @@ class IAPService {
                 if (this.onError) this.onError(err.message || "Purchase failed");
             }
         } else {
-            // Diagnostics
-            if (!product) {
-                console.error(`IAP: Product ${productId} NOT FOUND in store. Check console for 'register' calls.`);
-            } else {
-                console.error(`IAP: Product ${productId} found but cannot purchase. State: ${product.state}, Valid: ${product.valid}`);
-            }
-            
-            // Force update for next attempt
             store.update();
-
             if (this.onError) {
-                 this.onError("Store not connected or product unavailable. Retrying connection...");
+                 this.onError("Product unavailable. Retrying connection...");
             }
         }
     }
@@ -233,9 +202,7 @@ class IAPService {
         if (!Capacitor.isNativePlatform()) return;
         const CdvPurchase = getCdvPurchase();
         try {
-            console.log("IAP: Restoring purchases...");
             await CdvPurchase.store.restore();
-            // Force update to refresh state
             await CdvPurchase.store.update();
         } catch (e) {
             console.error("IAP: Restore failed", e);
