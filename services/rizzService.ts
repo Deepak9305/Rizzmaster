@@ -3,7 +3,7 @@ import Groq from "groq-sdk";
 import { RizzResponse, BioResponse } from "../types";
 
 // Initialize Gemini Client (for image processing)
-const geminiAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+const geminiAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY || '' });
 
 // Initialize Groq Client (for text generation with Llama)
 const groq = new Groq({
