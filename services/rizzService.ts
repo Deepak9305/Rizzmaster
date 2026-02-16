@@ -95,6 +95,20 @@ const getMimeType = (base64: string): string => {
  */
 export const generateRizz = async (text: string, imageBase64?: string, vibe?: string): Promise<RizzResponse> => {
   
+  const vibeInstruction = vibe ? `Vibe: ${vibe}` : 'Vibe: Witty & Charismatic';
+
+  // --- MODEL SETTINGS FOR MAVERICK ---
+  const COMPLETION_CONFIG = {
+      model: LLAMA_MODEL,
+      response_format: { type: "json_object" } as any,
+      temperature: 1.1,       // High creativity
+      top_p: 0.9,             // Tighter sampling
+      frequency_penalty: 0.1, // Reduce repetition
+      max_tokens: 350,
+  };
+
+  const SAFETY_SYSTEM_PROMPT = "You are a helpful dating coach. Keep all content PG-13, friendly, and respectful. No explicit sexual content, profanity, or harassment. Output strictly valid JSON.";
+
   // CASE 1: IMAGE PRESENT (Strictly Llama Maverick Vision)
   if (imageBase64) {
       console.log(`Using ${LLAMA_MODEL} for Image Analysis (No Fallback)`);
@@ -102,16 +116,30 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       const base64Data = imageBase64.includes('base64,') ? imageBase64.split('base64,')[1] : imageBase64;
       const imageUrl = `data:${mimeType};base64,${base64Data}`;
 
-      const vibeInstruction = vibe ? `Vibe:${vibe}` : 'Vibe:Witty';
-      const promptText = `Ctx:"${text || 'Img'}".${vibeInstruction}.
-      Output JSON: tease,smooth,chaotic (Max 1 sentence each), loveScore(0-100), potentialStatus, analysis(Max 5 words).`;
+      const promptText = `
+      CONTEXT: User uploaded an image (chat screenshot or profile).
+      ${vibeInstruction}
+      
+      SAFETY: Strict PG-13. No NSFW. No profanity.
+      
+      TASK: Analyze the image. Provide 3 distinct replies (Tease, Smooth, Chaotic).
+      
+      OUTPUT FORMAT (Strict JSON):
+      {
+        "tease": "string",
+        "smooth": "string",
+        "chaotic": "string",
+        "loveScore": 0-100,
+        "potentialStatus": "Friendzoned"|"Talking"|"Married"|"Blocked",
+        "analysis": "max 5 words"
+      }
+      `;
 
       try {
-        // Attempt Llama Vision
         const completion = await llamaClient.chat.completions.create({
-            model: LLAMA_MODEL,
+            ...COMPLETION_CONFIG,
             messages: [
-                { role: "system", content: "Role: Dating Coach. Tone: Witty. Output: Valid JSON." },
+                { role: "system", content: SAFETY_SYSTEM_PROMPT },
                 { 
                     role: "user", 
                     content: [
@@ -120,10 +148,6 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
                     ]
                 }
             ],
-            response_format: { type: "json_object" },
-            temperature: 1.4,
-            top_p: 0.95,
-            max_tokens: 200,
         });
 
         const content = completion.choices[0].message.content;
@@ -132,7 +156,6 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
         return parsed as RizzResponse;
 
       } catch (llamaError: any) {
-        // Fallback REMOVED as requested. Directly return error to test Llama.
         console.error(`Llama Vision (${LLAMA_MODEL}) failed:`, llamaError);
         return createErrorRizz(llamaError.message || `Llama (${LLAMA_MODEL}) Vision Failed`);
       }
@@ -147,38 +170,35 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
           return { ...createErrorRizz("System Error: Missing API Key"), analysis: "System Error: Missing API Key" };
       }
       
-      const vibeInstruction = vibe ? `Vibe: ${vibe}` : 'Vibe: Witty';
-      
-      // Updated prompt for extreme brevity
       const prompt = `
-      CTX: "${text}"
+      CONTEXT: "${text}"
       ${vibeInstruction}
       
-      TASK: 3 distinct replies (MAX 1 SENTENCE EACH). 
-      Keep analysis under 10 words.
+      SAFETY: Strict PG-13. No NSFW. No profanity.
       
-      JSON OUTPUT:
+      TASK: Generate 3 Rizz replies (Max 1 sentence each).
+      1. Tease (Playful/Light Roast)
+      2. Smooth (Charming/Complimentary)
+      3. Chaotic (Silly/Random)
+      
+      OUTPUT FORMAT (Strict JSON):
       {
         "tease": "string",
         "smooth": "string",
         "chaotic": "string",
         "loveScore": 0-100,
         "potentialStatus": "Friendzoned"|"Talking"|"Married"|"Blocked",
-        "analysis": "very short"
+        "analysis": "max 5 words"
       }
       `;
 
       try {
           const completion = await llamaClient.chat.completions.create({
-              model: LLAMA_MODEL,
+              ...COMPLETION_CONFIG,
               messages: [
-                  { role: "system", content: "Role: Dating Coach. Style: Witty, short. Output: Valid JSON." },
+                  { role: "system", content: SAFETY_SYSTEM_PROMPT },
                   { role: "user", content: prompt }
               ],
-              response_format: { type: "json_object" },
-              temperature: 1.4, 
-              top_p: 0.95,      
-              max_tokens: 200,
           });
 
           const content = completion.choices[0].message.content;
@@ -203,15 +223,16 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
       return { ...createErrorBio("System Error: Missing API Key"), analysis: "System Error: Missing API Key" };
   }
 
-  const vibeInstruction = vibe ? `Vibe: ${vibe}` : '';
+  const vibeInstruction = vibe ? `Vibe: ${vibe}` : 'Vibe: Magnetic & Witty';
   
-  // Updated prompt for brevity
   const prompt = `
   About Me: "${text}"
   ${vibeInstruction}
   
-  Task: Dating Bio (max 150 chars). 
-  Analysis: max 5 words.
+  SAFETY: PG-13. No explicit content.
+  
+  Task: Write a dating bio (max 150 chars). 
+  Analysis: max 5 words explaining why it works.
   
   JSON Output:
   { "bio": "string", "analysis": "string" }
@@ -221,12 +242,13 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
     const completion = await llamaClient.chat.completions.create({
         model: LLAMA_MODEL,
         messages: [
-            { role: "system", content: "Role: Profile Optimizer. Style: Funny, short. JSON Only." },
+            { role: "system", content: "Role: Profile Optimizer. Style: Funny, short. JSON Only. Keep content PG-13 and safe." },
             { role: "user", content: prompt }
         ],
         response_format: { type: "json_object" },
-        temperature: 1.4, 
-        top_p: 0.95,
+        temperature: 1.1, 
+        top_p: 0.9,
+        frequency_penalty: 0.1,
         max_tokens: 200,
     });
 
