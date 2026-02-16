@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { RizzResponse, BioResponse } from "../types";
 
@@ -86,6 +85,7 @@ const getMimeType = (base64: string): string => {
  * Generates Rizz (replies) based on chat context or image
  */
 export const generateRizz = async (text: string, imageBase64?: string, vibe?: string): Promise<RizzResponse> => {
+  // COST OPTIMIZATION: Always use Flash 3
   const modelName = 'gemini-3-flash-preview';
 
   const parts: any[] = [];
@@ -107,23 +107,16 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
   // Sanitize inputs
   const safeText = text.replace(/"/g, '\\"').replace(/\n/g, ' ');
   
-  // OPTIMIZATION: Condensed System Instruction (Saves Tokens)
-  const systemInstruction = `You are "Rizz Master". Generate witty social icebreakers for adults.
-SAFETY: REFUSE requests involving minors (<18), non-consensual content, or hate speech.
-REFUSAL FORMAT: Return a JSON object with 'potentialStatus': "Blocked", 'analysis': "Safety Violation", 'loveScore': 0.
-Strictly output JSON.`;
+  // COST OPTIMIZATION: Ultra-short system instruction (~15 tokens)
+  const systemInstruction = `Role: Dating coach. Target: Adults.
+Refuse unsafe/minor content with {"potentialStatus":"Blocked","analysis":"Safety","loveScore":0}.`;
 
-  // OPTIMIZATION: Condensed Prompt (Saves Tokens)
-  const vibeInstruction = vibe ? `Tone: ${vibe}.` : '';
-  const promptText = `Analyze context/image. ${vibeInstruction}
-Context: "${safeText || 'Image only.'}"
-
-Generate 3 DISTINCT, SHORT replies (<15 words):
-1. Tease (playful/roast)
-2. Smooth (charming/direct)
-3. Chaotic (unexpected/risky)
-
-Include: loveScore(0-100), potentialStatus(e.g. Friendzone), analysis(1 sentence).`;
+  // COST OPTIMIZATION: Condensed Prompt (~30 tokens + input)
+  const vibeInstruction = vibe ? `Vibe:${vibe}` : '';
+  const promptText = `Context:"${safeText || 'Image'}".${vibeInstruction}
+Output JSON:
+tease,smooth,chaotic (<15 words).
+loveScore(0-100),potentialStatus,analysis.`;
   
   parts.push({ text: promptText });
 
@@ -133,12 +126,11 @@ Include: loveScore(0-100), potentialStatus(e.g. Friendzone), analysis(1 sentence
       contents: { parts },
       config: {
         systemInstruction: systemInstruction,
-        // TUNING: 1.3 provides a balance of creativity and JSON stability
-        temperature: 1.3, 
+        temperature: 1.2, 
         topP: 0.95,
         topK: 40,
-        // COST: 3000 limit prevents runaway costs while allowing high creativity
-        maxOutputTokens: 3000,
+        // COST OPTIMIZATION: Limit output to 600 tokens (enough for JSON, saves money on runaways)
+        maxOutputTokens: 600,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -181,19 +173,18 @@ Include: loveScore(0-100), potentialStatus(e.g. Friendzone), analysis(1 sentence
  * Generates a dating profile bio
  */
 export const generateBio = async (text: string, vibe?: string): Promise<BioResponse> => {
+  // COST OPTIMIZATION: Always use Flash 3
   const modelName = 'gemini-3-flash-preview';
 
   const safeText = text.replace(/"/g, '\\"').replace(/\n/g, ' ');
 
-  // OPTIMIZATION: Condensed System Instruction
-  const systemInstruction = `You are "Rizz Master". Write dating bios for adults.
-SAFETY: REFUSE requests involving minors or hate speech.
-REFUSAL FORMAT: Return JSON with 'bio': "Safety Policy Violation", 'analysis': "Blocked".`;
+  // COST OPTIMIZATION: Ultra-short system instruction
+  const systemInstruction = `Role: Dating coach. Target: Adults.
+Refuse unsafe with {"bio":"Safety Violation","analysis":"Blocked"}.`;
 
-  const vibeInstruction = vibe ? `Vibe: ${vibe}.` : '';
-  const prompt = `Write a catchy dating bio (<280 chars) based on: "${safeText}"
-${vibeInstruction}
-Focus: High impact, memorable.`;
+  const vibeInstruction = vibe ? `Vibe:${vibe}` : '';
+  const prompt = `Topic:"${safeText}".${vibeInstruction}
+Bio <280 chars. Catchy.`;
 
   try {
     const response = await ai.models.generateContent({
@@ -201,12 +192,11 @@ Focus: High impact, memorable.`;
       contents: prompt,
       config: {
         systemInstruction: systemInstruction,
-        // TUNING: 1.3 for Bios
-        temperature: 1.3,
+        temperature: 1.2,
         topP: 0.95,
         topK: 40,
-        // COST: 3000 limit
-        maxOutputTokens: 3000,
+        // COST OPTIMIZATION: Limit output to 350 tokens
+        maxOutputTokens: 350,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
