@@ -19,8 +19,8 @@ const llamaClient = new OpenAI({
 
 // Model Configuration
 const GEMINI_MODEL = 'gemini-3-flash-preview';
-// Default to Versatile for quality
-const LLAMA_MODEL = (process.env.LLAMA_MODEL_NAME || 'llama-3.3-70b-versatile'); 
+// Updated to Llama 3.1 as requested
+const LLAMA_MODEL = (process.env.LLAMA_MODEL_NAME || 'llama-3.1-70b-versatile'); 
 
 // --- FALLBACK OBJECTS ---
 const SAFE_REFUSAL_RIZZ: RizzResponse = {
