@@ -119,7 +119,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
           contents: { parts },
           config: {
             systemInstruction: `Role: Dating Coach. Tone: Witty. Keep it extremely short. Strict JSON.`,
-            temperature: 1.0, 
+            temperature: 1.4, 
             topP: 0.95,       
             maxOutputTokens: 200, // Reduced to 200
             responseMimeType: "application/json",
@@ -186,7 +186,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
                   { role: "user", content: prompt }
               ],
               response_format: { type: "json_object" },
-              temperature: 1.0, 
+              temperature: 1.4, 
               top_p: 0.95,      
               max_tokens: 200, // Reduced to 200
           });
@@ -235,7 +235,7 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
             { role: "user", content: prompt }
         ],
         response_format: { type: "json_object" },
-        temperature: 1.0, 
+        temperature: 1.4, 
         top_p: 0.95,
         max_tokens: 200, // Reduced to 200
     });
