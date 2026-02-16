@@ -4,7 +4,7 @@ import { RizzResponse, BioResponse } from "../types";
 
 // --- CLIENT INITIALIZATION ---
 
-// 1. Gemini Client (For Image/Multimodal Tasks)
+// 1. Gemini Client (Kept for reference, but fallback logic removed)
 const geminiClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY || '' });
 
 // 2. Llama Client (Via OpenAI-compatible provider like Groq, OpenRouter, or DeepInfra)
@@ -19,8 +19,8 @@ const llamaClient = new OpenAI({
 
 // Model Configuration
 const GEMINI_MODEL = 'gemini-3-flash-preview';
-// Switched to Llama 3.1 8B Instant for cost efficiency
-const LLAMA_MODEL = (process.env.LLAMA_MODEL_NAME || 'llama-3.1-8b-instant'); 
+// Using Llama 4 Maverick for Text AND Image
+const LLAMA_MODEL = (process.env.LLAMA_MODEL_NAME || 'llama-4-maverick'); 
 
 // --- FALLBACK OBJECTS ---
 const SAFE_REFUSAL_RIZZ: RizzResponse = {
@@ -95,60 +95,50 @@ const getMimeType = (base64: string): string => {
  */
 export const generateRizz = async (text: string, imageBase64?: string, vibe?: string): Promise<RizzResponse> => {
   
-  // CASE 1: IMAGE PRESENT (Use Gemini)
+  // CASE 1: IMAGE PRESENT (Strictly Llama Maverick Vision)
   if (imageBase64) {
-      console.log("Using Gemini 3 for Image Analysis");
-      const parts: any[] = [];
+      console.log(`Using ${LLAMA_MODEL} for Image Analysis (No Fallback)`);
       const mimeType = getMimeType(imageBase64);
       const base64Data = imageBase64.includes('base64,') ? imageBase64.split('base64,')[1] : imageBase64;
-          
-      parts.push({ inlineData: { mimeType: mimeType, data: base64Data } });
+      const imageUrl = `data:${mimeType};base64,${base64Data}`;
 
-      const safeText = text.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, ' ');
       const vibeInstruction = vibe ? `Vibe:${vibe}` : 'Vibe:Witty';
-      
-      // Updated prompt for extreme brevity to fit 200 tokens
-      const promptText = `Ctx:"${safeText || 'Img'}".${vibeInstruction}.
+      const promptText = `Ctx:"${text || 'Img'}".${vibeInstruction}.
       Output JSON: tease,smooth,chaotic (Max 1 sentence each), loveScore(0-100), potentialStatus, analysis(Max 5 words).`;
-      
-      parts.push({ text: promptText });
 
       try {
-        const response = await geminiClient.models.generateContent({
-          model: GEMINI_MODEL,
-          contents: { parts },
-          config: {
-            systemInstruction: `Role: Dating Coach. Tone: Witty. Keep it extremely short. Strict JSON.`,
-            temperature: 1.4, 
-            topP: 0.95,       
-            maxOutputTokens: 200, // Reduced to 200
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: Type.OBJECT,
-              properties: {
-                tease: { type: Type.STRING },
-                smooth: { type: Type.STRING },
-                chaotic: { type: Type.STRING },
-                loveScore: { type: Type.INTEGER },
-                potentialStatus: { type: Type.STRING },
-                analysis: { type: Type.STRING },
-              },
-              required: ["tease", "smooth", "chaotic", "loveScore", "potentialStatus", "analysis"]
-            }
-          }
+        // Attempt Llama Vision
+        const completion = await llamaClient.chat.completions.create({
+            model: LLAMA_MODEL,
+            messages: [
+                { role: "system", content: "Role: Dating Coach. Tone: Witty. Output: Valid JSON." },
+                { 
+                    role: "user", 
+                    content: [
+                        { type: "text", text: promptText },
+                        { type: "image_url", image_url: { url: imageUrl } }
+                    ]
+                }
+            ],
+            response_format: { type: "json_object" },
+            temperature: 1.4,
+            top_p: 0.95,
+            max_tokens: 200,
         });
 
-        const parsed = parseJSON(response.text);
-        if (!parsed || !parsed.tease) return createErrorRizz("Invalid JSON from Gemini");
+        const content = completion.choices[0].message.content;
+        const parsed = parseJSON(content);
+        if (!parsed || !parsed.tease) throw new Error("Invalid JSON from Llama Vision");
         return parsed as RizzResponse;
 
-      } catch (error: any) {
-        console.error("Gemini Image Error:", error);
-        return createErrorRizz(error.message || "Gemini API Error");
+      } catch (llamaError: any) {
+        // Fallback REMOVED as requested. Directly return error to test Llama.
+        console.error(`Llama Vision (${LLAMA_MODEL}) failed:`, llamaError);
+        return createErrorRizz(llamaError.message || `Llama (${LLAMA_MODEL}) Vision Failed`);
       }
   }
 
-  // CASE 2: TEXT ONLY (Use Llama)
+  // CASE 2: TEXT ONLY (Use Llama Maverick)
   else {
       console.log(`Using ${LLAMA_MODEL} for Text Rizz`);
 
@@ -188,7 +178,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
               response_format: { type: "json_object" },
               temperature: 1.4, 
               top_p: 0.95,      
-              max_tokens: 200, // Reduced to 200
+              max_tokens: 200,
           });
 
           const content = completion.choices[0].message.content;
@@ -237,7 +227,7 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
         response_format: { type: "json_object" },
         temperature: 1.4, 
         top_p: 0.95,
-        max_tokens: 200, // Reduced to 200
+        max_tokens: 200,
     });
 
     const content = completion.choices[0].message.content;
