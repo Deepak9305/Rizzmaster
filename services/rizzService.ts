@@ -20,7 +20,7 @@ const llamaClient = new OpenAI({
 // Model Configuration
 const GEMINI_MODEL = 'gemini-3-flash-preview';
 // Using Llama 4 Maverick for Text AND Image
-const LLAMA_MODEL = (process.env.LLAMA_MODEL_NAME || 'llama-4-maverick'); 
+const LLAMA_MODEL = (process.env.LLAMA_MODEL_NAME || 'meta-llama/llama-4-maverick-17b-128e-instruct'); 
 
 // --- FALLBACK OBJECTS ---
 const SAFE_REFUSAL_RIZZ: RizzResponse = {
