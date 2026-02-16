@@ -19,8 +19,8 @@ const llamaClient = new OpenAI({
 
 // Model Configuration
 const GEMINI_MODEL = 'gemini-3-flash-preview';
-// Updated to Llama 3.1 as requested
-const LLAMA_MODEL = (process.env.LLAMA_MODEL_NAME || 'llama-3.1-70b-versatile'); 
+// Updated to Llama 3.3 for better stability on Groq
+const LLAMA_MODEL = (process.env.LLAMA_MODEL_NAME || 'llama-3.3-70b-versatile'); 
 
 // --- FALLBACK OBJECTS ---
 const SAFE_REFUSAL_RIZZ: RizzResponse = {
@@ -32,24 +32,24 @@ const SAFE_REFUSAL_RIZZ: RizzResponse = {
   analysis: "Safety Policy Violation"
 };
 
-const ERROR_RIZZ: RizzResponse = {
-  tease: "The AI is overloaded. Please try again.",
-  smooth: "The AI is overloaded. Please try again.",
-  chaotic: "The AI is overloaded. Please try again.",
+const createErrorRizz = (msg: string): RizzResponse => ({
+  tease: "The AI encountered an error.",
+  smooth: "Please try again later.",
+  chaotic: "System hiccup.",
   loveScore: 0,
   potentialStatus: "Error",
-  analysis: "Service temporarily unavailable."
-};
+  analysis: msg.substring(0, 100) // Keep it concise for UI
+});
 
 const SAFE_REFUSAL_BIO: BioResponse = {
   bio: "I cannot generate content for that request due to safety policies.",
   analysis: "Safety Policy Violation"
 };
 
-const ERROR_BIO: BioResponse = {
+const createErrorBio = (msg: string): BioResponse => ({
   bio: "Error generating bio. Please try again.",
-  analysis: "System Error"
-};
+  analysis: msg.substring(0, 100)
+});
 
 /**
  * Clean and parse JSON from AI response
@@ -118,9 +118,9 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
           contents: { parts },
           config: {
             systemInstruction: `Role: Elite Dating Coach. Tone: Authentic, witty, high-risk/high-reward. Avoid robotic brevity or cringe cliches. Strict JSON.`,
-            temperature: 1.4, // High creativity
-            topP: 0.95,       // Stabilize high temp
-            maxOutputTokens: 1000, // Optimized to 1000
+            temperature: 1.0, // Reduced from 1.4 for stability
+            topP: 0.95,       
+            maxOutputTokens: 1000, 
             responseMimeType: "application/json",
             responseSchema: {
               type: Type.OBJECT,
@@ -138,12 +138,12 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
         });
 
         const parsed = parseJSON(response.text);
-        if (!parsed || !parsed.tease) return ERROR_RIZZ;
+        if (!parsed || !parsed.tease) return createErrorRizz("Invalid JSON from Gemini");
         return parsed as RizzResponse;
 
-      } catch (error) {
+      } catch (error: any) {
         console.error("Gemini Image Error:", error);
-        return ERROR_RIZZ;
+        return createErrorRizz(error.message || "Gemini API Error");
       }
   }
 
@@ -153,7 +153,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
 
       if (apiKey === 'dummy-key') {
           console.error("API Key missing.");
-          return { ...ERROR_RIZZ, analysis: "System Error: Missing API Key" };
+          return { ...createErrorRizz("System Error: Missing API Key"), analysis: "System Error: Missing API Key" };
       }
       
       const vibeInstruction = vibe ? `Vibe: ${vibe}` : 'Vibe: Witty';
@@ -184,19 +184,19 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
                   { role: "user", content: prompt }
               ],
               response_format: { type: "json_object" },
-              temperature: 1.4, // High Creativity
-              top_p: 0.95,      // Stability
-              max_tokens: 1000,  // Optimized to 1000
+              temperature: 1.0, // Reduced from 1.4 for stability
+              top_p: 0.95,      
+              max_tokens: 1000, 
           });
 
           const content = completion.choices[0].message.content;
           const parsed = parseJSON(content);
-          if (!parsed || !parsed.tease) return ERROR_RIZZ;
+          if (!parsed || !parsed.tease) return createErrorRizz("Invalid JSON from Llama");
           return parsed as RizzResponse;
 
-      } catch (error) {
+      } catch (error: any) {
           console.error("Llama Text Error:", error);
-          return ERROR_RIZZ;
+          return createErrorRizz(error.message || "Llama API Error");
       }
   }
 };
@@ -208,7 +208,7 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
   console.log(`Using ${LLAMA_MODEL} for Bio`);
 
   if (apiKey === 'dummy-key') {
-      return { ...ERROR_BIO, analysis: "System Error: Missing API Key" };
+      return { ...createErrorBio("System Error: Missing API Key"), analysis: "System Error: Missing API Key" };
   }
 
   const vibeInstruction = vibe ? `Vibe: ${vibe}` : '';
@@ -232,18 +232,18 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
             { role: "user", content: prompt }
         ],
         response_format: { type: "json_object" },
-        temperature: 1.4,
+        temperature: 1.0, // Reduced from 1.4 for stability
         top_p: 0.95,
-        max_tokens: 1000, // Optimized to 1000
+        max_tokens: 1000, 
     });
 
     const content = completion.choices[0].message.content;
     const parsed = parseJSON(content);
-    if (!parsed || !parsed.bio) return ERROR_BIO;
+    if (!parsed || !parsed.bio) return createErrorBio("Invalid JSON from Llama");
     return parsed as BioResponse;
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Llama Bio Error:", error);
-    return ERROR_BIO;
+    return createErrorBio(error.message || "Llama API Error");
   }
 };
