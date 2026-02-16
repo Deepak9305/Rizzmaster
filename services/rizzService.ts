@@ -129,8 +129,8 @@ loveScore(0-100),potentialStatus,analysis.`;
         temperature: 1.2, 
         topP: 0.95,
         topK: 40,
-        // COST OPTIMIZATION: Limit output to 600 tokens (enough for JSON, saves money on runaways)
-        maxOutputTokens: 600,
+        // INCREASED BUFFER: 1000 tokens prevents JSON truncation while keeping costs low
+        maxOutputTokens: 1000,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -195,8 +195,8 @@ Bio <280 chars. Catchy.`;
         temperature: 1.2,
         topP: 0.95,
         topK: 40,
-        // COST OPTIMIZATION: Limit output to 350 tokens
-        maxOutputTokens: 350,
+        // INCREASED BUFFER: 800 tokens prevents JSON truncation
+        maxOutputTokens: 800,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
