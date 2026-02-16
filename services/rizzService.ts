@@ -19,8 +19,8 @@ const llamaClient = new OpenAI({
 
 // Model Configuration
 const GEMINI_MODEL = 'gemini-3-flash-preview';
-// Updated to Llama 3.3 for better stability on Groq
-const LLAMA_MODEL = (process.env.LLAMA_MODEL_NAME || 'llama-3.3-70b-versatile'); 
+// Switched to Llama 3.1 8B Instant for cost efficiency
+const LLAMA_MODEL = (process.env.LLAMA_MODEL_NAME || 'llama-3.1-8b-instant'); 
 
 // --- FALLBACK OBJECTS ---
 const SAFE_REFUSAL_RIZZ: RizzResponse = {
