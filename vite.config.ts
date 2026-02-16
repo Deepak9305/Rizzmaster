@@ -1,4 +1,3 @@
-
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -14,8 +13,16 @@ export default defineConfig(({ mode }) => {
     base: './',
     define: {
       // Define process.env variables so they work in the client-side code
-      // This maintains compatibility with your existing service files
+      // Gemini Key
       'process.env.API_KEY': JSON.stringify(env.API_KEY),
+      
+      // Llama / OpenAI Compatible Keys
+      'process.env.GROQ_API_KEY': JSON.stringify(env.GROQ_API_KEY),
+      'process.env.LLAMA_API_KEY': JSON.stringify(env.LLAMA_API_KEY),
+      'process.env.LLAMA_BASE_URL': JSON.stringify(env.LLAMA_BASE_URL), 
+      'process.env.LLAMA_MODEL_NAME': JSON.stringify(env.LLAMA_MODEL_NAME),
+      
+      // Supabase
       'process.env.REACT_APP_SUPABASE_URL': JSON.stringify(env.REACT_APP_SUPABASE_URL),
       'process.env.REACT_APP_SUPABASE_ANON_KEY': JSON.stringify(env.REACT_APP_SUPABASE_ANON_KEY),
     },

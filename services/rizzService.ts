@@ -1,14 +1,30 @@
-import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
+import OpenAI from "openai";
 import { RizzResponse, BioResponse } from "../types";
 
-// Initialize Gemini Client
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+// --- CLIENT INITIALIZATION ---
+
+// 1. Gemini Client (For Image/Multimodal Tasks)
+const geminiClient = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+
+// 2. Llama Client (Via OpenAI-compatible provider like Groq, OpenRouter, or DeepInfra)
+// Defaults to Groq URL if not specified, as they are fastest for Llama 3
+const llamaClient = new OpenAI({ 
+    apiKey: process.env.GROQ_API_KEY || process.env.LLAMA_API_KEY || '', 
+    baseURL: process.env.LLAMA_BASE_URL || 'https://api.groq.com/openai/v1',
+    dangerouslyAllowBrowser: true 
+});
+
+// Model Configuration
+const GEMINI_MODEL = 'gemini-3-flash-preview';
+// Use environment variable for model name, default to Llama 3.3 70B (Versatile) if missing
+const LLAMA_MODEL = (process.env.LLAMA_MODEL_NAME || 'llama-3.3-70b-versatile'); 
 
 // --- FALLBACK OBJECTS ---
 const SAFE_REFUSAL_RIZZ: RizzResponse = {
-  tease: "I cannot generate content for that request due to safety guidelines. Please keep it respectful and safe.",
-  smooth: "I cannot generate content for that request due to safety guidelines. Please keep it respectful and safe.",
-  chaotic: "I cannot generate content for that request due to safety guidelines. Please keep it respectful and safe.",
+  tease: "I cannot generate content for that request due to safety guidelines.",
+  smooth: "I cannot generate content for that request due to safety guidelines.",
+  chaotic: "I cannot generate content for that request due to safety guidelines.",
   loveScore: 0,
   potentialStatus: "Blocked",
   analysis: "Safety Policy Violation"
@@ -34,20 +50,17 @@ const ERROR_BIO: BioResponse = {
 };
 
 /**
- * Clean and parse JSON from AI response, handling Markdown code blocks.
+ * Clean and parse JSON from AI response
  */
 const parseJSON = (text: string | undefined): any => {
   if (!text) return null;
   
-  // Aggressively clean markdown and whitespace
   let cleaned = text.trim();
-  
-  // Remove markdown wrapping (case insensitive, global)
+  // Remove markdown wrapping
   cleaned = cleaned.replace(/```json/gi, '').replace(/```/g, '');
-  
   cleaned = cleaned.trim();
   
-  // Locate the first '{' and last '}' to strip any preamble/postscript
+  // Repair brackets
   const firstBrace = cleaned.indexOf('{');
   const lastBrace = cleaned.lastIndexOf('}');
   
@@ -55,7 +68,6 @@ const parseJSON = (text: string | undefined): any => {
     if (lastBrace !== -1 && lastBrace > firstBrace) {
        cleaned = cleaned.substring(firstBrace, lastBrace + 1);
     } else if (lastBrace === -1) {
-       // Attempt basic repair for simple truncation (missing closing brace)
        cleaned = cleaned.substring(firstBrace) + "}";
     }
   }
@@ -68,70 +80,49 @@ const parseJSON = (text: string | undefined): any => {
   }
 };
 
-/**
- * Helper to extract mime type from base64 string
- */
 const getMimeType = (base64: string): string => {
     if (base64.startsWith('data:')) {
         const matches = base64.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,/);
-        if (matches && matches.length > 1) {
-            return matches[1];
-        }
+        if (matches && matches.length > 1) return matches[1];
     }
-    return 'image/png'; // Default fallback
+    return 'image/png';
 };
 
 /**
- * Generates Rizz (replies) based on chat context or image
+ * GENERATE RIZZ
+ * Logic: 
+ * - If Image exists -> Use Gemini (Multimodal expert)
+ * - If Text only -> Use Llama (Text expert)
  */
 export const generateRizz = async (text: string, imageBase64?: string, vibe?: string): Promise<RizzResponse> => {
-  // Always use Flash 3
-  const modelName = 'gemini-3-flash-preview';
-
-  const parts: any[] = [];
   
+  // CASE 1: IMAGE PRESENT (Use Gemini)
   if (imageBase64) {
-    const mimeType = getMimeType(imageBase64);
-    const base64Data = imageBase64.includes('base64,') 
-        ? imageBase64.split('base64,')[1] 
-        : imageBase64;
-        
-    parts.push({ 
-        inlineData: { 
-            mimeType: mimeType,
-            data: base64Data 
-        } 
-    });
-  }
+      console.log("Using Gemini 3 for Image Analysis");
+      const parts: any[] = [];
+      const mimeType = getMimeType(imageBase64);
+      const base64Data = imageBase64.includes('base64,') ? imageBase64.split('base64,')[1] : imageBase64;
+          
+      parts.push({ inlineData: { mimeType: mimeType, data: base64Data } });
 
-  // Sanitize inputs: Escape backslashes first, then quotes, replace newlines
-  const safeText = text.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, ' ');
-  
-  const systemInstruction = `Role: Dating coach. Target: Adults.
-Output STRICT JSON. No markdown. No chatter.
-Refuse unsafe/minor content with {"potentialStatus":"Blocked","analysis":"Safety","loveScore":0}.`;
+      const safeText = text.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, ' ');
+      const vibeInstruction = vibe ? `Vibe:${vibe}` : '';
+      
+      const promptText = `Context:"${safeText || 'Image'}".${vibeInstruction}
+      Generate JSON:
+      tease,smooth,chaotic (<15 words).
+      loveScore(0-100),potentialStatus,analysis.`;
+      
+      parts.push({ text: promptText });
 
-  const vibeInstruction = vibe ? `Vibe:${vibe}` : '';
-  const promptText = `Context:"${safeText || 'Image'}".${vibeInstruction}
-Generate JSON:
-tease,smooth,chaotic (<15 words).
-loveScore(0-100),potentialStatus,analysis.`;
-  
-  parts.push({ text: promptText });
-
-  // Retry logic for stability
-  for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        const response = await ai.models.generateContent({
-          model: modelName,
+        const response = await geminiClient.models.generateContent({
+          model: GEMINI_MODEL,
           contents: { parts },
           config: {
-            systemInstruction: systemInstruction,
-            temperature: 1.2, 
-            topP: 0.95,
-            topK: 40,
-            // Safe buffer to prevent truncation
-            maxOutputTokens: 2048,
+            systemInstruction: `Role: Dating coach. Target: Adults. Output STRICT JSON. Refuse unsafe content.`,
+            temperature: 1.0, 
+            maxOutputTokens: 1000,
             responseMimeType: "application/json",
             responseSchema: {
               type: Type.OBJECT,
@@ -148,80 +139,103 @@ loveScore(0-100),potentialStatus,analysis.`;
           }
         });
 
-        const outputText = response.text;
-        if (!outputText) {
-            console.warn("Empty response text received.");
-            if (attempt === 1) return SAFE_REFUSAL_RIZZ;
-            continue;
-        }
+        const parsed = parseJSON(response.text);
+        if (!parsed || !parsed.tease) return ERROR_RIZZ;
+        return parsed as RizzResponse;
 
-        const parsed = parseJSON(outputText);
-        if (parsed) {
-             // Validate keys exist
-            if (!parsed.tease || !parsed.smooth) {
-                if (attempt === 1) return ERROR_RIZZ;
-                continue;
-            }
-            return parsed as RizzResponse;
-        }
-        
-        console.warn(`Attempt ${attempt + 1} failed to parse JSON.`);
-
-      } catch (error: any) {
-        console.error("Rizz Generation Error:", error);
-        if (attempt === 1) return ERROR_RIZZ; 
+      } catch (error) {
+        console.error("Gemini Image Error:", error);
+        return ERROR_RIZZ;
       }
   }
-  return ERROR_RIZZ;
+
+  // CASE 2: TEXT ONLY (Use Llama)
+  else {
+      console.log(`Using ${LLAMA_MODEL} for Text Rizz`);
+      
+      const vibeInstruction = vibe ? `Current Vibe: ${vibe}` : 'Vibe: General/Witty';
+      const prompt = `
+      CONTEXT: "${text}"
+      ${vibeInstruction}
+
+      TASK: Generate 3 replies (tease, smooth, chaotic).
+      
+      OUTPUT FORMAT (JSON ONLY):
+      {
+        "tease": "reply string",
+        "smooth": "reply string",
+        "chaotic": "reply string",
+        "loveScore": number 0-100,
+        "potentialStatus": "Friendzoned" | "Talking" | "Married" | "Blocked",
+        "analysis": "short explanation"
+      }
+      `;
+
+      try {
+          const completion = await llamaClient.chat.completions.create({
+              model: LLAMA_MODEL,
+              messages: [
+                  { role: "system", content: "You are a world-class dating coach. You provide short, punchy, witty replies. You ALWAYS respond in valid JSON." },
+                  { role: "user", content: prompt }
+              ],
+              response_format: { type: "json_object" },
+              temperature: 1.1,
+              max_tokens: 800,
+          });
+
+          const content = completion.choices[0].message.content;
+          const parsed = parseJSON(content);
+          if (!parsed || !parsed.tease) return ERROR_RIZZ;
+          return parsed as RizzResponse;
+
+      } catch (error) {
+          console.error("Llama Text Error:", error);
+          // Optional: Fallback to Gemini if Llama fails
+          return ERROR_RIZZ;
+      }
+  }
 };
 
 /**
- * Generates a dating profile bio
+ * GENERATE BIO
+ * Always uses Llama for better creative writing text capabilities.
  */
 export const generateBio = async (text: string, vibe?: string): Promise<BioResponse> => {
-  const modelName = 'gemini-3-flash-preview';
-  const safeText = text.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, ' ');
+  console.log(`Using ${LLAMA_MODEL} for Bio`);
 
-  const systemInstruction = `Role: Dating coach. Target: Adults.
-Output STRICT JSON. No markdown.
-Refuse unsafe with {"bio":"Safety Violation","analysis":"Blocked"}.`;
-
-  const vibeInstruction = vibe ? `Vibe:${vibe}` : '';
-  const prompt = `Topic:"${safeText}".${vibeInstruction}
-Bio <280 chars. Catchy.`;
+  const vibeInstruction = vibe ? `Vibe: ${vibe}` : '';
+  const prompt = `
+  TOPIC: "${text}"
+  ${vibeInstruction}
+  
+  TASK: Write a catchy dating profile bio (under 280 chars).
+  
+  OUTPUT JSON:
+  {
+    "bio": "string",
+    "analysis": "why it works"
+  }
+  `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: modelName,
-      contents: prompt,
-      config: {
-        systemInstruction: systemInstruction,
+    const completion = await llamaClient.chat.completions.create({
+        model: LLAMA_MODEL,
+        messages: [
+            { role: "system", content: "You are an expert profile optimizer. You write short, magnetic bios. Output valid JSON." },
+            { role: "user", content: prompt }
+        ],
+        response_format: { type: "json_object" },
         temperature: 1.2,
-        topP: 0.95,
-        topK: 40,
-        maxOutputTokens: 1024,
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            bio: { type: Type.STRING },
-            analysis: { type: Type.STRING },
-          },
-          required: ["bio", "analysis"]
-        }
-      }
+        max_tokens: 600,
     });
 
-    const outputText = response.text;
-    if (!outputText) return SAFE_REFUSAL_BIO;
-
-    const parsed = parseJSON(outputText);
-    if (!parsed) return ERROR_BIO;
-
+    const content = completion.choices[0].message.content;
+    const parsed = parseJSON(content);
+    if (!parsed || !parsed.bio) return ERROR_BIO;
     return parsed as BioResponse;
 
-  } catch (error: any) {
-    console.error("Bio Generation Error:", error);
+  } catch (error) {
+    console.error("Llama Bio Error:", error);
     return ERROR_BIO;
   }
 };
