@@ -8,8 +8,6 @@ import { RizzResponse, BioResponse } from "../types";
 const geminiClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY || '' });
 
 // 2. Llama Client (Via OpenAI-compatible provider like Groq, OpenRouter, or DeepInfra)
-// Use a placeholder key ('dummy') if missing to prevent the app from crashing on startup.
-// We will check for the key's validity before making requests.
 const apiKey = process.env.GROQ_API_KEY || process.env.LLAMA_API_KEY || 'dummy-key';
 const baseURL = process.env.LLAMA_BASE_URL || 'https://api.groq.com/openai/v1';
 
@@ -21,7 +19,7 @@ const llamaClient = new OpenAI({
 
 // Model Configuration
 const GEMINI_MODEL = 'gemini-3-flash-preview';
-// Use environment variable for model name, default to Llama 3.3 70B (Versatile) if missing
+// Default to Versatile for quality, but prompt engineering will reduce cost
 const LLAMA_MODEL = (process.env.LLAMA_MODEL_NAME || 'llama-3.3-70b-versatile'); 
 
 // --- FALLBACK OBJECTS ---
@@ -94,9 +92,6 @@ const getMimeType = (base64: string): string => {
 
 /**
  * GENERATE RIZZ
- * Logic: 
- * - If Image exists -> Use Gemini (Multimodal expert)
- * - If Text only -> Use Llama (Text expert)
  */
 export const generateRizz = async (text: string, imageBase64?: string, vibe?: string): Promise<RizzResponse> => {
   
@@ -109,13 +104,12 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
           
       parts.push({ inlineData: { mimeType: mimeType, data: base64Data } });
 
+      // Optimized Prompt: Shorter = Cheaper
       const safeText = text.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, ' ');
-      const vibeInstruction = vibe ? `Vibe:${vibe}` : '';
+      const vibeInstruction = vibe ? `Vibe:${vibe}` : 'Vibe:Witty';
       
-      const promptText = `Context:"${safeText || 'Image'}".${vibeInstruction}
-      Generate JSON:
-      tease,smooth,chaotic (<15 words).
-      loveScore(0-100),potentialStatus,analysis.`;
+      const promptText = `Ctx:"${safeText || 'Img'}".${vibeInstruction}.
+      Output JSON: tease,smooth,chaotic (max 12 words ea), loveScore(0-100), potentialStatus, analysis(short).`;
       
       parts.push({ text: promptText });
 
@@ -124,9 +118,10 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
           model: GEMINI_MODEL,
           contents: { parts },
           config: {
-            systemInstruction: `Role: Dating coach. Target: Adults. Output STRICT JSON. Refuse unsafe content.`,
-            temperature: 1.0, 
-            maxOutputTokens: 1000,
+            systemInstruction: `Role: Elite Dating Coach. Tone: Bold, concise, high-risk/high-reward. Strict JSON.`,
+            temperature: 1.4, // High creativity
+            topP: 0.95,       // Stabilize high temp
+            maxOutputTokens: 600, // Reduced for cost
             responseMimeType: "application/json",
             responseSchema: {
               type: Type.OBJECT,
@@ -157,27 +152,28 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
   else {
       console.log(`Using ${LLAMA_MODEL} for Text Rizz`);
 
-      // Check for valid API key before request
       if (apiKey === 'dummy-key') {
-          console.error("GROQ_API_KEY or LLAMA_API_KEY is missing.");
+          console.error("API Key missing.");
           return { ...ERROR_RIZZ, analysis: "System Error: Missing API Key" };
       }
       
-      const vibeInstruction = vibe ? `Current Vibe: ${vibe}` : 'Vibe: General/Witty';
-      const prompt = `
-      CONTEXT: "${text}"
-      ${vibeInstruction}
-
-      TASK: Generate 3 replies (tease, smooth, chaotic).
+      const vibeInstruction = vibe ? `Vibe: ${vibe}` : 'Vibe: Witty';
       
-      OUTPUT FORMAT (JSON ONLY):
+      // Cost Optimized Prompt: Highly compressed
+      const prompt = `
+      CTX: "${text}"
+      ${vibeInstruction}
+      
+      TASK: 3 short replies (<15 words).
+      
+      JSON OUTPUT:
       {
-        "tease": "reply string",
-        "smooth": "reply string",
-        "chaotic": "reply string",
-        "loveScore": number 0-100,
-        "potentialStatus": "Friendzoned" | "Talking" | "Married" | "Blocked",
-        "analysis": "short explanation"
+        "tease": "string",
+        "smooth": "string",
+        "chaotic": "string",
+        "loveScore": 0-100,
+        "potentialStatus": "Friendzoned"|"Talking"|"Married"|"Blocked",
+        "analysis": "1 sentence"
       }
       `;
 
@@ -185,12 +181,13 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
           const completion = await llamaClient.chat.completions.create({
               model: LLAMA_MODEL,
               messages: [
-                  { role: "system", content: "You are a world-class dating coach. You provide short, punchy, witty replies. You ALWAYS respond in valid JSON." },
+                  { role: "system", content: "Role: Master Dating Coach. Style: Short, bold, human, punchy. Output: Valid JSON." },
                   { role: "user", content: prompt }
               ],
               response_format: { type: "json_object" },
-              temperature: 1.1,
-              max_tokens: 800,
+              temperature: 1.4, // High Creativity
+              top_p: 0.95,      // Stability
+              max_tokens: 450,  // Reduced for Cost
           });
 
           const content = completion.choices[0].message.content;
@@ -200,7 +197,6 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
 
       } catch (error) {
           console.error("Llama Text Error:", error);
-          // Optional: Fallback to Gemini if Llama fails
           return ERROR_RIZZ;
       }
   }
@@ -208,40 +204,38 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
 
 /**
  * GENERATE BIO
- * Always uses Llama for better creative writing text capabilities.
  */
 export const generateBio = async (text: string, vibe?: string): Promise<BioResponse> => {
   console.log(`Using ${LLAMA_MODEL} for Bio`);
 
   if (apiKey === 'dummy-key') {
-      console.error("GROQ_API_KEY or LLAMA_API_KEY is missing.");
       return { ...ERROR_BIO, analysis: "System Error: Missing API Key" };
   }
 
   const vibeInstruction = vibe ? `Vibe: ${vibe}` : '';
+  
+  // Cost Optimized Prompt
   const prompt = `
-  TOPIC: "${text}"
+  About Me: "${text}"
   ${vibeInstruction}
   
-  TASK: Write a catchy dating profile bio (under 280 chars).
+  Task: Dating App Bio (<280 chars).
   
-  OUTPUT JSON:
-  {
-    "bio": "string",
-    "analysis": "why it works"
-  }
+  JSON Output:
+  { "bio": "string", "analysis": "string" }
   `;
 
   try {
     const completion = await llamaClient.chat.completions.create({
         model: LLAMA_MODEL,
         messages: [
-            { role: "system", content: "You are an expert profile optimizer. You write short, magnetic bios. Output valid JSON." },
+            { role: "system", content: "Role: Profile Optimizer. Style: Magnetic, mysterious, funny. JSON Only." },
             { role: "user", content: prompt }
         ],
         response_format: { type: "json_object" },
-        temperature: 1.2,
-        max_tokens: 600,
+        temperature: 1.4,
+        top_p: 0.95,
+        max_tokens: 400, // Reduced for Cost
     });
 
     const content = completion.choices[0].message.content;
