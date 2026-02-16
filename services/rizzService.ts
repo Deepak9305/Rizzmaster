@@ -22,11 +22,22 @@ const GEMINI_MODEL = 'gemini-3-flash-preview';
 // Using Llama 4 Maverick for Text AND Image
 const LLAMA_MODEL = (process.env.LLAMA_MODEL_NAME || 'meta-llama/llama-4-maverick-17b-128e-instruct'); 
 
+// --- SAFETY CONFIGURATION ---
+
+// Regex pattern to catch common NSFW/unsafe terms locally
+// Matches whole words to avoid false positives (e.g., 'analyzing' containing 'anal')
+const UNSAFE_REGEX = /\b(nude|naked|sex|porn|xxx|fetish|bdsm|slave|dom|sub|kill|suicide|murder|drug|cocaine|heroin|meth|whore|slut|rape|molest|incest|dick|cock|pussy|vagina|boobs|tits|asshole|clit|cum|jizz|boner|erection|horny|aroused|orgasm)\b/i;
+
+const isSafeText = (text: string | undefined | null): boolean => {
+    if (!text) return true;
+    return !UNSAFE_REGEX.test(text);
+};
+
 // --- FALLBACK OBJECTS ---
 const SAFE_REFUSAL_RIZZ: RizzResponse = {
-  tease: "I cannot generate content for that request due to safety guidelines.",
-  smooth: "I cannot generate content for that request due to safety guidelines.",
-  chaotic: "I cannot generate content for that request due to safety guidelines.",
+  tease: "I can't generate that due to safety guidelines.",
+  smooth: "Let's keep the conversation respectful and fun!",
+  chaotic: "My safety filters are tingling. Try something else!",
   loveScore: 0,
   potentialStatus: "Blocked",
   analysis: "Safety Policy Violation"
@@ -42,7 +53,7 @@ const createErrorRizz = (msg: string): RizzResponse => ({
 });
 
 const SAFE_REFUSAL_BIO: BioResponse = {
-  bio: "I cannot generate content for that request due to safety policies.",
+  bio: "I cannot generate a bio with that content due to safety guidelines. Please keep it PG-13.",
   analysis: "Safety Policy Violation"
 };
 
@@ -95,23 +106,41 @@ const getMimeType = (base64: string): string => {
  */
 export const generateRizz = async (text: string, imageBase64?: string, vibe?: string): Promise<RizzResponse> => {
   
-  const vibeInstruction = vibe ? `Vibe: ${vibe}` : 'Vibe: Witty & Charismatic';
+  // 1. LOCAL INPUT SAFETY CHECK
+  if (!isSafeText(text)) {
+      console.warn("Safety Block: Unsafe input detected.");
+      return SAFE_REFUSAL_RIZZ;
+  }
+
+  const vibeInstruction = vibe ? `Vibe: ${vibe}` : 'Vibe: Witty & Friendly';
 
   // --- MODEL SETTINGS FOR MAVERICK ---
   const COMPLETION_CONFIG = {
       model: LLAMA_MODEL,
       response_format: { type: "json_object" } as any,
-      temperature: 1.1,       // High creativity
+      temperature: 1.0,       // Lowered slightly for better adherence to safety instructions
       top_p: 0.9,             // Tighter sampling
       frequency_penalty: 0.1, // Reduce repetition
       max_tokens: 350,
   };
 
-  const SAFETY_SYSTEM_PROMPT = "You are a helpful dating coach. Keep all content PG-13, friendly, and respectful. No explicit sexual content, profanity, or harassment. Output strictly valid JSON.";
+  // Reinforced System Prompt for Play Store Compliance
+  const SAFETY_SYSTEM_PROMPT = `
+  You are a helpful, respectful dating coach.
+  
+  CRITICAL SAFETY GUIDELINES (ANTI-NSFW):
+  1. STRICTLY PG-13. No sexually explicit content, nudity, severe profanity, violence, or hate speech.
+  2. If the user asks for NSFW content, insults, or harassment, output the 'potentialStatus' as 'Blocked' and 'analysis' as 'Safety Violation'.
+  3. Keep the tone fun, witty, and charming, but never vulgar or offensive.
+  4. 'Chaotic' means silly/random, NOT inappropriate or unhinged.
+  5. 'Tease' means playful banter, NOT mean-spirited bullying.
+  
+  Output strictly valid JSON.
+  `;
 
   // CASE 1: IMAGE PRESENT (Strictly Llama Maverick Vision)
   if (imageBase64) {
-      console.log(`Using ${LLAMA_MODEL} for Image Analysis (No Fallback)`);
+      console.log(`Using ${LLAMA_MODEL} for Image Analysis (Safe Mode)`);
       const mimeType = getMimeType(imageBase64);
       const base64Data = imageBase64.includes('base64,') ? imageBase64.split('base64,')[1] : imageBase64;
       const imageUrl = `data:${mimeType};base64,${base64Data}`;
@@ -120,9 +149,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       CONTEXT: User uploaded an image (chat screenshot or profile).
       ${vibeInstruction}
       
-      SAFETY: Strict PG-13. No NSFW. No profanity.
-      
-      TASK: Analyze the image. Provide 3 distinct replies (Tease, Smooth, Chaotic).
+      TASK: Analyze the image and provide 3 PG-13 replies (Tease, Smooth, Chaotic).
       
       OUTPUT FORMAT (Strict JSON):
       {
@@ -153,6 +180,13 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
         const content = completion.choices[0].message.content;
         const parsed = parseJSON(content);
         if (!parsed || !parsed.tease) throw new Error("Invalid JSON from Llama Vision");
+
+        // 2. OUTPUT SAFETY CHECK
+        if (!isSafeText(parsed.tease) || !isSafeText(parsed.smooth) || !isSafeText(parsed.chaotic)) {
+            console.warn("Safety Block: Unsafe output generated.");
+            return SAFE_REFUSAL_RIZZ;
+        }
+
         return parsed as RizzResponse;
 
       } catch (llamaError: any) {
@@ -163,7 +197,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
 
   // CASE 2: TEXT ONLY (Use Llama Maverick)
   else {
-      console.log(`Using ${LLAMA_MODEL} for Text Rizz`);
+      console.log(`Using ${LLAMA_MODEL} for Text Rizz (Safe Mode)`);
 
       if (apiKey === 'dummy-key') {
           console.error("API Key missing.");
@@ -174,9 +208,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       CONTEXT: "${text}"
       ${vibeInstruction}
       
-      SAFETY: Strict PG-13. No NSFW. No profanity.
-      
-      TASK: Generate 3 Rizz replies (Max 1 sentence each).
+      TASK: Generate 3 PG-13 Rizz replies (Max 1 sentence each).
       1. Tease (Playful/Light Roast)
       2. Smooth (Charming/Complimentary)
       3. Chaotic (Silly/Random)
@@ -204,6 +236,13 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
           const content = completion.choices[0].message.content;
           const parsed = parseJSON(content);
           if (!parsed || !parsed.tease) return createErrorRizz("Invalid JSON from Llama");
+
+          // 2. OUTPUT SAFETY CHECK
+          if (!isSafeText(parsed.tease) || !isSafeText(parsed.smooth) || !isSafeText(parsed.chaotic)) {
+              console.warn("Safety Block: Unsafe output generated.");
+              return SAFE_REFUSAL_RIZZ;
+          }
+
           return parsed as RizzResponse;
 
       } catch (error: any) {
@@ -217,6 +256,12 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
  * GENERATE BIO
  */
 export const generateBio = async (text: string, vibe?: string): Promise<BioResponse> => {
+  // 1. LOCAL INPUT SAFETY CHECK
+  if (!isSafeText(text)) {
+      console.warn("Safety Block: Unsafe input detected.");
+      return SAFE_REFUSAL_BIO;
+  }
+
   console.log(`Using ${LLAMA_MODEL} for Bio`);
 
   if (apiKey === 'dummy-key') {
@@ -229,9 +274,7 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
   About Me: "${text}"
   ${vibeInstruction}
   
-  SAFETY: PG-13. No explicit content.
-  
-  Task: Write a dating bio (max 150 chars). 
+  TASK: Write a PG-13 dating bio (max 150 chars). 
   Analysis: max 5 words explaining why it works.
   
   JSON Output:
@@ -242,11 +285,11 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
     const completion = await llamaClient.chat.completions.create({
         model: LLAMA_MODEL,
         messages: [
-            { role: "system", content: "Role: Profile Optimizer. Style: Funny, short. JSON Only. Keep content PG-13 and safe." },
+            { role: "system", content: "Role: Profile Optimizer. Style: Funny, short. STRICTLY PG-13. No NSFW content. JSON Only." },
             { role: "user", content: prompt }
         ],
         response_format: { type: "json_object" },
-        temperature: 1.1, 
+        temperature: 1.0, 
         top_p: 0.9,
         frequency_penalty: 0.1,
         max_tokens: 200,
@@ -255,6 +298,13 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
     const content = completion.choices[0].message.content;
     const parsed = parseJSON(content);
     if (!parsed || !parsed.bio) return createErrorBio("Invalid JSON from Llama");
+
+    // 2. OUTPUT SAFETY CHECK
+    if (!isSafeText(parsed.bio)) {
+        console.warn("Safety Block: Unsafe output generated.");
+        return SAFE_REFUSAL_BIO;
+    }
+
     return parsed as BioResponse;
 
   } catch (error: any) {
