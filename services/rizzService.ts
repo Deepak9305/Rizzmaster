@@ -120,7 +120,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
             systemInstruction: `Role: Elite Dating Coach. Tone: Authentic, witty, high-risk/high-reward. Avoid robotic brevity or cringe cliches. Strict JSON.`,
             temperature: 1.4, // High creativity
             topP: 0.95,       // Stabilize high temp
-            maxOutputTokens: 800, // Optimized to 800
+            maxOutputTokens: 600, // Optimized to 600
             responseMimeType: "application/json",
             responseSchema: {
               type: Type.OBJECT,
@@ -186,7 +186,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
               response_format: { type: "json_object" },
               temperature: 1.4, // High Creativity
               top_p: 0.95,      // Stability
-              max_tokens: 800,  // Optimized to 800
+              max_tokens: 600,  // Optimized to 600
           });
 
           const content = completion.choices[0].message.content;
@@ -234,7 +234,7 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
         response_format: { type: "json_object" },
         temperature: 1.4,
         top_p: 0.95,
-        max_tokens: 800, // Optimized to 800
+        max_tokens: 600, // Optimized to 600
     });
 
     const content = completion.choices[0].message.content;
