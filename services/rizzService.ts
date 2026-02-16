@@ -1,14 +1,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import Groq from "groq-sdk";
 import { RizzResponse, BioResponse } from "../types";
 
-// Initialize Gemini Client (for image processing)
-const geminiAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY || '' });
-
-// Initialize Groq Client (for text generation with Llama)
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY || ''
-});
+// Initialize Gemini Client
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
 // --- FALLBACK OBJECTS ---
 const SAFE_REFUSAL_RIZZ: RizzResponse = {
@@ -44,24 +38,24 @@ const ERROR_BIO: BioResponse = {
  */
 const parseJSON = (text: string | undefined): any => {
   if (!text) return null;
-
+  
   // Aggressively clean markdown and whitespace
   let cleaned = text.trim();
-
+  
   // Remove markdown wrapping
   // Handles ```json \n { ... } \n ``` or just ``` { ... } ```
   cleaned = cleaned.replace(/^```(json)?/i, '').replace(/```$/, '');
-
+  
   // Locate the first '{' and last '}' to strip any preamble/postscript
   const firstBrace = cleaned.indexOf('{');
   const lastBrace = cleaned.lastIndexOf('}');
-
+  
   if (firstBrace !== -1) {
     if (lastBrace !== -1 && lastBrace > firstBrace) {
-      cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+       cleaned = cleaned.substring(firstBrace, lastBrace + 1);
     } else if (lastBrace === -1) {
-      // Attempt basic repair for simple truncation (missing closing brace)
-      cleaned = cleaned.substring(firstBrace) + "}";
+       // Attempt basic repair for simple truncation (missing closing brace)
+       cleaned = cleaned.substring(firstBrace) + "}";
     }
   }
 
@@ -78,146 +72,100 @@ const parseJSON = (text: string | undefined): any => {
  * Helper to extract mime type from base64 string
  */
 const getMimeType = (base64: string): string => {
-  if (base64.startsWith('data:')) {
-    const matches = base64.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,/);
-    if (matches && matches.length > 1) {
-      return matches[1];
+    if (base64.startsWith('data:')) {
+        const matches = base64.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,/);
+        if (matches && matches.length > 1) {
+            return matches[1];
+        }
     }
-  }
-  return 'image/png'; // Default fallback
+    return 'image/png'; // Default fallback
 };
 
 /**
  * Generates Rizz (replies) based on chat context or image
  */
 export const generateRizz = async (text: string, imageBase64?: string, vibe?: string): Promise<RizzResponse> => {
-  // MODEL ROUTING: Gemini 3 Flash for images, Llama Maverick 4 for text-only
-  const useGemini = !!imageBase64;
+  // COST OPTIMIZATION: Always use Flash 3
+  const modelName = 'gemini-3-flash-preview';
+
+  const parts: any[] = [];
+  
+  if (imageBase64) {
+    const mimeType = getMimeType(imageBase64);
+    const base64Data = imageBase64.includes('base64,') 
+        ? imageBase64.split('base64,')[1] 
+        : imageBase64;
+        
+    parts.push({ 
+        inlineData: { 
+            mimeType: mimeType,
+            data: base64Data 
+        } 
+    });
+  }
 
   // Sanitize inputs
   const safeText = text.replace(/"/g, '\\"').replace(/\n/g, ' ');
-
-  try {
-    if (useGemini) {
-      // === GEMINI PATH (Image Processing) ===
-      const parts: any[] = [];
-
-      if (imageBase64) {
-        const mimeType = getMimeType(imageBase64);
-        const base64Data = imageBase64.includes('base64,')
-          ? imageBase64.split('base64,')[1]
-          : imageBase64;
-
-        parts.push({
-          inlineData: {
-            mimeType: mimeType,
-            data: base64Data
-          }
-        });
-      }
-
-      const systemInstruction = `Role: Dating coach. Target: Adults.
+  
+  // COST OPTIMIZATION: Ultra-short system instruction (~15 tokens)
+  const systemInstruction = `Role: Dating coach. Target: Adults.
 Refuse unsafe/minor content with {"potentialStatus":"Blocked","analysis":"Safety","loveScore":0}.`;
 
-      const vibeInstruction = vibe ? `Vibe:${vibe}` : '';
-      const promptText = `Context:"${safeText || 'Image'}".${vibeInstruction}
+  // COST OPTIMIZATION: Condensed Prompt (~30 tokens + input)
+  const vibeInstruction = vibe ? `Vibe:${vibe}` : '';
+  const promptText = `Context:"${safeText || 'Image'}".${vibeInstruction}
 Output JSON:
 tease,smooth,chaotic (<15 words).
 loveScore(0-100),potentialStatus,analysis.`;
+  
+  parts.push({ text: promptText });
 
-      parts.push({ text: promptText });
-
-      const response = await geminiAI.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: { parts },
-        config: {
-          systemInstruction: systemInstruction,
-          temperature: 1.2,
-          topP: 0.95,
-          topK: 40,
-          maxOutputTokens: 1000,
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              tease: { type: Type.STRING },
-              smooth: { type: Type.STRING },
-              chaotic: { type: Type.STRING },
-              loveScore: { type: Type.INTEGER },
-              potentialStatus: { type: Type.STRING },
-              analysis: { type: Type.STRING },
-            },
-            required: ["tease", "smooth", "chaotic", "loveScore", "potentialStatus", "analysis"]
-          }
+  try {
+    const response = await ai.models.generateContent({
+      model: modelName,
+      contents: { parts },
+      config: {
+        systemInstruction: systemInstruction,
+        temperature: 1.2, 
+        topP: 0.95,
+        topK: 40,
+        // INCREASED BUFFER: 1000 tokens prevents JSON truncation while keeping costs low
+        maxOutputTokens: 1000,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            tease: { type: Type.STRING },
+            smooth: { type: Type.STRING },
+            chaotic: { type: Type.STRING },
+            loveScore: { type: Type.INTEGER },
+            potentialStatus: { type: Type.STRING },
+            analysis: { type: Type.STRING },
+          },
+          required: ["tease", "smooth", "chaotic", "loveScore", "potentialStatus", "analysis"]
         }
-      });
+      }
+    });
 
-      const outputText = response.text;
-      if (!outputText) {
+    const outputText = response.text;
+    if (!outputText) {
         console.warn("Empty response text received (likely safety block). Returning refusal.");
         return SAFE_REFUSAL_RIZZ;
-      }
-
-      const parsed = parseJSON(outputText);
-      if (!parsed) return ERROR_RIZZ;
-
-      // Validate keys exist to prevent blank UI
-      if (!parsed.tease || !parsed.smooth) {
-        return ERROR_RIZZ;
-      }
-
-      return parsed as RizzResponse;
-
-    } else {
-      // === GROQ PATH (Text-Only with Llama) ===
-      const vibeInstruction = vibe ? `Vibe: ${vibe}` : '';
-      const systemPrompt = `You are a dating coach for adults. Generate rizz lines (flirty responses).
-Refuse unsafe/minor content with {"potentialStatus":"Blocked","analysis":"Safety","loveScore":0}.
-
-Output ONLY valid JSON with this exact structure:
-{
-  "tease": "playful line (<15 words)",
-  "smooth": "charming line (<15 words)",
-  "chaotic": "bold line (<15 words)",
-  "loveScore": 0-100,
-  "potentialStatus": "status",
-  "analysis": "brief analysis"
-}`;
-
-      const userPrompt = `Context: "${safeText}". ${vibeInstruction}
-Generate rizz lines as JSON.`;
-
-      const completion = await groq.chat.completions.create({
-        model: "llama-4-maverick",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
-        ],
-        temperature: 1.2,
-        max_tokens: 1000,
-        response_format: { type: "json_object" }
-      });
-
-      const outputText = completion.choices[0]?.message?.content;
-      if (!outputText) {
-        console.warn("Empty response from Groq");
-        return ERROR_RIZZ;
-      }
-
-      const parsed = parseJSON(outputText);
-      if (!parsed) return ERROR_RIZZ;
-
-      // Validate keys exist to prevent blank UI
-      if (!parsed.tease || !parsed.smooth) {
-        return ERROR_RIZZ;
-      }
-
-      return parsed as RizzResponse;
     }
+
+    const parsed = parseJSON(outputText);
+    if (!parsed) return ERROR_RIZZ;
+    
+    // Validate keys exist to prevent blank UI
+    if (!parsed.tease || !parsed.smooth) {
+        return ERROR_RIZZ;
+    }
+
+    return parsed as RizzResponse;
 
   } catch (error: any) {
     console.error("Rizz Generation Error:", error);
-    return ERROR_RIZZ;
+    return ERROR_RIZZ; 
   }
 };
 
@@ -225,37 +173,45 @@ Generate rizz lines as JSON.`;
  * Generates a dating profile bio
  */
 export const generateBio = async (text: string, vibe?: string): Promise<BioResponse> => {
-  // MODEL ROUTING: Llama Maverick 4 for text-only generation
+  // COST OPTIMIZATION: Always use Flash 3
+  const modelName = 'gemini-3-flash-preview';
+
   const safeText = text.replace(/"/g, '\\"').replace(/\n/g, ' ');
 
-  const vibeInstruction = vibe ? `Vibe: ${vibe}` : '';
-  const systemPrompt = `You are a dating coach for adults. Generate catchy dating profile bios.
-Refuse unsafe content with {"bio":"Safety Violation","analysis":"Blocked"}.
+  // COST OPTIMIZATION: Ultra-short system instruction
+  const systemInstruction = `Role: Dating coach. Target: Adults.
+Refuse unsafe with {"bio":"Safety Violation","analysis":"Blocked"}.`;
 
-Output ONLY valid JSON with this exact structure:
-{
-  "bio": "catchy bio (<280 chars)",
-  "analysis": "brief analysis"
-}`;
-
-  const userPrompt = `Topic: "${safeText}". ${vibeInstruction}
-Generate a bio as JSON.`;
+  const vibeInstruction = vibe ? `Vibe:${vibe}` : '';
+  const prompt = `Topic:"${safeText}".${vibeInstruction}
+Bio <280 chars. Catchy.`;
 
   try {
-    const completion = await groq.chat.completions.create({
-      model: "llama-4-maverick",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt }
-      ],
-      temperature: 1.2,
-      max_tokens: 800,
-      response_format: { type: "json_object" }
+    const response = await ai.models.generateContent({
+      model: modelName,
+      contents: prompt,
+      config: {
+        systemInstruction: systemInstruction,
+        temperature: 1.2,
+        topP: 0.95,
+        topK: 40,
+        // INCREASED BUFFER: 800 tokens prevents JSON truncation
+        maxOutputTokens: 800,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            bio: { type: Type.STRING },
+            analysis: { type: Type.STRING },
+          },
+          required: ["bio", "analysis"]
+        }
+      }
     });
 
-    const outputText = completion.choices[0]?.message?.content;
+    const outputText = response.text;
     if (!outputText) {
-      return SAFE_REFUSAL_BIO;
+        return SAFE_REFUSAL_BIO;
     }
 
     const parsed = parseJSON(outputText);
