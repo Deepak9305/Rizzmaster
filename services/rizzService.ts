@@ -8,10 +8,14 @@ import { RizzResponse, BioResponse } from "../types";
 const geminiClient = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
 // 2. Llama Client (Via OpenAI-compatible provider like Groq, OpenRouter, or DeepInfra)
-// Defaults to Groq URL if not specified, as they are fastest for Llama 3
+// Use a placeholder key ('dummy') if missing to prevent the app from crashing on startup.
+// We will check for the key's validity before making requests.
+const apiKey = process.env.GROQ_API_KEY || process.env.LLAMA_API_KEY || 'dummy-key';
+const baseURL = process.env.LLAMA_BASE_URL || 'https://api.groq.com/openai/v1';
+
 const llamaClient = new OpenAI({ 
-    apiKey: process.env.GROQ_API_KEY || process.env.LLAMA_API_KEY || '', 
-    baseURL: process.env.LLAMA_BASE_URL || 'https://api.groq.com/openai/v1',
+    apiKey: apiKey, 
+    baseURL: baseURL,
     dangerouslyAllowBrowser: true 
 });
 
@@ -152,6 +156,12 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
   // CASE 2: TEXT ONLY (Use Llama)
   else {
       console.log(`Using ${LLAMA_MODEL} for Text Rizz`);
+
+      // Check for valid API key before request
+      if (apiKey === 'dummy-key') {
+          console.error("GROQ_API_KEY or LLAMA_API_KEY is missing.");
+          return { ...ERROR_RIZZ, analysis: "System Error: Missing API Key" };
+      }
       
       const vibeInstruction = vibe ? `Current Vibe: ${vibe}` : 'Vibe: General/Witty';
       const prompt = `
@@ -202,6 +212,11 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
  */
 export const generateBio = async (text: string, vibe?: string): Promise<BioResponse> => {
   console.log(`Using ${LLAMA_MODEL} for Bio`);
+
+  if (apiKey === 'dummy-key') {
+      console.error("GROQ_API_KEY or LLAMA_API_KEY is missing.");
+      return { ...ERROR_BIO, analysis: "System Error: Missing API Key" };
+  }
 
   const vibeInstruction = vibe ? `Vibe: ${vibe}` : '';
   const prompt = `

@@ -14,17 +14,17 @@ export default defineConfig(({ mode }) => {
     define: {
       // Define process.env variables so they work in the client-side code
       // Gemini Key
-      'process.env.API_KEY': JSON.stringify(env.API_KEY),
+      'process.env.API_KEY': JSON.stringify(env.API_KEY || ''),
       
       // Llama / OpenAI Compatible Keys
-      'process.env.GROQ_API_KEY': JSON.stringify(env.GROQ_API_KEY),
-      'process.env.LLAMA_API_KEY': JSON.stringify(env.LLAMA_API_KEY),
-      'process.env.LLAMA_BASE_URL': JSON.stringify(env.LLAMA_BASE_URL), 
-      'process.env.LLAMA_MODEL_NAME': JSON.stringify(env.LLAMA_MODEL_NAME),
+      'process.env.GROQ_API_KEY': JSON.stringify(env.GROQ_API_KEY || ''),
+      'process.env.LLAMA_API_KEY': JSON.stringify(env.LLAMA_API_KEY || ''),
+      'process.env.LLAMA_BASE_URL': JSON.stringify(env.LLAMA_BASE_URL || ''), 
+      'process.env.LLAMA_MODEL_NAME': JSON.stringify(env.LLAMA_MODEL_NAME || ''),
       
       // Supabase
-      'process.env.REACT_APP_SUPABASE_URL': JSON.stringify(env.REACT_APP_SUPABASE_URL),
-      'process.env.REACT_APP_SUPABASE_ANON_KEY': JSON.stringify(env.REACT_APP_SUPABASE_ANON_KEY),
+      'process.env.REACT_APP_SUPABASE_URL': JSON.stringify(env.REACT_APP_SUPABASE_URL || ''),
+      'process.env.REACT_APP_SUPABASE_ANON_KEY': JSON.stringify(env.REACT_APP_SUPABASE_ANON_KEY || ''),
     },
     build: {
       chunkSizeWarningLimit: 1000,
