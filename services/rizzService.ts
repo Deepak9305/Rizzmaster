@@ -19,7 +19,7 @@ const llamaClient = new OpenAI({
 
 // Model Configuration
 const GEMINI_MODEL = 'gemini-3-flash-preview';
-// Default to Versatile for quality, but prompt engineering will reduce cost
+// Default to Versatile for quality
 const LLAMA_MODEL = (process.env.LLAMA_MODEL_NAME || 'llama-3.3-70b-versatile'); 
 
 // --- FALLBACK OBJECTS ---
@@ -104,12 +104,12 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
           
       parts.push({ inlineData: { mimeType: mimeType, data: base64Data } });
 
-      // Optimized Prompt: Shorter = Cheaper
       const safeText = text.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, ' ');
       const vibeInstruction = vibe ? `Vibe:${vibe}` : 'Vibe:Witty';
       
+      // Optimal length: Not too short, not too long.
       const promptText = `Ctx:"${safeText || 'Img'}".${vibeInstruction}.
-      Output JSON: tease,smooth,chaotic (max 12 words ea), loveScore(0-100), potentialStatus, analysis(short).`;
+      Output JSON: tease,smooth,chaotic (max 25 words ea, natural phrasing), loveScore(0-100), potentialStatus, analysis(concise).`;
       
       parts.push({ text: promptText });
 
@@ -118,10 +118,10 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
           model: GEMINI_MODEL,
           contents: { parts },
           config: {
-            systemInstruction: `Role: Elite Dating Coach. Tone: Bold, concise, high-risk/high-reward. Strict JSON.`,
+            systemInstruction: `Role: Elite Dating Coach. Tone: Authentic, witty, high-risk/high-reward. Avoid robotic brevity or cringe cliches. Strict JSON.`,
             temperature: 1.4, // High creativity
             topP: 0.95,       // Stabilize high temp
-            maxOutputTokens: 600, // Reduced for cost
+            maxOutputTokens: 800, // Balanced for cost vs quality
             responseMimeType: "application/json",
             responseSchema: {
               type: Type.OBJECT,
@@ -159,12 +159,13 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       
       const vibeInstruction = vibe ? `Vibe: ${vibe}` : 'Vibe: Witty';
       
-      // Cost Optimized Prompt: Highly compressed
+      // Optimal Prompt: Balanced constraints
       const prompt = `
       CTX: "${text}"
       ${vibeInstruction}
       
-      TASK: 3 short replies (<15 words).
+      TASK: 3 distinct replies (max 2 sentences each). 
+      Make them sound human, witty, and calibrated. Avoid being overly brief or robotic.
       
       JSON OUTPUT:
       {
@@ -173,7 +174,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
         "chaotic": "string",
         "loveScore": 0-100,
         "potentialStatus": "Friendzoned"|"Talking"|"Married"|"Blocked",
-        "analysis": "1 sentence"
+        "analysis": "1-2 sentences"
       }
       `;
 
@@ -181,13 +182,13 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
           const completion = await llamaClient.chat.completions.create({
               model: LLAMA_MODEL,
               messages: [
-                  { role: "system", content: "Role: Master Dating Coach. Style: Short, bold, human, punchy. Output: Valid JSON." },
+                  { role: "system", content: "Role: Master Dating Coach. Style: Authentic, magnetic, unpredictable. Avoid generic advice. Output: Valid JSON." },
                   { role: "user", content: prompt }
               ],
               response_format: { type: "json_object" },
               temperature: 1.4, // High Creativity
               top_p: 0.95,      // Stability
-              max_tokens: 450,  // Reduced for Cost
+              max_tokens: 650,  // Balanced for Cost/Quality
           });
 
           const content = completion.choices[0].message.content;
@@ -214,12 +215,13 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
 
   const vibeInstruction = vibe ? `Vibe: ${vibe}` : '';
   
-  // Cost Optimized Prompt
+  // Optimal Bio Prompt
   const prompt = `
   About Me: "${text}"
   ${vibeInstruction}
   
-  Task: Dating App Bio (<280 chars).
+  Task: Dating App Bio (max 280 chars).
+  Make it stand out. Not too generic.
   
   JSON Output:
   { "bio": "string", "analysis": "string" }
@@ -235,7 +237,7 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
         response_format: { type: "json_object" },
         temperature: 1.4,
         top_p: 0.95,
-        max_tokens: 400, // Reduced for Cost
+        max_tokens: 500, // Balanced
     });
 
     const content = completion.choices[0].message.content;
