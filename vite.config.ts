@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => {
       // Define process.env variables so they work in the client-side code
       // Gemini Key
       'process.env.API_KEY': JSON.stringify(env.API_KEY || ''),
+      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || ''),
       
       // Llama / OpenAI Compatible Keys
       'process.env.GROQ_API_KEY': JSON.stringify(env.GROQ_API_KEY || ''),

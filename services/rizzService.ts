@@ -5,7 +5,7 @@ import { RizzResponse, BioResponse } from "../types";
 // --- CLIENT INITIALIZATION ---
 
 // 1. Gemini Client (For Image/Multimodal Tasks)
-const geminiClient = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+const geminiClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY || '' });
 
 // 2. Llama Client (Via OpenAI-compatible provider like Groq, OpenRouter, or DeepInfra)
 // Use a placeholder key ('dummy') if missing to prevent the app from crashing on startup.
