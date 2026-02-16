@@ -39,8 +39,27 @@ const LOADING_MESSAGES = [
   "Cooking..."
 ];
 
-const VIBES_CHAT = ["Flirty", "Funny", "Savage", "Wholesome", "Nonchalant", "Intellectual", "Romantic"];
-const VIBES_BIO = ["Confident", "Chill", "Funny", "Mysterious", "Adventurous", "Direct", "Witty"];
+// --- VIBE CONFIGURATION ---
+// Define which vibes are PRO only
+const VIBES_CHAT = [
+  { label: "Flirty", isPro: false },
+  { label: "Funny", isPro: false },
+  { label: "Savage", isPro: true },      // PRO
+  { label: "Wholesome", isPro: false },
+  { label: "Nonchalant", isPro: false },
+  { label: "Intellectual", isPro: true },// PRO
+  { label: "Romantic", isPro: true }     // PRO
+];
+
+const VIBES_BIO = [
+  { label: "Confident", isPro: false },
+  { label: "Chill", isPro: false },
+  { label: "Funny", isPro: false },
+  { label: "Mysterious", isPro: true },  // PRO
+  { label: "Adventurous", isPro: false },
+  { label: "Direct", isPro: true },      // PRO
+  { label: "Witty", isPro: true }        // PRO
+];
 
 // Helper for UUID generation with fallback
 const generateUUID = () => {
@@ -633,6 +652,20 @@ const AppContent: React.FC = () => {
     }
   };
 
+  const handleVibeClick = (vibe: { label: string, isPro: boolean }) => {
+    const isPremium = profileRef.current?.is_premium;
+    
+    if (vibe.isPro && !isPremium) {
+        NativeBridge.haptic('error');
+        showToast(`'${vibe.label}' is a Pro vibe!`, 'error');
+        handleOpenPremium();
+        return;
+    }
+
+    NativeBridge.haptic('light');
+    setSelectedVibe(selectedVibe === vibe.label ? null : vibe.label);
+  };
+
   const handleGenerate = async () => {
     const currentProfile = profileRef.current;
     if (!currentProfile) return;
@@ -911,15 +944,19 @@ const AppContent: React.FC = () => {
                     <div className="flex flex-wrap gap-2">
                         {(mode === InputMode.CHAT ? VIBES_CHAT : VIBES_BIO).map((vibe) => (
                             <button 
-                                key={vibe} 
-                                onClick={() => { setSelectedVibe(selectedVibe === vibe ? null : vibe); NativeBridge.haptic('light'); }}
-                                className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all active:scale-95 ${
-                                    selectedVibe === vibe 
+                                key={vibe.label} 
+                                onClick={() => handleVibeClick(vibe)}
+                                className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all active:scale-95 flex items-center gap-1.5 ${
+                                    selectedVibe === vibe.label 
                                     ? 'bg-rose-500/20 border-rose-500 text-rose-300' 
-                                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+                                    : vibe.isPro && !profile?.is_premium 
+                                      ? 'bg-white/5 border-yellow-500/30 text-white/40 hover:bg-white/10'
+                                      : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
                                 }`}
                             >
-                                {vibe}
+                                {vibe.label}
+                                {vibe.isPro && !profile?.is_premium && <span className="text-[10px]">🔒</span>}
+                                {vibe.isPro && profile?.is_premium && selectedVibe !== vibe.label && <span className="text-[10px] text-yellow-500">👑</span>}
                             </button>
                         ))}
                     </div>
