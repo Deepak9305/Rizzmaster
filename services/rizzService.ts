@@ -52,7 +52,7 @@ const ERROR_BIO: BioResponse = {
 /**
  * Clean and parse JSON from AI response
  */
-const parseJSON = (text: string | undefined): any => {
+const parseJSON = (text: string | null | undefined): any => {
   if (!text) return null;
   
   let cleaned = text.trim();
