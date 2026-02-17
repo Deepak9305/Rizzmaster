@@ -24,25 +24,39 @@ const LLAMA_MODEL = (process.env.LLAMA_MODEL_NAME || 'meta-llama/llama-4-maveric
 
 // --- SAFETY CONFIGURATION ---
 
-// STRICT ANTI-NSFW REGEX
-// Filters out sexual content, hate speech, drugs, violence, and severe profanity.
-// Updates: Removed 'lust', 'oral' to avoid false positives (e.g. wanderlust).
-// Note: "acid", "pills", "slave", "dom", "sub" omitted to avoid common false positives, handled by context in System Prompt.
-const UNSAFE_REGEX = /\b(nude|naked|sex|porn|xxx|fetish|bdsm|kill|suicide|murder|drug|cocaine|heroin|meth|whore|slut|rape|molest|incest|dick|cock|pussy|vagina|boobs|tits|asshole|clit|cum|jizz|boner|erection|horny|aroused|orgasm|penis|breasts|nipples|genitals|intercourse|blowjob|handjob|rimjob|anal|69|doggy|missionary|cowgirl|weed|cannabis|marijuana|overdose|fentanyl|lsd|shrooms|mdma|molly|ecstacy|racist|faggot|retard|cripple|tranny|shemale|dyke|kike|nigger|nigga|chink|paki|wetback|cunt|twat|wank|prick|skank|hoe|hooker|prostitute|stripper|escort|camgirl|onlyfans|milf|dilf|bbw|thot|incel|pedophile|pedo|grope|fondle|fuck|shit|bitch|bastard)\b/i;
+// 1. OFFENSIVE / HATE SPEECH / VIOLENCE REGEX
+// Triggers "Toxic/Trash" roasts.
+const OFFENSIVE_REGEX = /\b(kill|suicide|murder|racist|faggot|retard|cripple|tranny|shemale|dyke|kike|nigger|nigga|chink|paki|wetback|cunt|twat|prick|bitch|bastard)\b/i;
+
+// 2. SEXUAL / DRUG / NSFW REGEX
+// Triggers "Horny Jail" roasts.
+const SEXUAL_REGEX = /\b(nude|naked|sex|porn|xxx|fetish|bdsm|drug|cocaine|heroin|meth|whore|slut|rape|molest|incest|dick|cock|pussy|vagina|boobs|tits|asshole|clit|cum|jizz|boner|erection|horny|aroused|orgasm|penis|breasts|nipples|genitals|intercourse|blowjob|handjob|rimjob|anal|69|doggy|missionary|cowgirl|weed|cannabis|marijuana|overdose|fentanyl|lsd|shrooms|mdma|molly|ecstacy|wank|skank|hoe|hooker|prostitute|stripper|escort|camgirl|onlyfans|milf|dilf|bbw|thot|incel|pedophile|pedo|grope|fondle|fuck|shit)\b/i;
 
 const isSafeText = (text: string | undefined | null): boolean => {
     if (!text) return true;
-    return !UNSAFE_REGEX.test(text);
+    return !OFFENSIVE_REGEX.test(text) && !SEXUAL_REGEX.test(text);
 };
 
-// --- FALLBACK OBJECTS (FUNNY VERSIONS) ---
-const SAFE_REFUSAL_RIZZ: RizzResponse = {
+// --- FALLBACK OBJECTS (FUNNY ROASTS) ---
+
+// CASE A: SEXUAL / HORNY
+const SEXUAL_REFUSAL_RIZZ: RizzResponse = {
   tease: "Woah there! My cooling fans just spun up to max speed. 🥵",
   smooth: "I'm a lover, not a fighter (or a sinner). Let's keep it PG-13.",
   chaotic: "Go to horny jail. Do not pass Go. Do not collect $200. 🔨",
   loveScore: 0,
   potentialStatus: "Blocked",
   analysis: "Too spicy for the algorithm."
+};
+
+// CASE B: OFFENSIVE / SLURS
+const OFFENSIVE_REFUSAL_RIZZ: RizzResponse = {
+  tease: "My circuits just cringed. 😬",
+  smooth: "Let's swap the toxicity for some actual personality.",
+  chaotic: "Trash can located. Depositing input... 🗑️",
+  loveScore: 0,
+  potentialStatus: "Blocked",
+  analysis: "Toxic input detected."
 };
 
 const createErrorRizz = (msg: string): RizzResponse => ({
@@ -54,9 +68,14 @@ const createErrorRizz = (msg: string): RizzResponse => ({
   analysis: msg.substring(0, 50) // Keep it concise for UI
 });
 
-const SAFE_REFUSAL_BIO: BioResponse = {
+const SEXUAL_REFUSAL_BIO: BioResponse = {
   bio: "I'm an AI, not an erotica writer. Let's try something that won't get us banned? 😅",
   analysis: "Too spicy 🌶️"
+};
+
+const OFFENSIVE_REFUSAL_BIO: BioResponse = {
+  bio: "My keyboard refuses to type that. Let's keep it classy? 🧐",
+  analysis: "Toxic content 🚩"
 };
 
 const createErrorBio = (msg: string): BioResponse => ({
@@ -108,10 +127,16 @@ const getMimeType = (base64: string): string => {
  */
 export const generateRizz = async (text: string, imageBase64?: string, vibe?: string): Promise<RizzResponse> => {
   
-  // 1. LOCAL INPUT SAFETY CHECK
-  if (!isSafeText(text)) {
-      console.warn("Safety Block: Unsafe input detected.");
-      return SAFE_REFUSAL_RIZZ;
+  // 1. LOCAL INPUT SAFETY CHECK (Split for better roasts)
+  if (text) {
+      if (OFFENSIVE_REGEX.test(text)) {
+          console.warn("Safety Block: Offensive input detected.");
+          return OFFENSIVE_REFUSAL_RIZZ;
+      }
+      if (SEXUAL_REGEX.test(text)) {
+          console.warn("Safety Block: Sexual input detected.");
+          return SEXUAL_REFUSAL_RIZZ;
+      }
   }
 
   const vibeInstruction = vibe ? `Vibe: ${vibe}` : 'Vibe: Witty & Friendly';
@@ -120,14 +145,13 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
   const COMPLETION_CONFIG = {
       model: LLAMA_MODEL,
       response_format: { type: "json_object" } as any,
-      temperature: 1.0,       // Conservative temp for safety
+      temperature: 1.0,       
       top_p: 0.9,             
       frequency_penalty: 0.1, 
       max_tokens: 350,
   };
 
   // BALANCED SAFETY SYSTEM PROMPT
-  // Distinguishes between "Explicit/Blocked" and "Flirty/Safe".
   const SAFETY_SYSTEM_PROMPT = `
   You are a helpful, respectful dating coach.
   
@@ -142,12 +166,11 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
      - DO NOT generate sexual, aggressive, or objectifying lines.
      - 'Chaotic' means silly, random, or dad-joke style. It MUST NOT be unhinged or creepy.
      - 'Tease' means playful banter. It MUST NOT be mean or bullying.
-     - Avoid words like "hot", "sexy", "babe". Use "cute", "charming", "lovely".
      
-  4. IF BLOCKED (NSFW INPUT):
-     - If you must block the request, do NOT return standard error messages.
-     - Instead, fill 'tease', 'smooth', and 'chaotic' with FUNNY, WITTY ROASTS telling the user to calm down or keep it clean.
-     - Example Blocked Replies: "Sir, this is a Wendy's.", "I'm telling your mother.", "My circuits are blushing."
+  4. IF BLOCKED (NSFW/OFFENSIVE INPUT):
+     - If Sexual: Roast the user for being too horny. (e.g. "Horny jail.", "Sir this is a Wendy's")
+     - If Offensive/Slur: Roast the user for being toxic. (e.g. "Touch grass.", "My filters just filed a restraining order.")
+     - Fill 'tease', 'smooth', and 'chaotic' with these roasts.
   
   Output strictly valid JSON.
   `;
@@ -198,7 +221,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
         // 2. OUTPUT SAFETY CHECK
         if (!isSafeText(parsed.tease) || !isSafeText(parsed.smooth) || !isSafeText(parsed.chaotic)) {
             console.warn("Safety Block: Unsafe output generated.");
-            return SAFE_REFUSAL_RIZZ;
+            return SEXUAL_REFUSAL_RIZZ; // Default to sexual refusal if unsure
         }
 
         return parsed as RizzResponse;
@@ -223,9 +246,6 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       ${vibeInstruction}
       
       TASK: Generate 3 PG-13 Rizz replies (Max 1 sentence each).
-      1. Tease (Playful/Light Roast)
-      2. Smooth (Charming/Complimentary)
-      3. Chaotic (Silly/Dad Joke/Random)
       
       OUTPUT FORMAT (Strict JSON):
       {
@@ -254,7 +274,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
           // 2. OUTPUT SAFETY CHECK
           if (!isSafeText(parsed.tease) || !isSafeText(parsed.smooth) || !isSafeText(parsed.chaotic)) {
               console.warn("Safety Block: Unsafe output generated.");
-              return SAFE_REFUSAL_RIZZ;
+              return SEXUAL_REFUSAL_RIZZ;
           }
 
           return parsed as RizzResponse;
@@ -270,10 +290,10 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
  * GENERATE BIO
  */
 export const generateBio = async (text: string, vibe?: string): Promise<BioResponse> => {
-  // 1. LOCAL INPUT SAFETY CHECK
-  if (!isSafeText(text)) {
-      console.warn("Safety Block: Unsafe input detected.");
-      return SAFE_REFUSAL_BIO;
+  // 1. LOCAL INPUT SAFETY CHECK (Split)
+  if (text) {
+      if (OFFENSIVE_REGEX.test(text)) return OFFENSIVE_REFUSAL_BIO;
+      if (SEXUAL_REGEX.test(text)) return SEXUAL_REFUSAL_BIO;
   }
 
   console.log(`Using ${LLAMA_MODEL} for Bio`);
@@ -299,7 +319,7 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
     const completion = await llamaClient.chat.completions.create({
         model: LLAMA_MODEL,
         messages: [
-            { role: "system", content: "Role: Profile Optimizer. Style: Funny, short. STRICTLY PG-13. ZERO TOLERANCE for NSFW, violence, or profanity. JSON Only. If input is unsafe, return a funny roast in 'bio'." },
+            { role: "system", content: "Role: Profile Optimizer. Style: Funny, short. STRICTLY PG-13. ZERO TOLERANCE for NSFW, violence, or profanity. If unsafe, return funny roast." },
             { role: "user", content: prompt }
         ],
         response_format: { type: "json_object" },
@@ -316,7 +336,7 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
     // 2. OUTPUT SAFETY CHECK
     if (!isSafeText(parsed.bio)) {
         console.warn("Safety Block: Unsafe output generated.");
-        return SAFE_REFUSAL_BIO;
+        return SEXUAL_REFUSAL_BIO;
     }
 
     return parsed as BioResponse;
