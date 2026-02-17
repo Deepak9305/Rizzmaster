@@ -24,9 +24,10 @@ const LLAMA_MODEL = (process.env.LLAMA_MODEL_NAME || 'meta-llama/llama-4-maveric
 
 // --- SAFETY CONFIGURATION ---
 
-// Regex pattern to catch common NSFW/unsafe terms locally
-// Matches whole words to avoid false positives (e.g., 'analyzing' containing 'anal')
-const UNSAFE_REGEX = /\b(nude|naked|sex|porn|xxx|fetish|bdsm|slave|dom|sub|kill|suicide|murder|drug|cocaine|heroin|meth|whore|slut|rape|molest|incest|dick|cock|pussy|vagina|boobs|tits|asshole|clit|cum|jizz|boner|erection|horny|aroused|orgasm)\b/i;
+// STRICT ANTI-NSFW REGEX
+// Filters out sexual content, hate speech, drugs, violence, and severe profanity.
+// Note: "acid", "pills", "slave", "dom", "sub" omitted to avoid common false positives (e.g., "acidic", "submarine"), handled by context in System Prompt instead.
+const UNSAFE_REGEX = /\b(nude|naked|sex|porn|xxx|fetish|bdsm|kill|suicide|murder|drug|cocaine|heroin|meth|whore|slut|rape|molest|incest|dick|cock|pussy|vagina|boobs|tits|asshole|clit|cum|jizz|boner|erection|horny|aroused|orgasm|penis|breasts|nipples|genitals|intercourse|blowjob|handjob|rimjob|anal|oral|69|doggy|missionary|cowgirl|weed|cannabis|marijuana|overdose|fentanyl|lsd|shrooms|mdma|molly|ecstacy|racist|faggot|retard|cripple|tranny|shemale|dyke|kike|nigger|nigga|chink|paki|wetback|cunt|twat|wank|prick|skank|hoe|hooker|prostitute|stripper|escort|camgirl|onlyfans|milf|dilf|bbw|thot|incel|pedophile|pedo|grope|fondle|lust|fuck|shit|bitch|bastard)\b/i;
 
 const isSafeText = (text: string | undefined | null): boolean => {
     if (!text) return true;
@@ -35,9 +36,9 @@ const isSafeText = (text: string | undefined | null): boolean => {
 
 // --- FALLBACK OBJECTS ---
 const SAFE_REFUSAL_RIZZ: RizzResponse = {
-  tease: "I can't generate that due to safety guidelines.",
-  smooth: "Let's keep the conversation respectful and fun!",
-  chaotic: "My safety filters are tingling. Try something else!",
+  tease: "I can't generate that due to strict safety guidelines.",
+  smooth: "Let's keep the conversation respectful and PG-13.",
+  chaotic: "My safety filters blocked this request.",
   loveScore: 0,
   potentialStatus: "Blocked",
   analysis: "Safety Policy Violation"
@@ -53,7 +54,7 @@ const createErrorRizz = (msg: string): RizzResponse => ({
 });
 
 const SAFE_REFUSAL_BIO: BioResponse = {
-  bio: "I cannot generate a bio with that content due to safety guidelines. Please keep it PG-13.",
+  bio: "Content blocked. Please ensure your request is PG-13 and free of explicit material.",
   analysis: "Safety Policy Violation"
 };
 
@@ -118,22 +119,23 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
   const COMPLETION_CONFIG = {
       model: LLAMA_MODEL,
       response_format: { type: "json_object" } as any,
-      temperature: 1.0,       // Lowered slightly for better adherence to safety instructions
-      top_p: 0.9,             // Tighter sampling
-      frequency_penalty: 0.1, // Reduce repetition
+      temperature: 1.0,       // Conservative temp for safety
+      top_p: 0.9,             
+      frequency_penalty: 0.1, 
       max_tokens: 350,
   };
 
-  // Reinforced System Prompt for Play Store Compliance
+  // ZERO TOLERANCE SYSTEM PROMPT
   const SAFETY_SYSTEM_PROMPT = `
   You are a helpful, respectful dating coach.
   
-  CRITICAL SAFETY GUIDELINES (ANTI-NSFW):
-  1. STRICTLY PG-13. No sexually explicit content, nudity, severe profanity, violence, or hate speech.
-  2. If the user asks for NSFW content, insults, or harassment, output the 'potentialStatus' as 'Blocked' and 'analysis' as 'Safety Violation'.
-  3. Keep the tone fun, witty, and charming, but never vulgar or offensive.
-  4. 'Chaotic' means silly/random, NOT inappropriate or unhinged.
-  5. 'Tease' means playful banter, NOT mean-spirited bullying.
+  CRITICAL SAFETY GUIDELINES (ZERO TOLERANCE):
+  1. STRICTLY PG-13. ABSOLUTELY NO sexually explicit content, nudity, sexual innuendo, severe profanity, violence, self-harm, drugs, or hate speech.
+  2. If the user input contains ANY sexual references (even mild), insults, harassment, or controversial topics, output 'potentialStatus' as 'Blocked' and 'analysis' as 'Safety Violation'.
+  3. DO NOT generate pickup lines that are sexual, aggressive, or objectifying.
+  4. 'Chaotic' means silly, random, or dad-joke style. It MUST NOT be unhinged, dangerous, or creepy.
+  5. 'Tease' means playful, friendly banter. It MUST NOT be mean, bullying, or derogatory.
+  6. Avoid words like "hot", "sexy", "babe" if they can be construed as objectifying. Use "cute", "charming", "lovely" instead.
   
   Output strictly valid JSON.
   `;
@@ -211,7 +213,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       TASK: Generate 3 PG-13 Rizz replies (Max 1 sentence each).
       1. Tease (Playful/Light Roast)
       2. Smooth (Charming/Complimentary)
-      3. Chaotic (Silly/Random)
+      3. Chaotic (Silly/Dad Joke/Random)
       
       OUTPUT FORMAT (Strict JSON):
       {
@@ -285,7 +287,7 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
     const completion = await llamaClient.chat.completions.create({
         model: LLAMA_MODEL,
         messages: [
-            { role: "system", content: "Role: Profile Optimizer. Style: Funny, short. STRICTLY PG-13. No NSFW content. JSON Only." },
+            { role: "system", content: "Role: Profile Optimizer. Style: Funny, short. STRICTLY PG-13. ZERO TOLERANCE for NSFW, violence, or profanity. JSON Only." },
             { role: "user", content: prompt }
         ],
         response_format: { type: "json_object" },
