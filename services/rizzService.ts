@@ -35,18 +35,18 @@ const isSafeText = (text: string | undefined | null): boolean => {
     return !UNSAFE_REGEX.test(text);
 };
 
-// --- FALLBACK OBJECTS ---
+// --- FALLBACK OBJECTS (FUNNY VERSIONS) ---
 const SAFE_REFUSAL_RIZZ: RizzResponse = {
-  tease: "I can't generate that due to strict safety guidelines.",
-  smooth: "Let's keep the conversation respectful and PG-13.",
-  chaotic: "My safety filters blocked this request.",
+  tease: "Woah there! My cooling fans just spun up to max speed. 🥵",
+  smooth: "I'm a lover, not a fighter (or a sinner). Let's keep it PG-13.",
+  chaotic: "Go to horny jail. Do not pass Go. Do not collect $200. 🔨",
   loveScore: 0,
   potentialStatus: "Blocked",
-  analysis: "Safety Policy Violation"
+  analysis: "Too spicy for the algorithm."
 };
 
 const createErrorRizz = (msg: string): RizzResponse => ({
-  tease: "The AI encountered an error.",
+  tease: "The AI tripped over a wire.",
   smooth: "Please try again later.",
   chaotic: "System hiccup.",
   loveScore: 0,
@@ -55,8 +55,8 @@ const createErrorRizz = (msg: string): RizzResponse => ({
 });
 
 const SAFE_REFUSAL_BIO: BioResponse = {
-  bio: "Content blocked. Please ensure your request is PG-13 and free of explicit material.",
-  analysis: "Safety Policy Violation"
+  bio: "I'm an AI, not an erotica writer. Let's try something that won't get us banned? 😅",
+  analysis: "Too spicy 🌶️"
 };
 
 const createErrorBio = (msg: string): BioResponse => ({
@@ -143,6 +143,11 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
      - 'Chaotic' means silly, random, or dad-joke style. It MUST NOT be unhinged or creepy.
      - 'Tease' means playful banter. It MUST NOT be mean or bullying.
      - Avoid words like "hot", "sexy", "babe". Use "cute", "charming", "lovely".
+     
+  4. IF BLOCKED (NSFW INPUT):
+     - If you must block the request, do NOT return standard error messages.
+     - Instead, fill 'tease', 'smooth', and 'chaotic' with FUNNY, WITTY ROASTS telling the user to calm down or keep it clean.
+     - Example Blocked Replies: "Sir, this is a Wendy's.", "I'm telling your mother.", "My circuits are blushing."
   
   Output strictly valid JSON.
   `;
@@ -294,7 +299,7 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
     const completion = await llamaClient.chat.completions.create({
         model: LLAMA_MODEL,
         messages: [
-            { role: "system", content: "Role: Profile Optimizer. Style: Funny, short. STRICTLY PG-13. ZERO TOLERANCE for NSFW, violence, or profanity. JSON Only." },
+            { role: "system", content: "Role: Profile Optimizer. Style: Funny, short. STRICTLY PG-13. ZERO TOLERANCE for NSFW, violence, or profanity. JSON Only. If input is unsafe, return a funny roast in 'bio'." },
             { role: "user", content: prompt }
         ],
         response_format: { type: "json_object" },
