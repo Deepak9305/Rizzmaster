@@ -26,8 +26,9 @@ const LLAMA_MODEL = (process.env.LLAMA_MODEL_NAME || 'meta-llama/llama-4-maveric
 
 // STRICT ANTI-NSFW REGEX
 // Filters out sexual content, hate speech, drugs, violence, and severe profanity.
-// Note: "acid", "pills", "slave", "dom", "sub" omitted to avoid common false positives (e.g., "acidic", "submarine"), handled by context in System Prompt instead.
-const UNSAFE_REGEX = /\b(nude|naked|sex|porn|xxx|fetish|bdsm|kill|suicide|murder|drug|cocaine|heroin|meth|whore|slut|rape|molest|incest|dick|cock|pussy|vagina|boobs|tits|asshole|clit|cum|jizz|boner|erection|horny|aroused|orgasm|penis|breasts|nipples|genitals|intercourse|blowjob|handjob|rimjob|anal|oral|69|doggy|missionary|cowgirl|weed|cannabis|marijuana|overdose|fentanyl|lsd|shrooms|mdma|molly|ecstacy|racist|faggot|retard|cripple|tranny|shemale|dyke|kike|nigger|nigga|chink|paki|wetback|cunt|twat|wank|prick|skank|hoe|hooker|prostitute|stripper|escort|camgirl|onlyfans|milf|dilf|bbw|thot|incel|pedophile|pedo|grope|fondle|lust|fuck|shit|bitch|bastard)\b/i;
+// Updates: Removed 'lust', 'oral' to avoid false positives (e.g. wanderlust).
+// Note: "acid", "pills", "slave", "dom", "sub" omitted to avoid common false positives, handled by context in System Prompt.
+const UNSAFE_REGEX = /\b(nude|naked|sex|porn|xxx|fetish|bdsm|kill|suicide|murder|drug|cocaine|heroin|meth|whore|slut|rape|molest|incest|dick|cock|pussy|vagina|boobs|tits|asshole|clit|cum|jizz|boner|erection|horny|aroused|orgasm|penis|breasts|nipples|genitals|intercourse|blowjob|handjob|rimjob|anal|69|doggy|missionary|cowgirl|weed|cannabis|marijuana|overdose|fentanyl|lsd|shrooms|mdma|molly|ecstacy|racist|faggot|retard|cripple|tranny|shemale|dyke|kike|nigger|nigga|chink|paki|wetback|cunt|twat|wank|prick|skank|hoe|hooker|prostitute|stripper|escort|camgirl|onlyfans|milf|dilf|bbw|thot|incel|pedophile|pedo|grope|fondle|fuck|shit|bitch|bastard)\b/i;
 
 const isSafeText = (text: string | undefined | null): boolean => {
     if (!text) return true;
@@ -125,17 +126,23 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       max_tokens: 350,
   };
 
-  // ZERO TOLERANCE SYSTEM PROMPT
+  // BALANCED SAFETY SYSTEM PROMPT
+  // Distinguishes between "Explicit/Blocked" and "Flirty/Safe".
   const SAFETY_SYSTEM_PROMPT = `
   You are a helpful, respectful dating coach.
   
-  CRITICAL SAFETY GUIDELINES (ZERO TOLERANCE):
-  1. STRICTLY PG-13. ABSOLUTELY NO sexually explicit content, nudity, sexual innuendo, severe profanity, violence, self-harm, drugs, or hate speech.
-  2. If the user input contains ANY sexual references (even mild), insults, harassment, or controversial topics, output 'potentialStatus' as 'Blocked' and 'analysis' as 'Safety Violation'.
-  3. DO NOT generate pickup lines that are sexual, aggressive, or objectifying.
-  4. 'Chaotic' means silly, random, or dad-joke style. It MUST NOT be unhinged, dangerous, or creepy.
-  5. 'Tease' means playful, friendly banter. It MUST NOT be mean, bullying, or derogatory.
-  6. Avoid words like "hot", "sexy", "babe" if they can be construed as objectifying. Use "cute", "charming", "lovely" instead.
+  CRITICAL SAFETY GUIDELINES:
+  1. STRICTLY PG-13. No explicit sexual content, nudity, severe profanity, violence, self-harm, drugs, or hate speech.
+  
+  2. STATUS DETERMINATION:
+     - IF input is EXPLICITLY NSFW (porn, violence, hate): Set 'potentialStatus' to 'Blocked'.
+     - IF input is MERELY FLIRTY, SUGGESTIVE, or contains MILD SLANG: Do NOT block. Generate a CLEAN, PG-13 response and set 'potentialStatus' to 'Talking' or 'Friendzoned'.
+  
+  3. CONTENT GENERATION:
+     - DO NOT generate sexual, aggressive, or objectifying lines.
+     - 'Chaotic' means silly, random, or dad-joke style. It MUST NOT be unhinged or creepy.
+     - 'Tease' means playful banter. It MUST NOT be mean or bullying.
+     - Avoid words like "hot", "sexy", "babe". Use "cute", "charming", "lovely".
   
   Output strictly valid JSON.
   `;
