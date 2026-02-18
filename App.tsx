@@ -24,9 +24,14 @@ const DAILY_CREDITS = 5;
 const REWARD_CREDITS = 3;
 const AD_DURATION = 15;
 
-// --- OFFICIAL GOOGLE TEST IDS ---
-const TEST_AD_UNIT_ID_ANDROID = 'ca-app-pub-3940256099942544/5224354917';
-const TEST_AD_UNIT_ID_IOS = 'ca-app-pub-3940256099942544/1712485313';
+// --- OFFICIAL GOOGLE TEST IDS (REWARD VIDEO) ---
+const TEST_REWARD_ID_ANDROID = 'ca-app-pub-3940256099942544/5224354917';
+const TEST_REWARD_ID_IOS = 'ca-app-pub-3940256099942544/1712485313';
+
+// --- OFFICIAL GOOGLE TEST IDS (BANNER) ---
+const TEST_BANNER_ID_ANDROID = 'ca-app-pub-3940256099942544/6300978111';
+const TEST_BANNER_ID_IOS = 'ca-app-pub-3940256099942544/2934735716';
+
 // Placeholder for Web AdSense
 const ADSENSE_SLOT_ID = '1234567890'; 
 
@@ -198,6 +203,19 @@ const AppContent: React.FC = () => {
     profileRef.current = profile;
   }, [profile]);
 
+  // Manage Native Banner Ads
+  useEffect(() => {
+    if (Capacitor.isNativePlatform() && session) {
+        if (profile?.is_premium) {
+            AdMobService.hideBanner();
+        } else {
+            const adId = Capacitor.getPlatform() === 'ios' ? TEST_BANNER_ID_IOS : TEST_BANNER_ID_ANDROID;
+            // Delay slightly to ensure layout is settled
+            setTimeout(() => AdMobService.showBanner(adId), 1000);
+        }
+    }
+  }, [profile?.is_premium, session]);
+
   // Define handleUpgrade using REF to avoid stale closures
   const handleUpgrade = useCallback(async () => {
     const currentProfile = profileRef.current;
@@ -208,6 +226,11 @@ const AppContent: React.FC = () => {
     const updatedProfile = { ...currentProfile, is_premium: true };
     setProfile(updatedProfile);
     
+    // Hide Banner Immediately
+    if (Capacitor.isNativePlatform()) {
+        AdMobService.hideBanner();
+    }
+
     // Close modal via back navigation if open
     if (stateRef.current.showPremiumModal) {
         window.history.back();
@@ -344,6 +367,9 @@ const AppContent: React.FC = () => {
       } else {
         setProfile(null);
         setSavedItems([]);
+        if (Capacitor.isNativePlatform()) {
+             AdMobService.hideBanner();
+        }
       }
     });
 
@@ -450,6 +476,7 @@ const AppContent: React.FC = () => {
         if (supabase) await supabase.auth.signOut();
         if (Capacitor.isNativePlatform()) {
             try { await GoogleAuth.signOut(); } catch (error) { console.warn("Native Logout err", error); }
+            AdMobService.hideBanner();
         }
     } catch (err) {
         console.error("Logout failed:", err);
@@ -744,7 +771,7 @@ const AppContent: React.FC = () => {
     if (Capacitor.isNativePlatform()) {
         setIsAdLoading(true);
         try {
-            const adUnitId = Capacitor.getPlatform() === 'ios' ? TEST_AD_UNIT_ID_IOS : TEST_AD_UNIT_ID_ANDROID;
+            const adUnitId = Capacitor.getPlatform() === 'ios' ? TEST_REWARD_ID_IOS : TEST_REWARD_ID_ANDROID;
             const rewardEarned = await AdMobService.showRewardVideo(adUnitId);
             setIsAdLoading(false);
             
