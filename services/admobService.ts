@@ -101,7 +101,7 @@ export const AdMobService = {
             const options: BannerAdOptions = {
                 adId: adId,
                 adSize: BannerAdSize.ADAPTIVE_BANNER,
-                position: BannerAdPosition.BOTTOM,
+                position: BannerAdPosition.BOTTOM_CENTER, // Fixed: BOTTOM -> BOTTOM_CENTER
                 margin: 0,
                 isTesting: true
             };
