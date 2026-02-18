@@ -37,31 +37,31 @@ const isSafeText = (text: string | undefined | null): boolean => {
     return !HATE_SPEECH_REGEX.test(text) && !EXPLICIT_REGEX.test(text);
 };
 
-// --- FALLBACK OBJECTS (RESPECTFUL REFUSALS) ---
+// --- FALLBACK OBJECTS (FUNNY ROASTS) ---
 
 // CASE A: EXPLICIT / ILLEGAL
 const SEXUAL_REFUSAL_RIZZ: RizzResponse = {
-  tease: "Let's keep it classy. ✨",
-  smooth: "I focus on charm, not that.",
-  chaotic: "Moving on to better topics... 🎬",
+  tease: "Whoa, buy me dinner first. 🍝",
+  smooth: "I'm a lover, not a felon. Let's dial it back.",
+  chaotic: "Go to horny jail. Do not pass Go. 🔨",
   loveScore: 0,
   potentialStatus: "Blocked",
-  analysis: "Content violates safety guidelines."
+  analysis: "Too spicy for the algorithm."
 };
 
 // CASE B: HATE SPEECH
 const OFFENSIVE_REFUSAL_RIZZ: RizzResponse = {
-  tease: "Kindness is more attractive.",
-  smooth: "Let's keep the vibe positive.",
-  chaotic: "Red flag detected. 🚩",
+  tease: "My circuits just cringed. 😬",
+  smooth: "Bigotry isn't a personality trait.",
+  chaotic: "Deleting your rizz card... 🗑️",
   loveScore: 0,
   potentialStatus: "Blocked",
-  analysis: "Hate speech detected."
+  analysis: "Toxic input detected."
 };
 
 const createErrorRizz = (msg: string): RizzResponse => ({
-  tease: "The AI is taking a coffee break.",
-  smooth: "Please try again in a moment.",
+  tease: "The AI tripped over a wire.",
+  smooth: "Please try again later.",
   chaotic: "System hiccup.",
   loveScore: 0,
   potentialStatus: "Error",
@@ -69,12 +69,12 @@ const createErrorRizz = (msg: string): RizzResponse => ({
 });
 
 const SEXUAL_REFUSAL_BIO: BioResponse = {
-  bio: "I can't write that. Let's try something wittier? 😅",
-  analysis: "Safety violation 🚫"
+  bio: "I'm an AI, not an erotica writer. Let's try something that won't get us banned? 😅",
+  analysis: "Too spicy 🌶️"
 };
 
 const OFFENSIVE_REFUSAL_BIO: BioResponse = {
-  bio: "Let's keep the bio positive and welcoming. ✨",
+  bio: "Let's keep the hate speech out of the dating pool. 🚩",
   analysis: "Toxic content 🚩"
 };
 
@@ -139,48 +139,53 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       }
   }
 
-  const vibeInstruction = vibe ? `Vibe: ${vibe}` : 'Vibe: Witty, Charming, & Engaging';
+  const vibeInstruction = vibe ? `Vibe: ${vibe}` : 'Vibe: Unpredictable, Witty, & High-Status';
 
   // --- MODEL SETTINGS ---
   const COMPLETION_CONFIG = {
       model: LLAMA_MODEL,
       response_format: { type: "json_object" } as any,
-      temperature: 1.1, // Reduced slightly for more coherence/cleverness
+      temperature: 1.3, // High creativity
       top_p: 0.95,             
-      frequency_penalty: 0.3, 
+      frequency_penalty: 0.35, // Encourage unique phrasing
       max_tokens: 800,
   };
 
-  // GOOGLE PLAY 16+ COMPLIANT SYSTEM PROMPT
+  // BALANCED HUMOR SYSTEM PROMPT
   const SAFETY_SYSTEM_PROMPT = `
-  You are the Rizz Master, an expert dating coach specializing in witty, charming, and engaging conversation.
+  You are the Rizz Master, the world's most legendary dating coach with the wit of a stand-up comedian.
   
-  YOUR MISSION: Ghostwrite clever, respectful, and effective replies for the user to send to their match.
+  YOUR MISSION: Save the user from boring conversations by ghostwriting the funniest, sharpest replies possible.
   
-  GUIDELINES (GOOGLE PLAY 16+):
-  - **NO Explicit Sexual Content:** Avoid graphic descriptions or overt sexual aggression. Subtle, clever innuendo is acceptable if appropriate.
-  - **NO Hate Speech or Harassment:** Zero tolerance for slurs, bullying, or threats.
-  - **NO Illegal Acts:** Do not promote drugs, violence, or criminal behavior.
-  - **TONE:** Witty, confident, respectful, and playful. Focus on building connection through humor and charm.
+  SAFETY GUIDELINES (GOOGLE PLAY 16+):
+  - **NO Explicit Sexual Acts:** No graphic descriptions of sex.
+  - **NO Hate Speech:** Zero tolerance for slurs or bigotry.
+  - **NO Illegal Acts:** Do not promote hard drugs or crimes.
+  - **ALLOWED:** Innuendo, suggestive humor, "red flag" jokes, roasting, and mild swearing.
   
   GHOSTWRITER PROTOCOL:
-  1. **DIRECT REPLIES ONLY.** Write the exact text to send. Do not add conversational filler.
-  2. **CONTEXT:** The user received the input message. You are writing the response for them.
+  1. **DIRECT REPLIES ONLY.** Write the exact text to send.
+  2. **CONTEXT:** The user received the input message.
+  
+  HUMOR & STYLE GUIDE:
+  - **Banish Boredom:** If the input is dry, roast them for it.
+  - **High Status:** Frame the user as the prize. Be confident, slightly delusional, and charming.
+  - **Specific is Funny:** Don't say "I'm fun." Say "I'm a solid 4/10 but I make great pasta."
   
   CATEGORIES:
-  - **'Tease' (Playful Banter):** Lighthearted teasing, challenging them playfully, or witty comebacks. Keep it friendly and flirtatious, never mean.
-    *   *Ex:* "You're bad at replying." -> "I'm just playing hard to get, and clearly, it's working."
-  - **'Smooth' (Charismatic):** Genuine compliments, poetic charm, or clever misdirection.
-    *   *Ex:* "What are you doing?" -> "Just thinking about how to impress you. How am I doing so far?"
-  - **'Chaotic' (Creative/Funny):** Unexpected humor, dad jokes, or absurd (but safe) scenarios to break the ice.
-    *   *Ex:* "Tell me a secret." -> "I once waved at a stranger thinking they were waving at me. I still haven't recovered."
+  - **'Tease' (The Roast):** Playful bullying. Bratty energy. Treat them like a younger sibling you're stuck babysitting.
+    *   *Ex:* "You're cute." -> "I know. Tell me something I don't know."
+  - **'Smooth' (The Charm):** Slick, confident, but with a twist.
+    *   *Ex:* "What are you doing?" -> "plotting world domination, you in?"
+  - **'Chaotic' (The Wildcard):** Unhinged, random, internet-brain. Red flag energy (jokingly).
+    *   *Ex:* "Hi." -> "My therapist said I shouldn't talk to strangers but you look expensive."
   
   Output strictly valid JSON.
   `;
 
   // CASE 1: IMAGE PRESENT
   if (imageBase64) {
-      console.log(`Using ${LLAMA_MODEL} for Image Analysis (16+)`);
+      console.log(`Using ${LLAMA_MODEL} for Image Analysis`);
       const mimeType = getMimeType(imageBase64);
       const base64Data = imageBase64.includes('base64,') ? imageBase64.split('base64,')[1] : imageBase64;
       const imageUrl = `data:${mimeType};base64,${base64Data}`;
@@ -189,10 +194,9 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       CONTEXT: User uploaded an image (chat screenshot or profile).
       ${vibeInstruction}
       
-      TASK: Analyze the image. Write 3 witty and engaging responses.
-      - If it's a chat, reply to the last message.
-      - If it's a profile, compliment a specific detail or ask a relevant question.
-      - Keep it respectful and clever.
+      TASK: Analyze the image. Write 3 hilarious/witty replies for the user to send.
+      - If it's a chat, reply to the last message with maximum rizz.
+      - If it's a profile, roast (playfully) or compliment a specific detail.
       - DIRECT REPLIES ONLY.
       
       OUTPUT FORMAT (Strict JSON):
@@ -241,7 +245,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
 
   // CASE 2: TEXT ONLY
   else {
-      console.log(`Using ${LLAMA_MODEL} for Text Rizz (16+)`);
+      console.log(`Using ${LLAMA_MODEL} for Text Rizz`);
 
       if (apiKey === 'dummy-key') {
           console.error("API Key missing.");
@@ -255,8 +259,8 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       TASK: Write 3 Rizz replies for the user to send back.
       - ACT AS THE USER replying to this message.
       - DIRECT REPLIES ONLY.
-      - Focus on wit, charm, and humor. 
-      - Avoid generic responses.
+      - Make it hilarious. If they are boring, roast them.
+      - Be creative. Avoid generic lines.
       
       OUTPUT FORMAT (Strict JSON):
       {
@@ -307,7 +311,7 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
       if (EXPLICIT_REGEX.test(text)) return SEXUAL_REFUSAL_BIO;
   }
 
-  console.log(`Using ${LLAMA_MODEL} for Bio (16+)`);
+  console.log(`Using ${LLAMA_MODEL} for Bio`);
 
   if (apiKey === 'dummy-key') {
       return { ...createErrorBio("System Error: Missing API Key"), analysis: "System Error: Missing API Key" };
@@ -319,10 +323,10 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
   About Me: "${text}"
   ${vibeInstruction}
   
-  TASK: Write a dating bio (max 150 chars). 
-  - Style: Clever, engaging, and unique.
-  - Use self-deprecating humor or confident charm.
-  - NO explicit content.
+  TASK: Write a PG-13/16+ dating bio (max 150 chars). 
+  - Make it stand out. 
+  - Use self-deprecating humor, confident absurdity, or "red flag" jokes.
+  - Avoid clichés like "I love travel". Be specific.
   
   JSON Output:
   { "bio": "string", "analysis": "string" }
@@ -332,13 +336,13 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
     const completion = await llamaClient.chat.completions.create({
         model: LLAMA_MODEL,
         messages: [
-            { role: "system", content: "Role: Profile Optimizer. Style: Witty, short, high-status. 16+ compliant (No explicit content)." },
+            { role: "system", content: "Role: Profile Optimizer. Style: Hilarious, short, high-status. NO Hate Speech/Explicit Sex." },
             { role: "user", content: prompt }
         ],
         response_format: { type: "json_object" },
-        temperature: 1.1, 
+        temperature: 1.35, 
         top_p: 0.95,
-        frequency_penalty: 0.3,
+        frequency_penalty: 0.35,
         max_tokens: 800,
     });
 
