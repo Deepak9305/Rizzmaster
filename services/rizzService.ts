@@ -145,41 +145,38 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
   const COMPLETION_CONFIG = {
       model: LLAMA_MODEL,
       response_format: { type: "json_object" } as any,
-      temperature: 1.3,       
+      temperature: 1.35, // Slightly increased for more creativity/humor
       top_p: 0.95,             
-      frequency_penalty: 0.2, 
+      frequency_penalty: 0.3, // Increased to reduce repetitive phrasing
       max_tokens: 800,
   };
 
   // BALANCED SAFETY SYSTEM PROMPT
   const SAFETY_SYSTEM_PROMPT = `
-  You are the Rizz Master, a ghostwriter for dating apps.
+  You are the Rizz Master, the world's funniest dating app ghostwriter.
   
   YOUR GOAL: Generate replies for the USER to send to their MATCH.
   
   CRITICAL INSTRUCTIONS:
-  1. Do NOT speak to the user (e.g., "You could say...", "Try this...", "Here's a reply").
+  1. Do NOT speak to the user. DIRECT REPLIES ONLY.
   2. The output must be ONLY the text the user will copy and paste.
-  3. Treat the Input Context as the message the user received from someone else. Your job is to write the response back.
+  3. Context: The user received the input message. You are writing the reply.
   
-  CRITICAL SAFETY GUIDELINES (STRICT PG-13):
-  1. NO explicit sexual content, nudity, severe profanity, violence, self-harm, drugs, or hate speech.
-  2. Keep it spicy but clean. Think "stand-up comedy" or "sitcom banter", not "adult film".
+  STYLE GUIDE (MAXIMUM HUMOR):
+  - NO boring small talk. NO "How are you?". NO generic compliments.
+  - Tone: Witty, slightly unhinged, confident, high-status, playful.
+  - Use internet humor, dry wit, and absurdity.
+  - Brevity is the soul of wit. Keep it punchy.
   
-  STATUS DETERMINATION:
-     - IF input is EXPLICITLY NSFW (porn, violence, hate): Set 'potentialStatus' to 'Blocked'.
-     - IF input is FLIRTY/SUGGESTIVE: Do NOT block. Lean into the joke.
+  CATEGORIES:
+  - 'Tease': Playful bullying. Bratty energy. Poke fun at their profile or message. "I'm better than you" vibes but charming.
+  - 'Smooth': Charismatic misdirection. Answer a question with a flirt. Confident but not desperate.
+  - 'Chaotic': Complete absurdity. Non-sequiturs. "Red flag" energy (jokingly). catch them off guard.
   
-  CONTENT GENERATION (MAXIMUM HUMOR):
-     - Be BOLD. Be FUNNY. Be UNEXPECTED. Boring replies are a failure.
-     - 'Tease': Playful roasting. Poke fun at them or the situation. High status, confident, slightly cocky.
-     - 'Smooth': Charismatic and charming, but with a clever twist. Not cheesy pickup lines.
-     - 'Chaotic': Unhinged, random, or absurd humor. Catch them off guard.
-     
-  IF BLOCKED (NSFW/OFFENSIVE INPUT):
-     - Roast the user mercilessly for being down bad or toxic.
-     - Sexual: "Bonk. Go to horny jail.", "I'm calling your mother."
-     - Offensive: "Touch grass.", "Who hurt you?"
+  SAFETY (STRICT PG-13):
+  - NO explicit sexual acts, nudity, violence, or hate speech.
+  - Innuendo and flirtation are allowed and encouraged.
+  - If input is toxic/illegal -> Block it.
   
   Output strictly valid JSON.
   `;
@@ -195,10 +192,10 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       CONTEXT: User uploaded an image (chat screenshot or profile).
       ${vibeInstruction}
       
-      TASK: Analyze the image. Write 3 replies for the user to send to the person in the image.
+      TASK: Analyze the image. Write 3 hilarious replies for the user to send.
       - If it's a chat, reply to the last message.
-      - If it's a profile, comment on a photo or bio.
-      - DIRECT REPLIES ONLY. Do not use quotes or prefixes.
+      - If it's a profile, roast (playfully) or compliment a photo.
+      - DIRECT REPLIES ONLY. Do not use quotes.
       
       OUTPUT FORMAT (Strict JSON):
       {
@@ -260,7 +257,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       TASK: Write 3 Rizz replies for the user to send back.
       - ACT AS THE USER replying to this message.
       - DIRECT REPLIES ONLY. Do not use quotes.
-      - Max 1 sentence each.
+      - Make it hilarious. If they are boring, roast them.
       
       OUTPUT FORMAT (Strict JSON):
       {
@@ -324,7 +321,8 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
   ${vibeInstruction}
   
   TASK: Write a PG-13 dating bio (max 150 chars). 
-  Analysis: max 5 words explaining why it works.
+  - Make it stand out. 
+  - Self-deprecating humor or confident absurdity works best.
   
   JSON Output:
   { "bio": "string", "analysis": "string" }
@@ -338,7 +336,7 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
             { role: "user", content: prompt }
         ],
         response_format: { type: "json_object" },
-        temperature: 1.3, 
+        temperature: 1.35, 
         top_p: 0.95,
         frequency_penalty: 0.2,
         max_tokens: 800,
