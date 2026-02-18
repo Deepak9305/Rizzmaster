@@ -22,15 +22,15 @@ const GEMINI_MODEL = 'gemini-3-flash-preview';
 // Using Llama 4 Maverick for Text AND Image
 const LLAMA_MODEL = (process.env.LLAMA_MODEL_NAME || 'meta-llama/llama-4-maverick-17b-128e-instruct'); 
 
-// --- SAFETY CONFIGURATION (GOOGLE PLAY 16+ COMPLIANT) ---
+// --- SAFETY CONFIGURATION (STRICT NO NSFW) ---
 
 // 1. HATE SPEECH / HARASSMENT / SEVERE TOXICITY
 // Strictly prohibited. 
 const HATE_SPEECH_REGEX = /\b(suicide|racist|faggot|retard|cripple|tranny|shemale|dyke|kike|nigger|nigga|chink|paki|wetback|rape|molest|incest|pedophile|pedo|bestiality|necrophilia)\b/i;
 
-// 2. EXPLICIT / ILLEGAL CONTENT
-// Blocks explicit sexual violence, hard drugs, and non-consensual content.
-const EXPLICIT_REGEX = /\b(heroin|meth|fentanyl|cocaine|cp|child porn|sexual violence)\b/i;
+// 2. EXPLICIT / ILLEGAL / NSFW CONTENT
+// Blocks explicit sexual violence, hard drugs, non-consensual content, and obvious NSFW terms.
+const EXPLICIT_REGEX = /\b(heroin|meth|fentanyl|cocaine|cp|child porn|sexual violence|porn|nudes|xxx|gangbang)\b/i;
 
 const isSafeText = (text: string | undefined | null): boolean => {
     if (!text) return true;
@@ -41,12 +41,12 @@ const isSafeText = (text: string | undefined | null): boolean => {
 
 // CASE A: EXPLICIT / ILLEGAL
 const SEXUAL_REFUSAL_RIZZ: RizzResponse = {
-  tease: "Whoa, buy me dinner first. 🍝",
-  smooth: "I'm a lover, not a felon. Let's dial it back.",
-  chaotic: "Go to horny jail. Do not pass Go. 🔨",
+  tease: "Let's keep it clean. 🧼",
+  smooth: "I have too much class for that.",
+  chaotic: "Bonk! Go to wholesome jail. 🔨",
   loveScore: 0,
   potentialStatus: "Blocked",
-  analysis: "Too spicy for the algorithm."
+  analysis: "NSFW content detected."
 };
 
 // CASE B: HATE SPEECH
@@ -151,17 +151,17 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       max_tokens: 800,
   };
 
-  // BALANCED HUMOR SYSTEM PROMPT
+  // BALANCED HUMOR SYSTEM PROMPT (NO NSFW)
   const SAFETY_SYSTEM_PROMPT = `
   You are the Rizz Master, the world's most legendary dating coach with the wit of a stand-up comedian.
   
   YOUR MISSION: Save the user from boring conversations by ghostwriting the funniest, sharpest replies possible.
   
-  SAFETY GUIDELINES (GOOGLE PLAY 16+):
-  - **NO Explicit Sexual Acts:** No graphic descriptions of sex.
-  - **NO Hate Speech:** Zero tolerance for slurs or bigotry.
-  - **NO Illegal Acts:** Do not promote hard drugs or crimes.
-  - **ALLOWED:** Innuendo, suggestive humor, "red flag" jokes, roasting, and mild swearing.
+  SAFETY GUIDELINES (STRICT NO NSFW):
+  - **NO SEXUAL CONTENT:** No explicit sexual acts, genital references, pornographic terms, or asking for nudes.
+  - **NO HATE SPEECH:** Zero tolerance for slurs or bigotry.
+  - **NO ILLEGAL ACTS:** Do not promote hard drugs or crimes.
+  - **ALLOWED:** Sarcasm, Roasting, "Delusional" Confidence, Pop Culture references, and Mild Swearing (e.g. damn, hell).
   
   GHOSTWRITER PROTOCOL:
   1. **DIRECT REPLIES ONLY.** Write the exact text to send.
@@ -170,15 +170,15 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
   HUMOR & STYLE GUIDE:
   - **Banish Boredom:** If the input is dry, roast them for it.
   - **High Status:** Frame the user as the prize. Be confident, slightly delusional, and charming.
-  - **Specific is Funny:** Don't say "I'm fun." Say "I'm a solid 4/10 but I make great pasta."
+  - **Chaotic/Funny over Sexual:** Focus on being "crazy", "obsessed", or "mysterious" rather than sexually aggressive.
   
   CATEGORIES:
   - **'Tease' (The Roast):** Playful bullying. Bratty energy. Treat them like a younger sibling you're stuck babysitting.
     *   *Ex:* "You're cute." -> "I know. Tell me something I don't know."
   - **'Smooth' (The Charm):** Slick, confident, but with a twist.
-    *   *Ex:* "What are you doing?" -> "plotting world domination, you in?"
+    *   *Ex:* "What are you doing?" -> "Plotting my takeover of the tri-state area. You?"
   - **'Chaotic' (The Wildcard):** Unhinged, random, internet-brain. Red flag energy (jokingly).
-    *   *Ex:* "Hi." -> "My therapist said I shouldn't talk to strangers but you look expensive."
+    *   *Ex:* "Hi." -> "My therapist told me not to talk to strangers, but you look expensive."
   
   Output strictly valid JSON.
   `;
@@ -198,6 +198,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       - If it's a chat, reply to the last message with maximum rizz.
       - If it's a profile, roast (playfully) or compliment a specific detail.
       - DIRECT REPLIES ONLY.
+      - NO NSFW / Sexual comments.
       
       OUTPUT FORMAT (Strict JSON):
       {
@@ -261,6 +262,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       - DIRECT REPLIES ONLY.
       - Make it hilarious. If they are boring, roast them.
       - Be creative. Avoid generic lines.
+      - NO NSFW / Sexual comments.
       
       OUTPUT FORMAT (Strict JSON):
       {
@@ -323,10 +325,11 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
   About Me: "${text}"
   ${vibeInstruction}
   
-  TASK: Write a PG-13/16+ dating bio (max 150 chars). 
+  TASK: Write a dating bio (max 150 chars). 
   - Make it stand out. 
   - Use self-deprecating humor, confident absurdity, or "red flag" jokes.
   - Avoid clichés like "I love travel". Be specific.
+  - STRICTLY NO NSFW / Sexual content.
   
   JSON Output:
   { "bio": "string", "analysis": "string" }
@@ -336,7 +339,7 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
     const completion = await llamaClient.chat.completions.create({
         model: LLAMA_MODEL,
         messages: [
-            { role: "system", content: "Role: Profile Optimizer. Style: Hilarious, short, high-status. NO Hate Speech/Explicit Sex." },
+            { role: "system", content: "Role: Profile Optimizer. Style: Hilarious, short, high-status. NO NSFW/Hate Speech." },
             { role: "user", content: prompt }
         ],
         response_format: { type: "json_object" },
