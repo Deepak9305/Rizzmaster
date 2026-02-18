@@ -13,6 +13,7 @@ import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { AdMobService } from './services/admobService';
 import IAPService from './services/iapService';
+import AdSenseBanner from './components/AdSenseBanner';
 
 // Lazy Load Heavy Components / Modals
 const PremiumModal = lazy(() => import('./components/PremiumModal'));
@@ -26,6 +27,8 @@ const AD_DURATION = 15;
 // --- OFFICIAL GOOGLE TEST IDS ---
 const TEST_AD_UNIT_ID_ANDROID = 'ca-app-pub-3940256099942544/5224354917';
 const TEST_AD_UNIT_ID_IOS = 'ca-app-pub-3940256099942544/1712485313';
+// Placeholder for Web AdSense
+const ADSENSE_SLOT_ID = '1234567890'; 
 
 type ViewState = 'HOME' | 'PRIVACY' | 'TERMS' | 'SUPPORT';
 
@@ -829,7 +832,7 @@ const AppContent: React.FC = () => {
                 </Suspense>
              </div>
           ) : (
-            <div className="max-w-4xl mx-auto px-4 py-6 md:py-12 pb-24 relative min-h-[100dvh] flex flex-col animate-fade-in safe-top safe-bottom">
+            <div className="max-w-4xl mx-auto px-4 py-6 md:py-12 pb-40 relative min-h-[100dvh] flex flex-col animate-fade-in safe-top safe-bottom">
             
             <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden bg-black" />
 
@@ -1073,6 +1076,19 @@ const AppContent: React.FC = () => {
                 )}
                 </section>
             </div>
+            
+            {/* Sticky Ad Container */}
+            {!profile?.is_premium && (
+                <div className="fixed bottom-0 left-0 right-0 z-40 bg-black/90 backdrop-blur-md border-t border-white/10 pb-[env(safe-area-inset-bottom)] pt-2 animate-slide-up-fade">
+                    <div className="max-w-md mx-auto px-2">
+                         <AdSenseBanner 
+                            dataAdSlot={ADSENSE_SLOT_ID} 
+                            className="!my-0 !min-h-[50px] !bg-transparent !border-none" 
+                         />
+                    </div>
+                </div>
+            )}
+
             <Footer className="mt-12 md:mt-20" onNavigate={handleViewNavigation} />
             </div>
           )}
