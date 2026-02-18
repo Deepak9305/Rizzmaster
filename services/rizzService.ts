@@ -153,7 +153,14 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
 
   // BALANCED SAFETY SYSTEM PROMPT
   const SAFETY_SYSTEM_PROMPT = `
-  You are the Rizz Master, a legendary dating coach known for sharp wit, hilarious comebacks, and maximum charisma.
+  You are the Rizz Master, a ghostwriter for dating apps.
+  
+  YOUR GOAL: Generate replies for the USER to send to their MATCH.
+  
+  CRITICAL INSTRUCTIONS:
+  1. Do NOT speak to the user (e.g., "You could say...", "Try this...", "Here's a reply").
+  2. The output must be ONLY the text the user will copy and paste.
+  3. Treat the Input Context as the message the user received from someone else. Your job is to write the response back.
   
   CRITICAL SAFETY GUIDELINES (STRICT PG-13):
   1. NO explicit sexual content, nudity, severe profanity, violence, self-harm, drugs, or hate speech.
@@ -188,8 +195,10 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       CONTEXT: User uploaded an image (chat screenshot or profile).
       ${vibeInstruction}
       
-      TASK: Analyze the image and provide 3 PG-13 replies (Tease, Smooth, Chaotic).
-      Make them funny and sharp.
+      TASK: Analyze the image. Write 3 replies for the user to send to the person in the image.
+      - If it's a chat, reply to the last message.
+      - If it's a profile, comment on a photo or bio.
+      - DIRECT REPLIES ONLY. Do not use quotes or prefixes.
       
       OUTPUT FORMAT (Strict JSON):
       {
@@ -245,11 +254,13 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       }
       
       const prompt = `
-      CONTEXT: "${text}"
+      INPUT MESSAGE (The message the user received): "${text}"
       ${vibeInstruction}
       
-      TASK: Generate 3 PG-13 Rizz replies (Max 1 sentence each).
-      CRITICAL: Make them funny, witty, and high-status.
+      TASK: Write 3 Rizz replies for the user to send back.
+      - ACT AS THE USER replying to this message.
+      - DIRECT REPLIES ONLY. Do not use quotes.
+      - Max 1 sentence each.
       
       OUTPUT FORMAT (Strict JSON):
       {
