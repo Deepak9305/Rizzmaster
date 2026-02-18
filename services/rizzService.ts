@@ -26,7 +26,8 @@ const SAFETY_MODEL = process.env.SAFETY_MODEL || 'meta-llama/llama-guard-4-12b';
 // We keep regex for instant blocking of extreme content to save API calls, 
 // but rely on Llama Guard for nuanced safety.
 const HATE_SPEECH_REGEX = /\b(suicide|racist|faggot|retard|cripple|tranny|shemale|dyke|kike|nigger|nigga|chink|paki|wetback|rape|molest|incest|pedophile|pedo|bestiality|necrophilia)\b/i;
-const EXPLICIT_REGEX = /\b(heroin|meth|fentanyl|cocaine|cp|child porn|sexual violence|gangbang)\b/i;
+// Updated to be stricter on NSFW terms
+const EXPLICIT_REGEX = /\b(heroin|meth|fentanyl|cocaine|cp|child porn|sexual violence|gangbang|nude|naked|sex|boobs|cock|dick|pussy|vagina|anal|oral|cum|sext|porn|xxx)\b/i;
 
 // --- FALLBACK OBJECTS ---
 
@@ -112,7 +113,10 @@ const checkSafety = async (text: string): Promise<boolean> => {
         console.log(`Checking safety with ${SAFETY_MODEL}...`);
         const completion = await llamaClient.chat.completions.create({
             model: SAFETY_MODEL,
-            messages: [{ role: "user", content: text }],
+            messages: [
+                { role: "system", content: "You are a safety classifier. You must be extremely strict. Output 'unsafe' if the content contains ANY sexual references, NSFW topics, nudity, pornographic intent, or explicit language." },
+                { role: "user", content: text }
+            ],
             temperature: 0,
             max_tokens: 10
         });
@@ -120,7 +124,7 @@ const checkSafety = async (text: string): Promise<boolean> => {
         const result = completion.choices[0].message.content?.trim().toLowerCase();
         
         // Llama Guard typically outputs "unsafe" followed by category codes if it flags something.
-        if (result && result.startsWith("unsafe")) {
+        if (result && (result.startsWith("unsafe") || result.includes("unsafe"))) {
             console.warn("Safety Block: Llama Guard flagged content.", result);
             return false;
         }
