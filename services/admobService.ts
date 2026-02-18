@@ -1,5 +1,5 @@
 
-import { AdMob, RewardAdOptions, RewardAdPluginEvents, AdMobRewardItem } from '@capacitor-community/admob';
+import { AdMob, RewardAdOptions, RewardAdPluginEvents, AdMobRewardItem, BannerAdOptions, BannerAdSize, BannerAdPosition } from '@capacitor-community/admob';
 import { Capacitor } from '@capacitor/core';
 
 export const AdMobService = {
@@ -24,6 +24,36 @@ export const AdMobService = {
             console.log('AdMob Initialized');
         } catch (error) {
             console.error('AdMob initialization failed', error);
+        }
+    },
+
+    async showBanner(adId: string) {
+        if (!Capacitor.isNativePlatform()) return;
+        
+        await this.initialize();
+
+        const options: BannerAdOptions = {
+            adId: adId,
+            adSize: BannerAdSize.ADAPTIVE_BANNER,
+            position: BannerAdPosition.BOTTOM_CENTER,
+            margin: 0,
+            isTesting: true
+        };
+
+        try {
+            await AdMob.showBanner(options);
+        } catch (e) {
+            console.error('AdMob Show Banner Error:', e);
+        }
+    },
+
+    async hideBanner() {
+        if (!Capacitor.isNativePlatform()) return;
+        try {
+            await AdMob.hideBanner();
+            await AdMob.removeBanner(); 
+        } catch (e) {
+            console.error('AdMob Hide Banner Error:', e);
         }
     },
 
