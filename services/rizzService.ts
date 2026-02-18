@@ -145,10 +145,10 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
   const COMPLETION_CONFIG = {
       model: LLAMA_MODEL,
       response_format: { type: "json_object" } as any,
-      temperature: 1.0,       
+      temperature: 1.4,       
       top_p: 0.9,             
       frequency_penalty: 0.1, 
-      max_tokens: 350,
+      max_tokens: 800,
   };
 
   // BALANCED SAFETY SYSTEM PROMPT
@@ -323,10 +323,10 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
             { role: "user", content: prompt }
         ],
         response_format: { type: "json_object" },
-        temperature: 1.0, 
+        temperature: 1.4, 
         top_p: 0.9,
         frequency_penalty: 0.1,
-        max_tokens: 200,
+        max_tokens: 800,
     });
 
     const content = completion.choices[0].message.content;
