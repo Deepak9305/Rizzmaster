@@ -14,6 +14,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { AdMobService } from './services/admobService';
 import IAPService from './services/iapService';
 import AdSenseBanner from './components/AdSenseBanner';
+import OnboardingFlow from './components/OnboardingFlow';
 
 // Lazy Load Heavy Components / Modals
 const PremiumModal = lazy(() => import('./components/PremiumModal'));
@@ -163,6 +164,9 @@ const AppContent: React.FC = () => {
   // Splash State
   const [showSplash, setShowSplash] = useState(true);
 
+  // Onboarding State
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
   // App State
   const [currentView, setCurrentView] = useState<ViewState>('HOME');
   const [mode, setMode] = useState<InputMode>(InputMode.CHAT);
@@ -202,6 +206,19 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     profileRef.current = profile;
   }, [profile]);
+
+  // Check for Onboarding on Mount
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem('rizz_onboarding_completed');
+    if (!hasSeenOnboarding) {
+        setShowOnboarding(true);
+    }
+  }, []);
+
+  const handleOnboardingComplete = () => {
+    localStorage.setItem('rizz_onboarding_completed', 'true');
+    setShowOnboarding(false);
+  };
 
   // Manage Native Banner Ads
   useEffect(() => {
@@ -856,6 +873,11 @@ const AppContent: React.FC = () => {
             isAppReady={isAuthReady} 
             onComplete={() => setShowSplash(false)} 
           />
+      )}
+
+      {/* Onboarding Flow: Shows after Splash if not completed */}
+      {!showSplash && showOnboarding && (
+          <OnboardingFlow onComplete={handleOnboardingComplete} />
       )}
 
       <div className={showSplash ? 'pointer-events-none' : ''}>

@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import OpenAI from "openai";
 import { RizzResponse, BioResponse } from "../types";
@@ -19,8 +20,8 @@ const llamaClient = new OpenAI({
 
 // Model Configuration
 const GEMINI_MODEL = 'gemini-3-flash-preview';
-// Using Llama 4 Maverick for Text AND Image
-const LLAMA_MODEL = (process.env.LLAMA_MODEL_NAME || 'meta-llama/llama-4-maverick-17b-128e-instruct'); 
+// Updated to use Llama Guard 4 as requested
+const LLAMA_MODEL = (process.env.LLAMA_MODEL_NAME || 'meta-llama/llama-guard-4-12b'); 
 
 // --- SAFETY CONFIGURATION (STRICT NO NSFW) ---
 
