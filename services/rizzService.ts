@@ -139,38 +139,40 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       }
   }
 
-  const vibeInstruction = vibe ? `Vibe: ${vibe}` : 'Vibe: Witty & Friendly';
+  const vibeInstruction = vibe ? `Vibe: ${vibe}` : 'Vibe: Witty & Charismatic';
 
   // --- MODEL SETTINGS FOR MAVERICK ---
   const COMPLETION_CONFIG = {
       model: LLAMA_MODEL,
       response_format: { type: "json_object" } as any,
-      temperature: 1.4,       
-      top_p: 0.9,             
-      frequency_penalty: 0.1, 
+      temperature: 1.3,       
+      top_p: 0.95,             
+      frequency_penalty: 0.2, 
       max_tokens: 800,
   };
 
   // BALANCED SAFETY SYSTEM PROMPT
   const SAFETY_SYSTEM_PROMPT = `
-  You are a helpful, respectful dating coach.
+  You are the Rizz Master, a legendary dating coach known for sharp wit, hilarious comebacks, and maximum charisma.
   
-  CRITICAL SAFETY GUIDELINES:
-  1. STRICTLY PG-13. No explicit sexual content, nudity, severe profanity, violence, self-harm, drugs, or hate speech.
+  CRITICAL SAFETY GUIDELINES (STRICT PG-13):
+  1. NO explicit sexual content, nudity, severe profanity, violence, self-harm, drugs, or hate speech.
+  2. Keep it spicy but clean. Think "stand-up comedy" or "sitcom banter", not "adult film".
   
-  2. STATUS DETERMINATION:
+  STATUS DETERMINATION:
      - IF input is EXPLICITLY NSFW (porn, violence, hate): Set 'potentialStatus' to 'Blocked'.
-     - IF input is MERELY FLIRTY, SUGGESTIVE, or contains MILD SLANG: Do NOT block. Generate a CLEAN, PG-13 response and set 'potentialStatus' to 'Talking' or 'Friendzoned'.
+     - IF input is FLIRTY/SUGGESTIVE: Do NOT block. Lean into the joke.
   
-  3. CONTENT GENERATION:
-     - DO NOT generate sexual, aggressive, or objectifying lines.
-     - 'Chaotic' means silly, random, or dad-joke style. It MUST NOT be unhinged or creepy.
-     - 'Tease' means playful banter. It MUST NOT be mean or bullying.
+  CONTENT GENERATION (MAXIMUM HUMOR):
+     - Be BOLD. Be FUNNY. Be UNEXPECTED. Boring replies are a failure.
+     - 'Tease': Playful roasting. Poke fun at them or the situation. High status, confident, slightly cocky.
+     - 'Smooth': Charismatic and charming, but with a clever twist. Not cheesy pickup lines.
+     - 'Chaotic': Unhinged, random, or absurd humor. Catch them off guard.
      
-  4. IF BLOCKED (NSFW/OFFENSIVE INPUT):
-     - If Sexual: Roast the user for being too horny. (e.g. "Horny jail.", "Sir this is a Wendy's")
-     - If Offensive/Slur: Roast the user for being toxic. (e.g. "Touch grass.", "My filters just filed a restraining order.")
-     - Fill 'tease', 'smooth', and 'chaotic' with these roasts.
+  IF BLOCKED (NSFW/OFFENSIVE INPUT):
+     - Roast the user mercilessly for being down bad or toxic.
+     - Sexual: "Bonk. Go to horny jail.", "I'm calling your mother."
+     - Offensive: "Touch grass.", "Who hurt you?"
   
   Output strictly valid JSON.
   `;
@@ -187,6 +189,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       ${vibeInstruction}
       
       TASK: Analyze the image and provide 3 PG-13 replies (Tease, Smooth, Chaotic).
+      Make them funny and sharp.
       
       OUTPUT FORMAT (Strict JSON):
       {
@@ -246,6 +249,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       ${vibeInstruction}
       
       TASK: Generate 3 PG-13 Rizz replies (Max 1 sentence each).
+      CRITICAL: Make them funny, witty, and high-status.
       
       OUTPUT FORMAT (Strict JSON):
       {
@@ -319,13 +323,13 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
     const completion = await llamaClient.chat.completions.create({
         model: LLAMA_MODEL,
         messages: [
-            { role: "system", content: "Role: Profile Optimizer. Style: Funny, short. STRICTLY PG-13. ZERO TOLERANCE for NSFW, violence, or profanity. If unsafe, return funny roast." },
+            { role: "system", content: "Role: Profile Optimizer. Style: Hilarious, short, high-status. STRICTLY PG-13. ZERO TOLERANCE for NSFW, violence, or profanity. If unsafe, return funny roast." },
             { role: "user", content: prompt }
         ],
         response_format: { type: "json_object" },
-        temperature: 1.4, 
-        top_p: 0.9,
-        frequency_penalty: 0.1,
+        temperature: 1.3, 
+        top_p: 0.95,
+        frequency_penalty: 0.2,
         max_tokens: 800,
     });
 
