@@ -216,8 +216,8 @@ const AppContent: React.FC = () => {
                 AdMobService.hideBanner();
             } else {
                 const adId = Capacitor.getPlatform() === 'ios' ? TEST_BANNER_ID_IOS : TEST_BANNER_ID_ANDROID;
-                // Delay slightly to ensure layout is settled
-                timer = setTimeout(() => AdMobService.showBanner(adId), 1500);
+                // Delay slightly to ensure layout is settled and old banners are gone
+                timer = setTimeout(() => AdMobService.showBanner(adId), 2000);
             }
         }
     };
@@ -240,7 +240,8 @@ const AppContent: React.FC = () => {
         // Don't hide banner on unmount to prevent flickering during quick state changes,
         // unless logout handles it.
     };
-  }, [profile, session]); // Trigger when profile is loaded/updated
+    // Optimized dependency array: only re-run if premium status changes, not on every credit update
+  }, [profile?.is_premium, session]); 
 
   // Define handleUpgrade using REF to avoid stale closures
   const handleUpgrade = useCallback(async () => {
@@ -1130,8 +1131,8 @@ const AppContent: React.FC = () => {
                 </section>
             </div>
             
-            {/* Sticky Ad Container */}
-            {!profile?.is_premium && (
+            {/* Sticky Ad Container (WEB ONLY) - Hidden on Native to prevent overlap */}
+            {!profile?.is_premium && !Capacitor.isNativePlatform() && (
                 <div className="fixed bottom-0 left-0 right-0 z-40 bg-black/90 backdrop-blur-md border-t border-white/10 pb-[env(safe-area-inset-bottom)] pt-2 animate-slide-up-fade">
                     <div className="max-w-md mx-auto px-2">
                          <AdSenseBanner 

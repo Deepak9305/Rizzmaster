@@ -33,8 +33,9 @@ export const AdMobService = {
         try {
             await this.initialize();
 
-            // CRITICAL: Attempt to remove any existing banner first to avoid conflicts
+            // CRITICAL: Attempt to hide and remove any existing banner first
             try {
+                await AdMob.hideBanner();
                 await AdMob.removeBanner();
             } catch (e) {
                 // Ignore removal error (e.g. if no banner exists)
