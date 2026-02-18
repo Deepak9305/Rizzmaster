@@ -30,18 +30,27 @@ export const AdMobService = {
     async showBanner(adId: string) {
         if (!Capacitor.isNativePlatform()) return;
         
-        await this.initialize();
-
-        const options: BannerAdOptions = {
-            adId: adId,
-            adSize: BannerAdSize.ADAPTIVE_BANNER,
-            position: BannerAdPosition.BOTTOM_CENTER,
-            margin: 0,
-            isTesting: true
-        };
-
         try {
+            await this.initialize();
+
+            // CRITICAL: Attempt to remove any existing banner first to avoid conflicts
+            try {
+                await AdMob.removeBanner();
+            } catch (e) {
+                // Ignore removal error (e.g. if no banner exists)
+            }
+
+            const options: BannerAdOptions = {
+                adId: adId,
+                adSize: BannerAdSize.ADAPTIVE_BANNER,
+                position: BannerAdPosition.BOTTOM_CENTER,
+                margin: 0,
+                isTesting: true,
+                npa: true // Request non-personalized ads for reliability in testing
+            };
+
             await AdMob.showBanner(options);
+            console.log('AdMob Banner Request Sent');
         } catch (e) {
             console.error('AdMob Show Banner Error:', e);
         }

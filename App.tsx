@@ -205,16 +205,42 @@ const AppContent: React.FC = () => {
 
   // Manage Native Banner Ads
   useEffect(() => {
-    if (Capacitor.isNativePlatform() && session) {
-        if (profile?.is_premium) {
-            AdMobService.hideBanner();
-        } else {
-            const adId = Capacitor.getPlatform() === 'ios' ? TEST_BANNER_ID_IOS : TEST_BANNER_ID_ANDROID;
-            // Delay slightly to ensure layout is settled
-            setTimeout(() => AdMobService.showBanner(adId), 1000);
+    let timer: any;
+
+    const refreshBanner = () => {
+        if (Capacitor.isNativePlatform() && session) {
+            // Wait for profile to load before making ad decisions
+            if (!profile) return;
+
+            if (profile.is_premium) {
+                AdMobService.hideBanner();
+            } else {
+                const adId = Capacitor.getPlatform() === 'ios' ? TEST_BANNER_ID_IOS : TEST_BANNER_ID_ANDROID;
+                // Delay slightly to ensure layout is settled
+                timer = setTimeout(() => AdMobService.showBanner(adId), 1500);
+            }
         }
+    };
+
+    refreshBanner();
+
+    // Listen for App Resume to refresh ads (often needed if they disappear)
+    let appListener: any;
+    if (Capacitor.isNativePlatform()) {
+        CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+            if (isActive) {
+                refreshBanner();
+            }
+        }).then(l => appListener = l);
     }
-  }, [profile?.is_premium, session]);
+    
+    return () => {
+        if (timer) clearTimeout(timer);
+        if (appListener) appListener.remove();
+        // Don't hide banner on unmount to prevent flickering during quick state changes,
+        // unless logout handles it.
+    };
+  }, [profile, session]); // Trigger when profile is loaded/updated
 
   // Define handleUpgrade using REF to avoid stale closures
   const handleUpgrade = useCallback(async () => {
