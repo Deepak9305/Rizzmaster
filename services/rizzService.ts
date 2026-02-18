@@ -27,7 +27,7 @@ const SAFETY_MODEL = process.env.SAFETY_MODEL || 'meta-llama/llama-guard-4-12b';
 const HATE_SPEECH_REGEX = /\b(suicide|kill yourself|kys|self-harm|die|racist|faggot|fag|retard|retarded|cripple|tranny|shemale|dyke|kike|nigger|nigga|negro|chink|paki|wetback|beaner|gook|raghead|terrorist|jihad|lynch|rape|molest|incest|pedophile|pedo|bestiality|necrophilia|hitler|nazi|white power|kkk|coon|spic|jungle bunny|porch monkey|sand nigger|towelhead|camel jockey|ching chong|dog eater|zipperhead|kraut|mick|wop|yid|heeb|abomination|sodomite|batty boy|chi chi man|fudge packer|pillow biter|rug muncher|carpet muncher|mong|spastic|window licker)\b/i;
 
 // Updated to be much stricter on NSFW terms
-const EXPLICIT_REGEX = /\b(heroin|meth|fentanyl|cocaine|crack|drugs|cp|child porn|sexual violence|hard|wet|gangbang|nude|nudes|naked|sex|seggs|boobs|tits|titties|cock|dick|penis|pussy|vagina|cunt|anal|oral|cum|sperm|jizz|bukkake|creampie|blowjob|handjob|rimjob|sext|porn|xxx|hentai|horny|orgasm|masturbate|dildo|vibrator|bdsm|fetish|milf|dilf|onlyfans|slut|whore|thot|boner|erection|clit|clitoris|deepthroat|scissoring|tribadism|anilingus|cunnilingus|fellatio|sodomy|buggery|pederasty|hebephilia|ephebophilia|gerontophilia|urolagnia|coprophilia|scat|water sports|golden shower|pearl necklace|facial|titty fuck|tit fuck|boob fuck|paizuri|glory hole|dogging|swinging|cuckold|cuck|incel|femcel)\b/i;
+const EXPLICIT_REGEX = /\b(heroin|meth|fentanyl|cocaine|crack|drugs|cp|child porn|sexual violence|hard|wet|soaked|gangbang|nude|nudes|naked|sex|seggs|boobs|tits|titties|cock|dick|penis|pussy|vagina|cunt|anal|oral|cum|sperm|jizz|bukkake|creampie|blowjob|handjob|rimjob|sext|porn|xxx|hentai|horny|orgasm|masturbate|dildo|vibrator|bdsm|fetish|milf|dilf|onlyfans|slut|whore|thot|boner|erection|clit|clitoris|deepthroat|scissoring|tribadism|anilingus|cunnilingus|fellatio|sodomy|buggery|pederasty|hebephilia|ephebophilia|gerontophilia|urolagnia|coprophilia|scat|water sports|golden shower|pearl necklace|facial|titty fuck|tit fuck|boob fuck|paizuri|glory hole|dogging|swinging|cuckold|cuck|incel|femcel)\b/i;
 
 // --- FALLBACK OBJECTS ---
 
@@ -156,7 +156,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
   const COMPLETION_CONFIG = {
       model: GENERATION_MODEL,
       response_format: { type: "json_object" } as any,
-      temperature: 1.3, // Maximum creativity/chaos
+      temperature: 1.1, 
       top_p: 0.95,             
       frequency_penalty: 0.2, 
       max_tokens: 800,
@@ -333,7 +333,7 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
             { role: "user", content: prompt }
         ],
         response_format: { type: "json_object" },
-        temperature: 1.3, // Increased creativity
+        temperature: 1.1, 
         top_p: 0.95,
         frequency_penalty: 0.2,
         max_tokens: 800,
