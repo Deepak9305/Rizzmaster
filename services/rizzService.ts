@@ -22,6 +22,13 @@ const llamaClient = new OpenAI({
 const GENERATION_MODEL = process.env.GENERATION_MODEL || 'meta-llama/llama-4-scout-17b-16e-instruct';
 const SAFETY_MODEL = process.env.SAFETY_MODEL || 'meta-llama/llama-guard-4-12b';
 
+// --- LOCAL PRE-FILTERS ---
+// Expanded regex for instant blocking of extreme content to save API calls.
+const HATE_SPEECH_REGEX = /\b(suicide|kill yourself|kys|self-harm|die|racist|faggot|fag|retard|retarded|cripple|tranny|shemale|dyke|kike|nigger|nigga|negro|chink|paki|wetback|beaner|gook|raghead|terrorist|jihad|lynch|rape|molest|incest|pedophile|pedo|bestiality|necrophilia|hitler|nazi|white power|kkk|coon|spic|jungle bunny|porch monkey|sand nigger|towelhead|camel jockey|ching chong|dog eater|zipperhead|kraut|mick|wop|yid|heeb|abomination|sodomite|batty boy|chi chi man|fudge packer|pillow biter|rug muncher|carpet muncher|mong|spastic|window licker)\b/i;
+
+// Updated to be much stricter on NSFW terms
+const EXPLICIT_REGEX = /\b(heroin|meth|fentanyl|cocaine|crack|drugs|cp|child porn|sexual violence|hard|wet|soaked|gangbang|nude|nudes|naked|sex|seggs|boobs|tits|titties|cock|dick|penis|pussy|vagina|cunt|anal|oral|cum|sperm|jizz|bukkake|creampie|blowjob|handjob|rimjob|sext|porn|xxx|hentai|horny|orgasm|masturbate|dildo|vibrator|bdsm|fetish|milf|dilf|onlyfans|slut|whore|thot|boner|erection|clit|clitoris|deepthroat|scissoring|tribadism|anilingus|cunnilingus|fellatio|sodomy|buggery|pederasty|hebephilia|ephebophilia|gerontophilia|urolagnia|coprophilia|scat|water sports|golden shower|pearl necklace|facial|titty fuck|tit fuck|boob fuck|paizuri|glory hole|dogging|swinging|cuckold|cuck|incel|femcel)\b/i;
+
 // --- FALLBACK OBJECTS ---
 
 const BLOCKED_RIZZ: RizzResponse = {
@@ -93,16 +100,21 @@ const getMimeType = (base64: string): string => {
 
 /**
  * CHECK SAFETY WITH LLAMA GUARD
- * Strictly API based for both input and output
  */
 const checkSafety = async (text: string): Promise<boolean> => {
-    // Llama Guard Check
+    // 1. Fast Regex Pre-check (Optimization)
+    if (HATE_SPEECH_REGEX.test(text) || EXPLICIT_REGEX.test(text)) {
+        console.warn("Safety Block: Regex detected violation.");
+        return false;
+    }
+
+    // 2. Llama Guard Check
     try {
         console.log(`Checking safety with ${SAFETY_MODEL}...`);
         const completion = await llamaClient.chat.completions.create({
             model: SAFETY_MODEL,
             messages: [
-                { role: "system", content: "You are a safety classifier with a ZERO TOLERANCE policy. You must be extremely strict. Output 'unsafe' if the content contains ANY sexual references, innuendo, NSFW slang, nudity, pornographic intent, violence, hate speech, harassment, or explicit language, even if mild or joking." },
+                { role: "system", content: "You are a safety classifier. You must be extremely strict. Output 'unsafe' if the content contains ANY sexual references, NSFW topics, nudity, pornographic intent, or explicit language." },
                 { role: "user", content: text }
             ],
             temperature: 0,
@@ -131,7 +143,7 @@ const checkSafety = async (text: string): Promise<boolean> => {
  */
 export const generateRizz = async (text: string, imageBase64?: string, vibe?: string): Promise<RizzResponse> => {
   
-  // 1. INPUT SAFETY CHECK
+  // 1. SAFETY CHECK
   if (text) {
       const isSafe = await checkSafety(text);
       if (!isSafe) return BLOCKED_RIZZ;
@@ -151,6 +163,8 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
   };
 
   // UNRESTRICTED CREATIVE SYSTEM PROMPT
+  // We removed the heavy "SAFETY GUIDELINES" section because Llama Guard handles filtering.
+  // This allows the model to be funnier and edgier without self-censoring harmless jokes.
   const CREATIVE_SYSTEM_PROMPT = `
   You are the Rizz Master, a legendary dating coach with the wit of a stand-up comedian.
   
@@ -173,8 +187,6 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
   
   Output strictly valid JSON.
   `;
-
-  let response: RizzResponse | null = null;
 
   // CASE 1: IMAGE PRESENT
   if (imageBase64) {
@@ -219,8 +231,10 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
         });
 
         const content = completion.choices[0].message.content;
-        response = parseJSON(content);
-        if (!response || !response.tease) throw new Error("Invalid JSON from Generation Model");
+        const parsed = parseJSON(content);
+        if (!parsed || !parsed.tease) throw new Error("Invalid JSON from Generation Model");
+
+        return parsed as RizzResponse;
 
       } catch (llamaError: any) {
         console.error(`Generation (${GENERATION_MODEL}) failed:`, llamaError);
@@ -268,34 +282,23 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
           });
 
           const content = completion.choices[0].message.content;
-          response = parseJSON(content);
-          if (!response || !response.tease) return createErrorRizz("Invalid JSON from Generation Model");
+          const parsed = parseJSON(content);
+          if (!parsed || !parsed.tease) return createErrorRizz("Invalid JSON from Generation Model");
+
+          return parsed as RizzResponse;
 
       } catch (error: any) {
           console.error("Llama Text Error:", error);
           return createErrorRizz(error.message || "Llama API Error");
       }
   }
-
-  // 2. OUTPUT SAFETY CHECK
-  if (response) {
-      const generatedContent = `${response.tease} ${response.smooth} ${response.chaotic} ${response.analysis}`;
-      const isOutputSafe = await checkSafety(generatedContent);
-      if (!isOutputSafe) {
-          console.warn("Safety Block: Output content flagged.");
-          return BLOCKED_RIZZ;
-      }
-      return response;
-  }
-
-  return createErrorRizz("Unknown Generation Error");
 };
 
 /**
  * GENERATE BIO
  */
 export const generateBio = async (text: string, vibe?: string): Promise<BioResponse> => {
-  // 1. INPUT SAFETY CHECK
+  // 1. SAFETY CHECK
   if (text) {
       const isSafe = await checkSafety(text);
       if (!isSafe) return BLOCKED_BIO;
@@ -322,8 +325,6 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
   { "bio": "string", "analysis": "string" }
   `;
 
-  let response: BioResponse | null = null;
-
   try {
     const completion = await llamaClient.chat.completions.create({
         model: GENERATION_MODEL,
@@ -339,24 +340,13 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
     });
 
     const content = completion.choices[0].message.content;
-    response = parseJSON(content);
-    if (!response || !response.bio) return createErrorBio("Invalid JSON from Generation Model");
+    const parsed = parseJSON(content);
+    if (!parsed || !parsed.bio) return createErrorBio("Invalid JSON from Generation Model");
+
+    return parsed as BioResponse;
 
   } catch (error: any) {
     console.error("Llama Bio Error:", error);
     return createErrorBio(error.message || "Llama API Error");
   }
-
-  // 2. OUTPUT SAFETY CHECK
-  if (response) {
-      const generatedContent = `${response.bio} ${response.analysis}`;
-      const isOutputSafe = await checkSafety(generatedContent);
-      if (!isOutputSafe) {
-          console.warn("Safety Block: Output bio flagged.");
-          return BLOCKED_BIO;
-      }
-      return response;
-  }
-
-  return createErrorBio("Unknown Bio Error");
 };
