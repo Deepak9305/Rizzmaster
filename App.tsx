@@ -24,9 +24,14 @@ const DAILY_CREDITS = 5;
 const REWARD_CREDITS = 3;
 const AD_DURATION = 15;
 
-// --- OFFICIAL GOOGLE TEST IDS ---
-const TEST_AD_UNIT_ID_ANDROID = 'ca-app-pub-3940256099942544/5224354917';
-const TEST_AD_UNIT_ID_IOS = 'ca-app-pub-3940256099942544/1712485313';
+// --- OFFICIAL GOOGLE TEST IDS (REWARD VIDEO) ---
+const TEST_REWARD_ID_ANDROID = 'ca-app-pub-3940256099942544/5224354917';
+const TEST_REWARD_ID_IOS = 'ca-app-pub-3940256099942544/1712485313';
+
+// --- OFFICIAL GOOGLE TEST IDS (BANNER) ---
+const TEST_BANNER_ID_ANDROID = 'ca-app-pub-3940256099942544/6300978111';
+const TEST_BANNER_ID_IOS = 'ca-app-pub-3940256099942544/2934735716';
+
 // Placeholder for Web AdSense
 const ADSENSE_SLOT_ID = '1234567890'; 
 
@@ -72,6 +77,20 @@ const generateUUID = () => {
     return Date.now().toString(36) + Math.random().toString(36).substring(2);
 };
 
+// --- CACHE HELPERS ---
+const updateCache = (key: string, data: any) => {
+    try {
+        localStorage.setItem(key, JSON.stringify(data));
+    } catch (e) {
+        console.warn("Cache write failed", e);
+    }
+};
+
+const clearCache = (userId: string) => {
+    localStorage.removeItem(`profile_${userId}`);
+    localStorage.removeItem(`saved_${userId}`);
+};
+
 interface SplashScreenProps {
     isAppReady: boolean;
     onComplete: () => void;
@@ -80,62 +99,174 @@ interface SplashScreenProps {
 const SplashScreen: React.FC<SplashScreenProps> = ({ isAppReady, onComplete }) => {
   const [progress, setProgress] = useState(0);
   const [isExiting, setIsExiting] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // Advanced Particle Background
   useEffect(() => {
-    // Duration of the progress bar animation in ms
-    const duration = 2200; 
-    const interval = 20;
-    const steps = duration / interval;
-    let currentStep = 0;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-    const timer = setInterval(() => {
-      currentStep++;
-      // Calculate progress
-      const progressValue = Math.min(100, (currentStep / steps) * 100);
-      setProgress(progressValue);
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    
+    const setSize = () => {
+        canvas.width = width;
+        canvas.height = height;
+    };
+    setSize();
 
-      if (currentStep >= steps) {
-        clearInterval(timer);
-      }
-    }, interval);
+    // Create particles
+    const particles: {x: number, y: number, size: number, speed: number, alpha: number}[] = [];
+    const particleCount = Math.min(width / 6, 120); // Responsive count
 
-    return () => clearInterval(timer);
+    for (let i = 0; i < particleCount; i++) {
+        particles.push({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            size: Math.random() * 2,
+            speed: Math.random() * 0.4 + 0.1,
+            alpha: Math.random() * 0.5 + 0.1
+        });
+    }
+
+    let animationId: number;
+    let time = 0;
+
+    const draw = () => {
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, width, height);
+        
+        time += 0.005;
+
+        particles.forEach((p) => {
+             // Float upward
+             p.y -= p.speed;
+             
+             // Wrap around
+             if (p.y < -5) {
+                 p.y = height + 5;
+                 p.x = Math.random() * width;
+             }
+
+             // Gentle sway
+             p.x += Math.sin(time + p.alpha * 10) * 0.1;
+
+             // Draw star/particle
+             ctx.beginPath();
+             ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
+             ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+             ctx.fill();
+        });
+
+        // Draw connecting lines for nearby particles (Constellation effect)
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+        ctx.lineWidth = 0.5;
+        
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < 100) {
+                    ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        animationId = requestAnimationFrame(draw);
+    };
+
+    draw();
+
+    const handleResize = () => {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        setSize();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+        cancelAnimationFrame(animationId);
+        window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
-  // Monitor for completion
+  // Progress Simulation with Easing
   useEffect(() => {
-      // Only exit if progress bar is full AND app data is ready
-      if (progress >= 100 && isAppReady && !isExiting) {
+    const startTime = Date.now();
+    const duration = 2200; // 2.2s load time
+    let animationFrame: number;
+
+    const easeOutQuart = (x: number): number => {
+        return 1 - Math.pow(1 - x, 4);
+    };
+
+    const update = () => {
+        const elapsed = Date.now() - startTime;
+        const rawProgress = Math.min(1, elapsed / duration);
+        const easedProgress = easeOutQuart(rawProgress) * 100;
+        
+        setProgress(easedProgress);
+
+        if (rawProgress < 1) {
+            animationFrame = requestAnimationFrame(update);
+        }
+    };
+
+    update();
+
+    return () => cancelAnimationFrame(animationFrame);
+  }, []);
+
+  // Exit Condition
+  useEffect(() => {
+      if (progress > 99 && isAppReady && !isExiting) {
           setIsExiting(true);
-          // Wait for the exit animation (fade/scale out) to finish before unmounting
-          setTimeout(() => {
-              onComplete();
-          }, 800); 
+          setTimeout(onComplete, 800); // Match CSS transition
       }
   }, [progress, isAppReady, isExiting, onComplete]);
 
   return (
-    <div className={`fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center overflow-hidden transition-all duration-800 ${isExiting ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100'}`}>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-rose-900/20 rounded-full blur-[100px] animate-pulse-glow" />
-      <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-amber-900/10 rounded-full blur-[80px] animate-float" />
+    <div className={`fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center overflow-hidden transition-all duration-[800ms] cubic-bezier(0.7, 0, 0.3, 1) ${isExiting ? 'opacity-0 scale-110 pointer-events-none' : 'opacity-100'}`}>
+      
+      {/* Canvas Layer */}
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full opacity-50" />
+      
+      {/* Vignette Overlay */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,black_100%)] pointer-events-none" />
 
+      {/* Ambient Glows */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-rose-900/20 rounded-full blur-[120px] animate-pulse-glow" />
+      
+      {/* Content */}
       <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-4xl px-4">
-        <div className="relative mb-12">
+        <div className="relative mb-12 transform scale-100 md:scale-125">
            <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-rose-200 via-amber-100 to-rose-200 animate-text-shimmer drop-shadow-2xl">
               Rizz Master
            </h1>
-           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent blur-xl opacity-50 animate-text-shimmer" style={{ backgroundSize: '200% 100%' }}></div>
+           {/* Reflection / Glow under text */}
+           <div className="absolute -inset-2 bg-gradient-to-r from-rose-500/0 via-rose-500/20 to-rose-500/0 blur-xl opacity-50" />
         </div>
-        <div className="w-64 md:w-80 h-[2px] bg-white/10 rounded-full overflow-hidden relative">
-          <div 
-            className="absolute top-0 left-0 h-full bg-gradient-to-r from-rose-500 via-amber-400 to-rose-500 shadow-[0_0_15px_rgba(251,191,36,0.5)] transition-all duration-75 ease-out"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-        <div className="mt-4 h-6 overflow-hidden">
-            <p className="text-[10px] md:text-xs font-bold tracking-[0.5em] text-white/40 uppercase animate-fade-in-up">
-              {progress < 30 ? 'ANALYZING...' : progress < 70 ? 'COOKING...' : (isAppReady ? 'READY.' : 'AUTHENTICATING...')}
-            </p>
+        
+        <div className="w-64 md:w-80 flex flex-col gap-2">
+            <div className="h-[2px] bg-white/10 rounded-full overflow-hidden relative">
+            <div 
+                className="absolute top-0 left-0 h-full bg-gradient-to-r from-rose-500 via-amber-400 to-rose-500 shadow-[0_0_15px_rgba(251,191,36,0.8)]"
+                style={{ width: `${progress}%`, transition: 'width 0.1s linear' }}
+            />
+            </div>
+            <div className="flex justify-between items-center text-[9px] font-mono text-white/40 uppercase tracking-[0.2em]">
+                <span className="animate-pulse">
+                     {progress < 40 ? 'INITIALIZING_CORE' : progress < 80 ? 'LOADING_ASSETS' : 'ESTABLISHING_LINK'}
+                </span>
+                <span>{Math.floor(progress)}%</span>
+            </div>
         </div>
       </div>
     </div>
@@ -198,6 +329,24 @@ const AppContent: React.FC = () => {
     profileRef.current = profile;
   }, [profile]);
 
+  // Manage Native Banner Ads
+  useEffect(() => {
+    if (Capacitor.isNativePlatform() && session) {
+        if (profile?.is_premium) {
+            AdMobService.hideBanner();
+        } else {
+            const adId = Capacitor.getPlatform() === 'ios' ? TEST_BANNER_ID_IOS : TEST_BANNER_ID_ANDROID;
+            // Delay slightly to ensure layout is settled
+            setTimeout(() => AdMobService.showBanner(adId), 1000);
+        }
+    }
+    
+    return () => {
+        // We generally don't hide the banner on unmount unless we are leaving the main app view,
+        // but explicit cleanup is good practice if views change significantly.
+    };
+  }, [profile?.is_premium, session]);
+
   // Define handleUpgrade using REF to avoid stale closures
   const handleUpgrade = useCallback(async () => {
     const currentProfile = profileRef.current;
@@ -215,7 +364,15 @@ const AppContent: React.FC = () => {
     
     showToast(`Welcome to the Elite Club! 👑`, 'success');
 
+    // HIDE ADS
+    if (Capacitor.isNativePlatform()) {
+        AdMobService.hideBanner();
+    }
+
     if (supabase && currentProfile.id !== 'guest') {
+        // Sync Cache
+        updateCache(`profile_${currentProfile.id}`, updatedProfile);
+        // Network
         await supabase.from('profiles').update({ is_premium: true }).eq('id', currentProfile.id);
     } else {
         localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
@@ -344,6 +501,9 @@ const AppContent: React.FC = () => {
       } else {
         setProfile(null);
         setSavedItems([]);
+        if (Capacitor.isNativePlatform()) {
+             AdMobService.hideBanner();
+        }
       }
     });
 
@@ -407,6 +567,20 @@ const AppContent: React.FC = () => {
         return;
     }
 
+    // AUTHENTICATED LOAD STRATEGY
+    
+    // 1. CACHE (Immediate)
+    try {
+        const cachedProfile = localStorage.getItem(`profile_${userId}`);
+        const cachedSaved = localStorage.getItem(`saved_${userId}`);
+        
+        if (cachedProfile) setProfile(JSON.parse(cachedProfile));
+        if (cachedSaved) setSavedItems(JSON.parse(cachedSaved));
+    } catch (e) {
+        console.warn("Cache read error", e);
+    }
+
+    // 2. NETWORK (Fresh)
     try {
         const profilePromise = supabase.from('profiles').select('*').eq('id', userId).single();
         const savedPromise = supabase.from('saved_items').select('*').eq('user_id', userId).order('created_at', { ascending: false });
@@ -433,11 +607,18 @@ const AppContent: React.FC = () => {
             }
         }
 
-        if (profileData) setProfile(profileData as UserProfile);
-        if (savedData) setSavedItems(savedData as SavedItem[]);
+        if (profileData) {
+            setProfile(profileData as UserProfile);
+            updateCache(`profile_${userId}`, profileData);
+        }
+        if (savedData) {
+            setSavedItems(savedData as SavedItem[]);
+            updateCache(`saved_${userId}`, savedData);
+        }
 
     } catch (e) {
-        console.error("Error loading user data", e);
+        console.error("Error loading user data (Network)", e);
+        // We gracefully degrade to the cache loaded in Step 1
     }
   };
 
@@ -446,14 +627,22 @@ const AppContent: React.FC = () => {
     
     NativeBridge.haptic('medium');
     
+    const currentUserId = profileRef.current?.id;
+
     try {
         if (supabase) await supabase.auth.signOut();
         if (Capacitor.isNativePlatform()) {
             try { await GoogleAuth.signOut(); } catch (error) { console.warn("Native Logout err", error); }
+            AdMobService.hideBanner();
         }
     } catch (err) {
         console.error("Logout failed:", err);
     } finally {
+        // Clear sensitive cache if auth user
+        if (currentUserId && currentUserId !== 'guest') {
+            clearCache(currentUserId);
+        }
+
         setSession(null);
         setProfile(null);
         setSavedItems([]);
@@ -485,6 +674,9 @@ const AppContent: React.FC = () => {
     setProfile(updatedProfile); 
     
     if (supabase && currentProfile.id !== 'guest') {
+        // Sync Cache
+        updateCache(`profile_${currentProfile.id}`, updatedProfile);
+        // Network
         await supabase.from('profiles').update({ credits: newAmount }).eq('id', currentProfile.id);
     } else {
         localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
@@ -516,6 +708,9 @@ const AppContent: React.FC = () => {
       showToast("Removed from saved", 'info');
       
       if (supabase && currentProfile.id !== 'guest') {
+          // Sync Cache
+          updateCache(`saved_${currentProfile.id}`, newItems);
+          // Network
           await supabase.from('saved_items').delete().eq('id', exists.id);
       } else {
           localStorage.setItem('guest_saved_items', JSON.stringify(newItems));
@@ -534,9 +729,14 @@ const AppContent: React.FC = () => {
       showToast("Saved to your gems", 'success');
 
       if (supabase && currentProfile.id !== 'guest') {
+        // Sync Cache (Optimistic)
+        updateCache(`saved_${currentProfile.id}`, newItems);
+        // Network
         const { data } = await supabase.from('saved_items').insert([{ user_id: currentProfile.id, content, type }]).select().single();
         if (data) {
-             setSavedItems(current => current.map(i => i.id === newItem.id ? { ...i, id: data.id } : i));
+             const finalItems = newItems.map(i => i.id === newItem.id ? { ...i, id: data.id } : i);
+             setSavedItems(finalItems);
+             updateCache(`saved_${currentProfile.id}`, finalItems);
         }
       } else {
         localStorage.setItem('guest_saved_items', JSON.stringify(newItems));
@@ -550,7 +750,12 @@ const AppContent: React.FC = () => {
     setSavedItems(newItems);
     showToast("Item deleted", 'info');
 
-    if (supabase && profileRef.current?.id !== 'guest') {
+    const currentProfile = profileRef.current;
+
+    if (supabase && currentProfile && currentProfile.id !== 'guest') {
+        // Sync Cache
+        updateCache(`saved_${currentProfile.id}`, newItems);
+        // Network
         await supabase.from('saved_items').delete().eq('id', id);
     } else {
         localStorage.setItem('guest_saved_items', JSON.stringify(newItems));
@@ -599,13 +804,19 @@ const AppContent: React.FC = () => {
         // 2. Sign Out & Cleanup (Only if RPC succeeded)
         await supabase.auth.signOut();
         
-        // Clear Local State
+        // Clear Local State & Cache
+        clearCache(currentProfile.id);
+        
         setSession(null);
         setProfile(null);
         setSavedItems([]);
         setResult(null);
         setCurrentView('HOME');
         
+        if (Capacitor.isNativePlatform()) {
+             AdMobService.hideBanner();
+        }
+
         showToast("Account permanently deleted", 'success');
         window.history.replaceState({ view: 'HOME' }, '', '/');
 
@@ -744,7 +955,7 @@ const AppContent: React.FC = () => {
     if (Capacitor.isNativePlatform()) {
         setIsAdLoading(true);
         try {
-            const adUnitId = Capacitor.getPlatform() === 'ios' ? TEST_AD_UNIT_ID_IOS : TEST_AD_UNIT_ID_ANDROID;
+            const adUnitId = Capacitor.getPlatform() === 'ios' ? TEST_REWARD_ID_IOS : TEST_REWARD_ID_ANDROID;
             const rewardEarned = await AdMobService.showRewardVideo(adUnitId);
             setIsAdLoading(false);
             
@@ -1077,8 +1288,9 @@ const AppContent: React.FC = () => {
                 </section>
             </div>
             
-            {/* Sticky Ad Container */}
-            {!profile?.is_premium && (
+            {/* Sticky Ad Container (WEB ONLY FALLBACK) */}
+            {/* On Native Mobile, the AdMob Plugin handles the banner overlay automatically. */}
+            {!Capacitor.isNativePlatform() && !profile?.is_premium && (
                 <div className="fixed bottom-0 left-0 right-0 z-40 bg-black/90 backdrop-blur-md border-t border-white/10 pb-[env(safe-area-inset-bottom)] pt-2 animate-slide-up-fade">
                     <div className="max-w-md mx-auto px-2">
                          <AdSenseBanner 

@@ -1,5 +1,5 @@
 
-import { AdMob, RewardAdOptions, RewardAdPluginEvents, AdMobRewardItem } from '@capacitor-community/admob';
+import { AdMob, RewardAdOptions, RewardAdPluginEvents, AdMobRewardItem, BannerAdOptions, BannerAdSize, BannerAdPosition } from '@capacitor-community/admob';
 import { Capacitor } from '@capacitor/core';
 
 export const AdMobService = {
@@ -91,5 +91,43 @@ export const AdMobService = {
                 resolve(false);
             }
         });
+    },
+
+    async showBanner(adId: string): Promise<void> {
+        if (!Capacitor.isNativePlatform()) return;
+        await this.initialize();
+
+        try {
+            const options: BannerAdOptions = {
+                adId: adId,
+                adSize: BannerAdSize.ADAPTIVE_BANNER,
+                position: BannerAdPosition.BOTTOM,
+                margin: 0,
+                isTesting: true
+            };
+            await AdMob.showBanner(options);
+        } catch (e) {
+            console.error("AdMob Show Banner Failed", e);
+        }
+    },
+
+    async hideBanner(): Promise<void> {
+        if (!Capacitor.isNativePlatform()) return;
+        try {
+            await AdMob.hideBanner();
+            // Optionally remove it completely to save resources
+            await AdMob.removeBanner(); 
+        } catch (e) {
+            console.error("AdMob Hide Banner Failed", e);
+        }
+    },
+    
+    async resumeBanner(): Promise<void> {
+        if (!Capacitor.isNativePlatform()) return;
+        try {
+            await AdMob.resumeBanner();
+        } catch (e) {
+            // If resume fails, it might be because it was removed, so we ignore
+        }
     }
 };
