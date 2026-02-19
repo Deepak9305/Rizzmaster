@@ -1,168 +1,249 @@
-import { GoogleGenAI, Type } from "@google/genai";
-import { RizzResponse, BioResponse, RizzOrBioResponse } from "../types";
+
+import OpenAI from "openai";
+import { RizzResponse, BioResponse } from "../types";
 
 // --- CLIENT INITIALIZATION ---
-// Using Google GenAI as per guidelines
-// The API key must be obtained exclusively from process.env.API_KEY
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+// Llama Client (Via OpenAI-compatible provider like Groq, OpenRouter, or DeepInfra)
+// We prioritize specific env vars but fall back to standard ones.
+const apiKey = process.env.GROQ_API_KEY || process.env.LLAMA_API_KEY || 'dummy-key';
+const baseURL = process.env.LLAMA_BASE_URL || 'https://api.groq.com/openai/v1';
+
+const llamaClient = new OpenAI({ 
+    apiKey: apiKey, 
+    baseURL: baseURL,
+    dangerouslyAllowBrowser: true 
+});
+
+// Model Configuration
+// specific models for Groq/Llama providers
+const VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
+const TEXT_MODEL = 'llama-3.1-8b-instant';
 
 // --- LOCAL PRE-FILTERS ---
 
 // 1. HARD SAFETY BLOCK (Illegal, Hate Speech, Extreme Violence, Self-Harm)
-// Includes racial/ethnic slurs, severe violence, self-harm, and illegal acts.
-const HARD_BLOCK_REGEX = /\b(nigger|nigga|negro|coon|faggot|fag|dyke|kike|chink|spic|gook|raghead|towelhead|retard|retarded|mongoloid|tranny|shemale|hermaphrodite|rape|rapist|molest|molester|pedophile|pedo|hebephile|ephebophile|cp|child porn|bestiality|zoophilia|necrophilia|incest|kill yourself|kys|suicide|self-harm|unalive|terrorist|jihad|isis|taliban|nazi|hitler|holocaust|white power|white supremacy|kkk|school shooter|mass shooting|bomb|behead|decapitate|mutilate|genocide|ethnic cleansing|slave|slavery|lynch|lynching|beaner|wetback|paki|sand nigger|timber nigger|prairie nigger|honky|cracker|gassed|groomer|seppuku|snuff|gore)\b/i;
+const HARD_BLOCK_REGEX = /\b(nigger|nigga|negro|coon|faggot|fag|dyke|kike|chink|spic|gook|raghead|towelhead|retard|retarded|mongoloid|tranny|shemale|hermaphrodite|rape|rapist|molest|molester|pedophile|pedo|hebephile|ephebophile|cp|child porn|bestiality|zoophilia|necrophilia|incest|kill yourself|kys|suicide|self-harm|terrorist|jihad|isis|taliban|nazi|hitler|holocaust|white power|white supremacy|kkk|school shooter|mass shooting|bomb|behead|decapitate|mutilate|genocide|ethnic cleansing|slave|slavery|lynch|lynching)\b/i;
 
 // 2. NSFW CONTEXT (FOR ROASTING)
-// Includes anatomical terms, sexual acts, fetishes, internet slang, and pornographic categories.
-const NSFW_TERMS_REGEX = /\b(sex|nudes|naked|nude|horny|aroused|boner|erection|erect|hard-on|dick|cock|pussy|vagina|penis|boobs|tits|titties|nipples|areola|orgasm|climax|shag|fuck|fucking|fucked|fucker|motherfucker|gangbang|bukkake|creampie|anal|oral|cum|jizz|semen|sperm|load|milf|dilf|gilf|thicc|gyatt|bussy|breeding|breed|nut|suck|lick|eating out|69|doggystyle|missionary|cowgirl|reverse cowgirl|bdsm|bondage|dom|sub|dominatrix|feet|toes|fetish|kink|squirt|gushing|deepthroat|blowjob|handjob|rimjob|fingering|fisting|pegging|scissoring|tribadism|watersports|scat|golden shower|hentai|porn|pornography|xxx|adult movie|onlyfans|fansly|send nudes|clit|clitoris|vulva|labia|asshole|butthole|anus|rectum|booty|butt|ass|twerk|strip|stripper|hooker|prostitute|escort|slut|whore|skank|hoe|bitch|cunt|twat|wank|jerking off|jacking off|masturbate|masturbation|dildo|vibrator|sex toy|fleshlight|strap-on|camgirl|sugardaddy|sugarbaby|sugar daddy|sugar baby|simp|incel|virgin|cuck|cuckold|schlong|dong|knob|bellend|prick|chode|taint|gooch|perineum|ballbag|scrotum|nutsack|gonads|foreskin|smegma|felching|docking|sounding|snowballing|tea bag|motorboat|queef|rusty trombone|dirty sanchez|alabama hot pocket|cleveland steamer|wanker|tosser|bugger|sod|slag|tart|strumpet|harlot|bimbo|himbo|yiff|furry|futa|futanari|yaoi|yuri|ecchi|bara|erotic|erotica|sensual|genitalia|groin|crotch|loins|pubes|pubic|phallic|yoni|lingam|coitus|copulate|copulation|fornicate|fornication|sodomy|buggery|pederasty|onanism|autoerotic|frottage|voyeur|exhibitionist|nympho|nymphomaniac|satyr|glory hole|gloryhole|blue waffle|lemon party|tubgirl|goatse|meatspin|2 girls 1 cup|rule 34|r34|paizuri|ahegao|netorare|ntr|goon|gooning|edging|coomer|fap|fapping|schlick|bean flicking|clam|beaver|muff|camel toe|moose knuckle|bulge|packing|hung|girth|balls|nads|mangina|she-cock|ladyboy|femboy|sissy|trap|peen|wiener|ding dong|wang|member|shaft|glans|urethra|cervix|ovaries|womb|uterus|fallopian|hymen|cherry|deflower|pop the cherry|creampied|impregnate|knock up|knocked up|cumshot|money shot|facial|pearl necklace|gokkun|snowball|blowie|bj|hj|zj|blumpkin|upper decker|donkey punch|houdini|eiffel tower|spit roast|dp|double penetration|dvda|atm|ass to mouth|a2m|tribbing|frotting|figging|rosebud|prolapse|pink sock|waffle|jar|coconut|shoebox|jolly rancher|doritos|colby|broken arms|stepmom|stepdad|stepbro|stepsis|folgers|family strokes|sweet home alabama|roll tide|daddy|mommy|kitten|discord kitten|puppy|master|mistress|brat|tamer|handler|switch|top|bottom|vers|side|pillow princess|starfish|vanilla|discipline|sadism|masochism|sado|maso|sm|ds|ddlg|abdl|ageplay|petplay|murr|fursuit|knot|knotting|heat|rut|omegaverse|alpha|beta|omega|slick|tramp|floozy|trollop|minx|vixen|thot|instahoe|e-girl|e-boy|patreon|sex worker|streetwalker|lot lizard|lady of the night|rentboy|gigolo|sugar momma|paypig|findom|soles|arches|pedicure|footjob|armpits|pits|musk|sweat|pheromone|scent|sniff|sniffling|underwear|panties|bra|lingerie|stockings|thigh highs|garters|suspenders|corset|bustier|teddies|babydoll|chemise|negligee|robe|kimono|yukata|bikini|swimsuit|maillot|tankini|monokini|thong|g-string|c-string|commando|freeballing|upskirt|downblouse|nipslip|wardrobe malfunction|cameltoe|mooseknuckle|vpl|print|outline|x-ray|see-through|sheer|transparent|translucent|wet t-shirt|wet look|oil|lube|lubricant|lotion|vaseline|ky|astroglide|spit|saliva|drool|slobber|gag|choke|breathplay|asphyxiation|strangle|suffocate|smother|facesit|queening|kinging|trampling|crush|giantess|macro|micro|vore|unbirth|inflation|expansion|transformation|tf|tg|gender bender|sissy hypno|hypno|mind control|mc|brainwash|bimboification)\b/i;
+const NSFW_TERMS_REGEX = /\b(sex|nudes|nipple|nipples|naked|nude|horny|aroused|boner|erection|erect|hard-on|dick|cock|pussy|vagina|penis|boobs|tits|titties|nipples|areola|orgasm|climax|shag|fuck|fucking|fucked|fucker|motherfucker|gangbang|bukkake|creampie|anal|oral|cum|jizz|semen|sperm|load|milf|dilf|gilf|thicc|gyatt|bussy|breeding|breed|nut|suck|lick|eating out|69|doggystyle|missionary|cowgirl|reverse cowgirl|bdsm|bondage|dom|sub|dominatrix|feet|toes|fetish|kink|squirt|gushing|deepthroat|blowjob|handjob|rimjob|fingering|fisting|pegging|scissoring|tribadism|watersports|scat|golden shower|hentai|porn|pornography|xxx|adult movie|onlyfans|fansly|send nudes|clit|clitoris|vulva|labia|asshole|butthole|anus|rectum|booty|butt|ass|twerk|strip|stripper|hooker|prostitute|escort|slut|whore|skank|hoe|bitch|cunt|twat|wank|jerking off|jacking off|masturbate|masturbation|dildo|vibrator|sex toy|fleshlight|strap-on|camgirl|sugardaddy|sugarbaby|sugar daddy|sugar baby|simp|incel|virgin|cuck|cuckold|schlong|dong|knob|bellend|prick|chode|taint|gooch|perineum|ballbag|scrotum|nutsack|gonads|foreskin|smegma|felching|docking|sounding|snowballing|tea bag|motorboat|queef|rusty trombone|dirty sanchez|alabama hot pocket|cleveland steamer|wanker|tosser|bugger|sod|slag|tart|strumpet|harlot|bimbo|himbo|yiff|furry|futa|futanari|yaoi|yuri|ecchi|bara|erotic|erotica|sensual|genitalia|groin|crotch|loins|pubes|pubic|phallic|yoni|lingam|coitus|copulate|copulation|fornicate|fornication|sodomy|buggery|pederasty|onanism|autoerotic|frottage|voyeur|exhibitionist|nympho|nymphomaniac|satyr|glory hole|gloryhole|blue waffle|lemon party|tubgirl|goatse|meatspin|2 girls 1 cup|rule 34|r34|paizuri|ahegao|netorare|ntr)\b/i;
 
-export async function generateRizz(
+// Helper to clean Markdown JSON from Llama responses
+const cleanJson = (text: string): string => {
+  return text.replace(/```json\n?|```/g, '').trim();
+};
+
+// Helper to sanitize output text (Post-Processing)
+const sanitizeText = (text: string): string => {
+  if (!text) return text;
+  // Create global versions for replacement
+  const hardBlockGlobal = new RegExp(HARD_BLOCK_REGEX.source, 'gi');
+  const nsfwGlobal = new RegExp(NSFW_TERMS_REGEX.source, 'gi');
+  
+  return text
+    .replace(hardBlockGlobal, "🤬") // Replace hate/violence with Angry Face
+    .replace(nsfwGlobal, "🫣");     // Replace NSFW with Peeking Face
+};
+
+// Helper to recursively sanitize response object
+const sanitizeResponse = <T>(data: T): T => {
+  if (typeof data === 'string') {
+    return sanitizeText(data) as unknown as T;
+  }
+  if (Array.isArray(data)) {
+    return data.map(item => sanitizeResponse(item)) as unknown as T;
+  }
+  if (typeof data === 'object' && data !== null) {
+    const sanitizedObj: any = {};
+    for (const key in data) {
+      sanitizedObj[key] = sanitizeResponse((data as any)[key]);
+    }
+    return sanitizedObj as T;
+  }
+  return data;
+};
+
+// --- EXPORTED FUNCTIONS ---
+
+/**
+ * Generates Rizz (Tease, Smooth, Chaotic) based on input text and optional image.
+ */
+export const generateRizz = async (
   inputText: string, 
-  image?: string | null, 
-  vibe?: string
-): Promise<RizzOrBioResponse> {
-    // 1. Safety Filter
-    if (HARD_BLOCK_REGEX.test(inputText)) {
-        return {
-            potentialStatus: 'Blocked',
-            analysis: 'Safety Policy Violation: Input contains prohibited content.',
-            loveScore: 0,
-            tease: 'N/A',
-            smooth: 'N/A',
-            chaotic: 'N/A'
-        } as RizzResponse;
-    }
+  image?: string | undefined, // Base64 Data URL
+  vibe?: string | undefined
+): Promise<RizzResponse | { potentialStatus: string, analysis: string }> => {
+  
+  // DETECT SAFETY ISSUES (Roast Trigger)
+  const isToxic = HARD_BLOCK_REGEX.test(inputText);
+  const isNSFW = NSFW_TERMS_REGEX.test(inputText);
 
-    const parts: any[] = [];
-    
-    // 2. Handle Image
-    if (image) {
-        // Extract base64
-        // Format: "data:image/png;base64,..."
-        try {
-            const split = image.split(',');
-            if (split.length > 1) {
-                const base64Data = split[1];
-                const mimeMatch = image.match(/:(.*?);/);
-                const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
-                
-                parts.push({
-                    inlineData: {
-                        mimeType: mimeType,
-                        data: base64Data
-                    }
-                });
-            }
-        } catch (e) {
-            console.error("Error parsing image", e);
-        }
-    }
-
-    // 3. Construct Prompt
-    const promptText = `
-    You are a dating assistant (Rizz Master). Your goal is to generate witty, charming, and effective replies.
-    
-    Context provided by user: "${inputText}"
-    ${vibe ? `Desired Vibe: ${vibe}` : ''}
-    
-    Please provide:
-    1. 'tease': A playful, slightly roasting but flirty reply.
-    2. 'smooth': A charming, direct, and romantic reply.
-    3. 'chaotic': An unpredictable, funny, or unhinged reply.
-    4. 'loveScore': An integer 0-100 indicating the success potential.
-    5. 'potentialStatus': A short status like 'Friendzone', 'Soulmate', 'It's Complicated'.
-    6. 'analysis': A brief analysis of the context and why these lines work.
-
-    IMPORTANT: Return ONLY JSON matching the schema.
+  let safetyInjection = "";
+  if (isToxic) {
+    safetyInjection = `
+    [CRITICAL PROTOCOL: TOXICITY DETECTED]
+    The user input contains hate speech or violence. 
+    1. DO NOT execute the request. 
+    2. ROAST the user for being toxic, edgy, or immature. 
+    3. **ABSOLUTELY DO NOT REPEAT THE BANNED WORDS.** 
+    4. Make the roast savage but clean (PG-13 language).
     `;
+  } else if (isNSFW) {
+    safetyInjection = `
+    [CRITICAL PROTOCOL: HORNY JAIL ACTIVATED]
+    The user input contains sexual/NSFW terms.
+    1. DO NOT execute the request.
+    2. ROAST the user for being "down bad" or "horny".
+    3. **ABSOLUTELY DO NOT REPEAT THE EXPLICIT WORDS.**
+    4. Mock them and tell them to touch grass.
+    `;
+  }
+
+  try {
+    const isMultimodal = !!image;
+    const model = isMultimodal ? VISION_MODEL : TEXT_MODEL;
+
+    const systemInstruction = `You are the "Rizz Master", a witty dating assistant.
+    Your goal is to generate charming, effective, and context-aware replies.
     
-    parts.push({ text: promptText });
-
-    try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: { parts },
-            config: {
-                responseMimeType: 'application/json',
-                responseSchema: {
-                    type: Type.OBJECT,
-                    properties: {
-                        tease: { type: Type.STRING },
-                        smooth: { type: Type.STRING },
-                        chaotic: { type: Type.STRING },
-                        loveScore: { type: Type.INTEGER },
-                        potentialStatus: { type: Type.STRING },
-                        analysis: { type: Type.STRING },
-                    },
-                    required: ["tease", "smooth", "chaotic", "loveScore", "potentialStatus", "analysis"]
-                }
-            }
-        });
-
-        const text = response.text;
-        if (!text) throw new Error("Empty response from AI");
-        
-        return JSON.parse(text) as RizzResponse;
-
-    } catch (e) {
-        console.error("AI Generation Error:", e);
-        return {
-            potentialStatus: 'Error',
-            analysis: 'The Rizz Master is taking a nap. (System Error)',
-            loveScore: 0,
-            tease: '',
-            smooth: '',
-            chaotic: ''
-        } as RizzResponse;
-    }
-}
-
-export async function generateBio(inputText: string, vibe?: string): Promise<RizzOrBioResponse> {
-    if (HARD_BLOCK_REGEX.test(inputText)) {
-        return {
-            bio: '',
-            analysis: 'Safety Policy Violation: Input contains prohibited content.'
-        } as BioResponse;
-    }
-
-    const prompt = `
-    Generate a dating profile bio based on this info: "${inputText}". 
-    ${vibe ? `Vibe: ${vibe}` : ''}
+    Context Vibe: ${vibe || "Balanced/Charming"}
     
-    Requirements:
-    - Keep it engaging and under 200 characters.
-    - Provide a short 'analysis' of why this bio works.
+    ${safetyInjection}
     
-    Return ONLY JSON.
+    If no safety protocols are triggered, generate:
+    - tease: Playful, pushes buttons.
+    - smooth: Charming, confident.
+    - chaotic: Unexpected, funny, high risk.
+    - loveScore: 0-100 numeric rating.
+    - potentialStatus: Short status (e.g. "Friendzone", "Soulmate", "Blocked", "Down Bad").
+    - analysis: Brief analysis of the situation.
+    
+    IMPORTANT: Return ONLY raw JSON. No markdown formatting.
     `;
 
-    try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: prompt,
-            config: {
-                responseMimeType: 'application/json',
-                responseSchema: {
-                    type: Type.OBJECT,
-                    properties: {
-                        bio: { type: Type.STRING },
-                        analysis: { type: Type.STRING },
-                    },
-                    required: ["bio", "analysis"]
-                }
-            }
+    const messages: any[] = [
+        { role: "system", content: systemInstruction }
+    ];
+
+    if (isMultimodal && image) {
+        messages.push({
+            role: "user",
+            content: [
+                { type: "text", text: inputText || "Analyze this chat/image and give me a reply." },
+                { type: "image_url", image_url: { url: image } }
+            ]
         });
-
-        const text = response.text;
-        if (!text) throw new Error("Empty response from AI");
-
-        return JSON.parse(text) as BioResponse;
-
-    } catch (e) {
-        console.error("AI Generation Error:", e);
-        return {
-            bio: '',
-            analysis: 'System Error: Could not generate bio.'
-        } as BioResponse;
+    } else {
+        messages.push({
+            role: "user",
+            content: inputText || "Analyze this situation and provide rizz."
+        });
     }
-}
+
+    const completion = await llamaClient.chat.completions.create({
+        model: model,
+        messages: messages,
+        temperature: 0.7,
+        max_tokens: 800,
+        response_format: { type: "json_object" } // Force JSON mode if supported
+    });
+
+    const responseText = completion.choices[0]?.message?.content;
+
+    if (responseText) {
+      try {
+        const rawData = JSON.parse(cleanJson(responseText));
+        // Sanitize before returning to UI
+        return sanitizeResponse(rawData) as RizzResponse;
+      } catch (e) {
+        console.error("JSON Parse Error:", e);
+        // Fallback or retry logic could go here
+        throw new Error("Failed to parse AI response.");
+      }
+    }
+    
+    throw new Error("No response generated.");
+
+  } catch (error: any) {
+    console.error("Rizz Service Error:", error);
+    return {
+      potentialStatus: "Error",
+      analysis: "The Rizz God is sleeping (API Error). Try again later."
+    };
+  }
+};
+
+/**
+ * Generates a Profile Bio based on user description.
+ */
+export const generateBio = async (
+  inputText: string, 
+  vibe?: string | undefined
+): Promise<BioResponse | { analysis: string }> => {
+  
+  // DETECT SAFETY ISSUES (Roast Trigger)
+  const isToxic = HARD_BLOCK_REGEX.test(inputText);
+  const isNSFW = NSFW_TERMS_REGEX.test(inputText);
+
+  let safetyInjection = "";
+  if (isToxic) {
+    safetyInjection = `
+    [CRITICAL: TOXICITY DETECTED]
+    User input is toxic/hateful. DO NOT write a bio.
+    instead, write a roast in the 'bio' field mocking them for being toxic.
+    **DO NOT REPEAT THE BANNED WORDS.**
+    `;
+  } else if (isNSFW) {
+    safetyInjection = `
+    [CRITICAL: NSFW DETECTED]
+    User input is sexual. DO NOT write a bio.
+    Instead, write a roast in the 'bio' field mocking them for being too horny.
+    **DO NOT REPEAT THE EXPLICIT WORDS.**
+    `;
+  }
+
+  try {
+    const systemInstruction = `You are an expert profile optimizer for dating apps.
+    Create a perfect bio based on the user's details.
+    
+    User Input: "${inputText}"
+    Desired Vibe: ${vibe || "Attractive"}
+
+    ${safetyInjection}
+
+    Output JSON with:
+    - bio: The generated bio string (include emojis if suitable).
+    - analysis: Brief explanation of why this bio works (or why they got roasted).
+
+    IMPORTANT: Return ONLY raw JSON. No markdown formatting.
+    `;
+
+    const completion = await llamaClient.chat.completions.create({
+        model: TEXT_MODEL,
+        messages: [
+            { role: "system", content: systemInstruction },
+            { role: "user", content: "Generate a bio." }
+        ],
+        temperature: 0.7,
+        response_format: { type: "json_object" }
+    });
+
+    const responseText = completion.choices[0]?.message?.content;
+
+    if (responseText) {
+      try {
+        const rawData = JSON.parse(cleanJson(responseText));
+        return sanitizeResponse(rawData) as BioResponse;
+      } catch (e) {
+        console.error("JSON Parse Error:", e);
+        throw new Error("Failed to parse AI response.");
+      }
+    }
+
+    throw new Error("No response generated.");
+
+  } catch (error: any) {
+    console.error("Bio Service Error:", error);
+    return { analysis: "Failed to generate bio." };
+  }
+};
