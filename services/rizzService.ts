@@ -28,11 +28,13 @@ const TEXT_MODEL = 'llama-3.1-8b-instant';
 
 // 1. HARD SAFETY BLOCK (Illegal, Hate Speech, Extreme Violence, Self-Harm)
 // These are NEVER sent to the AI. They are blocked immediately.
-const HARD_BLOCK_REGEX = /\b(suicide|kill yourself|kys|self-harm|die|racist|faggot|fag|retard|retarded|cripple|tranny|shemale|dyke|kike|nigger|nigga|negro|chink|paki|wetback|beaner|gook|raghead|terrorist|jihad|lynch|rape|molest|incest|pedophile|pedo|bestiality|necrophilia|hitler|nazi|white power|kkk|coon|spic|jungle bunny|porch monkey|sand nigger|towelhead|camel jockey|ching chong|dog eater|zipperhead|kraut|mick|wop|yid|heeb|cp|child porn|sexual violence|hebephilia|ephebophilia|gerontophilia|behead|decapitate|gore|murder|slaughter|genocide|bomb|meth|heroin|fentanyl|cocaine|crack|shoot up|school shooter|slave|slavery|holocaust)\b/i;
+// If these appear in the Output, the output is also blocked.
+const HARD_BLOCK_REGEX = /\b(suicide|kill yourself|kys|self-harm|die|racist|faggot|fag|retard|retarded|cripple|tranny|shemale|dyke|kike|nigger|nigga|negro|chink|paki|wetback|beaner|gook|raghead|terrorist|jihad|lynch|rape|molest|incest|pedophile|pedo|bestiality|necrophilia|hitler|nazi|white power|kkk|coon|spic|jungle bunny|porch monkey|sand nigger|towelhead|camel jockey|ching chong|dog eater|zipperhead|kraut|mick|wop|yid|heeb|cp|child porn|sexual violence|hebephilia|ephebophilia|gerontophilia|behead|decapitate|gore|murder|slaughter|genocide|bomb|meth|heroin|fentanyl|cocaine|crack|shoot up|school shooter|slave|slavery|holocaust|rape|rapist|molester|grope|forced sex|non-consensual|abuse|abuser|domestic violence|beat wife|beat husband|kill all|exterminate|ethnic cleansing|final solution|lynching|noose|gas chamber|concentration camp|isis|al qaeda|hamas|taliban|school shooting|mass shooting|active shooter|zoophilia|revenge porn|noncon|underage|jailbait|lolita)\b/i;
 
 // 2. NSFW CONTEXT (FOR ROASTING)
 // We let these pass to the LLM, but we tag them so the LLM knows to ROAST the user.
-const NSFW_TERMS_REGEX = /\b(sex|nudes|naked|horny|boner|erection|erect|dick|cock|pussy|vagina|penis|boobs|tits|nipples|orgasm|shag|fuck|fucking|fucked|gangbang|bukkake|creampie|anal|oral|cum|jizz|milf|dilf|gilf|thicc|gyatt|breeding|breed|nut|suck|lick|eating out|69|doggystyle|missionary|cowgirl|bdsm|bondage|dom|sub|feet|toes|fetish|kink|squirt|deepthroat|blowjob|handjob|rimjob|fingering|fisting|pegging|scissoring|tribadism|watersports|scat|hentai|porn|xxx|onlyfans|send nudes|clit|clitoris|vulva|asshole|butthole|booty|twerk|strip|stripper|hooker|slut|whore|skank|hoe|bitch)\b/i;
+// Included: Anatomical terms, sexual acts, fetish slang, "down bad" internet slang.
+const NSFW_TERMS_REGEX = /\b(sex|nudes|naked|horny|boner|erection|erect|dick|cock|pussy|vagina|penis|boobs|tits|nipples|orgasm|shag|fuck|fucking|fucked|gangbang|bukkake|creampie|anal|oral|cum|jizz|milf|dilf|gilf|thicc|gyatt|breeding|breed|nut|suck|lick|eating out|69|doggystyle|missionary|cowgirl|bdsm|bondage|dom|sub|feet|toes|fetish|kink|squirt|deepthroat|blowjob|handjob|rimjob|fingering|fisting|pegging|scissoring|tribadism|watersports|scat|hentai|porn|xxx|onlyfans|send nudes|clit|clitoris|vulva|asshole|butthole|booty|twerk|strip|stripper|hooker|slut|whore|skank|hoe|bitch|cunt|twat|wank|masturbate|masturbation|dildo|vibrator|sex toy|camgirl|sugardaddy|sugarbaby|sugar daddy|sugar baby|simping|simp|incel|virgin|chad|stacy|thot|e-girl|e-thot|baddie|down bad|smash|pass|body count|fwb|friends with benefits|nsfw|explicit|uncensored|hardcore|softcore|lewd|arousal|aroused|climax|penetration|intercourse|coitus|fellatio|cunnilingus|anilingus|sodomize|sodomy|buggery|pederasty|fornication|adultery|swinging|swinger|poly|polyamory|threesome|foursome|orgy|group sex|glory hole|dogging|flashing|flasher|exhibitionist|voyeur|voyeurism|upskirt|downblouse|cameltoe|mooseknuckle|bulge|package|junk|privates|genitals|groin|crotch|loins|pubes|pubic|balls|testicles|nuts|sack|scrotum|shaft|head|tip|foreskin|labia|lips|muff|box|slit|gash|snatch|beaver|clam|taco|flower|honeypot|meat curtain|beef curtain|wizard sleeve|tight|loose|wet|moist|gushing|creaming|throbbing|pulsating|hard|stiff|rock hard|raging|morning wood|blue balls|precum|load|rope|pearl necklace|facial|swallow|spit|gag|choke|spank|whip|paddle|cuff|tie up|blindfold|gagged|bound|dominated|submitted|slave|master|mistress|goddess|worship|humiliation|degradation|cuck|cuckold|bull|hotwife|stag|vixen|queen of spades|snowbunny|coalburner|oilriller|raceplay|cnc|consensual non-consent|roleplay|furry|yiff|yiffing|anthro|femboy|trap|sissy|crossdresser|cd|tv|ts|mtf|ftm|pre-op|post-op|non-op|shemale|ladyboy|kathoei|hijra|two-spirit|intersex|hermaphrodite|herm|dickgirl|futa|futanari)\b/i;
 
 // --- FALLBACK OBJECTS ---
 
@@ -111,6 +113,19 @@ const getMimeType = (base64: string): string => {
 const checkInputSafety = (text: string): boolean => {
     if (HARD_BLOCK_REGEX.test(text)) {
         console.warn("Input Block: Regex detected severe violation.");
+        return false;
+    }
+    return true;
+};
+
+/**
+ * CHECK OUTPUT SAFETY
+ * Scans generated text for banned content.
+ */
+const checkOutputSafety = (text: string | undefined): boolean => {
+    if (!text) return true;
+    if (HARD_BLOCK_REGEX.test(text)) {
+        console.warn("Output Block: Regex detected severe violation in AI response.");
         return false;
     }
     return true;
@@ -210,6 +225,16 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
         const parsed = parseJSON(content);
         if (!parsed || !parsed.tease) throw new Error("Invalid JSON from Generation Model");
 
+        // 3. OUTPUT SAFETY CHECK
+        if (
+            !checkOutputSafety(parsed.tease) || 
+            !checkOutputSafety(parsed.smooth) || 
+            !checkOutputSafety(parsed.chaotic) ||
+            !checkOutputSafety(parsed.analysis)
+        ) {
+            return BLOCKED_RIZZ;
+        }
+
         return parsed as RizzResponse;
 
       } catch (llamaError: any) {
@@ -253,6 +278,16 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
           const content = completion.choices[0].message.content;
           const parsed = parseJSON(content);
           if (!parsed || !parsed.tease) return createErrorRizz("Invalid JSON from Generation Model");
+
+          // 3. OUTPUT SAFETY CHECK
+          if (
+              !checkOutputSafety(parsed.tease) || 
+              !checkOutputSafety(parsed.smooth) || 
+              !checkOutputSafety(parsed.chaotic) ||
+              !checkOutputSafety(parsed.analysis)
+          ) {
+              return BLOCKED_RIZZ;
+          }
 
           return parsed as RizzResponse;
 
@@ -314,6 +349,11 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
     const content = completion.choices[0].message.content;
     const parsed = parseJSON(content);
     if (!parsed || !parsed.bio) return createErrorBio("Invalid JSON from Generation Model");
+
+    // 3. OUTPUT SAFETY CHECK
+    if (!checkOutputSafety(parsed.bio)) {
+        return BLOCKED_BIO;
+    }
 
     return parsed as BioResponse;
 
