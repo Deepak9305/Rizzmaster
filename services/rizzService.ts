@@ -32,6 +32,36 @@ const cleanJson = (text: string): string => {
   return text.replace(/```json\n?|```/g, '').trim();
 };
 
+// Helper to sanitize output text (Post-Processing)
+const sanitizeText = (text: string): string => {
+  if (!text) return text;
+  // Create global versions for replacement
+  const hardBlockGlobal = new RegExp(HARD_BLOCK_REGEX.source, 'gi');
+  const nsfwGlobal = new RegExp(NSFW_TERMS_REGEX.source, 'gi');
+  
+  return text
+    .replace(hardBlockGlobal, "🤬") // Replace hate/violence with Angry Face
+    .replace(nsfwGlobal, "🫣");     // Replace NSFW with Peeking Face
+};
+
+// Helper to recursively sanitize response object
+const sanitizeResponse = <T>(data: T): T => {
+  if (typeof data === 'string') {
+    return sanitizeText(data) as unknown as T;
+  }
+  if (Array.isArray(data)) {
+    return data.map(item => sanitizeResponse(item)) as unknown as T;
+  }
+  if (typeof data === 'object' && data !== null) {
+    const sanitizedObj: any = {};
+    for (const key in data) {
+      sanitizedObj[key] = sanitizeResponse((data as any)[key]);
+    }
+    return sanitizedObj as T;
+  }
+  return data;
+};
+
 // --- EXPORTED FUNCTIONS ---
 
 /**
@@ -121,7 +151,9 @@ export const generateRizz = async (
 
     if (responseText) {
       try {
-        return JSON.parse(cleanJson(responseText)) as RizzResponse;
+        const rawData = JSON.parse(cleanJson(responseText));
+        // Sanitize before returning to UI
+        return sanitizeResponse(rawData) as RizzResponse;
       } catch (e) {
         console.error("JSON Parse Error:", e);
         // Fallback or retry logic could go here
@@ -199,7 +231,8 @@ export const generateBio = async (
 
     if (responseText) {
       try {
-        return JSON.parse(cleanJson(responseText)) as BioResponse;
+        const rawData = JSON.parse(cleanJson(responseText));
+        return sanitizeResponse(rawData) as BioResponse;
       } catch (e) {
         console.error("JSON Parse Error:", e);
         throw new Error("Failed to parse AI response.");
