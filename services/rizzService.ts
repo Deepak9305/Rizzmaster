@@ -139,6 +139,14 @@ const checkSafety = async (text: string): Promise<boolean> => {
 };
 
 /**
+ * CHECK OUTPUT FOR BANNED WORDS (Regex Only)
+ * Used to filter output without incurring extra API costs.
+ */
+const isOutputClean = (text: string): boolean => {
+    return !HATE_SPEECH_REGEX.test(text) && !EXPLICIT_REGEX.test(text);
+};
+
+/**
  * GENERATE RIZZ
  */
 export const generateRizz = async (text: string, imageBase64?: string, vibe?: string): Promise<RizzResponse> => {
@@ -234,6 +242,13 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
         const parsed = parseJSON(content);
         if (!parsed || !parsed.tease) throw new Error("Invalid JSON from Generation Model");
 
+        // OUTPUT SAFETY CHECK (Regex Only - Zero Latency)
+        const combinedOutput = `${parsed.tease} ${parsed.smooth} ${parsed.chaotic} ${parsed.analysis}`;
+        if (!isOutputClean(combinedOutput)) {
+            console.warn("Safety Block: Output contained banned words.");
+            return BLOCKED_RIZZ;
+        }
+
         return parsed as RizzResponse;
 
       } catch (llamaError: any) {
@@ -284,6 +299,13 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
           const content = completion.choices[0].message.content;
           const parsed = parseJSON(content);
           if (!parsed || !parsed.tease) return createErrorRizz("Invalid JSON from Generation Model");
+
+          // OUTPUT SAFETY CHECK (Regex Only - Zero Latency)
+          const combinedOutput = `${parsed.tease} ${parsed.smooth} ${parsed.chaotic} ${parsed.analysis}`;
+          if (!isOutputClean(combinedOutput)) {
+              console.warn("Safety Block: Output contained banned words.");
+              return BLOCKED_RIZZ;
+          }
 
           return parsed as RizzResponse;
 
@@ -342,6 +364,13 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
     const content = completion.choices[0].message.content;
     const parsed = parseJSON(content);
     if (!parsed || !parsed.bio) return createErrorBio("Invalid JSON from Generation Model");
+
+    // OUTPUT SAFETY CHECK (Regex Only - Zero Latency)
+    const combinedOutput = `${parsed.bio} ${parsed.analysis}`;
+    if (!isOutputClean(combinedOutput)) {
+        console.warn("Safety Block: Output bio contained banned words.");
+        return BLOCKED_BIO;
+    }
 
     return parsed as BioResponse;
 
