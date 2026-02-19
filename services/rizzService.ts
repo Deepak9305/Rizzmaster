@@ -29,7 +29,7 @@ const TEXT_MODEL = 'llama-3.1-8b-instant';
 // 1. HARD SAFETY BLOCK (Illegal, Hate Speech, Extreme Violence, Self-Harm)
 // These are NEVER sent to the AI. They are blocked immediately.
 // If these appear in the Output, the output is also blocked.
-const HARD_BLOCK_REGEX = /\b(suicide|kill yourself|kys|self-harm|die|racist|faggot|fag|retard|retarded|cripple|tranny|shemale|dyke|kike|nigger|nigga|negro|chink|paki|wetback|beaner|gook|raghead|terrorist|jihad|lynch|rape|molest|incest|pedophile|pedo|bestiality|necrophilia|hitler|nazi|white power|kkk|coon|spic|jungle bunny|porch monkey|sand nigger|towelhead|camel jockey|ching chong|dog eater|zipperhead|kraut|mick|wop|yid|heeb|cp|child porn|sexual violence|hebephilia|ephebophilia|gerontophilia|behead|decapitate|gore|murder|slaughter|genocide|bomb|meth|heroin|fentanyl|cocaine|crack|shoot up|school shooter|slave|slavery|holocaust|rape|rapist|molester|grope|forced sex|non-consensual|abuse|abuser|domestic violence|beat wife|beat husband|kill all|exterminate|ethnic cleansing|final solution|lynching|noose|gas chamber|concentration camp|isis|al qaeda|hamas|taliban|school shooting|mass shooting|active shooter|zoophilia|revenge porn|noncon|underage|jailbait|lolita)\b/i;
+const HARD_BLOCK_REGEX = /\b(nigger|nigga|faggot|fag|dyke|kike|chink|spic|gook|raghead|retard|retarded|rape|rapist|molest|pedophile|pedo|cp|child porn|bestiality|necrophilia|kill yourself|kys|suicide|terrorist|jihad|nazi|hitler|white power|kkk|school shooter|mass shooting|behead|decapitate|genocide|ethnic cleansing)\b/i;
 
 // 2. NSFW CONTEXT (FOR ROASTING)
 // We let these pass to the LLM, but we tag them so the LLM knows to ROAST the user.
