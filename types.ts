@@ -1,3 +1,4 @@
+
 export enum InputMode {
   CHAT = 'CHAT',
   BIO = 'BIO'
@@ -33,4 +34,13 @@ export interface BioResponse {
   analysis: string;
 }
 
-export type RizzOrBioResponse = RizzResponse | BioResponse;
+export interface RizzError {
+  potentialStatus: string;
+  analysis: string;
+}
+
+export interface BioError {
+  analysis: string;
+}
+
+export type RizzOrBioResponse = RizzResponse | BioResponse | RizzError | BioError;

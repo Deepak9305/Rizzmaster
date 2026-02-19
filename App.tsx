@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect, lazy, Suspense, useCallback } from 
 import { generateRizz, generateBio } from './services/rizzService';
 import { NativeBridge } from './services/nativeBridge';
 import { ToastProvider, useToast } from './context/ToastContext';
-import { InputMode, RizzResponse, BioResponse, SavedItem, UserProfile } from './types';
+import { InputMode, RizzResponse, BioResponse, SavedItem, UserProfile, RizzOrBioResponse } from './types';
 import { supabase } from './services/supabaseClient';
 import RizzCard from './components/RizzCard';
 import LoginPage from './components/LoginPage';
@@ -178,7 +178,7 @@ const AppContent: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [loadingMsg, setLoadingMsg] = useState("Cooking...");
   
-  const [result, setResult] = useState<RizzResponse | BioResponse | null>(null);
+  const [result, setResult] = useState<RizzOrBioResponse | null>(null);
   const [inputError, setInputError] = useState<string | null>(null);
 
   // Modals & Flags
