@@ -22,7 +22,9 @@ const llamaClient = new OpenAI({
 const PERSPECTIVE_API_KEY = process.env.PERSPECTIVE_API_KEY || '';
 
 // Model Configuration
-const GENERATION_MODEL = process.env.GENERATION_MODEL || 'meta-llama/llama-4-scout-17b-16e-instruct';
+// We use the 8B model for text (fast, smart) and the Scout model for Vision (high detail)
+const VISION_MODEL = process.env.GENERATION_MODEL || 'meta-llama/llama-4-scout-17b-16e-instruct';
+const TEXT_MODEL = 'llama-3.1-8b-instant';
 const SAFETY_MODEL = process.env.SAFETY_MODEL || 'meta-llama/llama-guard-4-12b';
 
 // --- LOCAL PRE-FILTERS ---
@@ -34,7 +36,6 @@ const HATE_SPEECH_REGEX = /\b(suicide|kill yourself|kys|self-harm|die|racist|fag
 // 2. EXPLICIT CONTENT (PG-13 FILTER)
 // We block hardcore pornography terms but allow words that might be used in PG-13 contexts (like 'sex', 'horny', 'nude') 
 // if the context is safe (checked by Perspective/LLM). 
-// REMOVED from blocklist: sex, horny, hard, wet, nude, naked, strip (Context matters for these).
 const EXPLICIT_REGEX = /\b(heroin|meth|fentanyl|cocaine|crack|cp|child porn|sexual violence|gangbang|cunt|anal|oral|cum|sperm|jizz|bukkake|creampie|blowjob|handjob|rimjob|hentai|masturbate|dildo|vibrator|bdsm|fetish|milf|dilf|onlyfans|whore|clit|clitoris|deepthroat|scissoring|tribadism|anilingus|cunnilingus|fellatio|sodomy|buggery|pederasty|hebephilia|ephebophilia|gerontophilia|urolagnia|coprophilia|scat|water sports|golden shower|pearl necklace|facial|titty fuck|tit fuck|boob fuck|paizuri|glory hole|dogging|cuckold|cuck|incel|femcel)\b/i;
 
 // --- FALLBACK OBJECTS ---
@@ -205,7 +206,7 @@ const checkOutputSafety = async (text: string): Promise<boolean> => {
             return false;
         }
 
-        // Allow flirting (up to 0.8), but block hardcore porn descriptions
+        // Allow flirting (up to 0.85), but block hardcore porn descriptions
         if (sexuallyExplicit > 0.85) {
             console.warn("Output Blocked: Too Explicit");
             return false;
@@ -233,11 +234,10 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
 
   // --- GENERATION SETTINGS ---
   const COMPLETION_CONFIG = {
-      model: GENERATION_MODEL,
       response_format: { type: "json_object" } as any,
-      temperature: 1.15, // Increased for more humor variation
+      temperature: 1.15, // High creativity
       top_p: 0.95,             
-      frequency_penalty: 0.3, // Reduce repetition of generic phrases 
+      frequency_penalty: 0.3, 
       max_tokens: 800,
   };
 
@@ -248,11 +248,11 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
   YOUR MISSION: Ghostwrite the funniest, sharpest, most engaging replies for the user.
   
   RATING: PG-13
-  - **Allowed:** Swearing (damn, hell, ass, shit), sexual innuendo, flirting, roasting, sarcasm.
-  - **Banned:** Hate speech, racism, hardcore explicit descriptions.
+  - **Allowed:** Mild swearing (damn, hell, ass, shit, bitch), sexual innuendo (that's what she said), flirting, roasting, sarcasm.
+  - **Banned:** Hate speech, racism, hardcore explicit descriptions, graphic violence.
   
   STYLE GUIDE (The "Meta" Vibe):
-  - **Brainrot:** Use subtle Gen Z slang (cooked, aura, cringe) but don't overdo it.
+  - **Brainrot:** Use subtle Gen Z slang (cooked, aura, cringe, based, down bad) but don't overdo it.
   - **Lowercase Aesthetic:** Write like a text message (lowercase, minimal punctuation).
   - **Status:** Be confident. Frame the user as the prize.
   - **No NPC Energy:** If the input is "hey", destroy them. If the input is boring, roast them.
@@ -265,9 +265,9 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
   Output strictly valid JSON.
   `;
 
-  // CASE 1: IMAGE PRESENT
+  // CASE 1: IMAGE PRESENT -> Use VISION_MODEL (Scout)
   if (imageBase64) {
-      console.log(`Using ${GENERATION_MODEL} for Image Analysis`);
+      console.log(`Using Vision Model: ${VISION_MODEL}`);
       const mimeType = getMimeType(imageBase64);
       const base64Data = imageBase64.includes('base64,') ? imageBase64.split('base64,')[1] : imageBase64;
       const imageUrl = `data:${mimeType};base64,${base64Data}`;
@@ -294,6 +294,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
 
       try {
         const completion = await llamaClient.chat.completions.create({
+            model: VISION_MODEL,
             ...COMPLETION_CONFIG,
             messages: [
                 { role: "system", content: CREATIVE_SYSTEM_PROMPT },
@@ -322,14 +323,14 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
         return parsed as RizzResponse;
 
       } catch (llamaError: any) {
-        console.error(`Generation (${GENERATION_MODEL}) failed:`, llamaError);
+        console.error(`Generation (${VISION_MODEL}) failed:`, llamaError);
         return createErrorRizz(llamaError.message || `Vision Generation Failed`);
       }
   }
 
-  // CASE 2: TEXT ONLY
+  // CASE 2: TEXT ONLY -> Use TEXT_MODEL (Llama 3.1 8B Instant)
   else {
-      console.log(`Using ${GENERATION_MODEL} for Text Rizz`);
+      console.log(`Using Text Model: ${TEXT_MODEL}`);
 
       if (apiKey === 'dummy-key') {
           console.error("API Key missing.");
@@ -359,6 +360,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
 
       try {
           const completion = await llamaClient.chat.completions.create({
+              model: TEXT_MODEL,
               ...COMPLETION_CONFIG,
               messages: [
                   { role: "system", content: CREATIVE_SYSTEM_PROMPT },
@@ -397,7 +399,7 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
       if (!isSafe) return BLOCKED_BIO;
   }
 
-  console.log(`Using ${GENERATION_MODEL} for Bio`);
+  console.log(`Using Text Model for Bio: ${TEXT_MODEL}`);
 
   if (apiKey === 'dummy-key') {
       return { ...createErrorBio("System Error: Missing API Key"), analysis: "System Error: Missing API Key" };
@@ -420,9 +422,9 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
 
   try {
     const completion = await llamaClient.chat.completions.create({
-        model: GENERATION_MODEL,
+        model: TEXT_MODEL,
         messages: [
-            { role: "system", content: "Role: Profile Optimizer. Style: Hilarious, short, high-status. Rating: PG-13. Be creative and unrestricted." },
+            { role: "system", content: "Role: Profile Optimizer. Style: Hilarious, short, high-status. Rating: PG-13. Be creative and unrestricted within PG-13 limits." },
             { role: "user", content: prompt }
         ],
         response_format: { type: "json_object" },
