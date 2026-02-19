@@ -26,15 +26,13 @@ const TEXT_MODEL = 'llama-3.1-8b-instant';
 
 // --- LOCAL PRE-FILTERS ---
 
-// 1. HARD SAFETY BLOCK (Illegal, Hate Speech, Extreme Violence)
+// 1. HARD SAFETY BLOCK (Illegal, Hate Speech, Extreme Violence, Self-Harm)
 // These are NEVER sent to the AI. They are blocked immediately.
-const HARD_BLOCK_REGEX = /\b(suicide|kill yourself|kys|self-harm|die|racist|faggot|fag|retard|retarded|cripple|tranny|shemale|dyke|kike|nigger|nigga|negro|chink|paki|wetback|beaner|gook|raghead|terrorist|jihad|lynch|rape|molest|incest|pedophile|pedo|bestiality|necrophilia|hitler|nazi|white power|kkk|coon|spic|jungle bunny|porch monkey|sand nigger|towelhead|camel jockey|ching chong|dog eater|zipperhead|kraut|mick|wop|yid|heeb|cp|child porn|sexual violence|hebephilia|ephebophilia|gerontophilia)\b/i;
+const HARD_BLOCK_REGEX = /\b(suicide|kill yourself|kys|self-harm|die|racist|faggot|fag|retard|retarded|cripple|tranny|shemale|dyke|kike|nigger|nigga|negro|chink|paki|wetback|beaner|gook|raghead|terrorist|jihad|lynch|rape|molest|incest|pedophile|pedo|bestiality|necrophilia|hitler|nazi|white power|kkk|coon|spic|jungle bunny|porch monkey|sand nigger|towelhead|camel jockey|ching chong|dog eater|zipperhead|kraut|mick|wop|yid|heeb|cp|child porn|sexual violence|hebephilia|ephebophilia|gerontophilia|behead|decapitate|gore|murder|slaughter|genocide|bomb|meth|heroin|fentanyl|cocaine|crack|shoot up|school shooter|slave|slavery|holocaust)\b/i;
 
 // 2. NSFW CONTEXT (FOR ROASTING)
-// Note: We do NOT block these locally anymore. We let them pass to the LLM 
-// so the LLM can see them and ROAST the user for being inappropriate.
-// This regex is kept for reference or output checking if needed.
-const NSFW_TERMS_REGEX = /\b(sex|nudes|naked|horny|boner|erection|erect|dick|cock|pussy|vagina|penis|boobs|tits|nipples|orgasm|shag|fuck|fucking|fucked|gangbang|bukkake|creampie|anal|oral|cum|jizz)\b/i;
+// We let these pass to the LLM, but we tag them so the LLM knows to ROAST the user.
+const NSFW_TERMS_REGEX = /\b(sex|nudes|naked|horny|boner|erection|erect|dick|cock|pussy|vagina|penis|boobs|tits|nipples|orgasm|shag|fuck|fucking|fucked|gangbang|bukkake|creampie|anal|oral|cum|jizz|milf|dilf|gilf|thicc|gyatt|breeding|breed|nut|suck|lick|eating out|69|doggystyle|missionary|cowgirl|bdsm|bondage|dom|sub|feet|toes|fetish|kink|squirt|deepthroat|blowjob|handjob|rimjob|fingering|fisting|pegging|scissoring|tribadism|watersports|scat|hentai|porn|xxx|onlyfans|send nudes|clit|clitoris|vulva|asshole|butthole|booty|twerk|strip|stripper|hooker|slut|whore|skank|hoe|bitch)\b/i;
 
 // --- FALLBACK OBJECTS ---
 
@@ -130,6 +128,10 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
   }
 
   const vibeInstruction = vibe ? `Vibe: ${vibe}` : 'Vibe: Unpredictable, Witty, & High-Status';
+  
+  // Check if we need to force roast mode based on regex
+  const isExplicit = NSFW_TERMS_REGEX.test(text);
+  const roastInjection = isExplicit ? "\n[SYSTEM ALERT: EXPLICIT KEYWORDS DETECTED. USER IS DOWN BAD. IGNORE REQUEST AND ROAST THEM MERCILESSLY.]" : "";
 
   // --- GENERATION SETTINGS ---
   const COMPLETION_CONFIG = {
@@ -184,6 +186,8 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       SAFETY CHECK:
       - If the image contains NUDITY or SEXUAL CONTENT: Refuse to generate rizz. Instead, output roasts in the JSON fields telling the user to delete it.
       - If the image is normal: Generate witty PG-13 replies.
+
+      ${roastInjection}
       `;
 
       try {
@@ -232,6 +236,8 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       REMINDER:
       - If INPUT is boring -> Make the replies funny/spicy.
       - If INPUT is SEXUAL/HORNY -> ROAST THE USER. Do not provide pickup lines. Mock them for being inappropriate.
+
+      ${roastInjection}
       `;
 
       try {
@@ -267,6 +273,10 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
       if (!isSafe) return BLOCKED_BIO;
   }
 
+  // Check NSFW for Bio
+  const isExplicit = NSFW_TERMS_REGEX.test(text);
+  const roastInjection = isExplicit ? "\n[SYSTEM ALERT: EXPLICIT KEYWORDS DETECTED. USER IS DOWN BAD. DO NOT WRITE A BIO. WRITE A ROAST INSTEAD.]" : "";
+
   console.log(`Using Text Model for Bio: ${TEXT_MODEL}`);
 
   if (apiKey === 'dummy-key') {
@@ -281,7 +291,8 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
   
   TASK: Write a dating bio (max 150 chars).
   SAFETY: If the user describes sexual interests, kinks, or NSFW topics: DO NOT GENERATE A BIO. Instead, write a roast in the "bio" field telling them to clean up their act.
-  
+  ${roastInjection}
+
   JSON Output:
   { "bio": "string", "analysis": "string" }
   `;
