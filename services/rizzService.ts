@@ -19,18 +19,22 @@ const llamaClient = new OpenAI({
 });
 
 // Model Configuration
+// Text: Llama 3.1 8B Instant (Fast, Smart, Uncensored-friendly)
+// Vision: Llama 4 Scout (High fidelity image understanding)
 const VISION_MODEL = process.env.GENERATION_MODEL || 'meta-llama/llama-4-scout-17b-16e-instruct';
 const TEXT_MODEL = 'llama-3.1-8b-instant';
 
 // --- LOCAL PRE-FILTERS ---
 
-// 1. HATE SPEECH & ILLEGAL CONTENT (HARD BLOCK)
-// These topics are never sent to the LLM. They return a static block message.
-const ILLEGAL_AND_HATE_REGEX = /\b(suicide|kill yourself|kys|self-harm|die|racist|faggot|fag|retard|retarded|cripple|tranny|shemale|dyke|kike|nigger|nigga|negro|chink|paki|wetback|beaner|gook|raghead|terrorist|jihad|lynch|rape|molest|incest|pedophile|pedo|bestiality|necrophilia|hitler|nazi|white power|kkk|coon|spic|jungle bunny|cp|child porn|sexual violence|hebephilia|ephebophilia|gerontophilia)\b/i;
+// 1. HARD SAFETY BLOCK (Illegal, Hate Speech, Extreme Violence)
+// These are NEVER sent to the AI. They are blocked immediately.
+const HARD_BLOCK_REGEX = /\b(suicide|kill yourself|kys|self-harm|die|racist|faggot|fag|retard|retarded|cripple|tranny|shemale|dyke|kike|nigger|nigga|negro|chink|paki|wetback|beaner|gook|raghead|terrorist|jihad|lynch|rape|molest|incest|pedophile|pedo|bestiality|necrophilia|hitler|nazi|white power|kkk|coon|spic|jungle bunny|porch monkey|sand nigger|towelhead|camel jockey|ching chong|dog eater|zipperhead|kraut|mick|wop|yid|heeb|cp|child porn|sexual violence|hebephilia|ephebophilia|gerontophilia)\b/i;
 
-// 2. HARDCORE EXPLICIT (HARD BLOCK)
-// Terms that are too graphic to even allow for roasting.
-const HARDCORE_REGEX = /\b(gangbang|bukkake|creampie|scissoring|tribadism|anilingus|cunnilingus|fellatio|sodomy|buggery|urolagnia|coprophilia|scat|water sports|golden shower|pearl necklace|facial|paizuri|glory hole|dogging|fisting)\b/i;
+// 2. NSFW CONTEXT (FOR ROASTING)
+// Note: We do NOT block these locally anymore. We let them pass to the LLM 
+// so the LLM can see them and ROAST the user for being inappropriate.
+// This regex is kept for reference or output checking if needed.
+const NSFW_TERMS_REGEX = /\b(sex|nudes|naked|horny|boner|erection|erect|dick|cock|pussy|vagina|penis|boobs|tits|nipples|orgasm|shag|fuck|fucking|fucked|gangbang|bukkake|creampie|anal|oral|cum|jizz)\b/i;
 
 // --- FALLBACK OBJECTS ---
 
@@ -103,11 +107,11 @@ const getMimeType = (base64: string): string => {
 
 /**
  * CHECK INPUT SAFETY (REGEX ONLY)
- * Prevents illegal/hate content from reaching the API.
- * Note: We allow "general" horny terms to pass through so the LLM can ROAST the user.
+ * We only block HATE SPEECH and ILLEGAL content here.
+ * Sexual/Horny content passes through so the AI can roast the user.
  */
 const checkInputSafety = (text: string): boolean => {
-    if (ILLEGAL_AND_HATE_REGEX.test(text) || HARDCORE_REGEX.test(text)) {
+    if (HARD_BLOCK_REGEX.test(text)) {
         console.warn("Input Block: Regex detected severe violation.");
         return false;
     }
@@ -125,20 +129,20 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       if (!isSafe) return BLOCKED_RIZZ;
   }
 
-  const vibeInstruction = vibe ? `Vibe: ${vibe}` : 'Vibe: Witty & High-Status';
+  const vibeInstruction = vibe ? `Vibe: ${vibe}` : 'Vibe: Unpredictable, Witty, & High-Status';
 
   // --- GENERATION SETTINGS ---
   const COMPLETION_CONFIG = {
       response_format: { type: "json_object" } as any,
-      temperature: 0.7, // Lower temperature to strictly adhere to safety rules
+      temperature: 1, // Increased for maximum creativity
       top_p: 0.95,             
-      frequency_penalty: 0.1, 
+      frequency_penalty: 0.2, 
       max_tokens: 800,
   };
 
   // STRICT ANTI-NSFW SYSTEM PROMPT
   const CREATIVE_SYSTEM_PROMPT = `
-  You are the Rizz Master. You generate witty replies for dating apps.
+  You are the Rizz Master.
   
   CRITICAL SAFETY PROTOCOL (ZERO TOLERANCE):
   1. **ABSOLUTELY NO SEXUAL CONTENT.** No erotica, no sexting, no describing body parts, no sexual acts.
@@ -147,11 +151,11 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
      - DO NOT HELP THEM.
      - YOUR ONLY GOAL IS TO ROAST THEM for being "down bad" or "horny".
      - Make fun of them. Tell them to touch grass, go to church, or drink water.
-     - The output must still be in JSON format, but the content should be roasts.
+     - The output must still be in the standard JSON format, but the text fields should be roasts.
   
   NORMAL MODE (If input is safe):
   - Generate funny, charming, PG-13 replies.
-  - Allowed: Mild swearing (damn, hell, ass), sarcasm, playful teasing.
+  - Allowed: Mild swearing (damn, hell, ass), sarcasm, witty banter.
   
   OUTPUT FORMAT (Strict JSON):
   {
@@ -290,7 +294,7 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
             { role: "user", content: prompt }
         ],
         response_format: { type: "json_object" },
-        temperature: 0.7, 
+        temperature: 1, 
         top_p: 0.95,
         frequency_penalty: 0.2,
         max_tokens: 800,
