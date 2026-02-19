@@ -18,14 +18,11 @@ const llamaClient = new OpenAI({
     dangerouslyAllowBrowser: true 
 });
 
-// 3. Perspective API Key
-const PERSPECTIVE_API_KEY = process.env.PERSPECTIVE_API_KEY || '';
-
 // Model Configuration
-// We use the 8B model for text (fast, smart) and the Scout model for Vision (high detail)
+// Text: Llama 3.1 8B Instant (Fast, Smart, Uncensored-friendly)
+// Vision: Llama 4 Scout (High fidelity image understanding)
 const VISION_MODEL = process.env.GENERATION_MODEL || 'meta-llama/llama-4-scout-17b-16e-instruct';
 const TEXT_MODEL = 'llama-3.1-8b-instant';
-const SAFETY_MODEL = process.env.SAFETY_MODEL || 'meta-llama/llama-guard-4-12b';
 
 // --- LOCAL PRE-FILTERS ---
 
@@ -33,10 +30,11 @@ const SAFETY_MODEL = process.env.SAFETY_MODEL || 'meta-llama/llama-guard-4-12b';
 // We never allow hate speech, racial slurs, or encouragement of self-harm.
 const HATE_SPEECH_REGEX = /\b(suicide|kill yourself|kys|self-harm|die|racist|faggot|fag|retard|retarded|cripple|tranny|shemale|dyke|kike|nigger|nigga|negro|chink|paki|wetback|beaner|gook|raghead|terrorist|jihad|lynch|rape|molest|incest|pedophile|pedo|bestiality|necrophilia|hitler|nazi|white power|kkk|coon|spic|jungle bunny|porch monkey|sand nigger|towelhead|camel jockey|ching chong|dog eater|zipperhead|kraut|mick|wop|yid|heeb|abomination|sodomite|batty boy|chi chi man|fudge packer|pillow biter|rug muncher|carpet muncher|mong|spastic|window licker)\b/i;
 
-// 2. EXPLICIT CONTENT (PG-13 FILTER)
-// We block hardcore pornography terms but allow words that might be used in PG-13 contexts (like 'sex', 'horny', 'nude') 
-// if the context is safe (checked by Perspective/LLM). 
-const EXPLICIT_REGEX = /\b(heroin|meth|fentanyl|cocaine|crack|cp|child porn|sexual violence|gangbang|cunt|anal|oral|cum|sperm|jizz|bukkake|creampie|blowjob|handjob|rimjob|hentai|masturbate|dildo|vibrator|bdsm|fetish|milf|dilf|onlyfans|whore|clit|clitoris|deepthroat|scissoring|tribadism|anilingus|cunnilingus|fellatio|sodomy|buggery|pederasty|hebephilia|ephebophilia|gerontophilia|urolagnia|coprophilia|scat|water sports|golden shower|pearl necklace|facial|titty fuck|tit fuck|boob fuck|paizuri|glory hole|dogging|cuckold|cuck|incel|femcel)\b/i;
+// 2. EXPLICIT CONTENT (STRICT PG-13 FILTER)
+// Block hardcore pornography terms AND overt sexual slang.
+// We ALLOW: damn, hell, ass, shit (Mild Swearing).
+// We BLOCK: sex, nudes, genitals, sexual acts.
+const EXPLICIT_REGEX = /\b(heroin|meth|fentanyl|cocaine|crack|cp|child porn|sexual violence|gangbang|cunt|anal|oral|cum|sperm|jizz|bukkake|creampie|blowjob|handjob|rimjob|hentai|masturbate|dildo|vibrator|bdsm|fetish|milf|dilf|onlyfans|whore|clit|clitoris|deepthroat|scissoring|tribadism|anilingus|cunnilingus|fellatio|sodomy|buggery|pederasty|hebephilia|ephebophilia|gerontophilia|urolagnia|coprophilia|scat|water sports|golden shower|pearl necklace|facial|titty fuck|tit fuck|boob fuck|paizuri|glory hole|dogging|cuckold|cuck|incel|femcel|sex|nude|nudes|naked|horny|boner|erection|erect|dick|cock|pussy|vagina|penis|boobs|tits|nipples|orgasm|shag|fuck|fucking|fucked)\b/i;
 
 // --- FALLBACK OBJECTS ---
 
@@ -108,115 +106,24 @@ const getMimeType = (base64: string): string => {
 };
 
 /**
- * CHECK OUTPUT FOR BANNED WORDS (Local Regex Backup)
- * Used as a fallback if Perspective API fails.
+ * CHECK OUTPUT SAFETY (REGEX ONLY)
+ * Output is checked only against the Regex blocklist to allow for "edgy" humor 
+ * that might trip the strict API filters.
  */
-const isOutputCleanRegex = (text: string): boolean => {
+const checkOutputSafety = (text: string): boolean => {
     return !HATE_SPEECH_REGEX.test(text) && !EXPLICIT_REGEX.test(text);
 };
 
 /**
- * CHECK SAFETY WITH LLAMA GUARD (For INPUT)
+ * CHECK INPUT SAFETY (REGEX ONLY)
+ * Removed Guard API. Input is checked strictly by local regex to prevent jailbreaks.
  */
-const checkInputSafety = async (text: string): Promise<boolean> => {
-    // 1. Fast Regex Pre-check (Optimization)
+const checkInputSafety = (text: string): boolean => {
     if (HATE_SPEECH_REGEX.test(text) || EXPLICIT_REGEX.test(text)) {
         console.warn("Input Block: Regex detected violation.");
         return false;
     }
-
-    // 2. Llama Guard Check
-    try {
-        console.log(`Checking input with ${SAFETY_MODEL}...`);
-        const completion = await llamaClient.chat.completions.create({
-            model: SAFETY_MODEL,
-            messages: [
-                { role: "system", content: "You are a safety classifier. You must be extremely strict about HATE SPEECH and ILLEGAL ACTS. However, you should ALLOW mild sexual innuendo, flirting, and swearing (PG-13)." },
-                { role: "user", content: text }
-            ],
-            temperature: 0,
-            max_tokens: 10
-        });
-
-        const result = completion.choices[0].message.content?.trim().toLowerCase();
-        
-        // Llama Guard typically outputs "unsafe" followed by category codes if it flags something.
-        if (result && (result.startsWith("unsafe") || result.includes("unsafe"))) {
-            console.warn("Input Block: Llama Guard flagged content.", result);
-            return false;
-        }
-
-        return true;
-    } catch (error) {
-        console.error("Llama Guard API Error:", error);
-        // Fail open for connection errors, fallback to internal generation safety
-        return true; 
-    }
-};
-
-/**
- * CHECK OUTPUT WITH GOOGLE PERSPECTIVE API
- */
-const checkOutputSafety = async (text: string): Promise<boolean> => {
-    // If no key, fallback to regex
-    if (!PERSPECTIVE_API_KEY) {
-        console.warn("Perspective API Key missing, falling back to regex.");
-        return isOutputCleanRegex(text);
-    }
-
-    try {
-        console.log("Checking output with Perspective API...");
-        const response = await fetch(`https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=${PERSPECTIVE_API_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                comment: { text: text },
-                languages: ['en'],
-                requestedAttributes: {
-                    TOXICITY: {},
-                    SEVERE_TOXICITY: {},
-                    IDENTITY_ATTACK: {},
-                    SEXUALLY_EXPLICIT: {},
-                    THREAT: {}
-                }
-            })
-        });
-
-        if (!response.ok) {
-            console.error("Perspective API returned error:", response.status);
-            return isOutputCleanRegex(text); // Fallback on error
-        }
-
-        const data = await response.json();
-        const scores = data.attributeScores;
-
-        // PG-13 THRESHOLDS
-        // We tolerate higher TOXICITY (for roasts) and SEXUALLY_EXPLICIT (for innuendo).
-        // We do NOT tolerate SEVERE_TOXICITY (hate speech) or THREATS.
-        
-        const severeToxicity = scores.SEVERE_TOXICITY?.summaryScore?.value || 0;
-        const identityAttack = scores.IDENTITY_ATTACK?.summaryScore?.value || 0;
-        const sexuallyExplicit = scores.SEXUALLY_EXPLICIT?.summaryScore?.value || 0;
-        const threat = scores.THREAT?.summaryScore?.value || 0;
-
-        console.log("Perspective Scores:", { severeToxicity, identityAttack, sexuallyExplicit, threat });
-
-        if (severeToxicity > 0.85 || identityAttack > 0.7 || threat > 0.7) {
-            console.warn("Output Blocked: Toxic/Hate/Threat");
-            return false;
-        }
-
-        // Allow flirting (up to 0.85), but block hardcore porn descriptions
-        if (sexuallyExplicit > 0.85) {
-            console.warn("Output Blocked: Too Explicit");
-            return false;
-        }
-
-        return true;
-    } catch (error) {
-        console.error("Perspective API Network Error:", error);
-        return isOutputCleanRegex(text); // Fallback
-    }
+    return true;
 };
 
 /**
@@ -224,9 +131,9 @@ const checkOutputSafety = async (text: string): Promise<boolean> => {
  */
 export const generateRizz = async (text: string, imageBase64?: string, vibe?: string): Promise<RizzResponse> => {
   
-  // 1. INPUT SAFETY CHECK (Guard + Regex)
+  // 1. INPUT SAFETY CHECK (Regex Only)
   if (text) {
-      const isSafe = await checkInputSafety(text);
+      const isSafe = checkInputSafety(text);
       if (!isSafe) return BLOCKED_RIZZ;
   }
 
@@ -235,21 +142,21 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
   // --- GENERATION SETTINGS ---
   const COMPLETION_CONFIG = {
       response_format: { type: "json_object" } as any,
-      temperature: 1.15, // High creativity
+      temperature: 0.85, // Lowered to reduce hallucinations/chaos
       top_p: 0.95,             
       frequency_penalty: 0.3, 
       max_tokens: 800,
   };
 
-  // ENHANCED SYSTEM PROMPT FOR PG-13 HUMOR
+  // ENHANCED SYSTEM PROMPT FOR STRICT PG-13 HUMOR
   const CREATIVE_SYSTEM_PROMPT = `
   You are the Rizz Master, a chaotic good dating coach and stand-up comedian.
   
   YOUR MISSION: Ghostwrite the funniest, sharpest, most engaging replies for the user.
   
-  RATING: PG-13
-  - **Allowed:** Mild swearing (damn, hell, ass, shit, bitch), sexual innuendo (that's what she said), flirting, roasting, sarcasm.
-  - **Banned:** Hate speech, racism, hardcore explicit descriptions, graphic violence.
+  RATING: PG-13 (STRICTLY SAFE)
+  - **Allowed:** Mild swearing (damn, hell, ass, shit), flirting, roasting, sarcasm, witty banter.
+  - **Strictly Banned:** Overt sexual content, sexual acts, genitals, nudity, hate speech, violence.
   
   STYLE GUIDE (The "Meta" Vibe):
   - **Brainrot:** Use subtle Gen Z slang (cooked, aura, cringe, based, down bad) but don't overdo it.
@@ -259,7 +166,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
   
   CATEGORIES:
   - **'Tease' (The Roast):** Playful bullying. Treat them like a bratty sibling. Be mean but funny.
-  - **'Smooth' (The Charm):** Slick, confident. Use innuendo. "I'm not saying I'm obsessed, but..."
+  - **'Smooth' (The Charm):** Slick, confident, romantic but NOT sexual.
   - **'Chaotic' (The Wildcard):** Unhinged, random, delusional. "I'm already planning our wedding/divorce."
   
   Output strictly valid JSON.
@@ -280,6 +187,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       - If chat: Reply to the last message with maximum rizz.
       - If profile: Roast a specific detail or compliment them suspiciously.
       - Make it punchy. No essays.
+      - KEEP IT PG-13. NO SEXUAL COMMENTS.
       
       OUTPUT FORMAT (Strict JSON):
       {
@@ -312,9 +220,9 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
         const parsed = parseJSON(content);
         if (!parsed || !parsed.tease) throw new Error("Invalid JSON from Generation Model");
 
-        // 2. OUTPUT SAFETY CHECK (Perspective API)
+        // 2. OUTPUT SAFETY CHECK (Regex Only)
         const combinedOutput = `${parsed.tease} ${parsed.smooth} ${parsed.chaotic} ${parsed.analysis}`;
-        const isOutputSafe = await checkOutputSafety(combinedOutput);
+        const isOutputSafe = checkOutputSafety(combinedOutput);
         
         if (!isOutputSafe) {
             return BLOCKED_RIZZ;
@@ -346,6 +254,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       - DIRECT REPLIES ONLY.
       - Make it hilarious. If they are boring, roast them.
       - Be creative. Avoid generic lines.
+      - KEEP IT PG-13. NO SEXUAL COMMENTS.
       
       OUTPUT FORMAT (Strict JSON):
       {
@@ -372,9 +281,9 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
           const parsed = parseJSON(content);
           if (!parsed || !parsed.tease) return createErrorRizz("Invalid JSON from Generation Model");
 
-          // 2. OUTPUT SAFETY CHECK (Perspective API)
+          // 2. OUTPUT SAFETY CHECK (Regex Only)
           const combinedOutput = `${parsed.tease} ${parsed.smooth} ${parsed.chaotic} ${parsed.analysis}`;
-          const isOutputSafe = await checkOutputSafety(combinedOutput);
+          const isOutputSafe = checkOutputSafety(combinedOutput);
 
           if (!isOutputSafe) {
               return BLOCKED_RIZZ;
@@ -393,9 +302,9 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
  * GENERATE BIO
  */
 export const generateBio = async (text: string, vibe?: string): Promise<BioResponse> => {
-  // 1. INPUT SAFETY CHECK (Guard + Regex)
+  // 1. INPUT SAFETY CHECK (Regex Only)
   if (text) {
-      const isSafe = await checkInputSafety(text);
+      const isSafe = checkInputSafety(text);
       if (!isSafe) return BLOCKED_BIO;
   }
 
@@ -415,6 +324,7 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
   - Make it stand out. 
   - Use self-deprecating humor, confident absurdity, or "red flag" jokes.
   - Avoid clichés like "I love travel". Be specific.
+  - KEEP IT PG-13.
   
   JSON Output:
   { "bio": "string", "analysis": "string" }
@@ -424,11 +334,11 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
     const completion = await llamaClient.chat.completions.create({
         model: TEXT_MODEL,
         messages: [
-            { role: "system", content: "Role: Profile Optimizer. Style: Hilarious, short, high-status. Rating: PG-13. Be creative and unrestricted within PG-13 limits." },
+            { role: "system", content: "Role: Profile Optimizer. Style: Hilarious, short, high-status. Rating: PG-13 (Strictly Safe). Be creative but strictly allow NO sexual content." },
             { role: "user", content: prompt }
         ],
         response_format: { type: "json_object" },
-        temperature: 1.1, 
+        temperature: 0.85, 
         top_p: 0.95,
         frequency_penalty: 0.2,
         max_tokens: 800,
@@ -438,9 +348,9 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
     const parsed = parseJSON(content);
     if (!parsed || !parsed.bio) return createErrorBio("Invalid JSON from Generation Model");
 
-    // 2. OUTPUT SAFETY CHECK (Perspective API)
+    // 2. OUTPUT SAFETY CHECK (Regex Only)
     const combinedOutput = `${parsed.bio} ${parsed.analysis}`;
-    const isOutputSafe = await checkOutputSafety(combinedOutput);
+    const isOutputSafe = checkOutputSafety(combinedOutput);
 
     if (!isOutputSafe) {
         return BLOCKED_BIO;
