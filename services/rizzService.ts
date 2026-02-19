@@ -336,7 +336,7 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
     const completion = await llamaClient.chat.completions.create({
         model: TEXT_MODEL,
         messages: [
-            { role: "system", content: "Role: Profile Optimizer. Rating: PG-13. STRICTLY NO NSFW. If user asks for NSFW, roast them." },
+            { role: "system", content: "Role: Profile Optimizer. Rating: PG-13. STRICTLY NO NSFW. If user asks for NSFW, roast them but without using nsfw words." },
             { role: "user", content: prompt }
         ],
         response_format: { type: "json_object" },
