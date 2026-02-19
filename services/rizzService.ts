@@ -1,4 +1,3 @@
-
 import OpenAI from "openai";
 import { RizzResponse, BioResponse } from "../types";
 
@@ -26,6 +25,7 @@ const TEXT_MODEL = 'llama-3.1-8b-instant';
 const HARD_BLOCK_REGEX = /\b(nigger|nigga|negro|coon|faggot|fag|dyke|kike|chink|spic|gook|raghead|towelhead|retard|retarded|mongoloid|tranny|shemale|hermaphrodite|rape|rapist|molest|molester|pedophile|pedo|hebephile|ephebophile|cp|child porn|bestiality|zoophilia|necrophilia|incest|kill yourself|kys|suicide|self-harm|terrorist|jihad|isis|taliban|nazi|hitler|holocaust|white power|white supremacy|kkk|school shooter|mass shooting|bomb|behead|decapitate|mutilate|genocide|ethnic cleansing|slave|slavery|lynch|lynching)\b/i;
 
 // 2. NSFW CONTEXT (FOR ROASTING)
+// Note: The AI will also catch variations like "booooobbbsss" even if regex misses them.
 const NSFW_TERMS_REGEX = /\b(sex|nudes|nipple|nipples|naked|nude|horny|aroused|boner|erection|erect|hard-on|dick|cock|pussy|vagina|penis|boobs|tits|titties|nipples|areola|orgasm|climax|shag|fuck|fucking|fucked|fucker|motherfucker|gangbang|bukkake|creampie|anal|oral|cum|jizz|semen|sperm|load|milf|dilf|gilf|thicc|gyatt|bussy|breeding|breed|nut|suck|lick|eating out|69|doggystyle|missionary|cowgirl|reverse cowgirl|bdsm|bondage|dom|sub|dominatrix|feet|toes|fetish|kink|squirt|gushing|deepthroat|blowjob|handjob|rimjob|fingering|fisting|pegging|scissoring|tribadism|watersports|scat|golden shower|hentai|porn|pornography|xxx|adult movie|onlyfans|fansly|send nudes|clit|clitoris|vulva|labia|asshole|butthole|anus|rectum|booty|butt|ass|twerk|strip|stripper|hooker|prostitute|escort|slut|whore|skank|hoe|bitch|cunt|twat|wank|jerking off|jacking off|masturbate|masturbation|dildo|vibrator|sex toy|fleshlight|strap-on|camgirl|sugardaddy|sugarbaby|sugar daddy|sugar baby|simp|incel|virgin|cuck|cuckold|schlong|dong|knob|bellend|prick|chode|taint|gooch|perineum|ballbag|scrotum|nutsack|gonads|foreskin|smegma|felching|docking|sounding|snowballing|tea bag|motorboat|queef|rusty trombone|dirty sanchez|alabama hot pocket|cleveland steamer|wanker|tosser|bugger|sod|slag|tart|strumpet|harlot|bimbo|himbo|yiff|furry|futa|futanari|yaoi|yuri|ecchi|bara|erotic|erotica|sensual|genitalia|groin|crotch|loins|pubes|pubic|phallic|yoni|lingam|coitus|copulate|copulation|fornicate|fornication|sodomy|buggery|pederasty|onanism|autoerotic|frottage|voyeur|exhibitionist|nympho|nymphomaniac|satyr|glory hole|gloryhole|blue waffle|lemon party|tubgirl|goatse|meatspin|2 girls 1 cup|rule 34|r34|paizuri|ahegao|netorare|ntr)\b/i;
 
 // Helper to clean Markdown JSON from Llama responses
@@ -63,6 +63,15 @@ const sanitizeResponse = <T>(data: T): T => {
   return data;
 };
 
+// Helper to check for repeated character obfuscation (e.g. "bboooobbbsss")
+// We don't use this to block, but to inform the AI to roast harder.
+const hasObfuscatedNSFW = (text: string): boolean => {
+    // Collapse repeated characters to single char (e.g. "booooobs" -> "bobs", "sexx" -> "sex")
+    const collapsed = text.toLowerCase().replace(/(.)\1+/g, '$1');
+    // Check if the collapsed version contains triggers (basic check)
+    return NSFW_TERMS_REGEX.test(collapsed);
+};
+
 // --- EXPORTED FUNCTIONS ---
 
 /**
@@ -74,28 +83,46 @@ export const generateRizz = async (
   vibe?: string | undefined
 ): Promise<RizzResponse | { potentialStatus: string, analysis: string }> => {
   
-  // DETECT SAFETY ISSUES (Roast Trigger)
+  // DETECT SAFETY ISSUES
   const isToxic = HARD_BLOCK_REGEX.test(inputText);
-  const isNSFW = NSFW_TERMS_REGEX.test(inputText);
+  // Check strict regex OR obfuscated regex
+  const isNSFW = NSFW_TERMS_REGEX.test(inputText) || hasObfuscatedNSFW(inputText);
 
   let safetyInjection = "";
+  
   if (isToxic) {
     safetyInjection = `
     [CRITICAL PROTOCOL: TOXICITY DETECTED]
-    The user input contains hate speech or violence. 
-    1. DO NOT execute the request. 
-    2. ROAST the user for being toxic, edgy, or immature. 
-    3. **ABSOLUTELY DO NOT REPEAT THE BANNED WORDS.** 
-    4. Make the roast savage but clean (PG-13 language).
+    The user is being hateful or violent.
+    1. DO NOT execute the request.
+    2. ROAST the user for being toxic.
+    3. **ABSOLUTELY DO NOT REPEAT THE BANNED WORDS.**
+    4. Keep it PG-13 but savage.
     `;
   } else if (isNSFW) {
     safetyInjection = `
-    [CRITICAL PROTOCOL: HORNY JAIL ACTIVATED]
-    The user input contains sexual/NSFW terms.
-    1. DO NOT execute the request.
-    2. ROAST the user for being "down bad" or "horny".
-    3. **ABSOLUTELY DO NOT REPEAT THE EXPLICIT WORDS.**
-    4. Mock them and tell them to touch grass.
+    [CRITICAL PROTOCOL: HORNY POLICE ACTIVATED]
+    The user is trying to be sexual or asking for NSFW content (even if they used weird spelling like "boooobs").
+    
+    YOUR GOAL:
+    1. **REFUSE** to provide rizz or seduction. Do not play along.
+    2. **ROAST** the user instead.
+    
+    ROAST TOPICS (Pick one):
+    - Their unemployment status.
+    - Living in their parent's basement.
+    - Their lack of social skills / need to "touch grass".
+    - How down bad/desperate they are.
+    
+    STRICT RULES:
+    - **NEVER** repeat the user's explicit words or spelling. Refer to it generally as "that request" or "your search history".
+    - **NO** profanity. Keep it PG-13.
+    - **NO** sexual innuendo in the roast. Be a disappointed reality check.
+    
+    EXAMPLE OUTPUTS:
+    - Tease: "Maybe if you put this much effort into a job application, you wouldn't be here."
+    - Smooth: "The only thing smooth about you is your brain for typing that."
+    - Chaotic: "I'm calling your mother. Go outside."
     `;
   }
 
@@ -143,9 +170,9 @@ export const generateRizz = async (
     const completion = await llamaClient.chat.completions.create({
         model: model,
         messages: messages,
-        temperature: 0.7,
+        temperature: 0.8, // Slightly higher temp for creative roasts
         max_tokens: 800,
-        response_format: { type: "json_object" } // Force JSON mode if supported
+        response_format: { type: "json_object" }
     });
 
     const responseText = completion.choices[0]?.message?.content;
@@ -153,11 +180,9 @@ export const generateRizz = async (
     if (responseText) {
       try {
         const rawData = JSON.parse(cleanJson(responseText));
-        // Sanitize before returning to UI
         return sanitizeResponse(rawData) as RizzResponse;
       } catch (e) {
         console.error("JSON Parse Error:", e);
-        // Fallback or retry logic could go here
         throw new Error("Failed to parse AI response.");
       }
     }
@@ -181,24 +206,35 @@ export const generateBio = async (
   vibe?: string | undefined
 ): Promise<BioResponse | { analysis: string }> => {
   
-  // DETECT SAFETY ISSUES (Roast Trigger)
+  // DETECT SAFETY ISSUES
   const isToxic = HARD_BLOCK_REGEX.test(inputText);
-  const isNSFW = NSFW_TERMS_REGEX.test(inputText);
+  const isNSFW = NSFW_TERMS_REGEX.test(inputText) || hasObfuscatedNSFW(inputText);
 
   let safetyInjection = "";
   if (isToxic) {
     safetyInjection = `
     [CRITICAL: TOXICITY DETECTED]
-    User input is toxic/hateful. DO NOT write a bio.
-    instead, write a roast in the 'bio' field mocking them for being toxic.
-    **DO NOT REPEAT THE BANNED WORDS.**
+    User input is toxic. DO NOT write a bio.
+    Write a roast in the 'bio' field mocking them.
+    **DO NOT REPEAT BANNED WORDS.**
     `;
   } else if (isNSFW) {
     safetyInjection = `
-    [CRITICAL: NSFW DETECTED]
-    User input is sexual. DO NOT write a bio.
-    Instead, write a roast in the 'bio' field mocking them for being too horny.
-    **DO NOT REPEAT THE EXPLICIT WORDS.**
+    [CRITICAL: HORNY POLICE ACTIVATED]
+    User input is sexual or NSFW (e.g. '${inputText}'). 
+    
+    1. **REFUSE** to write a dating bio for this.
+    2. Instead, fill the 'bio' field with a roast about their life choices.
+    
+    ROAST TOPICS:
+    - Unemployment / Jobless behavior.
+    - "Touching grass" deficiency.
+    - Living situation (Basement dweller).
+    
+    RULES:
+    - **NEVER** repeat the user's explicit words.
+    - Keep it PG-13.
+    - Be brutally sarcastic.
     `;
   }
 
@@ -224,7 +260,7 @@ export const generateBio = async (
             { role: "system", content: systemInstruction },
             { role: "user", content: "Generate a bio." }
         ],
-        temperature: 0.7,
+        temperature: 0.8,
         response_format: { type: "json_object" }
     });
 
