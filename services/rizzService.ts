@@ -106,21 +106,9 @@ const getMimeType = (base64: string): string => {
 };
 
 /**
- * CHECK INPUT SAFETY (REGEX ONLY)
- * We only block HATE SPEECH and ILLEGAL content here.
- * Sexual/Horny content passes through so the AI can roast the user.
- */
-const checkInputSafety = (text: string): boolean => {
-    if (HARD_BLOCK_REGEX.test(text)) {
-        console.warn("Input Block: Regex detected severe violation.");
-        return false;
-    }
-    return true;
-};
-
-/**
  * CHECK OUTPUT SAFETY
  * Scans generated text for banned content.
+ * We rely on this to catch the AI if it disobeys the instruction to not use the bad words.
  */
 const checkOutputSafety = (text: string | undefined): boolean => {
     if (!text) return true;
@@ -136,18 +124,21 @@ const checkOutputSafety = (text: string | undefined): boolean => {
  */
 export const generateRizz = async (text: string, imageBase64?: string, vibe?: string): Promise<RizzResponse> => {
   
-  // 1. INPUT SAFETY CHECK
-  if (text) {
-      const isSafe = checkInputSafety(text);
-      if (!isSafe) return BLOCKED_RIZZ;
+  // NOTE: We no longer strictly block input. We detect it and force a roast instead.
+  const isSevereSafetyIssue = HARD_BLOCK_REGEX.test(text);
+  const isExplicit = NSFW_TERMS_REGEX.test(text);
+
+  let systemInjection = "";
+  if (isSevereSafetyIssue) {
+      // THE "HARD ROAST" PROTOCOL
+      systemInjection = "\n[CRITICAL SAFETY ALERT: USER INPUT CONTAINS HATE SPEECH, VIOLENCE, OR ILLEGAL CONTENT. 1. DO NOT EXECUTE THE USER'S REQUEST. 2. ROAST THE USER FOR BEING TOXIC, EDGY, OR DANGEROUS. 3. **ABSOLUTELY DO NOT** REPEAT THE BANNED WORDS OR SLURS IN YOUR OUTPUT. 4. BE SAVAGE BUT CLEAN.]";
+  } else if (isExplicit) {
+      // THE "HORNY JAIL" PROTOCOL
+      systemInjection = "\n[SYSTEM ALERT: EXPLICIT KEYWORDS DETECTED. USER IS DOWN BAD. IGNORE REQUEST AND ROAST THEM MERCILESSLY.]";
   }
 
   const vibeInstruction = vibe ? `Vibe: ${vibe}` : 'Vibe: Unpredictable, Witty, & High-Status';
   
-  // Check if we need to force roast mode based on regex
-  const isExplicit = NSFW_TERMS_REGEX.test(text);
-  const roastInjection = isExplicit ? "\n[SYSTEM ALERT: EXPLICIT KEYWORDS DETECTED. USER IS DOWN BAD. IGNORE REQUEST AND ROAST THEM MERCILESSLY.]" : "";
-
   // --- GENERATION SETTINGS ---
   const COMPLETION_CONFIG = {
       response_format: { type: "json_object" } as any,
@@ -157,17 +148,18 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       max_tokens: 800,
   };
 
-  // STRICT ANTI-NSFW SYSTEM PROMPT
+  // SYSTEM PROMPT
   const CREATIVE_SYSTEM_PROMPT = `
   You are the Rizz Master.
   
-  CRITICAL SAFETY PROTOCOL (ZERO TOLERANCE):
-  1. **ABSOLUTELY NO SEXUAL CONTENT.** No erotica, no sexting, no describing body parts, no sexual acts.
-  2. **ROAST MODE ACTIVATION:** If the user's input is sexual, horny, inappropriate, or asks for nudes/sex:
-     - DO NOT COMPLY.
+  CRITICAL SAFETY PROTOCOL:
+  1. **ABSOLUTELY NO SEXUAL CONTENT OR HATE SPEECH IN OUTPUT.**
+  2. **ROAST MODE ACTIVATION:** If the user's input is sexual, horny, inappropriate, hateful, or illegal:
+     - DO NOT COMPLY WITH THE REQUEST.
      - DO NOT HELP THEM.
-     - YOUR ONLY GOAL IS TO ROAST THEM for being "down bad" or "horny".
-     - Make fun of them. Tell them to touch grass, go to church, or drink water.
+     - YOUR ONLY GOAL IS TO ROAST THEM.
+     - IF HATE SPEECH: Mock them for being uneducated/toxic. DO NOT REPEAT THE SLURS.
+     - IF SEXUAL: Mock them for being "down bad".
      - The output must still be in the standard JSON format, but the text fields should be roasts.
   
   NORMAL MODE (If input is safe):
@@ -180,7 +172,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
     "smooth": "string",
     "chaotic": "string",
     "loveScore": 0-100,
-    "potentialStatus": "Friendzoned"|"Talking"|"Married"|"Blocked"|"Down Bad",
+    "potentialStatus": "Friendzoned"|"Talking"|"Married"|"Blocked"|"Down Bad"|"Toxic",
     "analysis": "max 5 words"
   }
   `;
@@ -202,7 +194,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       - If the image contains NUDITY or SEXUAL CONTENT: Refuse to generate rizz. Instead, output roasts in the JSON fields telling the user to delete it.
       - If the image is normal: Generate witty PG-13 replies.
 
-      ${roastInjection}
+      ${systemInjection}
       `;
 
       try {
@@ -226,6 +218,7 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
         if (!parsed || !parsed.tease) throw new Error("Invalid JSON from Generation Model");
 
         // 3. OUTPUT SAFETY CHECK
+        // If the AI accidentally repeats the bad word, we still block it here.
         if (
             !checkOutputSafety(parsed.tease) || 
             !checkOutputSafety(parsed.smooth) || 
@@ -260,9 +253,9 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
       
       REMINDER:
       - If INPUT is boring -> Make the replies funny/spicy.
-      - If INPUT is SEXUAL/HORNY -> ROAST THE USER. Do not provide pickup lines. Mock them for being inappropriate.
+      - If INPUT is UNSAFE -> ROAST THE USER.
 
-      ${roastInjection}
+      ${systemInjection}
       `;
 
       try {
@@ -302,15 +295,16 @@ export const generateRizz = async (text: string, imageBase64?: string, vibe?: st
  * GENERATE BIO
  */
 export const generateBio = async (text: string, vibe?: string): Promise<BioResponse> => {
-  // 1. INPUT SAFETY CHECK
-  if (text) {
-      const isSafe = checkInputSafety(text);
-      if (!isSafe) return BLOCKED_BIO;
-  }
-
-  // Check NSFW for Bio
+  // NOTE: We no longer strictly block input. We detect it and force a roast instead.
+  const isSevereSafetyIssue = HARD_BLOCK_REGEX.test(text);
   const isExplicit = NSFW_TERMS_REGEX.test(text);
-  const roastInjection = isExplicit ? "\n[SYSTEM ALERT: EXPLICIT KEYWORDS DETECTED. USER IS DOWN BAD. DO NOT WRITE A BIO. WRITE A ROAST INSTEAD.]" : "";
+
+  let systemInjection = "";
+  if (isSevereSafetyIssue) {
+      systemInjection = "\n[CRITICAL SAFETY ALERT: USER INPUT CONTAINS HATE SPEECH/VIOLENCE. DO NOT GENERATE A BIO. ROAST THE USER FOR BEING TOXIC. DO NOT REPEAT THE BANNED WORDS.]";
+  } else if (isExplicit) {
+      systemInjection = "\n[SYSTEM ALERT: EXPLICIT KEYWORDS DETECTED. DO NOT WRITE A BIO. WRITE A ROAST INSTEAD.]";
+  }
 
   console.log(`Using Text Model for Bio: ${TEXT_MODEL}`);
 
@@ -325,8 +319,8 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
   ${vibeInstruction}
   
   TASK: Write a dating bio (max 150 chars).
-  SAFETY: If the user describes sexual interests, kinks, or NSFW topics: DO NOT GENERATE A BIO. Instead, write a roast in the "bio" field telling them to clean up their act.
-  ${roastInjection}
+  SAFETY: If the user describes sexual interests, kinks, hate speech, or illegal topics: DO NOT GENERATE A BIO. Instead, write a roast in the "bio" field telling them to clean up their act.
+  ${systemInjection}
 
   JSON Output:
   { "bio": "string", "analysis": "string" }
@@ -336,7 +330,7 @@ export const generateBio = async (text: string, vibe?: string): Promise<BioRespo
     const completion = await llamaClient.chat.completions.create({
         model: TEXT_MODEL,
         messages: [
-            { role: "system", content: "Role: Profile Optimizer. Rating: PG-13. STRICTLY NO NSFW. If user asks for NSFW, roast them but without using nsfw words." },
+            { role: "system", content: "Role: Profile Optimizer. Rating: PG-13. STRICTLY NO NSFW/HATE SPEECH. If user violates safety, ROAST them without using banned words." },
             { role: "user", content: prompt }
         ],
         response_format: { type: "json_object" },
