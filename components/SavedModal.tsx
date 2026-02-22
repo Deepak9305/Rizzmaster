@@ -18,6 +18,8 @@ const SavedModal: React.FC<SavedModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
+  const displayItems = savedItems.filter(item => item.type !== 'system');
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-end">
       <div 
@@ -32,13 +34,13 @@ const SavedModal: React.FC<SavedModalProps> = ({
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-            {savedItems.length === 0 ? (
+            {displayItems.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-white/30 text-center">
                     <span className="text-4xl mb-4 opacity-50">📂</span>
                     <p>No saved items yet.</p>
                 </div>
             ) : (
-                savedItems.map((item) => (
+                displayItems.map((item) => (
                     <div key={item.id} className="p-4 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors group">
                          <div className="flex justify-between items-start mb-2">
                              <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${

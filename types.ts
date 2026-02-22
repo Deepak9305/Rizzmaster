@@ -16,7 +16,7 @@ export interface SavedItem {
   id: string;
   user_id: string;
   content: string;
-  type: 'tease' | 'smooth' | 'chaotic' | 'bio';
+  type: 'tease' | 'smooth' | 'chaotic' | 'bio' | 'system';
   created_at: string;
 }
 
