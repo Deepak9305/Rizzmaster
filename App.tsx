@@ -173,6 +173,7 @@ const AppContent: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [image, setImage] = useState<string | null>(null);
   const [selectedVibe, setSelectedVibe] = useState<string | null>(null);
+  const [shareCount, setShareCount] = useState(0);
   
   // Loading State
   const [loading, setLoading] = useState(false);
@@ -205,6 +206,10 @@ const AppContent: React.FC = () => {
   // Sync profile ref
   useEffect(() => {
     profileRef.current = profile;
+    if (profile) {
+        const count = parseInt(localStorage.getItem(`rizz_share_count_${profile.id}`) || '0', 10);
+        setShareCount(count);
+    }
   }, [profile]);
 
   // Check for Onboarding on Mount
