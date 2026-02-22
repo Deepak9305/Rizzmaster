@@ -18,7 +18,6 @@ const llamaClient = new OpenAI({
 // specific models for Groq/Llama providers
 const VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
 const TEXT_MODEL = 'llama-3.1-8b-instant';
-const SAFETY_MODEL = 'gpt-oss-safeguard-20b';
 
 // --- LOCAL PRE-FILTERS ---
 
@@ -73,28 +72,6 @@ const hasObfuscatedNSFW = (text: string): boolean => {
     return NSFW_TERMS_REGEX.test(collapsed);
 };
 
-// AI Safety Check using the specified safeguard model
-const checkSafetyWithAI = async (text: string): Promise<boolean> => {
-    try {
-        const completion = await llamaClient.chat.completions.create({
-            model: SAFETY_MODEL,
-            messages: [
-                { role: "system", content: "Classify the following text as 'SAFE' or 'UNSAFE'. If it contains hate speech, sexual content, sexual innuendo, seduction, or self-harm, label it 'UNSAFE'. Output ONLY the classification word." },
-                { role: "user", content: text }
-            ],
-            temperature: 0,
-            max_tokens: 10
-        });
-        const result = completion.choices[0]?.message?.content?.trim().toUpperCase();
-        return result === 'SAFE';
-    } catch (error) {
-        console.warn("AI Safety Check Error (falling back to regex):", error);
-        // If the specific safety model fails (e.g. doesn't exist on provider), 
-        // we fall back to assuming safe (letting regex/main model handle it)
-        return true; 
-    }
-};
-
 // --- EXPORTED FUNCTIONS ---
 
 /**
@@ -110,16 +87,8 @@ export const generateRizz = async (
   const isToxic = HARD_BLOCK_REGEX.test(inputText);
   const isNSFW = NSFW_TERMS_REGEX.test(inputText) || hasObfuscatedNSFW(inputText);
   
-  let isUnsafe = isToxic || isNSFW;
-
-  // If regex didn't catch it, try AI safety check
-  if (!isUnsafe) {
-      const isAISafe = await checkSafetyWithAI(inputText);
-      if (!isAISafe) isUnsafe = true;
-  }
-  
   // BRANCHING LOGIC: If unsafe, we completely switch personas.
-  // const isUnsafe = isToxic || isNSFW; // (Replaced by logic above)
+  const isUnsafe = isToxic || isNSFW;
   
   let systemInstruction = "";
 
@@ -240,13 +209,7 @@ export const generateBio = async (
   const isToxic = HARD_BLOCK_REGEX.test(inputText);
   const isNSFW = NSFW_TERMS_REGEX.test(inputText) || hasObfuscatedNSFW(inputText);
   
-  let isUnsafe = isToxic || isNSFW;
-
-  // If regex didn't catch it, try AI safety check
-  if (!isUnsafe) {
-      const isAISafe = await checkSafetyWithAI(inputText);
-      if (!isAISafe) isUnsafe = true;
-  }
+  const isUnsafe = isToxic || isNSFW;
 
   let systemInstruction = "";
 
