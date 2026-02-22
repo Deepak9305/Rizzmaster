@@ -34,6 +34,8 @@ export const NativeBridge = {
    * Returns a status string: 'SHARED', 'COPIED', 'DISMISSED', 'FAILED'
    */
   share: async (title: string, text: string, url?: string): Promise<'SHARED' | 'COPIED' | 'DISMISSED' | 'FAILED'> => {
+    const contentToCopy = url ? `${text}\n${url}` : text;
+
     // 1. Try Capacitor Native Share (Plugin)
     if (Capacitor.isNativePlatform()) {
         try {
@@ -46,8 +48,7 @@ export const NativeBridge = {
             return 'SHARED';
         } catch (err: any) {
             console.warn('Native share dismissed/failed', err);
-            // User likely cancelled or plugin failed
-            return 'DISMISSED';
+            // Fallback to clipboard on native failure
         }
     }
 
@@ -55,21 +56,20 @@ export const NativeBridge = {
     const shareData: any = { title, text };
     if (url) shareData.url = url;
 
-    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+    if (typeof navigator !== 'undefined' && navigator.share && navigator.canShare && navigator.canShare(shareData)) {
       try {
         await navigator.share(shareData);
         return 'SHARED';
       } catch (err: any) {
         if (err.name === 'AbortError') {
-          return 'DISMISSED'; // User cancelled
+           console.log('User cancelled share');
+           // Even if cancelled, we don't want to fail completely if we can copy
         }
-        // If share failed for other reasons, fall through to clipboard
         console.warn('Web Share failed, attempting fallback:', err);
       }
     }
     
-    // 3. Fallback: Copy to Clipboard
-    const contentToCopy = url ? `${text}\n${url}` : text;
+    // 3. Fallback: Copy to Clipboard (Always try this if others fail/dismiss)
     const copied = await NativeBridge.copyToClipboard(contentToCopy);
     return copied ? 'COPIED' : 'FAILED';
   },
