@@ -79,7 +79,7 @@ const checkSafetyWithAI = async (text: string): Promise<boolean> => {
         const completion = await llamaClient.chat.completions.create({
             model: SAFETY_MODEL,
             messages: [
-                { role: "system", content: "Classify the following text as 'SAFE' or 'UNSAFE'. If it contains hate speech, explicit sexual content, or self-harm, label it 'UNSAFE'. Output ONLY the classification word." },
+                { role: "system", content: "Classify the following text as 'SAFE' or 'UNSAFE'. If it contains hate speech, sexual content, sexual innuendo, seduction, or self-harm, label it 'UNSAFE'. Output ONLY the classification word." },
                 { role: "user", content: text }
             ],
             temperature: 0,
