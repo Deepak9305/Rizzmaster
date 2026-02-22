@@ -27,7 +27,7 @@ const HARD_BLOCK_REGEX = /\b(nigger|nigga|negro|coon|faggot|fag|dyke|kike|chink|
 // 2. NSFW CONTEXT (FOR ROASTING)
 // Note: The AI will also catch variations like "booooobbbsss" even if regex misses them.
 // Added 'bobs' and 'vagene' to catch collapsed obfuscations.
-const NSFW_TERMS_REGEX = /\b(sex|boobs|bobs|vagene|breast|breasts|nudes|nipple|nipples|naked|nude|horny|aroused|boner|erection|erect|hard-on|dick|cock|pussy|vagina|penis|boobs|tits|titties|nipples|areola|orgasm|climax|shag|fuck|fucking|fucked|fucker|motherfucker|gangbang|bukkake|creampie|anal|oral|cum|jizz|semen|sperm|load|milf|dilf|gilf|thicc|gyatt|bussy|breeding|breed|nut|suck|lick|eating out|69|doggystyle|missionary|cowgirl|reverse cowgirl|bdsm|bondage|dom|sub|dominatrix|feet|toes|fetish|kink|squirt|gushing|deepthroat|blowjob|handjob|rimjob|fingering|fisting|pegging|scissoring|tribadism|watersports|scat|golden shower|hentai|porn|pornography|xxx|adult movie|onlyfans|fansly|send nudes|clit|clitoris|vulva|labia|asshole|butthole|anus|rectum|booty|butt|ass|twerk|strip|stripper|hooker|prostitute|escort|slut|whore|skank|hoe|bitch|cunt|twat|wank|jerking off|jacking off|masturbate|masturbation|dildo|vibrator|sex toy|fleshlight|strap-on|camgirl|sugardaddy|sugarbaby|sugar daddy|sugar baby|simp|incel|virgin|cuck|cuckold|schlong|dong|knob|bellend|prick|chode|taint|gooch|perineum|ballbag|scrotum|nutsack|gonads|foreskin|smegma|felching|docking|sounding|snowballing|tea bag|motorboat|queef|rusty trombone|dirty sanchez|alabama hot pocket|cleveland steamer|wanker|tosser|bugger|sod|slag|tart|strumpet|harlot|bimbo|himbo|yiff|furry|futa|futanari|yaoi|yuri|ecchi|bara|erotic|erotica|sensual|genitalia|groin|crotch|loins|pubes|pubic|phallic|yoni|lingam|coitus|copulate|copulation|fornicate|fornication|sodomy|buggery|pederasty|onanism|autoerotic|frottage|voyeur|exhibitionist|nympho|nymphomaniac|satyr|glory hole|gloryhole|blue waffle|lemon party|tubgirl|goatse|meatspin|2 girls 1 cup|rule 34|r34|paizuri|ahegao|netorare|ntr)\b/i;
+const NSFW_TERMS_REGEX = /\b(sex|boobs|boobbeessss|bobs|vagene|breast|breasts|nudes|nipple|nipples|naked|nude|horny|aroused|boner|erection|erect|hard-on|dick|cock|pussy|vagina|penis|boobs|tits|titties|nipples|areola|orgasm|climax|shag|fuck|fucking|fucked|fucker|motherfucker|gangbang|bukkake|creampie|anal|oral|cum|jizz|semen|sperm|load|milf|dilf|gilf|thicc|gyatt|bussy|breeding|breed|nut|suck|lick|eating out|69|doggystyle|missionary|cowgirl|reverse cowgirl|bdsm|bondage|dom|sub|dominatrix|feet|toes|fetish|kink|squirt|gushing|deepthroat|blowjob|handjob|rimjob|fingering|fisting|pegging|scissoring|tribadism|watersports|scat|golden shower|hentai|porn|pornography|xxx|adult movie|onlyfans|fansly|send nudes|clit|clitoris|vulva|labia|asshole|butthole|anus|rectum|booty|butt|ass|twerk|strip|stripper|hooker|prostitute|escort|slut|whore|skank|hoe|bitch|cunt|twat|wank|jerking off|jacking off|masturbate|masturbation|dildo|vibrator|sex toy|fleshlight|strap-on|camgirl|sugardaddy|sugarbaby|sugar daddy|sugar baby|simp|incel|virgin|cuck|cuckold|schlong|dong|knob|bellend|prick|chode|taint|gooch|perineum|ballbag|scrotum|nutsack|gonads|foreskin|smegma|felching|docking|sounding|snowballing|tea bag|motorboat|queef|rusty trombone|dirty sanchez|alabama hot pocket|cleveland steamer|wanker|tosser|bugger|sod|slag|tart|strumpet|harlot|bimbo|himbo|yiff|furry|futa|futanari|yaoi|yuri|ecchi|bara|erotic|erotica|sensual|genitalia|groin|crotch|loins|pubes|pubic|phallic|yoni|lingam|coitus|copulate|copulation|fornicate|fornication|sodomy|buggery|pederasty|onanism|autoerotic|frottage|voyeur|exhibitionist|nympho|nymphomaniac|satyr|glory hole|gloryhole|blue waffle|lemon party|tubgirl|goatse|meatspin|2 girls 1 cup|rule 34|r34|paizuri|ahegao|netorare|ntr)\b/i;
 
 // Helper to clean Markdown JSON from Llama responses
 const cleanJson = (text: string): string => {
@@ -116,10 +116,10 @@ export const generateRizz = async (
       
       JSON OUTPUT FORMAT (Override the meanings):
       - tease: A light roast about their social skills.
-      - smooth: A sarcastic comment about their "smooth" brain.
+      - smooth: A sarcastic comment about their unemployment.
       - chaotic: A brutal reality check about their employment status.
       - loveScore: Return 0.
-      - potentialStatus: "Down Bad", "Unemployed", "Friendzoned", or "Blocked".
+      - potentialStatus: "Blocked".
       - analysis: A short sentence explaining why they need to get a job instead of doing this.
       
       IMPORTANT: Return ONLY raw JSON. No markdown.
@@ -135,7 +135,7 @@ export const generateRizz = async (
       Generate a JSON object with:
       - tease: Playful, pushes buttons.
       - smooth: Charming, confident.
-      - chaotic: Unexpected, funny, high risk.
+      - chaotic: Unexpected, funny.
       - loveScore: 0-100 numeric rating.
       - potentialStatus: Short status (e.g. "Friendzone", "Soulmate").
       - analysis: Brief analysis of the situation.
