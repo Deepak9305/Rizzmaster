@@ -170,7 +170,7 @@ export const generateRizz = async (
     const completion = await llamaClient.chat.completions.create({
         model: model,
         messages: messages,
-        temperature: 0.9,
+        temperature: 0.7,
         max_tokens: 800,
         response_format: { type: "json_object" }
     });
@@ -259,7 +259,7 @@ export const generateBio = async (
             { role: "system", content: systemInstruction },
             { role: "user", content: "Generate a bio." }
         ],
-        temperature: 0.9,
+        temperature: 0.7,
         response_format: { type: "json_object" }
     });
 
