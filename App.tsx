@@ -192,6 +192,8 @@ const AppContent: React.FC = () => {
   const [isAdLoading, setIsAdLoading] = useState(false);
   const [hasClaimedShareReward, setHasClaimedShareReward] = useState(false);
 
+  const [isSharing, setIsSharing] = useState(false);
+
   // Ref to track state for event listeners without re-binding
   const stateRef = useRef({
       currentView,
@@ -880,45 +882,57 @@ const AppContent: React.FC = () => {
   };
 
   const handleShareForCredits = async () => {
-    if (hasClaimedShareReward) return;
+    if (hasClaimedShareReward || isSharing) return;
 
+    setIsSharing(true);
     NativeBridge.haptic('medium');
     const shareText = "Check out Rizz Master! It generates the best replies for your dating apps. 🚀";
     const shareUrl = "https://rizzmaster.ai"; // Replace with actual app URL if available
 
-    const result = await NativeBridge.share("Get Rizz Master", shareText, shareUrl);
+    try {
+        const result = await NativeBridge.share("Get Rizz Master", shareText, shareUrl);
 
-    if (result === 'SHARED' || result === 'COPIED') {
-        const newCount = shareCount + 1;
-        
-        if (newCount >= 5) {
-            updateCredits((profileRef.current?.credits || 0) + 10);
-            setShareCount(0);
-            setHasClaimedShareReward(true);
+        if (result === 'SHARED' || result === 'COPIED') {
+            const newCount = shareCount + 1;
             
-            if (profile) {
-                localStorage.setItem(`rizz_share_count_${profile.id}`, '0');
+            if (newCount >= 5) {
+                updateCredits((profileRef.current?.credits || 0) + 10);
+                setShareCount(0);
+                setHasClaimedShareReward(true);
                 
-                if (profile.id === 'guest') {
-                    localStorage.setItem('guest_share_reward_claimed', 'true');
-                } else if (supabase) {
-                    // Persist claim to DB
-                    await supabase.from('saved_items').insert({
-                        user_id: profile.id,
-                        content: 'share_reward_claimed',
-                        type: 'system'
-                    });
+                if (profile) {
+                    localStorage.setItem(`rizz_share_count_${profile.id}`, '0');
+                    
+                    if (profile.id === 'guest') {
+                        localStorage.setItem('guest_share_reward_claimed', 'true');
+                    } else if (supabase) {
+                        // Persist claim to DB
+                        await supabase.from('saved_items').insert({
+                            user_id: profile.id,
+                            content: 'share_reward_claimed',
+                            type: 'system'
+                        });
+                    }
                 }
+                showToast("Shared with 5 friends! +10 Credits!", 'success');
+                NativeBridge.haptic('success');
+            } else {
+                setShareCount(newCount);
+                if (profile) {
+                    localStorage.setItem(`rizz_share_count_${profile.id}`, newCount.toString());
+                }
+                showToast(`Shared! (${newCount}/5 for +10 Credits)`, 'success');
             }
-            showToast("Shared with 5 friends! +10 Credits!", 'success');
-            NativeBridge.haptic('success');
+        } else if (result === 'DISMISSED') {
+            showToast('Share cancelled.', 'info');
         } else {
-            setShareCount(newCount);
-            if (profile) {
-                localStorage.setItem(`rizz_share_count_${profile.id}`, newCount.toString());
-            }
-            showToast(`Shared! (${newCount}/5 for +10 Credits)`, 'success');
+            showToast('Could not share. Try again.', 'error');
         }
+    } catch (error) {
+        console.error("Share error:", error);
+        showToast('Share failed. Please try again.', 'error');
+    } finally {
+        setIsSharing(false);
     }
   };
 
