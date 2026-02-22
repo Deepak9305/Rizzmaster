@@ -25,9 +25,44 @@ const TEXT_MODEL = 'llama-3.1-8b-instant';
 const HARD_BLOCK_REGEX = /\b(nigger|nigga|negro|coon|faggot|fag|dyke|kike|chink|spic|gook|raghead|towelhead|retard|retarded|mongoloid|tranny|shemale|hermaphrodite|rape|rapist|molest|molester|pedophile|pedo|hebephile|ephebophile|cp|child porn|bestiality|zoophilia|necrophilia|incest|kill yourself|kys|suicide|self-harm|terrorist|jihad|isis|taliban|nazi|hitler|holocaust|white power|white supremacy|kkk|school shooter|mass shooting|bomb|behead|decapitate|mutilate|genocide|ethnic cleansing|slave|slavery|lynch|lynching)\b/i;
 
 // 2. NSFW CONTEXT (FOR ROASTING)
-// Note: The AI will also catch variations like "booooobbbsss" even if regex misses them.
-// Added 'bobs' and 'vagene' to catch collapsed obfuscations.
-const NSFW_TERMS_REGEX = /\b(sex|boobs|boobbeessss|bobs|vagene|breast|breasts|nudes|nipple|nipples|naked|nude|horny|aroused|boner|erection|erect|hard-on|dick|cock|pussy|vagina|penis|boobs|tits|titties|nipples|areola|orgasm|climax|shag|fuck|fucking|fucked|fucker|motherfucker|gangbang|bukkake|creampie|anal|oral|cum|jizz|semen|sperm|load|milf|dilf|gilf|thicc|gyatt|bussy|breeding|breed|nut|suck|lick|eating out|69|doggystyle|missionary|cowgirl|reverse cowgirl|bdsm|bondage|dom|sub|dominatrix|feet|toes|fetish|kink|squirt|gushing|deepthroat|blowjob|handjob|rimjob|fingering|fisting|pegging|scissoring|tribadism|watersports|scat|golden shower|hentai|porn|pornography|xxx|adult movie|onlyfans|fansly|send nudes|clit|clitoris|vulva|labia|asshole|butthole|anus|rectum|booty|butt|ass|twerk|strip|stripper|hooker|prostitute|escort|slut|whore|skank|hoe|bitch|cunt|twat|wank|jerking off|jacking off|masturbate|masturbation|dildo|vibrator|sex toy|fleshlight|strap-on|camgirl|sugardaddy|sugarbaby|sugar daddy|sugar baby|simp|incel|virgin|cuck|cuckold|schlong|dong|knob|bellend|prick|chode|taint|gooch|perineum|ballbag|scrotum|nutsack|gonads|foreskin|smegma|felching|docking|sounding|snowballing|tea bag|motorboat|queef|rusty trombone|dirty sanchez|alabama hot pocket|cleveland steamer|wanker|tosser|bugger|sod|slag|tart|strumpet|harlot|bimbo|himbo|yiff|furry|futa|futanari|yaoi|yuri|ecchi|bara|erotic|erotica|sensual|genitalia|groin|crotch|loins|pubes|pubic|phallic|yoni|lingam|coitus|copulate|copulation|fornicate|fornication|sodomy|buggery|pederasty|onanism|autoerotic|frottage|voyeur|exhibitionist|nympho|nymphomaniac|satyr|glory hole|gloryhole|blue waffle|lemon party|tubgirl|goatse|meatspin|2 girls 1 cup|rule 34|r34|paizuri|ahegao|netorare|ntr)\b/i;
+// Expanded list to catch variations.
+const NSFW_WORDS_LIST = [
+    "sex", "boobs", "bobs", "vagene", "breast", "nudes", "nipple", "naked", "nude", "horny", "aroused", "boner", "erection", "erect", "hard-on", "dick", "cock", "pussy", "vagina", "penis", "tits", "areola", "orgasm", "climax", "shag", "fuck", "motherfucker", "gangbang", "bukkake", "creampie", "anal", "oral", "cum", "jizz", "semen", "sperm", "load", "milf", "dilf", "gilf", "thicc", "gyatt", "bussy", "breeding", "breed", "nut", "suck", "lick", "eating out", "69", "doggystyle", "missionary", "cowgirl", "bdsm", "bondage", "dom", "sub", "dominatrix", "feet", "toes", "fetish", "kink", "squirt", "gushing", "deepthroat", "blowjob", "handjob", "rimjob", "fingering", "fisting", "pegging", "scissoring", "tribadism", "watersports", "scat", "golden shower", "hentai", "porn", "xxx", "adult movie", "onlyfans", "fansly", "send nudes", "clit", "vulva", "labia", "asshole", "butthole", "anus", "rectum", "booty", "butt", "ass", "twerk", "strip", "stripper", "hooker", "prostitute", "escort", "slut", "whore", "skank", "hoe", "bitch", "cunt", "twat", "wank", "masturbate", "dildo", "vibrator", "sex toy", "fleshlight", "strap-on", "camgirl", "sugardaddy", "sugarbaby", "simp", "incel", "virgin", "cuck", "schlong", "dong", "knob", "bellend", "prick", "chode", "taint", "gooch", "perineum", "ballbag", "scrotum", "nutsack", "gonads", "foreskin", "smegma", "felching", "docking", "sounding", "snowballing", "tea bag", "motorboat", "queef", "rusty trombone", "dirty sanchez", "alabama hot pocket", "cleveland steamer", "wanker", "tosser", "bugger", "sod", "slag", "tart", "strumpet", "harlot", "bimbo", "himbo", "yiff", "furry", "futa", "yaoi", "yuri", "ecchi", "bara", "erotic", "sensual", "genitalia", "groin", "crotch", "loins", "pubes", "phallic", "yoni", "lingam", "coitus", "copulate", "fornicate", "sodomy", "buggery", "pederasty", "onanism", "autoerotic", "frottage", "voyeur", "exhibitionist", "nympho", "satyr", "glory hole", "blue waffle", "lemon party", "tubgirl", "goatse", "meatspin", "2 girls 1 cup", "rule 34", "paizuri", "ahegao", "netorare", "ntr"
+];
+
+// Map characters to their regex pattern including leetspeak and repetitions
+const CHAR_MAP: Record<string, string> = {
+    'a': '[a@4]',
+    'b': '[b8]',
+    'c': '[c\\(]',
+    'e': '[e3]',
+    'g': '[g69]',
+    'i': '[i1!|]',
+    'l': '[l1|]',
+    'o': '[o0]',
+    's': '[s5$]',
+    't': '[t7+]',
+    'z': '[z2]'
+};
+
+// Generate regex that matches words with repeated characters and leetspeak
+// e.g. "sex" -> [s5$]+[e3]+[x]+
+const NSFW_TERMS_REGEX = new RegExp(
+    `\\b(${NSFW_WORDS_LIST.map(word => 
+        word.split('').map(c => {
+            const lower = c.toLowerCase();
+            if (lower === ' ') return '\\s+';
+            if (lower === '-') return '-+';
+            if (/[a-z0-9]/.test(lower)) {
+                const pattern = CHAR_MAP[lower] || lower;
+                // Escape special regex chars if raw char is used and not in map (though a-z0-9 are safe)
+                return `${pattern}+`;
+            }
+            return '\\' + c;
+        }).join('')
+    ).join('|')})\\b`, 
+    'i'
+);
 
 // Helper to clean Markdown JSON from Llama responses
 const cleanJson = (text: string): string => {
@@ -64,14 +99,6 @@ const sanitizeResponse = <T>(data: T): T => {
   return data;
 };
 
-// Helper to check for repeated character obfuscation (e.g. "bboooobbbsss")
-const hasObfuscatedNSFW = (text: string): boolean => {
-    // Collapse repeated characters to single char (e.g. "booooobs" -> "bobs", "sexx" -> "sex")
-    const collapsed = text.toLowerCase().replace(/(.)\1+/g, '$1');
-    // Check if the collapsed version contains triggers
-    return NSFW_TERMS_REGEX.test(collapsed);
-};
-
 // --- EXPORTED FUNCTIONS ---
 
 /**
@@ -85,7 +112,7 @@ export const generateRizz = async (
   
   // DETECT SAFETY ISSUES
   const isToxic = HARD_BLOCK_REGEX.test(inputText);
-  const isNSFW = NSFW_TERMS_REGEX.test(inputText) || hasObfuscatedNSFW(inputText);
+  const isNSFW = NSFW_TERMS_REGEX.test(inputText);
   
   // BRANCHING LOGIC: If unsafe, we completely switch personas.
   const isUnsafe = isToxic || isNSFW;
@@ -207,7 +234,7 @@ export const generateBio = async (
 ): Promise<BioResponse | { analysis: string }> => {
   
   const isToxic = HARD_BLOCK_REGEX.test(inputText);
-  const isNSFW = NSFW_TERMS_REGEX.test(inputText) || hasObfuscatedNSFW(inputText);
+  const isNSFW = NSFW_TERMS_REGEX.test(inputText);
   
   const isUnsafe = isToxic || isNSFW;
 
