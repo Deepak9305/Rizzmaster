@@ -222,6 +222,8 @@ const AppContent: React.FC = () => {
 
   // Manage Native Banner Ads
   useEffect(() => {
+    let timer: any;
+
     const refreshBanner = () => {
         if (Capacitor.isNativePlatform() && session) {
             // Wait for profile to load before making ad decisions
@@ -231,8 +233,8 @@ const AppContent: React.FC = () => {
                 AdMobService.hideBanner();
             } else {
                 const adId = Capacitor.getPlatform() === 'ios' ? TEST_BANNER_ID_IOS : TEST_BANNER_ID_ANDROID;
-                // Show banner directly, AdMobService now handles deduplication
-                AdMobService.showBanner(adId);
+                // Delay slightly to ensure layout is settled and old banners are gone
+                timer = setTimeout(() => AdMobService.showBanner(adId), 2000);
             }
         }
     };
@@ -248,7 +250,7 @@ const AppContent: React.FC = () => {
                 if (profile && !profile.is_premium) {
                     AdMobService.hideBanner().then(() => {
                         const adId = Capacitor.getPlatform() === 'ios' ? TEST_BANNER_ID_IOS : TEST_BANNER_ID_ANDROID;
-                        AdMobService.showBanner(adId);
+                        timer = setTimeout(() => AdMobService.showBanner(adId), 1000);
                     });
                 }
             }
@@ -256,6 +258,7 @@ const AppContent: React.FC = () => {
     }
     
     return () => {
+        if (timer) clearTimeout(timer);
         if (appListener) appListener.remove();
         // Don't hide banner on unmount to prevent flickering during quick state changes,
         // unless logout handles it.

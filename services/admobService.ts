@@ -4,7 +4,6 @@ import { Capacitor } from '@capacitor/core';
 
 export const AdMobService = {
     initialized: false,
-    isBannerShowing: false,
 
     async initialize() {
         if (!Capacitor.isNativePlatform()) return;
@@ -30,7 +29,6 @@ export const AdMobService = {
 
     async showBanner(adId: string) {
         if (!Capacitor.isNativePlatform()) return;
-        if (this.isBannerShowing) return; // Prevent redundant calls
         
         try {
             await this.initialize();
@@ -53,22 +51,18 @@ export const AdMobService = {
             };
 
             await AdMob.showBanner(options);
-            this.isBannerShowing = true;
             console.log('AdMob Banner Request Sent');
         } catch (e) {
             console.error('AdMob Show Banner Error:', e);
-            this.isBannerShowing = false;
         }
     },
 
     async hideBanner() {
         if (!Capacitor.isNativePlatform()) return;
-        if (!this.isBannerShowing) return; // Already hidden
         
         try {
             await AdMob.hideBanner();
             await AdMob.removeBanner(); 
-            this.isBannerShowing = false;
         } catch (e) {
             console.error('AdMob Hide Banner Error:', e);
         }
