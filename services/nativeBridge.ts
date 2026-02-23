@@ -79,29 +79,44 @@ export const NativeBridge = {
    */
   copyToClipboard: async (text: string): Promise<boolean> => {
     try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(text);
-        return true;
-      } else {
-        // Legacy fallback
-        const textArea = document.createElement("textarea");
-        textArea.value = text;
-        textArea.style.position = "fixed";
-        textArea.style.opacity = "0";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
+      // 1. Try modern clipboard API
+      if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
         try {
-            document.execCommand('copy');
-            document.body.removeChild(textArea);
+            await navigator.clipboard.writeText(text);
             return true;
-        } catch (err) {
-            document.body.removeChild(textArea);
-            return false;
+        } catch (e) {
+            console.warn("navigator.clipboard.writeText failed, falling back", e);
         }
       }
+      
+      // 2. Legacy fallback (execCommand)
+      if (typeof document !== 'undefined') {
+          const textArea = document.createElement("textarea");
+          textArea.value = text;
+          
+          // Avoid scrolling to bottom
+          textArea.style.top = "0";
+          textArea.style.left = "0";
+          textArea.style.position = "fixed";
+          textArea.style.opacity = "0";
+          
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          
+          try {
+              const successful = document.execCommand('copy');
+              document.body.removeChild(textArea);
+              return successful;
+          } catch (err) {
+              document.body.removeChild(textArea);
+              console.error('Fallback: Oops, unable to copy', err);
+              return false;
+          }
+      }
+      return false;
     } catch (err) {
-      console.error('Clipboard failed', err);
+      console.error('Clipboard failed completely', err);
       return false;
     }
   }

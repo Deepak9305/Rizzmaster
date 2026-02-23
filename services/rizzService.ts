@@ -167,7 +167,7 @@ export const generateRizz = async (
       Generate a JSON object with:
       - tease: Playful, pushes buttons.
       - smooth: Charming, confident.
-      - chaotic: Unexpected, funny.
+      - chaotic: Funny.
       - loveScore: 0-100 numeric rating.
       - potentialStatus: Short status (e.g. "Friendzone", "Soulmate").
       - analysis: Brief analysis of the situation.
