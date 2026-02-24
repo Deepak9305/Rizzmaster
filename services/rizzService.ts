@@ -17,7 +17,7 @@ const llamaClient = new OpenAI({
 // Model Configuration
 // specific models for Groq/Llama providers
 const VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
-const TEXT_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
+const TEXT_MODEL = 'llama-3.1-8b-instant';
 
 // --- LOCAL PRE-FILTERS ---
 
@@ -157,26 +157,49 @@ export const generateRizz = async (
       `;
   } else {
       // --- RIZZ MASTER PERSONA (Normal Operation) ---
-      const genderContext = gender ? `User Gender: ${gender} (Generate replies suitable for a ${gender} user).` : "";
+      let genderInstruction = "";
+      if (gender === 'Male') {
+          genderInstruction = "User Gender: Male. Tone: Confident, direct, cool, not desperate. Avoid excessive emojis.";
+      } else if (gender === 'Female') {
+          genderInstruction = "User Gender: Female. Tone: Playful, engaging, slightly mysterious. Encourage the chase.";
+      }
 
       systemInstruction = `
       Role: "Rizz Master" dating assistant.
       Goal: Generate witty, high-converting replies for DMs/Dating Apps.
       Vibe: ${vibe || "Balanced"}
-      ${genderContext}
+      ${genderInstruction}
 
       Style Guidelines:
       - Casual, authentic text messaging style.
       - Use lowercase where appropriate for "chill" vibe.
       - NO hashtags. NO cringy emojis unless ironic.
       - React to SPECIFIC details in the input (don't be generic).
+      - If the input is a question, answer it with a twist.
+      - If the input is dry (e.g., "hey"), roast them lightly or start a fun topic.
+
+      PERSONA DEFINITIONS:
+      1. TEASE (Playful/Banter):
+         - Poke fun at something specific in their text/photo.
+         - Challenge them (e.g., "Are you always this trouble?").
+         - Push-pull dynamic.
+      
+      2. SMOOTH (Charming/Confident):
+         - Direct but not creepy.
+         - Compliment their vibe, not just looks.
+         - Move the conversation forward (e.g., "So when are we getting tacos?").
+      
+      3. CHAOTIC (Unhinged/Funny):
+         - Unexpected, absurd, or "red flag" energy.
+         - Bizarrely specific scenarios.
+         - High risk, high reward.
 
       Output JSON:
-      - tease: Playful banter, challenge them, light roasting.
-      - smooth: High-value, confident, charming but not desperate.
-      - chaotic: Unhinged, absurd, "red flag" energy, or bizarrely specific.
+      - tease: [The Tease Reply]
+      - smooth: [The Smooth Reply]
+      - chaotic: [The Chaotic Reply]
       - loveScore: 0-100 rating.
-      - potentialStatus: Short status (e.g. "Friendzone", "Down Bad").
+      - potentialStatus: Short status (e.g. "Friendzone", "Down Bad", "Wife Material").
       - analysis: Brief strategy explanation.
       
       Return ONLY raw JSON.
@@ -206,27 +229,31 @@ export const generateRizz = async (
         });
     }
 
-    const completion = await llamaClient.chat.completions.create({
-        model: model,
-        messages: messages,
-        temperature: 0.7,
-        max_tokens: 800,
-        response_format: { type: "json_object" }
-    });
+    // Retry logic for robustness
+    let attempts = 0;
+    while (attempts < 2) {
+        try {
+            const completion = await llamaClient.chat.completions.create({
+                model: model,
+                messages: messages,
+                temperature: 0.85, // Slightly increased for creativity
+                max_tokens: 1000,
+                response_format: { type: "json_object" }
+            });
 
-    const responseText = completion.choices[0]?.message?.content;
+            const responseText = completion.choices[0]?.message?.content;
 
-    if (responseText) {
-      try {
-        const rawData = JSON.parse(cleanJson(responseText));
-        return sanitizeResponse(rawData) as RizzResponse;
-      } catch (e) {
-        console.error("JSON Parse Error:", e);
-        throw new Error("Failed to parse AI response.");
-      }
+            if (responseText) {
+                const rawData = JSON.parse(cleanJson(responseText));
+                return sanitizeResponse(rawData) as RizzResponse;
+            }
+        } catch (e) {
+            console.warn(`Attempt ${attempts + 1} failed:`, e);
+            attempts++;
+        }
     }
     
-    throw new Error("No response generated.");
+    throw new Error("No response generated after retries.");
 
   } catch (error: any) {
     console.error("Rizz Service Error:", error);
