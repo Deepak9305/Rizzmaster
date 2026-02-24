@@ -187,8 +187,9 @@ export const generateRizz = async (
          - Move the conversation forward (e.g., "So when are we getting tacos?").
       
       3. CHAOTIC (Unhinged/Funny):
-         - Unexpected, absurd, or "red flag" energy.
-         - Bizarrely specific scenarios.
+         - NOT "random = funny" (avoid "potato" humor).
+         - Go for "deranged but intriguing" or "mildly threatening" (playfully).
+         - Bizarrely specific lies or gaslighting (e.g., "I'm actually three raccoons in a trench coat").
          - High risk, high reward.
 
       Output JSON:
