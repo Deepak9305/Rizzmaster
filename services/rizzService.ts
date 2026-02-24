@@ -177,9 +177,10 @@ export const generateRizz = async (
 
       PERSONA DEFINITIONS:
       1. TEASE (Playful/Banter):
-         - Poke fun at something specific in their text/photo.
-         - Challenge them (e.g., "Are you always this trouble?").
-         - Push-pull dynamic.
+         - NOT "negging" or mean.
+         - Playful disagreement or "bratty" energy.
+         - Call out something specific (e.g., "That shirt is a choice," or "You look like you steal fries").
+         - Avoid generic lines like "Are you trouble?".
       
       2. SMOOTH (Charming/Confident):
          - Direct but not creepy.
