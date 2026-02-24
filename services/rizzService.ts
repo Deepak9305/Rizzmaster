@@ -163,14 +163,20 @@ export const generateRizz = async (
       Your goal is to generate charming, effective, and context-aware replies.
       
       Context Vibe: ${vibe || "Balanced/Charming"}
+
+      INSTRUCTIONS:
+      1. Analyze the input text/image carefully.
+      2. Generate replies that DIRECTLY address the content of the input.
+      3. Avoid generic pickup lines unless they fit the specific context.
+      4. Keep it short, punchy, and engaging (suitable for DM/Text).
       
       Generate a JSON object with:
-      - tease: Playful, pushes buttons.
-      - smooth: Charming, confident.
-      - chaotic: Funny.
-      - loveScore: 0-100 numeric rating.
-      - potentialStatus: Short status (e.g. "Friendzone", "Soulmate").
-      - analysis: Brief analysis of the situation.
+      - tease: Playful, pushes buttons, maybe a light roast based on the input.
+      - smooth: Charming, confident, complimentary but not desperate.
+      - chaotic: Unexpected, funny, maybe a bit unhinged or absurd but related.
+      - loveScore: 0-100 numeric rating of the input's "rizz" or potential.
+      - potentialStatus: Short status (e.g. "Friendzone", "Soulmate", "Ghosted").
+      - analysis: Brief analysis of the situation and why these replies work.
       
       IMPORTANT: Return ONLY raw JSON. No markdown.
       `;
@@ -202,7 +208,7 @@ export const generateRizz = async (
     const completion = await llamaClient.chat.completions.create({
         model: model,
         messages: messages,
-        temperature: 1.2,
+        temperature: 0.7,
         max_tokens: 800,
         response_format: { type: "json_object" }
     });
@@ -292,7 +298,7 @@ export const generateBio = async (
             { role: "system", content: systemInstruction },
             { role: "user", content: "Generate a bio." }
         ],
-        temperature: 1.1,
+        temperature: 0.7,
         response_format: { type: "json_object" }
     });
 
