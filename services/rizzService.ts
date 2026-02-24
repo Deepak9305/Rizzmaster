@@ -24,7 +24,10 @@ const TEXT_MODEL = 'llama-3.1-8b-instant';
 // 1. HARD SAFETY BLOCK (Illegal, Hate Speech, Extreme Violence, Self-Harm)
 const HARD_BLOCK_REGEX = /\b(nigger|nigga|negro|coon|faggot|fag|dyke|kike|chink|spic|gook|raghead|towelhead|retard|retarded|mongoloid|tranny|shemale|hermaphrodite|rape|rapist|molest|molester|pedophile|pedo|hebephile|ephebophile|cp|child porn|bestiality|zoophilia|necrophilia|incest|kill yourself|kys|suicide|self-harm|terrorist|jihad|isis|taliban|nazi|hitler|holocaust|white power|white supremacy|kkk|school shooter|mass shooting|bomb|behead|decapitate|mutilate|genocide|ethnic cleansing|slave|slavery|lynch|lynching)\b/i;
 
-// 2. NSFW CONTEXT (FOR ROASTING)
+// 2. MINOR / AGE SAFETY (Underage detection)
+const MINOR_SAFETY_REGEX = /\b(jailbait|loli|shota|underage|preteen|hebephile|ephebophile|child porn|cp)\b|(\b(1[0-7]|[0-9])\s*(yo|years?\s*old|yrs?\s*old)\b)/i;
+
+// 3. NSFW CONTEXT (FOR ROASTING)
 // Expanded list to catch variations.
 const NSFW_WORDS_LIST = [
     "sex", "boobs", "boobies", "boobees", "bobs", "vagene", "breast", "nudes", "nipple", "naked", "nude", "horny", "aroused", "boner", "erection", "erect", "hard-on", "dick", "cock", "pussy", "vagina", "penis", "tits", "areola", "orgasm", "climax", "shag", "fuck", "motherfucker", "gangbang", "bukkake", "creampie", "anal", "oral", "cum", "jizz", "semen", "sperm", "load", "milf", "dilf", "gilf", "thicc", "gyatt", "bussy", "breeding", "breed", "nut", "suck", "lick", "eating out", "69", "doggystyle", "missionary", "cowgirl", "bdsm", "bondage", "dom", "sub", "dominatrix", "feet", "toes", "fetish", "kink", "squirt", "gushing", "deepthroat", "blowjob", "handjob", "rimjob", "fingering", "fisting", "pegging", "scissoring", "tribadism", "watersports", "scat", "golden shower", "hentai", "porn", "xxx", "adult movie", "onlyfans", "fansly", "send nudes", "clit", "vulva", "labia", "asshole", "butthole", "anus", "rectum", "booty", "butt", "ass", "twerk", "strip", "stripper", "hooker", "prostitute", "escort", "slut", "whore", "skank", "hoe", "bitch", "cunt", "twat", "wank", "masturbate", "dildo", "vibrator", "sex toy", "fleshlight", "strap-on", "camgirl", "sugardaddy", "sugarbaby", "simp", "incel", "virgin", "cuck", "schlong", "dong", "knob", "bellend", "prick", "chode", "taint", "gooch", "perineum", "ballbag", "scrotum", "nutsack", "gonads", "foreskin", "smegma", "felching", "docking", "sounding", "snowballing", "tea bag", "motorboat", "queef", "rusty trombone", "dirty sanchez", "alabama hot pocket", "cleveland steamer", "wanker", "tosser", "bugger", "sod", "slag", "tart", "strumpet", "harlot", "bimbo", "himbo", "yiff", "furry", "futa", "yaoi", "yuri", "ecchi", "bara", "erotic", "sensual", "genitalia", "groin", "crotch", "loins", "pubes", "phallic", "yoni", "lingam", "coitus", "copulate", "fornicate", "sodomy", "buggery", "pederasty", "onanism", "autoerotic", "frottage", "voyeur", "exhibitionist", "nympho", "satyr", "glory hole", "blue waffle", "lemon party", "tubgirl", "goatse", "meatspin", "2 girls 1 cup", "rule 34", "paizuri", "ahegao", "netorare", "ntr",
@@ -82,10 +85,12 @@ const sanitizeText = (text: string): string => {
   // Create global versions for replacement
   const hardBlockGlobal = new RegExp(HARD_BLOCK_REGEX.source, 'gi');
   const nsfwGlobal = new RegExp(NSFW_TERMS_REGEX.source, 'gi');
+  const minorGlobal = new RegExp(MINOR_SAFETY_REGEX.source, 'gi');
   
   return text
     .replace(hardBlockGlobal, "🤬") // Replace hate/violence with Angry Face
-    .replace(nsfwGlobal, "🫣");     // Replace NSFW with Peeking Face
+    .replace(nsfwGlobal, "🫣")      // Replace NSFW with Peeking Face
+    .replace(minorGlobal, "🔞");    // Replace Minor terms with No Under 18
 };
 
 // Helper to recursively sanitize response object
@@ -114,16 +119,16 @@ const sanitizeResponse = <T>(data: T): T => {
 export const generateRizz = async (
   inputText: string, 
   image?: string | undefined, // Base64 Data URL
-  vibe?: string | undefined,
-  gender?: 'Male' | 'Female' | undefined
+  vibe?: string | undefined
 ): Promise<RizzResponse | { potentialStatus: string, analysis: string }> => {
   
   // DETECT SAFETY ISSUES
   const isToxic = HARD_BLOCK_REGEX.test(inputText);
   const isNSFW = NSFW_TERMS_REGEX.test(inputText);
+  const isMinor = MINOR_SAFETY_REGEX.test(inputText);
   
   // BRANCHING LOGIC: If unsafe, we completely switch personas.
-  const isUnsafe = isToxic || isNSFW;
+  const isUnsafe = isToxic || isNSFW || isMinor;
   
   let systemInstruction = "";
 
@@ -135,7 +140,7 @@ export const generateRizz = async (
       
       systemInstruction = `
       SAFETY OVERRIDE.
-      Identity: "Roast Master". User text is Toxic/NSFW.
+      Identity: "Roast Master". User text is Toxic/NSFW/Underage.
       
       Task:
       1. IGNORE seduction requests.
@@ -157,18 +162,10 @@ export const generateRizz = async (
       `;
   } else {
       // --- RIZZ MASTER PERSONA (Normal Operation) ---
-      let genderInstruction = "";
-      if (gender === 'Male') {
-          genderInstruction = "User Gender: Male. Tone: Confident, direct, cool, not desperate. Avoid excessive emojis.";
-      } else if (gender === 'Female') {
-          genderInstruction = "User Gender: Female. Tone: Playful, engaging, slightly mysterious. Encourage the chase.";
-      }
-
       systemInstruction = `
       Role: "Rizz Master" dating assistant.
       Goal: Generate witty, high-converting replies for DMs/Dating Apps.
       Vibe: ${vibe || "Balanced"}
-      ${genderInstruction}
 
       Style Guidelines:
       - Casual, authentic text messaging style.
@@ -274,8 +271,9 @@ export const generateBio = async (
   
   const isToxic = HARD_BLOCK_REGEX.test(inputText);
   const isNSFW = NSFW_TERMS_REGEX.test(inputText);
+  const isMinor = MINOR_SAFETY_REGEX.test(inputText);
   
-  const isUnsafe = isToxic || isNSFW;
+  const isUnsafe = isToxic || isNSFW || isMinor;
 
   let systemInstruction = "";
 
@@ -283,7 +281,7 @@ export const generateBio = async (
       // --- ROAST MASTER PERSONA (BIO MODE) ---
       systemInstruction = `
       SAFETY OVERRIDE.
-      User asking for bio with NSFW/Toxic terms.
+      User asking for bio with NSFW/Toxic/Underage terms.
       
       Task:
       1. REFUSE bio.

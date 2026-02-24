@@ -173,22 +173,7 @@ const AppContent: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [image, setImage] = useState<string | null>(null);
   const [selectedVibe, setSelectedVibe] = useState<string | null>(null);
-  const [gender, setGender] = useState<'Male' | 'Female' | null>(() => {
-      if (typeof window !== 'undefined') {
-          return localStorage.getItem('rizz_user_gender') as 'Male' | 'Female' | null;
-      }
-      return null;
-  });
   const [shareCount, setShareCount] = useState(0);
-
-  // Persist gender selection
-  useEffect(() => {
-      if (gender) {
-          localStorage.setItem('rizz_user_gender', gender);
-      } else {
-          localStorage.removeItem('rizz_user_gender');
-      }
-  }, [gender]);
   
   // Loading State
   const [loading, setLoading] = useState(false);
@@ -817,7 +802,7 @@ const AppContent: React.FC = () => {
 
       let res;
       if (mode === InputMode.CHAT) {
-        res = await generateRizz(inputText, image || undefined, selectedVibe || undefined, gender || undefined);
+        res = await generateRizz(inputText, image || undefined, selectedVibe || undefined);
       } else {
         res = await generateBio(inputText, selectedVibe || undefined);
       }
@@ -958,7 +943,6 @@ const AppContent: React.FC = () => {
       setResult(null); 
       setInputError(null); 
       setSelectedVibe(null);
-      setGender(null);
       NativeBridge.haptic('light'); 
   }, []);
 
@@ -1118,34 +1102,6 @@ const AppContent: React.FC = () => {
                     className="w-full h-32 md:h-40 bg-black/40 border border-white/10 rounded-2xl p-4 text-sm md:text-base focus:ring-2 focus:ring-rose-500/50 focus:outline-none resize-none transition-all placeholder:text-white/20"
                     style={{ fontSize: '16px' }}
                     />
-                </div>
-
-                <div className="mb-6">
-                    <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-3">
-                        Your Gender (Optional)
-                    </label>
-                    <div className="flex gap-3">
-                        <button
-                            onClick={() => { NativeBridge.haptic('light'); setGender(gender === 'Male' ? null : 'Male'); }}
-                            className={`flex-1 py-2 rounded-xl text-sm font-bold border transition-all ${
-                                gender === 'Male'
-                                ? 'bg-blue-500/20 border-blue-500 text-blue-300 shadow-[0_0_15px_rgba(59,130,246,0.3)]'
-                                : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
-                            }`}
-                        >
-                            ♂️ Boy
-                        </button>
-                        <button
-                            onClick={() => { NativeBridge.haptic('light'); setGender(gender === 'Female' ? null : 'Female'); }}
-                            className={`flex-1 py-2 rounded-xl text-sm font-bold border transition-all ${
-                                gender === 'Female'
-                                ? 'bg-pink-500/20 border-pink-500 text-pink-300 shadow-[0_0_15px_rgba(236,72,153,0.3)]'
-                                : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
-                            }`}
-                        >
-                            ♀️ Girl
-                        </button>
-                    </div>
                 </div>
 
                 <div className="mb-6">
