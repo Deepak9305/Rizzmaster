@@ -173,7 +173,7 @@ export const generateRizz = async (
       Generate a JSON object with:
       - tease: Playful, pushes buttons, maybe a light roast based on the input.
       - smooth: Charming, confident, complimentary but not desperate.
-      - chaotic: Unexpected, funny, maybe a bit unhinged or absurd but related.
+      - chaotic: Completely unhinged, absurd, "red flag" energy, or bizarrely specific. Make it memorable and risky.
       - loveScore: 0-100 numeric rating of the input's "rizz" or potential.
       - potentialStatus: Short status (e.g. "Friendzone", "Soulmate", "Ghosted").
       - analysis: Brief analysis of the situation and why these replies work.
