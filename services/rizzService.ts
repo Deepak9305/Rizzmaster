@@ -32,7 +32,20 @@ const MINOR_SAFETY_REGEX = /\b(jailbait|loli|shota|underage|preteen|hebephile|ep
 const NSFW_WORDS_LIST = [
     "sex", "boobs", "boobies", "boobees", "bobs", "vagene", "breast", "nudes", "nipple", "naked", "nude", "horny", "aroused", "boner", "erection", "erect", "hard-on", "dick", "cock", "pussy", "vagina", "penis", "tits", "areola", "orgasm", "climax", "shag", "fuck", "motherfucker", "gangbang", "bukkake", "creampie", "anal", "oral", "cum", "jizz", "semen", "sperm", "load", "milf", "dilf", "gilf", "thicc", "gyatt", "bussy", "breeding", "breed", "nut", "suck", "lick", "eating out", "69", "doggystyle", "missionary", "cowgirl", "bdsm", "bondage", "dom", "sub", "dominatrix", "feet", "toes", "fetish", "kink", "squirt", "gushing", "deepthroat", "blowjob", "handjob", "rimjob", "fingering", "fisting", "pegging", "scissoring", "tribadism", "watersports", "scat", "golden shower", "hentai", "porn", "xxx", "adult movie", "onlyfans", "fansly", "send nudes", "clit", "vulva", "labia", "asshole", "butthole", "anus", "rectum", "booty", "butt", "ass", "twerk", "strip", "stripper", "hooker", "prostitute", "escort", "slut", "whore", "skank", "hoe", "bitch", "cunt", "twat", "wank", "masturbate", "dildo", "vibrator", "sex toy", "fleshlight", "strap-on", "camgirl", "sugardaddy", "sugarbaby", "simp", "incel", "virgin", "cuck", "schlong", "dong", "knob", "bellend", "prick", "chode", "taint", "gooch", "perineum", "ballbag", "scrotum", "nutsack", "gonads", "foreskin", "smegma", "felching", "docking", "sounding", "snowballing", "tea bag", "motorboat", "queef", "rusty trombone", "dirty sanchez", "alabama hot pocket", "cleveland steamer", "wanker", "tosser", "bugger", "sod", "slag", "tart", "strumpet", "harlot", "bimbo", "himbo", "yiff", "furry", "futa", "yaoi", "yuri", "ecchi", "bara", "erotic", "sensual", "genitalia", "groin", "crotch", "loins", "pubes", "phallic", "yoni", "lingam", "coitus", "copulate", "fornicate", "sodomy", "buggery", "pederasty", "onanism", "autoerotic", "frottage", "voyeur", "exhibitionist", "nympho", "satyr", "glory hole", "blue waffle", "lemon party", "tubgirl", "goatse", "meatspin", "2 girls 1 cup", "rule 34", "paizuri", "ahegao", "netorare", "ntr",
     // Common misspellings and variations
-    "fuk", "fuh", "fvck", "dik", "dic", "puss", "pusi", "pusy", "biatch", "biyatch", "beeyotch", "ho", "hoe", "azz", "secks", "segs", "segway"
+    "fuk", "fuh", "fvck", "dik", "dic", "puss", "pusi", "pusy", "biatch", "biyatch", "beeyotch", "ho", "hoe", "azz", "secks", "segs", "segway",
+    "sh!t", "sh1t", "b!tch", "b1tch", "c0ck", "p0rn", "w0re", "wh0re", "sl0t", "5lut", "cumshot", "facial", "titties", "titty", "breasts", "clitoris",
+    "vulva", "labia", "pubic", "groin", "crotch", "loins", "muff", "beaver", "cameltoe", "mooseknuckle", "boner", "erection", "stiffie", "hardon",
+    "masturbate", "jerk off", "jack off", "wank", "fap", "schlick", "finger", "diddle", "rub one out", "choke the chicken", "spank the monkey",
+    "sex", "intercourse", "coitus", "fornicate", "copulate", "screw", "hump", "bang", "shag", "rail", "plow", "breed", "creampie", "raw dog",
+    "bareback", "condom", "rubber", "protection", "pill", "plan b", "abortion", "fetus", "baby killer", "rapist", "molester", "predator", "groomer",
+    "pedophile", "pedo", "nonce", "toucher", "bad touch", "incest", "stepbro", "stepsis", "stepmom", "stepdad", "milf", "dilf", "gilf", "cougar",
+    "sugar daddy", "sugar baby", "onlyfans", "fansly", "camgirl", "sex worker", "prostitute", "hooker", "escort", "call girl", "street walker",
+    "lot lizard", "pimp", "madam", "brothel", "whorehouse", "strip club", "gentlemans club", "lap dance", "private dance", "champagne room",
+    "bdsm", "bondage", "dom", "sub", "domme", "mistress", "master", "slave", "gimp", "leash", "collar", "cuffs", "gag", "whip", "paddle", "flogger",
+    "spank", "choke", "strangle", "asphyxiate", "breathplay", "knifeplay", "bloodplay", "scat", "piss", "urine", "golden shower", "watersports",
+    "enema", "douche", "rimming", "anilingus", "cunnilingus", "fellatio", "blowjob", "handjob", "titjob", "footjob", "deepthroat", "gag reflex",
+    "swallow", "spit", "snowball", "felch", "docking", "sounding", "pegging", "strap on", "dildo", "vibrator", "plug", "beads", "fleshlight",
+    "pocket pussy", "doll", "robot", "hentai", "ecchi", "yaoi", "yuri", "futa", "furry", "yiff", "vore", "guro", "snuff", "bestiality", "zoophilia"
 ];
 
 // Map characters to their regex pattern including leetspeak and repetitions
@@ -76,7 +89,18 @@ const NSFW_TERMS_REGEX = new RegExp(
 
 // Helper to clean Markdown JSON from Llama responses
 const cleanJson = (text: string): string => {
-  return text.replace(/```json\n?|```/g, '').trim();
+  // Remove markdown code blocks
+  let cleaned = text.replace(/```json\n?|```/g, '').trim();
+  
+  // Attempt to find the first '{' and last '}' to extract just the JSON object
+  const firstOpen = cleaned.indexOf('{');
+  const lastClose = cleaned.lastIndexOf('}');
+  
+  if (firstOpen !== -1 && lastClose !== -1 && lastClose > firstOpen) {
+    cleaned = cleaned.substring(firstOpen, lastClose + 1);
+  }
+  
+  return cleaned;
 };
 
 // Helper to sanitize output text (Post-Processing)
@@ -95,13 +119,16 @@ const sanitizeText = (text: string): string => {
 
 // Helper to recursively sanitize response object
 const sanitizeResponse = <T>(data: T): T => {
+  if (data === null || data === undefined) {
+    return "" as unknown as T; // Default to empty string for nulls to prevent crashes
+  }
   if (typeof data === 'string') {
     return sanitizeText(data) as unknown as T;
   }
   if (Array.isArray(data)) {
     return data.map(item => sanitizeResponse(item)) as unknown as T;
   }
-  if (typeof data === 'object' && data !== null) {
+  if (typeof data === 'object') {
     const sanitizedObj: any = {};
     for (const key in data) {
       sanitizedObj[key] = sanitizeResponse((data as any)[key]);
@@ -120,24 +147,19 @@ export const generateRizz = async (
   inputText: string, 
   image?: string | undefined, // Base64 Data URL
   vibe?: string | undefined
-): Promise<RizzResponse | { potentialStatus: string, analysis: string }> => {
+): Promise<RizzResponse> => { // Return type simplified for consistency
   
-  // DETECT SAFETY ISSUES
+  // ... (Safety checks remain the same) ...
   const isToxic = HARD_BLOCK_REGEX.test(inputText);
   const isNSFW = NSFW_TERMS_REGEX.test(inputText);
   const isMinor = MINOR_SAFETY_REGEX.test(inputText);
   
-  // BRANCHING LOGIC: If unsafe, we completely switch personas.
   const isUnsafe = isToxic || isNSFW || isMinor;
   
   let systemInstruction = "";
 
   if (isUnsafe) {
-      // --- ROAST MASTER PERSONA ---
-      // We instruct the model to abandon 'Rizz' and switch to 'Roast'
-      // The keys 'tease', 'smooth', 'chaotic' must be preserved for JSON validity,
-      // but their content will be replaced by life-choice roasts.
-      
+      // ... (Roast Master Persona remains the same) ...
       systemInstruction = `
       SAFETY OVERRIDE.
       Identity: "Roast Master". User text is Toxic/NSFW/Underage.
@@ -161,7 +183,7 @@ export const generateRizz = async (
       Return ONLY raw JSON.
       `;
   } else {
-      // --- RIZZ MASTER PERSONA (Normal Operation) ---
+      // ... (Rizz Master Persona remains the same) ...
       systemInstruction = `
       Role: "Rizz Master" dating assistant.
       Goal: Generate witty, high-converting replies for DMs/Dating Apps.
@@ -206,6 +228,7 @@ export const generateRizz = async (
   }
 
   try {
+    // ... (Model selection and messages setup remain the same) ...
     const isMultimodal = !!image;
     const model = isMultimodal ? VISION_MODEL : TEXT_MODEL;
 
@@ -235,7 +258,7 @@ export const generateRizz = async (
             const completion = await llamaClient.chat.completions.create({
                 model: model,
                 messages: messages,
-                temperature: 0.85, // Slightly increased for creativity
+                temperature: 0.85,
                 max_tokens: 1000,
                 response_format: { type: "json_object" }
             });
@@ -256,7 +279,12 @@ export const generateRizz = async (
 
   } catch (error: any) {
     console.error("Rizz Service Error:", error);
+    // Return a safe fallback object to prevent UI crashes
     return {
+      tease: "Error generating rizz.",
+      smooth: "Try again later.",
+      chaotic: "The AI is taking a nap.",
+      loveScore: 0,
       potentialStatus: "Error",
       analysis: "The Rizz God is sleeping (API Error). Try again later."
     };
