@@ -112,7 +112,8 @@ const sanitizeResponse = <T>(data: T): T => {
 export const generateRizz = async (
   inputText: string, 
   image?: string | undefined, // Base64 Data URL
-  vibe?: string | undefined
+  vibe?: string | undefined,
+  gender?: 'Male' | 'Female' | undefined
 ): Promise<RizzResponse | { potentialStatus: string, analysis: string }> => {
   
   // DETECT SAFETY ISSUES
@@ -158,11 +159,14 @@ export const generateRizz = async (
       `;
   } else {
       // --- RIZZ MASTER PERSONA (Normal Operation) ---
+      const genderContext = gender ? `User Gender: ${gender} (Generate replies suitable for a ${gender} user).` : "";
+
       systemInstruction = `
       You are the "Rizz Master", a witty dating assistant.
       Your goal is to generate charming, effective, and context-aware replies.
       
       Context Vibe: ${vibe || "Balanced/Charming"}
+      ${genderContext}
 
       INSTRUCTIONS:
       1. Analyze the input text/image carefully.
