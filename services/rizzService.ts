@@ -202,7 +202,7 @@ export const generateRizz = async (
     const completion = await llamaClient.chat.completions.create({
         model: model,
         messages: messages,
-        temperature: 0.7,
+        temperature: 1.1,
         max_tokens: 800,
         response_format: { type: "json_object" }
     });
