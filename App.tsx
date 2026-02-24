@@ -173,8 +173,22 @@ const AppContent: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [image, setImage] = useState<string | null>(null);
   const [selectedVibe, setSelectedVibe] = useState<string | null>(null);
-  const [gender, setGender] = useState<'Male' | 'Female' | null>(null);
+  const [gender, setGender] = useState<'Male' | 'Female' | null>(() => {
+      if (typeof window !== 'undefined') {
+          return localStorage.getItem('rizz_user_gender') as 'Male' | 'Female' | null;
+      }
+      return null;
+  });
   const [shareCount, setShareCount] = useState(0);
+
+  // Persist gender selection
+  useEffect(() => {
+      if (gender) {
+          localStorage.setItem('rizz_user_gender', gender);
+      } else {
+          localStorage.removeItem('rizz_user_gender');
+      }
+  }, [gender]);
   
   // Loading State
   const [loading, setLoading] = useState(false);
