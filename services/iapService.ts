@@ -39,16 +39,16 @@ const getProductType = () => getCdvPurchase().ProductType.PAID_SUBSCRIPTION;
 export const IAP_CONFIG = {
     WEEKLY: {
         alias: 'weekly_sub', 
-        androidId: 'godmode',               
-        androidBasePlanId: 'godmode4-99',   
-        iosId: 'godmode4-99',               
+        androidId: 'premium',               
+        androidBasePlanId: 'weekly',   
+        iosId: 'premium_weekly', // iOS typically requires unique product IDs per subscription duration
         get type() { return getProductType(); }
     },
     MONTHLY: {
         alias: 'monthly_sub',
-        androidId: 'godmode',               
-        androidBasePlanId: 'godmode15-99',  
-        iosId: 'godmode15-99',              
+        androidId: 'premium',               
+        androidBasePlanId: 'monthly',  
+        iosId: 'premium_monthly', // iOS typically requires unique product IDs per subscription duration
         get type() { return getProductType(); }
     }
 };
