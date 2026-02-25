@@ -51,8 +51,6 @@ export const NativeBridge = {
                 url: url || '',
                 dialogTitle: 'Share' // Android only
             });
-            // On iOS/Android, result might be empty or contain activityType if successful
-            // If it throws, it failed/cancelled. If it returns, it likely succeeded (or at least didn't crash).
             return 'SHARED';
         } catch (err: any) {
             console.warn('Native share dismissed/failed', err);
@@ -71,6 +69,7 @@ export const NativeBridge = {
     if (text) shareData.text = text;
     if (url) shareData.url = url;
 
+    // Check navigator.share support
     if (typeof navigator !== 'undefined' && navigator.share && navigator.canShare && navigator.canShare(shareData)) {
       try {
         await navigator.share(shareData);
