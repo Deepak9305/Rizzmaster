@@ -45,28 +45,28 @@ export const NativeBridge = {
     // 1. Try Capacitor Native Share (Plugin)
     if (Capacitor.isNativePlatform()) {
         try {
-            await Share.share({
+            const result = await Share.share({
                 title: title || 'Check this out!',
                 text: text || '',
                 url: url || '',
                 dialogTitle: 'Share' // Android only
             });
+            // On iOS/Android, result might be empty or contain activityType if successful
+            // If it throws, it failed/cancelled. If it returns, it likely succeeded (or at least didn't crash).
             return 'SHARED';
         } catch (err: any) {
             console.warn('Native share dismissed/failed', err);
-            // If the user dismissed the sheet, we stop here.
-            // If it failed for another reason, we might want to fallback, but usually native share is reliable.
-            if (err.message !== 'Share canceled') {
-                 // Fallback to clipboard only on actual errors, not user cancellation
-                 const copied = await NativeBridge.copyToClipboard(contentToCopy);
-                 return copied ? 'COPIED' : 'FAILED';
+            // If the user dismissed the sheet, we return DISMISSED so it doesn't count.
+            if (err.message === 'Share canceled') {
+                 return 'DISMISSED'; 
             }
-            return 'DISMISSED';
+            // If it's a real error, try fallback
+            const copied = await NativeBridge.copyToClipboard(contentToCopy);
+            return copied ? 'COPIED' : 'FAILED';
         }
     }
 
     // 2. Try Web Share API (Desktop/Mobile Web)
-    // Validate share data for Web Share API
     const shareData: any = { title: title || 'Share' };
     if (text) shareData.text = text;
     if (url) shareData.url = url;

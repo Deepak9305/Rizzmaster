@@ -329,16 +329,16 @@ const AppContentInner: React.FC = () => {
                     // Actually, let's just use the ID they gave. If it fails, it fails.
                     // const appOpenId = 'ca-app-pub-7381421031784616/2705366298'; 
                     
-                    // RE-EVALUATION: The user provided a specific ID. I should use it.
-                    // But I am calling `AdMobService.showInterstitial`. 
-                    // AdMob might reject an App Open ID being used in an Interstitial request.
-                    // Let's Update the code to use the ID provided by the user, but keep the method as showInterstitial.
+                    // RE-EVALUATION: The user requested to separate the risk.
+                    // Using an App Open ID with an Interstitial request is risky (mismatch).
+                    // To be safe and ensure it works, we will use the PROD INTERSTITIAL ID for this "App Open" behavior.
+                    // This makes it a standard Interstitial ad shown at app resume, which is fully supported.
                     
-                    const appOpenId = Capacitor.getPlatform() === 'ios' ? TEST_INTERSTITIAL_ID_IOS : 'ca-app-pub-7381421031784616/2705366298';
+                    const appOpenId = Capacitor.getPlatform() === 'ios' ? TEST_INTERSTITIAL_ID_IOS : PROD_INTERSTITIAL_ID_ANDROID;
                     AdMobService.showInterstitial(appOpenId).then((shown) => {
                         if (shown) {
                             lastAppOpenAdTime = now;
-                            console.log("App Open Ad (via Interstitial) Shown");
+                            console.log("App Open Ad (via Interstitial ID) Shown");
                         }
                     });
                 }
@@ -847,7 +847,9 @@ const AppContentInner: React.FC = () => {
     setSelectedVibe(selectedVibe === vibe.label ? null : vibe.label);
   };
 
-  const lastInterstitialTime = useRef<number>(0);
+  const lastInterstitialTime = useRef<number>(Date.now()); // Initialize with current time to start cooldown immediately on launch
+  const APP_LAUNCH_GRACE_PERIOD = 2 * 60 * 1000; // 2 minutes grace period on launch
+  const appLaunchTime = useRef<number>(Date.now());
 
   // --- OFFICIAL GOOGLE TEST IDS (INTERSTITIAL) ---
   const TEST_INTERSTITIAL_ID_ANDROID = 'ca-app-pub-3940256099942544/1033173712';
@@ -888,22 +890,32 @@ const AppContentInner: React.FC = () => {
 
     setLoading(true);
 
-    // INTERSTITIAL AD LOGIC
-    // Only show if NOT premium AND cooldown has passed
-    if (!currentProfile.is_premium && Capacitor.isNativePlatform()) {
-        const now = Date.now();
-        if (now - lastInterstitialTime.current > INTERSTITIAL_COOLDOWN_MS) {
-            console.log("Showing Interstitial Ad...");
-            const adId = Capacitor.getPlatform() === 'ios' ? TEST_INTERSTITIAL_ID_IOS : PROD_INTERSTITIAL_ID_ANDROID; 
+    // INTERSTITIAL AD LOGIC - MOVED TO AFTER GENERATION
+    // This ensures we don't violate AdMob policy by showing ads during "loading" or "generating" states.
+    // We prepare the ad logic here but execute it later.
+    const showInterstitialIfReady = async () => {
+        if (!currentProfile.is_premium && Capacitor.isNativePlatform()) {
+            const now = Date.now();
             
-            try {
-                await AdMobService.showInterstitial(adId);
-                lastInterstitialTime.current = Date.now(); // Reset cooldown
-            } catch (e) {
-                console.warn("Interstitial failed to show:", e);
+            // Check for Launch Grace Period (2 mins)
+            if (now - appLaunchTime.current < APP_LAUNCH_GRACE_PERIOD) {
+                console.log("Skipping Interstitial: In Launch Grace Period");
+                return;
+            }
+
+            if (now - lastInterstitialTime.current > INTERSTITIAL_COOLDOWN_MS) {
+                console.log("Showing Interstitial Ad...");
+                const adId = Capacitor.getPlatform() === 'ios' ? TEST_INTERSTITIAL_ID_IOS : PROD_INTERSTITIAL_ID_ANDROID; 
+                
+                try {
+                    await AdMobService.showInterstitial(adId);
+                    lastInterstitialTime.current = Date.now(); // Reset cooldown
+                } catch (e) {
+                    console.warn("Interstitial failed to show:", e);
+                }
             }
         }
-    }
+    };
     
     const creditsBefore = currentProfile.credits || 0;
 
@@ -935,6 +947,9 @@ const AppContentInner: React.FC = () => {
       } else {
          setResult(res);
          NativeBridge.haptic('success');
+         // Show Ad AFTER result is ready and displayed
+         // Increased delay to 3 seconds to allow user to see the result first
+         setTimeout(() => showInterstitialIfReady(), 3000);
       }
 
     } catch (error) {
