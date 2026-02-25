@@ -214,29 +214,27 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
+    let isStatusBarVisible = false; // Track local state to prevent spamming bridge
+    
+    // Initial Hide
+    StatusBar.hide().catch(() => {}); // Catch potential errors on initial hide
+
     const handleScroll = () => {
       const scrollY = window.scrollY;
-      if (scrollY > 50) {
-        StatusBar.show();
-        StatusBar.setStyle({ style: Style.Dark });
-        StatusBar.setOverlaysWebView({ overlay: false }); // Push content down when visible? Or keep overlay?
-        // Actually, if we want to avoid overlap when scrolled, overlay: false is safer, but might cause jump.
-        // Let's stick to overlay: true for immersive feel, but show it.
-        // Wait, if it's overlay: true, it overlaps content.
-        // The user complained about overlap.
-        // If we hide it at top (scrollY < 50), no overlap.
-        // If we show it when scrolled down, it overlaps the *scrolled* content, which is usually fine as it's just text.
-        // But let's try to keep it simple: Hide at top, Show when scrolled.
-        StatusBar.setOverlaysWebView({ overlay: true });
-      } else {
-        StatusBar.hide();
+      const shouldBeVisible = scrollY > 50;
+
+      if (shouldBeVisible && !isStatusBarVisible) {
+        isStatusBarVisible = true;
+        StatusBar.show().catch(() => {});
+        StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
+        StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
+      } else if (!shouldBeVisible && isStatusBarVisible) {
+        isStatusBarVisible = false;
+        StatusBar.hide().catch(() => {});
       }
     };
 
-    // Initial Hide
-    StatusBar.hide();
-
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
