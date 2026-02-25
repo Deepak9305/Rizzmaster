@@ -274,7 +274,20 @@ export const generateRizz = async (
 
             if (responseText) {
                 const rawData = JSON.parse(cleanJson(responseText));
-                return sanitizeResponse(rawData) as RizzResponse;
+                const sanitized = sanitizeResponse(rawData) as any;
+
+                // Validate structure and provide defaults if keys are missing
+                // This prevents "blank screen" issues if the model hallucinates the schema
+                const finalResponse: RizzResponse = {
+                    tease: sanitized.tease || "The AI is speechless (try again).",
+                    smooth: sanitized.smooth || "Too smooth for words (try again).",
+                    chaotic: sanitized.chaotic || "System overload (try again).",
+                    loveScore: typeof sanitized.loveScore === 'number' ? sanitized.loveScore : 50,
+                    potentialStatus: sanitized.potentialStatus || "Unknown",
+                    analysis: sanitized.analysis || "No analysis available."
+                };
+
+                return finalResponse;
             }
         } catch (e) {
             console.warn(`Attempt ${attempts + 1} failed:`, e);
