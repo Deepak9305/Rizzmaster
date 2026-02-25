@@ -33,6 +33,9 @@ const TEST_REWARD_ID_IOS = 'ca-app-pub-3940256099942544/1712485313';
 const TEST_BANNER_ID_ANDROID = 'ca-app-pub-3940256099942544/6300978111';
 const TEST_BANNER_ID_IOS = 'ca-app-pub-3940256099942544/2934735716';
 
+// PROD BANNER ID
+const PROD_BANNER_ID_ANDROID = 'ca-app-pub-7381421031784616/7234804095';
+
 // Placeholder for Web AdSense
 const ADSENSE_SLOT_ID = '1234567890'; 
 
@@ -240,7 +243,7 @@ const AppContent: React.FC = () => {
             if (profile.is_premium) {
                 AdMobService.hideBanner();
             } else {
-                const adId = Capacitor.getPlatform() === 'ios' ? TEST_BANNER_ID_IOS : TEST_BANNER_ID_ANDROID;
+                const adId = Capacitor.getPlatform() === 'ios' ? TEST_BANNER_ID_IOS : PROD_BANNER_ID_ANDROID;
                 // Delay slightly to ensure layout is settled and old banners are gone
                 timer = setTimeout(() => AdMobService.showBanner(adId), 2000);
             }
@@ -257,7 +260,7 @@ const AppContent: React.FC = () => {
                 // Force a refresh on resume by hiding then showing
                 if (profile && !profile.is_premium) {
                     AdMobService.hideBanner().then(() => {
-                        const adId = Capacitor.getPlatform() === 'ios' ? TEST_BANNER_ID_IOS : TEST_BANNER_ID_ANDROID;
+                        const adId = Capacitor.getPlatform() === 'ios' ? TEST_BANNER_ID_IOS : PROD_BANNER_ID_ANDROID;
                         timer = setTimeout(() => AdMobService.showBanner(adId), 1000);
                     });
                 }
@@ -766,6 +769,20 @@ const AppContent: React.FC = () => {
     setSelectedVibe(selectedVibe === vibe.label ? null : vibe.label);
   };
 
+  const lastInterstitialTime = useRef<number>(0);
+
+  // --- OFFICIAL GOOGLE TEST IDS (INTERSTITIAL) ---
+  const TEST_INTERSTITIAL_ID_ANDROID = 'ca-app-pub-3940256099942544/1033173712';
+  const TEST_INTERSTITIAL_ID_IOS = 'ca-app-pub-3940256099942544/4411468910';
+
+  // PROD INTERSTITIAL ID
+  const PROD_INTERSTITIAL_ID_ANDROID = 'ca-app-pub-7381421031784616/5183026259';
+  
+  // PROD REWARD ID
+  const PROD_REWARD_ID_ANDROID = 'ca-app-pub-7381421031784616/6580197977';
+
+  const INTERSTITIAL_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutes
+
   const handleGenerate = async () => {
     const currentProfile = profileRef.current;
     if (!currentProfile) return;
@@ -792,6 +809,23 @@ const AppContent: React.FC = () => {
     }
 
     setLoading(true);
+
+    // INTERSTITIAL AD LOGIC
+    // Only show if NOT premium AND cooldown has passed
+    if (!currentProfile.is_premium && Capacitor.isNativePlatform()) {
+        const now = Date.now();
+        if (now - lastInterstitialTime.current > INTERSTITIAL_COOLDOWN_MS) {
+            console.log("Showing Interstitial Ad...");
+            const adId = Capacitor.getPlatform() === 'ios' ? TEST_INTERSTITIAL_ID_IOS : PROD_INTERSTITIAL_ID_ANDROID; 
+            
+            try {
+                await AdMobService.showInterstitial(adId);
+                lastInterstitialTime.current = Date.now(); // Reset cooldown
+            } catch (e) {
+                console.warn("Interstitial failed to show:", e);
+            }
+        }
+    }
     
     const creditsBefore = currentProfile.credits || 0;
 
@@ -841,7 +875,7 @@ const AppContent: React.FC = () => {
     if (Capacitor.isNativePlatform()) {
         setIsAdLoading(true);
         try {
-            const adUnitId = Capacitor.getPlatform() === 'ios' ? TEST_REWARD_ID_IOS : TEST_REWARD_ID_ANDROID;
+            const adUnitId = Capacitor.getPlatform() === 'ios' ? TEST_REWARD_ID_IOS : PROD_REWARD_ID_ANDROID;
             const rewardEarned = await AdMobService.showRewardVideo(adUnitId);
             setIsAdLoading(false);
             
@@ -989,7 +1023,7 @@ const AppContent: React.FC = () => {
                 </Suspense>
              </div>
           ) : (
-            <div className="max-w-4xl mx-auto px-4 py-6 md:py-12 pb-40 relative min-h-[100dvh] flex flex-col animate-fade-in safe-top safe-bottom">
+            <div className="max-w-4xl mx-auto px-4 py-6 md:py-12 pb-40 relative min-h-[100dvh] flex flex-col animate-fade-in safe-top">
             
             <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden bg-black" />
 

@@ -1,5 +1,5 @@
 
-import { AdMob, RewardAdOptions, RewardAdPluginEvents, AdMobRewardItem, BannerAdOptions, BannerAdSize, BannerAdPosition } from '@capacitor-community/admob';
+import { AdMob, RewardAdOptions, RewardAdPluginEvents, AdMobRewardItem, BannerAdOptions, BannerAdSize, BannerAdPosition, InterstitialAdPluginEvents } from '@capacitor-community/admob';
 import { Capacitor } from '@capacitor/core';
 
 export const AdMobService = {
@@ -66,6 +66,61 @@ export const AdMobService = {
         } catch (e) {
             console.error('AdMob Hide Banner Error:', e);
         }
+    },
+
+    async showInterstitial(adId: string): Promise<boolean> {
+        if (!Capacitor.isNativePlatform()) return false;
+        
+        await this.initialize();
+
+        return new Promise(async (resolve) => {
+            let listeners: any[] = [];
+
+            const cleanup = async () => {
+                for (const listener of listeners) {
+                    if (listener && typeof listener.remove === 'function') {
+                        await listener.remove();
+                    }
+                }
+                listeners = [];
+            };
+
+            try {
+                const onDismiss = await AdMob.addListener(InterstitialAdPluginEvents.Dismissed, () => {
+                    console.log('AdMob Interstitial Dismissed');
+                    cleanup();
+                    resolve(true);
+                });
+                listeners.push(onDismiss);
+                
+                const onFailed = await AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, (err) => {
+                    console.error('AdMob Interstitial Failed to load', err);
+                    cleanup();
+                    resolve(false);
+                });
+                listeners.push(onFailed);
+
+                const onShowFailed = await AdMob.addListener(InterstitialAdPluginEvents.FailedToShow, (err) => {
+                    console.error('AdMob Interstitial Failed to show', err);
+                    cleanup();
+                    resolve(false);
+                });
+                listeners.push(onShowFailed);
+
+                const options: any = {
+                    adId: adId,
+                    isTesting: true
+                };
+
+                await AdMob.prepareInterstitial(options);
+                await AdMob.showInterstitial();
+                
+            } catch (error) {
+                console.error('AdMob Interstitial Execution Error', error);
+                await cleanup();
+                resolve(false);
+            }
+        });
     },
 
     async showRewardVideo(adId: string): Promise<boolean> {
