@@ -221,7 +221,7 @@ export const generateRizz = async (
       - chaotic: [The Chaotic Reply]
       - loveScore: 0-100 rating.
       - potentialStatus: Short status (e.g. "Friendzone", "Down Bad", "Wife Material").
-      - analysis: A 2-sentence psychological breakdown. 1) Why the input works/fails. 2) Why these replies will trigger a response (e.g., "This creates a curiosity gap" or "This breaks their frame").
+      - analysis: Brief strategy explanation.
       
       Return ONLY raw JSON.
       `;
