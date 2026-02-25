@@ -152,7 +152,15 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ isAppReady, onComplete }) =
   );
 };
 
-const AppContent: React.FC = () => {
+const AppContent: React.FC = React.memo(() => {
+  return (
+    <Suspense fallback={<div className="fixed inset-0 bg-black z-50" />}>
+      <AppContentInner />
+    </Suspense>
+  );
+});
+
+const AppContentInner: React.FC = () => {
   const { showToast } = useToast();
   
   // Auth State
@@ -219,19 +227,23 @@ const AppContent: React.FC = () => {
     // Initial Hide
     StatusBar.hide().catch(() => {}); // Catch potential errors on initial hide
 
+    // Handle Status Bar Visibility on Scroll with Debounce
     const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const shouldBeVisible = scrollY > 50;
+      // Use requestAnimationFrame to throttle updates to the screen refresh rate
+      requestAnimationFrame(() => {
+        const scrollY = window.scrollY;
+        const shouldBeVisible = scrollY > 50;
 
-      if (shouldBeVisible && !isStatusBarVisible) {
-        isStatusBarVisible = true;
-        StatusBar.show().catch(() => {});
-        StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
-        StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
-      } else if (!shouldBeVisible && isStatusBarVisible) {
-        isStatusBarVisible = false;
-        StatusBar.hide().catch(() => {});
-      }
+        if (shouldBeVisible && !isStatusBarVisible) {
+          isStatusBarVisible = true;
+          StatusBar.show().catch(() => {});
+          StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
+          StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
+        } else if (!shouldBeVisible && isStatusBarVisible) {
+          isStatusBarVisible = false;
+          StatusBar.hide().catch(() => {});
+        }
+      });
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -322,7 +334,7 @@ const AppContent: React.FC = () => {
                     // AdMob might reject an App Open ID being used in an Interstitial request.
                     // Let's Update the code to use the ID provided by the user, but keep the method as showInterstitial.
                     
-                    const appOpenId = Capacitor.getPlatform() === 'ios' ? TEST_REWARD_ID_IOS : 'ca-app-pub-7381421031784616/2705366298';
+                    const appOpenId = Capacitor.getPlatform() === 'ios' ? TEST_INTERSTITIAL_ID_IOS : 'ca-app-pub-7381421031784616/2705366298';
                     AdMobService.showInterstitial(appOpenId).then((shown) => {
                         if (shown) {
                             lastAppOpenAdTime = now;
