@@ -594,19 +594,66 @@ const AppContentInner: React.FC = () => {
         }
 
         if (profileResult.error?.code === 'PGRST116') {
+            const today = new Date().toISOString().split('T')[0];
             const { data: newProfile } = await supabase.from('profiles').insert([{ 
                 id: userId, 
                 email: email, 
                 credits: DAILY_CREDITS, 
                 is_premium: false,
-                last_daily_reset: new Date().toISOString().split('T')[0]
+                last_daily_reset: today,
+                streak_count: 1,
+                last_streak_date: today
             }]).select().single();
             if (newProfile) profileData = newProfile;
         } else if (profileData) {
             const today = new Date().toISOString().split('T')[0];
+            
             if (profileData.last_daily_reset !== today) {
-                const { data: updated } = await supabase.from('profiles').update({ credits: DAILY_CREDITS, last_daily_reset: today }).eq('id', userId).select().single();
-                if (updated) profileData = updated;
+                // Calculate Streak
+                let currentStreak = profileData.streak_count || 0;
+                const lastReset = new Date(profileData.last_daily_reset);
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayStr = yesterday.toISOString().split('T')[0];
+                
+                // If last reset was yesterday, increment streak. Else reset to 1.
+                if (profileData.last_daily_reset === yesterdayStr) {
+                    currentStreak += 1;
+                } else {
+                    // Missed a day (or more)
+                    currentStreak = 1;
+                }
+
+                // Calculate Bonus
+                // Day 1: 0
+                // Day 2-3: +1
+                // Day 4-5: +2
+                // Day 6-7: +3
+                // Day 8+: +5
+                let bonus = 0;
+                if (currentStreak === 1) bonus = 0;
+                else if (currentStreak >= 2 && currentStreak <= 3) bonus = 1;
+                else if (currentStreak >= 4 && currentStreak <= 5) bonus = 2;
+                else if (currentStreak >= 6 && currentStreak <= 7) bonus = 3;
+                else if (currentStreak >= 8) bonus = 5;
+
+                const newCredits = DAILY_CREDITS + bonus;
+
+                const { data: updated } = await supabase.from('profiles').update({ 
+                    credits: newCredits, 
+                    last_daily_reset: today,
+                    streak_count: currentStreak,
+                    last_streak_date: today
+                }).eq('id', userId).select().single();
+                
+                if (updated) {
+                    profileData = updated;
+                    if (bonus > 0) {
+                        setTimeout(() => showToast(`🔥 ${currentStreak} Day Streak! +${bonus} Bonus Credits!`, 'success'), 1000);
+                    } else {
+                        setTimeout(() => showToast(`Daily Credits Reset!`, 'info'), 1000);
+                    }
+                }
             }
         }
 
@@ -1170,13 +1217,6 @@ const AppContentInner: React.FC = () => {
                 </button>
 
                 <div className="flex items-center gap-2 md:gap-3">
-                {!hasClaimedShareReward && (
-                    <button onClick={handleShareForCredits} className="p-2 md:px-4 md:py-2 bg-white/5 hover:bg-white/10 rounded-full flex items-center gap-1.5 transition-all border border-white/5 active:scale-95">
-                        <span className="text-green-500 text-base md:text-lg">🎁</span>
-                        <span className="hidden md:inline text-xs font-bold text-white">Earn ({shareCount}/5)</span>
-                    </button>
-                )}
-
                 <button onClick={handleOpenSaved} className="p-2 md:px-4 md:py-2 bg-white/5 hover:bg-white/10 rounded-full flex items-center gap-1.5 transition-all border border-white/5 active:scale-95">
                     <span className="text-rose-500 text-base md:text-lg">♥</span>
                     <span className="hidden md:inline text-xs font-bold text-white">Saved</span>

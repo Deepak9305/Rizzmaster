@@ -10,6 +10,8 @@ export interface UserProfile {
   credits: number;
   is_premium: boolean;
   last_daily_reset: string;
+  streak_count?: number;
+  last_streak_date?: string;
 }
 
 export interface SavedItem {
