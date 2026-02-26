@@ -51,7 +51,16 @@ const SavedModal: React.FC<SavedModalProps> = ({
                              }`}>
                                  {item.type}
                              </span>
-                             <span className="text-[10px] text-white/30">{new Date(item.created_at).toLocaleDateString()}</span>
+                             <span className="text-[10px] text-white/30">
+                                 {(() => {
+                                     try {
+                                         const date = new Date(item.created_at);
+                                         return isNaN(date.getTime()) ? 'Recently' : date.toLocaleDateString();
+                                     } catch (e) {
+                                         return 'Recently';
+                                     }
+                                 })()}
+                             </span>
                          </div>
                          <p className="text-white/90 text-sm leading-relaxed mb-3">{item.content}</p>
                          <div className="flex gap-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
