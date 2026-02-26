@@ -368,7 +368,7 @@ export const generateBio = async (
             { role: "system", content: systemInstruction },
             { role: "user", content: "Generate a bio." }
         ],
-        temperature: 0.85,
+        temperature: 0.7,
         response_format: { type: "json_object" }
     });
 
