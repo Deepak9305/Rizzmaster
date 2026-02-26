@@ -801,9 +801,15 @@ const AppContentInner: React.FC = () => {
 
   const handleShare = useCallback(async (content: string) => {
     NativeBridge.haptic('light');
-    const status = await NativeBridge.share('Rizz Master Reply', content);
+    
+    // Add branding to the shared content
+    const shareText = `"${content}"\n\n⚡ Rizz Master`;
+    const shareUrl = "https://rizzmaster.ai";
+
+    const status = await NativeBridge.share('Rizz Master Reply', shareText, shareUrl);
+    
     if (status === 'COPIED') {
-        showToast('Link copied to clipboard!', 'success');
+        showToast('Copied to clipboard!', 'success');
     } else if (status === 'FAILED') {
         showToast('Could not share content.', 'error');
     }
