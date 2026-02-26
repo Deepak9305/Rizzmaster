@@ -2,7 +2,7 @@
 import React, { memo, useRef, useState } from 'react';
 import { NativeBridge } from '../services/nativeBridge';
 import { useToast } from '../context/ToastContext';
-import { toPng } from 'html-to-image';
+import { toJpeg } from 'html-to-image';
 
 interface RizzCardProps {
   label: string;
@@ -46,13 +46,14 @@ const RizzCard: React.FC<RizzCardProps> = memo(({
     NativeBridge.haptic('medium');
     
     try {
-        // Small delay to ensure rendering
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Longer delay to ensure rendering and layout stability
+        await new Promise(resolve => setTimeout(resolve, 150));
 
-        // Generate Image
-        const dataUrl = await toPng(cardRef.current, {
+        // Generate Image - Maximum Optimization for Stability
+        const dataUrl = await toJpeg(cardRef.current, {
             cacheBust: true,
-            pixelRatio: 2, // Reduced from 3 to 2 to prevent memory crashes on some devices
+            quality: 0.75, // Reduced quality slightly for smaller memory footprint
+            pixelRatio: 1.0, // Standard resolution (safest for preventing crashes)
             backgroundColor: '#000000',
             style: {
                 transform: 'scale(1)',
@@ -62,7 +63,7 @@ const RizzCard: React.FC<RizzCardProps> = memo(({
         });
 
         const blob = await (await fetch(dataUrl)).blob();
-        const file = new File([blob], 'rizz-master.png', { type: 'image/png' });
+        const file = new File([blob], 'rizz-master.jpg', { type: 'image/jpeg' });
 
         // Check if sharing files is supported
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -91,7 +92,7 @@ const RizzCard: React.FC<RizzCardProps> = memo(({
     {/* Hidden Capture Element - Optimized for Image Generation */}
     <div 
         ref={cardRef}
-        className="fixed top-[-9999px] left-[-9999px] w-[600px] p-12 bg-black text-white rounded-3xl overflow-hidden flex flex-col justify-center items-center text-center border-[12px] border-zinc-900"
+        className="fixed top-0 left-[-9999px] w-[600px] p-12 bg-black text-white rounded-3xl overflow-hidden flex flex-col justify-center items-center text-center border-[12px] border-zinc-900"
         style={{ fontFamily: 'Inter, sans-serif' }}
     >
         {/* Background Gradient Blob */}
