@@ -552,27 +552,12 @@ const AppContentInner: React.FC = () => {
 
   const loadUserData = async (userId: string, email?: string) => {
     if (!supabase || userId === 'guest') {
-        try {
-            const storedProfile = localStorage.getItem('guest_profile');
-            const storedItems = localStorage.getItem('guest_saved_items');
-            
-            if (storedProfile) {
-                setProfile(JSON.parse(storedProfile));
-            } else {
-                const newProfile: UserProfile = { 
-                  id: 'guest', 
-                  email: 'guest@rizzmaster.ai', 
-                  credits: DAILY_CREDITS, 
-                  is_premium: false, 
-                  last_daily_reset: new Date().toISOString().split('T')[0] 
-                };
-                setProfile(newProfile);
-                localStorage.setItem('guest_profile', JSON.stringify(newProfile));
-            }
-            setSavedItems(storedItems ? JSON.parse(storedItems) : []);
-        } catch (e) {
-            console.error("Error parsing guest data", e);
-            // Fallback for corrupted storage
+        const storedProfile = localStorage.getItem('guest_profile');
+        const storedItems = localStorage.getItem('guest_saved_items');
+        
+        if (storedProfile) {
+            setProfile(JSON.parse(storedProfile));
+        } else {
             const newProfile: UserProfile = { 
               id: 'guest', 
               email: 'guest@rizzmaster.ai', 
@@ -581,8 +566,9 @@ const AppContentInner: React.FC = () => {
               last_daily_reset: new Date().toISOString().split('T')[0] 
             };
             setProfile(newProfile);
-            setSavedItems([]);
+            localStorage.setItem('guest_profile', JSON.stringify(newProfile));
         }
+        setSavedItems(storedItems ? JSON.parse(storedItems) : []);
         
         // Check for share reward claim in guest storage
         const claimed = localStorage.getItem('guest_share_reward_claimed');
@@ -930,17 +916,7 @@ const AppContentInner: React.FC = () => {
 
   const INTERSTITIAL_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutes
 
-  const interstitialTimeoutRef = useRef<any>(null);
-
-  // Cleanup timeouts on unmount
-  useEffect(() => {
-    return () => {
-      if (interstitialTimeoutRef.current) clearTimeout(interstitialTimeoutRef.current);
-    };
-  }, []);
-
   const handleGenerate = async () => {
-    if (loading) return;
     const currentProfile = profileRef.current;
     if (!currentProfile) return;
     
@@ -1026,8 +1002,7 @@ const AppContentInner: React.FC = () => {
          NativeBridge.haptic('success');
          // Show Ad AFTER result is ready and displayed
          // Increased delay to 3 seconds to allow user to see the result first
-         if (interstitialTimeoutRef.current) clearTimeout(interstitialTimeoutRef.current);
-         interstitialTimeoutRef.current = setTimeout(() => showInterstitialIfReady(), 3000);
+         setTimeout(() => showInterstitialIfReady(), 3000);
       }
 
     } catch (error) {
