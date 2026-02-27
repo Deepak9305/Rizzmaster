@@ -54,50 +54,6 @@ export const NativeBridge = {
   },
 
   /**
-   * Share content with a prioritized, cached capability flow.
-   */
-  share: async (title: string, text: string, url?: string): Promise<'SHARED' | 'COPIED' | 'DISMISSED' | 'FAILED'> => {
-    if (!text && !url) return 'FAILED';
-
-    const { isNative, hasWebShare } = getCapabilities();
-    const shareData = { title: title || 'Rizz Master', text: text || '', url: url || '', dialogTitle: 'Share' };
-
-    // Strategy 1: Native Plugin (Preferred for App)
-    // Handles native intents better than WebView navigator.share
-    if (isNative) {
-      try {
-        await Share.share(shareData);
-        return 'SHARED';
-      } catch (err: any) {
-        if (isCancelled(err)) return 'DISMISSED';
-        console.warn('[NativeBridge] Native share failed, trying fallbacks:', err);
-      }
-    }
-
-    // Strategy 2: Web Share API (Preferred for Mobile Web)
-    if (hasWebShare) {
-      try {
-        if (navigator.canShare && !navigator.canShare(shareData)) throw new Error('Invalid share data');
-        
-        // Race against a timeout to prevent hanging
-        await Promise.race([
-            navigator.share(shareData),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
-        ]);
-        return 'SHARED';
-      } catch (err: any) {
-        if (isCancelled(err)) return 'DISMISSED';
-        console.warn('[NativeBridge] Web share failed:', err);
-      }
-    }
-
-    // Strategy 3: Clipboard Fallback (Universal)
-    const contentToCopy = url ? `${text}\n${url}` : text;
-    const success = await NativeBridge.copyToClipboard(contentToCopy);
-    return success ? 'COPIED' : 'FAILED';
-  },
-
-  /**
    * Optimized Clipboard copy with modern-first approach.
    */
   copyToClipboard: async (text: string): Promise<boolean> => {
