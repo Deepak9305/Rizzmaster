@@ -58,4 +58,4 @@ const Footer: React.FC<FooterProps> = ({ className = "", onNavigate }) => {
   );
 };
 
-export default Footer;
+export default React.memo(Footer);

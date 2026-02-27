@@ -154,4 +154,4 @@ const InfoPages: React.FC<InfoPagesProps> = ({ page, onBack, onDeleteAccount }) 
   );
 };
 
-export default InfoPages;
+export default React.memo(InfoPages);

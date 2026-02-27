@@ -139,4 +139,4 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onResto
   );
 };
 
-export default PremiumModal;
+export default React.memo(PremiumModal);

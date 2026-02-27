@@ -16,7 +16,7 @@ const SavedModal: React.FC<SavedModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  const displayItems = savedItems.filter(item => item.type !== 'system');
+  const displayItems = React.useMemo(() => savedItems.filter(item => item.type !== 'system'), [savedItems]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-end">

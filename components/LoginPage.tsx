@@ -342,4 +342,4 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
   );
 };
 
-export default LoginPage;
+export default React.memo(LoginPage);

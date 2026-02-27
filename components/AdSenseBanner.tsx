@@ -63,4 +63,4 @@ const AdSenseBanner: React.FC<AdSenseBannerProps> = ({
   );
 };
 
-export default AdSenseBanner;
+export default React.memo(AdSenseBanner);

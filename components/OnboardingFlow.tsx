@@ -119,4 +119,4 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
   );
 };
 
-export default OnboardingFlow;
+export default React.memo(OnboardingFlow);
