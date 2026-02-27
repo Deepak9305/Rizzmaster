@@ -51,16 +51,40 @@ export const NativeBridge = {
 
     const caps = getCapabilities();
 
-    // Construct clean share data (avoid empty strings which can cause issues)
+    // Construct clean share data
     const shareData: any = {};
     if (title) shareData.title = title;
     if (text) shareData.text = text;
     if (url) shareData.url = url;
 
-    // 1. Try Native Platform Plugin (Highest priority for iOS/Android apps)
+    // 1. Try Web Share API (Safest & Best for Modern Devices)
+    // We prioritize this because it works natively in almost all modern WebViews and Browsers
+    // without relying on the Capacitor Bridge which can be fragile.
+    if (caps.hasWebShare) {
+      try {
+        let canShare = true;
+        // If canShare is implemented, use it to verify data
+        if (typeof navigator.canShare === 'function') {
+            canShare = navigator.canShare(shareData);
+        }
+
+        if (canShare) {
+            await navigator.share(shareData);
+            return 'SHARED';
+        } else {
+            console.warn('[NativeBridge] navigator.canShare returned false, trying fallbacks');
+        }
+      } catch (err: any) {
+        if (err.name === 'AbortError') return 'SHARED';
+        console.warn('[NativeBridge] Web Share failed:', err);
+        // Fall through to next method
+      }
+    }
+
+    // 2. Try Native Platform Plugin (Fallback for older Native Apps)
     if (caps.isNative) {
       try {
-        if (Share) {
+        if (Share && typeof Share.share === 'function') {
             await Share.share({
               title: title || 'Rizz Master',
               text: text || '',
@@ -72,26 +96,9 @@ export const NativeBridge = {
       } catch (err: any) {
         const msg = err.message?.toLowerCase() || '';
         if (msg.includes('canceled') || msg.includes('dismissed') || err.name === 'AbortError') {
-          return 'SHARED'; // Treat as shared for UX
+          return 'SHARED';
         }
         console.warn('[NativeBridge] Capacitor Share failed:', err);
-      }
-    }
-
-    // 2. Try Web Share API (Modern Browsers)
-    if (caps.hasWebShare) {
-      try {
-        // Use canShare if available for extra safety
-        if (typeof navigator.canShare === 'function' && !navigator.canShare(shareData)) {
-            console.warn('[NativeBridge] navigator.canShare returned false');
-            // Fall through to clipboard
-        } else {
-            await navigator.share(shareData);
-            return 'SHARED';
-        }
-      } catch (err: any) {
-        if (err.name === 'AbortError') return 'SHARED';
-        console.warn('[NativeBridge] Web Share failed:', err);
       }
     }
 
