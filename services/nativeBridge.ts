@@ -42,33 +42,45 @@ export const NativeBridge = {
       url: url || ''
     };
 
-    // 1. Try Capacitor Share Plugin (Optimized for Native)
-    // This handles native share sheets better on iOS/Android than the raw Web API in some webviews
-    if (Capacitor.isNativePlatform()) {
-      try {
-        await Share.share(shareData);
-        return 'SHARED';
-      } catch (err: any) {
-        if (err.message?.includes('canceled') || err.name === 'AbortError') return 'SHARED';
-        console.warn('Capacitor Share failed, trying Web Share:', err);
-      }
-    }
-
-    // 2. Try Native Web Share API (Standard Web)
+    // 1. Try Native Web Share API FIRST (Most reliable in modern browsers)
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
-        await navigator.share(shareData);
-        return 'SHARED';
+        // Check if the browser actually thinks it can share this data
+        if (navigator.canShare && navigator.canShare(shareData)) {
+            await navigator.share(shareData);
+            return 'SHARED';
+        } else if (!navigator.canShare) {
+            // Fallback for browsers that support share but not canShare
+            await navigator.share(shareData);
+            return 'SHARED';
+        }
       } catch (err: any) {
         if (err.name === 'AbortError') return 'SHARED';
         console.warn('Web Share failed:', err);
+        // If web share fails, we continue to try Capacitor or Clipboard
       }
     }
 
+    // 2. Try Capacitor Share Plugin (For Native Apps)
+    try {
+        if (Capacitor.isNativePlatform() && Share) {
+            await Share.share(shareData);
+            return 'SHARED';
+        }
+    } catch (err: any) {
+        console.warn('Capacitor Share failed:', err);
+        if (err.message?.includes('canceled') || err.name === 'AbortError') return 'SHARED';
+    }
+
     // 3. Fallback: Copy to Clipboard
-    const contentToCopy = url ? `${text}\n${url}` : text;
-    const copied = await NativeBridge.copyToClipboard(contentToCopy);
-    return copied ? 'COPIED' : 'FAILED';
+    try {
+        const contentToCopy = url ? `${text}\n${url}` : text;
+        const copied = await NativeBridge.copyToClipboard(contentToCopy);
+        return copied ? 'COPIED' : 'FAILED';
+    } catch (err) {
+        console.error('Final share fallback failed:', err);
+        return 'FAILED';
+    }
   },
 
   /**
