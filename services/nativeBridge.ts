@@ -45,23 +45,7 @@ export const NativeBridge = {
     if (text) shareData.text = text;
     if (url) shareData.url = url;
 
-    // 1. Try Web Share API First (Even on Native if available)
-    // This is often more reliable for "intent" based sharing on modern Android/iOS webviews
-    if (typeof navigator !== 'undefined' && navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-      try {
-        await navigator.share(shareData);
-        return 'SHARED';
-      } catch (err: any) {
-        if (err.name === 'AbortError') {
-           console.log('User cancelled share');
-           // Treat cancel as success for reward purposes on mobile to avoid frustration
-           return 'SHARED';
-        }
-        console.warn('Web Share failed, attempting native/fallback:', err);
-      }
-    }
-
-    // 2. Try Capacitor Native Share (Plugin)
+    // 1. Try Capacitor Native Share (Plugin) FIRST if on native platform
     if (Capacitor.isNativePlatform()) {
         try {
             await Share.share({
@@ -73,16 +57,30 @@ export const NativeBridge = {
             return 'SHARED';
         } catch (err: any) {
             console.warn('Native share dismissed/failed', err);
-            if (err.message === 'Share canceled') {
+            // If user cancelled, we still count it as shared for UX purposes
+            if (err.message === 'Share canceled' || err.name === 'AbortError') {
                  return 'SHARED'; 
             }
-            // If it's a real error, try fallback
-            const copied = await NativeBridge.copyToClipboard(contentToCopy);
-            return copied ? 'COPIED' : 'FAILED';
+            // If it's a real error, fall through to web share or clipboard
         }
     }
+
+    // 2. Try Web Share API
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        // Some browsers don't support canShare, so we try-catch the share call directly
+        await navigator.share(shareData);
+        return 'SHARED';
+      } catch (err: any) {
+        if (err.name === 'AbortError') {
+           console.log('User cancelled share');
+           return 'SHARED';
+        }
+        console.warn('Web Share failed, attempting fallback:', err);
+      }
+    }
     
-    // 3. Fallback: Copy to Clipboard (Always try this if others fail/dismiss)
+    // 3. Fallback: Copy to Clipboard
     const copied = await NativeBridge.copyToClipboard(contentToCopy);
     return copied ? 'COPIED' : 'FAILED';
   },
