@@ -1,5 +1,4 @@
 
-import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 
 /**
@@ -34,50 +33,28 @@ export const NativeBridge = {
    * Returns a status string: 'SHARED', 'COPIED', 'DISMISSED', 'FAILED'
    */
   share: async (title: string, text: string, url?: string): Promise<'SHARED' | 'COPIED' | 'DISMISSED' | 'FAILED'> => {
-    // Ensure we have at least some content to share
-    if (!text && !url) {
-        console.warn('Share called with empty text and url');
-        return 'FAILED';
-    }
+    if (!text && !url) return 'FAILED';
 
-    const contentToCopy = url ? `${text}\n${url}` : text;
-    const shareData: any = { title: title || 'Share' };
-    if (text) shareData.text = text;
-    if (url) shareData.url = url;
+    const shareData: ShareData = {
+      title: title || 'Rizz Master',
+      text: text || '',
+      url: url || ''
+    };
 
-    // 1. Try Web Share API FIRST (The "Native Web" one)
+    // 1. Try Native Web Share API
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share(shareData);
         return 'SHARED';
       } catch (err: any) {
-        if (err.name === 'AbortError') {
-           console.log('User cancelled share');
-           return 'SHARED';
-        }
-        console.warn('Web Share failed, attempting native plugin fallback:', err);
+        // User cancelled is considered a success in terms of "attempted"
+        if (err.name === 'AbortError') return 'SHARED';
+        console.warn('Web Share failed:', err);
       }
     }
 
-    // 2. Try Capacitor Native Share (Plugin) as fallback for older native environments
-    if (Capacitor.isNativePlatform()) {
-        try {
-            await Share.share({
-                title: title || 'Check this out!',
-                text: text || '',
-                url: url || '',
-                dialogTitle: 'Share' // Android only
-            });
-            return 'SHARED';
-        } catch (err: any) {
-            console.warn('Native share plugin failed', err);
-            if (err.message === 'Share canceled' || err.name === 'AbortError') {
-                 return 'SHARED'; 
-            }
-        }
-    }
-    
-    // 3. Fallback: Copy to Clipboard
+    // 2. Fallback: Copy to Clipboard
+    const contentToCopy = url ? `${text}\n${url}` : text;
     const copied = await NativeBridge.copyToClipboard(contentToCopy);
     return copied ? 'COPIED' : 'FAILED';
   },
