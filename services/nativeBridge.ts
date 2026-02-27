@@ -45,7 +45,21 @@ export const NativeBridge = {
     if (text) shareData.text = text;
     if (url) shareData.url = url;
 
-    // 1. Try Capacitor Native Share (Plugin) FIRST if on native platform
+    // 1. Try Web Share API FIRST (The "Native Web" one)
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share(shareData);
+        return 'SHARED';
+      } catch (err: any) {
+        if (err.name === 'AbortError') {
+           console.log('User cancelled share');
+           return 'SHARED';
+        }
+        console.warn('Web Share failed, attempting native plugin fallback:', err);
+      }
+    }
+
+    // 2. Try Capacitor Native Share (Plugin) as fallback for older native environments
     if (Capacitor.isNativePlatform()) {
         try {
             await Share.share({
@@ -56,28 +70,11 @@ export const NativeBridge = {
             });
             return 'SHARED';
         } catch (err: any) {
-            console.warn('Native share dismissed/failed', err);
-            // If user cancelled, we still count it as shared for UX purposes
+            console.warn('Native share plugin failed', err);
             if (err.message === 'Share canceled' || err.name === 'AbortError') {
                  return 'SHARED'; 
             }
-            // If it's a real error, fall through to web share or clipboard
         }
-    }
-
-    // 2. Try Web Share API
-    if (typeof navigator !== 'undefined' && navigator.share) {
-      try {
-        // Some browsers don't support canShare, so we try-catch the share call directly
-        await navigator.share(shareData);
-        return 'SHARED';
-      } catch (err: any) {
-        if (err.name === 'AbortError') {
-           console.log('User cancelled share');
-           return 'SHARED';
-        }
-        console.warn('Web Share failed, attempting fallback:', err);
-      }
     }
     
     // 3. Fallback: Copy to Clipboard
