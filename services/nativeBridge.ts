@@ -1,4 +1,5 @@
 
+import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 
 /**
@@ -35,25 +36,36 @@ export const NativeBridge = {
   share: async (title: string, text: string, url?: string): Promise<'SHARED' | 'COPIED' | 'DISMISSED' | 'FAILED'> => {
     if (!text && !url) return 'FAILED';
 
-    const shareData: ShareData = {
+    const shareData = {
       title: title || 'Rizz Master',
       text: text || '',
       url: url || ''
     };
 
-    // 1. Try Native Web Share API
+    // 1. Try Capacitor Share Plugin (Optimized for Native)
+    // This handles native share sheets better on iOS/Android than the raw Web API in some webviews
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await Share.share(shareData);
+        return 'SHARED';
+      } catch (err: any) {
+        if (err.message?.includes('canceled') || err.name === 'AbortError') return 'SHARED';
+        console.warn('Capacitor Share failed, trying Web Share:', err);
+      }
+    }
+
+    // 2. Try Native Web Share API (Standard Web)
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share(shareData);
         return 'SHARED';
       } catch (err: any) {
-        // User cancelled is considered a success in terms of "attempted"
         if (err.name === 'AbortError') return 'SHARED';
         console.warn('Web Share failed:', err);
       }
     }
 
-    // 2. Fallback: Copy to Clipboard
+    // 3. Fallback: Copy to Clipboard
     const contentToCopy = url ? `${text}\n${url}` : text;
     const copied = await NativeBridge.copyToClipboard(contentToCopy);
     return copied ? 'COPIED' : 'FAILED';
