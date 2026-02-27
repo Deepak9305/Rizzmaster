@@ -1,4 +1,5 @@
 
+import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 
 /**
@@ -56,10 +57,28 @@ export const NativeBridge = {
     if (text) shareData.text = text;
     if (url) shareData.url = url;
 
-    // 1. Try Web Share API (Safest & Best for Modern Devices)
-    // We prioritize this because it works natively in almost all modern WebViews and Browsers.
-    // CRITICAL: If this exists but fails, we fallback to CLIPBOARD, not Capacitor Share.
-    // Mixing both in the same session can cause crashes in some WebViews.
+    // 1. Try Native Platform Plugin (Highest priority for iOS/Android apps)
+    // We use the plugin because it handles native intents better than navigator.share in WebViews
+    if (caps.isNative) {
+      try {
+        await Share.share({
+          title: title || 'Rizz Master',
+          text: text || '',
+          url: url || '',
+          dialogTitle: 'Share'
+        });
+        return 'SHARED';
+      } catch (err: any) {
+        const msg = err.message?.toLowerCase() || '';
+        if (msg.includes('canceled') || msg.includes('dismissed') || err.name === 'AbortError') {
+          return 'SHARED'; // Treat as shared for UX
+        }
+        console.warn('[NativeBridge] Capacitor Share failed:', err);
+        // If native share fails (e.g. plugin not installed properly), we fall back
+      }
+    }
+
+    // 2. Try Web Share API (Safest & Best for Modern Devices)
     if (caps.hasWebShare) {
       try {
         let canShare = true;
@@ -88,12 +107,6 @@ export const NativeBridge = {
         // Proceed to Clipboard fallback
       }
     }
-    
-    // 2. Capacitor Share Plugin REMOVED
-    // We intentionally removed the Capacitor Share plugin fallback.
-    // In hybrid apps, if Web Share fails, trying to invoke a second native share plugin
-    // immediately often causes a "double fault" crash.
-    // The safest fallback is always the Clipboard.
 
     // 3. Final Fallback: Copy to Clipboard
     const contentToCopy = url ? `${text}\n${url}` : text;
