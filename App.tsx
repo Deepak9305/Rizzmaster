@@ -185,7 +185,6 @@ const AppContentInner: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [image, setImage] = useState<string | null>(null);
   const [selectedVibe, setSelectedVibe] = useState<string | null>(null);
-  const [shareCount, setShareCount] = useState(0);
   
   // Loading State
   const [loading, setLoading] = useState(false);
@@ -202,9 +201,6 @@ const AppContentInner: React.FC = () => {
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
   const [isSessionBlocked, setIsSessionBlocked] = useState(false);
   const [isAdLoading, setIsAdLoading] = useState(false);
-  const [hasClaimedShareReward, setHasClaimedShareReward] = useState(false);
-
-  const [isSharing, setIsSharing] = useState(false);
 
   // Ref to track state for event listeners without re-binding
   const stateRef = useRef({
@@ -253,10 +249,6 @@ const AppContentInner: React.FC = () => {
   // Sync profile ref
   useEffect(() => {
     profileRef.current = profile;
-    if (profile) {
-        const count = parseInt(localStorage.getItem(`rizz_share_count_${profile.id}`) || '0', 10);
-        setShareCount(count);
-    }
   }, [profile]);
 
   // Check for Onboarding on Mount
@@ -569,10 +561,6 @@ const AppContentInner: React.FC = () => {
             localStorage.setItem('guest_profile', JSON.stringify(newProfile));
         }
         setSavedItems(storedItems ? JSON.parse(storedItems) : []);
-        
-        // Check for share reward claim in guest storage
-        const claimed = localStorage.getItem('guest_share_reward_claimed');
-        if (claimed === 'true') setHasClaimedShareReward(true);
         return;
     }
 
@@ -588,9 +576,6 @@ const AppContentInner: React.FC = () => {
         if (savedData) {
             const items = savedData as SavedItem[];
             setSavedItems(items);
-            // Check if user has claimed the share reward
-            const hasClaimed = items.some(item => item.type === 'system' && item.content === 'share_reward_claimed');
-            setHasClaimedShareReward(hasClaimed);
         }
 
         if (profileResult.error?.code === 'PGRST116') {
@@ -1008,61 +993,6 @@ const AppContentInner: React.FC = () => {
     }, AD_DURATION * 1000);
   };
 
-  const handleShareForCredits = async () => {
-    if (hasClaimedShareReward || isSharing) return;
-
-    setIsSharing(true);
-    NativeBridge.haptic('medium');
-    const shareText = "Check out Rizz Master! It generates the best replies for your dating apps. 🚀";
-    const shareUrl = "https://rizzmaster.ai"; // Replace with actual app URL if available
-
-    try {
-        const result = await NativeBridge.share("Get Rizz Master", shareText, shareUrl);
-
-        if (result === 'SHARED' || result === 'COPIED') {
-            const newCount = shareCount + 1;
-            
-            if (newCount >= 5) {
-                updateCredits((profileRef.current?.credits || 0) + 10);
-                setShareCount(0);
-                setHasClaimedShareReward(true);
-                
-                if (profile) {
-                    localStorage.setItem(`rizz_share_count_${profile.id}`, '0');
-                    
-                    if (profile.id === 'guest') {
-                        localStorage.setItem('guest_share_reward_claimed', 'true');
-                    } else if (supabase) {
-                        // Persist claim to DB
-                        await supabase.from('saved_items').insert({
-                            user_id: profile.id,
-                            content: 'share_reward_claimed',
-                            type: 'system'
-                        });
-                    }
-                }
-                showToast("Shared with 5 friends! +10 Credits!", 'success');
-                NativeBridge.haptic('success');
-            } else {
-                setShareCount(newCount);
-                if (profile) {
-                    localStorage.setItem(`rizz_share_count_${profile.id}`, newCount.toString());
-                }
-                showToast(`Shared! (${newCount}/5 for +10 Credits)`, 'success');
-            }
-        } else if (result === 'DISMISSED') {
-            showToast('Share cancelled.', 'info');
-        } else {
-            showToast('Could not share. Try again.', 'error');
-        }
-    } catch (error) {
-        console.error("Share error:", error);
-        showToast('Share failed. Please try again.', 'error');
-    } finally {
-        setIsSharing(false);
-    }
-  };
-
   const isSaved = useCallback((content: string) => savedItems.some(item => item.content === content), [savedItems]);
   const clear = useCallback(() => { 
       setInputText(''); 
@@ -1164,13 +1094,6 @@ const AppContentInner: React.FC = () => {
                 </button>
 
                 <div className="flex items-center gap-2 md:gap-3">
-                {!hasClaimedShareReward && (
-                    <button onClick={handleShareForCredits} className="p-2 md:px-4 md:py-2 bg-white/5 hover:bg-white/10 rounded-full flex items-center gap-1.5 transition-all border border-white/5 active:scale-95">
-                        <span className="text-green-500 text-base md:text-lg">🎁</span>
-                        <span className="hidden md:inline text-xs font-bold text-white">Earn ({shareCount}/5)</span>
-                    </button>
-                )}
-
                 <button onClick={handleOpenSaved} className="p-2 md:px-4 md:py-2 bg-white/5 hover:bg-white/10 rounded-full flex items-center gap-1.5 transition-all border border-white/5 active:scale-95">
                     <span className="text-rose-500 text-base md:text-lg">♥</span>
                     <span className="hidden md:inline text-xs font-bold text-white">Saved</span>
@@ -1312,11 +1235,6 @@ const AppContentInner: React.FC = () => {
                     <button onClick={handleOpenPremium} className="bg-gradient-to-r from-yellow-500 to-amber-600 text-black py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base shadow-xl hover:brightness-110 active:scale-[0.98] transition-all flex flex-col items-center justify-center animate-pulse">
                     <span className="text-xl mb-1">👑</span> <span>Go Unlimited</span>
                     </button>
-                    {!hasClaimedShareReward && (
-                        <button onClick={handleShareForCredits} className="col-span-2 bg-white/5 border border-white/10 py-3 rounded-2xl font-bold text-sm hover:bg-white/10 active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-white/80">
-                            <span>📤</span> <span>Share to Friends ({shareCount}/5) (+10 Credits)</span>
-                        </button>
-                    )}
                     </div>
                 )}
                 {!profile?.is_premium && <p className="text-center text-[10px] md:text-xs text-white/30 mt-3 md:mt-4">{profile?.credits} daily credits remaining. <span className="text-yellow-500/80 cursor-pointer hover:underline" onClick={handleOpenPremium}>Upgrade.</span></p>}
