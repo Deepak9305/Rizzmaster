@@ -58,12 +58,12 @@ export const NativeBridge = {
     if (url) shareData.url = url;
 
     // 1. Try Web Share API (Safest & Best for Modern Devices)
-    // We prioritize this because it works natively in almost all modern WebViews and Browsers
-    // without relying on the Capacitor Bridge which can be fragile.
+    // We prioritize this because it works natively in almost all modern WebViews and Browsers.
+    // CRITICAL: If this exists but fails, we fallback to CLIPBOARD, not Capacitor Share.
+    // Mixing both in the same session can cause crashes in some WebViews.
     if (caps.hasWebShare) {
       try {
         let canShare = true;
-        // If canShare is implemented, use it to verify data
         if (typeof navigator.canShare === 'function') {
             canShare = navigator.canShare(shareData);
         }
@@ -71,18 +71,16 @@ export const NativeBridge = {
         if (canShare) {
             await navigator.share(shareData);
             return 'SHARED';
-        } else {
-            console.warn('[NativeBridge] navigator.canShare returned false, trying fallbacks');
         }
       } catch (err: any) {
         if (err.name === 'AbortError') return 'SHARED';
         console.warn('[NativeBridge] Web Share failed:', err);
-        // Fall through to next method
+        // Proceed to Clipboard fallback, skipping Capacitor Share
       }
     }
-
-    // 2. Try Native Platform Plugin (Fallback for older Native Apps)
-    if (caps.isNative) {
+    
+    // 2. Try Native Platform Plugin (Only if Web Share is NOT available)
+    else if (caps.isNative) {
       try {
         if (Share && typeof Share.share === 'function') {
             await Share.share({
