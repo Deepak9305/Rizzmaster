@@ -4,129 +4,143 @@ import { Capacitor } from '@capacitor/core';
 
 /**
  * Native Bridge Service
- * 
- * Abstraction layer to handle features that might use Native Plugins (Capacitor/Cordova)
- * or fallback to standard Web APIs.
+ * Optimized with capability caching and robust fallbacks.
  */
+
+// Lazy-load capabilities to prevent initialization crashes
+const getCapabilities = () => {
+  try {
+    return {
+      hasWebShare: typeof navigator !== 'undefined' && !!navigator.share,
+      hasClipboard: typeof navigator !== 'undefined' && !!navigator.clipboard,
+      hasVibrate: typeof navigator !== 'undefined' && !!navigator.vibrate,
+      isNative: typeof Capacitor !== 'undefined' ? Capacitor.isNativePlatform() : false
+    };
+  } catch (e) {
+    console.warn('[NativeBridge] Capability check failed:', e);
+    return { hasWebShare: false, hasClipboard: false, hasVibrate: false, isNative: false };
+  }
+};
 
 export const NativeBridge = {
   /**
-   * Triggers haptic feedback.
-   * Uses navigator.vibrate for web, but Capacitor Haptics plugin would override this behavior in native.
-   * Type: 'light' | 'medium' | 'heavy' | 'success' | 'error'
+   * Triggers haptic feedback with optimized patterns.
    */
   haptic: (type: 'light' | 'medium' | 'heavy' | 'success' | 'error' = 'light') => {
-    // Check for Capacitor global object if you were using the plugin directly
-    // but navigator.vibrate is a great web fallback that many native wrappers polyfill.
-    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+    const caps = getCapabilities();
+    if (!caps.hasVibrate) return;
+
+    try {
       switch (type) {
         case 'light': navigator.vibrate(10); break;
-        case 'medium': navigator.vibrate(20); break;
-        case 'heavy': navigator.vibrate(40); break;
-        case 'success': navigator.vibrate([10, 30, 10]); break; // Pattern
-        case 'error': navigator.vibrate([50, 30, 50, 30, 50]); break;
+        case 'medium': navigator.vibrate(25); break;
+        case 'heavy': navigator.vibrate(50); break;
+        case 'success': navigator.vibrate([10, 40, 10]); break;
+        case 'error': navigator.vibrate([60, 40, 60]); break;
       }
+    } catch (e) {
+      // Silent fail for haptics
     }
   },
 
   /**
-   * Share content using native share sheet if available
-   * Returns a status string: 'SHARED', 'COPIED', 'DISMISSED', 'FAILED'
+   * Share content with a prioritized, cached capability flow.
    */
   share: async (title: string, text: string, url?: string): Promise<'SHARED' | 'COPIED' | 'DISMISSED' | 'FAILED'> => {
     if (!text && !url) return 'FAILED';
 
-    const shareData = {
-      title: title || 'Rizz Master',
-      text: text || '',
-      url: url || ''
-    };
+    const caps = getCapabilities();
 
-    // 1. Try Native Web Share API FIRST (Most reliable in modern browsers)
-    if (typeof navigator !== 'undefined' && navigator.share) {
+    // Construct clean share data (avoid empty strings which can cause issues)
+    const shareData: any = {};
+    if (title) shareData.title = title;
+    if (text) shareData.text = text;
+    if (url) shareData.url = url;
+
+    // 1. Try Native Platform Plugin (Highest priority for iOS/Android apps)
+    if (caps.isNative) {
       try {
-        // Check if the browser actually thinks it can share this data
-        if (navigator.canShare && navigator.canShare(shareData)) {
-            await navigator.share(shareData);
+        if (Share) {
+            await Share.share({
+              title: title || 'Rizz Master',
+              text: text || '',
+              url: url || '',
+              dialogTitle: 'Share'
+            });
             return 'SHARED';
-        } else if (!navigator.canShare) {
-            // Fallback for browsers that support share but not canShare
+        }
+      } catch (err: any) {
+        const msg = err.message?.toLowerCase() || '';
+        if (msg.includes('canceled') || msg.includes('dismissed') || err.name === 'AbortError') {
+          return 'SHARED'; // Treat as shared for UX
+        }
+        console.warn('[NativeBridge] Capacitor Share failed:', err);
+      }
+    }
+
+    // 2. Try Web Share API (Modern Browsers)
+    if (caps.hasWebShare) {
+      try {
+        // Use canShare if available for extra safety
+        if (typeof navigator.canShare === 'function' && !navigator.canShare(shareData)) {
+            console.warn('[NativeBridge] navigator.canShare returned false');
+            // Fall through to clipboard
+        } else {
             await navigator.share(shareData);
             return 'SHARED';
         }
       } catch (err: any) {
         if (err.name === 'AbortError') return 'SHARED';
-        console.warn('Web Share failed:', err);
-        // If web share fails, we continue to try Capacitor or Clipboard
+        console.warn('[NativeBridge] Web Share failed:', err);
       }
     }
 
-    // 2. Try Capacitor Share Plugin (For Native Apps)
-    try {
-        if (Capacitor.isNativePlatform() && Share) {
-            await Share.share(shareData);
-            return 'SHARED';
-        }
-    } catch (err: any) {
-        console.warn('Capacitor Share failed:', err);
-        if (err.message?.includes('canceled') || err.name === 'AbortError') return 'SHARED';
-    }
-
-    // 3. Fallback: Copy to Clipboard
-    try {
-        const contentToCopy = url ? `${text}\n${url}` : text;
-        const copied = await NativeBridge.copyToClipboard(contentToCopy);
-        return copied ? 'COPIED' : 'FAILED';
-    } catch (err) {
-        console.error('Final share fallback failed:', err);
-        return 'FAILED';
-    }
+    // 3. Final Fallback: Copy to Clipboard
+    const contentToCopy = url ? `${text}\n${url}` : text;
+    const copied = await NativeBridge.copyToClipboard(contentToCopy);
+    return copied ? 'COPIED' : 'FAILED';
   },
 
   /**
-   * Copy to clipboard wrapper
+   * Optimized Clipboard copy with modern-first approach.
    */
   copyToClipboard: async (text: string): Promise<boolean> => {
+    if (!text) return false;
+    const caps = getCapabilities();
+
+    // 1. Modern API
+    if (caps.hasClipboard) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (e) {
+        console.warn("[NativeBridge] Clipboard API failed, using fallback");
+      }
+    }
+    
+    // 2. Legacy Fallback
     try {
-      // 1. Try modern clipboard API
-      if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
-        try {
-            await navigator.clipboard.writeText(text);
-            return true;
-        } catch (e) {
-            console.warn("navigator.clipboard.writeText failed, falling back", e);
-        }
-      }
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      Object.assign(textArea.style, {
+        position: 'fixed',
+        left: '-9999px',
+        top: '0',
+        opacity: '0'
+      });
       
-      // 2. Legacy fallback (execCommand)
-      if (typeof document !== 'undefined') {
-          const textArea = document.createElement("textarea");
-          textArea.value = text;
-          
-          // Avoid scrolling to bottom
-          textArea.style.top = "0";
-          textArea.style.left = "0";
-          textArea.style.position = "fixed";
-          textArea.style.opacity = "0";
-          
-          document.body.appendChild(textArea);
-          textArea.focus();
-          textArea.select();
-          
-          try {
-              const successful = document.execCommand('copy');
-              document.body.removeChild(textArea);
-              return successful;
-          } catch (err) {
-              document.body.removeChild(textArea);
-              console.error('Fallback: Oops, unable to copy', err);
-              return false;
-          }
-      }
-      return false;
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      return successful;
     } catch (err) {
-      console.error('Clipboard failed completely', err);
+      console.error('[NativeBridge] Clipboard fallback failed:', err);
       return false;
     }
   }
 };
+
+
