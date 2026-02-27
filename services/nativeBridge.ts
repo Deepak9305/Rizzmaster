@@ -1,5 +1,4 @@
 
-import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 
 /**
@@ -65,40 +64,36 @@ export const NativeBridge = {
       try {
         let canShare = true;
         if (typeof navigator.canShare === 'function') {
-            canShare = navigator.canShare(shareData);
+            try {
+                canShare = navigator.canShare(shareData);
+            } catch (e) {
+                console.warn('[NativeBridge] canShare check failed:', e);
+                canShare = true; // Try anyway if check fails
+            }
         }
 
         if (canShare) {
-            await navigator.share(shareData);
+            // Add a timeout to prevent freezing if the share sheet hangs
+            const sharePromise = navigator.share(shareData);
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Share operation timed out')), 3000)
+            );
+            
+            await Promise.race([sharePromise, timeoutPromise]);
             return 'SHARED';
         }
       } catch (err: any) {
         if (err.name === 'AbortError') return 'SHARED';
         console.warn('[NativeBridge] Web Share failed:', err);
-        // Proceed to Clipboard fallback, skipping Capacitor Share
+        // Proceed to Clipboard fallback
       }
     }
     
-    // 2. Try Native Platform Plugin (Only if Web Share is NOT available)
-    else if (caps.isNative) {
-      try {
-        if (Share && typeof Share.share === 'function') {
-            await Share.share({
-              title: title || 'Rizz Master',
-              text: text || '',
-              url: url || '',
-              dialogTitle: 'Share'
-            });
-            return 'SHARED';
-        }
-      } catch (err: any) {
-        const msg = err.message?.toLowerCase() || '';
-        if (msg.includes('canceled') || msg.includes('dismissed') || err.name === 'AbortError') {
-          return 'SHARED';
-        }
-        console.warn('[NativeBridge] Capacitor Share failed:', err);
-      }
-    }
+    // 2. Capacitor Share Plugin REMOVED
+    // We intentionally removed the Capacitor Share plugin fallback.
+    // In hybrid apps, if Web Share fails, trying to invoke a second native share plugin
+    // immediately often causes a "double fault" crash.
+    // The safest fallback is always the Clipboard.
 
     // 3. Final Fallback: Copy to Clipboard
     const contentToCopy = url ? `${text}\n${url}` : text;
