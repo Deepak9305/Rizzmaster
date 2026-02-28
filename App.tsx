@@ -76,6 +76,59 @@ const VIBES_BIO = [
   { label: "Witty", isPro: true }        // PRO
 ];
 
+
+
+// Extracted Memoized Components to prevent re-renders on text input
+const VibeButton = React.memo(({ vibe, isSelected, isPremium, onClick }: { vibe: { label: string, isPro: boolean }, isSelected: boolean, isPremium: boolean, onClick: (v: any) => void }) => (
+    <button 
+        onClick={() => onClick(vibe)}
+        className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all active:scale-95 flex items-center gap-1.5 ${
+            isSelected 
+            ? 'bg-rose-500/20 border-rose-500 text-rose-300' 
+            : vibe.isPro && !isPremium 
+              ? 'bg-white/5 border-yellow-500/30 text-white/40 hover:bg-white/10'
+              : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+        }`}
+    >
+        {vibe.label}
+        {vibe.isPro && !isPremium && <span className="text-[10px]">🔒</span>}
+        {vibe.isPro && isPremium && !isSelected && <span className="text-[10px] text-yellow-500">👑</span>}
+    </button>
+));
+
+const GenerateButton = React.memo(({ 
+    loading, 
+    loadingMsg, 
+    isPremium, 
+    cost, 
+    onClick 
+}: { 
+    loading: boolean, 
+    loadingMsg: string, 
+    isPremium: boolean, 
+    cost: number, 
+    onClick: () => void 
+}) => (
+    <button
+    onClick={onClick}
+    disabled={loading}
+    className={`w-full py-3.5 md:py-4 rounded-2xl font-bold text-base md:text-lg shadow-xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
+        isPremium 
+        ? "bg-gradient-to-r from-yellow-500 to-amber-600 text-black" 
+        : "rizz-gradient text-white"
+    }`}
+    >
+    {loading ? (
+        <span className="flex items-center justify-center gap-2 animate-pulse">
+        <svg className={`animate-spin h-5 w-5 ${isPremium ? 'text-black' : 'text-white'}`} viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        {loadingMsg}
+        </span>
+    ) : (
+        isPremium ? "Get Rizz (VIP)" : `Get Rizz (${cost} ⚡)`
+    )}
+    </button>
+));
+
 // Helper for UUID generation with fallback
 const generateUUID = () => {
     if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -729,12 +782,7 @@ const AppContentInner: React.FC = () => {
       toggleSave(content, type);
   }, [toggleSave]);
 
-  const handleReport = useCallback(() => {
-    NativeBridge.haptic('medium');
-    showToast('Report submitted. We will review this.', 'info');
-  }, [showToast]);
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
@@ -749,11 +797,11 @@ const AppContentInner: React.FC = () => {
         if (fileInputRef.current) fileInputRef.current.value = '';
       };
       reader.readAsDataURL(file);
-      if (inputError) setInputError(null);
+      setInputError(null);
     }
-  };
+  }, [showToast]);
 
-  const handleVibeClick = (vibe: { label: string, isPro: boolean }) => {
+  const handleVibeClick = useCallback((vibe: { label: string, isPro: boolean }) => {
     const isPremium = profileRef.current?.is_premium;
     
     if (vibe.isPro && !isPremium) {
@@ -764,8 +812,16 @@ const AppContentInner: React.FC = () => {
     }
 
     NativeBridge.haptic('light');
-    setSelectedVibe(selectedVibe === vibe.label ? null : vibe.label);
-  };
+    setSelectedVibe(current => current === vibe.label ? null : vibe.label);
+  }, [handleOpenPremium, showToast]);
+
+  const handleReport = useCallback(() => {
+    NativeBridge.haptic('medium');
+    showToast('Report submitted. We will review this.', 'info');
+  }, [showToast]);
+
+  // ... handleGenerate ...
+
 
   const lastInterstitialTime = useRef<number>(Date.now()); // Initialize with current time to start cooldown immediately on launch
   const APP_LAUNCH_GRACE_PERIOD = 2 * 60 * 1000; // 2 minutes grace period on launch
@@ -783,7 +839,7 @@ const AppContentInner: React.FC = () => {
 
   const INTERSTITIAL_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutes
 
-  const handleGenerate = async () => {
+  const handleGenerate = useCallback(async () => {
     const currentProfile = profileRef.current;
     if (!currentProfile) return;
     
@@ -891,9 +947,9 @@ const AppContentInner: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [mode, inputText, image, selectedVibe, updateCredits, showToast, handleOpenPremium]);
 
-  const handleWatchAd = async () => {
+  const handleWatchAd = useCallback(async () => {
     NativeBridge.haptic('medium');
     handleBackNavigation();
 
@@ -938,7 +994,7 @@ const AppContentInner: React.FC = () => {
           showToast(`+${REWARD_CREDITS} Credits Added!`, 'success');
       }
     }, AD_DURATION * 1000);
-  };
+  }, [handleBackNavigation, updateCredits, showToast]);
 
   const isSaved = useCallback((content: string) => savedItems.some(item => item.content === content), [savedItems]);
   const clear = useCallback(() => { 
@@ -1096,21 +1152,13 @@ const AppContentInner: React.FC = () => {
                     </label>
                     <div className="flex flex-wrap gap-2">
                         {(mode === InputMode.CHAT ? VIBES_CHAT : VIBES_BIO).map((vibe) => (
-                            <button 
-                                key={vibe.label} 
-                                onClick={() => handleVibeClick(vibe)}
-                                className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all active:scale-95 flex items-center gap-1.5 ${
-                                    selectedVibe === vibe.label 
-                                    ? 'bg-rose-500/20 border-rose-500 text-rose-300' 
-                                    : vibe.isPro && !profile?.is_premium 
-                                      ? 'bg-white/5 border-yellow-500/30 text-white/40 hover:bg-white/10'
-                                      : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
-                                }`}
-                            >
-                                {vibe.label}
-                                {vibe.isPro && !profile?.is_premium && <span className="text-[10px]">🔒</span>}
-                                {vibe.isPro && profile?.is_premium && selectedVibe !== vibe.label && <span className="text-[10px] text-yellow-500">👑</span>}
-                            </button>
+                            <VibeButton 
+                                key={vibe.label}
+                                vibe={vibe}
+                                isSelected={selectedVibe === vibe.label}
+                                isPremium={!!profile?.is_premium}
+                                onClick={handleVibeClick}
+                            />
                         ))}
                     </div>
                 </div>
@@ -1145,24 +1193,13 @@ const AppContentInner: React.FC = () => {
                 )}
                 
                 {(profile?.is_premium || (profile?.credits || 0) > 0) ? (
-                    <button
-                    onClick={handleGenerate}
-                    disabled={loading}
-                    className={`w-full py-3.5 md:py-4 rounded-2xl font-bold text-base md:text-lg shadow-xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
-                        profile?.is_premium 
-                        ? "bg-gradient-to-r from-yellow-500 to-amber-600 text-black" 
-                        : "rizz-gradient text-white"
-                    }`}
-                    >
-                    {loading ? (
-                        <span className="flex items-center justify-center gap-2 animate-pulse">
-                        <svg className={`animate-spin h-5 w-5 ${profile?.is_premium ? 'text-black' : 'text-white'}`} viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        {loadingMsg}
-                        </span>
-                    ) : (
-                        profile?.is_premium ? "Get Rizz (VIP)" : `Get Rizz (${(mode === InputMode.CHAT && image) ? 2 : 1} ⚡)`
-                    )}
-                    </button>
+                    <GenerateButton 
+                        loading={loading}
+                        loadingMsg={loadingMsg}
+                        isPremium={!!profile?.is_premium}
+                        cost={(mode === InputMode.CHAT && image) ? 2 : 1}
+                        onClick={handleGenerate}
+                    />
                 ) : (
                     <div className="grid grid-cols-2 gap-3">
                     <button onClick={handleWatchAd} disabled={isAdLoading} className="bg-white/10 border border-white/10 py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base hover:bg-white/20 active:scale-[0.98] transition-all flex flex-col items-center justify-center">
