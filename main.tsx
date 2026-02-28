@@ -2,7 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
-// @ts-ignore - Virtual module
 import { registerSW } from 'virtual:pwa-register';
 
 // Register Service Worker for PWA / Offline Support
