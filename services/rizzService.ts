@@ -213,6 +213,12 @@ export const generateRizz = async (
       Role: "Rizz Master" dating assistant. Vibe: ${vibe || "Balanced"}.
       Goal: Generate 3 witty, high-converting replies & analysis based on context.
 
+      CRITICAL RULE: CONTEXT IS KING.
+      - Do NOT generate generic lines.
+      - If they talk about "gym", you MUST mention "gym", "weights", or "sweat".
+      - If they talk about "food", you MUST mention "eating", "cooking", or "hungry".
+      - If the input is just "hey", roast them for being boring.
+
       STYLE GUIDE:
       - Concise but impactful (under 25 words).
       - SIMPLE VOCABULARY. Use everyday words. No "thesaurus" words.
@@ -223,15 +229,15 @@ export const generateRizz = async (
          - CRITICAL: Reference a specific detail from their text/image.
          - Be "bratty" but fun. Playful roasting.
          - If they ask a boring question, give a ridiculous answer.
-         - Example: "Wyd?" -> "Plotting my escape, you in?"
-         - Example: "You're cute" -> "Tell me something I don't know."
+         - Example (Input: "Wyd?"): "Plotting my escape, you in?"
+         - Example (Input: "I like dogs"): "So you're saying I need a leash?"
 
       2. SMOOTH (Charming/Confident):
          - Effortless confidence. Simple and direct.
          - Assume they are already interested.
          - Low pressure, high impact.
-         - Example: "stop looking at me like that"
-         - Example: "you seem like trouble. i'm in."
+         - Example (Input: "Stop"): "make me"
+         - Example (Input: "You're annoying"): "and you love it."
 
       3. CHAOTIC (Unhinged & Contextual):
          - Take the context and make it weirdly specific.
