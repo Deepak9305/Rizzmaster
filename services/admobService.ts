@@ -75,6 +75,14 @@ export const AdMobService = {
 
         return new Promise(async (resolve) => {
             let listeners: any[] = [];
+            let hasResolved = false;
+
+            const safeResolve = (val: boolean) => {
+                if (!hasResolved) {
+                    hasResolved = true;
+                    resolve(val);
+                }
+            };
 
             const cleanup = async () => {
                 for (const listener of listeners) {
@@ -85,25 +93,35 @@ export const AdMobService = {
                 listeners = [];
             };
 
+            // Timeout Safety (15 seconds max to load/show)
+            const timeoutId = setTimeout(() => {
+                console.warn('AdMob Interstitial Timeout');
+                cleanup();
+                safeResolve(false);
+            }, 15000);
+
             try {
                 const onDismiss = await AdMob.addListener(InterstitialAdPluginEvents.Dismissed, () => {
                     console.log('AdMob Interstitial Dismissed');
+                    clearTimeout(timeoutId);
                     cleanup();
-                    resolve(true);
+                    safeResolve(true);
                 });
                 listeners.push(onDismiss);
                 
                 const onFailed = await AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, (err) => {
                     console.error('AdMob Interstitial Failed to load', err);
+                    clearTimeout(timeoutId);
                     cleanup();
-                    resolve(false);
+                    safeResolve(false);
                 });
                 listeners.push(onFailed);
 
                 const onShowFailed = await AdMob.addListener(InterstitialAdPluginEvents.FailedToShow, (err) => {
                     console.error('AdMob Interstitial Failed to show', err);
+                    clearTimeout(timeoutId);
                     cleanup();
-                    resolve(false);
+                    safeResolve(false);
                 });
                 listeners.push(onShowFailed);
 
@@ -117,8 +135,9 @@ export const AdMobService = {
                 
             } catch (error) {
                 console.error('AdMob Interstitial Execution Error', error);
+                clearTimeout(timeoutId);
                 await cleanup();
-                resolve(false);
+                safeResolve(false);
             }
         });
     },
@@ -132,6 +151,14 @@ export const AdMobService = {
         return new Promise(async (resolve) => {
             let earnedReward = false;
             let listeners: any[] = [];
+            let hasResolved = false;
+
+            const safeResolve = (val: boolean) => {
+                if (!hasResolved) {
+                    hasResolved = true;
+                    resolve(val);
+                }
+            };
 
             const cleanup = async () => {
                 for (const listener of listeners) {
@@ -141,6 +168,13 @@ export const AdMobService = {
                 }
                 listeners = [];
             };
+
+            // Timeout Safety (15 seconds max to load/show)
+            const timeoutId = setTimeout(() => {
+                console.warn('AdMob Reward Timeout');
+                cleanup();
+                safeResolve(false);
+            }, 15000);
 
             try {
                 // Set up Listeners
@@ -152,23 +186,26 @@ export const AdMobService = {
 
                 const onDismiss = await AdMob.addListener(RewardAdPluginEvents.Dismissed, () => {
                     console.log('AdMob Ad Dismissed');
+                    clearTimeout(timeoutId);
                     cleanup();
                     // Resolve with true only if reward was triggered
-                    resolve(earnedReward);
+                    safeResolve(earnedReward);
                 });
                 listeners.push(onDismiss);
                 
                 const onFailed = await AdMob.addListener(RewardAdPluginEvents.FailedToLoad, (err) => {
                     console.error('AdMob Failed to load', err);
+                    clearTimeout(timeoutId);
                     cleanup();
-                    resolve(false);
+                    safeResolve(false);
                 });
                 listeners.push(onFailed);
 
                 const onShowFailed = await AdMob.addListener(RewardAdPluginEvents.FailedToShow, (err) => {
                     console.error('AdMob Failed to show', err);
+                    clearTimeout(timeoutId);
                     cleanup();
-                    resolve(false);
+                    safeResolve(false);
                 });
                 listeners.push(onShowFailed);
 
@@ -183,8 +220,9 @@ export const AdMobService = {
                 
             } catch (error) {
                 console.error('AdMob Execution Error', error);
+                clearTimeout(timeoutId);
                 await cleanup();
-                resolve(false);
+                safeResolve(false);
             }
         });
     }

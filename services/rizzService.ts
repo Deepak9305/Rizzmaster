@@ -17,7 +17,7 @@ const llamaClient = new OpenAI({
 // Model Configuration
 // specific models for Groq/Llama providers
 const VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
-const TEXT_MODEL = 'llama-3.1-8b-instant';
+const TEXT_MODEL = process.env.LLAMA_MODEL_NAME || 'llama-3.1-8b-instant';
 
 // --- LOCAL PRE-FILTERS ---
 
@@ -169,6 +169,18 @@ export const generateRizz = async (
   vibe?: string | undefined
 ): Promise<RizzResponse> => { // Return type simplified for consistency
   
+  if (!apiKey || apiKey === 'dummy-key') {
+      console.error("API Key is missing or invalid.");
+      return {
+          tease: "API Key Missing",
+          smooth: "Please check settings",
+          chaotic: "I need a key to unlock the rizz",
+          loveScore: 0,
+          potentialStatus: "Config Error",
+          analysis: "The developer forgot to set the API Key."
+      };
+  }
+
   // ... (Safety checks remain the same) ...
   const isToxic = HARD_BLOCK_REGEX.test(inputText);
   const isNSFW = NSFW_TERMS_REGEX.test(inputText);
@@ -337,6 +349,11 @@ export const generateBio = async (
   vibe?: string | undefined
 ): Promise<BioResponse | { analysis: string }> => {
   
+  if (!apiKey || apiKey === 'dummy-key') {
+      console.error("API Key is missing or invalid.");
+      return { analysis: "API Key Missing. Please check settings." };
+  }
+
   const isToxic = HARD_BLOCK_REGEX.test(inputText);
   const isNSFW = NSFW_TERMS_REGEX.test(inputText);
   const isMinor = MINOR_SAFETY_REGEX.test(inputText);
