@@ -202,7 +202,7 @@ export const generateRizz = async (
       Goal: Generate 3 witty, high-converting replies & analysis based on context.
 
       STYLE GUIDE:
-      - Short & Punchy (under 15 words).
+      - Concise but impactful (under 25 words).
       - Lowercase aesthetic for "Smooth".
       - NO hashtags. NO cringe emojis (like 🥺, 🙈). Use 💀, 😭, 👀 sparingly.
 
@@ -268,7 +268,7 @@ export const generateRizz = async (
                 model: model,
                 messages: messages,
                 temperature: 0.85,
-                max_tokens: 1000,
+                max_tokens: 2000,
                 response_format: { type: "json_object" }
             });
 
