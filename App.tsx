@@ -141,7 +141,6 @@ const AppContentInner: React.FC = () => {
   const [adTimer, setAdTimer] = useState(0);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showSavedModal, setShowSavedModal] = useState(false);
-  const [isSessionBlocked, setIsSessionBlocked] = useState(false);
   const [isAdLoading, setIsAdLoading] = useState(false);
 
   const isMounted = useRef(true);
@@ -163,7 +162,7 @@ const AppContentInner: React.FC = () => {
 
   // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const sessionChannelRef = useRef<BroadcastChannel | null>(null);
+  const appListenerRef = useRef<any>(null);
 
   // Ref to track state for event listeners without re-binding
   const stateRef = useRef({
@@ -190,40 +189,13 @@ const AppContentInner: React.FC = () => {
     };
   }, []);
 
-  // Handle Status Bar Visibility on Scroll
+  // Handle Status Bar Visibility - Fixed for Stability
   useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
-
-    let isStatusBarVisible = false; // Track local state to prevent spamming bridge
-    
-    // Initial Hide
-    StatusBar.hide().catch(() => {}); // Catch potential errors on initial hide
-
-    // Handle Status Bar Visibility on Scroll with Throttling
-    let ticking = false;
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const scrollY = window.scrollY;
-          const shouldBeVisible = scrollY > 50;
-
-          if (shouldBeVisible && !isStatusBarVisible) {
-            isStatusBarVisible = true;
-            StatusBar.show().catch(() => {});
-            StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
-            StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
-          } else if (!shouldBeVisible && isStatusBarVisible) {
-            isStatusBarVisible = false;
-            StatusBar.hide().catch(() => {});
-          }
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    if (Capacitor.isNativePlatform()) {
+        StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
+        StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
+        StatusBar.show().catch(() => {});
+    }
   }, []);
 
   // Sync profile ref
@@ -275,47 +247,51 @@ const AppContentInner: React.FC = () => {
     refreshBanner();
 
     // Listen for App Resume to refresh ads (often needed if they disappear)
-    let appListener: any;
     if (Capacitor.isNativePlatform()) {
-        CapacitorApp.addListener('appStateChange', ({ isActive }) => {
-            if (isActive) {
-                // 1. Refresh Banner - Only if not already manipulating
-                if (profile && !profile.is_premium && !AdMobService.isBannerManipulating) {
-                    AdMobService.hideBanner().then(() => {
-                        const adId = Capacitor.getPlatform() === 'ios' ? TEST_BANNER_ID_IOS : PROD_BANNER_ID_ANDROID;
-                        timer = setTimeout(() => {
-                            if (isMounted.current) AdMobService.showBanner(adId);
-                        }, 3000); // Increased to 3s for more stability on resume
-                    }).catch(() => {});
-                }
+        const setupListener = async () => {
+            const listener = await CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+                if (isActive) {
+                    // 1. Refresh Banner - Only if not already manipulating
+                    if (profile && !profile.is_premium && !AdMobService.isBannerManipulating) {
+                        AdMobService.hideBanner().then(() => {
+                            const adId = Capacitor.getPlatform() === 'ios' ? TEST_BANNER_ID_IOS : PROD_BANNER_ID_ANDROID;
+                            timer = setTimeout(() => {
+                                if (isMounted.current) AdMobService.showBanner(adId);
+                            }, 3000); // Increased to 3s for more stability on resume
+                        }).catch(() => {});
+                    }
 
-                // 2. Show App Open Ad (Simulated with Interstitial)
-                const now = Date.now();
-                if (profile && !profile.is_premium && (now - lastAppOpenAdTime > APP_OPEN_AD_COOLDOWN) && !AdMobService.isAdShowing) {
-                    const appOpenId = Capacitor.getPlatform() === 'ios' ? TEST_INTERSTITIAL_ID_IOS : PROD_INTERSTITIAL_ID_ANDROID;
-                    // Delay slightly to ensure UI is ready
-                    setTimeout(() => {
-                        if (isMounted.current) {
-                            AdMobService.showInterstitial(appOpenId).then((shown) => {
-                                if (shown) {
-                                    lastAppOpenAdTime = now;
-                                    console.log("App Open Ad (via Interstitial ID) Shown");
-                                }
-                            }).catch(() => {});
-                        }
-                    }, 4000); // Increased to 4s
+                    // 2. Show App Open Ad (Simulated with Interstitial)
+                    const now = Date.now();
+                    if (profile && !profile.is_premium && (now - lastAppOpenAdTime > APP_OPEN_AD_COOLDOWN) && !AdMobService.isAdShowing) {
+                        const appOpenId = Capacitor.getPlatform() === 'ios' ? TEST_INTERSTITIAL_ID_IOS : PROD_INTERSTITIAL_ID_ANDROID;
+                        // Delay slightly to ensure UI is ready
+                        setTimeout(() => {
+                            if (isMounted.current) {
+                                AdMobService.showInterstitial(appOpenId).then((shown) => {
+                                    if (shown) {
+                                        lastAppOpenAdTime = now;
+                                        console.log("App Open Ad (via Interstitial ID) Shown");
+                                    }
+                                }).catch(() => {});
+                            }
+                        }, 4000); // Increased to 4s
+                    }
                 }
-            }
-        }).then(l => appListener = l);
+            });
+            appListenerRef.current = listener;
+        };
+        setupListener();
     }
     
     return () => {
         if (timer) clearTimeout(timer);
-        if (appListener) {
+        if (appListenerRef.current) {
              // Safe removal
-             if (typeof appListener.remove === 'function') {
-                 appListener.remove();
+             if (typeof appListenerRef.current.remove === 'function') {
+                 appListenerRef.current.remove();
              }
+             appListenerRef.current = null;
         }
     };
     // Optimized dependency array: only re-run if premium status changes, not on every credit update
@@ -353,32 +329,42 @@ const AppContentInner: React.FC = () => {
   // Initialize Native Services - ONCE
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
-        // Google Auth - Initialize immediately
-        const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
-        GoogleAuth.initialize({
-            clientId: clientId || 'YOUR_WEB_CLIENT_ID_PLACEHOLDER',
-            scopes: ['profile', 'email'],
-            grantOfflineAccess: false,
-        });
-
-        // Delay AdMob/IAP initialization to let the app settle
+        // Delay all native initializations to let the app settle
         const initTimer = setTimeout(() => {
+            // Google Auth
+            try {
+                const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
+                GoogleAuth.initialize({
+                    clientId: clientId || 'YOUR_WEB_CLIENT_ID_PLACEHOLDER',
+                    scopes: ['profile', 'email'],
+                    grantOfflineAccess: false,
+                });
+            } catch (e) { console.warn("GoogleAuth init failed", e); }
+
             // AdMob - Only if not premium
             if (profileRef.current && !profileRef.current.is_premium) {
                 AdMobService.initialize(false);
             }
 
             // In-App Purchases
-            IAPService.initialize(
-                () => {
-                    // On successful purchase/restore
-                    handleUpgrade();
-                },
-                (errorMessage) => {
-                    showToast(errorMessage, 'error');
-                }
-            );
-        }, 3000); // 3s delay
+            try {
+                IAPService.initialize(
+                    () => {
+                        // On successful purchase/restore
+                        handleUpgrade();
+                    },
+                    (errorMessage) => {
+                        showToast(errorMessage, 'error');
+                    }
+                );
+            } catch (e) { console.warn("IAP init failed", e); }
+
+            // StatusBar
+            try {
+                StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
+                StatusBar.setBackgroundColor({ color: '#000000' }).catch(() => {});
+            } catch (e) { console.warn("StatusBar init failed", e); }
+        }, 3500); // 3.5s delay
 
         return () => clearTimeout(initTimer);
      }
@@ -483,23 +469,6 @@ const AppContentInner: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (typeof BroadcastChannel === 'undefined') return;
-    const channel = new BroadcastChannel('rizz_session_sync');
-    sessionChannelRef.current = channel;
-
-    channel.postMessage({ type: 'NEW_SESSION_STARTED' });
-    channel.onmessage = (event) => {
-      if (event.data.type === 'NEW_SESSION_STARTED') {
-        setIsSessionBlocked(true);
-      }
-    };
-    return () => {
-      channel.close();
-      sessionChannelRef.current = null;
-    };
-  }, []);
-
-  useEffect(() => {
     let interval: any;
     if (loading) {
       let i = 0;
@@ -511,11 +480,6 @@ const AppContentInner: React.FC = () => {
     }
     return () => clearInterval(interval);
   }, [loading]);
-
-  const handleReclaimSession = useCallback(() => {
-    setIsSessionBlocked(false);
-    sessionChannelRef.current?.postMessage({ type: 'NEW_SESSION_STARTED' });
-  }, []);
 
   // Global Error Handler for Native Stability
   useEffect(() => {
@@ -862,16 +826,7 @@ const AppContentInner: React.FC = () => {
       )}
 
       <div className={showSplash ? 'pointer-events-none' : ''}>
-          {isSessionBlocked ? (
-            <div className="min-h-[100dvh] flex flex-col items-center justify-center p-4 relative overflow-hidden bg-black safe-top safe-bottom">
-                <div className="glass max-w-md w-full p-8 rounded-3xl border border-white/10 text-center relative z-10 shadow-2xl">
-                <h1 className="text-2xl font-bold mb-4 text-white">Session Paused</h1>
-                <button onClick={() => { handleReclaimSession(); NativeBridge.haptic('medium'); }} className="w-full rizz-gradient py-3.5 rounded-xl font-bold text-white">
-                    Use Here Instead
-                </button>
-                </div>
-            </div>
-          ) : !session ? (
+          {!session ? (
             <LoginPage onGuestLogin={handleGuestLogin} />
           ) : !profile ? (
             <div className="min-h-screen flex flex-col items-center justify-center text-white p-4 bg-black safe-top safe-bottom">

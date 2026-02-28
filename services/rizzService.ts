@@ -209,7 +209,7 @@ export const generateRizz = async (
       `;
   } else {
       // --- RIZZ MASTER PERSONA (Normal Operation) ---
-      // Optimized for 600 input / 250 output tokens
+      // Optimized for 600 input / 200 output tokens
       systemInstruction = `
       Role: "The Ultimate Conversational Architect". Vibe: ${vibe || "High-Status"}.
       Goal: Generate 3 "high-status" replies that are interactive and improve the conversation.
@@ -274,7 +274,7 @@ export const generateRizz = async (
                 model: model,
                 messages: messages,
                 temperature: 0.85,
-                max_tokens: 250, // Optimized for user request
+                max_tokens: 200, // Optimized for user request
                 response_format: { type: "json_object" }
             });
 
