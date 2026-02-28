@@ -211,9 +211,9 @@ export const generateRizz = async (
       4. STYLE: Mostly lowercase. Use punctuation for pacing. Do not use emojis.
       
       MODES:
-      - TEASE: Playful tease, challenging, and slightly cocky. Generate a spark of tension.
-      - SMOOTH: Suave, direct, and charismatic. Pivot the conversation towards a deeper connection or a date.
-      - CHAOTIC: Unpredictable and funny.
+      - TEASE: Highly playful, challenging, and slightly arrogant. Use a push-pull dynamic. Roast them slightly but keep it flirtatious. Never sound desperate.
+      - SMOOTH: Suave, emotionally intelligent, direct, and charismatic. Pivot the conversation towards a deeper connection, a date, or undeniable chemistry.
+      - CHAOTIC: Completely unhinged, absurdist humor, wildly unpredictable, or overly dramatic. Make them say "wtf" but still want to reply. Zero logic.
       
       JSON OUTPUT FORMAT:
       {

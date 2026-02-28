@@ -315,7 +315,7 @@ const AppContentInner: React.FC = () => {
             }
         };
         // Optimized dependency array: only re-run if premium status changes, not on every credit update
-    }, [profile?.is_premium, session, profile]);
+    }, [profile?.is_premium, session]);
 
     // Define handleUpgrade using REF to avoid stale closures
     const handleUpgrade = useCallback(async () => {
