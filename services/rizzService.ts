@@ -209,41 +209,39 @@ export const generateRizz = async (
       `;
   } else {
       // --- RIZZ MASTER PERSONA (Normal Operation) ---
-      // Optimized for 600 input / 300 output tokens
+      // Optimized for 600 input / 250 output tokens
       systemInstruction = `
       Role: "The Ultimate Conversational Architect". Vibe: ${vibe || "High-Status"}.
-      Goal: Generate 3 "high-status" replies that force a response.
+      Goal: Generate 3 "high-status" replies that are interactive and improve the conversation.
 
-      RULES:
-      1. Mirroring & Mockery: Take one specific word or emotion from their text and flip it. (e.g., if they are "tired," don't be sympathetic—be the reason they stay awake).
-      2. Lower Case "Smoothness": Use mostly lowercase. It looks more effortless and less like a "copy-paste."
-      3. The "Open Loop": Every reply must imply a secret or a future event. Never end a conversation.
-      4. No Emojis: Unless it's 💀 or 😭 used ironically.
-      5. Length: 1-3 sentences. Minimum 15 words per reply. Be engaging and high-status.
+      CRITICAL RULES:
+      1. CONTEXT: Stay strictly within the context of the provided input. Do not hallucinate unrelated topics.
+      2. LANGUAGE: Use simple, easy-to-understand, everyday words. No complex jargon.
+      3. INTERACTIVE: Every reply must be a "hook" that improves the conversation and forces a response.
+      4. LENGTH: Be detailed. Each reply (tease, smooth, chaotic) must be at least 35-45 words long. This is mandatory to meet the minimum 105 token output requirement.
+      5. STYLE: Mostly lowercase for an effortless, non-tryhard look. No emojis unless ironic (💀, 😭).
+      6. MIRRORING: Take a specific detail from their text and flip it playfully.
 
-      🕹️ THE MODES (Upgraded)
-      1. THE TEASE (The "Villain" Arc): Use when they are dry or playing hard to get.
-         - Input: "i'm going to sleep." -> Output: "dreaming about me already? you're moving a little fast, don't you think?"
-      2. THE SMOOTH (The "Main Character" Energy): Use to move toward a date/meeting.
-         - Input: "what are you doing this weekend?" -> Output: "depends if you're brave enough to actually hang out or just keep texting."
-      3. THE CHAOTIC (The "Unpredictable" Flex): Use when the conversation is boring or "normal."
-         - Input: "i just ate pizza." -> Output: "pineapple on pizza is a red flag. i'm calling the police, stay where you are."
+      🕹️ THE MODES
+      1. THE TEASE: Playful mockery. If they are dry, call it out. If they are proud, humble them.
+      2. THE SMOOTH: Charismatic and bold. Move the conversation towards a real-life meeting or a deeper "vibe check."
+      3. THE CHAOTIC: Unpredictable and high-energy. Break the boring pattern with something completely unexpected but relevant.
 
       JSON OUTPUT ONLY:
       {
-        "tease": "str",
-        "smooth": "str",
-        "chaotic": "str",
+        "tease": "detailed response...",
+        "smooth": "detailed response...",
+        "chaotic": "detailed response...",
         "loveScore": 0-100,
         "potentialStatus": "Friendzone/Down Bad/Cooked/Soulmate",
-        "analysis": "1 witty sentence."
+        "analysis": "1 witty sentence explaining the strategy."
       }
       `;
   }
 
   try {
-    // Truncate input to save tokens (approx 150 tokens)
-    const truncatedInput = inputText.slice(0, 600);
+    // Truncate input to approx 600 tokens (approx 2400 characters)
+    const truncatedInput = inputText.slice(0, 2400);
     
     // ... (Model selection and messages setup remain the same) ...
     const isMultimodal = !!image;
@@ -276,7 +274,7 @@ export const generateRizz = async (
                 model: model,
                 messages: messages,
                 temperature: 0.85,
-                max_tokens: 300, // Increased output tokens for longer replies
+                max_tokens: 250, // Optimized for user request
                 response_format: { type: "json_object" }
             });
 
@@ -379,13 +377,19 @@ export const generateBio = async (
       `;
   } else {
       // --- NORMAL BIO GENERATION ---
-      // Optimized for token efficiency
+      // Optimized for 600 input / 250 output tokens
       systemInstruction = `
-      Role: Bio Optimizer. Vibe: ${vibe || "Attractive"}.
-      Input: "${inputText.slice(0, 500)}"
+      Role: "The Bio Architect". Vibe: ${vibe || "Attractive"}.
+      Task: Create a bio that is interactive, easy to understand, and stays in context of the user's traits.
+      
+      RULES:
+      1. CONTEXT: Only use the information provided in the input: "${inputText.slice(0, 2400)}".
+      2. LANGUAGE: Simple, punchy, and modern.
+      3. INTERACTIVE: Include a "call to action" or a question that makes people want to swipe right or message.
+      4. LENGTH: Be descriptive. The bio should be around 60-80 words to ensure we hit the token minimum.
   
       Output JSON:
-      { "bio": "Optimized bio (with emojis)", "analysis": "Why it works" }
+      { "bio": "The optimized bio...", "analysis": "Why this bio converts." }
       `;
   }
 
