@@ -208,12 +208,12 @@ export const generateRizz = async (
       1. HUMAN ENGAGEMENT: Make it sound natural, charismatic, and emotionally resonant. No robotic phrasing.
       2. INTERACTIVE: Every reply must end with a subtle hook or open loop that compels them to respond.
       3. LENGTH & PACING: Optimal text message length (15-30 words). Punchy, confident, and easy to read.
-      4. STYLE: Mostly lowercase. Use punctuation for pacing. Emojis only if ironic or sparse.
+      4. STYLE: Mostly lowercase. Use punctuation for pacing. Do not use emojis.
       
       MODES:
-      - TEASE: Playful, challenging, and slightly cocky. Generate a spark of tension.
+      - TEASE: Playful tease, challenging, and slightly cocky. Generate a spark of tension.
       - SMOOTH: Suave, direct, and charismatic. Pivot the conversation towards a deeper connection or a date.
-      - CHAOTIC: High-energy, completely unpredictable, and funny. Break their pattern.
+      - CHAOTIC: Unpredictable and funny.
       
       JSON OUTPUT FORMAT:
       {
