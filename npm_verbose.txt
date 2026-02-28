@@ -1,0 +1,57 @@
+npm verbose cli C:\Program Files\nodejs\node.exe C:\Users\rv941\AppData\Roaming\npm\node_modules\npm\bin\npm-cli.js
+npm info using npm@11.9.0
+npm info using node@v22.19.0
+npm verbose title npm install
+npm verbose argv "install" "--loglevel" "verbose"
+npm verbose logfile logs-max:10 dir:C:\Users\rv941\AppData\Local\npm-cache\_logs\2026-02-28T18_46_47_760Z-
+npm verbose logfile C:\Users\rv941\AppData\Local\npm-cache\_logs\2026-02-28T18_46_47_760Z-debug-0.log
+npm http cache https://registry.npmjs.org/@capacitor-community%2fadmob 289ms (cache hit)
+npm http cache https://registry.npmjs.org/@capacitor%2fandroid 20ms (cache hit)
+npm http cache https://registry.npmjs.org/@capacitor%2fcore 33ms (cache hit)
+npm http cache https://registry.npmjs.org/@capacitor%2fapp 24ms (cache hit)
+npm http cache https://registry.npmjs.org/@capacitor%2fios 21ms (cache hit)
+npm http cache https://registry.npmjs.org/@capacitor%2fpreferences 23ms (cache hit)
+npm http cache https://registry.npmjs.org/@capacitor%2fshare 29ms (cache hit)
+npm http cache https://registry.npmjs.org/@capacitor%2fstatus-bar 25ms (cache hit)
+npm http cache https://registry.npmjs.org/@capacitor%2ftoast 23ms (cache hit)
+npm verbose stack Error: could not resolve
+npm verbose stack     at PlaceDep.failPeerConflict (C:\Users\rv941\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\arborist\lib\place-dep.js:503:25)
+npm verbose stack     at new PlaceDep (C:\Users\rv941\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\arborist\lib\place-dep.js:157:21)
+npm verbose stack     at #buildDepStep (C:\Users\rv941\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\arborist\lib\arborist\build-ideal-tree.js:932:18)
+npm verbose stack     at async Arborist.buildIdealTree (C:\Users\rv941\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\arborist\lib\arborist\build-ideal-tree.js:170:7)
+npm verbose stack     at async Promise.all (index 1)
+npm verbose stack     at async Arborist.reify (C:\Users\rv941\AppData\Roaming\npm\node_modules\npm\node_modules\@npmcli\arborist\lib\arborist\reify.js:110:5)
+npm verbose stack     at async Install.exec (C:\Users\rv941\AppData\Roaming\npm\node_modules\npm\lib\commands\install.js:151:5)
+npm verbose stack     at async Npm.exec (C:\Users\rv941\AppData\Roaming\npm\node_modules\npm\lib\npm.js:208:9)
+npm verbose stack     at async module.exports (C:\Users\rv941\AppData\Roaming\npm\node_modules\npm\lib\cli\entry.js:67:5)
+npm error code ERESOLVE
+npm error ERESOLVE could not resolve
+npm error
+npm error While resolving: rizz-master@1.0.0
+npm error Found: @capacitor/android@5.7.8
+npm error node_modules/@capacitor/android
+npm error   @capacitor/android@"^6.2.1" from the root project
+npm error
+npm error Could not resolve dependency:
+npm error @capacitor/android@"^6.2.1" from the root project
+npm error
+npm error Conflicting peer dependency: @capacitor/core@6.2.1
+npm error node_modules/@capacitor/core
+npm error   peer @capacitor/core@"^6.2.0" from @capacitor/android@6.2.1
+npm error   node_modules/@capacitor/android
+npm error     @capacitor/android@"^6.2.1" from the root project
+npm error
+npm error Fix the upstream dependency conflict, or retry
+npm error this command with --force or --legacy-peer-deps
+npm error to accept an incorrect (and potentially broken) dependency resolution.
+npm error
+npm error
+npm error For a full report see:
+npm error C:\Users\rv941\AppData\Local\npm-cache\_logs\2026-02-28T18_46_47_760Z-eresolve-report.txt
+npm verbose cwd C:\Users\rv941\.gemini\antigravity\scratch\Rizzmaster
+npm verbose os Windows_NT 10.0.26200
+npm verbose node v22.19.0
+npm verbose npm  v11.9.0
+npm verbose exit 1
+npm verbose code 1
+npm error A complete log of this run can be found in: C:\Users\rv941\AppData\Local\npm-cache\_logs\2026-02-28T18_46_47_760Z-debug-0.log
