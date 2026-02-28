@@ -7,8 +7,12 @@ export const AdMobService = {
     initializationPromise: null as Promise<void> | null,
     isAdShowing: false,
 
-    async initialize() {
+    async initialize(isPremium: boolean = false) {
         if (!Capacitor.isNativePlatform()) return;
+        if (isPremium) {
+            console.log('AdMob: User is premium, skipping initialization.');
+            return;
+        }
         if (this.initialized) return;
 
         // Return existing promise if initialization is already in progress
@@ -45,10 +49,12 @@ export const AdMobService = {
 
     async showBanner(adId: string) {
         if (!Capacitor.isNativePlatform()) return;
-        if (this.isBannerManipulating) return;
+        if (this.isBannerManipulating || this.isAdShowing) return;
         
         this.isBannerManipulating = true;
         try {
+            // We don't pass isPremium here because if they are premium, 
+            // the caller (App.tsx) shouldn't be calling showBanner.
             await this.initialize();
 
             // Only hide, avoid removeBanner as it can be unstable in some plugin versions
@@ -85,7 +91,10 @@ export const AdMobService = {
 
         this.isBannerManipulating = true;
         try {
-            await AdMob.hideBanner().catch(() => {});
+            // Only hide if we are actually initialized
+            if (this.initialized) {
+                await AdMob.hideBanner().catch(() => {});
+            }
         } catch (e) {
             console.error('AdMob Hide Banner Error:', e);
         } finally {

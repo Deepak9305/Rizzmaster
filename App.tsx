@@ -256,11 +256,18 @@ const AppContentInner: React.FC = () => {
             if (!profile) return;
 
             if (profile.is_premium) {
-                AdMobService.hideBanner();
+                // Only hide if we actually initialized AdMob
+                if (AdMobService.initialized) {
+                    AdMobService.hideBanner();
+                }
             } else {
                 const adId = Capacitor.getPlatform() === 'ios' ? TEST_BANNER_ID_IOS : PROD_BANNER_ID_ANDROID;
                 // Delay slightly to ensure layout is settled and old banners are gone
-                timer = setTimeout(() => AdMobService.showBanner(adId), 2000);
+                timer = setTimeout(() => {
+                    if (isMounted.current && !profile.is_premium) {
+                        AdMobService.showBanner(adId);
+                    }
+                }, 4000); // Increased delay to 4s
             }
         }
     };
@@ -343,32 +350,39 @@ const AppContentInner: React.FC = () => {
     }
   }, [showToast]);
 
-  // Initialize Native Services
+  // Initialize Native Services - ONCE
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
-       // Google Auth
-       const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
-       GoogleAuth.initialize({
-           clientId: clientId || 'YOUR_WEB_CLIENT_ID_PLACEHOLDER',
-           scopes: ['profile', 'email'],
-           grantOfflineAccess: false,
-       });
+        // Google Auth - Initialize immediately
+        const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
+        GoogleAuth.initialize({
+            clientId: clientId || 'YOUR_WEB_CLIENT_ID_PLACEHOLDER',
+            scopes: ['profile', 'email'],
+            grantOfflineAccess: false,
+        });
 
-       // AdMob
-       AdMobService.initialize();
+        // Delay AdMob/IAP initialization to let the app settle
+        const initTimer = setTimeout(() => {
+            // AdMob - Only if not premium
+            if (profileRef.current && !profileRef.current.is_premium) {
+                AdMobService.initialize(false);
+            }
 
-       // In-App Purchases
-       IAPService.initialize(
-           () => {
-               // On successful purchase/restore
-               handleUpgrade();
-           },
-           (errorMessage) => {
-               showToast(errorMessage, 'error');
-           }
-       );
-    }
-  }, [handleUpgrade, showToast]);
+            // In-App Purchases
+            IAPService.initialize(
+                () => {
+                    // On successful purchase/restore
+                    handleUpgrade();
+                },
+                (errorMessage) => {
+                    showToast(errorMessage, 'error');
+                }
+            );
+        }, 3000); // 3s delay
+
+        return () => clearTimeout(initTimer);
+     }
+  }, []); // Only once on mount
 
   // Handle History API for Mobile Back Button support
   useEffect(() => {
@@ -712,7 +726,7 @@ const AppContentInner: React.FC = () => {
                 img.onload = () => {
                     URL.revokeObjectURL(objectUrl); // Clean up memory
                     const canvas = document.createElement('canvas');
-                    const MAX_DIM = 600; // Reduced from 800 for even better stability
+                    const MAX_DIM = 500; // Further reduced for extreme stability
                     let width = img.width;
                     let height = img.height;
 
