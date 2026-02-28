@@ -804,38 +804,42 @@ const AppContentInner: React.FC = () => {
       try {
           const resizeImage = (file: File): Promise<string> => {
             return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = (event) => {
-                    const img = new Image();
-                    img.src = event.target?.result as string;
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 1024; // Max dimension for AI analysis
-                        const MAX_HEIGHT = 1024;
-                        let width = img.width;
-                        let height = img.height;
+                const img = new Image();
+                const objectUrl = URL.createObjectURL(file);
+                img.src = objectUrl;
+                
+                img.onload = () => {
+                    URL.revokeObjectURL(objectUrl); // Clean up memory
+                    const canvas = document.createElement('canvas');
+                    const MAX_DIM = 800; // Reduced from 1024 for better stability
+                    let width = img.width;
+                    let height = img.height;
 
-                        if (width > height) {
-                            if (width > MAX_WIDTH) {
-                                height *= MAX_WIDTH / width;
-                                width = MAX_WIDTH;
-                            }
-                        } else {
-                            if (height > MAX_HEIGHT) {
-                                width *= MAX_HEIGHT / height;
-                                height = MAX_HEIGHT;
-                            }
+                    if (width > height) {
+                        if (width > MAX_DIM) {
+                            height *= MAX_DIM / width;
+                            width = MAX_DIM;
                         }
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx?.drawImage(img, 0, 0, width, height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.8)); // Compress to 80% quality
-                    };
-                    img.onerror = (error) => reject(error);
+                    } else {
+                        if (height > MAX_DIM) {
+                            width *= MAX_DIM / height;
+                            height = MAX_DIM;
+                        }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    if (ctx) {
+                        ctx.imageSmoothingEnabled = true;
+                        ctx.imageSmoothingQuality = 'high';
+                        ctx.drawImage(img, 0, 0, width, height);
+                    }
+                    resolve(canvas.toDataURL('image/jpeg', 0.7)); // Reduced quality to 70%
                 };
-                reader.onerror = (error) => reject(error);
+                img.onerror = (error) => {
+                    URL.revokeObjectURL(objectUrl);
+                    reject(error);
+                };
             });
         };
 
@@ -922,6 +926,11 @@ const AppContentInner: React.FC = () => {
 
     setLoading(true);
 
+    // Hide banner during generation to free up memory and prevent native conflicts
+    if (Capacitor.isNativePlatform() && !currentProfile.is_premium) {
+        AdMobService.hideBanner().catch(() => {});
+    }
+
     // INTERSTITIAL AD LOGIC - MOVED TO AFTER GENERATION
     const showInterstitialIfReady = async () => {
         if (!isMounted.current) return; // Safety check
@@ -958,6 +967,9 @@ const AppContentInner: React.FC = () => {
         updateCredits(creditsBefore - cost);
       }
 
+      // Small delay to allow UI to settle and memory to be reclaimed
+      await new Promise(resolve => setTimeout(resolve, 300));
+
       let res;
       if (mode === InputMode.CHAT) {
         res = await generateRizz(inputText, image || undefined, selectedVibe || undefined);
@@ -966,6 +978,12 @@ const AppContentInner: React.FC = () => {
       }
 
       if (!isMounted.current) return; // Stop if unmounted
+
+      // Re-show banner after generation
+      if (Capacitor.isNativePlatform() && !currentProfile.is_premium) {
+          const bannerId = Capacitor.getPlatform() === 'ios' ? TEST_BANNER_ID_IOS : PROD_BANNER_ID_ANDROID;
+          AdMobService.showBanner(bannerId).catch(() => {});
+      }
 
       if ('potentialStatus' in res && (res.potentialStatus === 'Error' || res.potentialStatus === 'Blocked')) {
          if (!currentProfile.is_premium) updateCredits(creditsBefore);
