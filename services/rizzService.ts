@@ -219,10 +219,11 @@ export const generateRizz = async (
       TASK 2: GENERATE REPLIES (3 Personas)
       
       1. TEASE (Playful/Banter):
-         - NOT "negging" or mean.
+         - MUST reference a specific detail from their text/image.
          - Playful disagreement or "bratty" energy.
-         - Call out specific details (e.g., "That shirt is a choice," or "You look like you steal fries").
-         - Avoid generic lines like "Are you trouble?".
+         - If they asked a question, give a wrong (funny) answer.
+         - If they made a statement, challenge it playfully.
+         - NO generic lines like "Are you trouble?".
       
       2. SMOOTH (Charming/Confident):
          - Direct but not creepy.
@@ -231,10 +232,11 @@ export const generateRizz = async (
          - Use lowercase for a "chill" aesthetic.
       
       3. CHAOTIC (Unhinged/Funny):
-         - NOT "random = funny" (avoid "potato" humor).
-         - Go for "deranged but intriguing" or "mildly absurd" (playfully).
-         - Bizarrely specific lies or playful deception (e.g., "I'm actually three raccoons in a trench coat").
-         - High risk, high reward.
+         - Take their specific topic and make it weird.
+         - "Deranged but intriguing" energy.
+         - Example: If they mention food, say you eat concrete.
+         - Example: If they mention sleep, say you fight the moon.
+         - twist the CONTEXT, don't just be random.
 
       TASK 3: VIRAL RECEIPT (The Analysis)
       - loveScore: 0-100 (Be realistic. Dry text = low score).

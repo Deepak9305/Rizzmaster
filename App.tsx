@@ -1027,6 +1027,7 @@ const AppContentInner: React.FC = () => {
 
   return (
     <div className="relative min-h-screen bg-black overflow-x-hidden">
+      <OfflineIndicator isOffline={isOffline} />
       
       {showSplash && (
           <SplashScreen 
