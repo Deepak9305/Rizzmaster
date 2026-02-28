@@ -122,12 +122,32 @@ const AppContentInner: React.FC = () => {
     // Onboarding State
     const [showOnboarding, setShowOnboarding] = useState(false);
 
-    // App State
-    const [currentView, setCurrentView] = useState<ViewState>('HOME');
-    const [mode, setMode] = useState<InputMode>(InputMode.CHAT);
-    const [inputText, setInputText] = useState('');
-    const [image, setImage] = useState<string | null>(null);
-    const [selectedVibe, setSelectedVibe] = useState<string | null>(null);
+    // App State - Load from LocalStorage if available (Background Recovery)
+    const [currentView, setCurrentView] = useState<ViewState>(() => {
+        return (localStorage.getItem('rizz_last_view') as ViewState) || 'HOME';
+    });
+    const [mode, setMode] = useState<InputMode>(() => {
+        return (localStorage.getItem('rizz_last_mode') as InputMode) || InputMode.CHAT;
+    });
+    const [inputText, setInputText] = useState(() => {
+        return localStorage.getItem('rizz_last_text') || '';
+    });
+    const [image, setImage] = useState<string | null>(null); // Deliberately not persisting images for memory safety
+    const [selectedVibe, setSelectedVibe] = useState<string | null>(() => {
+        return localStorage.getItem('rizz_last_vibe') || null;
+    });
+
+    // Background State Persistence Hook
+    useEffect(() => {
+        localStorage.setItem('rizz_last_view', currentView);
+        localStorage.setItem('rizz_last_mode', mode);
+        localStorage.setItem('rizz_last_text', inputText);
+        if (selectedVibe) {
+            localStorage.setItem('rizz_last_vibe', selectedVibe);
+        } else {
+            localStorage.removeItem('rizz_last_vibe');
+        }
+    }, [currentView, mode, inputText, selectedVibe]);
 
     // Loading State
     const [loading, setLoading] = useState(false);

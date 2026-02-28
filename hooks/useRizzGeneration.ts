@@ -19,7 +19,7 @@ export const useRizzGeneration = (
   const handleGenerate = useCallback(async () => {
     const currentProfile = profileRef.current;
     if (!currentProfile) return;
-    
+
     if (mode === InputMode.CHAT && !inputText.trim() && !image) {
       NativeBridge.haptic('error');
       setInputError("Give me some context! Paste the chat or upload a screenshot.");
@@ -45,36 +45,36 @@ export const useRizzGeneration = (
 
     // Hide banner during generation to free up memory and prevent native conflicts
     if (Capacitor.isNativePlatform() && !currentProfile.is_premium) {
-        AdMobService.hideBanner().catch(() => {});
+      AdMobService.hideBanner().catch(() => { });
     }
 
     const showInterstitialIfReady = async () => {
-        if (!isMounted.current) return; // Safety check
-        
-        if (!currentProfile.is_premium && Capacitor.isNativePlatform()) {
-            const now = Date.now();
-            
-            if (now - appLaunchTime.current < APP_LAUNCH_GRACE_PERIOD) {
-                console.log("Skipping Interstitial: In Launch Grace Period");
-                return;
-            }
+      if (!isMounted.current) return; // Safety check
 
-            if (now - lastInterstitialTime.current > INTERSTITIAL_COOLDOWN_MS) {
-                console.log("Showing Interstitial Ad...");
-                const adId = Capacitor.getPlatform() === 'ios' ? TEST_INTERSTITIAL_ID_IOS : PROD_INTERSTITIAL_ID_ANDROID; 
-                
-                try {
-                    await AdMobService.showInterstitial(adId);
-                    if (isMounted.current) {
-                        lastInterstitialTime.current = Date.now(); // Reset cooldown
-                    }
-                } catch (e) {
-                    console.warn("Interstitial failed to show:", e);
-                }
-            }
+      if (!currentProfile.is_premium && Capacitor.isNativePlatform()) {
+        const now = Date.now();
+
+        if (now - appLaunchTime.current < APP_LAUNCH_GRACE_PERIOD) {
+          console.log("Skipping Interstitial: In Launch Grace Period");
+          return;
         }
+
+        if (now - lastInterstitialTime.current > INTERSTITIAL_COOLDOWN_MS) {
+          console.log("Showing Interstitial Ad...");
+          const adId = Capacitor.getPlatform() === 'ios' ? TEST_INTERSTITIAL_ID_IOS : PROD_INTERSTITIAL_ID_ANDROID;
+
+          try {
+            await AdMobService.showInterstitial(adId);
+            if (isMounted.current) {
+              lastInterstitialTime.current = Date.now(); // Reset cooldown
+            }
+          } catch (e) {
+            console.warn("Interstitial failed to show:", e);
+          }
+        }
+      }
     };
-    
+
     const creditsBefore = currentProfile.credits || 0;
 
     try {
@@ -95,48 +95,55 @@ export const useRizzGeneration = (
 
       // Re-show banner after generation with a delay to ensure UI is settled
       if (Capacitor.isNativePlatform() && !currentProfile.is_premium) {
-          const bannerId = Capacitor.getPlatform() === 'ios' ? TEST_BANNER_ID_IOS : PROD_BANNER_ID_ANDROID;
-          setTimeout(() => {
-              if (isMounted.current) AdMobService.showBanner(bannerId).catch(() => {});
-          }, 1500); // 1.5s delay
+        const bannerId = Capacitor.getPlatform() === 'ios' ? TEST_BANNER_ID_IOS : PROD_BANNER_ID_ANDROID;
+        setTimeout(() => {
+          if (isMounted.current) AdMobService.showBanner(bannerId).catch(() => { });
+        }, 1500); // 1.5s delay
       }
 
       if ('potentialStatus' in res && (res.potentialStatus === 'Error' || res.potentialStatus === 'Blocked')) {
-         if (!currentProfile.is_premium) updateCredits(creditsBefore);
-         if (res.potentialStatus === 'Blocked') {
-            showToast('Request blocked by Safety Policy.', 'error');
-         } else {
-            showToast('Service unavailable. Credits refunded.', 'error');
-         }
-         setResult(res);
+        if (!currentProfile.is_premium) updateCredits(creditsBefore);
+        if (res.potentialStatus === 'Blocked') {
+          showToast('Request blocked by Safety Policy.', 'error');
+        } else {
+          showToast('Service unavailable. Credits refunded.', 'error');
+        }
+        setResult(res);
       } else if ('analysis' in res && (res.analysis === 'System Error' || res.analysis === 'Safety Policy Violation' || res.analysis === FALLBACK_ERROR_ANALYSIS)) {
-         if (!currentProfile.is_premium) updateCredits(creditsBefore);
-         showToast(res.analysis, 'error');
-         setResult(res);
+        if (!currentProfile.is_premium) updateCredits(creditsBefore);
+        showToast(res.analysis, 'error');
+        setResult(res);
       } else {
-         const rizzRes = res as RizzResponse;
-         if ('tease' in rizzRes && (
-             rizzRes.tease === FALLBACK_TEASE || 
-             rizzRes.smooth === FALLBACK_SMOOTH || 
-             rizzRes.chaotic === FALLBACK_CHAOTIC
-         )) {
-             if (!currentProfile.is_premium) updateCredits(creditsBefore);
-             showToast('AI was speechless. Credits refunded.', 'error');
-             setResult(res);
-         } else {
-             setResult(res);
-             NativeBridge.haptic('success');
-             setTimeout(() => {
-                 if (isMounted.current) showInterstitialIfReady();
-             }, 3000);
-         }
+        const rizzRes = res as RizzResponse;
+        if ('tease' in rizzRes && (
+          rizzRes.tease === FALLBACK_TEASE ||
+          rizzRes.smooth === FALLBACK_SMOOTH ||
+          rizzRes.chaotic === FALLBACK_CHAOTIC
+        )) {
+          if (!currentProfile.is_premium) updateCredits(creditsBefore);
+          showToast('AI was speechless. Credits refunded.', 'error');
+          setResult(res);
+        } else {
+          setResult(res);
+          NativeBridge.haptic('success');
+
+          if (isMounted.current) setLoading(false);
+
+          // CRITICAL FIX: Delay AdMob Interstitial significantly to ensure 
+          // React has finished rendering the (heavy) new result DOM and 
+          // memory from the Base64 image has been GC'd. This prevents OOM.
+          setTimeout(() => {
+            if (isMounted.current) showInterstitialIfReady();
+          }, 4000); // Increased from 3s to 4s for complete stability
+          return; // Return early because we handled setLoading above
+        }
       }
 
     } catch (error) {
       console.error(error);
       if (isMounted.current) {
-          showToast('The wingman tripped! Try again.', 'error');
-          if (!currentProfile.is_premium) updateCredits(creditsBefore);
+        showToast('The wingman tripped! Try again.', 'error');
+        if (!currentProfile.is_premium) updateCredits(creditsBefore);
       }
     } finally {
       if (isMounted.current) setLoading(false);
