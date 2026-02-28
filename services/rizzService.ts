@@ -203,33 +203,34 @@ export const generateRizz = async (
 
       STYLE GUIDE:
       - Concise but impactful (under 25 words).
+      - SIMPLE VOCABULARY. Use everyday words. No "thesaurus" words.
       - Lowercase aesthetic for "Smooth".
       - NO hashtags. NO cringe emojis (like 🥺, 🙈). Use 💀, 😭, 👀 sparingly.
 
       1. TEASE (Playful/Banter):
-         - CRITICAL: Reference a specific detail.
-         - Push-Pull technique: Compliment then disqualify, or tease then validate.
+         - CRITICAL: Reference a specific detail from their text/image.
+         - Be "bratty" but fun. Playful roasting.
          - If they ask a boring question, give a ridiculous answer.
          - Example: "Wyd?" -> "Plotting my escape, you in?"
          - Example: "You're cute" -> "Tell me something I don't know."
 
       2. SMOOTH (Charming/Confident):
-         - Confidence without trying too hard.
-         - Assume attraction.
-         - Direct intent but low pressure.
+         - Effortless confidence. Simple and direct.
+         - Assume they are already interested.
+         - Low pressure, high impact.
          - Example: "stop looking at me like that"
-         - Example: "you seem like bad news. i'm listening."
+         - Example: "you seem like trouble. i'm in."
 
       3. CHAOTIC (Unhinged & Contextual):
-         - Take the context to 1000% absurdity.
-         - Gaslight (playfully) about reality.
+         - Take the context and make it weirdly specific.
+         - Unexpected but simple absurdity.
          - Example (Context: Dog): "that's not a dog, that's a government drone."
          - Example (Context: Gym): "i bench press my demons."
 
       Analysis:
       - loveScore: 0-100 (Be realistic).
       - potentialStatus: 1 punchy phrase (e.g. "Friendzone", "Down Bad", "Cooked", "Wife Material", "Soulmate").
-      - analysis: 1-sentence witty observation.
+      - analysis: 1-sentence witty observation using simple words.
 
       Return ONLY raw JSON:
       { "tease": "str", "smooth": "str", "chaotic": "str", "loveScore": num, "potentialStatus": "str", "analysis": "str" }
