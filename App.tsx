@@ -309,38 +309,23 @@ const AppContentInner: React.FC = () => {
                 if (profile && !profile.is_premium) {
                     AdMobService.hideBanner().then(() => {
                         const adId = Capacitor.getPlatform() === 'ios' ? TEST_BANNER_ID_IOS : PROD_BANNER_ID_ANDROID;
-                        timer = setTimeout(() => AdMobService.showBanner(adId), 1000);
+                        timer = setTimeout(() => AdMobService.showBanner(adId), 2000); // Increased to 2s
                     });
                 }
 
                 // 2. Show App Open Ad (Simulated with Interstitial)
-                // Since the plugin version doesn't support App Open Ads directly, we use Interstitial as a fallback
                 const now = Date.now();
                 if (profile && !profile.is_premium && (now - lastAppOpenAdTime > APP_OPEN_AD_COOLDOWN)) {
-                    // Using the provided App Open Ad ID for Android, but calling it via Interstitial method as fallback
-                    // Note: Ideally this should be a real App Open Ad call if the plugin supported it.
-                    // Since we are forced to use showInterstitial, we should use the Interstitial ID to avoid mismatches.
-                    // HOWEVER, the user explicitly provided an App Open ID. 
-                    // Trying to load an App Open ID as an Interstitial might fail or be against policy.
-                    // Best practice with this plugin limitation is to stick to the Interstitial ID for this "simulated" behavior.
-                    // BUT, if the user *really* wants to use that ID, we can try. 
-                    // Let's stick to the PROD_INTERSTITIAL_ID_ANDROID for safety as it's guaranteed to work with showInterstitial.
-                    // Wait, I should explain this to the user.
-                    // Actually, let's just use the ID they gave. If it fails, it fails.
-                    // const appOpenId = 'ca-app-pub-7381421031784616/2705366298'; 
-                    
-                    // RE-EVALUATION: The user requested to separate the risk.
-                    // Using an App Open ID with an Interstitial request is risky (mismatch).
-                    // To be safe and ensure it works, we will use the PROD INTERSTITIAL ID for this "App Open" behavior.
-                    // This makes it a standard Interstitial ad shown at app resume, which is fully supported.
-                    
                     const appOpenId = Capacitor.getPlatform() === 'ios' ? TEST_INTERSTITIAL_ID_IOS : PROD_INTERSTITIAL_ID_ANDROID;
-                    AdMobService.showInterstitial(appOpenId).then((shown) => {
-                        if (shown) {
-                            lastAppOpenAdTime = now;
-                            console.log("App Open Ad (via Interstitial ID) Shown");
-                        }
-                    });
+                    // Delay slightly to ensure UI is ready
+                    setTimeout(() => {
+                        AdMobService.showInterstitial(appOpenId).then((shown) => {
+                            if (shown) {
+                                lastAppOpenAdTime = now;
+                                console.log("App Open Ad (via Interstitial ID) Shown");
+                            }
+                        });
+                    }, 1500);
                 }
             }
         }).then(l => appListener = l);
@@ -348,9 +333,12 @@ const AppContentInner: React.FC = () => {
     
     return () => {
         if (timer) clearTimeout(timer);
-        if (appListener) appListener.remove();
-        // Don't hide banner on unmount to prevent flickering during quick state changes,
-        // unless logout handles it.
+        if (appListener) {
+             // Safe removal
+             if (typeof appListener.remove === 'function') {
+                 appListener.remove();
+             }
+        }
     };
     // Optimized dependency array: only re-run if premium status changes, not on every credit update
   }, [profile?.is_premium, session]); 

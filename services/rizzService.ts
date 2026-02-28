@@ -209,53 +209,41 @@ export const generateRizz = async (
       `;
   } else {
       // --- RIZZ MASTER PERSONA (Normal Operation) ---
+      // Optimized for 600 input / 200 output tokens
       systemInstruction = `
-      Role: "Rizz Master" dating assistant. Vibe: ${vibe || "Balanced"}.
-      Goal: Generate 3 witty, high-converting replies & analysis based on context.
+      Role: "Rizz Master". Vibe: ${vibe || "Balanced"}.
+      Goal: 3 witty replies based on context.
 
-      CRITICAL RULE: CONTEXT IS KING.
-      - Do NOT generate generic lines.
-      - If they talk about "gym", you MUST mention "gym", "weights", or "sweat".
-      - If they talk about "food", you MUST mention "eating", "cooking", or "hungry".
-      - If the input is just "hey", roast them for being boring.
+      RULES:
+      1. CONTEXT IS KING. Mention specific keywords from input (e.g. "gym" -> "weights").
+      2. NO generic lines. If input is "hey", roast them.
+      3. SIMPLE words. No hashtags. Minimal emojis (💀, 😭).
+      4. Length < 20 words.
 
-      STYLE GUIDE:
-      - Concise but impactful (under 25 words).
-      - SIMPLE VOCABULARY. Use everyday words. No "thesaurus" words.
-      - Lowercase aesthetic for "Smooth".
-      - NO hashtags. NO cringe emojis (like 🥺, 🙈). Use 💀, 😭, 👀 sparingly.
+      MODES:
+      1. TEASE: Playful roast. Reference details.
+         - "Wyd?" -> "Plotting my escape."
+      2. SMOOTH: Confident, direct, lowercase.
+         - "Stop" -> "make me"
+      3. CHAOTIC: Absurd & specific.
+         - (Dog) -> "that's a government drone."
 
-      1. TEASE (Playful/Banter):
-         - CRITICAL: Reference a specific detail from their text/image.
-         - Be "bratty" but fun. Playful roasting.
-         - If they ask a boring question, give a ridiculous answer.
-         - Example (Input: "Wyd?"): "Plotting my escape, you in?"
-         - Example (Input: "I like dogs"): "So you're saying I need a leash?"
-
-      2. SMOOTH (Charming/Confident):
-         - Effortless confidence. Simple and direct.
-         - Assume they are already interested.
-         - Low pressure, high impact.
-         - Example (Input: "Stop"): "make me"
-         - Example (Input: "You're annoying"): "and you love it."
-
-      3. CHAOTIC (Unhinged & Contextual):
-         - Take the context and make it weirdly specific.
-         - Unexpected but simple absurdity.
-         - Example (Context: Dog): "that's not a dog, that's a government drone."
-         - Example (Context: Gym): "i bench press my demons."
-
-      Analysis:
-      - loveScore: 0-100 (Be realistic).
-      - potentialStatus: 1 punchy phrase (e.g. "Friendzone", "Down Bad", "Cooked", "Wife Material", "Soulmate").
-      - analysis: 1-sentence witty observation using simple words.
-
-      Return ONLY raw JSON:
-      { "tease": "str", "smooth": "str", "chaotic": "str", "loveScore": num, "potentialStatus": "str", "analysis": "str" }
+      JSON OUTPUT ONLY:
+      {
+        "tease": "str",
+        "smooth": "str",
+        "chaotic": "str",
+        "loveScore": 0-100,
+        "potentialStatus": "Friendzone/Down Bad/Cooked/Soulmate",
+        "analysis": "1 witty sentence."
+      }
       `;
   }
 
   try {
+    // Truncate input to save tokens (approx 150 tokens)
+    const truncatedInput = inputText.slice(0, 600);
+    
     // ... (Model selection and messages setup remain the same) ...
     const isMultimodal = !!image;
     const model = isMultimodal ? VISION_MODEL : TEXT_MODEL;
@@ -268,14 +256,14 @@ export const generateRizz = async (
         messages.push({
             role: "user",
             content: [
-                { type: "text", text: inputText || "Analyze this." },
+                { type: "text", text: truncatedInput || "Analyze this." },
                 { type: "image_url", image_url: { url: image } }
             ]
         });
     } else {
         messages.push({
             role: "user",
-            content: inputText || "Generate rizz."
+            content: truncatedInput || "Generate rizz."
         });
     }
 
@@ -287,7 +275,7 @@ export const generateRizz = async (
                 model: model,
                 messages: messages,
                 temperature: 0.85,
-                max_tokens: 2000,
+                max_tokens: 250, // Limit output tokens
                 response_format: { type: "json_object" }
             });
 
@@ -390,16 +378,13 @@ export const generateBio = async (
       `;
   } else {
       // --- NORMAL BIO GENERATION ---
+      // Optimized for token efficiency
       systemInstruction = `
-      Role: Dating profile optimizer.
-      Input: "${inputText}"
-      Vibe: ${vibe || "Attractive"}
+      Role: Bio Optimizer. Vibe: ${vibe || "Attractive"}.
+      Input: "${inputText.slice(0, 500)}"
   
       Output JSON:
-      - bio: Optimized bio string (with emojis).
-      - analysis: Why it works.
-  
-      Return ONLY raw JSON. No markdown.
+      { "bio": "Optimized bio (with emojis)", "analysis": "Why it works" }
       `;
   }
 
@@ -414,6 +399,7 @@ export const generateBio = async (
                     { role: "user", content: "Generate a bio." }
                 ],
                 temperature: 0.85,
+                max_tokens: 250, // Limit output tokens
                 response_format: { type: "json_object" }
             });
 

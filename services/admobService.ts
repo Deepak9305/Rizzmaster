@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core';
 
 export const AdMobService = {
     initialized: false,
+    isAdShowing: false,
 
     async initialize() {
         if (!Capacitor.isNativePlatform()) return;
@@ -70,8 +71,13 @@ export const AdMobService = {
 
     async showInterstitial(adId: string): Promise<boolean> {
         if (!Capacitor.isNativePlatform()) return false;
+        if (this.isAdShowing) {
+            console.log("Ad already showing, skipping interstitial.");
+            return false;
+        }
         
         await this.initialize();
+        this.isAdShowing = true;
 
         return new Promise(async (resolve) => {
             let listeners: any[] = [];
@@ -80,6 +86,7 @@ export const AdMobService = {
             const safeResolve = (val: boolean) => {
                 if (!hasResolved) {
                     hasResolved = true;
+                    this.isAdShowing = false;
                     resolve(val);
                 }
             };
@@ -144,9 +151,14 @@ export const AdMobService = {
 
     async showRewardVideo(adId: string): Promise<boolean> {
         if (!Capacitor.isNativePlatform()) return false;
+        if (this.isAdShowing) {
+            console.log("Ad already showing, skipping reward video.");
+            return false;
+        }
         
         // Ensure initialized
         await this.initialize();
+        this.isAdShowing = true;
 
         return new Promise(async (resolve) => {
             let earnedReward = false;
@@ -156,6 +168,7 @@ export const AdMobService = {
             const safeResolve = (val: boolean) => {
                 if (!hasResolved) {
                     hasResolved = true;
+                    this.isAdShowing = false;
                     resolve(val);
                 }
             };
