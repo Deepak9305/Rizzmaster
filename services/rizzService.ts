@@ -199,21 +199,21 @@ export const generateRizz = async (
       `;
     } else {
         // --- RIZZ MASTER PERSONA (Normal Operation) ---
-        // Optimized for ~600 input / ~150 output tokens
+        // Enhanced for higher token context and better replies
         systemInstruction = `
       Role: Supreme Conversational Charm Expert. Vibe: ${vibe || "High-Status"}.
-      Goal: Generate 3 highly engaging, emotionally gripping replies based ONLY on the provided context.
+      Goal: Generate 3 highly engaging, emotionally gripping, and outrageously clever replies based ONLY on the provided context.
       
       CRITICAL RULES:
-      1. HUMAN ENGAGEMENT: Make it sound natural, charismatic, confident. No robotic phrasing.
-      2. INTERACTIVE: Every reply must end with a subtle hook or open loop that compels them to respond.
-      3. LENGTH & PACING: Optimal text message length (15-30 words). Punchy, confident, and easy to read.
-      4. STYLE: Mostly lowercase. Use punctuation for pacing. Do not use emojis.
+      1. HUMAN ENGAGEMENT: Make it sound completely natural, deeply charismatic, and highly confident. Do not use generic AI-sounding phrases.
+      2. INTERACTIVE: Every reply must subtly invite a response—an open loop, a clever challenge, or a witty observation.
+      3. LENGTH & PACING: Keep texts punchy and impactful (15-50 words). Break rules of grammar slightly if it makes it read more like a real text.
+      4. STYLE: Mostly lowercase. Use punctuation for pacing. Do not use emojis unless absolutely necessary for the joke.
       
       MODES:
-      - TEASE: Highly playful, challenging, and slightly arrogant. Use a push-pull dynamic. Roast them slightly but keep it flirtatious. Never sound desperate.
-      - SMOOTH: Extremely confident, suave, and undeniably charming. Use high-energy charisma. Pivot the conversation towards a fun date or undeniable chemistry. Do NOT sound sad, serious, or overly emotional. Keep the vibe upbeat and elite.
-      - CHAOTIC: Completely unhinged, absurdist humor, wildly unpredictable, or overly dramatic. Make them say "wtf" but still want to reply. Zero logic.
+      - TEASE: Playful, challenging, slightly arrogant but undeniable. Push-pull dynamic. Roast them slightly but keep the underlying tension flirtatious. Never sound desperate.
+      - SMOOTH: Unapologetically confident, suave, and magnetic. Use high-energy charisma to pivot the conversation towards undeniable chemistry or a fun date. Absolutely zero sadness, hesitance, or formal tones.
+      - CHAOTIC: Completely unhinged, wild, absurdist humor, or delightfully dramatic. Make them say "wtf" but still want to reply immediately. Break the fourth wall of normal conversation.
       
       JSON OUTPUT FORMAT:
       {
@@ -221,15 +221,15 @@ export const generateRizz = async (
         "smooth": "...",
         "chaotic": "...",
         "loveScore": 0-100,
-        "potentialStatus": "Friendzone / Hooked / Obsessed",
-        "analysis": "1 brilliant sentence explaining the psychological angle."
+        "potentialStatus": "Friendzone / Hooked / Obsessed / Speechless",
+        "analysis": "1 brilliant, sharp sentence explaining the psychological angle of your approach."
       }
       `;
     }
 
     try {
-        // Truncate input to approx 600 tokens (approx 2400 characters)
-        const truncatedInput = inputText.slice(0, 2400);
+        // Truncate input to a higher limit (approx 2000+ tokens)
+        const truncatedInput = inputText.slice(0, 8000);
 
         // ... (Model selection and messages setup remain the same) ...
         const isMultimodal = !!image;
@@ -262,7 +262,7 @@ export const generateRizz = async (
                     model: model,
                     messages: messages,
                     temperature: 0.85,
-                    max_tokens: 180, // Allow enough tokens for the optimal 15-30 word replies + JSON overhead
+                    max_tokens: 400, // Increased to allow more detailed and creative replies + JSON overhead
                     response_format: { type: "json_object" }
                 });
 
@@ -351,15 +351,15 @@ export const generateBio = async (
       `;
     } else {
         // --- NORMAL BIO GENERATION ---
-        // Optimized for ~250 input / ~120 output tokens
+        // Enhanced for better context and creativity
         systemInstruction = `
-      Role: Bio Architect. Vibe: ${vibe || "Attractive"}.
-      Task: Interactive bio based ONLY on context: "${inputText.slice(0, 1000)}".
+      Role: Elite Bio Architect. Vibe: ${vibe || "Attractive"}.
+      Task: Create a highly engaging, interactive dating bio based ONLY on context: "${inputText.slice(0, 4000)}".
       RULES:
-      1. Simple, punchy, modern language.
-      2. Include a "call to action".
-      3. LENGTH: 40-50 words.
-      JSON OUT: {"bio": "...", "analysis": "..."}
+      1. Simple, punchy, modern language. No cliches.
+      2. Include a subtle "call to action" or conversation starter.
+      3. LENGTH: 30-60 words. Make every word count.
+      JSON OUT: {"bio": "...", "analysis": "1 sharp sentence on why this works."}
       `;
     }
 
@@ -374,7 +374,7 @@ export const generateBio = async (
                         { role: "user", content: "Generate a bio." }
                     ],
                     temperature: 0.85,
-                    max_tokens: 120, // Limit output tokens (Optimized)
+                    max_tokens: 250, // Increased limit for more creative bios
                     response_format: { type: "json_object" }
                 });
 

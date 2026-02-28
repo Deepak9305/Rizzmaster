@@ -1,0 +1,1 @@
+App.tsx(439,28): error TS2307: Cannot find module '@capacitor/toast' or its corresponding type declarations.

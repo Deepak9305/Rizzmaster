@@ -429,9 +429,16 @@ const AppContentInner: React.FC = () => {
                     return;
                 }
 
-                const shouldExit = window.confirm("Do you want to exit Rizz Master?");
-                if (shouldExit) {
+                const now = Date.now();
+                // We use global window object here since we can't easily add a ref locally inside the useEffect without deps. 
+                // Or better yet, just use a simple variable on the window object for simplicity.
+                if (now - ((window as any)._lastRizzBackPress || 0) < 2000) {
                     CapacitorApp.exitApp();
+                } else {
+                    (window as any)._lastRizzBackPress = now;
+                    import('@capacitor/toast').then(({ Toast }) => {
+                        Toast.show({ text: "Press back again to exit" }).catch(() => { });
+                    });
                 }
             });
         };

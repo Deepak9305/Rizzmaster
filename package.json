@@ -17,6 +17,7 @@
     "@capacitor/preferences": "^5.0.7",
     "@capacitor/share": "latest",
     "@capacitor/status-bar": "latest",
+    "@capacitor/toast": "^8.0.1",
     "@codetrix-studio/capacitor-google-auth": "^3.3.2",
     "@google/genai": "*",
     "@supabase/supabase-js": "^2.39.8",
