@@ -4,31 +4,44 @@ import { Capacitor } from '@capacitor/core';
 
 export const AdMobService = {
     initialized: false,
+    initializationPromise: null as Promise<void> | null,
     isAdShowing: false,
 
     async initialize() {
         if (!Capacitor.isNativePlatform()) return;
         if (this.initialized) return;
 
-        try {
-            // Request tracking authorization (iOS 14+)
-            try {
-                await AdMob.requestTrackingAuthorization();
-            } catch (e) {
-                console.warn("Tracking authorization skipped:", e);
-            }
-
-            await AdMob.initialize({
-                initializeForTesting: true, // Forces test mode
-            });
-            this.initialized = true;
-            console.log('AdMob Initialized');
-        } catch (error) {
-            console.error('AdMob initialization failed', error);
+        // Return existing promise if initialization is already in progress
+        if (this.initializationPromise) {
+            return this.initializationPromise;
         }
+
+        this.initializationPromise = (async () => {
+            try {
+                // Request tracking authorization (iOS 14+)
+                try {
+                    await AdMob.requestTrackingAuthorization();
+                } catch (e) {
+                    console.warn("Tracking authorization skipped:", e);
+                }
+
+                await AdMob.initialize({
+                    initializeForTesting: true, // Forces test mode
+                });
+                this.initialized = true;
+                console.log('AdMob Initialized');
+            } catch (error) {
+                console.error('AdMob initialization failed', error);
+            } finally {
+                this.initializationPromise = null;
+            }
+        })();
+
+        return this.initializationPromise;
     },
 
     isBannerManipulating: false,
+    isAdManipulating: false,
 
     async showBanner(adId: string) {
         if (!Capacitor.isNativePlatform()) return;
@@ -40,10 +53,10 @@ export const AdMobService = {
 
             // CRITICAL: Attempt to hide and remove any existing banner first
             try {
-                await AdMob.hideBanner();
-                await AdMob.removeBanner();
+                await AdMob.hideBanner().catch(() => {});
+                await AdMob.removeBanner().catch(() => {});
             } catch (e) {
-                // Ignore removal error (e.g. if no banner exists)
+                // Ignore removal error
             }
 
             const options: BannerAdOptions = {
@@ -52,7 +65,7 @@ export const AdMobService = {
                 position: BannerAdPosition.BOTTOM_CENTER,
                 margin: 0,
                 isTesting: true,
-                npa: true // Request non-personalized ads for reliability in testing
+                npa: true 
             };
 
             await AdMob.showBanner(options);
@@ -70,8 +83,8 @@ export const AdMobService = {
 
         this.isBannerManipulating = true;
         try {
-            await AdMob.hideBanner();
-            await AdMob.removeBanner(); 
+            await AdMob.hideBanner().catch(() => {});
+            await AdMob.removeBanner().catch(() => {}); 
         } catch (e) {
             console.error('AdMob Hide Banner Error:', e);
         } finally {
@@ -81,172 +94,172 @@ export const AdMobService = {
 
     async showInterstitial(adId: string): Promise<boolean> {
         if (!Capacitor.isNativePlatform()) return false;
-        if (this.isAdShowing) {
-            console.log("Ad already showing, skipping interstitial.");
+        if (this.isAdShowing || this.isAdManipulating) {
+            console.log("Ad operation in progress, skipping interstitial.");
             return false;
         }
         
-        await this.initialize();
-        this.isAdShowing = true;
+        this.isAdManipulating = true;
+        try {
+            await this.initialize();
+            this.isAdShowing = true;
 
-        return new Promise(async (resolve) => {
-            let listeners: any[] = [];
-            let hasResolved = false;
+            return await new Promise<boolean>(async (resolve) => {
+                let listeners: any[] = [];
+                let hasResolved = false;
 
-            const safeResolve = (val: boolean) => {
-                if (!hasResolved) {
-                    hasResolved = true;
-                    this.isAdShowing = false;
-                    resolve(val);
-                }
-            };
-
-            const cleanup = async () => {
-                for (const listener of listeners) {
-                    if (listener && typeof listener.remove === 'function') {
-                        await listener.remove();
+                const safeResolve = (val: boolean) => {
+                    if (!hasResolved) {
+                        hasResolved = true;
+                        this.isAdShowing = false;
+                        this.isAdManipulating = false;
+                        resolve(val);
                     }
-                }
-                listeners = [];
-            };
-
-            // Timeout Safety (15 seconds max to load/show)
-            const timeoutId = setTimeout(() => {
-                console.warn('AdMob Interstitial Timeout');
-                cleanup();
-                safeResolve(false);
-            }, 15000);
-
-            try {
-                const onDismiss = await AdMob.addListener(InterstitialAdPluginEvents.Dismissed, () => {
-                    console.log('AdMob Interstitial Dismissed');
-                    clearTimeout(timeoutId);
-                    cleanup();
-                    safeResolve(true);
-                });
-                listeners.push(onDismiss);
-                
-                const onFailed = await AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, (err) => {
-                    console.error('AdMob Interstitial Failed to load', err);
-                    clearTimeout(timeoutId);
-                    cleanup();
-                    safeResolve(false);
-                });
-                listeners.push(onFailed);
-
-                const onShowFailed = await AdMob.addListener(InterstitialAdPluginEvents.FailedToShow, (err) => {
-                    console.error('AdMob Interstitial Failed to show', err);
-                    clearTimeout(timeoutId);
-                    cleanup();
-                    safeResolve(false);
-                });
-                listeners.push(onShowFailed);
-
-                const options: any = {
-                    adId: adId,
-                    isTesting: true
                 };
 
-                await AdMob.prepareInterstitial(options);
-                await AdMob.showInterstitial();
-                
-            } catch (error) {
-                console.error('AdMob Interstitial Execution Error', error);
-                clearTimeout(timeoutId);
-                await cleanup();
-                safeResolve(false);
-            }
-        });
+                const cleanup = async () => {
+                    try {
+                        for (const listener of listeners) {
+                            if (listener && typeof listener.remove === 'function') {
+                                await listener.remove().catch(() => {});
+                            }
+                        }
+                    } catch (e) {
+                        console.warn("Cleanup failed", e);
+                    }
+                    listeners = [];
+                };
+
+                const timeoutId = setTimeout(() => {
+                    console.warn('AdMob Interstitial Timeout');
+                    cleanup().then(() => safeResolve(false));
+                }, 20000); // Increased timeout to 20s
+
+                try {
+                    const onDismiss = await AdMob.addListener(InterstitialAdPluginEvents.Dismissed, () => {
+                        console.log('AdMob Interstitial Dismissed');
+                        clearTimeout(timeoutId);
+                        cleanup().then(() => safeResolve(true));
+                    });
+                    listeners.push(onDismiss);
+                    
+                    const onFailed = await AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, (err) => {
+                        console.error('AdMob Interstitial Failed to load', err);
+                        clearTimeout(timeoutId);
+                        cleanup().then(() => safeResolve(false));
+                    });
+                    listeners.push(onFailed);
+
+                    const onShowFailed = await AdMob.addListener(InterstitialAdPluginEvents.FailedToShow, (err) => {
+                        console.error('AdMob Interstitial Failed to show', err);
+                        clearTimeout(timeoutId);
+                        cleanup().then(() => safeResolve(false));
+                    });
+                    listeners.push(onShowFailed);
+
+                    await AdMob.prepareInterstitial({ adId, isTesting: true });
+                    await AdMob.showInterstitial();
+                    
+                } catch (error) {
+                    console.error('AdMob Interstitial Execution Error', error);
+                    clearTimeout(timeoutId);
+                    cleanup().then(() => safeResolve(false));
+                }
+            });
+        } catch (e) {
+            console.error("Interstitial Outer Error", e);
+            this.isAdShowing = false;
+            this.isAdManipulating = false;
+            return false;
+        }
     },
 
     async showRewardVideo(adId: string): Promise<boolean> {
         if (!Capacitor.isNativePlatform()) return false;
-        if (this.isAdShowing) {
-            console.log("Ad already showing, skipping reward video.");
+        if (this.isAdShowing || this.isAdManipulating) {
+            console.log("Ad operation in progress, skipping reward video.");
             return false;
         }
         
-        // Ensure initialized
-        await this.initialize();
-        this.isAdShowing = true;
+        this.isAdManipulating = true;
+        try {
+            await this.initialize();
+            this.isAdShowing = true;
 
-        return new Promise(async (resolve) => {
-            let earnedReward = false;
-            let listeners: any[] = [];
-            let hasResolved = false;
+            return await new Promise<boolean>(async (resolve) => {
+                let earnedReward = false;
+                let listeners: any[] = [];
+                let hasResolved = false;
 
-            const safeResolve = (val: boolean) => {
-                if (!hasResolved) {
-                    hasResolved = true;
-                    this.isAdShowing = false;
-                    resolve(val);
-                }
-            };
-
-            const cleanup = async () => {
-                for (const listener of listeners) {
-                    if (listener && typeof listener.remove === 'function') {
-                        await listener.remove();
+                const safeResolve = (val: boolean) => {
+                    if (!hasResolved) {
+                        hasResolved = true;
+                        this.isAdShowing = false;
+                        this.isAdManipulating = false;
+                        resolve(val);
                     }
-                }
-                listeners = [];
-            };
-
-            // Timeout Safety (15 seconds max to load/show)
-            const timeoutId = setTimeout(() => {
-                console.warn('AdMob Reward Timeout');
-                cleanup();
-                safeResolve(false);
-            }, 15000);
-
-            try {
-                // Set up Listeners
-                const onReward = await AdMob.addListener(RewardAdPluginEvents.Rewarded, (reward: AdMobRewardItem) => {
-                    console.log('AdMob Reward Earned', reward);
-                    earnedReward = true;
-                });
-                listeners.push(onReward);
-
-                const onDismiss = await AdMob.addListener(RewardAdPluginEvents.Dismissed, () => {
-                    console.log('AdMob Ad Dismissed');
-                    clearTimeout(timeoutId);
-                    cleanup();
-                    // Resolve with true only if reward was triggered
-                    safeResolve(earnedReward);
-                });
-                listeners.push(onDismiss);
-                
-                const onFailed = await AdMob.addListener(RewardAdPluginEvents.FailedToLoad, (err) => {
-                    console.error('AdMob Failed to load', err);
-                    clearTimeout(timeoutId);
-                    cleanup();
-                    safeResolve(false);
-                });
-                listeners.push(onFailed);
-
-                const onShowFailed = await AdMob.addListener(RewardAdPluginEvents.FailedToShow, (err) => {
-                    console.error('AdMob Failed to show', err);
-                    clearTimeout(timeoutId);
-                    cleanup();
-                    safeResolve(false);
-                });
-                listeners.push(onShowFailed);
-
-                // Prepare and Show
-                const options: RewardAdOptions = {
-                    adId: adId,
-                    isTesting: true
                 };
 
-                await AdMob.prepareRewardVideoAd(options);
-                await AdMob.showRewardVideoAd();
-                
-            } catch (error) {
-                console.error('AdMob Execution Error', error);
-                clearTimeout(timeoutId);
-                await cleanup();
-                safeResolve(false);
-            }
-        });
+                const cleanup = async () => {
+                    try {
+                        for (const listener of listeners) {
+                            if (listener && typeof listener.remove === 'function') {
+                                await listener.remove().catch(() => {});
+                            }
+                        }
+                    } catch (e) {
+                        console.warn("Cleanup failed", e);
+                    }
+                    listeners = [];
+                };
+
+                const timeoutId = setTimeout(() => {
+                    console.warn('AdMob Reward Timeout');
+                    cleanup().then(() => safeResolve(false));
+                }, 25000); // Increased timeout to 25s
+
+                try {
+                    const onReward = await AdMob.addListener(RewardAdPluginEvents.Rewarded, (reward: AdMobRewardItem) => {
+                        console.log('AdMob Reward Earned', reward);
+                        earnedReward = true;
+                    });
+                    listeners.push(onReward);
+
+                    const onDismiss = await AdMob.addListener(RewardAdPluginEvents.Dismissed, () => {
+                        console.log('AdMob Ad Dismissed');
+                        clearTimeout(timeoutId);
+                        cleanup().then(() => safeResolve(earnedReward));
+                    });
+                    listeners.push(onDismiss);
+                    
+                    const onFailed = await AdMob.addListener(RewardAdPluginEvents.FailedToLoad, (err) => {
+                        console.error('AdMob Failed to load', err);
+                        clearTimeout(timeoutId);
+                        cleanup().then(() => safeResolve(false));
+                    });
+                    listeners.push(onFailed);
+
+                    const onShowFailed = await AdMob.addListener(RewardAdPluginEvents.FailedToShow, (err) => {
+                        console.error('AdMob Failed to show', err);
+                        clearTimeout(timeoutId);
+                        cleanup().then(() => safeResolve(false));
+                    });
+                    listeners.push(onShowFailed);
+
+                    await AdMob.prepareRewardVideoAd({ adId, isTesting: true });
+                    await AdMob.showRewardVideoAd();
+                    
+                } catch (error) {
+                    console.error('AdMob Execution Error', error);
+                    clearTimeout(timeoutId);
+                    cleanup().then(() => safeResolve(false));
+                }
+            });
+        } catch (e) {
+            console.error("Reward Outer Error", e);
+            this.isAdShowing = false;
+            this.isAdManipulating = false;
+            return false;
+        }
     }
 };
