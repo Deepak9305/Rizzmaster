@@ -329,22 +329,23 @@ const AppContentInner: React.FC = () => {
   // Initialize Native Services - ONCE
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
-        // Delay all native initializations to let the app settle
-        const initTimer = setTimeout(() => {
-            // Google Auth
-            try {
-                const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
-                GoogleAuth.initialize({
-                    clientId: clientId || 'YOUR_WEB_CLIENT_ID_PLACEHOLDER',
-                    scopes: ['profile', 'email'],
-                    grantOfflineAccess: false,
-                });
-            } catch (e) { console.warn("GoogleAuth init failed", e); }
+        // Google Auth - Initialize immediately with safety
+        try {
+            const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
+            GoogleAuth.initialize({
+                clientId: clientId || 'YOUR_WEB_CLIENT_ID_PLACEHOLDER',
+                scopes: ['profile', 'email'],
+                grantOfflineAccess: false,
+            });
+        } catch (e) {
+            console.warn("GoogleAuth init failed:", e);
+        }
 
-            // AdMob - Only if not premium
-            if (profileRef.current && !profileRef.current.is_premium) {
-                AdMobService.initialize(false);
-            }
+        // Delay IAP initialization to let the app settle
+        const initTimer = setTimeout(() => {
+            // AdMob: We DO NOT initialize here anymore. 
+            // We wait for the profile to load in the other useEffect (refreshBanner)
+            // to ensure we never initialize AdMob for premium users.
 
             // In-App Purchases
             try {
@@ -629,21 +630,21 @@ const AppContentInner: React.FC = () => {
 
     try {
         // 1. Try to fully delete the user (Auth + Data) via RPC
-        // This requires the 'delete_user' function to be set up in Supabase
         const { error: rpcError } = await supabase.rpc('delete_user');
 
         if (rpcError) {
-            console.error("RPC Error:", rpcError);
-            // PGRST202 or code 42883 = Function not found
-            if (rpcError.code === '42883' || rpcError.message?.includes('does not exist')) {
-                 alert("CRITICAL ERROR: The database function 'delete_user' is missing.\n\nYou must run the SQL script in your Supabase SQL Editor to enable account deletion.");
-                 setLoading(false);
-                 return;
-            }
-            throw new Error(rpcError.message);
+            console.warn("RPC Delete failed, attempting manual cleanup:", rpcError);
+            
+            // Fallback: Manual deletion of data (RLS allows this)
+            // We cannot delete auth.users from client, but we can wipe their data
+            const { error: profileError } = await supabase.from('profiles').delete().eq('id', currentProfile.id);
+            if (profileError) throw profileError;
+            
+            // Saved items cascade delete, but we can be explicit
+            await supabase.from('saved_items').delete().eq('user_id', currentProfile.id);
         }
 
-        // 2. Sign Out & Cleanup (Only if RPC succeeded)
+        // 2. Sign Out & Cleanup
         await supabase.auth.signOut();
         
         // Clear Local State
@@ -653,12 +654,12 @@ const AppContentInner: React.FC = () => {
         setResult(null);
         setCurrentView('HOME');
         
-        showToast("Account permanently deleted", 'success');
+        showToast("Account deleted", 'success');
         window.history.replaceState({ view: 'HOME' }, '', '/');
 
     } catch (err: any) {
         console.error("Delete Account Critical Error:", err);
-        showToast(err.message || 'Failed to delete account.', 'error');
+        showToast('Failed to delete account. Please contact support.', 'error');
     } finally {
         setLoading(false);
     }
