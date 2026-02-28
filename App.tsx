@@ -789,22 +789,64 @@ const AppContentInner: React.FC = () => {
       toggleSave(content, type);
   }, [toggleSave]);
 
-  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
+      if (file.size > 10 * 1024 * 1024) { // Increased raw limit, but we resize anyway
           NativeBridge.haptic('error');
-          showToast('Image too large. Max 5MB.', 'error');
+          showToast('Image too large. Max 10MB.', 'error');
           return;
       }
+      
       NativeBridge.haptic('light');
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImage(reader.result as string);
+      
+      // Resize Logic to prevent OOM
+      try {
+          const resizeImage = (file: File): Promise<string> => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target?.result as string;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 1024; // Max dimension for AI analysis
+                        const MAX_HEIGHT = 1024;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_WIDTH) {
+                                height *= MAX_WIDTH / width;
+                                width = MAX_WIDTH;
+                            }
+                        } else {
+                            if (height > MAX_HEIGHT) {
+                                width *= MAX_HEIGHT / height;
+                                height = MAX_HEIGHT;
+                            }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx?.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.8)); // Compress to 80% quality
+                    };
+                    img.onerror = (error) => reject(error);
+                };
+                reader.onerror = (error) => reject(error);
+            });
+        };
+
+        const resizedBase64 = await resizeImage(file);
+        setImage(resizedBase64);
         if (fileInputRef.current) fileInputRef.current.value = '';
-      };
-      reader.readAsDataURL(file);
-      setInputError(null);
+        setInputError(null);
+      } catch (error) {
+          console.error("Image processing failed:", error);
+          showToast("Failed to process image. Try another.", "error");
+      }
     }
   }, [showToast]);
 
@@ -846,6 +888,13 @@ const AppContentInner: React.FC = () => {
 
   const INTERSTITIAL_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutes
 
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+      isMounted.current = true;
+      return () => { isMounted.current = false; };
+  }, []);
+
   const handleGenerate = useCallback(async () => {
     const currentProfile = profileRef.current;
     if (!currentProfile) return;
@@ -874,9 +923,9 @@ const AppContentInner: React.FC = () => {
     setLoading(true);
 
     // INTERSTITIAL AD LOGIC - MOVED TO AFTER GENERATION
-    // This ensures we don't violate AdMob policy by showing ads during "loading" or "generating" states.
-    // We prepare the ad logic here but execute it later.
     const showInterstitialIfReady = async () => {
+        if (!isMounted.current) return; // Safety check
+        
         if (!currentProfile.is_premium && Capacitor.isNativePlatform()) {
             const now = Date.now();
             
@@ -892,7 +941,9 @@ const AppContentInner: React.FC = () => {
                 
                 try {
                     await AdMobService.showInterstitial(adId);
-                    lastInterstitialTime.current = Date.now(); // Reset cooldown
+                    if (isMounted.current) {
+                        lastInterstitialTime.current = Date.now(); // Reset cooldown
+                    }
                 } catch (e) {
                     console.warn("Interstitial failed to show:", e);
                 }
@@ -913,6 +964,8 @@ const AppContentInner: React.FC = () => {
       } else {
         res = await generateBio(inputText, selectedVibe || undefined);
       }
+
+      if (!isMounted.current) return; // Stop if unmounted
 
       if ('potentialStatus' in res && (res.potentialStatus === 'Error' || res.potentialStatus === 'Blocked')) {
          if (!currentProfile.is_premium) updateCredits(creditsBefore);
@@ -942,17 +995,20 @@ const AppContentInner: React.FC = () => {
              setResult(res);
              NativeBridge.haptic('success');
              // Show Ad AFTER result is ready and displayed
-             // Increased delay to 3 seconds to allow user to see the result first
-             setTimeout(() => showInterstitialIfReady(), 3000);
+             setTimeout(() => {
+                 if (isMounted.current) showInterstitialIfReady();
+             }, 3000);
          }
       }
 
     } catch (error) {
       console.error(error);
-      showToast('The wingman tripped! Try again.', 'error');
-      if (!currentProfile.is_premium) updateCredits(creditsBefore);
+      if (isMounted.current) {
+          showToast('The wingman tripped! Try again.', 'error');
+          if (!currentProfile.is_premium) updateCredits(creditsBefore);
+      }
     } finally {
-      setLoading(false);
+      if (isMounted.current) setLoading(false);
     }
   }, [mode, inputText, image, selectedVibe, updateCredits, showToast, handleOpenPremium]);
 
