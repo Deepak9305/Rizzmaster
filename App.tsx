@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect, lazy, Suspense, useCallback } from 'react';
-import { generateRizz, generateBio, FALLBACK_TEASE, FALLBACK_SMOOTH, FALLBACK_CHAOTIC, FALLBACK_ERROR_ANALYSIS } from './services/rizzService';
+import { FALLBACK_TEASE, FALLBACK_SMOOTH, FALLBACK_CHAOTIC, FALLBACK_ERROR_ANALYSIS } from './services/rizzService';
 import { NativeBridge } from './services/nativeBridge';
 import { ToastProvider, useToast } from './context/ToastContext';
 import { InputMode, RizzResponse, BioResponse, SavedItem, UserProfile, RizzOrBioResponse } from './types';
@@ -18,8 +18,30 @@ import { AdMobService } from './services/admobService';
 import IAPService from './services/iapService';
 import AdSenseBanner from './components/AdSenseBanner';
 import OnboardingFlow from './components/OnboardingFlow';
-
 import OfflineIndicator from './components/OfflineIndicator';
+
+// Hooks
+import { useAuth } from './hooks/useAuth';
+import { useRizzGeneration } from './hooks/useRizzGeneration';
+
+// Components
+import VibeButton from './components/VibeButton';
+import GenerateButton from './components/GenerateButton';
+
+// Utils
+import { generateUUID } from './utils/uuid.ts';
+
+// Constants
+import { 
+    TEST_BANNER_ID_IOS, 
+    PROD_BANNER_ID_ANDROID, 
+    TEST_INTERSTITIAL_ID_IOS, 
+    PROD_INTERSTITIAL_ID_ANDROID,
+    TEST_REWARD_ID_IOS,
+    PROD_REWARD_ID_ANDROID,
+    TEST_APP_OPEN_ID_ANDROID,
+    TEST_APP_OPEN_ID_IOS
+} from './constants/adIds';
 
 // Lazy Load Heavy Components / Modals
 const PremiumModal = lazy(() => import('./components/PremiumModal'));
@@ -30,16 +52,8 @@ const DAILY_CREDITS = 5;
 const REWARD_CREDITS = 5;
 const AD_DURATION = 15;
 
-// --- OFFICIAL GOOGLE TEST IDS (REWARD VIDEO) ---
-const TEST_REWARD_ID_ANDROID = 'ca-app-pub-3940256099942544/5224354917';
-const TEST_REWARD_ID_IOS = 'ca-app-pub-3940256099942544/1712485313';
-
-// --- OFFICIAL GOOGLE TEST IDS (BANNER) ---
-const TEST_BANNER_ID_ANDROID = 'ca-app-pub-3940256099942544/6300978111';
-const TEST_BANNER_ID_IOS = 'ca-app-pub-3940256099942544/2934735716';
-
-// PROD BANNER ID
-const PROD_BANNER_ID_ANDROID = 'ca-app-pub-7381421031784616/7234804095';
+  // --- OFFICIAL GOOGLE TEST IDS (REWARD VIDEO) ---
+  const TEST_REWARD_ID_ANDROID = 'ca-app-pub-3940256099942544/5224354917';
 
 // Placeholder for Web AdSense
 const ADSENSE_SLOT_ID = '1234567890'; 
@@ -57,7 +71,6 @@ const LOADING_MESSAGES = [
 ];
 
 // --- VIBE CONFIGURATION ---
-// Define which vibes are PRO only
 const VIBES_CHAT = [
   { label: "Flirty", isPro: false },
   { label: "Funny", isPro: false },
@@ -78,67 +91,6 @@ const VIBES_BIO = [
   { label: "Witty", isPro: true }        // PRO
 ];
 
-
-
-// Extracted Memoized Components to prevent re-renders on text input
-const VibeButton = React.memo(({ vibe, isSelected, isPremium, onClick }: { vibe: { label: string, isPro: boolean }, isSelected: boolean, isPremium: boolean, onClick: (v: any) => void }) => (
-    <button 
-        onClick={() => onClick(vibe)}
-        className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all active:scale-95 flex items-center gap-1.5 ${
-            isSelected 
-            ? 'bg-rose-500/20 border-rose-500 text-rose-300' 
-            : vibe.isPro && !isPremium 
-              ? 'bg-white/5 border-yellow-500/30 text-white/40 hover:bg-white/10'
-              : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
-        }`}
-    >
-        {vibe.label}
-        {vibe.isPro && !isPremium && <span className="text-[10px]">🔒</span>}
-        {vibe.isPro && isPremium && !isSelected && <span className="text-[10px] text-yellow-500">👑</span>}
-    </button>
-));
-
-const GenerateButton = React.memo(({ 
-    loading, 
-    loadingMsg, 
-    isPremium, 
-    cost, 
-    onClick 
-}: { 
-    loading: boolean, 
-    loadingMsg: string, 
-    isPremium: boolean, 
-    cost: number, 
-    onClick: () => void 
-}) => (
-    <button
-    onClick={onClick}
-    disabled={loading}
-    className={`w-full py-3.5 md:py-4 rounded-2xl font-bold text-base md:text-lg shadow-xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
-        isPremium 
-        ? "bg-gradient-to-r from-yellow-500 to-amber-600 text-black" 
-        : "rizz-gradient text-white"
-    }`}
-    >
-    {loading ? (
-        <span className="flex items-center justify-center gap-2 animate-pulse">
-        <svg className={`animate-spin h-5 w-5 ${isPremium ? 'text-black' : 'text-white'}`} viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-        {loadingMsg}
-        </span>
-    ) : (
-        isPremium ? "Get Rizz (VIP)" : `Get Rizz (${cost} ⚡)`
-    )}
-    </button>
-));
-
-// Helper for UUID generation with fallback
-const generateUUID = () => {
-    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-        return crypto.randomUUID();
-    }
-    return Date.now().toString(36) + Math.random().toString(36).substring(2);
-};
-
 const AppContent: React.FC = React.memo(() => {
   return (
     <Suspense fallback={<div className="fixed inset-0 bg-black z-50" />}>
@@ -150,19 +102,19 @@ const AppContent: React.FC = React.memo(() => {
 const AppContentInner: React.FC = () => {
   const { showToast } = useToast();
   
+  // Custom Hooks for Auth and Generation
+  const {
+    session, setSession,
+    profile, setProfile,
+    isAuthReady, setIsAuthReady,
+    savedItems, setSavedItems,
+    profileRef,
+    loadUserData,
+    updateCredits
+  } = useAuth(showToast);
+
   // Network State
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
-
-  
-  // Auth State
-  const [session, setSession] = useState<any>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isAuthReady, setIsAuthReady] = useState(false);
-  
-  // Refs
-  const profileRef = useRef<UserProfile | null>(null); 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const sessionChannelRef = useRef<BroadcastChannel | null>(null);
 
   // Splash State
   const [showSplash, setShowSplash] = useState(true);
@@ -189,9 +141,29 @@ const AppContentInner: React.FC = () => {
   const [adTimer, setAdTimer] = useState(0);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showSavedModal, setShowSavedModal] = useState(false);
-  const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
   const [isSessionBlocked, setIsSessionBlocked] = useState(false);
   const [isAdLoading, setIsAdLoading] = useState(false);
+
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => { isMounted.current = false; };
+  }, []);
+
+  const handleOpenPremium = useCallback(() => {
+      window.history.pushState({ view: currentView, premium: true }, '');
+      setShowPremiumModal(true);
+      NativeBridge.haptic('medium');
+  }, [currentView]);
+
+  const { handleGenerate } = useRizzGeneration({
+    mode, inputText, image, selectedVibe, profileRef, updateCredits, showToast, handleOpenPremium, setLoading, setResult, setInputError, isMounted
+  });
+
+  // Refs
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const sessionChannelRef = useRef<BroadcastChannel | null>(null);
 
   // Ref to track state for event listeners without re-binding
   const stateRef = useRef({
@@ -277,11 +249,6 @@ const AppContentInner: React.FC = () => {
     let timer: any;
     let lastAppOpenAdTime = 0;
     const APP_OPEN_AD_COOLDOWN = 30 * 60 * 1000; // 30 minutes
-
-    // --- OFFICIAL GOOGLE TEST ID (APP OPEN) ---
-    // Use Test ID for now as user hasn't provided production ID for App Open
-    const TEST_APP_OPEN_ID_ANDROID = 'ca-app-pub-3940256099942544/3419835294';
-    const TEST_APP_OPEN_ID_IOS = 'ca-app-pub-3940256099942544/5662855259';
 
     const refreshBanner = () => {
         if (Capacitor.isNativePlatform() && session) {
@@ -460,12 +427,6 @@ const AppContentInner: React.FC = () => {
     window.history.back();
   }, []);
 
-  const handleOpenPremium = useCallback(() => {
-    window.history.pushState({ view: currentView, premium: true }, '');
-    setShowPremiumModal(true);
-    NativeBridge.haptic('medium');
-  }, [currentView]);
-
   const handleOpenSaved = useCallback(() => {
     window.history.pushState({ view: currentView, saved: true }, '');
     setShowSavedModal(true);
@@ -538,67 +499,6 @@ const AppContentInner: React.FC = () => {
     sessionChannelRef.current?.postMessage({ type: 'NEW_SESSION_STARTED' });
   }, []);
 
-  const loadUserData = async (userId: string, email?: string) => {
-    if (!supabase || userId === 'guest') {
-        const storedProfile = localStorage.getItem('guest_profile');
-        const storedItems = localStorage.getItem('guest_saved_items');
-        
-        if (storedProfile) {
-            setProfile(JSON.parse(storedProfile));
-        } else {
-            const newProfile: UserProfile = { 
-              id: 'guest', 
-              email: 'guest@rizzmaster.ai', 
-              credits: DAILY_CREDITS, 
-              is_premium: false, 
-              last_daily_reset: new Date().toISOString().split('T')[0] 
-            };
-            setProfile(newProfile);
-            localStorage.setItem('guest_profile', JSON.stringify(newProfile));
-        }
-        setSavedItems(storedItems ? JSON.parse(storedItems) : []);
-        return;
-    }
-
-    try {
-        const profilePromise = supabase.from('profiles').select('*').eq('id', userId).single();
-        const savedPromise = supabase.from('saved_items').select('*').eq('user_id', userId).order('created_at', { ascending: false });
-
-        const [profileResult, savedResult] = await Promise.all([profilePromise, savedPromise]);
-
-        let profileData = profileResult.data;
-        const savedData = savedResult.data;
-
-        if (savedData) {
-            const items = savedData as SavedItem[];
-            setSavedItems(items);
-        }
-
-        if (profileResult.error?.code === 'PGRST116') {
-            const { data: newProfile } = await supabase.from('profiles').insert([{ 
-                id: userId, 
-                email: email, 
-                credits: DAILY_CREDITS, 
-                is_premium: false,
-                last_daily_reset: new Date().toISOString().split('T')[0]
-            }]).select().single();
-            if (newProfile) profileData = newProfile;
-        } else if (profileData) {
-            const today = new Date().toISOString().split('T')[0];
-            if (profileData.last_daily_reset !== today) {
-                const { data: updated } = await supabase.from('profiles').update({ credits: DAILY_CREDITS, last_daily_reset: today }).eq('id', userId).select().single();
-                if (updated) profileData = updated;
-            }
-        }
-
-        if (profileData) setProfile(profileData as UserProfile);
-        if (savedData) setSavedItems(savedData as SavedItem[]);
-
-    } catch (e) {
-        console.error("Error loading user data", e);
-    }
-  };
-
   const handleLogout = useCallback(async () => {
     if (!window.confirm("Are you sure you want to log out of Rizz Master?")) return;
     
@@ -634,30 +534,7 @@ const AppContentInner: React.FC = () => {
       const guestUser = { id: 'guest', email: 'guest@rizzmaster.ai' };
       setSession({ user: guestUser });
       loadUserData(guestUser.id);
-  }, []);
-
-  const updateCredits = useCallback(async (newAmount: number) => {
-    const currentProfile = profileRef.current;
-    if (!currentProfile) return;
-
-    const updatedProfile = { ...currentProfile, credits: newAmount };
-    setProfile(updatedProfile); 
-    
-    try {
-        if (supabase && currentProfile.id !== 'guest') {
-            const { error } = await supabase.from('profiles').update({ credits: newAmount }).eq('id', currentProfile.id);
-            if (error) {
-                console.error("Failed to sync credits to Supabase:", error);
-                // Optional: Revert local state if strict consistency is needed
-                // But for UX, we often keep optimistic state unless it's critical
-            }
-        } else {
-            localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
-        }
-    } catch (err) {
-        console.error("Critical error updating credits:", err);
-    }
-  }, []);
+  }, [loadUserData, setSession]);
 
   const handleRestorePurchases = useCallback(async () => {
     if (!profileRef.current) return;
@@ -872,163 +749,6 @@ const AppContentInner: React.FC = () => {
     NativeBridge.haptic('medium');
     showToast('Report submitted. We will review this.', 'info');
   }, [showToast]);
-
-  // ... handleGenerate ...
-
-
-  const lastInterstitialTime = useRef<number>(Date.now()); // Initialize with current time to start cooldown immediately on launch
-  const APP_LAUNCH_GRACE_PERIOD = 2 * 60 * 1000; // 2 minutes grace period on launch
-  const appLaunchTime = useRef<number>(Date.now());
-
-  // --- OFFICIAL GOOGLE TEST IDS (INTERSTITIAL) ---
-  const TEST_INTERSTITIAL_ID_ANDROID = 'ca-app-pub-3940256099942544/1033173712';
-  const TEST_INTERSTITIAL_ID_IOS = 'ca-app-pub-3940256099942544/4411468910';
-
-  // PROD INTERSTITIAL ID
-  const PROD_INTERSTITIAL_ID_ANDROID = 'ca-app-pub-7381421031784616/5183026259';
-  
-  // PROD REWARD ID
-  const PROD_REWARD_ID_ANDROID = 'ca-app-pub-7381421031784616/6580197977';
-
-  const INTERSTITIAL_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutes
-
-  const isMounted = useRef(true);
-
-  useEffect(() => {
-      isMounted.current = true;
-      return () => { isMounted.current = false; };
-  }, []);
-
-  const handleGenerate = useCallback(async () => {
-    const currentProfile = profileRef.current;
-    if (!currentProfile) return;
-    
-    if (mode === InputMode.CHAT && !inputText.trim() && !image) {
-      NativeBridge.haptic('error');
-      setInputError("Give me some context! Paste the chat or upload a screenshot.");
-      return;
-    }
-    if (mode === InputMode.BIO && !inputText.trim()) {
-      NativeBridge.haptic('error');
-      setInputError("I can't write a bio for a ghost! Tell me about your hobbies, job, or vibes.");
-      return;
-    }
-    setInputError(null);
-    NativeBridge.haptic('medium');
-
-    const cost = (mode === InputMode.CHAT && image) ? 2 : 1;
-
-    if (!currentProfile.is_premium && (currentProfile.credits || 0) < cost) {
-      if ((currentProfile.credits || 0) > 0) showToast(`Need ${cost} credits.`, 'error');
-      handleOpenPremium();
-      return;
-    }
-
-    setLoading(true);
-
-    // Hide banner during generation to free up memory and prevent native conflicts
-    if (Capacitor.isNativePlatform() && !currentProfile.is_premium) {
-        AdMobService.hideBanner().catch(() => {});
-    }
-
-    // INTERSTITIAL AD LOGIC - MOVED TO AFTER GENERATION
-    const showInterstitialIfReady = async () => {
-        if (!isMounted.current) return; // Safety check
-        
-        if (!currentProfile.is_premium && Capacitor.isNativePlatform()) {
-            const now = Date.now();
-            
-            // Check for Launch Grace Period (2 mins)
-            if (now - appLaunchTime.current < APP_LAUNCH_GRACE_PERIOD) {
-                console.log("Skipping Interstitial: In Launch Grace Period");
-                return;
-            }
-
-            if (now - lastInterstitialTime.current > INTERSTITIAL_COOLDOWN_MS) {
-                console.log("Showing Interstitial Ad...");
-                const adId = Capacitor.getPlatform() === 'ios' ? TEST_INTERSTITIAL_ID_IOS : PROD_INTERSTITIAL_ID_ANDROID; 
-                
-                try {
-                    await AdMobService.showInterstitial(adId);
-                    if (isMounted.current) {
-                        lastInterstitialTime.current = Date.now(); // Reset cooldown
-                    }
-                } catch (e) {
-                    console.warn("Interstitial failed to show:", e);
-                }
-            }
-        }
-    };
-    
-    const creditsBefore = currentProfile.credits || 0;
-
-    try {
-      if (!currentProfile.is_premium) {
-        updateCredits(creditsBefore - cost);
-      }
-
-      // Small delay to allow UI to settle and memory to be reclaimed
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      let res;
-      if (mode === InputMode.CHAT) {
-        res = await generateRizz(inputText, image || undefined, selectedVibe || undefined);
-      } else {
-        res = await generateBio(inputText, selectedVibe || undefined);
-      }
-
-      if (!isMounted.current) return; // Stop if unmounted
-
-      // Re-show banner after generation
-      if (Capacitor.isNativePlatform() && !currentProfile.is_premium) {
-          const bannerId = Capacitor.getPlatform() === 'ios' ? TEST_BANNER_ID_IOS : PROD_BANNER_ID_ANDROID;
-          AdMobService.showBanner(bannerId).catch(() => {});
-      }
-
-      if ('potentialStatus' in res && (res.potentialStatus === 'Error' || res.potentialStatus === 'Blocked')) {
-         if (!currentProfile.is_premium) updateCredits(creditsBefore);
-         
-         if (res.potentialStatus === 'Blocked') {
-            showToast('Request blocked by Safety Policy.', 'error');
-         } else {
-            showToast('Service unavailable. Credits refunded.', 'error');
-         }
-         setResult(res);
-      } else if ('analysis' in res && (res.analysis === 'System Error' || res.analysis === 'Safety Policy Violation' || res.analysis === FALLBACK_ERROR_ANALYSIS)) {
-         if (!currentProfile.is_premium) updateCredits(creditsBefore);
-         showToast(res.analysis, 'error');
-         setResult(res);
-      } else {
-         // Check for "Speechless" Fallbacks (Soft Error)
-         const rizzRes = res as RizzResponse;
-         if ('tease' in rizzRes && (
-             rizzRes.tease === FALLBACK_TEASE || 
-             rizzRes.smooth === FALLBACK_SMOOTH || 
-             rizzRes.chaotic === FALLBACK_CHAOTIC
-         )) {
-             if (!currentProfile.is_premium) updateCredits(creditsBefore);
-             showToast('AI was speechless. Credits refunded.', 'error');
-             setResult(res);
-         } else {
-             setResult(res);
-             NativeBridge.haptic('success');
-             // Show Ad AFTER result is ready and displayed
-             setTimeout(() => {
-                 if (isMounted.current) showInterstitialIfReady();
-             }, 3000);
-         }
-      }
-
-    } catch (error) {
-      console.error(error);
-      if (isMounted.current) {
-          showToast('The wingman tripped! Try again.', 'error');
-          if (!currentProfile.is_premium) updateCredits(creditsBefore);
-      }
-    } finally {
-      if (isMounted.current) setLoading(false);
-    }
-  }, [mode, inputText, image, selectedVibe, updateCredits, showToast, handleOpenPremium]);
 
   const handleWatchAd = useCallback(async () => {
     NativeBridge.haptic('medium');
