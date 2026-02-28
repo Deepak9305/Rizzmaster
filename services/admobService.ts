@@ -28,9 +28,13 @@ export const AdMobService = {
         }
     },
 
+    isBannerManipulating: false,
+
     async showBanner(adId: string) {
         if (!Capacitor.isNativePlatform()) return;
+        if (this.isBannerManipulating) return;
         
+        this.isBannerManipulating = true;
         try {
             await this.initialize();
 
@@ -55,17 +59,23 @@ export const AdMobService = {
             console.log('AdMob Banner Request Sent');
         } catch (e) {
             console.error('AdMob Show Banner Error:', e);
+        } finally {
+            this.isBannerManipulating = false;
         }
     },
 
     async hideBanner() {
         if (!Capacitor.isNativePlatform()) return;
-        
+        if (this.isBannerManipulating) return;
+
+        this.isBannerManipulating = true;
         try {
             await AdMob.hideBanner();
             await AdMob.removeBanner(); 
         } catch (e) {
             console.error('AdMob Hide Banner Error:', e);
+        } finally {
+            this.isBannerManipulating = false;
         }
     },
 

@@ -218,15 +218,15 @@ export const generateRizz = async (
       1. CONTEXT IS KING. Mention specific keywords from input (e.g. "gym" -> "weights").
       2. NO generic lines. If input is short/boring (e.g. "hey"), ELEVATE IT. Ask a fun question or start a game.
       3. SIMPLE words. No hashtags. Minimal emojis (💀, 😭).
-      4. Length < 20 words.
+      4. Length: 1-2 full sentences (approx 10-15 words). Avoid 1-word replies.
 
       MODES:
       1. TEASE: Playful banter.
-         - "Wyd?" -> "Plotting my escape, you in?"
+         - "Wyd?" -> "Plotting my escape from this boring conversation, you in?"
       2. SMOOTH: Confident, direct, lowercase.
-         - "Stop" -> "make me"
+         - "Stop" -> "make me, i dare you to try."
       3. CHAOTIC: Absurd & specific.
-         - (Dog) -> "that's a government drone."
+         - (Dog) -> "that's not a dog, that's definitely a government surveillance drone."
 
       JSON OUTPUT ONLY:
       {
