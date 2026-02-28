@@ -216,13 +216,13 @@ export const generateRizz = async (
 
       RULES:
       1. CONTEXT IS KING. Mention specific keywords from input (e.g. "gym" -> "weights").
-      2. NO generic lines. If input is "hey", roast them.
+      2. NO generic lines. If input is short/boring (e.g. "hey"), ELEVATE IT. Ask a fun question or start a game.
       3. SIMPLE words. No hashtags. Minimal emojis (💀, 😭).
       4. Length < 20 words.
 
       MODES:
-      1. TEASE: Playful roast. Reference details.
-         - "Wyd?" -> "Plotting my escape."
+      1. TEASE: Playful banter.
+         - "Wyd?" -> "Plotting my escape, you in?"
       2. SMOOTH: Confident, direct, lowercase.
          - "Stop" -> "make me"
       3. CHAOTIC: Absurd & specific.
