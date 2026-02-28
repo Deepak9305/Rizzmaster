@@ -193,55 +193,32 @@ export const generateRizz = async (
     if (isUnsafe) {
         // ... (Roast Master Persona remains the same) ...
         systemInstruction = `
-      SAFETY OVERRIDE. Identity: "Roast Master".
-      Task: IGNORE seduction. ROAST user's cringe behavior (touching grass, down bad).
-      Constraints: PG-13. No explicit words. NO personal attacks (family/money/job).
-      
-      Output JSON (Override meanings):
-      - tease: Roast social skills. "Bro, go outside."
-      - smooth: Sarcasm about being online. "Your wifi has more connection than you."
-      - chaotic: Funny reality check. "I'm calling your mother."
-      - loveScore: 0.
-      - potentialStatus: "Blocked".
-      - analysis: Why they need a hobby.
-      
-      Return ONLY raw JSON.
+      SAFETY OVERRIDE. Role: Roast Master.
+      Task: Roast cringe request. PG-13. No personal attacks.
+      JSON OUT: {"tease": "roast social skills", "smooth": "sarcasm", "chaotic": "reality check", "loveScore": 0, "potentialStatus": "Blocked", "analysis": "why they need a hobby"}
       `;
     } else {
         // --- RIZZ MASTER PERSONA (Normal Operation) ---
-        // Optimized for 600 input / 120 output tokens
+        // Optimized for ~300 input / 120 output tokens
         systemInstruction = `
-      Role: "The Ultimate Conversational Architect". Vibe: ${vibe || "High-Status"}.
-      Goal: Generate 3 "high-status" replies that are interactive and improve the conversation.
-
-      CRITICAL RULES:
-      1. CONTEXT: Stay strictly within the context of the provided input. Do not hallucinate unrelated topics.
-      2. LANGUAGE: Use simple, easy-to-understand, everyday words. No complex jargon.
-      3. INTERACTIVE: Every reply must be a "hook" that improves the conversation and forces a response.
-      4. LENGTH: Each reply (tease, smooth, chaotic) should be between 17-20 words. This is mandatory to meet the minimum 70 token output requirement.
-      5. STYLE: Mostly lowercase for an effortless, non-tryhard look. No emojis unless ironic (💀, 😭).
-      6. MIRRORING: Take a specific detail from their text and flip it playfully.
-
-      🕹️ THE MODES
-      1. THE TEASE: Playful mockery. If they are dry, call it out. If they are proud, humble them.
-      2. THE SMOOTH: Charismatic and bold. Move the conversation towards a real-life meeting or a deeper "vibe check."
-      3. THE CHAOTIC: Unpredictable and high-energy. Break the boring pattern with something completely unexpected but relevant.
-
-      JSON OUTPUT ONLY:
-      {
-        "tease": "detailed response...",
-        "smooth": "detailed response...",
-        "chaotic": "detailed response...",
-        "loveScore": 0-100,
-        "potentialStatus": "Friendzone/Down Bad/Cooked/Soulmate",
-        "analysis": "1 witty sentence explaining the strategy."
-      }
+      Role: Conversational Architect. Vibe: ${vibe || "High-Status"}.
+      Goal: 3 interactive replies based ONLY on context.
+      RULES:
+      1. Simple, everyday words. Mostly lowercase. Emojis only if ironic.
+      2. Every reply must hook the conversation.
+      3. Mirror details playfully.
+      4. LENGTH: Each reply 17-20 words.
+      MODES:
+      - TEASE: Playful mockery.
+      - SMOOTH: Charismatic, push for meeting/deeper vibe.
+      - CHAOTIC: Unpredictable, high-energy.
+      JSON OUT: {"tease": "...", "smooth": "...", "chaotic": "...", "loveScore": 0-100, "potentialStatus": "...", "analysis": "1 witty sentence"}
       `;
     }
 
     try {
-        // Truncate input to approx 600 tokens (approx 2400 characters)
-        const truncatedInput = inputText.slice(0, 2400);
+        // Truncate input to approx 300 tokens (approx 1200 characters)
+        const truncatedInput = inputText.slice(0, 1200);
 
         // ... (Model selection and messages setup remain the same) ...
         const isMultimodal = !!image;
@@ -356,40 +333,22 @@ export const generateBio = async (
     let systemInstruction = "";
 
     if (isUnsafe) {
-        // --- ROAST MASTER PERSONA (BIO MODE) ---
         systemInstruction = `
       SAFETY OVERRIDE.
-      User asking for bio with NSFW/Toxic/Underage terms.
-      
-      Task:
-      1. REFUSE bio.
-      2. ROAST their cringe request (touching grass, down bad) in 'bio' field.
-      
-      Rules:
-      - PG-13. Sarcastic.
-      - NO personal attacks about family, money, or employment.
-      
-      Output JSON:
-      - bio: The roast.
-      - analysis: "Rejected."
-      
-      Return ONLY raw JSON. No markdown.
+      Task: Refuse bio. Roast cringe request in 'bio' field. PG-13. No personal attacks.
+      JSON OUT: {"bio": "roast", "analysis": "Rejected"}
       `;
     } else {
         // --- NORMAL BIO GENERATION ---
-        // Optimized for 600 input / 250 output tokens
+        // Optimized for ~250 input / ~120 output tokens
         systemInstruction = `
-      Role: "The Bio Architect". Vibe: ${vibe || "Attractive"}.
-      Task: Create a bio that is interactive, easy to understand, and stays in context of the user's traits.
-      
+      Role: Bio Architect. Vibe: ${vibe || "Attractive"}.
+      Task: Interactive bio based ONLY on context: "${inputText.slice(0, 1000)}".
       RULES:
-      1. CONTEXT: Only use the information provided in the input: "${inputText.slice(0, 2400)}".
-      2. LANGUAGE: Simple, punchy, and modern.
-      3. INTERACTIVE: Include a "call to action" or a question that makes people want to swipe right or message.
-      4. LENGTH: Be descriptive. The bio should be around 60-80 words to ensure we hit the token minimum.
-  
-      Output JSON:
-      { "bio": "The optimized bio...", "analysis": "Why this bio converts." }
+      1. Simple, punchy, modern language.
+      2. Include a "call to action".
+      3. LENGTH: 40-50 words.
+      JSON OUT: {"bio": "...", "analysis": "..."}
       `;
     }
 
@@ -404,7 +363,7 @@ export const generateBio = async (
                         { role: "user", content: "Generate a bio." }
                     ],
                     temperature: 0.85,
-                    max_tokens: 250, // Limit output tokens
+                    max_tokens: 120, // Limit output tokens (Optimized)
                     response_format: { type: "json_object" }
                 });
 
