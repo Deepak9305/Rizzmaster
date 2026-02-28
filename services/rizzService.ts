@@ -205,7 +205,7 @@ export const generateRizz = async (
       Goal: Generate 3 highly engaging, emotionally gripping replies based ONLY on the provided context.
       
       CRITICAL RULES:
-      1. HUMAN ENGAGEMENT: Make it sound natural, charismatic, and emotionally resonant. No robotic phrasing.
+      1. HUMAN ENGAGEMENT: Make it sound natural, charismatic, confident. No robotic phrasing.
       2. INTERACTIVE: Every reply must end with a subtle hook or open loop that compels them to respond.
       3. LENGTH & PACING: Optimal text message length (15-30 words). Punchy, confident, and easy to read.
       4. STYLE: Mostly lowercase. Use punctuation for pacing. Do not use emojis.
