@@ -51,12 +51,11 @@ export const AdMobService = {
         try {
             await this.initialize();
 
-            // CRITICAL: Attempt to hide and remove any existing banner first
+            // Only hide, avoid removeBanner as it can be unstable in some plugin versions
             try {
                 await AdMob.hideBanner().catch(() => {});
-                await AdMob.removeBanner().catch(() => {});
             } catch (e) {
-                // Ignore removal error
+                // Ignore hide error
             }
 
             const options: BannerAdOptions = {
@@ -73,7 +72,10 @@ export const AdMobService = {
         } catch (e) {
             console.error('AdMob Show Banner Error:', e);
         } finally {
-            this.isBannerManipulating = false;
+            // Delay releasing the lock to prevent rapid toggling
+            setTimeout(() => {
+                this.isBannerManipulating = false;
+            }, 1000);
         }
     },
 
@@ -84,11 +86,12 @@ export const AdMobService = {
         this.isBannerManipulating = true;
         try {
             await AdMob.hideBanner().catch(() => {});
-            await AdMob.removeBanner().catch(() => {}); 
         } catch (e) {
             console.error('AdMob Hide Banner Error:', e);
         } finally {
-            this.isBannerManipulating = false;
+            setTimeout(() => {
+                this.isBannerManipulating = false;
+            }, 1000);
         }
     },
 

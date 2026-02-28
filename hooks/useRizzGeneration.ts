@@ -93,9 +93,12 @@ export const useRizzGeneration = (
 
       if (!isMounted.current) return;
 
+      // Re-show banner after generation with a delay to ensure UI is settled
       if (Capacitor.isNativePlatform() && !currentProfile.is_premium) {
           const bannerId = Capacitor.getPlatform() === 'ios' ? TEST_BANNER_ID_IOS : PROD_BANNER_ID_ANDROID;
-          AdMobService.showBanner(bannerId).catch(() => {});
+          setTimeout(() => {
+              if (isMounted.current) AdMobService.showBanner(bannerId).catch(() => {});
+          }, 1500); // 1.5s delay
       }
 
       if ('potentialStatus' in res && (res.potentialStatus === 'Error' || res.potentialStatus === 'Blocked')) {

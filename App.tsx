@@ -272,27 +272,31 @@ const AppContentInner: React.FC = () => {
     if (Capacitor.isNativePlatform()) {
         CapacitorApp.addListener('appStateChange', ({ isActive }) => {
             if (isActive) {
-                // 1. Refresh Banner
-                if (profile && !profile.is_premium) {
+                // 1. Refresh Banner - Only if not already manipulating
+                if (profile && !profile.is_premium && !AdMobService.isBannerManipulating) {
                     AdMobService.hideBanner().then(() => {
                         const adId = Capacitor.getPlatform() === 'ios' ? TEST_BANNER_ID_IOS : PROD_BANNER_ID_ANDROID;
-                        timer = setTimeout(() => AdMobService.showBanner(adId), 2000); // Increased to 2s
-                    });
+                        timer = setTimeout(() => {
+                            if (isMounted.current) AdMobService.showBanner(adId);
+                        }, 3000); // Increased to 3s for more stability on resume
+                    }).catch(() => {});
                 }
 
                 // 2. Show App Open Ad (Simulated with Interstitial)
                 const now = Date.now();
-                if (profile && !profile.is_premium && (now - lastAppOpenAdTime > APP_OPEN_AD_COOLDOWN)) {
+                if (profile && !profile.is_premium && (now - lastAppOpenAdTime > APP_OPEN_AD_COOLDOWN) && !AdMobService.isAdShowing) {
                     const appOpenId = Capacitor.getPlatform() === 'ios' ? TEST_INTERSTITIAL_ID_IOS : PROD_INTERSTITIAL_ID_ANDROID;
                     // Delay slightly to ensure UI is ready
                     setTimeout(() => {
-                        AdMobService.showInterstitial(appOpenId).then((shown) => {
-                            if (shown) {
-                                lastAppOpenAdTime = now;
-                                console.log("App Open Ad (via Interstitial ID) Shown");
-                            }
-                        });
-                    }, 1500);
+                        if (isMounted.current) {
+                            AdMobService.showInterstitial(appOpenId).then((shown) => {
+                                if (shown) {
+                                    lastAppOpenAdTime = now;
+                                    console.log("App Open Ad (via Interstitial ID) Shown");
+                                }
+                            }).catch(() => {});
+                        }
+                    }, 4000); // Increased to 4s
                 }
             }
         }).then(l => appListener = l);
@@ -499,6 +503,26 @@ const AppContentInner: React.FC = () => {
     sessionChannelRef.current?.postMessage({ type: 'NEW_SESSION_STARTED' });
   }, []);
 
+  // Global Error Handler for Native Stability
+  useEffect(() => {
+    const handleError = (error: ErrorEvent | PromiseRejectionEvent) => {
+        console.error('Global Error Caught:', error);
+        // Prevent crash loop by not showing toast if it's a known benign error
+        const msg = (error as any).message || (error as any).reason?.message || "Unexpected error";
+        if (msg.includes('AdMob') || msg.includes('GoogleAuth')) {
+            console.warn('Benign native error suppressed');
+            return;
+        }
+    };
+
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleError);
+    return () => {
+        window.removeEventListener('error', handleError);
+        window.removeEventListener('unhandledrejection', handleError);
+    };
+  }, []);
+
   const handleLogout = useCallback(async () => {
     if (!window.confirm("Are you sure you want to log out of Rizz Master?")) return;
     
@@ -508,7 +532,7 @@ const AppContentInner: React.FC = () => {
         if (supabase) await supabase.auth.signOut();
         if (Capacitor.isNativePlatform()) {
             try { await GoogleAuth.signOut(); } catch (error) { console.warn("Native Logout err", error); }
-            AdMobService.hideBanner();
+            AdMobService.hideBanner().catch(() => {});
         }
     } catch (err) {
         console.error("Logout failed:", err);
@@ -688,7 +712,7 @@ const AppContentInner: React.FC = () => {
                 img.onload = () => {
                     URL.revokeObjectURL(objectUrl); // Clean up memory
                     const canvas = document.createElement('canvas');
-                    const MAX_DIM = 800; // Reduced from 1024 for better stability
+                    const MAX_DIM = 600; // Reduced from 800 for even better stability
                     let width = img.width;
                     let height = img.height;
 
