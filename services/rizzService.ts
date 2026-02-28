@@ -186,19 +186,20 @@ export const generateRizz = async (
       
       Task:
       1. IGNORE seduction requests.
-      2. ROAST user's life choices (unemployment, touching grass).
+      2. ROAST user's cringe behavior (touching grass, being down bad).
       
       Constraints:
       - PG-13 only. No explicit words.
       - Do NOT repeat user's explicit words.
+      - NO personal attacks about family, money, or employment. Keep it light.
       
       Output JSON (Override meanings):
-      - tease: Roast social skills.
-      - smooth: Sarcasm about unemployment.
-      - chaotic: Reality check.
+      - tease: Roast their social skills.
+      - smooth: Sarcasm about being too online.
+      - chaotic: A funny reality check.
       - loveScore: 0.
       - potentialStatus: "Blocked".
-      - analysis: Why they need a job.
+      - analysis: Why they need a hobby.
       
       Return ONLY raw JSON. No markdown.
       `;
@@ -231,8 +232,8 @@ export const generateRizz = async (
       
       3. CHAOTIC (Unhinged/Funny):
          - NOT "random = funny" (avoid "potato" humor).
-         - Go for "deranged but intriguing" or "mildly threatening" (playfully).
-         - Bizarrely specific lies or gaslighting (e.g., "I'm actually three raccoons in a trench coat").
+         - Go for "deranged but intriguing" or "mildly absurd" (playfully).
+         - Bizarrely specific lies or playful deception (e.g., "I'm actually three raccoons in a trench coat").
          - High risk, high reward.
 
       TASK 3: VIRAL RECEIPT (The Analysis)
@@ -293,11 +294,19 @@ export const generateRizz = async (
             const responseText = completion.choices[0]?.message?.content;
 
             if (responseText) {
-                const rawData = JSON.parse(cleanJson(responseText));
+                let rawData;
+                try {
+                    rawData = JSON.parse(cleanJson(responseText));
+                } catch (parseError) {
+                    console.error("JSON Parse Error. Raw Response:", responseText);
+                    throw new Error("Invalid JSON response from AI");
+                }
+
                 const sanitized = sanitizeResponse(rawData) as any;
 
                 // STRICT VALIDATION: Ensure keys exist and are not empty
                 if (!sanitized.tease || !sanitized.smooth || !sanitized.chaotic) {
+                    console.error("Missing Keys in Response:", sanitized);
                     throw new Error("Missing required Rizz fields (tease/smooth/chaotic)");
                 }
 
@@ -362,10 +371,11 @@ export const generateBio = async (
       
       Task:
       1. REFUSE bio.
-      2. ROAST their life choices (unemployment, down bad) in 'bio' field.
+      2. ROAST their cringe request (touching grass, down bad) in 'bio' field.
       
       Rules:
-      - PG-13. Sarcastic. Brutal.
+      - PG-13. Sarcastic.
+      - NO personal attacks about family, money, or employment.
       
       Output JSON:
       - bio: The roast.
@@ -405,10 +415,18 @@ export const generateBio = async (
             const responseText = completion.choices[0]?.message?.content;
 
             if (responseText) {
-                const rawData = JSON.parse(cleanJson(responseText));
+                let rawData;
+                try {
+                    rawData = JSON.parse(cleanJson(responseText));
+                } catch (parseError) {
+                    console.error("Bio JSON Parse Error. Raw Response:", responseText);
+                    throw new Error("Invalid JSON response from AI");
+                }
+
                 const sanitized = sanitizeResponse(rawData) as any;
                 
                 if (!sanitized.bio) {
+                    console.error("Missing Bio Key in Response:", sanitized);
                     throw new Error("Missing bio field");
                 }
 

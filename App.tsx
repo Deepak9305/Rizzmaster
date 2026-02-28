@@ -19,6 +19,8 @@ import IAPService from './services/iapService';
 import AdSenseBanner from './components/AdSenseBanner';
 import OnboardingFlow from './components/OnboardingFlow';
 
+import OfflineIndicator from './components/OfflineIndicator';
+
 // Lazy Load Heavy Components / Modals
 const PremiumModal = lazy(() => import('./components/PremiumModal'));
 const SavedModal = lazy(() => import('./components/SavedModal'));
@@ -148,6 +150,10 @@ const AppContent: React.FC = React.memo(() => {
 const AppContentInner: React.FC = () => {
   const { showToast } = useToast();
   
+  // Network State
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  
   // Auth State
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -198,6 +204,19 @@ const AppContentInner: React.FC = () => {
   useEffect(() => {
       stateRef.current = { currentView, showPremiumModal, showSavedModal };
   }, [currentView, showPremiumModal, showSavedModal]);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Handle Status Bar Visibility on Scroll
   useEffect(() => {
