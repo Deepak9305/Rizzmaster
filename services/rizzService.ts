@@ -103,6 +103,19 @@ const cleanJson = (text: string): string => {
   return cleaned;
 };
 
+// Helper to ensure a value is a string (prevents React object rendering crashes)
+const ensureString = (val: any): string => {
+    if (val === null || val === undefined) return "";
+    if (typeof val === 'string') return val;
+    if (typeof val === 'number') return String(val);
+    if (Array.isArray(val)) return val.map(ensureString).join(" ");
+    if (typeof val === 'object') {
+        // Try to extract text from common nested structures
+        return val.text || val.content || val.message || val.response || JSON.stringify(val);
+    }
+    return String(val);
+};
+
 // Helper to sanitize output text (Post-Processing)
 const sanitizeText = (text: string): string => {
   if (!text) return text;
@@ -137,6 +150,13 @@ const sanitizeResponse = <T>(data: T): T => {
   }
   return data;
 };
+
+// --- CONSTANTS ---
+export const FALLBACK_TEASE = "I couldn't cook up a tease. Give me more context!";
+export const FALLBACK_SMOOTH = "I'm speechless. Try adding more details.";
+export const FALLBACK_CHAOTIC = "System overload. The Rizz is too powerful.";
+export const FALLBACK_ANALYSIS = "No analysis available.";
+export const FALLBACK_ERROR_ANALYSIS = "The Rizz God is sleeping (API Error). Try again later.";
 
 // --- EXPORTED FUNCTIONS ---
 
@@ -180,7 +200,7 @@ export const generateRizz = async (
       - potentialStatus: "Blocked".
       - analysis: Why they need a job.
       
-      Return ONLY raw JSON.
+      Return ONLY raw JSON. No markdown.
       `;
   } else {
       // --- RIZZ MASTER PERSONA (Normal Operation) ---
@@ -222,15 +242,15 @@ export const generateRizz = async (
 
       Output JSON:
       {
-        "tease": "...",
-        "smooth": "...",
-        "chaotic": "...",
-        "loveScore": 0,
-        "potentialStatus": "...",
-        "analysis": "..."
+        "tease": "string",
+        "smooth": "string",
+        "chaotic": "string",
+        "loveScore": number,
+        "potentialStatus": "string",
+        "analysis": "string"
       }
       
-      Return ONLY raw JSON.
+      Return ONLY raw JSON. No markdown.
       `;
   }
 
@@ -260,7 +280,7 @@ export const generateRizz = async (
 
     // Retry logic for robustness
     let attempts = 0;
-    while (attempts < 2) {
+    while (attempts < 3) { // Increased retries to 3
         try {
             const completion = await llamaClient.chat.completions.create({
                 model: model,
@@ -276,15 +296,20 @@ export const generateRizz = async (
                 const rawData = JSON.parse(cleanJson(responseText));
                 const sanitized = sanitizeResponse(rawData) as any;
 
+                // STRICT VALIDATION: Ensure keys exist and are not empty
+                if (!sanitized.tease || !sanitized.smooth || !sanitized.chaotic) {
+                    throw new Error("Missing required Rizz fields (tease/smooth/chaotic)");
+                }
+
                 // Validate structure and provide defaults if keys are missing
                 // This prevents "blank screen" issues if the model hallucinates the schema
                 const finalResponse: RizzResponse = {
-                    tease: sanitized.tease || "The AI is speechless (try again).",
-                    smooth: sanitized.smooth || "Too smooth for words (try again).",
-                    chaotic: sanitized.chaotic || "System overload (try again).",
-                    loveScore: typeof sanitized.loveScore === 'number' ? sanitized.loveScore : 50,
-                    potentialStatus: sanitized.potentialStatus || "Unknown",
-                    analysis: sanitized.analysis || "No analysis available."
+                    tease: ensureString(sanitized.tease) || FALLBACK_TEASE,
+                    smooth: ensureString(sanitized.smooth) || FALLBACK_SMOOTH,
+                    chaotic: ensureString(sanitized.chaotic) || FALLBACK_CHAOTIC,
+                    loveScore: Number(sanitized.loveScore) || 50,
+                    potentialStatus: ensureString(sanitized.potentialStatus) || "Unknown",
+                    analysis: ensureString(sanitized.analysis) || FALLBACK_ANALYSIS
                 };
 
                 return finalResponse;
@@ -292,6 +317,8 @@ export const generateRizz = async (
         } catch (e) {
             console.warn(`Attempt ${attempts + 1} failed:`, e);
             attempts++;
+            // Add a small delay before retry
+            await new Promise(resolve => setTimeout(resolve, 1000));
         }
     }
     
@@ -306,7 +333,7 @@ export const generateRizz = async (
       chaotic: "The AI is taking a nap.",
       loveScore: 0,
       potentialStatus: "Error",
-      analysis: "The Rizz God is sleeping (API Error). Try again later."
+      analysis: FALLBACK_ERROR_ANALYSIS
     };
   }
 };
@@ -344,7 +371,7 @@ export const generateBio = async (
       - bio: The roast.
       - analysis: "Rejected."
       
-      Return ONLY raw JSON.
+      Return ONLY raw JSON. No markdown.
       `;
   } else {
       // --- NORMAL BIO GENERATION ---
@@ -357,37 +384,51 @@ export const generateBio = async (
       - bio: Optimized bio string (with emojis).
       - analysis: Why it works.
   
-      Return ONLY raw JSON.
+      Return ONLY raw JSON. No markdown.
       `;
   }
 
   try {
-    const completion = await llamaClient.chat.completions.create({
-        model: TEXT_MODEL,
-        messages: [
-            { role: "system", content: systemInstruction },
-            { role: "user", content: "Generate a bio." }
-        ],
-        temperature: 0.85,
-        response_format: { type: "json_object" }
-    });
+    let attempts = 0;
+    while (attempts < 3) {
+        try {
+            const completion = await llamaClient.chat.completions.create({
+                model: TEXT_MODEL,
+                messages: [
+                    { role: "system", content: systemInstruction },
+                    { role: "user", content: "Generate a bio." }
+                ],
+                temperature: 0.85,
+                response_format: { type: "json_object" }
+            });
 
-    const responseText = completion.choices[0]?.message?.content;
+            const responseText = completion.choices[0]?.message?.content;
 
-    if (responseText) {
-      try {
-        const rawData = JSON.parse(cleanJson(responseText));
-        return sanitizeResponse(rawData) as BioResponse;
-      } catch (e) {
-        console.error("JSON Parse Error:", e);
-        throw new Error("Failed to parse AI response.");
-      }
+            if (responseText) {
+                const rawData = JSON.parse(cleanJson(responseText));
+                const sanitized = sanitizeResponse(rawData) as any;
+                
+                if (!sanitized.bio) {
+                    throw new Error("Missing bio field");
+                }
+
+                return {
+                    bio: ensureString(sanitized.bio),
+                    analysis: ensureString(sanitized.analysis || "Bio generated!")
+                };
+            }
+        } catch (e) {
+            console.warn(`Bio Attempt ${attempts + 1} failed:`, e);
+            attempts++;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
     }
 
     throw new Error("No response generated.");
 
   } catch (error: any) {
     console.error("Bio Service Error:", error);
-    return { analysis: "Failed to generate bio." };
+    // Return "System Error" to trigger the error handling in App.tsx (refund credits + show toast)
+    return { analysis: "System Error" };
   }
 };

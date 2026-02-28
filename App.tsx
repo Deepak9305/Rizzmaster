@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect, lazy, Suspense, useCallback } from 'react';
-import { generateRizz, generateBio } from './services/rizzService';
+import { generateRizz, generateBio, FALLBACK_TEASE, FALLBACK_SMOOTH, FALLBACK_CHAOTIC, FALLBACK_ERROR_ANALYSIS } from './services/rizzService';
 import { NativeBridge } from './services/nativeBridge';
 import { ToastProvider, useToast } from './context/ToastContext';
 import { InputMode, RizzResponse, BioResponse, SavedItem, UserProfile, RizzOrBioResponse } from './types';
@@ -583,10 +583,19 @@ const AppContentInner: React.FC = () => {
     const updatedProfile = { ...currentProfile, credits: newAmount };
     setProfile(updatedProfile); 
     
-    if (supabase && currentProfile.id !== 'guest') {
-        await supabase.from('profiles').update({ credits: newAmount }).eq('id', currentProfile.id);
-    } else {
-        localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
+    try {
+        if (supabase && currentProfile.id !== 'guest') {
+            const { error } = await supabase.from('profiles').update({ credits: newAmount }).eq('id', currentProfile.id);
+            if (error) {
+                console.error("Failed to sync credits to Supabase:", error);
+                // Optional: Revert local state if strict consistency is needed
+                // But for UX, we often keep optimistic state unless it's critical
+            }
+        } else {
+            localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
+        }
+    } catch (err) {
+        console.error("Critical error updating credits:", err);
     }
   }, []);
 
@@ -851,16 +860,28 @@ const AppContentInner: React.FC = () => {
             showToast('Service unavailable. Credits refunded.', 'error');
          }
          setResult(res);
-      } else if ('analysis' in res && (res.analysis === 'System Error' || res.analysis === 'Safety Policy Violation')) {
+      } else if ('analysis' in res && (res.analysis === 'System Error' || res.analysis === 'Safety Policy Violation' || res.analysis === FALLBACK_ERROR_ANALYSIS)) {
          if (!currentProfile.is_premium) updateCredits(creditsBefore);
          showToast(res.analysis, 'error');
          setResult(res);
       } else {
-         setResult(res);
-         NativeBridge.haptic('success');
-         // Show Ad AFTER result is ready and displayed
-         // Increased delay to 3 seconds to allow user to see the result first
-         setTimeout(() => showInterstitialIfReady(), 3000);
+         // Check for "Speechless" Fallbacks (Soft Error)
+         const rizzRes = res as RizzResponse;
+         if ('tease' in rizzRes && (
+             rizzRes.tease === FALLBACK_TEASE || 
+             rizzRes.smooth === FALLBACK_SMOOTH || 
+             rizzRes.chaotic === FALLBACK_CHAOTIC
+         )) {
+             if (!currentProfile.is_premium) updateCredits(creditsBefore);
+             showToast('AI was speechless. Credits refunded.', 'error');
+             setResult(res);
+         } else {
+             setResult(res);
+             NativeBridge.haptic('success');
+             // Show Ad AFTER result is ready and displayed
+             // Increased delay to 3 seconds to allow user to see the result first
+             setTimeout(() => showInterstitialIfReady(), 3000);
+         }
       }
 
     } catch (error) {
