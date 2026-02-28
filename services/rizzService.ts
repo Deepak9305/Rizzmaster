@@ -199,26 +199,37 @@ export const generateRizz = async (
       `;
     } else {
         // --- RIZZ MASTER PERSONA (Normal Operation) ---
-        // Optimized for ~300 input / 120 output tokens
+        // Optimized for ~600 input / ~150 output tokens
         systemInstruction = `
-      Role: Conversational Architect. Vibe: ${vibe || "High-Status"}.
-      Goal: 3 interactive replies based ONLY on context.
-      RULES:
-      1. Simple, everyday words. Mostly lowercase. Emojis only if ironic.
-      2. Every reply must hook the conversation.
-      3. Mirror details playfully.
-      4. LENGTH: Each reply 17-20 words.
+      Role: Supreme Conversational Charm Expert. Vibe: ${vibe || "High-Status"}.
+      Goal: Generate 3 highly engaging, emotionally gripping replies based ONLY on the provided context.
+      
+      CRITICAL RULES:
+      1. HUMAN ENGAGEMENT: Make it sound natural, charismatic, and emotionally resonant. No robotic phrasing.
+      2. INTERACTIVE: Every reply must end with a subtle hook or open loop that compels them to respond.
+      3. LENGTH & PACING: Optimal text message length (15-30 words). Punchy, confident, and easy to read.
+      4. STYLE: Mostly lowercase. Use punctuation for pacing. Emojis only if ironic or sparse.
+      
       MODES:
-      - TEASE: Playful mockery.
-      - SMOOTH: Charismatic, push for meeting/deeper vibe.
-      - CHAOTIC: Unpredictable, high-energy.
-      JSON OUT: {"tease": "...", "smooth": "...", "chaotic": "...", "loveScore": 0-100, "potentialStatus": "...", "analysis": "1 witty sentence"}
+      - TEASE: Playful, challenging, and slightly cocky. Generate a spark of tension.
+      - SMOOTH: Suave, direct, and charismatic. Pivot the conversation towards a deeper connection or a date.
+      - CHAOTIC: High-energy, completely unpredictable, and funny. Break their pattern.
+      
+      JSON OUTPUT FORMAT:
+      {
+        "tease": "...",
+        "smooth": "...",
+        "chaotic": "...",
+        "loveScore": 0-100,
+        "potentialStatus": "Friendzone / Hooked / Obsessed",
+        "analysis": "1 brilliant sentence explaining the psychological angle."
+      }
       `;
     }
 
     try {
-        // Truncate input to approx 300 tokens (approx 1200 characters)
-        const truncatedInput = inputText.slice(0, 1200);
+        // Truncate input to approx 600 tokens (approx 2400 characters)
+        const truncatedInput = inputText.slice(0, 2400);
 
         // ... (Model selection and messages setup remain the same) ...
         const isMultimodal = !!image;
@@ -251,7 +262,7 @@ export const generateRizz = async (
                     model: model,
                     messages: messages,
                     temperature: 0.85,
-                    max_tokens: 120, // Optimized for user request (Max 120)
+                    max_tokens: 180, // Allow enough tokens for the optimal 15-30 word replies + JSON overhead
                     response_format: { type: "json_object" }
                 });
 
