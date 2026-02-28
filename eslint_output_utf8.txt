@@ -1,0 +1,20 @@
+﻿
+C:\Users\rv941\.gemini\antigravity\scratch\Rizzmaster\App.tsx
+  204:6  warning  React Hook useEffect has a missing dependency: 'profileRef'. Either include it or remove the dependency array                                                                         react-hooks/exhaustive-deps
+  298:6  warning  React Hook useEffect has a missing dependency: 'profile'. Either include it or remove the dependency array                                                                            react-hooks/exhaustive-deps
+  327:6  warning  React Hook useCallback has missing dependencies: 'profileRef' and 'setProfile'. Either include them or remove the dependency array                                                    react-hooks/exhaustive-deps
+  372:6  warning  React Hook useEffect has missing dependencies: 'handleUpgrade' and 'showToast'. Either include them or remove the dependency array                                                    react-hooks/exhaustive-deps
+  470:6  warning  React Hook useEffect has missing dependencies: 'loadUserData', 'setIsAuthReady', 'setProfile', 'setSavedItems', and 'setSession'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  533:6  warning  React Hook useCallback has missing dependencies: 'setProfile', 'setSavedItems', and 'setSession'. Either include them or remove the dependency array                                  react-hooks/exhaustive-deps
+  551:6  warning  React Hook useCallback has a missing dependency: 'profileRef'. Either include it or remove the dependency array                                                                       react-hooks/exhaustive-deps
+  593:6  warning  React Hook useCallback has missing dependencies: 'profileRef' and 'setSavedItems'. Either include them or remove the dependency array                                                 react-hooks/exhaustive-deps
+  606:6  warning  React Hook useCallback has missing dependencies: 'profileRef' and 'setSavedItems'. Either include them or remove the dependency array                                                 react-hooks/exhaustive-deps
+  666:6  warning  React Hook useCallback has missing dependencies: 'profileRef', 'setProfile', 'setSavedItems', and 'setSession'. Either include them or remove the dependency array                    react-hooks/exhaustive-deps
+  749:6  warning  React Hook useCallback has a missing dependency: 'profileRef'. Either include it or remove the dependency array                                                                       react-hooks/exhaustive-deps
+  801:6  warning  React Hook useCallback has a missing dependency: 'profileRef'. Either include it or remove the dependency array                                                                       react-hooks/exhaustive-deps
+
+C:\Users\rv941\.gemini\antigravity\scratch\Rizzmaster\components\SavedModal.tsx
+  19:24  error  React Hook "React.useMemo" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+
+Γ£û 13 problems (1 error, 12 warnings)
+
