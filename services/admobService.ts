@@ -18,7 +18,7 @@ export const AdMobService = {
             }
 
             await AdMob.initialize({
-                initializeForTesting: true, // Forces test mode
+                initializeForTesting: false, // Disables test mode for production
             });
             this.initialized = true;
             console.log('AdMob Initialized');
@@ -29,7 +29,7 @@ export const AdMobService = {
 
     async showBanner(adId: string) {
         if (!Capacitor.isNativePlatform()) return;
-        
+
         try {
             await this.initialize();
 
@@ -46,8 +46,8 @@ export const AdMobService = {
                 adSize: BannerAdSize.ADAPTIVE_BANNER,
                 position: BannerAdPosition.BOTTOM_CENTER,
                 margin: 0,
-                isTesting: true,
-                npa: true // Request non-personalized ads for reliability in testing
+                isTesting: false,
+                npa: false // Enable personalized ads for better production fill rate
             };
 
             await AdMob.showBanner(options);
@@ -59,10 +59,10 @@ export const AdMobService = {
 
     async hideBanner() {
         if (!Capacitor.isNativePlatform()) return;
-        
+
         try {
             await AdMob.hideBanner();
-            await AdMob.removeBanner(); 
+            await AdMob.removeBanner();
         } catch (e) {
             console.error('AdMob Hide Banner Error:', e);
         }
@@ -70,7 +70,7 @@ export const AdMobService = {
 
     async showInterstitial(adId: string): Promise<boolean> {
         if (!Capacitor.isNativePlatform()) return false;
-        
+
         await this.initialize();
 
         return new Promise(async (resolve) => {
@@ -92,7 +92,7 @@ export const AdMobService = {
                     resolve(true);
                 });
                 listeners.push(onDismiss);
-                
+
                 const onFailed = await AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, (err) => {
                     console.error('AdMob Interstitial Failed to load', err);
                     cleanup();
@@ -109,12 +109,12 @@ export const AdMobService = {
 
                 const options: any = {
                     adId: adId,
-                    isTesting: true
+                    isTesting: false
                 };
 
                 await AdMob.prepareInterstitial(options);
                 await AdMob.showInterstitial();
-                
+
             } catch (error) {
                 console.error('AdMob Interstitial Execution Error', error);
                 await cleanup();
@@ -125,7 +125,7 @@ export const AdMobService = {
 
     async showRewardVideo(adId: string): Promise<boolean> {
         if (!Capacitor.isNativePlatform()) return false;
-        
+
         // Ensure initialized
         await this.initialize();
 
@@ -157,7 +157,7 @@ export const AdMobService = {
                     resolve(earnedReward);
                 });
                 listeners.push(onDismiss);
-                
+
                 const onFailed = await AdMob.addListener(RewardAdPluginEvents.FailedToLoad, (err) => {
                     console.error('AdMob Failed to load', err);
                     cleanup();
@@ -175,12 +175,12 @@ export const AdMobService = {
                 // Prepare and Show
                 const options: RewardAdOptions = {
                     adId: adId,
-                    isTesting: true
+                    isTesting: false
                 };
 
                 await AdMob.prepareRewardVideoAd(options);
                 await AdMob.showRewardVideoAd();
-                
+
             } catch (error) {
                 console.error('AdMob Execution Error', error);
                 await cleanup();
