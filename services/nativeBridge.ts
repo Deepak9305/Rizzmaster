@@ -1,5 +1,4 @@
 
-import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 
 /**
@@ -36,36 +35,13 @@ export const NativeBridge = {
   share: async (title: string, text: string, url?: string): Promise<'SHARED' | 'COPIED' | 'DISMISSED' | 'FAILED'> => {
     // Ensure we have at least some content to share
     if (!text && !url) {
-        console.warn('Share called with empty text and url');
-        return 'FAILED';
+      console.warn('Share called with empty text and url');
+      return 'FAILED';
     }
 
     const contentToCopy = url ? `${text}\n${url}` : text;
 
-    // 1. Try Capacitor Native Share (Plugin)
-    if (Capacitor.isNativePlatform()) {
-        try {
-            await Share.share({
-                title: title || 'Check this out!',
-                text: text || '',
-                url: url || '',
-                dialogTitle: 'Share' // Android only
-            });
-            return 'SHARED';
-        } catch (err: any) {
-            console.warn('Native share dismissed/failed', err);
-            // If the user dismissed the sheet, we stop here.
-            // If it failed for another reason, we might want to fallback, but usually native share is reliable.
-            if (err.message !== 'Share canceled') {
-                 // Fallback to clipboard only on actual errors, not user cancellation
-                 const copied = await NativeBridge.copyToClipboard(contentToCopy);
-                 return copied ? 'COPIED' : 'FAILED';
-            }
-            return 'DISMISSED';
-        }
-    }
-
-    // 2. Try Web Share API (Desktop/Mobile Web)
+    // Try Web Share API (Desktop/Mobile Web)
     // Validate share data for Web Share API
     const shareData: any = { title: title || 'Share' };
     if (text) shareData.text = text;
@@ -77,13 +53,13 @@ export const NativeBridge = {
         return 'SHARED';
       } catch (err: any) {
         if (err.name === 'AbortError') {
-           console.log('User cancelled share');
-           return 'DISMISSED';
+          console.log('User cancelled share');
+          return 'DISMISSED';
         }
         console.warn('Web Share failed, attempting fallback:', err);
       }
     }
-    
+
     // 3. Fallback: Copy to Clipboard (Always try this if others fail/dismiss)
     const copied = await NativeBridge.copyToClipboard(contentToCopy);
     return copied ? 'COPIED' : 'FAILED';
@@ -97,37 +73,37 @@ export const NativeBridge = {
       // 1. Try modern clipboard API
       if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
         try {
-            await navigator.clipboard.writeText(text);
-            return true;
+          await navigator.clipboard.writeText(text);
+          return true;
         } catch (e) {
-            console.warn("navigator.clipboard.writeText failed, falling back", e);
+          console.warn("navigator.clipboard.writeText failed, falling back", e);
         }
       }
-      
+
       // 2. Legacy fallback (execCommand)
       if (typeof document !== 'undefined') {
-          const textArea = document.createElement("textarea");
-          textArea.value = text;
-          
-          // Avoid scrolling to bottom
-          textArea.style.top = "0";
-          textArea.style.left = "0";
-          textArea.style.position = "fixed";
-          textArea.style.opacity = "0";
-          
-          document.body.appendChild(textArea);
-          textArea.focus();
-          textArea.select();
-          
-          try {
-              const successful = document.execCommand('copy');
-              document.body.removeChild(textArea);
-              return successful;
-          } catch (err) {
-              document.body.removeChild(textArea);
-              console.error('Fallback: Oops, unable to copy', err);
-              return false;
-          }
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+
+        // Avoid scrolling to bottom
+        textArea.style.top = "0";
+        textArea.style.left = "0";
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+          const successful = document.execCommand('copy');
+          document.body.removeChild(textArea);
+          return successful;
+        } catch (err) {
+          document.body.removeChild(textArea);
+          console.error('Fallback: Oops, unable to copy', err);
+          return false;
+        }
       }
       return false;
     } catch (err) {

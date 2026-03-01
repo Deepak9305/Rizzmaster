@@ -1,0 +1,209 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Updated viewport for Native Mobile: prevent zoom, handle notches (viewport-fit=cover) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <!-- Native Status Bar Colors -->
+    <meta name="theme-color" content="#050505" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Rizz Master AI</title>
+    <!-- Keeping Tailwind CDN for simplicity as requested, though installing it via package.json is also an option with Vite -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+      
+      body {
+        font-family: 'Space Grotesk', sans-serif;
+        background-color: #050505;
+        color: #ffffff;
+        /* Mobile: Prevent rubber-banding on scroll in some webviews */
+        overscroll-behavior-y: none;
+        /* Mobile: Optimize tap highlight */
+        -webkit-tap-highlight-color: transparent;
+      }
+      
+      /* Safe Area Utilities */
+      
+      .safe-top {
+        padding-top: calc(env(safe-area-inset-top) + 1.5rem);
+      }
+      
+      .safe-bottom {
+        padding-bottom: calc(env(safe-area-inset-bottom) + 1.5rem);
+      }
+      
+      .glass {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+      }
+      
+      .rizz-gradient {
+        background: linear-gradient(135deg, #FF0080 0%, #7928CA 50%, #FF0080 100%);
+        background-size: 200% 200%;
+        animation: gradient 5s ease infinite;
+      }
+      
+      @keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+      
+      /* --- NEW PREMIUM ANIMATIONS --- */
+      
+      /* Text Shimmer Effect */
+      
+      @keyframes shimmer {
+        0% { background-position: -200% center; }
+        100% { background-position: 200% center; }
+      }
+      
+      .animate-text-shimmer {
+        background-size: 200% auto;
+        animation: shimmer 3s linear infinite;
+      }
+      
+      /* Generic Shimmer for Backgrounds/Borders */
+      
+      .animate-shimmer {
+        background-size: 200% 100%;
+        animation: shimmer 2s linear infinite;
+      }
+      
+      /* Letter Blur Reveal */
+      
+      @keyframes blurIn {
+        0% { opacity: 0; filter: blur(20px); transform: translateY(10px) scale(0.9); }
+        100% { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
+      }
+      
+      .animate-blur-in {
+        animation: blurIn 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      }
+      
+      /* Slow Float */
+      
+      @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+      }
+      
+      .animate-float {
+        animation: float 6s ease-in-out infinite;
+      }
+      
+      /* Curtain Reveal (Exit Splash) */
+      
+      @keyframes curtainUp {
+        0% { transform: translateY(0); }
+        100% { transform: translateY(-100%); }
+      }
+      
+      .animate-curtain-up {
+        animation: curtainUp 0.8s cubic-bezier(0.7, 0, 0.3, 1) forwards;
+      }
+      
+      /* Utility Animations */
+      
+      .animate-fade-in {
+        animation: fadeIn 0.8s ease-out forwards;
+      }
+      
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      
+      .animate-fade-in-up {
+        animation: fadeInUp 0.8s ease-out forwards;
+      }
+      
+      @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+      
+      .animate-scale-in {
+        animation: scaleIn 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      }
+      
+      @keyframes scaleIn {
+        0% { transform: scale(0.95); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      
+      .animate-pulse-glow {
+        animation: pulse-glow 4s ease-in-out infinite;
+      }
+      
+      @keyframes pulse-glow {
+        0%, 100% { opacity: 0.3; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(1.05); }
+      }
+      
+      /* Toast Animation */
+      
+      .animate-slide-up-fade {
+        animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+      
+      @keyframes slideUpFade {
+        from { opacity: 0; transform: translateY(10px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      
+      /* Slide In Right (for Saved Modal) */
+      
+      @keyframes slideInRight {
+        from { opacity: 0; transform: translateX(100%); }
+        to { opacity: 1; transform: translateX(0); }
+      }
+      
+      .animate-slide-in-right {
+        animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+      
+      /* Custom Scrollbar for Sticky Containers */
+      
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+      }
+      
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+      }
+      
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+      }
+      
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+    </style>
+
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.94.0",
+    "@google/genai": "https://esm.sh/@google/genai@^1.39.0",
+    "@capacitor/core": "https://esm.sh/@capacitor/core@^8.0.2",
+    "vite": "https://esm.sh/vite@^7.3.1",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.3",
+    "@codetrix-studio/capacitor-google-auth": "https://esm.sh/@codetrix-studio/capacitor-google-auth@^3.4.0-rc.4",
+    "@capacitor-community/admob": "https://esm.sh/@capacitor-community/admob@^8.0.0",
+    "@capacitor/app": "https://esm.sh/@capacitor/app@^8.0.0",
+    "@capacitor/share": "https://esm.sh/@capacitor/share@^6.0.0",
+    "cordova-plugin-purchase": "https://esm.sh/cordova-plugin-purchase@^13.13.0",
+    "openai": "https://esm.sh/openai@^6.22.0"
+  }
+}
+</script>
+  <script type="module" crossorigin src="./assets/index-BtK8Lv9L.js"></script>
+</head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
