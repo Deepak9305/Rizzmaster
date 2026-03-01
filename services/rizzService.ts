@@ -208,7 +208,7 @@ export const generateRizz = async (
          - Avoid generic lines like "Are you trouble?".
       
       2. SMOOTH (Charming/Confident):
-         - Direct and charismatic.
+         - Direct, confident, and charismatic.
          - Compliment their vibe/energy, not just looks.
          - Move the conversation forward (e.g., "So when are we getting tacos?").
          - Use lowercase for a "chill" aesthetic.
