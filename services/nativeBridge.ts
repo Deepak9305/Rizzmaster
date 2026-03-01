@@ -29,8 +29,8 @@ const getCapabilities = () => {
 
 // Helper to detect user cancellation errors
 const isCancelled = (err: any) => {
-    const msg = err?.message?.toLowerCase() || '';
-    return msg.includes('cancel') || msg.includes('dismiss') || err?.name === 'AbortError';
+  const msg = err?.message?.toLowerCase() || '';
+  return msg.includes('cancel') || msg.includes('dismiss') || err?.name === 'AbortError';
 };
 
 export const NativeBridge = {
@@ -74,16 +74,45 @@ export const NativeBridge = {
       el.value = text;
       // Use cssText for faster style application
       el.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0;';
-      
+
       document.body.appendChild(el);
       el.focus();
       el.select();
-      
+
       const successful = document.execCommand('copy');
       document.body.removeChild(el);
       return successful;
     } catch (err) {
       console.error('[NativeBridge] Clipboard fallback failed:', err);
+      return false;
+    }
+  },
+
+  /**
+   * Native/Web Sharing with cancellation handling.
+   */
+  shareText: async (title: string, text: string): Promise<boolean> => {
+    const { hasWebShare, isNative } = getCapabilities();
+
+    try {
+      if (isNative) {
+        await Share.share({
+          title,
+          text,
+          dialogTitle: title
+        });
+        return true;
+      } else if (hasWebShare) {
+        await navigator.share({
+          title,
+          text
+        });
+        return true;
+      }
+      return false;
+    } catch (err) {
+      if (isCancelled(err)) return true; // User cancel is not an "error"
+      console.error('[NativeBridge] Sharing failed:', err);
       return false;
     }
   }
