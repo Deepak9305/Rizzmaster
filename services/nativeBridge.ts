@@ -47,13 +47,14 @@ export const NativeBridge = {
     if (text) shareData.text = text;
     if (url) shareData.url = url;
 
-    if (typeof navigator !== 'undefined' && navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+    // Simplified check for better compatibility across mobile browsers
+    if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share(shareData);
         return 'SHARED';
       } catch (err: any) {
-        if (err.name === 'AbortError') {
-          console.log('User cancelled share');
+        if (err.name === 'AbortError' || err.name === 'NotAllowedError') {
+          console.log('User cancelled or blocked share');
           return 'DISMISSED';
         }
         console.warn('Web Share failed, attempting fallback:', err);
