@@ -7,7 +7,7 @@ import { NativeBridge } from '../services/nativeBridge';
 import { InputMode, RizzResponse, RizzOrBioResponse } from '../types';
 import { TEST_INTERSTITIAL_ID_IOS, PROD_INTERSTITIAL_ID_ANDROID, TEST_BANNER_ID_IOS, PROD_BANNER_ID_ANDROID } from '../constants/adIds';
 
-const APP_LAUNCH_GRACE_PERIOD = 2 * 60 * 1000; // 2 minutes grace period on launch
+const APP_LAUNCH_GRACE_PERIOD = 3 * 60 * 1000; // 3 minutes grace period on launch
 const INTERSTITIAL_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutes
 
 export const useRizzGeneration = (
