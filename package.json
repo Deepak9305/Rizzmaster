@@ -12,10 +12,16 @@
     "@capacitor-community/admob": "^8.0.0",
     "@capacitor/android": "^8.1.0",
     "@capacitor/app": "^8.0.0",
+    "@capacitor/camera": "^8.0.0",
     "@capacitor/core": "^8.1.0",
+    "@capacitor/dialog": "^8.0.0",
     "@capacitor/ios": "^8.1.0",
+    "@capacitor/keyboard": "^8.0.0",
+    "@capacitor/network": "^8.0.0",
     "@capacitor/preferences": "^8.0.0",
+    "@capacitor/screen-orientation": "^8.0.0",
     "@capacitor/share": "^8.0.1",
+    "@capacitor/splash-screen": "^8.0.0",
     "@capacitor/status-bar": "^8.0.0",
     "@capacitor/toast": "^8.0.0",
     "@codetrix-studio/capacitor-google-auth": "^3.4.0-rc.4",
@@ -38,6 +44,7 @@
     "tailwindcss": "^3.4.4",
     "typescript": "^5.5.3",
     "vite": "^5.3.1",
-    "vite-plugin-pwa": "^1.2.0"
+    "vite-plugin-pwa": "^1.2.0",
+    "@capacitor/cli": "^8.1.0"
   }
 }
