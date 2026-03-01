@@ -1,20 +1,39 @@
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { AdMobService } from '../services/admobService';
 import { generateRizz, generateBio, FALLBACK_TEASE, FALLBACK_SMOOTH, FALLBACK_CHAOTIC, FALLBACK_ERROR_ANALYSIS } from '../services/rizzService';
 import { NativeBridge } from '../services/nativeBridge';
-import { InputMode, RizzResponse, RizzOrBioResponse, UserProfile } from '../types';
+import { InputMode, RizzResponse, RizzOrBioResponse } from '../types';
 import { TEST_INTERSTITIAL_ID_IOS, PROD_INTERSTITIAL_ID_ANDROID, TEST_BANNER_ID_IOS, PROD_BANNER_ID_ANDROID } from '../constants/adIds';
 
 const APP_LAUNCH_GRACE_PERIOD = 2 * 60 * 1000; // 2 minutes grace period on launch
 const INTERSTITIAL_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutes
 
 export const useRizzGeneration = (
-  { mode, inputText, image, selectedVibe, profileRef, updateCredits, showToast, handleOpenPremium, setLoading, setResult, setInputError, isMounted }: any
+  { mode, inputText, image, selectedVibe, profileRef, updateCredits, showToast, handleOpenPremium, setLoading, setResult, setInputError, setImage, isMounted }: any
 ) => {
   const appLaunchTime = useRef<number>(Date.now());
   const lastInterstitialTime = useRef<number>(Date.now());
+  // Fix 3: Track all active timers so we can cancel them when a new generation starts
+  const activeTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  // Fix 3: Cancel all pending timers on unmount
+  useEffect(() => {
+    return () => {
+      activeTimers.current.forEach(clearTimeout);
+      activeTimers.current = [];
+    };
+  }, []);
+
+  const safeSetTimeout = (fn: () => void, ms: number) => {
+    const id = setTimeout(() => {
+      activeTimers.current = activeTimers.current.filter(t => t !== id);
+      fn();
+    }, ms);
+    activeTimers.current.push(id);
+    return id;
+  };
 
   const handleGenerate = useCallback(async () => {
     const currentProfile = profileRef.current;
@@ -33,6 +52,10 @@ export const useRizzGeneration = (
     setInputError(null);
     NativeBridge.haptic('medium');
 
+    // Fix 3: Cancel any pending ad/banner timers before starting a new generation
+    activeTimers.current.forEach(clearTimeout);
+    activeTimers.current = [];
+
     const cost = (mode === InputMode.CHAT && image) ? 2 : 1;
 
     if (!currentProfile.is_premium && (currentProfile.credits || 0) < cost) {
@@ -49,7 +72,7 @@ export const useRizzGeneration = (
     }
 
     const showInterstitialIfReady = async () => {
-      if (!isMounted.current) return; // Safety check
+      if (!isMounted.current) return;
 
       if (!currentProfile.is_premium && Capacitor.isNativePlatform()) {
         const now = Date.now();
@@ -66,7 +89,7 @@ export const useRizzGeneration = (
           try {
             await AdMobService.showInterstitial(adId);
             if (isMounted.current) {
-              lastInterstitialTime.current = Date.now(); // Reset cooldown
+              lastInterstitialTime.current = Date.now();
             }
           } catch (e) {
             console.warn("Interstitial failed to show:", e);
@@ -93,12 +116,19 @@ export const useRizzGeneration = (
 
       if (!isMounted.current) return;
 
+      // Fix 1: Release Base64 image from React state immediately after the API call completes.
+      // This allows GC to reclaim the memory BEFORE the interstitial ad loads 4s later,
+      // preventing the memory spike that causes OOM kills.
+      if (image && setImage) {
+        setImage(null);
+      }
+
       // Re-show banner after generation with a delay to ensure UI is settled
       if (Capacitor.isNativePlatform() && !currentProfile.is_premium) {
         const bannerId = Capacitor.getPlatform() === 'ios' ? TEST_BANNER_ID_IOS : PROD_BANNER_ID_ANDROID;
-        setTimeout(() => {
+        safeSetTimeout(() => {
           if (isMounted.current) AdMobService.showBanner(bannerId).catch(() => { });
-        }, 1500); // 1.5s delay
+        }, 1500);
       }
 
       if ('potentialStatus' in res && (res.potentialStatus === 'Error' || res.potentialStatus === 'Blocked')) {
@@ -129,13 +159,11 @@ export const useRizzGeneration = (
 
           if (isMounted.current) setLoading(false);
 
-          // CRITICAL FIX: Delay AdMob Interstitial significantly to ensure 
-          // React has finished rendering the (heavy) new result DOM and 
-          // memory from the Base64 image has been GC'd. This prevents OOM.
-          setTimeout(() => {
+          // Delay interstitial: let React render results + GC image memory first
+          safeSetTimeout(() => {
             if (isMounted.current) showInterstitialIfReady();
-          }, 4000); // Increased from 3s to 4s for complete stability
-          return; // Return early because we handled setLoading above
+          }, 4000);
+          return;
         }
       }
 
@@ -148,7 +176,7 @@ export const useRizzGeneration = (
     } finally {
       if (isMounted.current) setLoading(false);
     }
-  }, [mode, inputText, image, selectedVibe, updateCredits, showToast, handleOpenPremium, profileRef, setLoading, setResult, setInputError, isMounted]);
+  }, [mode, inputText, image, selectedVibe, updateCredits, showToast, handleOpenPremium, profileRef, setLoading, setResult, setInputError, setImage, isMounted]);
 
   return { handleGenerate };
 };

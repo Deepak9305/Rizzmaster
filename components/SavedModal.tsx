@@ -1,5 +1,7 @@
 import React from 'react';
 import { SavedItem } from '../types';
+import { NativeBridge } from '../services/nativeBridge';
+import { useToast } from '../context/ToastContext';
 
 interface SavedModalProps {
   isOpen: boolean;
@@ -14,6 +16,7 @@ const SavedModal: React.FC<SavedModalProps> = ({
   savedItems,
   onDelete,
 }) => {
+  const { showToast } = useToast();
   const displayItems = React.useMemo(() => savedItems.filter(item => item.type !== 'system'), [savedItems]);
 
   if (!isOpen) return null;
@@ -42,9 +45,9 @@ const SavedModal: React.FC<SavedModalProps> = ({
               <div key={item.id} className="p-4 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors group">
                 <div className="flex justify-between items-start mb-2">
                   <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${item.type === 'chaotic' ? 'bg-red-500/20 text-red-400' :
-                      item.type === 'smooth' ? 'bg-blue-500/20 text-blue-400' :
-                        item.type === 'bio' ? 'bg-emerald-500/20 text-emerald-400' :
-                          'bg-purple-500/20 text-purple-400'
+                    item.type === 'smooth' ? 'bg-blue-500/20 text-blue-400' :
+                      item.type === 'bio' ? 'bg-emerald-500/20 text-emerald-400' :
+                        'bg-purple-500/20 text-purple-400'
                     }`}>
                     {item.type}
                   </span>
@@ -53,10 +56,9 @@ const SavedModal: React.FC<SavedModalProps> = ({
                 <p className="text-white/90 text-sm leading-relaxed mb-3">{item.content}</p>
                 <div className="flex gap-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(item.content);
-                      // Optional: Show a small toast or feedback here if possible, 
-                      // but for now just the action is enough.
+                    onClick={async () => {
+                      const ok = await NativeBridge.copyToClipboard(item.content);
+                      if (ok) showToast('Copied!', 'success');
                     }}
                     className="p-1.5 text-white/40 hover:text-white hover:bg-white/10 rounded-lg"
                     title="Copy"

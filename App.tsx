@@ -177,12 +177,14 @@ const AppContentInner: React.FC = () => {
     }, [currentView]);
 
     const { handleGenerate } = useRizzGeneration({
-        mode, inputText, image, selectedVibe, profileRef, updateCredits, showToast, handleOpenPremium, setLoading, setResult, setInputError, isMounted
+        mode, inputText, image, selectedVibe, profileRef, updateCredits, showToast, handleOpenPremium, setLoading, setResult, setInputError, setImage, isMounted
     });
 
     // Refs
     const fileInputRef = useRef<HTMLInputElement>(null);
     const appListenerRef = useRef<any>(null);
+    // Fix 5: Store back-button listener handle so we only remove it, not all listeners
+    const backButtonListenerRef = useRef<any>(null);
 
     // Ref to track state for event listeners without re-binding
     const stateRef = useRef({
@@ -314,7 +316,9 @@ const AppContentInner: React.FC = () => {
                 appListenerRef.current = null;
             }
         };
-        // Optimized dependency array: only re-run if premium status changes, not on every credit update
+        // Intentionally narrow deps: only re-run when premium status or session changes.
+        // Re-running on every profile update (credits) would spam AdMob show/hide cycles.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [profile?.is_premium, session]);
 
     // Define handleUpgrade using REF to avoid stale closures
@@ -414,9 +418,14 @@ const AppContentInner: React.FC = () => {
         if (!Capacitor.isNativePlatform()) return;
 
         const setupBackListener = async () => {
-            await CapacitorApp.removeAllListeners();
+            // Fix 5: Remove only the previous back-button listener, not ALL app listeners.
+            // removeAllListeners() was silently killing the appStateChange listener too.
+            if (backButtonListenerRef.current) {
+                try { await backButtonListenerRef.current.remove(); } catch (_) { }
+                backButtonListenerRef.current = null;
+            }
 
-            CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+            const listener = await CapacitorApp.addListener('backButton', () => {
                 const { currentView, showPremiumModal, showSavedModal } = stateRef.current;
 
                 if (showPremiumModal || showSavedModal) {
@@ -430,8 +439,6 @@ const AppContentInner: React.FC = () => {
                 }
 
                 const now = Date.now();
-                // We use global window object here since we can't easily add a ref locally inside the useEffect without deps. 
-                // Or better yet, just use a simple variable on the window object for simplicity.
                 if (now - ((window as any)._lastRizzBackPress || 0) < 2000) {
                     CapacitorApp.exitApp();
                 } else {
@@ -441,10 +448,17 @@ const AppContentInner: React.FC = () => {
                     });
                 }
             });
+            backButtonListenerRef.current = listener;
         };
 
         setupBackListener();
-        return () => { CapacitorApp.removeAllListeners(); };
+        return () => {
+            // Fix 5: Only remove our specific listener on cleanup
+            if (backButtonListenerRef.current) {
+                backButtonListenerRef.current.remove().catch(() => { });
+                backButtonListenerRef.current = null;
+            }
+        };
     }, []);
 
     // Navigation Wrappers

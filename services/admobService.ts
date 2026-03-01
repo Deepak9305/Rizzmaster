@@ -50,7 +50,7 @@ export const AdMobService = {
     async showBanner(adId: string) {
         if (!Capacitor.isNativePlatform()) return;
         if (this.isBannerManipulating || this.isAdShowing) return;
-        
+
         this.isBannerManipulating = true;
         try {
             // We don't pass isPremium here because if they are premium, 
@@ -59,7 +59,7 @@ export const AdMobService = {
 
             // Only hide, avoid removeBanner as it can be unstable in some plugin versions
             try {
-                await AdMob.hideBanner().catch(() => {});
+                await AdMob.hideBanner().catch(() => { });
             } catch (e) {
                 // Ignore hide error
             }
@@ -70,7 +70,7 @@ export const AdMobService = {
                 position: BannerAdPosition.BOTTOM_CENTER,
                 margin: 0,
                 isTesting: true,
-                npa: true 
+                npa: true
             };
 
             await AdMob.showBanner(options);
@@ -93,7 +93,7 @@ export const AdMobService = {
         try {
             // Only hide if we are actually initialized
             if (this.initialized) {
-                await AdMob.hideBanner().catch(() => {});
+                await AdMob.hideBanner().catch(() => { });
             }
         } catch (e) {
             console.error('AdMob Hide Banner Error:', e);
@@ -110,11 +110,12 @@ export const AdMobService = {
             console.log("Ad operation in progress, skipping interstitial.");
             return false;
         }
-        
+
         this.isAdManipulating = true;
+        // Fix 2: isAdShowing is set INSIDE the Promise, after listeners are registered.
+        // This prevents it from getting stuck 'true' if setup fails before safeResolve runs.
         try {
             await this.initialize();
-            this.isAdShowing = true;
 
             return await new Promise<boolean>(async (resolve) => {
                 let listeners: any[] = [];
@@ -123,17 +124,18 @@ export const AdMobService = {
                 const safeResolve = (val: boolean) => {
                     if (!hasResolved) {
                         hasResolved = true;
-                        this.isAdShowing = false;
-                        this.isAdManipulating = false;
                         resolve(val);
                     }
                 };
 
+                // Fix 2: Guaranteed cleanup — always resets flags regardless of how the Promise ends
                 const cleanup = async () => {
+                    this.isAdShowing = false;
+                    this.isAdManipulating = false;
                     try {
                         for (const listener of listeners) {
                             if (listener && typeof listener.remove === 'function') {
-                                await listener.remove().catch(() => {});
+                                await listener.remove().catch(() => { });
                             }
                         }
                     } catch (e) {
@@ -145,7 +147,7 @@ export const AdMobService = {
                 const timeoutId = setTimeout(() => {
                     console.warn('AdMob Interstitial Timeout');
                     cleanup().then(() => safeResolve(false));
-                }, 20000); // Increased timeout to 20s
+                }, 20000);
 
                 try {
                     const onDismiss = await AdMob.addListener(InterstitialAdPluginEvents.Dismissed, () => {
@@ -154,7 +156,7 @@ export const AdMobService = {
                         cleanup().then(() => safeResolve(true));
                     });
                     listeners.push(onDismiss);
-                    
+
                     const onFailed = await AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, (err) => {
                         console.error('AdMob Interstitial Failed to load', err);
                         clearTimeout(timeoutId);
@@ -169,9 +171,11 @@ export const AdMobService = {
                     });
                     listeners.push(onShowFailed);
 
+                    // Fix 2: Set isAdShowing only after listeners are ready — prevents stuck state
+                    this.isAdShowing = true;
                     await AdMob.prepareInterstitial({ adId, isTesting: true });
                     await AdMob.showInterstitial();
-                    
+
                 } catch (error) {
                     console.error('AdMob Interstitial Execution Error', error);
                     clearTimeout(timeoutId);
@@ -192,11 +196,10 @@ export const AdMobService = {
             console.log("Ad operation in progress, skipping reward video.");
             return false;
         }
-        
+
         this.isAdManipulating = true;
         try {
             await this.initialize();
-            this.isAdShowing = true;
 
             return await new Promise<boolean>(async (resolve) => {
                 let earnedReward = false;
@@ -206,17 +209,18 @@ export const AdMobService = {
                 const safeResolve = (val: boolean) => {
                     if (!hasResolved) {
                         hasResolved = true;
-                        this.isAdShowing = false;
-                        this.isAdManipulating = false;
                         resolve(val);
                     }
                 };
 
+                // Fix 2: Guaranteed cleanup — always resets flags regardless of how the Promise ends
                 const cleanup = async () => {
+                    this.isAdShowing = false;
+                    this.isAdManipulating = false;
                     try {
                         for (const listener of listeners) {
                             if (listener && typeof listener.remove === 'function') {
-                                await listener.remove().catch(() => {});
+                                await listener.remove().catch(() => { });
                             }
                         }
                     } catch (e) {
@@ -243,7 +247,7 @@ export const AdMobService = {
                         cleanup().then(() => safeResolve(earnedReward));
                     });
                     listeners.push(onDismiss);
-                    
+
                     const onFailed = await AdMob.addListener(RewardAdPluginEvents.FailedToLoad, (err) => {
                         console.error('AdMob Failed to load', err);
                         clearTimeout(timeoutId);
@@ -258,9 +262,11 @@ export const AdMobService = {
                     });
                     listeners.push(onShowFailed);
 
+                    // Fix 2: Set isAdShowing only after listeners are ready — prevents stuck state
+                    this.isAdShowing = true;
                     await AdMob.prepareRewardVideoAd({ adId, isTesting: true });
                     await AdMob.showRewardVideoAd();
-                    
+
                 } catch (error) {
                     console.error('AdMob Execution Error', error);
                     clearTimeout(timeoutId);
