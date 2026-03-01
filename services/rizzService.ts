@@ -195,7 +195,7 @@ export const generateRizz = async (
       Vibe: ${vibe || "Balanced"}
 
       TASK 1: CONTEXT ANALYSIS (If image provided)
-      - Identify the speakers (User vs. Crush).
+      - You have to reply everytime whatever user says.
       - Analyze the TONE (dry, flirty, angry, ghosting).
       - Check timestamps/gaps (e.g., double texting, late night).
       - Detect "red flags" or "green flags".
@@ -209,7 +209,7 @@ export const generateRizz = async (
          - Avoid generic lines like "Are you trouble?".
       
       2. SMOOTH (Charming/Confident):
-         - Direct but not creepy.
+         - Direct and charismatic but not creepy.
          - Compliment their vibe/energy, not just looks.
          - Move the conversation forward (e.g., "So when are we getting tacos?").
          - Use lowercase for a "chill" aesthetic.
@@ -217,7 +217,7 @@ export const generateRizz = async (
       3. CHAOTIC (Unhinged/Funny):
          - NOT "random = funny" (avoid "potato" humor).
          - Go for "deranged but intriguing" or "mildly threatening" (playfully).
-         - Bizarrely specific lies or gaslighting (e.g., "I'm actually three raccoons in a trench coat").
+         - Bizarrely specific lies or gaslighting but dont go out of the context (e.g., "I'm actually three raccoons in a trench coat").
          - High risk, high reward.
 
       TASK 3: VIRAL RECEIPT (The Analysis)
