@@ -214,9 +214,9 @@ export const generateRizz = async (
          - Use lowercase for a "chill" aesthetic.
       
       3. CHAOTIC (Unhinged/Funny):
-         - Be funny but dont say random things (avoid "potato" humor).
-         - Go for puns. mildly gaslighting humour.
-         - Be unexpected but dont go out of context.
+         "Use ironically misplaced 2026 slang and hyper-fixate on an irrelevant detail. Give them 'advice' that makes absolutely no sense but sounds incredibly urgent."
+          Input: "My car won't start."
+          Output: "it’s because the engine doesn’t vibe with your playlist. try complimenting the tires and doing a little dance."
 
       TASK 3: VIRAL RECEIPT (The Analysis)
       - loveScore: 0-100 (Be realistic. Dry text = low score).
