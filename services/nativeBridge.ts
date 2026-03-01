@@ -4,118 +4,133 @@ import { Capacitor } from '@capacitor/core';
 
 /**
  * Native Bridge Service
- * Optimized with capability caching and robust fallbacks.
+ * 
+ * Abstraction layer to handle features that might use Native Plugins (Capacitor/Cordova)
+ * or fallback to standard Web APIs.
  */
-
-// Singleton to cache capabilities after first check
-let cachedCaps: { hasWebShare: boolean; hasClipboard: boolean; hasVibrate: boolean; isNative: boolean } | null = null;
-
-const getCapabilities = () => {
-  if (cachedCaps) return cachedCaps;
-  try {
-    cachedCaps = {
-      hasWebShare: typeof navigator !== 'undefined' && !!navigator.share,
-      hasClipboard: typeof navigator !== 'undefined' && !!navigator.clipboard,
-      hasVibrate: typeof navigator !== 'undefined' && !!navigator.vibrate,
-      isNative: typeof Capacitor !== 'undefined' ? Capacitor.isNativePlatform() : false
-    };
-  } catch (e) {
-    console.warn('[NativeBridge] Capability check failed:', e);
-    // Return safe defaults but don't cache error state to allow retry
-    return { hasWebShare: false, hasClipboard: false, hasVibrate: false, isNative: false };
-  }
-  return cachedCaps;
-};
-
-// Helper to detect user cancellation errors
-const isCancelled = (err: any) => {
-  const msg = err?.message?.toLowerCase() || '';
-  return msg.includes('cancel') || msg.includes('dismiss') || err?.name === 'AbortError';
-};
 
 export const NativeBridge = {
   /**
-   * Triggers haptic feedback with optimized patterns.
+   * Triggers haptic feedback.
+   * Uses navigator.vibrate for web, but Capacitor Haptics plugin would override this behavior in native.
+   * Type: 'light' | 'medium' | 'heavy' | 'success' | 'error'
    */
   haptic: (type: 'light' | 'medium' | 'heavy' | 'success' | 'error' = 'light') => {
-    const { hasVibrate } = getCapabilities();
-    if (!hasVibrate) return;
-
-    try {
-      // Navigator.vibrate automatically cancels previous vibrations
+    // Check for Capacitor global object if you were using the plugin directly
+    // but navigator.vibrate is a great web fallback that many native wrappers polyfill.
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
       switch (type) {
         case 'light': navigator.vibrate(10); break;
-        case 'medium': navigator.vibrate(25); break;
-        case 'heavy': navigator.vibrate(50); break;
-        case 'success': navigator.vibrate([10, 40, 10]); break;
-        case 'error': navigator.vibrate([60, 40, 60]); break;
+        case 'medium': navigator.vibrate(20); break;
+        case 'heavy': navigator.vibrate(40); break;
+        case 'success': navigator.vibrate([10, 30, 10]); break; // Pattern
+        case 'error': navigator.vibrate([50, 30, 50, 30, 50]); break;
       }
-    } catch { /* Silent fail */ }
+    }
   },
 
   /**
-   * Optimized Clipboard copy with modern-first approach.
+   * Share content using native share sheet if available
+   * Returns a status string: 'SHARED', 'COPIED', 'DISMISSED', 'FAILED'
+   */
+  share: async (title: string, text: string, url?: string): Promise<'SHARED' | 'COPIED' | 'DISMISSED' | 'FAILED'> => {
+    // Ensure we have at least some content to share
+    if (!text && !url) {
+        console.warn('Share called with empty text and url');
+        return 'FAILED';
+    }
+
+    const contentToCopy = url ? `${text}\n${url}` : text;
+    const shareData: any = { title: title || 'Share' };
+    if (text) shareData.text = text;
+    if (url) shareData.url = url;
+
+    // 1. Try Web Share API First (Even on Native if available)
+    // This is often more reliable for "intent" based sharing on modern Android/iOS webviews
+    if (typeof navigator !== 'undefined' && navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+        return 'SHARED';
+      } catch (err: any) {
+        if (err.name === 'AbortError') {
+           console.log('User cancelled share');
+           // Treat cancel as success for reward purposes on mobile to avoid frustration
+           return 'SHARED';
+        }
+        console.warn('Web Share failed, attempting native/fallback:', err);
+      }
+    }
+
+    // 2. Try Capacitor Native Share (Plugin)
+    if (Capacitor.isNativePlatform()) {
+        try {
+            await Share.share({
+                title: title || 'Check this out!',
+                text: text || '',
+                url: url || '',
+                dialogTitle: 'Share' // Android only
+            });
+            return 'SHARED';
+        } catch (err: any) {
+            console.warn('Native share dismissed/failed', err);
+            if (err.message === 'Share canceled') {
+                 return 'SHARED'; 
+            }
+            // If it's a real error, try fallback
+            const copied = await NativeBridge.copyToClipboard(contentToCopy);
+            return copied ? 'COPIED' : 'FAILED';
+        }
+    }
+    
+    // 3. Fallback: Copy to Clipboard (Always try this if others fail/dismiss)
+    const copied = await NativeBridge.copyToClipboard(contentToCopy);
+    return copied ? 'COPIED' : 'FAILED';
+  },
+
+  /**
+   * Copy to clipboard wrapper
    */
   copyToClipboard: async (text: string): Promise<boolean> => {
-    if (!text) return false;
-    const { hasClipboard } = getCapabilities();
-
-    // Try Modern API
-    if (hasClipboard) {
-      try {
-        await navigator.clipboard.writeText(text);
-        return true;
-      } catch { /* Fallthrough to legacy */ }
-    }
-
-    // Legacy Fallback
     try {
-      const el = document.createElement("textarea");
-      el.value = text;
-      // Use cssText for faster style application
-      el.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0;';
-
-      document.body.appendChild(el);
-      el.focus();
-      el.select();
-
-      const successful = document.execCommand('copy');
-      document.body.removeChild(el);
-      return successful;
-    } catch (err) {
-      console.error('[NativeBridge] Clipboard fallback failed:', err);
-      return false;
-    }
-  },
-
-  /**
-   * Native/Web Sharing with cancellation handling.
-   */
-  shareText: async (title: string, text: string): Promise<boolean> => {
-    const { hasWebShare, isNative } = getCapabilities();
-
-    try {
-      if (isNative) {
-        await Share.share({
-          title,
-          text,
-          dialogTitle: title
-        });
-        return true;
-      } else if (hasWebShare) {
-        await navigator.share({
-          title,
-          text
-        });
-        return true;
+      // 1. Try modern clipboard API
+      if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+        try {
+            await navigator.clipboard.writeText(text);
+            return true;
+        } catch (e) {
+            console.warn("navigator.clipboard.writeText failed, falling back", e);
+        }
+      }
+      
+      // 2. Legacy fallback (execCommand)
+      if (typeof document !== 'undefined') {
+          const textArea = document.createElement("textarea");
+          textArea.value = text;
+          
+          // Avoid scrolling to bottom
+          textArea.style.top = "0";
+          textArea.style.left = "0";
+          textArea.style.position = "fixed";
+          textArea.style.opacity = "0";
+          
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          
+          try {
+              const successful = document.execCommand('copy');
+              document.body.removeChild(textArea);
+              return successful;
+          } catch (err) {
+              document.body.removeChild(textArea);
+              console.error('Fallback: Oops, unable to copy', err);
+              return false;
+          }
       }
       return false;
     } catch (err) {
-      if (isCancelled(err)) return true; // User cancel is not an "error"
-      console.error('[NativeBridge] Sharing failed:', err);
+      console.error('Clipboard failed completely', err);
       return false;
     }
   }
 };
-
-

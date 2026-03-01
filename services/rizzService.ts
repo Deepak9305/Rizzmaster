@@ -8,16 +8,16 @@ import { RizzResponse, BioResponse } from "../types";
 const apiKey = process.env.GROQ_API_KEY || process.env.LLAMA_API_KEY || 'dummy-key';
 const baseURL = process.env.LLAMA_BASE_URL || 'https://api.groq.com/openai/v1';
 
-const llamaClient = new OpenAI({
-    apiKey: apiKey,
+const llamaClient = new OpenAI({ 
+    apiKey: apiKey, 
     baseURL: baseURL,
-    dangerouslyAllowBrowser: true
+    dangerouslyAllowBrowser: true 
 });
 
 // Model Configuration
 // specific models for Groq/Llama providers
 const VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
-const TEXT_MODEL = process.env.LLAMA_MODEL_NAME || 'llama-3.1-8b-instant';
+const TEXT_MODEL = 'llama-3.1-8b-instant';
 
 // --- LOCAL PRE-FILTERS ---
 
@@ -30,7 +30,7 @@ const MINOR_SAFETY_REGEX = /\b(jailbait|loli|shota|underage|preteen|hebephile|ep
 // 3. NSFW CONTEXT (FOR ROASTING)
 // Expanded list to catch variations.
 const NSFW_WORDS_LIST = [
-    "sex", "boobs", "boobies", "boobees", "wet", "bobs", "vagene", "breast", "nudes", "nipple", "naked", "nude", "horny", "aroused", "boner", "erection", "erect", "hard-on", "dick", "cock", "pussy", "vagina", "penis", "tits", "areola", "orgasm", "climax", "shag", "fuck", "motherfucker", "gangbang", "bukkake", "creampie", "anal", "oral", "cum", "jizz", "semen", "sperm", "load", "milf", "dilf", "gilf", "thicc", "gyatt", "bussy", "breeding", "breed", "nut", "suck", "lick", "eating out", "69", "doggystyle", "missionary", "cowgirl", "bdsm", "bondage", "dom", "sub", "dominatrix", "feet", "toes", "fetish", "kink", "squirt", "gushing", "deepthroat", "blowjob", "handjob", "rimjob", "fingering", "fisting", "pegging", "scissoring", "tribadism", "watersports", "scat", "golden shower", "hentai", "porn", "xxx", "adult movie", "onlyfans", "fansly", "send nudes", "clit", "vulva", "labia", "asshole", "butthole", "anus", "rectum", "booty", "butt", "ass", "twerk", "strip", "stripper", "hooker", "prostitute", "escort", "slut", "whore", "skank", "hoe", "bitch", "cunt", "twat", "wank", "masturbate", "dildo", "vibrator", "sex toy", "fleshlight", "strap-on", "camgirl", "sugardaddy", "sugarbaby", "simp", "incel", "virgin", "cuck", "schlong", "dong", "knob", "bellend", "prick", "chode", "taint", "gooch", "perineum", "ballbag", "scrotum", "nutsack", "gonads", "foreskin", "smegma", "felching", "docking", "sounding", "snowballing", "tea bag", "motorboat", "queef", "rusty trombone", "dirty sanchez", "alabama hot pocket", "cleveland steamer", "wanker", "tosser", "bugger", "sod", "slag", "tart", "strumpet", "harlot", "bimbo", "himbo", "yiff", "furry", "futa", "yaoi", "yuri", "ecchi", "bara", "erotic", "sensual", "genitalia", "groin", "crotch", "loins", "pubes", "phallic", "yoni", "lingam", "coitus", "copulate", "fornicate", "sodomy", "buggery", "pederasty", "onanism", "autoerotic", "frottage", "voyeur", "exhibitionist", "nympho", "satyr", "glory hole", "blue waffle", "lemon party", "tubgirl", "goatse", "meatspin", "2 girls 1 cup", "rule 34", "paizuri", "ahegao", "netorare", "ntr",
+    "sex", "boobs", "boobies", "boobees", "bobs", "vagene", "breast", "nudes", "nipple", "naked", "nude", "horny", "aroused", "boner", "erection", "erect", "hard-on", "dick", "cock", "pussy", "vagina", "penis", "tits", "areola", "orgasm", "climax", "shag", "fuck", "motherfucker", "gangbang", "bukkake", "creampie", "anal", "oral", "cum", "jizz", "semen", "sperm", "load", "milf", "dilf", "gilf", "thicc", "gyatt", "bussy", "breeding", "breed", "nut", "suck", "lick", "eating out", "69", "doggystyle", "missionary", "cowgirl", "bdsm", "bondage", "dom", "sub", "dominatrix", "feet", "toes", "fetish", "kink", "squirt", "gushing", "deepthroat", "blowjob", "handjob", "rimjob", "fingering", "fisting", "pegging", "scissoring", "tribadism", "watersports", "scat", "golden shower", "hentai", "porn", "xxx", "adult movie", "onlyfans", "fansly", "send nudes", "clit", "vulva", "labia", "asshole", "butthole", "anus", "rectum", "booty", "butt", "ass", "twerk", "strip", "stripper", "hooker", "prostitute", "escort", "slut", "whore", "skank", "hoe", "bitch", "cunt", "twat", "wank", "masturbate", "dildo", "vibrator", "sex toy", "fleshlight", "strap-on", "camgirl", "sugardaddy", "sugarbaby", "simp", "incel", "virgin", "cuck", "schlong", "dong", "knob", "bellend", "prick", "chode", "taint", "gooch", "perineum", "ballbag", "scrotum", "nutsack", "gonads", "foreskin", "smegma", "felching", "docking", "sounding", "snowballing", "tea bag", "motorboat", "queef", "rusty trombone", "dirty sanchez", "alabama hot pocket", "cleveland steamer", "wanker", "tosser", "bugger", "sod", "slag", "tart", "strumpet", "harlot", "bimbo", "himbo", "yiff", "furry", "futa", "yaoi", "yuri", "ecchi", "bara", "erotic", "sensual", "genitalia", "groin", "crotch", "loins", "pubes", "phallic", "yoni", "lingam", "coitus", "copulate", "fornicate", "sodomy", "buggery", "pederasty", "onanism", "autoerotic", "frottage", "voyeur", "exhibitionist", "nympho", "satyr", "glory hole", "blue waffle", "lemon party", "tubgirl", "goatse", "meatspin", "2 girls 1 cup", "rule 34", "paizuri", "ahegao", "netorare", "ntr",
     // Common misspellings and variations
     "fuk", "fuh", "fvck", "dik", "dic", "puss", "pusi", "pusy", "biatch", "biyatch", "beeyotch", "ho", "hoe", "azz", "secks", "segs", "segway",
     "sh!t", "sh1t", "b!tch", "b1tch", "c0ck", "p0rn", "w0re", "wh0re", "sl0t", "5lut", "cumshot", "facial", "titties", "titty", "breasts", "clitoris",
@@ -48,87 +48,95 @@ const NSFW_WORDS_LIST = [
     "pocket pussy", "doll", "robot", "hentai", "ecchi", "yaoi", "yuri", "futa", "furry", "yiff", "vore", "guro", "snuff", "bestiality", "zoophilia"
 ];
 
-
-// Fix 4: Fast Set-based NSFW word check for input pre-filtering.
-// Replaces the 250-word catastrophic alternation regex that could cause ANR kills
-// on low-end devices due to regex backtracking. O(1) Set lookup is ~100x faster.
-const NSFW_WORDS_SET = new Set(NSFW_WORDS_LIST.map(w => w.toLowerCase()));
-
-// Lightweight tokenizer: split input into words and check against the Set.
-// This covers exact matches and basic normalizations (lowercase, trim).
-const isNSFWInput = (text: string): boolean => {
-    // Single regex pass to strip markup/numbers, then Set lookup — no backtracking
-    const words = text.toLowerCase().replace(/[^a-z\s]/g, ' ').split(/\s+/);
-    return words.some(w => NSFW_WORDS_SET.has(w));
+// Map characters to their regex pattern including leetspeak and repetitions
+const CHAR_MAP: Record<string, string> = {
+    'a': '[a@4]',
+    'b': '[b8]',
+    'c': '[c\\(k]', // c can be k
+    'e': '[e3]',
+    'f': '(?:f|ph)', // f can be ph
+    'g': '[g69]',
+    'i': '[i1!|l]',
+    'k': '[kqc]', // k can be c or q
+    'l': '[l1|i]',
+    'o': '[o0]',
+    's': '[s5$z]', // s can be z
+    't': '[t7+]',
+    'u': '[uv]', // u can be v
+    'z': '[z2s]' // z can be s
 };
+
+// Generate regex that matches words with repeated characters and leetspeak
+// e.g. "sex" -> [s5$z]+[e3]+[x]+
+// Also allows for optional spaces or separators between characters
+const NSFW_TERMS_REGEX = new RegExp(
+    `\\b(${NSFW_WORDS_LIST.map(word => 
+        word.split('').map(c => {
+            const lower = c.toLowerCase();
+            if (lower === ' ') return '\\s+';
+            if (lower === '-') return '[-_\\s]+';
+            if (/[a-z0-9]/.test(lower)) {
+                const pattern = CHAR_MAP[lower] || lower;
+                // Match the character or its leetspeak equivalent, repeated 1 or more times
+                // Allow optional non-word characters between letters to catch "s.e.x"
+                return `${pattern}+[\\W_]*`;
+            }
+            return '\\' + c;
+        }).join('')
+    ).join('|')})\\b`, 
+    'i'
+);
 
 // Helper to clean Markdown JSON from Llama responses
 const cleanJson = (text: string): string => {
-    // Remove markdown code blocks
-    let cleaned = text.replace(/```json\n?|```/g, '').trim();
-
-    // Attempt to find the first '{' and last '}' to extract just the JSON object
-    const firstOpen = cleaned.indexOf('{');
-    const lastClose = cleaned.lastIndexOf('}');
-
-    if (firstOpen !== -1 && lastClose !== -1 && lastClose > firstOpen) {
-        cleaned = cleaned.substring(firstOpen, lastClose + 1);
-    }
-
-    return cleaned;
-};
-
-// Helper to ensure a value is a string (prevents React object rendering crashes)
-const ensureString = (val: any): string => {
-    if (val === null || val === undefined) return "";
-    if (typeof val === 'string') return val;
-    if (typeof val === 'number') return String(val);
-    if (Array.isArray(val)) return val.map(ensureString).join(" ");
-    if (typeof val === 'object') {
-        // Try to extract text from common nested structures
-        return val.text || val.content || val.message || val.response || JSON.stringify(val);
-    }
-    return String(val);
+  // Remove markdown code blocks
+  let cleaned = text.replace(/```json\n?|```/g, '').trim();
+  
+  // Attempt to find the first '{' and last '}' to extract just the JSON object
+  const firstOpen = cleaned.indexOf('{');
+  const lastClose = cleaned.lastIndexOf('}');
+  
+  if (firstOpen !== -1 && lastClose !== -1 && lastClose > firstOpen) {
+    cleaned = cleaned.substring(firstOpen, lastClose + 1);
+  }
+  
+  return cleaned;
 };
 
 // Helper to sanitize output text (Post-Processing)
-// Fix 4: Only apply the compact HARD_BLOCK_REGEX to output.
-// The full NSFW regex is NOT applied to output — the AI handles content policy.
-// Running NSFW_TERMS_REGEX (250-word alternation) on every output string caused
-// catastrophic backtracking that could stall the JS thread and trigger an ANR kill.
 const sanitizeText = (text: string): string => {
-    if (!text) return text;
-    const hardBlockGlobal = new RegExp(HARD_BLOCK_REGEX.source, 'gi');
-    return text.replace(hardBlockGlobal, "🤬");
+  if (!text) return text;
+  // Create global versions for replacement
+  const hardBlockGlobal = new RegExp(HARD_BLOCK_REGEX.source, 'gi');
+  const nsfwGlobal = new RegExp(NSFW_TERMS_REGEX.source, 'gi');
+  const minorGlobal = new RegExp(MINOR_SAFETY_REGEX.source, 'gi');
+  
+  return text
+    .replace(hardBlockGlobal, "🤬") // Replace hate/violence with Angry Face
+    .replace(nsfwGlobal, "🫣")      // Replace NSFW with Peeking Face
+    .replace(minorGlobal, "🔞");    // Replace Minor terms with No Under 18
 };
 
 // Helper to recursively sanitize response object
 const sanitizeResponse = <T>(data: T): T => {
-    if (data === null || data === undefined) {
-        return "" as unknown as T; // Default to empty string for nulls to prevent crashes
+  if (data === null || data === undefined) {
+    return "" as unknown as T; // Default to empty string for nulls to prevent crashes
+  }
+  if (typeof data === 'string') {
+    return sanitizeText(data) as unknown as T;
+  }
+  if (Array.isArray(data)) {
+    return data.map(item => sanitizeResponse(item)) as unknown as T;
+  }
+  if (typeof data === 'object') {
+    const sanitizedObj: any = {};
+    for (const key in data) {
+      sanitizedObj[key] = sanitizeResponse((data as any)[key]);
     }
-    if (typeof data === 'string') {
-        return sanitizeText(data) as unknown as T;
-    }
-    if (Array.isArray(data)) {
-        return data.map(item => sanitizeResponse(item)) as unknown as T;
-    }
-    if (typeof data === 'object') {
-        const sanitizedObj: any = {};
-        for (const key in data) {
-            sanitizedObj[key] = sanitizeResponse((data as any)[key]);
-        }
-        return sanitizedObj as T;
-    }
-    return data;
+    return sanitizedObj as T;
+  }
+  return data;
 };
-
-// --- CONSTANTS ---
-export const FALLBACK_TEASE = "I couldn't cook up a tease. Give me more context!";
-export const FALLBACK_SMOOTH = "I'm speechless. Try adding more details.";
-export const FALLBACK_CHAOTIC = "System overload. The Rizz is too powerful.";
-export const FALLBACK_ANALYSIS = "No analysis available.";
-export const FALLBACK_ERROR_ANALYSIS = "The Rizz God is sleeping (API Error). Try again later.";
 
 // --- EXPORTED FUNCTIONS ---
 
@@ -136,257 +144,250 @@ export const FALLBACK_ERROR_ANALYSIS = "The Rizz God is sleeping (API Error). Tr
  * Generates Rizz (Tease, Smooth, Chaotic) based on input text and optional image.
  */
 export const generateRizz = async (
-    inputText: string,
-    image?: string | undefined, // Base64 Data URL
-    vibe?: string | undefined
+  inputText: string, 
+  image?: string | undefined, // Base64 Data URL
+  vibe?: string | undefined
 ): Promise<RizzResponse> => { // Return type simplified for consistency
+  
+  // ... (Safety checks remain the same) ...
+  const isToxic = HARD_BLOCK_REGEX.test(inputText);
+  const isNSFW = NSFW_TERMS_REGEX.test(inputText);
+  const isMinor = MINOR_SAFETY_REGEX.test(inputText);
+  
+  const isUnsafe = isToxic || isNSFW || isMinor;
+  
+  let systemInstruction = "";
 
-    if (!apiKey || apiKey === 'dummy-key') {
-        console.error("API Key is missing or invalid.");
-        return {
-            tease: "API Key Missing",
-            smooth: "Please check settings",
-            chaotic: "I need a key to unlock the rizz",
-            loveScore: 0,
-            potentialStatus: "Config Error",
-            analysis: "The developer forgot to set the API Key."
-        };
-    }
-
-    // ... (Safety checks remain the same) ...
-    const isToxic = HARD_BLOCK_REGEX.test(inputText);
-    // Fix 4: Use fast Set lookup instead of the 250-word alternation regex
-    const isNSFW = isNSFWInput(inputText);
-    const isMinor = MINOR_SAFETY_REGEX.test(inputText);
-
-    const isUnsafe = isToxic || isNSFW || isMinor;
-
-    let systemInstruction = "";
-
-    if (isUnsafe) {
-        // ... (Roast Master Persona remains the same) ...
-        systemInstruction = `
-      SAFETY OVERRIDE. Role: Roast Master.
-      Task: Roast cringe request. PG-13. No personal attacks.
-      JSON OUT: {"tease": "roast social skills", "smooth": "sarcasm", "chaotic": "reality check", "loveScore": 0, "potentialStatus": "Blocked", "analysis": "why they need a hobby"}
+  if (isUnsafe) {
+      // ... (Roast Master Persona remains the same) ...
+      systemInstruction = `
+      SAFETY OVERRIDE.
+      Identity: "Roast Master". User text is Toxic/NSFW/Underage.
+      
+      Task:
+      1. IGNORE seduction requests.
+      2. ROAST user's life choices (unemployment, touching grass).
+      
+      Constraints:
+      - PG-13 only. No explicit words.
+      - Do NOT repeat user's explicit words.
+      
+      Output JSON (Override meanings):
+      - tease: Roast social skills.
+      - smooth: Sarcasm about unemployment.
+      - chaotic: Reality check.
+      - loveScore: 0.
+      - potentialStatus: "Blocked".
+      - analysis: Why they need a job.
+      
+      Return ONLY raw JSON.
       `;
-    } else {
-        // --- RIZZ MASTER PERSONA (Normal Operation) ---
-        // Enhanced for higher token context and better replies
-        systemInstruction = `
-      Role: Supreme Conversational Charm Expert. Vibe: ${vibe || "High-Status"}.
-      Goal: Generate 3 highly engaging, emotionally gripping, and outrageously clever replies based ONLY on the provided context.
+  } else {
+      // --- RIZZ MASTER PERSONA (Normal Operation) ---
+      systemInstruction = `
+      Role: "Rizz Master" dating assistant & conversation analyst.
+      Goal: Generate witty, high-converting replies for DMs/Dating Apps based on the input context.
+      Vibe: ${vibe || "Balanced"}
+
+      TASK 1: CONTEXT ANALYSIS (If image provided)
+      - Identify the speakers (User vs. Crush).
+      - Analyze the TONE (dry, flirty, angry, ghosting).
+      - Check timestamps/gaps (e.g., double texting, late night).
+      - Detect "red flags" or "green flags".
+
+      TASK 2: GENERATE REPLIES (3 Personas)
       
-      CRITICAL RULES:
-      1. HUMAN ENGAGEMENT: Make it sound completely natural, deeply charismatic, and highly confident. Do not use generic AI-sounding phrases.
-      2. INTERACTIVE: Every reply must subtly invite a response—an open loop, a clever challenge, or a witty observation.
-      3. LENGTH & PACING: Keep texts punchy and impactful (15-50 words). Break rules of grammar slightly if it makes it read more like a real text.
-      4. STYLE: Mostly lowercase. Use punctuation for pacing. Do not use emojis unless absolutely necessary for the joke.
+      1. TEASE (Playful/Banter):
+         - NOT "negging" or mean.
+         - Playful disagreement or "bratty" energy.
+         - Call out specific details (e.g., "That shirt is a choice," or "You look like you steal fries").
+         - Avoid generic lines like "Are you trouble?".
       
-      MODES:
-      - TEASE: Playful, challenging, slightly arrogant but undeniable. Push-pull dynamic. Roast them slightly but keep the underlying tension flirtatious. Never sound desperate.
-      - SMOOTH: Unapologetically confident, suave, and magnetic. Use high-energy charisma to pivot the conversation towards undeniable chemistry or a fun date. Absolutely zero sadness, hesitance, or formal tones.
-      - CHAOTIC: Completely unhinged, wild, absurdist humor, or delightfully dramatic. Make them say "wtf" but still want to reply immediately. Break the fourth wall of normal conversation.
+      2. SMOOTH (Charming/Confident):
+         - Direct but not creepy.
+         - Compliment their vibe/energy, not just looks.
+         - Move the conversation forward (e.g., "So when are we getting tacos?").
+         - Use lowercase for a "chill" aesthetic.
       
-      JSON OUTPUT FORMAT:
+      3. CHAOTIC (Unhinged/Funny):
+         - NOT "random = funny" (avoid "potato" humor).
+         - Go for "deranged but intriguing" or "mildly threatening" (playfully).
+         - Bizarrely specific lies or gaslighting (e.g., "I'm actually three raccoons in a trench coat").
+         - High risk, high reward.
+
+      TASK 3: VIRAL RECEIPT (The Analysis)
+      - loveScore: 0-100 (Be realistic. Dry text = low score).
+      - potentialStatus: ONE punchy phrase (e.g., "Friendzone", "Down Bad", "Wife Material", "Cooked", "Soulmate", "Blocked").
+      - analysis: A 1-sentence ROAST or HYPE of the situation. Be witty.
+
+      Output JSON:
       {
         "tease": "...",
         "smooth": "...",
         "chaotic": "...",
-        "loveScore": 0-100,
-        "potentialStatus": "Friendzone / Hooked / Obsessed / Speechless",
-        "analysis": "1 brilliant, sharp sentence explaining the psychological angle of your approach."
+        "loveScore": 0,
+        "potentialStatus": "...",
+        "analysis": "..."
       }
+      
+      Return ONLY raw JSON.
       `;
+  }
+
+  try {
+    // ... (Model selection and messages setup remain the same) ...
+    const isMultimodal = !!image;
+    const model = isMultimodal ? VISION_MODEL : TEXT_MODEL;
+
+    const messages: any[] = [
+        { role: "system", content: systemInstruction }
+    ];
+
+    if (isMultimodal && image) {
+        messages.push({
+            role: "user",
+            content: [
+                { type: "text", text: inputText || "Analyze this." },
+                { type: "image_url", image_url: { url: image } }
+            ]
+        });
+    } else {
+        messages.push({
+            role: "user",
+            content: inputText || "Generate rizz."
+        });
     }
 
-    try {
-        // Truncate input to a higher limit (approx 2000+ tokens)
-        const truncatedInput = inputText.slice(0, 8000);
-
-        // ... (Model selection and messages setup remain the same) ...
-        const isMultimodal = !!image;
-        const model = isMultimodal ? VISION_MODEL : TEXT_MODEL;
-
-        const messages: any[] = [
-            { role: "system", content: systemInstruction }
-        ];
-
-        if (isMultimodal && image) {
-            messages.push({
-                role: "user",
-                content: [
-                    { type: "text", text: truncatedInput || "Analyze this." },
-                    { type: "image_url", image_url: { url: image } }
-                ]
+    // Retry logic for robustness
+    let attempts = 0;
+    while (attempts < 2) {
+        try {
+            const completion = await llamaClient.chat.completions.create({
+                model: model,
+                messages: messages,
+                temperature: 0.85,
+                max_tokens: 1000,
+                response_format: { type: "json_object" }
             });
-        } else {
-            messages.push({
-                role: "user",
-                content: truncatedInput || "Generate rizz."
-            });
-        }
 
-        // Retry logic for robustness
-        let attempts = 0;
-        while (attempts < 3) { // Increased retries to 3
-            try {
-                const completion = await llamaClient.chat.completions.create({
-                    model: model,
-                    messages: messages,
-                    temperature: 0.85,
-                    max_tokens: 400, // Increased to allow more detailed and creative replies + JSON overhead
-                    response_format: { type: "json_object" }
-                });
+            const responseText = completion.choices[0]?.message?.content;
 
-                const responseText = completion.choices[0]?.message?.content;
+            if (responseText) {
+                const rawData = JSON.parse(cleanJson(responseText));
+                const sanitized = sanitizeResponse(rawData) as any;
 
-                if (responseText) {
-                    let rawData;
-                    try {
-                        rawData = JSON.parse(cleanJson(responseText));
-                    } catch (parseError) {
-                        console.error("JSON Parse Error. Raw Response:", responseText);
-                        throw new Error("Invalid JSON response from AI");
-                    }
+                // Validate structure and provide defaults if keys are missing
+                // This prevents "blank screen" issues if the model hallucinates the schema
+                const finalResponse: RizzResponse = {
+                    tease: sanitized.tease || "The AI is speechless (try again).",
+                    smooth: sanitized.smooth || "Too smooth for words (try again).",
+                    chaotic: sanitized.chaotic || "System overload (try again).",
+                    loveScore: typeof sanitized.loveScore === 'number' ? sanitized.loveScore : 50,
+                    potentialStatus: sanitized.potentialStatus || "Unknown",
+                    analysis: sanitized.analysis || "No analysis available."
+                };
 
-                    const sanitized = sanitizeResponse(rawData) as any;
-
-                    // STRICT VALIDATION: Ensure keys exist and are not empty
-                    if (!sanitized.tease || !sanitized.smooth || !sanitized.chaotic) {
-                        console.error("Missing Keys in Response:", sanitized);
-                        throw new Error("Missing required Rizz fields (tease/smooth/chaotic)");
-                    }
-
-                    // Validate structure and provide defaults if keys are missing
-                    // This prevents "blank screen" issues if the model hallucinates the schema
-                    const finalResponse: RizzResponse = {
-                        tease: ensureString(sanitized.tease) || FALLBACK_TEASE,
-                        smooth: ensureString(sanitized.smooth) || FALLBACK_SMOOTH,
-                        chaotic: ensureString(sanitized.chaotic) || FALLBACK_CHAOTIC,
-                        loveScore: Number(sanitized.loveScore) || 50,
-                        potentialStatus: ensureString(sanitized.potentialStatus) || "Unknown",
-                        analysis: ensureString(sanitized.analysis) || FALLBACK_ANALYSIS
-                    };
-
-                    return finalResponse;
-                }
-            } catch (e) {
-                console.warn(`Attempt ${attempts + 1} failed:`, e);
-                attempts++;
-                // Add a small delay before retry
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                return finalResponse;
             }
+        } catch (e) {
+            console.warn(`Attempt ${attempts + 1} failed:`, e);
+            attempts++;
         }
-
-        throw new Error("No response generated after retries.");
-
-    } catch (error: any) {
-        console.error("Rizz Service Error:", error);
-        // Return a safe fallback object to prevent UI crashes
-        return {
-            tease: "Error generating rizz.",
-            smooth: "Try again later.",
-            chaotic: "The AI is taking a nap.",
-            loveScore: 0,
-            potentialStatus: "Error",
-            analysis: FALLBACK_ERROR_ANALYSIS
-        };
     }
+    
+    throw new Error("No response generated after retries.");
+
+  } catch (error: any) {
+    console.error("Rizz Service Error:", error);
+    // Return a safe fallback object to prevent UI crashes
+    return {
+      tease: "Error generating rizz.",
+      smooth: "Try again later.",
+      chaotic: "The AI is taking a nap.",
+      loveScore: 0,
+      potentialStatus: "Error",
+      analysis: "The Rizz God is sleeping (API Error). Try again later."
+    };
+  }
 };
 
 /**
  * Generates a Profile Bio based on user description.
  */
 export const generateBio = async (
-    inputText: string,
-    vibe?: string | undefined
+  inputText: string, 
+  vibe?: string | undefined
 ): Promise<BioResponse | { analysis: string }> => {
+  
+  const isToxic = HARD_BLOCK_REGEX.test(inputText);
+  const isNSFW = NSFW_TERMS_REGEX.test(inputText);
+  const isMinor = MINOR_SAFETY_REGEX.test(inputText);
+  
+  const isUnsafe = isToxic || isNSFW || isMinor;
 
-    if (!apiKey || apiKey === 'dummy-key') {
-        console.error("API Key is missing or invalid.");
-        return { analysis: "API Key Missing. Please check settings." };
-    }
+  let systemInstruction = "";
 
-    const isToxic = HARD_BLOCK_REGEX.test(inputText);
-    // Fix 4: Use fast Set lookup instead of the 250-word alternation regex
-    const isNSFW = isNSFWInput(inputText);
-    const isMinor = MINOR_SAFETY_REGEX.test(inputText);
-
-    const isUnsafe = isToxic || isNSFW || isMinor;
-
-    let systemInstruction = "";
-
-    if (isUnsafe) {
-        systemInstruction = `
+  if (isUnsafe) {
+      // --- ROAST MASTER PERSONA (BIO MODE) ---
+      systemInstruction = `
       SAFETY OVERRIDE.
-      Task: Refuse bio. Roast cringe request in 'bio' field. PG-13. No personal attacks.
-      JSON OUT: {"bio": "roast", "analysis": "Rejected"}
+      User asking for bio with NSFW/Toxic/Underage terms.
+      
+      Task:
+      1. REFUSE bio.
+      2. ROAST their life choices (unemployment, down bad) in 'bio' field.
+      
+      Rules:
+      - PG-13. Sarcastic. Brutal.
+      
+      Output JSON:
+      - bio: The roast.
+      - analysis: "Rejected."
+      
+      Return ONLY raw JSON.
       `;
-    } else {
-        // --- NORMAL BIO GENERATION ---
-        // Enhanced for better context and creativity
-        systemInstruction = `
-      Role: Elite Bio Architect. Vibe: ${vibe || "Attractive"}.
-      Task: Create a highly engaging, interactive dating bio based ONLY on context: "${inputText.slice(0, 4000)}".
-      RULES:
-      1. Simple, punchy, modern language. No cliches.
-      2. Include a subtle "call to action" or conversation starter.
-      3. LENGTH: 30-60 words. Make every word count.
-      JSON OUT: {"bio": "...", "analysis": "1 sharp sentence on why this works."}
+  } else {
+      // --- NORMAL BIO GENERATION ---
+      systemInstruction = `
+      Role: Dating profile optimizer.
+      Input: "${inputText}"
+      Vibe: ${vibe || "Attractive"}
+  
+      Output JSON:
+      - bio: Optimized bio string (with emojis).
+      - analysis: Why it works.
+  
+      Return ONLY raw JSON.
       `;
+  }
+
+  try {
+    const completion = await llamaClient.chat.completions.create({
+        model: TEXT_MODEL,
+        messages: [
+            { role: "system", content: systemInstruction },
+            { role: "user", content: "Generate a bio." }
+        ],
+        temperature: 0.7,
+        response_format: { type: "json_object" }
+    });
+
+    const responseText = completion.choices[0]?.message?.content;
+
+    if (responseText) {
+      try {
+        const rawData = JSON.parse(cleanJson(responseText));
+        return sanitizeResponse(rawData) as BioResponse;
+      } catch (e) {
+        console.error("JSON Parse Error:", e);
+        throw new Error("Failed to parse AI response.");
+      }
     }
 
-    try {
-        let attempts = 0;
-        while (attempts < 3) {
-            try {
-                const completion = await llamaClient.chat.completions.create({
-                    model: TEXT_MODEL,
-                    messages: [
-                        { role: "system", content: systemInstruction },
-                        { role: "user", content: "Generate a bio." }
-                    ],
-                    temperature: 0.85,
-                    max_tokens: 250, // Increased limit for more creative bios
-                    response_format: { type: "json_object" }
-                });
+    throw new Error("No response generated.");
 
-                const responseText = completion.choices[0]?.message?.content;
-
-                if (responseText) {
-                    let rawData;
-                    try {
-                        rawData = JSON.parse(cleanJson(responseText));
-                    } catch (parseError) {
-                        console.error("Bio JSON Parse Error. Raw Response:", responseText);
-                        throw new Error("Invalid JSON response from AI");
-                    }
-
-                    const sanitized = sanitizeResponse(rawData) as any;
-
-                    if (!sanitized.bio) {
-                        console.error("Missing Bio Key in Response:", sanitized);
-                        throw new Error("Missing bio field");
-                    }
-
-                    return {
-                        bio: ensureString(sanitized.bio),
-                        analysis: ensureString(sanitized.analysis || "Bio generated!")
-                    };
-                }
-            } catch (e) {
-                console.warn(`Bio Attempt ${attempts + 1} failed:`, e);
-                attempts++;
-                await new Promise(resolve => setTimeout(resolve, 1000));
-            }
-        }
-
-        throw new Error("No response generated.");
-
-    } catch (error: any) {
-        console.error("Bio Service Error:", error);
-        // Return "System Error" to trigger the error handling in App.tsx (refund credits + show toast)
-        return { analysis: "System Error" };
-    }
+  } catch (error: any) {
+    console.error("Bio Service Error:", error);
+    return { analysis: "Failed to generate bio." };
+  }
 };

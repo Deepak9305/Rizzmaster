@@ -65,12 +65,14 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
       <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black via-black/90 to-transparent z-0" />
 
       {/* Skip Button */}
-      <button 
-        onClick={handleFinish} 
-        className="absolute top-12 right-6 z-50 text-white/40 text-xs font-bold uppercase tracking-widest hover:text-white transition-colors px-4 py-2"
-      >
-        Skip
-      </button>
+      <div className="absolute top-safe-top right-6 z-20 mt-4">
+        <button 
+          onClick={handleFinish} 
+          className="text-white/40 text-sm font-bold uppercase tracking-wider hover:text-white transition-colors"
+        >
+          Skip
+        </button>
+      </div>
 
       <div className="relative z-10 w-full max-w-md flex flex-col items-center text-center">
         
@@ -117,4 +119,4 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
   );
 };
 
-export default React.memo(OnboardingFlow);
+export default OnboardingFlow;
