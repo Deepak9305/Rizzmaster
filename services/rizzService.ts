@@ -214,10 +214,9 @@ export const generateRizz = async (
          - Use lowercase for a "chill" aesthetic.
       
       3. CHAOTIC (Unhinged/Funny):
-         - be funny but not say random things (avoid "potato" humor).
-         - Go for "deranged but intriguing" or "mildly threatening" (playfully).
-         - Bizarrely specific lies or gaslighting but dont go out of the context.
-         - High risk, high reward,.
+         - Be funny but dont say random things (avoid "potato" humor).
+         - Go for puns. mildly gaslighting humour.
+         - Be unexpected but dont go out of context.
 
       TASK 3: VIRAL RECEIPT (The Analysis)
       - loveScore: 0-100 (Be realistic. Dry text = low score).
