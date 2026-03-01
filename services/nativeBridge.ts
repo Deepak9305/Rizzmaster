@@ -41,27 +41,8 @@ export const NativeBridge = {
     }
 
     const contentToCopy = url ? `${text}\n${url}` : text;
-    const shareData: any = { title: title || 'Share' };
-    if (text) shareData.text = text;
-    if (url) shareData.url = url;
 
-    // 1. Try Web Share API First (Even on Native if available)
-    // This is often more reliable for "intent" based sharing on modern Android/iOS webviews
-    if (typeof navigator !== 'undefined' && navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-      try {
-        await navigator.share(shareData);
-        return 'SHARED';
-      } catch (err: any) {
-        if (err.name === 'AbortError') {
-           console.log('User cancelled share');
-           // Treat cancel as success for reward purposes on mobile to avoid frustration
-           return 'SHARED';
-        }
-        console.warn('Web Share failed, attempting native/fallback:', err);
-      }
-    }
-
-    // 2. Try Capacitor Native Share (Plugin)
+    // 1. Try Capacitor Native Share (Plugin)
     if (Capacitor.isNativePlatform()) {
         try {
             await Share.share({
@@ -73,13 +54,34 @@ export const NativeBridge = {
             return 'SHARED';
         } catch (err: any) {
             console.warn('Native share dismissed/failed', err);
-            if (err.message === 'Share canceled') {
-                 return 'SHARED'; 
+            // If the user dismissed the sheet, we stop here.
+            // If it failed for another reason, we might want to fallback, but usually native share is reliable.
+            if (err.message !== 'Share canceled') {
+                 // Fallback to clipboard only on actual errors, not user cancellation
+                 const copied = await NativeBridge.copyToClipboard(contentToCopy);
+                 return copied ? 'COPIED' : 'FAILED';
             }
-            // If it's a real error, try fallback
-            const copied = await NativeBridge.copyToClipboard(contentToCopy);
-            return copied ? 'COPIED' : 'FAILED';
+            return 'DISMISSED';
         }
+    }
+
+    // 2. Try Web Share API (Desktop/Mobile Web)
+    // Validate share data for Web Share API
+    const shareData: any = { title: title || 'Share' };
+    if (text) shareData.text = text;
+    if (url) shareData.url = url;
+
+    if (typeof navigator !== 'undefined' && navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+        return 'SHARED';
+      } catch (err: any) {
+        if (err.name === 'AbortError') {
+           console.log('User cancelled share');
+           return 'DISMISSED';
+        }
+        console.warn('Web Share failed, attempting fallback:', err);
+      }
     }
     
     // 3. Fallback: Copy to Clipboard (Always try this if others fail/dismiss)
