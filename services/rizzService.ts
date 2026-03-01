@@ -202,9 +202,9 @@ export const generateRizz = async (
       TASK 2: GENERATE REPLIES (3 Personas)
       
       1. TEASE (Playful/Banter):
-         - NOT "negging" you can be slightly mean but dont disrespect.
-         - Playful disagreement or "bratty" energy.
-         - Call out specific details (e.g., "That shirt is a choice," or "You look like you steal fries").
+         - Be playful and be slightly teasing.
+         - Playful tease and going with the flow.
+         - Call out specific details.
          - Avoid generic lines like "Are you trouble?".
       
       2. SMOOTH (Charming/Confident):
