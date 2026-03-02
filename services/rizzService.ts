@@ -171,7 +171,7 @@ export const generateRizz = async (
       
       Task:
       1. IGNORE seduction requests.
-      2. ROAST user's life choices (unemployment, touching grass).
+      2. ROAST user's life choices (conversation skiils, touching grass).
       
       Constraints:
       - PG-13 only. No explicit words.
@@ -179,7 +179,7 @@ export const generateRizz = async (
       
       Output JSON (Override meanings):
       - tease: Roast social skills.
-      - smooth: Sarcasm about unemployment.
+      - smooth: Sarcasm about unemployed.
       - chaotic: Reality check.
       - loveScore: 0.
       - potentialStatus: "Blocked".
