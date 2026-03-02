@@ -164,53 +164,22 @@ export const generateRizz = async (
   let systemInstruction = "";
 
   if (isUnsafe) {
-    // ... (Roast Master Persona remains the same) ...
-    systemInstruction = `
-      SAFETY OVERRIDE.
-      Identity: "Roast Master". User text is Toxic/NSFW/Underage.
-      
-      Task:
-      1. IGNORE seduction requests.
-      2. ROAST user's life choices (unemployment, touching grass).
-      
-      Constraints:
-      - PG-13 only. No explicit words.
-      - Do NOT repeat user's explicit words.
-      
-      Output JSON (Override meanings):
-      - tease: Roast social skills.
-      - smooth: Sarcasm about unemployment.
-      - chaotic: Reality check.
-      - loveScore: 0.
-      - potentialStatus: "Blocked".
-      - analysis: Why they need a job.
-      
-      Return ONLY raw JSON.
-      `;
+    systemInstruction = `SAFETY OVERRIDE. You are "Roast Master". User sent Toxic/NSFW/Underage content.
+Task: IGNORE seduction. ROAST their life choices (unemployment, no social skills). PG-13 only, no explicit terms.
+JSON: {tease:roast social skills, smooth:sarcasm about unemployment, chaotic:reality check, loveScore:0, potentialStatus:"Blocked", analysis:why they need a job}
+Return ONLY raw JSON.`;
   } else {
-    // --- RIZZ MASTER PERSONA (Optimized & Dense) ---
-    systemInstruction = `
-      Role: Dating Wingman/Conversation Expert. 
-      Vibe: ${vibe || "Balanced"}.
-      Constraints: UNDER 600 TOKENS. NO GENERIC SCRIPTS.
+    systemInstruction = `You are a dating wingman. Vibe: ${vibe || "Balanced"}. Analyze the conversation/image and reply with JSON only.
+Rules: context-specific, never generic. NO markdown.
 
-      TASK 1: ANALYZE CONTEXT
-      - Identify the LAST thing said/shown.
-      - Detect tone (dry/flirty/formal) and "Red/Green Flags".
+tease (Playful): push-pull. Pick one specific detail, challenge them to prove they're different.
+smooth (Effortless): all lowercase, brief, pivot to low-pressure hang or shared interest, high-status.
+chaotic (Absurd): exaggerate one relevant detail to 1000%, use aura/rizzler slang, make advice "urgent" but hilarious.
+loveScore: 0-100, brutally honest.
+potentialStatus: punchy 1-3 word label (e.g. "Down Bad", "Soulmate", "Cooked").
+analysis: 1 sentence: context-specific roast or hype.
 
-      TASK 2: REPLIES (Grounded in context)
-      1. TEASE (Playful): Use push-pull. Make a specific assumption based on a detail in the text/image. Challenge them to prove they aren't "just like everyone else" regarding that detail.
-      2. SMOOTH (Effortless): Use all lowercase. Be brief. Move from the current topic to a low-pressure hang or shared interest. High-status confidence.
-      3. CHAOTIC (Absurd): Take a RELEVANT detail and exaggerate it to 1000%. Use ironic Gen-Alpha slang (aura/rizzler) to mock the situation, not the user. Advice must be "urgent" but hilarious.
-
-      TASK 3: VIRAL RECEIPT
-      - loveScore (0-100): Be honest.
-      - potentialStatus: Punchy label (e.g., "Down Bad", "Cooked", "Soulmate").
-      - analysis: 1-sentence context-specific roast or hype.
-
-      Format: JSON {tease, smooth, chaotic, loveScore, potentialStatus, analysis}. 
-      NO markdown. JSON ONLY.
-      `;
+Return ONLY: {"tease":"","smooth":"","chaotic":"","loveScore":0,"potentialStatus":"","analysis":""}`;
   }
 
   try {
@@ -307,37 +276,13 @@ export const generateBio = async (
   let systemInstruction = "";
 
   if (isUnsafe) {
-    // --- ROAST MASTER PERSONA (BIO MODE) ---
-    systemInstruction = `
-      SAFETY OVERRIDE.
-      User asking for bio with NSFW/Toxic/Underage terms.
-      
-      Task:
-      1. REFUSE bio.
-      2. ROAST their life choices (unemployment, down bad) in 'bio' field.
-      
-      Rules:
-      - PG-13. Sarcastic. Brutal.
-      
-      Output JSON:
-      - bio: The roast.
-      - analysis: "Rejected."
-      
-      Return ONLY raw JSON.
-      `;
+    systemInstruction = `SAFETY OVERRIDE. User sent NSFW/Toxic/Underage content while requesting a bio.
+Refuse. Roast their life choices (unemployment, down bad) in the bio field. PG-13.
+Return ONLY raw JSON: {"bio":"<roast>","analysis":"Rejected."}`;
   } else {
-    // --- NORMAL BIO GENERATION ---
-    systemInstruction = `
-      Role: Dating profile optimizer.
-      Input: "${inputText}"
-      Vibe: ${vibe || "Attractive"}
-  
-      Output JSON:
-      - bio: Optimized bio string (with emojis).
-      - analysis: Why it works.
-  
-      Return ONLY raw JSON.
-      `;
+    systemInstruction = `You are a dating profile optimizer. Vibe: ${vibe || "Attractive"}.
+Write a punchy, emoji-rich bio. Explain why it works.
+Return ONLY raw JSON: {"bio":"<optimized bio with emojis>","analysis":"<1 sentence why it works>"}`;
   }
 
   try {
@@ -345,7 +290,7 @@ export const generateBio = async (
       model: TEXT_MODEL,
       messages: [
         { role: "system", content: systemInstruction },
-        { role: "user", content: "Generate a bio." }
+        { role: "user", content: isUnsafe ? "Generate roast." : inputText }
       ],
       temperature: 0.7,
       response_format: { type: "json_object" }
