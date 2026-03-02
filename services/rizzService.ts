@@ -196,35 +196,35 @@ export const generateRizz = async (
 
       TASK 1: DEEP CONTEXT ANALYSIS
       - Analyze the TONE: (Dry, flirty, defensive, ghosting, formal, or chaotic).
-      - Check timestamps/gaps: Detect double texting, late-night "u up?" energy, or long-term radio silence.
+      - Check timestamps/gaps: Detect double texting or long-term radio silence.
       - Detect Emotional Subtext: Is there tension, interest, or boredom?
       - Identify "Red/Green Flags": Call them out in the analysis if they exist.
 
-      TASK 2: GENERATE REPLIES (3 Distinct Personas)
+      TASK 2: GENERATE REPLIES (Grounded in Context)
       
       1. TEASE (Playful/Banter):
          - Identity: The "Banter King/Queen". Use push-pull dynamics.
-         - Logic: Make a playful assumption about them (e.g., "I bet you're the type to...") or call out a small detail in a funny way.
-         - Energy: Cocky-funny. Never be mean, just playfully challenging.
-         - Goal: Create a "vibey" tension that demands a spirited response.
-         - Avoid: Generic "Are you trouble?" or "What's a girl like you doing here?" lines.
+         - Logic: Make a playful, specific assumption about them BASED DIRECTLY on their text or the image. 
+         - Rule: Never use generic scripts. The tease must feel like a direct reaction to something they just said or did.
+         - Energy: Cocky-funny. Challenge them playfully to prove you wrong.
       
       2. SMOOTH (Charming/Confident):
          - Identity: High-Status, direct, and effortless.
          - Logic: Use "Low-Investment" charm. Be brief. Compliment their energy/vibe rather than physical looks.
-         - Call to Action: Subtly move the conversation toward a meet-up or a specific shared interest (e.g., "Tacos are the move, but are you a salsa verde or rojo person?").
-         - Style: All lowercase for a relaxed, modern aesthetic. High confidence, zero desperation.
+         - Call to Action: Subtly move the conversation toward a meet-up or a specific shared interest mentioned in the context.
+         - Style: All lowercase for a relaxed, modern aesthetic.
       
       3. CHAOTIC (Unhinged/Funny):
-         - Identity: The "Trend-Hopping Chaos Demon".
-         - Logic: Hyper-fixate on an irrelevant background detail or use ironic "2026/Gen-Alpha" slang (e.g., "rizzler", "skibidi", "fanum tax", but used ironically).
-         - Advice: Provide "urgent" advice that makes no sense but is hilariously specific.
-         - Example: If input is a photo of a coffee: "the way your latte foam is shaped like a cloud means you're spiritually allergic to Mondays. we need to fix your aura immediately."
+         - Identity: The "Absurdist Trendsetter".
+         - Logic: Take a RELEVANT detail from the context and exaggerate its importance to an absurd level.
+         - Rule: Do not be random. Be hyperbolically focused on the ACTUAL conversation.
+         - Slang: Use ironic "2026/Gen-Alpha" slang (e.g., "rizzler", "skibidi", "aura") only if it fits the absurdist interpretation of the context.
+         - Example: If they mention they're tired: "the sleep deprivation is actually a tactical move to enter the astral plane. your aura is currently vibrating at 400hz. we need to get you a coffee before you accidentally ascend."
 
       TASK 3: VIRAL RECEIPT (The Analysis)
       - loveScore: 0-100. Be brutally honest. Dry "K" = 5%. Multi-line flirty text = 85%+.
       - potentialStatus: One punchy, viral-ready label (e.g., "Down Bad", "Main Character", "Cooked", "Soulmate", "Friendzone", "Wife Material", "Ghosted", "Rizzler").
-      - analysis: A 1-sentence witty ROAST or HYPE. Must be punchy enough to share as a screenshot.
+      - analysis: A 1-sentence witty ROAST or HYPE. Must be punchy and context-specific.
 
       Output JSON format:
       {
