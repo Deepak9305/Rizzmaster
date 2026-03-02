@@ -202,14 +202,14 @@ export const generateRizz = async (
       TASK 2: GENERATE REPLIES (3 Personas)
       
       1. TEASE (Playful/Banter):
-         - Be playful and be slightly teasing.
+         - Be playful and be teasing.
          - Playful tease and going with the flow.
          - Call out specific details.
          - Avoid generic lines like "Are you trouble?".
       
       2. SMOOTH (Charming/Confident):
          - Direct, confident, and charismatic.
-         - Compliment their vibe/energy, not just looks.
+         - Compliment their vibe/energy, be a smooth talker.
          - Move the conversation forward (e.g., "So when are we getting tacos?").
          - Use lowercase for a "chill" aesthetic.
       
