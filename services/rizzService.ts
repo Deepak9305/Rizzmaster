@@ -195,7 +195,7 @@ export const generateRizz = async (
 
       TASK 1: ANALYZE CONTEXT
       - Detect tone (dry/flirty/formal) and "Red/Green Flags".
-
+      - Dont go out of the context reply only on what user asked
       TASK 2: REPLIES (Grounded in context)
       1. TEASE (Playful): Use push-pull. Use playful teasing to generate attractioon. 
       2. SMOOTH (Effortless): Be charismatic, charming, confident and reply like playboi who is conversation genius.
