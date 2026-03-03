@@ -188,7 +188,7 @@ RULES:
 - analysis: 1 sharp, witty sentence reviewing their message.
 
 Return ONLY raw JSON:
-{"tease":"","smooth":"","chaotic":"","loveScore":0,"potentialStatus":"","analysis":""}`;
+{"tease":"...","smooth":"...","chaotic":"...","loveScore":0,"potentialStatus":"...","analysis":"..."}`;
   }
 
   try {
@@ -233,18 +233,31 @@ Return ONLY raw JSON:
           const rawData = JSON.parse(cleanJson(responseText));
           const sanitized = sanitizeResponse(rawData) as any;
 
+          // Normalize keys to lowercase to handle AI capitalization inconsistencies
+          // e.g. {"Tease": "..."} instead of {"tease": "..."}
+          const normalizedData: any = {};
+          if (sanitized && typeof sanitized === 'object') {
+            for (const key in sanitized) {
+              if (sanitized[key] !== "") {
+                normalizedData[key.toLowerCase()] = sanitized[key];
+              }
+            }
+          }
+
           // Validate structure and provide defaults if keys are missing
           // This prevents "blank screen" issues if the model hallucinates the schema
           const finalResponse: RizzResponse = {
-            tease: sanitized.tease || "The AI is speechless (try again).",
-            smooth: sanitized.smooth || "Too smooth for words (try again).",
-            chaotic: sanitized.chaotic || "System overload (try again).",
-            loveScore: typeof sanitized.loveScore === 'number' ? sanitized.loveScore : 50,
-            potentialStatus: sanitized.potentialStatus || "Unknown",
-            analysis: sanitized.analysis || "No analysis available."
+            tease: normalizedData.tease || "The AI is speechless (try again).",
+            smooth: normalizedData.smooth || "Too smooth for words (try again).",
+            chaotic: normalizedData.chaotic || "System overload (try again).",
+            loveScore: typeof normalizedData.lovescore === 'number' ? normalizedData.lovescore : 50,
+            potentialStatus: normalizedData.potentialstatus || "Unknown",
+            analysis: normalizedData.analysis || "No analysis available."
           };
 
           return finalResponse;
+        } else {
+          throw new Error("Empty response text from model.");
         }
       } catch (e) {
         console.warn(`Attempt ${attempts + 1} failed:`, e);
