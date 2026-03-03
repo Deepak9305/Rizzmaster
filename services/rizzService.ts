@@ -16,7 +16,7 @@ const llamaClient = new OpenAI({
 });
 
 // Model Configuration
-const VISION_MODEL = 'llama-3.2-11b-vision-preview'; // Updated to stable Groq vision model
+const VISION_MODEL = 'llama-3.2-90b-vision-preview'; // Updated to 90B vision model
 const TEXT_MODEL = 'llama-3.1-8b-instant';
 
 // --- LOCAL PRE-FILTERS ---
