@@ -833,7 +833,7 @@ const AppContentInner: React.FC = () => {
   };
 
   const lastInterstitialTime = useRef<number>(Date.now()); // Initialize with current time to start cooldown immediately on launch
-  const APP_LAUNCH_GRACE_PERIOD = 2 * 60 * 1000; // 2 minutes grace period on launch
+  const APP_LAUNCH_GRACE_PERIOD = 3 * 60 * 1000; // 3 minutes grace period on launch
   const appLaunchTime = useRef<number>(Date.now());
 
   // --- OFFICIAL GOOGLE TEST IDS (INTERSTITIAL) ---
