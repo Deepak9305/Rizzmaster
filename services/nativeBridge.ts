@@ -1,6 +1,12 @@
 
-import { Capacitor } from '@capacitor/core';
-import { Share } from '@capacitor/share';
+import { Capacitor, registerPlugin } from '@capacitor/core';
+
+// Custom lightweight share plugin defined in MainActivity.java
+// Fires a native Android ACTION_SEND Intent — no third-party plugin needed
+interface NativeSharePlugin {
+  share(options: { text: string; title?: string }): Promise<void>;
+}
+const NativeShare = registerPlugin<NativeSharePlugin>('NativeShare');
 
 /**
  * Native Bridge Service
@@ -42,21 +48,19 @@ export const NativeBridge = {
 
     const contentToCopy = url ? `${text}\n${url}` : text;
 
-    // 1. On Native (Android/iOS), use the @capacitor/share plugin for the real native share sheet
+    // 1. On Native (Android/iOS), use our custom lightweight NativeShare plugin
+    //    which fires a native Android ACTION_SEND Intent directly (defined in MainActivity.java)
     if (Capacitor.isNativePlatform()) {
       try {
-        await Share.share({
-          title: title || 'Share',
-          text: text || undefined,
-          url: url || undefined,
-          dialogTitle: title || 'Share via',
-        });
+        const shareText = url ? `${text}\n${url}` : text;
+        await NativeShare.share({ text: shareText, title: title || 'Share' });
         return 'SHARED';
       } catch (err: any) {
-        if (err.message?.includes('cancel') || err.message?.includes('Cancel')) {
+        // User dismissed the share chooser
+        if (err.message?.includes('cancel') || err.message?.includes('Cancel') || err.message?.includes('dismiss')) {
           return 'DISMISSED';
         }
-        console.warn('Capacitor Share failed, falling back to clipboard:', err);
+        console.warn('NativeShare failed, falling back to clipboard:', err);
         const copied = await NativeBridge.copyToClipboard(contentToCopy);
         return copied ? 'COPIED' : 'FAILED';
       }
