@@ -1,5 +1,6 @@
 
 import { Capacitor } from '@capacitor/core';
+import { Share } from '@capacitor/share';
 
 /**
  * Native Bridge Service
@@ -41,13 +42,31 @@ export const NativeBridge = {
 
     const contentToCopy = url ? `${text}\n${url}` : text;
 
-    // Try Web Share API (Desktop/Mobile Web)
-    // Validate share data for Web Share API
+    // 1. On Native (Android/iOS), use the @capacitor/share plugin for the real native share sheet
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await Share.share({
+          title: title || 'Share',
+          text: text || undefined,
+          url: url || undefined,
+          dialogTitle: title || 'Share via',
+        });
+        return 'SHARED';
+      } catch (err: any) {
+        if (err.message?.includes('cancel') || err.message?.includes('Cancel')) {
+          return 'DISMISSED';
+        }
+        console.warn('Capacitor Share failed, falling back to clipboard:', err);
+        const copied = await NativeBridge.copyToClipboard(contentToCopy);
+        return copied ? 'COPIED' : 'FAILED';
+      }
+    }
+
+    // 2. On Web: Try Web Share API
     const shareData: any = { title: title || 'Share' };
     if (text) shareData.text = text;
     if (url) shareData.url = url;
 
-    // Simplified check for better compatibility across mobile browsers
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share(shareData);
@@ -61,7 +80,7 @@ export const NativeBridge = {
       }
     }
 
-    // 3. Fallback: Copy to Clipboard (Always try this if others fail/dismiss)
+    // 3. Fallback: Copy to Clipboard
     const copied = await NativeBridge.copyToClipboard(contentToCopy);
     return copied ? 'COPIED' : 'FAILED';
   },
