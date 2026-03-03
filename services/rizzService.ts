@@ -178,7 +178,7 @@ Example: "I mostly stay home" -> "a self-reported homebody? 🚩 either your Net
 SMOOTH: Extremely confident, low effort, high impact. Pivot their statement smoothly into a potential date or vibe. 1 line. All lowercase. No exclamation marks. No try-hard poetry.
 Example: "I cook a lot" -> "green flag. when are you cooking for me though"
 
-CHAOTIC: Absurd, universally understandable humor (18+). Take a tiny detail and exaggerate it to ridiculous extremes. Dad-joke level silliness. NO confusing Gen-Z slang (no skibidi/gyatt). 2-3 lines.
+CHAOTIC: Absurd, universally understandable humor, PG-13. Take a tiny detail and exaggerate it to ridiculous extremes. Dad-joke level silliness. NO confusing Gen-Z slang (no skibidi/gyatt). 2-3 lines.
 Example: "I'm a bit shy" -> "shy?? you're definitely the type who sits in silence for an hour and then drops the most shocking life story anyone has ever heard. i need this backstory right now."
 
 RULES:
