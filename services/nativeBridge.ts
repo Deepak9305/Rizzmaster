@@ -1,13 +1,4 @@
 
-import { Capacitor, registerPlugin } from '@capacitor/core';
-
-// Custom lightweight share plugin defined in MainActivity.java
-// Fires a native Android ACTION_SEND Intent — no third-party plugin needed
-interface NativeSharePlugin {
-  share(options: { text: string; title?: string }): Promise<void>;
-}
-const NativeShare = registerPlugin<NativeSharePlugin>('NativeShare');
-
 /**
  * Native Bridge Service
  * 
@@ -36,55 +27,36 @@ export const NativeBridge = {
   },
 
   /**
-   * Share content using native share sheet if available
-   * Returns a status string: 'SHARED', 'COPIED', 'DISMISSED', 'FAILED'
+   * Share content using the Web Share API (navigator.share) on all platforms.
+   * Works reliably inside Capacitor's WebView on Android & iOS.
+   * Falls back to copying to clipboard if Web Share is not available.
+   * Returns a status string: 'SHARED' | 'COPIED' | 'DISMISSED' | 'FAILED'
    */
   share: async (title: string, text: string, url?: string): Promise<'SHARED' | 'COPIED' | 'DISMISSED' | 'FAILED'> => {
-    // Ensure we have at least some content to share
     if (!text && !url) {
       console.warn('Share called with empty text and url');
       return 'FAILED';
     }
 
     const contentToCopy = url ? `${text}\n${url}` : text;
-
-    // 1. On Native (Android/iOS), use our custom lightweight NativeShare plugin
-    //    which fires a native Android ACTION_SEND Intent directly (defined in MainActivity.java)
-    if (Capacitor.isNativePlatform()) {
-      try {
-        const shareText = url ? `${text}\n${url}` : text;
-        await NativeShare.share({ text: shareText, title: title || 'Share' });
-        return 'SHARED';
-      } catch (err: any) {
-        // User dismissed the share chooser
-        if (err.message?.includes('cancel') || err.message?.includes('Cancel') || err.message?.includes('dismiss')) {
-          return 'DISMISSED';
-        }
-        console.warn('NativeShare failed, falling back to clipboard:', err);
-        const copied = await NativeBridge.copyToClipboard(contentToCopy);
-        return copied ? 'COPIED' : 'FAILED';
-      }
-    }
-
-    // 2. On Web: Try Web Share API
-    const shareData: any = { title: title || 'Share' };
+    const shareData: ShareData = { title: title || 'Share' };
     if (text) shareData.text = text;
     if (url) shareData.url = url;
 
+    // Use Web Share API on ALL platforms (including native Android/iOS via Capacitor WebView)
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share(shareData);
         return 'SHARED';
       } catch (err: any) {
         if (err.name === 'AbortError' || err.name === 'NotAllowedError') {
-          console.log('User cancelled or blocked share');
           return 'DISMISSED';
         }
-        console.warn('Web Share failed, attempting fallback:', err);
+        console.warn('Web Share failed, falling back to clipboard:', err);
       }
     }
 
-    // 3. Fallback: Copy to Clipboard
+    // Fallback: Copy to Clipboard
     const copied = await NativeBridge.copyToClipboard(contentToCopy);
     return copied ? 'COPIED' : 'FAILED';
   },
