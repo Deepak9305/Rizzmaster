@@ -414,8 +414,6 @@ const AppContentInner: React.FC = () => {
     const currentProfile = profileRef.current;
     if (!currentProfile) return;
 
-    NativeBridge.haptic('success');
-
     const updatedProfile = { ...currentProfile, is_premium: true };
     setProfile(updatedProfile);
 
@@ -518,24 +516,20 @@ const AppContentInner: React.FC = () => {
     if (view === currentView) return;
     window.history.pushState({ view }, '');
     setCurrentView(view);
-    NativeBridge.haptic('light');
   }, [currentView]);
 
   const handleBackNavigation = useCallback(() => {
-    NativeBridge.haptic('light');
     window.history.back();
   }, []);
 
   const handleOpenPremium = useCallback(() => {
     window.history.pushState({ view: currentView, premium: true }, '');
     setShowPremiumModal(true);
-    NativeBridge.haptic('medium');
   }, [currentView]);
 
   const handleOpenSaved = useCallback(() => {
     window.history.pushState({ view: currentView, saved: true }, '');
     setShowSavedModal(true);
-    NativeBridge.haptic('light');
   }, [currentView]);
 
   useEffect(() => {
@@ -680,8 +674,6 @@ const AppContentInner: React.FC = () => {
   const handleLogout = useCallback(async () => {
     if (!window.confirm("Are you sure you want to log out of Rizz Master?")) return;
 
-    NativeBridge.haptic('medium');
-
     try {
       if (supabase) await supabase.auth.signOut();
       if (Capacitor.isNativePlatform()) {
@@ -708,7 +700,6 @@ const AppContentInner: React.FC = () => {
   }, [showToast]);
 
   const handleGuestLogin = useCallback(() => {
-    NativeBridge.haptic('light');
     const guestUser = { id: 'guest', email: 'guest@rizzmaster.ai' };
     setSession({ user: guestUser });
     loadUserData(guestUser.id);
@@ -730,7 +721,6 @@ const AppContentInner: React.FC = () => {
 
   const handleRestorePurchases = useCallback(async () => {
     if (!profileRef.current) return;
-    NativeBridge.haptic('medium');
     if (Capacitor.isNativePlatform()) {
       IAPService.restore();
     } else {
@@ -742,8 +732,6 @@ const AppContentInner: React.FC = () => {
   const toggleSave = useCallback(async (content: string, type: 'tease' | 'smooth' | 'chaotic' | 'bio') => {
     const currentProfile = profileRef.current;
     if (!currentProfile) return;
-
-    NativeBridge.haptic('light');
 
     const exists = savedItems.find(item => item.content === content);
 
@@ -782,7 +770,6 @@ const AppContentInner: React.FC = () => {
   }, [savedItems, showToast]);
 
   const handleDeleteSaved = useCallback(async (id: string) => {
-    NativeBridge.haptic('medium');
     const newItems = savedItems.filter(item => item.id !== id);
     setSavedItems(newItems);
     showToast("Item deleted", 'info');
@@ -795,7 +782,6 @@ const AppContentInner: React.FC = () => {
   }, [savedItems, showToast]);
 
   const handleDeleteAccount = useCallback(async () => {
-    NativeBridge.haptic('error');
     if (!window.confirm("Are you sure? This cannot be undone. Your account and data will be permanently deleted.")) return;
 
     const currentProfile = profileRef.current;
@@ -859,7 +845,6 @@ const AppContentInner: React.FC = () => {
   }, [toggleSave]);
 
   const handleReport = useCallback(() => {
-    NativeBridge.haptic('medium');
     showToast('Report submitted. We will review this.', 'info');
   }, [showToast]);
 
@@ -867,11 +852,9 @@ const AppContentInner: React.FC = () => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        NativeBridge.haptic('error');
         showToast('Image too large. Max 5MB.', 'error');
         return;
       }
-      NativeBridge.haptic('light');
       const reader = new FileReader();
       reader.onloadend = () => {
         setImage(reader.result as string);
@@ -886,13 +869,11 @@ const AppContentInner: React.FC = () => {
     const isPremium = profileRef.current?.is_premium;
 
     if (vibe.isPro && !isPremium) {
-      NativeBridge.haptic('error');
       showToast(`'${vibe.label}' is a Pro vibe!`, 'error');
       handleOpenPremium();
       return;
     }
 
-    NativeBridge.haptic('light');
     setSelectedVibe(prev => prev === vibe.label ? null : vibe.label);
   }, [handleOpenPremium, showToast]);
 
@@ -913,17 +894,14 @@ const AppContentInner: React.FC = () => {
     if (!currentProfile) return;
 
     if (mode === InputMode.CHAT && !inputText.trim() && !image) {
-      NativeBridge.haptic('error');
       setInputError("Give me some context! Paste the chat or upload a screenshot.");
       return;
     }
     if (mode === InputMode.BIO && !inputText.trim()) {
-      NativeBridge.haptic('error');
       setInputError("I can't write a bio for a ghost! Tell me about your hobbies, job, or vibes.");
       return;
     }
     setInputError(null);
-    NativeBridge.haptic('medium');
 
     const cost = (mode === InputMode.CHAT && image) ? 2 : 1;
 
@@ -991,7 +969,6 @@ const AppContentInner: React.FC = () => {
         setResult(res);
       } else {
         setResult(res);
-        NativeBridge.haptic('success');
         // Show Ad AFTER result is ready and displayed
         // Increased delay to 3 seconds to allow user to see the result first
         setTimeout(() => showInterstitialIfReady(), 3000);
@@ -1007,7 +984,6 @@ const AppContentInner: React.FC = () => {
   }, [mode, inputText, image, selectedVibe, showToast, handleOpenPremium, updateCredits]);
 
   const handleWatchAd = useCallback(async () => {
-    NativeBridge.haptic('medium');
     handleBackNavigation();
 
     if (Capacitor.isNativePlatform()) {
@@ -1019,7 +995,6 @@ const AppContentInner: React.FC = () => {
 
         if (rewardEarned) {
           updateCredits((profileRef.current?.credits || 0) + REWARD_CREDITS);
-          NativeBridge.haptic('success');
           showToast(`+${REWARD_CREDITS} Credits Added!`, 'success');
         } else {
           showToast('Ad was canceled or failed.', 'info');
@@ -1047,7 +1022,6 @@ const AppContentInner: React.FC = () => {
       setIsAdPlaying(false);
       if (profileRef.current) {
         updateCredits((profileRef.current.credits || 0) + REWARD_CREDITS);
-        NativeBridge.haptic('success');
         showToast(`+${REWARD_CREDITS} Credits Added!`, 'success');
       }
     }, AD_DURATION * 1000);
@@ -1060,7 +1034,6 @@ const AppContentInner: React.FC = () => {
     setResult(null);
     setInputError(null);
     setSelectedVibe(null);
-    NativeBridge.haptic('light');
   }, []);
 
   return (
@@ -1083,7 +1056,7 @@ const AppContentInner: React.FC = () => {
           <div className="min-h-[100dvh] flex flex-col items-center justify-center p-4 relative overflow-hidden bg-black safe-top safe-bottom">
             <div className="glass max-w-md w-full p-8 rounded-3xl border border-white/10 text-center relative z-10 shadow-2xl">
               <h1 className="text-2xl font-bold mb-4 text-white">Session Paused</h1>
-              <button onClick={() => { handleReclaimSession(); NativeBridge.haptic('medium'); }} className="w-full rizz-gradient py-3.5 rounded-xl font-bold text-white">
+              <button onClick={() => { handleReclaimSession(); }} className="w-full rizz-gradient py-3.5 rounded-xl font-bold text-white">
                 Use Here Instead
               </button>
             </div>
@@ -1336,13 +1309,13 @@ const AppContentInner: React.FC = () => {
                       <span className="text-2xl">📝</span>
                       <h3 className="text-xs md:text-sm font-semibold uppercase tracking-widest text-white/60">Bio Result</h3>
                       <div className="ml-auto flex gap-2">
-                        <button onClick={() => { NativeBridge.copyToClipboard(result.bio); showToast('Bio copied!', 'success'); NativeBridge.haptic('light'); }} className="p-2 rounded-full hover:bg-white/10 transition-all text-white/50 hover:text-white"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg></button>
+                        <button onClick={() => { NativeBridge.copyToClipboard(result.bio); showToast('Bio copied!', 'success'); }} className="p-2 rounded-full hover:bg-white/10 transition-all text-white/50 hover:text-white"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg></button>
                         <button onClick={() => toggleSave(result.bio, 'bio')} className={`p-2 rounded-full hover:bg-white/10 transition-all ${isSaved(result.bio) ? 'text-rose-500' : 'text-white/50 hover:text-rose-400'}`}><svg className="w-5 h-5" fill={isSaved(result.bio) ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg></button>
                       </div>
                     </div>
                     <p className="text-lg md:text-xl leading-relaxed font-medium mb-6 md:mb-8 text-white">{result.bio}</p>
                     <div className="p-4 bg-white/5 rounded-2xl border border-white/5 mb-4"><h4 className="text-[10px] uppercase font-bold text-rose-400 mb-1">Why it works</h4><p className="text-xs md:text-sm text-white/60">{result.analysis}</p></div>
-                    <button onClick={() => { NativeBridge.copyToClipboard(result.bio); showToast('Bio copied!', 'success'); NativeBridge.haptic('light'); }} className="w-full py-3 border border-white/20 rounded-xl hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2"><span>📋</span> Copy Bio</button>
+                    <button onClick={() => { NativeBridge.copyToClipboard(result.bio); showToast('Bio copied!', 'success'); }} className="w-full py-3 border border-white/20 rounded-xl hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2"><span>📋</span> Copy Bio</button>
                   </div>
                 )}
               </section>

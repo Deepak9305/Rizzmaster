@@ -42,7 +42,6 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
   const [isExiting, setIsExiting] = useState(false);
 
   const handleNext = () => {
-    NativeBridge.haptic('light');
     if (currentIndex < SLIDES.length - 1) {
       setCurrentIndex(prev => prev + 1);
     } else {
@@ -51,7 +50,6 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
   };
 
   const handleFinish = () => {
-    NativeBridge.haptic('medium');
     setIsExiting(true);
     setTimeout(onComplete, 500); // Allow exit animation
   };
@@ -66,8 +64,8 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
 
       {/* Skip Button */}
       <div className="absolute top-safe-top right-6 z-20 mt-4">
-        <button 
-          onClick={handleFinish} 
+        <button
+          onClick={handleFinish}
           className="text-white/40 text-sm font-bold uppercase tracking-wider hover:text-white transition-colors"
         >
           Skip
@@ -75,33 +73,32 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
       </div>
 
       <div className="relative z-10 w-full max-w-md flex flex-col items-center text-center">
-        
+
         {/* Dynamic Icon */}
         <div className="mb-8 relative group">
-           <div className={`absolute inset-0 bg-gradient-to-br ${currentSlide.color} blur-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-500 rounded-full`} />
-           <div className="relative text-7xl md:text-8xl animate-float select-none">
-             {currentSlide.icon}
-           </div>
+          <div className={`absolute inset-0 bg-gradient-to-br ${currentSlide.color} blur-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-500 rounded-full`} />
+          <div className="relative text-7xl md:text-8xl animate-float select-none">
+            {currentSlide.icon}
+          </div>
         </div>
 
         {/* Text Content */}
         <div className="min-h-[160px] flex flex-col items-center justify-start animate-fade-in-up" key={currentIndex}>
-            <h2 className="text-3xl font-black text-white mb-4 tracking-tight leading-tight">
-              {currentSlide.title}
-            </h2>
-            <p className="text-white/60 text-lg leading-relaxed max-w-xs">
-              {currentSlide.desc}
-            </p>
+          <h2 className="text-3xl font-black text-white mb-4 tracking-tight leading-tight">
+            {currentSlide.title}
+          </h2>
+          <p className="text-white/60 text-lg leading-relaxed max-w-xs">
+            {currentSlide.desc}
+          </p>
         </div>
 
         {/* Indicators */}
         <div className="flex gap-2 mb-10 mt-4">
           {SLIDES.map((_, idx) => (
-            <div 
+            <div
               key={idx}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                idx === currentIndex ? 'w-8 bg-white' : 'w-1.5 bg-white/20'
-              }`}
+              className={`h-1.5 rounded-full transition-all duration-300 ${idx === currentIndex ? 'w-8 bg-white' : 'w-1.5 bg-white/20'
+                }`}
             />
           ))}
         </div>

@@ -29,7 +29,6 @@ const RizzCard: React.FC<RizzCardProps> = memo(({
   const { showToast } = useToast();
 
   const handleCopy = async () => {
-    NativeBridge.haptic('light');
     const success = await NativeBridge.copyToClipboard(content);
     if (success) {
       showToast('Copied to clipboard!', 'success');

@@ -1,5 +1,4 @@
 import { Capacitor, registerPlugin } from '@capacitor/core';
-import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 
 /**
  * --- NATIVE BRIDGE ---
@@ -7,18 +6,6 @@ import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
  * OR for advanced customization.
  */
 export const NativeBridge = {
-  /**
-   * Triggers haptic feedback.
-   * Type: 'light' | 'medium' | 'heavy' | 'success' | 'error'
-   */
-  haptic: (style: 'light' | 'medium' | 'heavy' | 'success' | 'error' = 'light') => {
-    if (style === 'success' || style === 'error') {
-      Haptics.notification({ type: style === 'success' ? NotificationType.Success : NotificationType.Error });
-    } else {
-      Haptics.impact({ style: ImpactStyle[style.toUpperCase() as keyof typeof ImpactStyle] || ImpactStyle.Light });
-    }
-  },
-
   /**
    * Copy to clipboard wrapper
    */
