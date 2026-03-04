@@ -219,7 +219,7 @@ Return ONLY raw JSON:
         const completion = await llamaClient.chat.completions.create({
           model: model,
           messages: messages,
-          temperature: 1.0,
+          temperature: 0.7,
           max_tokens: 1000,
           response_format: { type: "json_object" }
         });
