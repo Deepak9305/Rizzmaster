@@ -1,0 +1,40 @@
+{
+  "appId": "app.vercel.rizzmaster",
+  "appName": "RizzMaster",
+  "webDir": "dist",
+  "server": {
+    "url": "https://rizzmaster.vercel.app/",
+    "cleartext": false,
+    "androidScheme": "https"
+  },
+  "android": {
+    "webContentsDebuggingEnabled": false
+  },
+  "plugins": {
+    "GoogleAuth": {
+      "scopes": [
+        "profile",
+        "email"
+      ],
+      "serverClientId": "413817396320-eogg5st74ecbfa346s92ren9mgr4jrqd.apps.googleusercontent.com",
+      "forceCodeForRefreshToken": true
+    },
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "launchAutoHide": true,
+      "backgroundColor": "#0B0E14",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false,
+      "splashFullScreen": true,
+      "splashImmersive": true
+    },
+    "Keyboard": {
+      "resize": "body",
+      "style": "dark",
+      "resizeOnFullScreen": true
+    },
+    "AdMob": {
+      "appId": "ca-app-pub-7381421031784616~3292048441"
+    }
+  }
+}
