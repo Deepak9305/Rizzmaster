@@ -45,12 +45,20 @@ export const NativeBridge = {
       // 1. Try official Capacitor Share (handles Native Android/iOS seamlessly)
       const canShare = await Share.canShare();
       if (canShare.value) {
-        const shareResult = await Share.share({
+
+        // Android is very strict about Intent parameters. 
+        // If 'url' is provided but isn't considered a valid URI (e.g., missing scheme), 
+        // or if certain combinations of text/url are used, the native Intent resolver can crash.
+        // Safest approach across all Android versions is to combine into text if url isn't strictly needed as a separate field.
+        const mergedText = url ? `${text ? text + '\n' : ''}${url}` : text;
+
+        const shareOptions: any = {
           title: title || 'Share',
-          text: text || undefined,
-          url: url || undefined,
+          text: mergedText,
           dialogTitle: 'Share with',
-        });
+        };
+
+        const shareResult = await Share.share(shareOptions);
 
         // Some platforms don't return accurate activityType when dismissed
         // But if it didn't throw, we assume it was processed
