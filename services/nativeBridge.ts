@@ -5,6 +5,7 @@
  * Abstraction layer to handle features that might use Native Plugins (Capacitor/Cordova)
  * or fallback to standard Web APIs.
  */
+import { Share } from '@capacitor/share';
 
 export const NativeBridge = {
   /**
@@ -27,9 +28,9 @@ export const NativeBridge = {
   },
 
   /**
-   * Share content using the Web Share API (navigator.share) on all platforms.
-   * Works reliably inside Capacitor's WebView on Android & iOS.
-   * Falls back to copying to clipboard if Web Share is not available.
+   * Share content using the official Capacitor Share plugin.
+   * Works reliably inside Capacitor's WebView on Android & iOS and falls back to Web Share API on web.
+   * Falls back to copying to clipboard if sharing fails or is unavailable.
    * Returns a status string: 'SHARED' | 'COPIED' | 'DISMISSED' | 'FAILED'
    */
   share: async (title: string, text: string, url?: string): Promise<'SHARED' | 'COPIED' | 'DISMISSED' | 'FAILED'> => {
@@ -39,24 +40,30 @@ export const NativeBridge = {
     }
 
     const contentToCopy = url ? `${text}\n${url}` : text;
-    const shareData: ShareData = { title: title || 'Share' };
-    if (text) shareData.text = text;
-    if (url) shareData.url = url;
 
-    // Use Web Share API on ALL platforms (including native Android/iOS via Capacitor WebView)
-    if (typeof navigator !== 'undefined' && navigator.share) {
-      try {
-        await navigator.share(shareData);
+    try {
+      // 1. Try official Capacitor Share (handles Native Android/iOS seamlessly)
+      const canShare = await Share.canShare();
+      if (canShare.value) {
+        const shareResult = await Share.share({
+          title: title || 'Share',
+          text: text || undefined,
+          url: url || undefined,
+          dialogTitle: 'Share with',
+        });
+
+        // Some platforms don't return accurate activityType when dismissed
+        // But if it didn't throw, we assume it was processed
         return 'SHARED';
-      } catch (err: any) {
-        if (err.name === 'AbortError' || err.name === 'NotAllowedError') {
-          return 'DISMISSED';
-        }
-        console.warn('Web Share failed, falling back to clipboard:', err);
       }
+    } catch (err: any) {
+      if (err.message?.includes('cancel') || err.message?.includes('AbortError') || err.name === 'AbortError') {
+        return 'DISMISSED';
+      }
+      console.warn('Capacitor Share failed, falling back to clipboard:', err);
     }
 
-    // Fallback: Copy to Clipboard
+    // 2. Fallback: Copy to Clipboard
     const copied = await NativeBridge.copyToClipboard(contentToCopy);
     return copied ? 'COPIED' : 'FAILED';
   },
