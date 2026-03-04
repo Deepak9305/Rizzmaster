@@ -222,8 +222,6 @@ CRITICAL: Each rizz response (tease, smooth, chaotic) MUST be substantive and at
           messages: messages,
           temperature: 0.7,
           max_tokens: 1000,
-          // @ts-ignore - Some providers support min_tokens
-          min_tokens: 105,
           response_format: { type: "json_object" }
         });
 
@@ -316,8 +314,6 @@ CRITICAL: The bio must be detailed and substantial, at least 100 tokens long.`;
         { role: "user", content: isUnsafe ? "Generate roast." : inputText }
       ],
       temperature: 0.7,
-      // @ts-ignore
-      min_tokens: 105,
       response_format: { type: "json_object" }
     });
 
