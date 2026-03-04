@@ -1,11 +1,13 @@
 
-/**
- * Native Bridge Service
- * 
- * Abstraction layer to handle features that might use Native Plugins (Capacitor/Cordova)
- * or fallback to standard Web APIs.
- */
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { Share } from '@capacitor/share';
+
+// Custom lightweight share plugin defined in MainActivity.java
+// Bypasses Capacitor Share's FileProvider constraints which cause crashes on OEMs like Xiaomi
+interface NativeSharePlugin {
+  share(options: { text: string; title?: string }): Promise<void>;
+}
+const NativeShare = registerPlugin<NativeSharePlugin>('NativeShare');
 
 export const NativeBridge = {
   /**
@@ -40,38 +42,41 @@ export const NativeBridge = {
     }
 
     const contentToCopy = url ? `${text}\n${url}` : text;
+    const mergedText = url ? `${text ? text + '\n' : ''}${url}` : text;
 
-    try {
-      // 1. Try official Capacitor Share (handles Native Android/iOS seamlessly)
-      const canShare = await Share.canShare();
-      if (canShare.value) {
-
-        // Android is very strict about Intent parameters. 
-        // If 'url' is provided but isn't considered a valid URI (e.g., missing scheme), 
-        // or if certain combinations of text/url are used, the native Intent resolver can crash.
-        // Safest approach across all Android versions is to combine into text if url isn't strictly needed as a separate field.
-        const mergedText = url ? `${text ? text + '\n' : ''}${url}` : text;
-
-        const shareOptions: any = {
-          title: title || 'Share',
-          text: mergedText,
-          dialogTitle: 'Share with',
-        };
-
-        const shareResult = await Share.share(shareOptions);
-
-        // Some platforms don't return accurate activityType when dismissed
-        // But if it didn't throw, we assume it was processed
+    // 1. Android/iOS Custom NativeShare Plugin
+    // The official @capacitor/share plugin crashes on some Android skins (like Xiaomi/Samsung)
+    // because it tries to use FileProviders even for plain text. 
+    // We use a custom NativeShare plugin defined in MainActivity.java to bypass this.
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await NativeShare.share({ text: mergedText, title: title || 'Share' });
         return 'SHARED';
+      } catch (err: any) {
+        if (err.message?.includes('cancel') || err.message?.includes('Cancel') || err.message?.includes('dismiss')) {
+          return 'DISMISSED';
+        }
+        console.warn('NativeShare crashed (OEM restriction), falling back to Web Share API:', err);
       }
-    } catch (err: any) {
-      if (err.message?.includes('cancel') || err.message?.includes('AbortError') || err.name === 'AbortError') {
-        return 'DISMISSED';
-      }
-      console.warn('Capacitor Share failed, falling back to clipboard:', err);
     }
 
-    // 2. Fallback: Copy to Clipboard
+    // 2. Web Share API Fallback (Works on Web and some WebViews)
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: title || 'Share',
+          text: mergedText,
+        });
+        return 'SHARED';
+      } catch (err: any) {
+        if (err.name === 'AbortError' || err.name === 'NotAllowedError') {
+          return 'DISMISSED';
+        }
+        console.warn('Web Share failed, falling back to clipboard:', err);
+      }
+    }
+
+    // 3. Fallback: Copy to Clipboard
     const copied = await NativeBridge.copyToClipboard(contentToCopy);
     return copied ? 'COPIED' : 'FAILED';
   },
