@@ -223,23 +223,28 @@ const AppContentInner: React.FC = () => {
     // Initial Hide
     StatusBar.hide().catch(() => { }); // Catch potential errors on initial hide
 
+    let ticking = false;
+
     // Handle Status Bar Visibility on Scroll with Debounce
     const handleScroll = () => {
-      // Use requestAnimationFrame to throttle updates to the screen refresh rate
-      requestAnimationFrame(() => {
-        const scrollY = window.scrollY;
-        const shouldBeVisible = scrollY > 50;
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrollY = window.scrollY;
+          const shouldBeVisible = scrollY > 50;
 
-        if (shouldBeVisible && !isStatusBarVisible) {
-          isStatusBarVisible = true;
-          StatusBar.show().catch(() => { });
-          StatusBar.setStyle({ style: Style.Dark }).catch(() => { });
-          StatusBar.setOverlaysWebView({ overlay: true }).catch(() => { });
-        } else if (!shouldBeVisible && isStatusBarVisible) {
-          isStatusBarVisible = false;
-          StatusBar.hide().catch(() => { });
-        }
-      });
+          if (shouldBeVisible && !isStatusBarVisible) {
+            isStatusBarVisible = true;
+            StatusBar.show().catch(() => { });
+            StatusBar.setStyle({ style: Style.Dark }).catch(() => { });
+            StatusBar.setOverlaysWebView({ overlay: true }).catch(() => { });
+          } else if (!shouldBeVisible && isStatusBarVisible) {
+            isStatusBarVisible = false;
+            StatusBar.hide().catch(() => { });
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -275,7 +280,6 @@ const AppContentInner: React.FC = () => {
       const now = Date.now();
 
       if (now - lastShown > APP_OPEN_COOLDOWN_MS) {
-        console.log("Showing App Open Ad (Simulated via Interstitial)...");
         setIsAdLoading(true);
         const adId = Capacitor.getPlatform() === 'ios' ? APP_OPEN_SIMULATED_IOS : APP_OPEN_SIMULATED_ANDROID;
 
@@ -307,7 +311,6 @@ const AppContentInner: React.FC = () => {
       // If we are not in the background, increment active time
       if (backgroundTimestamp.current === null) {
         activeTimeMs.current += 1000;
-        // console.log(`Active Time: ${activeTimeMs.current / 1000}s`); // Debugging
       }
     }, 1000);
 
@@ -325,12 +328,9 @@ const AppContentInner: React.FC = () => {
           const timeInBackground = now - backgroundTimestamp.current;
 
           if (timeInBackground >= INACTIVITY_RESET_MS) {
-            console.log(`App returned after ${Math.floor(timeInBackground / 60000)}m. Resetting ad timers.`);
             // Reset active time and ad tracking to grant a new grace period
             activeTimeMs.current = 0;
             lastAdActiveTime.current = 0;
-          } else {
-            console.log(`App returned after ${Math.floor(timeInBackground / 60000)}m. Continuing timers.`);
           }
           // We are no longer in the background
           backgroundTimestamp.current = null;
@@ -863,7 +863,7 @@ const AppContentInner: React.FC = () => {
     showToast('Report submitted. We will review this.', 'info');
   }, [showToast]);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
@@ -880,9 +880,9 @@ const AppContentInner: React.FC = () => {
       reader.readAsDataURL(file);
       if (inputError) setInputError(null);
     }
-  };
+  }, [inputError, showToast]);
 
-  const handleVibeClick = (vibe: { label: string, isPro: boolean }) => {
+  const handleVibeClick = useCallback((vibe: { label: string, isPro: boolean }) => {
     const isPremium = profileRef.current?.is_premium;
 
     if (vibe.isPro && !isPremium) {
@@ -893,8 +893,8 @@ const AppContentInner: React.FC = () => {
     }
 
     NativeBridge.haptic('light');
-    setSelectedVibe(selectedVibe === vibe.label ? null : vibe.label);
-  };
+    setSelectedVibe(prev => prev === vibe.label ? null : vibe.label);
+  }, [handleOpenPremium, showToast]);
 
   // Active Time tracking handles the grace period now (see useEffect above)
 
@@ -908,7 +908,7 @@ const AppContentInner: React.FC = () => {
   // PROD REWARD ID
   const PROD_REWARD_ID_ANDROID = 'ca-app-pub-7381421031784616/6580197977';
 
-  const handleGenerate = async () => {
+  const handleGenerate = useCallback(async () => {
     const currentProfile = profileRef.current;
     if (!currentProfile) return;
 
@@ -944,13 +944,11 @@ const AppContentInner: React.FC = () => {
 
         // 1. Check for Initial Launch Grace Period (based on active time)
         if (currentActiveTime < APP_LAUNCH_GRACE_PERIOD) {
-          console.log(`Skipping Interstitial: In Grace Period (${Math.floor(currentActiveTime / 1000)}s / ${APP_LAUNCH_GRACE_PERIOD / 1000}s active)`);
           return;
         }
 
         // 2. Check for Active Interstitial Cooldown
         if (currentActiveTime - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS) {
-          console.log("Showing Interstitial Ad...");
           const adId = Capacitor.getPlatform() === 'ios' ? TEST_INTERSTITIAL_ID_IOS : PROD_INTERSTITIAL_ID_ANDROID;
 
           try {
@@ -960,8 +958,6 @@ const AppContentInner: React.FC = () => {
           } catch (e) {
             console.warn("Interstitial failed to show:", e);
           }
-        } else {
-          console.log(`Skipping Interstitial: In Cooldown (${Math.floor((currentActiveTime - lastAdActiveTime.current) / 1000)}s / ${INTERSTITIAL_COOLDOWN_MS / 1000}s active since last ad)`);
         }
       }
     };
@@ -1008,9 +1004,9 @@ const AppContentInner: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [mode, inputText, image, selectedVibe, showToast, handleOpenPremium, updateCredits]);
 
-  const handleWatchAd = async () => {
+  const handleWatchAd = useCallback(async () => {
     NativeBridge.haptic('medium');
     handleBackNavigation();
 
@@ -1055,7 +1051,7 @@ const AppContentInner: React.FC = () => {
         showToast(`+${REWARD_CREDITS} Credits Added!`, 'success');
       }
     }, AD_DURATION * 1000);
-  };
+  }, [handleBackNavigation, showToast, updateCredits]);
 
   const isSaved = useCallback((content: string) => savedItems.some(item => item.content === content), [savedItems]);
   const clear = useCallback(() => {
@@ -1327,9 +1323,9 @@ const AppContentInner: React.FC = () => {
                     </div>
 
                     <div className="grid gap-3 md:gap-4 pb-12">
-                      <RizzCard label="Tease" content={result.tease} icon="😏" color="from-purple-500 to-indigo-500" isSaved={isSaved(result.tease)} onSave={() => handleSaveWrapper(result.tease, 'tease')} onReport={handleReport} delay={0.1} />
-                      <RizzCard label="Smooth" content={result.smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved(result.smooth)} onSave={() => handleSaveWrapper(result.smooth, 'smooth')} onReport={handleReport} delay={0.2} />
-                      <RizzCard label="Chaotic" content={result.chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved(result.chaotic)} onSave={() => handleSaveWrapper(result.chaotic, 'chaotic')} onReport={handleReport} delay={0.3} />
+                      <RizzCard label="Tease" content={result.tease} icon="😏" color="from-purple-500 to-indigo-500" isSaved={isSaved(result.tease)} type="tease" onSave={handleSaveWrapper} onReport={handleReport} delay={0.1} />
+                      <RizzCard label="Smooth" content={result.smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved(result.smooth)} type="smooth" onSave={handleSaveWrapper} onReport={handleReport} delay={0.2} />
+                      <RizzCard label="Chaotic" content={result.chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved(result.chaotic)} type="chaotic" onSave={handleSaveWrapper} onReport={handleReport} delay={0.3} />
                     </div>
                   </>
                 )}
