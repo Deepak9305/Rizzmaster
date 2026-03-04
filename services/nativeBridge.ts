@@ -1,18 +1,51 @@
 import { Capacitor, registerPlugin } from '@capacitor/core';
+import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
+import { Share } from '@capacitor/share';
+
+/**
+ * --- NATIVE BRIDGE ---
+ * Custom bridge for features not readily available in official plugins
+ * OR for advanced customization.
+ */
+interface NativeSharePlugin {
+  share(options: { title: string; text: string }): Promise<{ value: string }>;
+}
+
+const NativeShare = registerPlugin<NativeSharePlugin>("NativeShare");
 
 export const NativeBridge = {
   /**
    * Triggers haptic feedback.
    * Type: 'light' | 'medium' | 'heavy' | 'success' | 'error'
    */
-  haptic: (type: 'light' | 'medium' | 'heavy' | 'success' | 'error' = 'light') => {
-    if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      switch (type) {
-        case 'light': navigator.vibrate(10); break;
-        case 'medium': navigator.vibrate(20); break;
-        case 'heavy': navigator.vibrate(40); break;
-        case 'success': navigator.vibrate([10, 30, 10]); break;
-        case 'error': navigator.vibrate([50, 30, 50, 30, 50]); break;
+  haptic: (style: 'light' | 'medium' | 'heavy' | 'success' | 'error' = 'light') => {
+    if (style === 'success' || style === 'error') {
+      Haptics.notification({ type: style === 'success' ? NotificationType.Success : NotificationType.Error });
+    } else {
+      Haptics.impact({ style: ImpactStyle[style.toUpperCase() as keyof typeof ImpactStyle] || ImpactStyle.Light });
+    }
+  },
+
+  /**
+   * Share Content
+   * Uses custom native plugin with clipboard fallback
+   */
+  share: async (title: string, text: string): Promise<'SHARED' | 'COPIED' | 'FAILED'> => {
+    try {
+      // 1. Try custom Native intent (best experience)
+      await NativeShare.share({ title, text });
+      return 'SHARED';
+    } catch (e) {
+      console.warn("Native share failed, using fallback:", e);
+      try {
+        // 2. Try the official Capacitor Share (standard intent)
+        await Share.share({ title, text, dialogTitle: title });
+        return 'SHARED';
+      } catch (officialError) {
+        console.warn("Official share failed, using clipboard:", officialError);
+        // 3. Last resort: Copy to Clipboard
+        const success = await NativeBridge.copyToClipboard(text);
+        return success ? 'COPIED' : 'FAILED';
       }
     }
   },
