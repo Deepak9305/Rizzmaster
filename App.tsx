@@ -863,16 +863,6 @@ const AppContentInner: React.FC = () => {
     showToast('Report submitted. We will review this.', 'info');
   }, [showToast]);
 
-  const handleShare = useCallback(async (content: string) => {
-    NativeBridge.haptic('light');
-    const status = await NativeBridge.share('Rizz Master Reply', content);
-    if (status === 'COPIED') {
-      showToast('Link copied to clipboard!', 'success');
-    } else if (status === 'FAILED') {
-      showToast('Could not share content.', 'error');
-    }
-  }, [showToast]);
-
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -1137,7 +1127,6 @@ const AppContentInner: React.FC = () => {
                 onClose={handleBackNavigation}
                 savedItems={savedItems}
                 onDelete={handleDeleteSaved}
-                onShare={handleShare}
               />
             </Suspense>
 
