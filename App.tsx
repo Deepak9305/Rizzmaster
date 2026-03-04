@@ -251,6 +251,100 @@ const AppContentInner: React.FC = () => {
     profileRef.current = profile;
   }, [profile]);
 
+  // --- INTERSTITIAL AD ACTIVE TIME TRACKING ---
+  // We use refs here because we need these values to be immediately available
+  // in background/foreground event listeners and intervals without causing re-renders.
+  const activeTimeMs = useRef<number>(0);
+  const lastAdActiveTime = useRef<number>(0);
+  const backgroundTimestamp = useRef<number | null>(null);
+
+  // App Open Ad Cooldown Tracking
+  // Storing this in localStorage so it persists across app restarts
+  const APP_OPEN_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
+  const PROD_APP_OPEN_ID_ANDROID = 'ca-app-pub-7381421031784616/2705366298';
+  const TEST_APP_OPEN_ID_IOS = 'ca-app-pub-3940256099942544/5662855259';
+
+  const handleAppOpenAd = useCallback(async () => {
+    if (!profileRef.current || profileRef.current.is_premium || !Capacitor.isNativePlatform()) return;
+
+    try {
+      const lastShown = parseInt(localStorage.getItem('last_app_open_ad_time') || '0', 10);
+      const now = Date.now();
+
+      if (now - lastShown > APP_OPEN_COOLDOWN_MS) {
+        console.log("Showing App Open Ad (Simulated via Interstitial)...");
+        setIsAdLoading(true); // Briefly show loading to prevent flashing content
+        const adId = Capacitor.getPlatform() === 'ios' ? TEST_APP_OPEN_ID_IOS : PROD_APP_OPEN_ID_ANDROID;
+
+        // Wait a tiny bit for UI to settle
+        setTimeout(async () => {
+          const shown = await AdMobService.showInterstitial(adId);
+          setIsAdLoading(false);
+          if (shown) {
+            localStorage.setItem('last_app_open_ad_time', now.toString());
+          }
+        }, 800);
+      }
+    } catch (e) {
+      setIsAdLoading(false);
+      console.warn("Expected failure loading App Open ID as Interstitial:", e);
+    }
+  }, []);
+
+  const APP_LAUNCH_GRACE_PERIOD = 3 * 60 * 1000; // 3 minutes of active time
+  const INTERSTITIAL_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutes of active time between ads
+  const INACTIVITY_RESET_MS = 30 * 60 * 1000; // 30 minutes of background time to reset
+
+  // Track Active Time (Foreground)
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    // Start tracking active time immediately
+    const interval = setInterval(() => {
+      // If we are not in the background, increment active time
+      if (backgroundTimestamp.current === null) {
+        activeTimeMs.current += 1000;
+        // console.log(`Active Time: ${activeTimeMs.current / 1000}s`); // Debugging
+      }
+    }, 1000);
+
+    // Initial setup listener for App state to handle background/foreground
+    let appStateListener: any;
+
+    // Using a separate listener specifically for the vital time tracking 
+    // to keep it decoupled from the ad refresh logic below.
+    CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      const now = Date.now();
+
+      if (isActive) {
+        // App came to FOREGROUND
+        if (backgroundTimestamp.current !== null) {
+          const timeInBackground = now - backgroundTimestamp.current;
+
+          if (timeInBackground >= INACTIVITY_RESET_MS) {
+            console.log(`App returned after ${Math.floor(timeInBackground / 60000)}m. Resetting ad timers.`);
+            // Reset active time and ad tracking to grant a new grace period
+            activeTimeMs.current = 0;
+            lastAdActiveTime.current = 0;
+          } else {
+            console.log(`App returned after ${Math.floor(timeInBackground / 60000)}m. Continuing timers.`);
+          }
+          // We are no longer in the background
+          backgroundTimestamp.current = null;
+        }
+      } else {
+        // App went to BACKGROUND
+        backgroundTimestamp.current = now;
+      }
+    }).then(listener => appStateListener = listener);
+
+    return () => {
+      clearInterval(interval);
+      if (appStateListener) appStateListener.remove();
+    };
+  }, []);
+  // --- END ACTIVE TIME TRACKING ---
+
   // Check for Onboarding on Mount
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem('rizz_onboarding_completed');
@@ -264,17 +358,9 @@ const AppContentInner: React.FC = () => {
     setShowOnboarding(false);
   };
 
-  // Manage Native Banner Ads & App Open Ads
+  // Manage Native Banner Ads
   useEffect(() => {
     let timer: any;
-    let lastAppOpenAdTime = 0;
-    const APP_OPEN_AD_COOLDOWN = 30 * 60 * 1000; // 30 minutes
-
-    // --- OFFICIAL GOOGLE TEST ID (APP OPEN) ---
-    // Use Test ID for now as user hasn't provided production ID for App Open
-    const TEST_APP_OPEN_ID_ANDROID = 'ca-app-pub-3940256099942544/3419835294';
-    const TEST_APP_OPEN_ID_IOS = 'ca-app-pub-3940256099942544/5662855259';
-
     const refreshBanner = () => {
       if (Capacitor.isNativePlatform() && session) {
         // Wait for profile to load before making ad decisions
@@ -305,35 +391,8 @@ const AppContentInner: React.FC = () => {
             });
           }
 
-          // 2. Show App Open Ad (Simulated with Interstitial)
-          // Since the plugin version doesn't support App Open Ads directly, we use Interstitial as a fallback
-          const now = Date.now();
-          if (profile && !profile.is_premium && (now - lastAppOpenAdTime > APP_OPEN_AD_COOLDOWN)) {
-            // Using the provided App Open Ad ID for Android, but calling it via Interstitial method as fallback
-            // Note: Ideally this should be a real App Open Ad call if the plugin supported it.
-            // Since we are forced to use showInterstitial, we should use the Interstitial ID to avoid mismatches.
-            // HOWEVER, the user explicitly provided an App Open ID. 
-            // Trying to load an App Open ID as an Interstitial might fail or be against policy.
-            // Best practice with this plugin limitation is to stick to the Interstitial ID for this "simulated" behavior.
-            // BUT, if the user *really* wants to use that ID, we can try. 
-            // Let's stick to the PROD_INTERSTITIAL_ID_ANDROID for safety as it's guaranteed to work with showInterstitial.
-            // Wait, I should explain this to the user.
-            // Actually, let's just use the ID they gave. If it fails, it fails.
-            // const appOpenId = 'ca-app-pub-7381421031784616/2705366298'; 
-
-            // RE-EVALUATION: The user requested to separate the risk.
-            // Using an App Open ID with an Interstitial request is risky (mismatch).
-            // To be safe and ensure it works, we will use the PROD INTERSTITIAL ID for this "App Open" behavior.
-            // This makes it a standard Interstitial ad shown at app resume, which is fully supported.
-
-            const appOpenId = Capacitor.getPlatform() === 'ios' ? TEST_INTERSTITIAL_ID_IOS : PROD_INTERSTITIAL_ID_ANDROID;
-            AdMobService.showInterstitial(appOpenId).then((shown) => {
-              if (shown) {
-                lastAppOpenAdTime = now;
-                console.log("App Open Ad (via Interstitial ID) Shown");
-              }
-            });
-          }
+          // Try to show App Open ad when resuming as well
+          handleAppOpenAd();
         }
       }).then(l => appListener = l);
     }
@@ -345,7 +404,7 @@ const AppContentInner: React.FC = () => {
       // unless logout handles it.
     };
     // Optimized dependency array: only re-run if premium status changes, not on every credit update
-  }, [profile?.is_premium, session]);
+  }, [profile?.is_premium, session, handleAppOpenAd]);
 
   // Define handleUpgrade using REF to avoid stale closures
   const handleUpgrade = useCallback(async () => {
@@ -495,6 +554,8 @@ const AppContentInner: React.FC = () => {
       setSession(session);
       if (session) {
         loadUserData(session.user.id, session.user.email);
+        // NOTE: App Open Ad is triggered by the useEffect watching [session, profile, isAuthReady]
+        // after the profile has actually loaded, not here where profile is not yet available.
       } else {
         setProfile(null);
         setSavedItems([]);
@@ -536,6 +597,16 @@ const AppContentInner: React.FC = () => {
     }
     return () => clearInterval(interval);
   }, [loading]);
+
+  // Hook to handle login and trigger App Open Ad
+  useEffect(() => {
+    // Only attempt the App Open Ad if we have a valid user session, profile is loaded, 
+    // and they aren't premium.
+    if (session && profile && !profile.is_premium && isAuthReady) {
+      handleAppOpenAd();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id, !!profile, isAuthReady]); // Listen for key auth phase changes
 
   const handleReclaimSession = useCallback(() => {
     setIsSessionBlocked(false);
@@ -832,9 +903,7 @@ const AppContentInner: React.FC = () => {
     setSelectedVibe(selectedVibe === vibe.label ? null : vibe.label);
   };
 
-  const lastInterstitialTime = useRef<number>(Date.now()); // Initialize with current time to start cooldown immediately on launch
-  const APP_LAUNCH_GRACE_PERIOD = 3 * 60 * 1000; // 3 minutes grace period on launch
-  const appLaunchTime = useRef<number>(Date.now());
+  // Active Time tracking handles the grace period now (see useEffect above)
 
   // --- OFFICIAL GOOGLE TEST IDS (INTERSTITIAL) ---
   const TEST_INTERSTITIAL_ID_ANDROID = 'ca-app-pub-3940256099942544/1033173712';
@@ -845,8 +914,6 @@ const AppContentInner: React.FC = () => {
 
   // PROD REWARD ID
   const PROD_REWARD_ID_ANDROID = 'ca-app-pub-7381421031784616/6580197977';
-
-  const INTERSTITIAL_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutes
 
   const handleGenerate = async () => {
     const currentProfile = profileRef.current;
@@ -880,24 +947,28 @@ const AppContentInner: React.FC = () => {
     // We prepare the ad logic here but execute it later.
     const showInterstitialIfReady = async () => {
       if (!currentProfile.is_premium && Capacitor.isNativePlatform()) {
-        const now = Date.now();
+        const currentActiveTime = activeTimeMs.current;
 
-        // Check for Launch Grace Period (2 mins)
-        if (now - appLaunchTime.current < APP_LAUNCH_GRACE_PERIOD) {
-          console.log("Skipping Interstitial: In Launch Grace Period");
+        // 1. Check for Initial Launch Grace Period (based on active time)
+        if (currentActiveTime < APP_LAUNCH_GRACE_PERIOD) {
+          console.log(`Skipping Interstitial: In Grace Period (${Math.floor(currentActiveTime / 1000)}s / ${APP_LAUNCH_GRACE_PERIOD / 1000}s active)`);
           return;
         }
 
-        if (now - lastInterstitialTime.current > INTERSTITIAL_COOLDOWN_MS) {
+        // 2. Check for Active Interstitial Cooldown
+        if (currentActiveTime - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS) {
           console.log("Showing Interstitial Ad...");
           const adId = Capacitor.getPlatform() === 'ios' ? TEST_INTERSTITIAL_ID_IOS : PROD_INTERSTITIAL_ID_ANDROID;
 
           try {
             await AdMobService.showInterstitial(adId);
-            lastInterstitialTime.current = Date.now(); // Reset cooldown
+            // Record the active time when the ad was shown
+            lastAdActiveTime.current = activeTimeMs.current;
           } catch (e) {
             console.warn("Interstitial failed to show:", e);
           }
+        } else {
+          console.log(`Skipping Interstitial: In Cooldown (${Math.floor((currentActiveTime - lastAdActiveTime.current) / 1000)}s / ${INTERSTITIAL_COOLDOWN_MS / 1000}s active since last ad)`);
         }
       }
     };
