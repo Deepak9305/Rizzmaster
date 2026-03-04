@@ -174,8 +174,7 @@ CRITICAL: Responses must feel human, natural, and directly address specifics in 
 
 TEASE: Witty push-pull. Challenge them playfully but show interest too. 
 
-SMOOTH: Extremely confident, low effort, high impact. Pivot their statement smoothly into a potential date or vibe. All lowercase. No exclamation marks.
-
+SMOOTH: Charismatic and a smooth talker. 
 CHAOTIC: Very funny, universally understandable humor. Take a tiny detail and exaggerate it to a ridiculous extreme. Dad-joke level absurdity, PG-13, no confusing Gen-Z slang. 2-3 lines.
 
 RULES:
