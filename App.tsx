@@ -258,11 +258,14 @@ const AppContentInner: React.FC = () => {
   const lastAdActiveTime = useRef<number>(0);
   const backgroundTimestamp = useRef<number | null>(null);
 
-  // App Open Ad Cooldown Tracking
-  // Storing this in localStorage so it persists across app restarts
+  // App Open Ad (simulated via Interstitial) — 1hr cooldown persisted in localStorage.
+  // NOTE: @capacitor-community/admob does NOT support the App Open ad format in any version.
+  // The App Open ID (ca-app-pub-7381421031784616/2705366298) CANNOT be loaded via
+  // prepareInterstitial — AdMob rejects cross-type ad unit requests.
+  // We use the PROD Interstitial ID for this simulated "App Open" experience instead.
   const APP_OPEN_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
-  const PROD_APP_OPEN_ID_ANDROID = 'ca-app-pub-7381421031784616/2705366298';
-  const TEST_APP_OPEN_ID_IOS = 'ca-app-pub-3940256099942544/5662855259';
+  const APP_OPEN_SIMULATED_ANDROID = 'ca-app-pub-7381421031784616/5183026259'; // PROD Interstitial
+  const APP_OPEN_SIMULATED_IOS = 'ca-app-pub-3940256099942544/4411468910';     // Google Test ID
 
   const handleAppOpenAd = useCallback(async () => {
     if (!profileRef.current || profileRef.current.is_premium || !Capacitor.isNativePlatform()) return;
@@ -273,10 +276,10 @@ const AppContentInner: React.FC = () => {
 
       if (now - lastShown > APP_OPEN_COOLDOWN_MS) {
         console.log("Showing App Open Ad (Simulated via Interstitial)...");
-        setIsAdLoading(true); // Briefly show loading to prevent flashing content
-        const adId = Capacitor.getPlatform() === 'ios' ? TEST_APP_OPEN_ID_IOS : PROD_APP_OPEN_ID_ANDROID;
+        setIsAdLoading(true);
+        const adId = Capacitor.getPlatform() === 'ios' ? APP_OPEN_SIMULATED_IOS : APP_OPEN_SIMULATED_ANDROID;
 
-        // Wait a tiny bit for UI to settle
+        // Wait for UI to settle before showing
         setTimeout(async () => {
           const shown = await AdMobService.showInterstitial(adId);
           setIsAdLoading(false);
@@ -287,7 +290,7 @@ const AppContentInner: React.FC = () => {
       }
     } catch (e) {
       setIsAdLoading(false);
-      console.warn("Expected failure loading App Open ID as Interstitial:", e);
+      console.warn("App Open Ad (Simulated) failed:", e);
     }
   }, []);
 
