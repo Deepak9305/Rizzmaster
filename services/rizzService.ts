@@ -185,7 +185,8 @@ RULES:
 - analysis: 1 sharp, witty sentence reviewing their message.
 
 Return ONLY raw JSON:
-{"tease":"...","smooth":"...","chaotic":"...","loveScore":0,"potentialStatus":"...","analysis":"..."}`;
+{"tease":"...","smooth":"...","chaotic":"...","loveScore":0,"potentialStatus":"...","analysis":"..."}
+CRITICAL: Each rizz response (tease, smooth, chaotic) MUST be substantive and at least 2-3 sentences long. Avoid one-liners.`;
   }
 
   try {
@@ -221,6 +222,8 @@ Return ONLY raw JSON:
           messages: messages,
           temperature: 0.7,
           max_tokens: 1000,
+          // @ts-ignore - Some providers support min_tokens
+          min_tokens: 105,
           response_format: { type: "json_object" }
         });
 
@@ -301,7 +304,8 @@ Return ONLY raw JSON: {"bio":"<roast>","analysis":"Rejected."}`;
   } else {
     systemInstruction = `You are a dating profile optimizer. Vibe: ${vibe || "Attractive"}.
 Write a punchy, emoji-rich bio. Explain why it works.
-Return ONLY raw JSON: {"bio":"<optimized bio with emojis>","analysis":"<1 sentence why it works>"}`;
+Return ONLY raw JSON: {"bio":"<optimized bio with emojis>","analysis":"<1 sentence why it works>"}
+CRITICAL: The bio must be detailed and substantial, at least 100 tokens long.`;
   }
 
   try {
@@ -312,6 +316,8 @@ Return ONLY raw JSON: {"bio":"<optimized bio with emojis>","analysis":"<1 senten
         { role: "user", content: isUnsafe ? "Generate roast." : inputText }
       ],
       temperature: 0.7,
+      // @ts-ignore
+      min_tokens: 105,
       response_format: { type: "json_object" }
     });
 
