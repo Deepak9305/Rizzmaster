@@ -902,6 +902,42 @@ const AppContentInner: React.FC = () => {
     }
   }, [inputError, showToast]);
 
+  const handleGalleryCapture = useCallback(async () => {
+    if (!Capacitor.isNativePlatform()) {
+      fileInputRef.current?.click();
+      return;
+    }
+
+    try {
+      const permissions = await Camera.checkPermissions();
+      if (permissions.photos !== 'granted') {
+        const request = await Camera.requestPermissions({ permissions: ['photos'] });
+        if (request.photos !== 'granted') {
+          showToast('Image/Storage permission is required to select photos.', 'error');
+          return;
+        }
+      }
+
+      const photo = await Camera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Photos
+      });
+
+      if (photo.dataUrl) {
+        setImage(photo.dataUrl);
+        if (inputError) setInputError(null);
+      }
+    } catch (e: any) {
+      // Don't show toast if user cancelled
+      if (e.message !== 'User cancelled photos app') {
+        console.error('Gallery Error:', e);
+        showToast('Failed to open gallery.', 'error');
+      }
+    }
+  }, [inputError, showToast]);
+
   const handleVibeClick = useCallback((vibe: { label: string, isPro: boolean }) => {
     const isPremium = profileRef.current?.is_premium;
 
@@ -1259,7 +1295,7 @@ const AppContentInner: React.FC = () => {
                         <span className="text-sm font-bold text-white/80">Camera</span>
                       </button>
                       <button
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={handleGalleryCapture}
                         className="flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all active:scale-[0.98]"
                       >
                         <span className="text-xl">🖼️</span>
