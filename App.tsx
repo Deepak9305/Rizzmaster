@@ -14,6 +14,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { AdMobService } from './services/admobService';
 import IAPService from './services/iapService';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import AdSenseBanner from './components/AdSenseBanner';
 import OnboardingFlow from './components/OnboardingFlow';
 
@@ -865,6 +866,42 @@ const AppContentInner: React.FC = () => {
     }
   }, [inputError, showToast]);
 
+  const handleCameraCapture = useCallback(async () => {
+    if (!Capacitor.isNativePlatform()) {
+      fileInputRef.current?.click();
+      return;
+    }
+
+    try {
+      const permissions = await Camera.checkPermissions();
+      if (permissions.camera !== 'granted') {
+        const request = await Camera.requestPermissions({ permissions: ['camera'] });
+        if (request.camera !== 'granted') {
+          showToast('Camera permission is required to take photos.', 'error');
+          return;
+        }
+      }
+
+      const photo = await Camera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera
+      });
+
+      if (photo.dataUrl) {
+        setImage(photo.dataUrl);
+        if (inputError) setInputError(null);
+      }
+    } catch (e: any) {
+      // Don't show toast if user cancelled
+      if (e.message !== 'User cancelled photos app') {
+        console.error('Camera Error:', e);
+        showToast('Failed to open camera.', 'error');
+      }
+    }
+  }, [inputError, showToast]);
+
   const handleVibeClick = useCallback((vibe: { label: string, isPro: boolean }) => {
     const isPremium = profileRef.current?.is_premium;
 
@@ -1213,23 +1250,32 @@ const AppContentInner: React.FC = () => {
 
                 {mode === InputMode.CHAT && (
                   <div className="mb-4 md:mb-6">
-                    <div
-                      onClick={() => fileInputRef.current?.click()}
-                      className={`group border-2 border-dashed border-white/10 rounded-2xl transition-all cursor-pointer hover:border-rose-500/50 hover:bg-white/5 active:scale-[0.99] ${image ? 'p-2' : 'p-6 md:p-8'}`}
-                    >
-                      {image ? (
-                        <div className="relative w-full">
-                          <img src={image} alt="Preview" className="w-full max-h-48 object-contain rounded-lg mx-auto" />
-                          <button onClick={(e) => { e.stopPropagation(); setImage(null); }} className="absolute top-2 right-2 bg-black/80 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm border border-white/20">✕</button>
-                        </div>
-                      ) : (
-                        <div className="flex flex-row items-center justify-center gap-3 opacity-50">
-                          <span className="text-2xl">📸</span>
-                          <span className="text-sm font-medium">Add Screenshot</span>
-                        </div>
-                      )}
-                      <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
+                    <div className="grid grid-cols-2 gap-3 mb-3">
+                      <button
+                        onClick={handleCameraCapture}
+                        className="flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all active:scale-[0.98]"
+                      >
+                        <span className="text-xl">📸</span>
+                        <span className="text-sm font-bold text-white/80">Camera</span>
+                      </button>
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all active:scale-[0.98]"
+                      >
+                        <span className="text-xl">🖼️</span>
+                        <span className="text-sm font-bold text-white/80">Gallery</span>
+                      </button>
                     </div>
+
+                    {image && (
+                      <div
+                        className="group border-2 border-dashed border-white/10 rounded-2xl transition-all p-2 relative"
+                      >
+                        <img src={image} alt="Preview" className="w-full max-h-48 object-contain rounded-lg mx-auto" />
+                        <button onClick={(e) => { e.stopPropagation(); setImage(null); }} className="absolute top-2 right-2 bg-black/80 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm border border-white/20">✕</button>
+                      </div>
+                    )}
+                    <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
                   </div>
                 )}
 
