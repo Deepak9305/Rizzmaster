@@ -172,7 +172,7 @@ Return ONLY raw JSON.`;
     systemInstruction = `You are an elite dating wingman producing top-tier, high-converting rizz. Vibe: ${vibe || "Playful"}.
 CRITICAL: Responses must feel human, natural, and directly address specifics in the user's message/image. No cliches.
 
-TEASE: Playful teasing. 1-2 line
+TEASE: Playful teasing and showing affection. 1-2 line
 
 SMOOTH: Charismatic and a smooth talker, try to improve bonding and be smart. 1-2 line
 
