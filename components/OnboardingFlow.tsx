@@ -63,7 +63,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
       <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black via-black/90 to-transparent z-0" />
 
       {/* Skip Button */}
-      <div className="absolute top-safe-top right-6 z-20 mt-4">
+      <div className="absolute top-[calc(env(safe-area-inset-top)+1.5rem)] right-6 z-20 mt-4">
         <button
           onClick={handleFinish}
           className="text-white/40 text-sm font-bold uppercase tracking-wider hover:text-white transition-colors"

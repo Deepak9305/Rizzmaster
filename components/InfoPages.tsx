@@ -55,74 +55,74 @@ const InfoPages: React.FC<InfoPagesProps> = ({ page, onBack, onDeleteAccount }) 
         return (
           <>
             <h1 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-amber-200 mb-6">Support Center</h1>
-            
-            <div className="grid md:grid-cols-2 gap-6 mb-8">
-               <div className="glass p-8 rounded-3xl border border-white/10 text-center flex flex-col items-center justify-center hover:border-white/20 transition-all">
-                  <div className="w-16 h-16 bg-rose-500/20 rounded-full flex items-center justify-center text-3xl mb-4 text-rose-400">✉️</div>
-                  <h3 className="text-xl font-bold text-white mb-2">Contact Us</h3>
-                  <p className="text-white/60 mb-6 text-sm">Found a bug? Billing issue? Just want to say hi?</p>
-                  <a href="mailto:rizzmasterhelpteam@gmail.com" className="px-6 py-3 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition-colors w-full">
-                    Email Support
-                  </a>
-               </div>
 
-               <div className="glass p-8 rounded-3xl border border-white/10 text-center flex flex-col items-center justify-center hover:border-white/20 transition-all">
-                  <div className="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center text-3xl mb-4 text-amber-400">💡</div>
-                  <h3 className="text-xl font-bold text-white mb-2">Feature Request</h3>
-                  <p className="text-white/60 mb-6 text-sm">Have an idea to make the Rizz Master even better?</p>
-                  <a href="mailto:rizzmasterhelpteam@gmail.com?subject=Feature Request" className="px-6 py-3 border border-white/20 text-white font-bold rounded-xl hover:bg-white/5 transition-colors w-full">
-                    Submit Idea
-                  </a>
-               </div>
+            <div className="grid md:grid-cols-2 gap-6 mb-8">
+              <div className="glass p-8 rounded-3xl border border-white/10 text-center flex flex-col items-center justify-center hover:border-white/20 transition-all">
+                <div className="w-16 h-16 bg-rose-500/20 rounded-full flex items-center justify-center text-3xl mb-4 text-rose-400">✉️</div>
+                <h3 className="text-xl font-bold text-white mb-2">Contact Us</h3>
+                <p className="text-white/60 mb-6 text-sm">Found a bug? Billing issue? Just want to say hi?</p>
+                <a href="mailto:rizzmasterhelpteam@gmail.com" className="px-6 py-3 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition-colors w-full">
+                  Email Support
+                </a>
+              </div>
+
+              <div className="glass p-8 rounded-3xl border border-white/10 text-center flex flex-col items-center justify-center hover:border-white/20 transition-all">
+                <div className="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center text-3xl mb-4 text-amber-400">💡</div>
+                <h3 className="text-xl font-bold text-white mb-2">Feature Request</h3>
+                <p className="text-white/60 mb-6 text-sm">Have an idea to make the Rizz Master even better?</p>
+                <a href="mailto:rizzmasterhelpteam@gmail.com?subject=Feature Request" className="px-6 py-3 border border-white/20 text-white font-bold rounded-xl hover:bg-white/5 transition-colors w-full">
+                  Submit Idea
+                </a>
+              </div>
             </div>
 
             <h2 className="text-2xl font-bold text-white mb-6 pl-2 border-l-4 border-rose-500">Frequently Asked Questions</h2>
             <div className="space-y-4">
               <details className="group bg-white/5 rounded-2xl border border-white/5 overflow-hidden">
                 <summary className="flex items-center justify-between p-5 cursor-pointer hover:bg-white/5 transition-colors">
-                   <span className="font-semibold text-white">How do credits work?</span>
-                   <span className="transform group-open:rotate-180 transition-transform text-white/50">▼</span>
+                  <span className="font-semibold text-white">How do credits work?</span>
+                  <span className="transform group-open:rotate-180 transition-transform text-white/50">▼</span>
                 </summary>
                 <div className="p-5 pt-0 text-white/60 leading-relaxed border-t border-white/5 mt-2">
-                   Free users get 5 credits every day. Credits reset at midnight UTC. You can earn more credits by waiting for the cooldown or upgrading to Premium for unlimited access.
+                  Free users get 5 credits every day. Credits reset at midnight UTC. You can earn more credits by waiting for the cooldown or upgrading to Premium for unlimited access.
                 </div>
               </details>
 
               <details className="group bg-white/5 rounded-2xl border border-white/5 overflow-hidden">
                 <summary className="flex items-center justify-between p-5 cursor-pointer hover:bg-white/5 transition-colors">
-                   <span className="font-semibold text-white">Can I cancel my subscription?</span>
-                   <span className="transform group-open:rotate-180 transition-transform text-white/50">▼</span>
+                  <span className="font-semibold text-white">Can I cancel my subscription?</span>
+                  <span className="transform group-open:rotate-180 transition-transform text-white/50">▼</span>
                 </summary>
                 <div className="p-5 pt-0 text-white/60 leading-relaxed border-t border-white/5 mt-2">
-                   Yes, you can cancel your subscription at any time via the Premium Modal or by contacting support. You will retain access until the end of your billing period.
+                  Yes, you can cancel your subscription at any time through the Google Play Store. You will retain access until the end of your billing period.
                 </div>
               </details>
 
               <details className="group bg-white/5 rounded-2xl border border-white/5 overflow-hidden">
                 <summary className="flex items-center justify-between p-5 cursor-pointer hover:bg-white/5 transition-colors">
-                   <span className="font-semibold text-white">Is my chat data private?</span>
-                   <span className="transform group-open:rotate-180 transition-transform text-white/50">▼</span>
+                  <span className="font-semibold text-white">Is my chat data private?</span>
+                  <span className="transform group-open:rotate-180 transition-transform text-white/50">▼</span>
                 </summary>
                 <div className="p-5 pt-0 text-white/60 leading-relaxed border-t border-white/5 mt-2">
-                   Absolutely. We only store the generated results you explicitly save. The context you paste and images you upload are processed transiently and are not stored in our persistent database.
+                  Absolutely. We only store the generated results you explicitly save. The context you paste and images you upload are processed transiently and are not stored in our persistent database.
                 </div>
               </details>
             </div>
 
             <div className="mt-12 border-t border-red-500/20 pt-8">
               <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                 <div className="text-left">
-                    <h3 className="text-red-400 font-bold mb-2 text-lg">Danger Zone</h3>
-                    <p className="text-white/40 text-sm max-w-md">
-                        Once you delete your account, there is no going back. All your saved rizz, bio, and credits will be permanently removed.
-                    </p>
-                 </div>
-                 <button 
-                    onClick={onDeleteAccount}
-                    className="px-6 py-3 bg-red-500/5 border border-red-500/20 text-red-400 font-bold rounded-xl hover:bg-red-500/20 transition-all w-full md:w-auto flex-shrink-0"
-                  >
-                    Delete Account
-                  </button>
+                <div className="text-left">
+                  <h3 className="text-red-400 font-bold mb-2 text-lg">Danger Zone</h3>
+                  <p className="text-white/40 text-sm max-w-md">
+                    Once you delete your account, there is no going back. All your saved rizz, bio, and credits will be permanently removed.
+                  </p>
+                </div>
+                <button
+                  onClick={onDeleteAccount}
+                  className="px-6 py-3 bg-red-500/5 border border-red-500/20 text-red-400 font-bold rounded-xl hover:bg-red-500/20 transition-all w-full md:w-auto flex-shrink-0"
+                >
+                  Delete Account
+                </button>
               </div>
             </div>
           </>
@@ -133,7 +133,7 @@ const InfoPages: React.FC<InfoPagesProps> = ({ page, onBack, onDeleteAccount }) 
   return (
     <div className="min-h-screen w-full bg-black text-white animate-fade-in pb-20">
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <button 
+        <button
           onClick={onBack}
           className="mb-8 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-sm font-bold text-white/60 hover:text-white transition-all flex items-center gap-2 group"
         >
@@ -144,7 +144,7 @@ const InfoPages: React.FC<InfoPagesProps> = ({ page, onBack, onDeleteAccount }) 
           {/* Decorative Background Elements */}
           <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-rose-500/5 rounded-full blur-[80px] pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-amber-500/5 rounded-full blur-[80px] pointer-events-none" />
-          
+
           <div className="relative z-10">
             {renderContent()}
           </div>
