@@ -269,9 +269,10 @@ const AppContentInner: React.FC = () => {
   // The App Open ID (ca-app-pub-7381421031784616/2705366298) CANNOT be loaded via
   // prepareInterstitial — AdMob rejects cross-type ad unit requests.
   // We use the PROD Interstitial ID for this simulated "App Open" experience instead.
+  // Official App Open ID
   const APP_OPEN_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
-  const APP_OPEN_SIMULATED_ANDROID = 'ca-app-pub-7381421031784616/5183026259'; // PROD Interstitial
-  const APP_OPEN_SIMULATED_IOS = 'ca-app-pub-3940256099942544/4411468910';     // Google Test ID
+  const APP_OPEN_ID_ANDROID = 'ca-app-pub-7381421031784616/2705366298';
+  const APP_OPEN_ID_IOS = 'ca-app-pub-3940256099942544/5662855259'; // Google Test ID
 
   const handleAppOpenAd = useCallback(async () => {
     if (!profileRef.current || profileRef.current.is_premium || !Capacitor.isNativePlatform()) return;
@@ -282,11 +283,11 @@ const AppContentInner: React.FC = () => {
 
       if (now - lastShown > APP_OPEN_COOLDOWN_MS) {
         setIsAdLoading(true);
-        const adId = Capacitor.getPlatform() === 'ios' ? APP_OPEN_SIMULATED_IOS : APP_OPEN_SIMULATED_ANDROID;
+        const adId = Capacitor.getPlatform() === 'ios' ? APP_OPEN_ID_IOS : APP_OPEN_ID_ANDROID;
 
         // Wait for UI to settle before showing
         setTimeout(async () => {
-          const shown = await AdMobService.showInterstitial(adId);
+          const shown = await AdMobService.showAppOpenAd(adId);
           setIsAdLoading(false);
           if (shown) {
             localStorage.setItem('last_app_open_ad_time', now.toString());
@@ -299,7 +300,7 @@ const AppContentInner: React.FC = () => {
     }
   }, []);
 
-  const APP_LAUNCH_GRACE_PERIOD = 3 * 60 * 1000; // 3 minutes of active time
+  const APP_LAUNCH_GRACE_PERIOD = 5 * 60 * 1000; // 5 minutes of active time
   const INTERSTITIAL_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutes of active time between ads
   const INACTIVITY_RESET_MS = 30 * 60 * 1000; // 30 minutes of background time to reset
 
