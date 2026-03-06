@@ -613,26 +613,7 @@ const AppContentInner: React.FC = () => {
   }, []);
 
   const loadUserData = async (userId: string, email?: string) => {
-    if (!supabase || userId === 'guest') {
-      const storedProfile = localStorage.getItem('guest_profile');
-      const storedItems = localStorage.getItem('guest_saved_items');
-
-      if (storedProfile) {
-        setProfile(JSON.parse(storedProfile));
-      } else {
-        const newProfile: UserProfile = {
-          id: 'guest',
-          email: 'guest@rizzmaster.ai',
-          credits: DAILY_CREDITS,
-          is_premium: false,
-          last_daily_reset: new Date().toISOString().split('T')[0]
-        };
-        setProfile(newProfile);
-        localStorage.setItem('guest_profile', JSON.stringify(newProfile));
-      }
-      setSavedItems(storedItems ? JSON.parse(storedItems) : []);
-      return;
-    }
+    if (!supabase) return;
 
     try {
       const profilePromise = supabase.from('profiles').select('*').eq('id', userId).single();
@@ -701,11 +682,6 @@ const AppContentInner: React.FC = () => {
     }
   }, [showToast]);
 
-  const handleGuestLogin = useCallback(() => {
-    const guestUser = { id: 'guest', email: 'guest@rizzmaster.ai' };
-    setSession({ user: guestUser });
-    loadUserData(guestUser.id);
-  }, []);
 
   const updateCredits = useCallback(async (newAmount: number) => {
     const currentProfile = profileRef.current;
@@ -714,10 +690,8 @@ const AppContentInner: React.FC = () => {
     const updatedProfile = { ...currentProfile, credits: newAmount };
     setProfile(updatedProfile);
 
-    if (supabase && currentProfile.id !== 'guest') {
+    if (supabase) {
       await supabase.from('profiles').update({ credits: newAmount }).eq('id', currentProfile.id);
-    } else {
-      localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
     }
   }, []);
 
@@ -742,10 +716,8 @@ const AppContentInner: React.FC = () => {
       setSavedItems(newItems);
       showToast("Removed from saved", 'info');
 
-      if (supabase && currentProfile.id !== 'guest') {
+      if (supabase) {
         await supabase.from('saved_items').delete().eq('id', exists.id);
-      } else {
-        localStorage.setItem('guest_saved_items', JSON.stringify(newItems));
       }
     } else {
       const newItem: SavedItem = {
@@ -760,13 +732,9 @@ const AppContentInner: React.FC = () => {
       setSavedItems(newItems);
       showToast("Saved to your gems", 'success');
 
-      if (supabase && currentProfile.id !== 'guest') {
-        const { data } = await supabase.from('saved_items').insert([{ user_id: currentProfile.id, content, type }]).select().single();
-        if (data) {
-          setSavedItems(current => current.map(i => i.id === newItem.id ? { ...i, id: data.id } : i));
-        }
-      } else {
-        localStorage.setItem('guest_saved_items', JSON.stringify(newItems));
+      if (supabase) {
+        const { data } = await supabase.from('profiles').select('id').eq('id', currentProfile.id).single(); // Just a ping to ensure they exist
+        await supabase.from('saved_items').insert([{ user_id: currentProfile.id, content, type }]);
       }
     }
   }, [savedItems, showToast]);
@@ -776,10 +744,8 @@ const AppContentInner: React.FC = () => {
     setSavedItems(newItems);
     showToast("Item deleted", 'info');
 
-    if (supabase && profileRef.current?.id !== 'guest') {
+    if (supabase) {
       await supabase.from('saved_items').delete().eq('id', id);
-    } else {
-      localStorage.setItem('guest_saved_items', JSON.stringify(newItems));
     }
   }, [savedItems, showToast]);
 
@@ -789,19 +755,7 @@ const AppContentInner: React.FC = () => {
     const currentProfile = profileRef.current;
     if (!currentProfile) return;
 
-    // Handle Guest
-    if (!supabase || currentProfile.id === 'guest') {
-      localStorage.removeItem('guest_profile');
-      localStorage.removeItem('guest_saved_items');
-      setProfile(null);
-      setSession(null);
-      setSavedItems([]);
-      setResult(null);
-      setCurrentView('HOME');
-      showToast("Guest account deleted", 'info');
-      window.history.replaceState({ view: 'HOME' }, '', '/');
-      return;
-    }
+    if (!supabase) return;
 
     setLoading(true);
 
@@ -1136,7 +1090,7 @@ const AppContentInner: React.FC = () => {
             </div>
           </div>
         ) : !session ? (
-          <LoginPage onGuestLogin={handleGuestLogin} />
+          <LoginPage />
         ) : !profile ? (
           <div className="min-h-screen flex flex-col items-center justify-center text-white p-4 bg-black safe-top safe-bottom">
             <svg className="animate-spin h-8 w-8 text-rose-500 mb-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
