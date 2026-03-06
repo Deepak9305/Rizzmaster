@@ -431,10 +431,8 @@ const AppContentInner: React.FC = () => {
 
     showToast(`Welcome to the Elite Club! 👑`, 'success');
 
-    if (supabase && currentProfile.id !== 'guest') {
+    if (supabase) {
       await supabase.from('profiles').update({ is_premium: true }).eq('id', currentProfile.id);
-    } else {
-      localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
     }
   }, [showToast]);
 
