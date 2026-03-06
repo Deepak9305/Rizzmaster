@@ -21,8 +21,7 @@ const LoginPage: React.FC<LoginPageProps> = () => {
 
     const handleGoogleLogin = async () => {
         if (!supabase) {
-            alert("Supabase not configured. Using Guest Mode.");
-            onGuestLogin();
+            alert("Authentication service is currently unavailable.");
             return;
         }
 
@@ -105,8 +104,7 @@ const LoginPage: React.FC<LoginPageProps> = () => {
     const handleEmailAuth = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!supabase) {
-            alert("Supabase not configured. Using Guest Mode.");
-            onGuestLogin();
+            alert("Authentication service is currently unavailable.");
             return;
         }
 
