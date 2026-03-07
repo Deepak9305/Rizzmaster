@@ -1202,26 +1202,6 @@ const AppContentInner: React.FC = () => {
                       {mode === InputMode.CHAT ? 'The Context' : 'About You'}
                     </label>
                     <div className="flex items-center gap-3">
-                      <div className="flex p-0.5 bg-white/5 rounded-lg border border-white/10 select-none">
-                        <button
-                          onClick={() => setResponseLength('short')}
-                          className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${responseLength === 'short' ? 'bg-rose-500 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
-                        >
-                          SHORT
-                        </button>
-                        <button
-                          onClick={() => setResponseLength('medium')}
-                          className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${responseLength === 'medium' ? 'bg-rose-500 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
-                        >
-                          MEDIUM
-                        </button>
-                        <button
-                          onClick={() => setResponseLength('long')}
-                          className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${responseLength === 'long' ? 'bg-rose-500 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
-                        >
-                          LONG
-                        </button>
-                      </div>
                       {inputText.length > 0 && (
                         <button onClick={() => setInputText('')} className="text-xs text-white/30 hover:text-white">Clear</button>
                       )}
@@ -1257,6 +1237,35 @@ const AppContentInner: React.FC = () => {
                         {vibe.isPro && profile?.is_premium && selectedVibe !== vibe.label && <span className="text-[10px] text-yellow-500">👑</span>}
                       </button>
                     ))}
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-3">
+                    Response Length
+                  </label>
+                  <div className="flex p-1 bg-white/5 rounded-2xl border border-white/10 select-none w-fit">
+                    <button
+                      onClick={() => setResponseLength('short')}
+                      className={`px-4 py-2 rounded-xl text-[11px] font-bold transition-all flex flex-col items-center min-w-[70px] ${responseLength === 'short' ? 'bg-rose-500 text-white shadow-lg scale-[1.05]' : 'text-white/40 hover:text-white/60 hover:bg-white/5'}`}
+                    >
+                      <span className="text-sm mb-0.5">⚡</span>
+                      SHORT
+                    </button>
+                    <button
+                      onClick={() => setResponseLength('medium')}
+                      className={`px-4 py-2 rounded-xl text-[11px] font-bold transition-all flex flex-col items-center min-w-[70px] ${responseLength === 'medium' ? 'bg-rose-500 text-white shadow-lg scale-[1.05]' : 'text-white/40 hover:text-white/60 hover:bg-white/5'}`}
+                    >
+                      <span className="text-sm mb-0.5">✨</span>
+                      MEDIUM
+                    </button>
+                    <button
+                      onClick={() => setResponseLength('long')}
+                      className={`px-4 py-2 rounded-xl text-[11px] font-bold transition-all flex flex-col items-center min-w-[70px] ${responseLength === 'long' ? 'bg-rose-500 text-white shadow-lg scale-[1.05]' : 'text-white/40 hover:text-white/60 hover:bg-white/5'}`}
+                    >
+                      <span className="text-sm mb-0.5">🔥</span>
+                      LONG
+                    </button>
                   </div>
                 </div>
 
