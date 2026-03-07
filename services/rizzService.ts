@@ -179,6 +179,7 @@ SMOOTH: Charismatic and a smooth talker, try to improve bonding and be smart. ${
 CHAOTIC: Very funny, universally understandable humor. Take a tiny detail and exaggerate it to a ridiculous extreme. Dad-joke level absurdity, PG-13, no confusing Gen-Z slang. ${length === 'short' ? '1-2 lines' : '3-4 sentences'}.
 
 RULES:
+- Dont go out of context.
 - NO "Hey", "So", "Well", or generic bot-speak.
 - loveScore: 0-100 (brutally honest rating of their game).
 - potentialStatus: 1-3 word label (e.g. "Sleeper Hit", "NPC Energy", "Wife Material").
