@@ -1008,7 +1008,7 @@ const AppContentInner: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [mode, inputText, image, selectedVibe, showToast, handleOpenPremium, updateCredits]);
+  }, [mode, inputText, image, selectedVibe, responseLength, showToast, handleOpenPremium, updateCredits]);
 
   const handleWatchAd = useCallback(async () => {
     handleBackNavigation();
