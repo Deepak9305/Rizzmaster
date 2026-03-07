@@ -1,12 +1,13 @@
 import {
-    AdMobPlus,
-    BannerAd,
-    InterstitialAd,
-    RewardedAd
-} from '@admob-plus/capacitor';
+    AdMob,
+    BannerAdOptions,
+    BannerAdSize,
+    BannerAdPosition,
+    BannerAdPluginEvents,
+    AdMobBannerSize,
+    RewardAdPluginEvents
+} from '@capacitor-community/admob';
 import { Capacitor } from '@capacitor/core';
-
-let bannerInstance: BannerAd | null = null;
 
 export const AdMobService = {
     initialized: false,
@@ -16,11 +17,11 @@ export const AdMobService = {
         if (this.initialized) return;
 
         try {
-            await AdMobPlus.start();
+            await AdMob.initialize({});
             this.initialized = true;
-            console.log('AdMob Plus Initialized');
+            console.log('AdMob Community Initialized');
         } catch (error) {
-            console.error('AdMob Plus initialization failed', error);
+            console.error('AdMob Community initialization failed', error);
         }
     },
 
@@ -29,14 +30,17 @@ export const AdMobService = {
 
         try {
             await this.initialize();
-            // Hide old banner if any
-            if (bannerInstance) {
-                try { await bannerInstance.hide(); } catch (_) { }
-                bannerInstance = null;
-            }
-            bannerInstance = new BannerAd({ adUnitId: adId, position: 'bottom' });
-            await bannerInstance.load();
-            await bannerInstance.show();
+
+            const options: BannerAdOptions = {
+                adId: adId,
+                adSize: BannerAdSize.BANNER,
+                position: BannerAdPosition.BOTTOM_CENTER,
+                margin: 0,
+                isTesting: false
+                // isTesting is handled by the overall config, or left false for prod/test IDs
+            };
+
+            await AdMob.showBanner(options);
             console.log('AdMob Banner shown');
         } catch (e) {
             console.error('AdMob Show Banner Error:', e);
@@ -46,9 +50,7 @@ export const AdMobService = {
     async hideBanner() {
         if (!Capacitor.isNativePlatform()) return;
         try {
-            if (bannerInstance) {
-                await bannerInstance.hide();
-            }
+            await AdMob.hideBanner();
         } catch (e) {
             console.error('AdMob Hide Banner Error:', e);
         }
@@ -60,30 +62,11 @@ export const AdMobService = {
         await this.initialize();
 
         try {
-            const ad = new InterstitialAd({ adUnitId: adId });
-            await ad.load();
-            await ad.show();
+            await AdMob.prepareInterstitial({ adId });
+            await AdMob.showInterstitial();
             return true;
         } catch (error) {
             console.error('AdMob Interstitial Error', error);
-            return false;
-        }
-    },
-
-    async showAppOpenAd(adId: string): Promise<boolean> {
-        if (!Capacitor.isNativePlatform()) return false;
-
-        await this.initialize();
-
-        try {
-            // AppOpenAd via low-level API (cls-based)
-            const id = Math.floor(Math.random() * 100000);
-            await AdMobPlus.adCreate({ id, adUnitId: adId, cls: 'AppOpenAd' } as any);
-            await AdMobPlus.adLoad({ id });
-            await AdMobPlus.adShow({ id });
-            return true;
-        } catch (error) {
-            console.error('AdMob App Open Error', error);
             return false;
         }
     },
@@ -94,23 +77,23 @@ export const AdMobService = {
         await this.initialize();
 
         return new Promise(async (resolve) => {
+            let earned = false;
+
             try {
-                const ad = new RewardedAd({ adUnitId: adId });
-
-                let earned = false;
-
-                // Listen via plugin-level listener (low-level event bridge)
-                const rewardHandle = await AdMobPlus.addListener('admob.rewarded.reward', () => {
+                // Listen for reward
+                const rewardListener = await AdMob.addListener(RewardAdPluginEvents.Rewarded, () => {
                     earned = true;
                 });
-                const dismissHandle = await AdMobPlus.addListener('admob.rewarded.dismiss', () => {
-                    rewardHandle.remove();
-                    dismissHandle.remove();
+
+                // Listen for dismiss
+                const dismissListener = await AdMob.addListener(RewardAdPluginEvents.Dismissed, () => {
+                    rewardListener.remove();
+                    dismissListener.remove();
                     resolve(earned);
                 });
 
-                await ad.load();
-                await ad.show();
+                await AdMob.prepareRewardVideoAd({ adId });
+                await AdMob.showRewardVideoAd();
 
             } catch (error) {
                 console.error('AdMob Reward Error', error);

@@ -282,34 +282,6 @@ const AppContentInner: React.FC = () => {
   const lastAdActiveTime = useRef<number>(0);
   const backgroundTimestamp = useRef<number | null>(null);
 
-  // App Open Ad (simulated via Interstitial) — 1hr cooldown persisted in localStorage.
-  const APP_OPEN_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
-
-  const handleAppOpenAd = useCallback(async () => {
-    if (!profileRef.current || profileRef.current.is_premium || !Capacitor.isNativePlatform()) return;
-
-    try {
-      const lastShown = parseInt(localStorage.getItem('last_app_open_ad_time') || '0', 10);
-      const now = Date.now();
-
-      if (now - lastShown > APP_OPEN_COOLDOWN_MS) {
-        setIsAdLoading(true);
-        const adId = getAdId('APP_OPEN');
-
-        // Wait for UI to settle before showing
-        setTimeout(async () => {
-          const shown = await AdMobService.showAppOpenAd(adId);
-          setIsAdLoading(false);
-          if (shown) {
-            localStorage.setItem('last_app_open_ad_time', now.toString());
-          }
-        }, 800);
-      }
-    } catch (e) {
-      setIsAdLoading(false);
-      console.warn("App Open Ad (Simulated) failed:", e);
-    }
-  }, []);
 
   const APP_LAUNCH_GRACE_PERIOD = 5 * 60 * 1000; // 5 minutes of active time
   const INTERSTITIAL_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutes of active time between ads
@@ -407,8 +379,6 @@ const AppContentInner: React.FC = () => {
             });
           }
 
-          // Try to show App Open ad when resuming as well
-          handleAppOpenAd();
         }
       }).then(l => appListener = l);
     }
@@ -420,7 +390,7 @@ const AppContentInner: React.FC = () => {
       // unless logout handles it.
     };
     // Optimized dependency array: only re-run if premium status changes, not on every credit update
-  }, [profile?.is_premium, session, handleAppOpenAd]);
+  }, [profile?.is_premium, session]);
 
   // Define handleUpgrade using REF to avoid stale closures
   const handleUpgrade = useCallback(async () => {
@@ -606,15 +576,7 @@ const AppContentInner: React.FC = () => {
     return () => clearInterval(interval);
   }, [loading]);
 
-  // Hook to handle login and trigger App Open Ad
-  useEffect(() => {
-    // Only attempt the App Open Ad if we have a valid user session, profile is loaded, 
-    // and they aren't premium.
-    if (session && profile && !profile.is_premium && isAuthReady) {
-      handleAppOpenAd();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.user?.id, !!profile, isAuthReady]); // Listen for key auth phase changes
+
 
   const handleReclaimSession = useCallback(() => {
     setIsSessionBlocked(false);
