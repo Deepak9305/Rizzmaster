@@ -25,7 +25,8 @@ const InfoPages = lazy(() => import('./components/InfoPages'));
 
 const DAILY_CREDITS = 5;
 const REWARD_CREDITS = 5;
-const AD_DURATION = 15;
+const AD_DURATION = 10;
+const SIMULATE_REWARD_AD = true; // Use 10s blank timer instead of real AdMob
 
 // --- AD CONFIGURATION ---
 const USE_TEST_ADS = true; // Set to false for Production
@@ -1022,6 +1023,30 @@ const AppContentInner: React.FC = () => {
   const handleWatchAd = useCallback(async () => {
     handleBackNavigation();
 
+    if (SIMULATE_REWARD_AD) {
+      // Bypassing real AdMob to show the 10s blank timer reward flow
+      setIsAdPlaying(true);
+      setAdTimer(AD_DURATION);
+      const interval = setInterval(() => {
+        setAdTimer((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      setTimeout(() => {
+        setIsAdPlaying(false);
+        if (profileRef.current) {
+          updateCredits((profileRef.current.credits || 0) + REWARD_CREDITS);
+          showToast(`+${REWARD_CREDITS} Credits Added!`, 'success');
+        }
+      }, AD_DURATION * 1000);
+      return;
+    }
+
     if (Capacitor.isNativePlatform()) {
       setIsAdLoading(true);
       try {
@@ -1151,7 +1176,7 @@ const AppContentInner: React.FC = () => {
                     <div className="h-full bg-rose-500 transition-all ease-linear w-full" style={{ width: '0%', transitionDuration: `${AD_DURATION}s` }}></div>
                   </div>
                   <div className="text-4xl font-black text-rose-500 mb-4">{adTimer}s</div>
-                  <p className="text-white/60 mb-6">Watching Rewarded Ad...</p>
+                  <p className="text-white/60 mb-6">{SIMULATE_REWARD_AD ? "Simulating Ad Content..." : "Watching Rewarded Ad..."}</p>
                 </div>
               </div>
             )}
