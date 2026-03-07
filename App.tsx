@@ -186,7 +186,7 @@ const AppContentInner: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [image, setImage] = useState<string | null>(null);
   const [selectedVibe, setSelectedVibe] = useState<string | null>(null);
-  const [responseLength, setResponseLength] = useState<ResponseLength>('short');
+  const [responseLength, setResponseLength] = useState<ResponseLength>('medium');
 
   // Loading State
   const [loading, setLoading] = useState(false);
@@ -1208,6 +1208,12 @@ const AppContentInner: React.FC = () => {
                           className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${responseLength === 'short' ? 'bg-rose-500 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
                         >
                           SHORT
+                        </button>
+                        <button
+                          onClick={() => setResponseLength('medium')}
+                          className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${responseLength === 'medium' ? 'bg-rose-500 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
+                        >
+                          MEDIUM
                         </button>
                         <button
                           onClick={() => setResponseLength('long')}

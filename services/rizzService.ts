@@ -172,11 +172,11 @@ Return ONLY raw JSON.`;
   } else {
     systemInstruction = `You are an elite dating wingman producing top-tier, high-converting rizz. Vibe: ${vibe || "Playful"}.
 
-TEASE: Playful teasing and show affection dont be mean . ${length === 'short' ? '1 line' : '2-3 sentences'}.
+TEASE: Lighthearted, charming, and playful teasing that shows affection dont be mean . ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
  
-SMOOTH: Charismatic and a smooth talker, try to improve bonding and be smart. ${length === 'short' ? '1 line' : '2-3 sentences'}.
+SMOOTH: Charismatic and a smooth talker, try to improve bonding and be smart. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
  
-CHAOTIC: Very funny, universally understandable humor. Take a tiny detail and exaggerate it to a ridiculous extreme. Dad-joke level absurdity, PG-13, no confusing Gen-Z slang. ${length === 'short' ? '1-2 lines' : '3-4 sentences'}.
+CHAOTIC: Very funny, universally understandable humor. Take a tiny detail and exaggerate it to a ridiculous extreme. Dad-joke level absurdity, PG-13, no confusing Gen-Z slang. ${length === 'short' ? '1-2 lines' : length === 'medium' ? '2-3 lines' : '3-4 sentences'}.
 
 RULES:
 - Dont go out of context.
@@ -189,7 +189,9 @@ Return ONLY raw JSON:
 {"tease":"...","smooth":"...","chaotic":"...","loveScore":0,"potentialStatus":"...","analysis":"..."}
 CRITICAL: ${length === 'short'
         ? 'Each rizz response (tease, smooth, chaotic) MUST be concise, punchy, and high-impact. Limit to 1-2 lines and approximately 18 words per response.'
-        : 'Each rizz response (tease, smooth, chaotic) MUST be substantive and at least 2-3 sentences long. Avoid one-liners.'}`;
+        : length === 'medium'
+          ? 'Each rizz response (tease, smooth, chaotic) MUST be balanced and engaging. Limit to 2-3 lines and approximately 30-35 words per response.'
+          : 'Each rizz response (tease, smooth, chaotic) MUST be substantive and at least 2-3 sentences long. Avoid one-liners.'}`;
   }
 
   try {
@@ -305,11 +307,13 @@ Refuse. Roast their life choices (unemployment, down bad) in the bio field. PG-1
 Return ONLY raw JSON: {"bio":"<roast>","analysis":"Rejected."}`;
   } else {
     systemInstruction = `You are a dating profile optimizer. Vibe: ${vibe || "Attractive"}.
-Write an emoji-rich bio (${length === 'short' ? 'punchy and concise' : 'detailed and extensive'}). Explain why it works.
+Write an emoji-rich bio (${length === 'short' ? 'punchy and concise' : length === 'medium' ? 'balanced and engaging' : 'detailed and extensive'}). Explain why it works.
 Return ONLY raw JSON: {"bio":"<optimized bio with emojis>","analysis":"<1 sentence why it works>"}
 CRITICAL: ${length === 'short'
         ? 'The bio must be punchy, catchy, and concise (1-2 lines, approx 15-20 words). Avoid being overly wordy.'
-        : 'The bio must be detailed and substantial, at least 100 tokens long.'}`;
+        : length === 'medium'
+          ? 'The bio must be balanced and engaging (3-4 lines, approx 40-50 words). Avoid being too short or too long.'
+          : 'The bio must be detailed and substantial, at least 100 tokens long.'}`;
   }
 
   try {
