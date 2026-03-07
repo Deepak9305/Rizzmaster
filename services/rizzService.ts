@@ -188,7 +188,7 @@ RULES:
 Return ONLY raw JSON:
 {"tease":"...","smooth":"...","chaotic":"...","loveScore":0,"potentialStatus":"...","analysis":"..."}
 CRITICAL: ${length === 'short'
-        ? 'Each rizz response (tease, smooth, chaotic) MUST be concise, punchy, and high-impact. Avoid unnecessary filler or repetition.'
+        ? 'Each rizz response (tease, smooth, chaotic) MUST be concise, punchy, and high-impact. Limit to 1-2 lines and approximately 15 words per response.'
         : 'Each rizz response (tease, smooth, chaotic) MUST be substantive and at least 2-3 sentences long. Avoid one-liners.'}`;
   }
 
@@ -308,7 +308,7 @@ Return ONLY raw JSON: {"bio":"<roast>","analysis":"Rejected."}`;
 Write a punchy, emoji-rich bio. Explain why it works.
 Return ONLY raw JSON: {"bio":"<optimized bio with emojis>","analysis":"<1 sentence why it works>"}
 CRITICAL: ${length === 'short'
-        ? 'The bio must be punchy, catchy, and concise. Avoid being overly wordy.'
+        ? 'The bio must be punchy, catchy, and concise (1-2 lines, approx 15-20 words). Avoid being overly wordy.'
         : 'The bio must be detailed and substantial, at least 100 tokens long.'}`;
   }
 
