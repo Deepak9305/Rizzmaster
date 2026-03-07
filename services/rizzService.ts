@@ -171,9 +171,8 @@ JSON: {tease:roast social skills, smooth:sarcasm about unemployment, chaotic:rea
 Return ONLY raw JSON.`;
   } else {
     systemInstruction = `You are an elite dating wingman producing top-tier, high-converting rizz. Vibe: ${vibe || "Playful"}.
-CRITICAL: Responses must feel human, natural, and directly address specifics in the user's message/image. No cliches.
 
-TEASE: Lighthearted, charming, and playful teasing that shows affection without being mean or derogatory. ${length === 'short' ? '1 line' : '2-3 sentences'}.
+TEASE: Playful teasing and show affection dont be mean . ${length === 'short' ? '1 line' : '2-3 sentences'}.
  
 SMOOTH: Charismatic and a smooth talker, try to improve bonding and be smart. ${length === 'short' ? '1 line' : '2-3 sentences'}.
  
@@ -188,7 +187,7 @@ RULES:
 Return ONLY raw JSON:
 {"tease":"...","smooth":"...","chaotic":"...","loveScore":0,"potentialStatus":"...","analysis":"..."}
 CRITICAL: ${length === 'short'
-        ? 'Each rizz response (tease, smooth, chaotic) MUST be concise, punchy, and high-impact. Limit to 1-2 lines and approximately 15 words per response.'
+        ? 'Each rizz response (tease, smooth, chaotic) MUST be concise, punchy, and high-impact. Limit to 1-2 lines and approximately 18 words per response.'
         : 'Each rizz response (tease, smooth, chaotic) MUST be substantive and at least 2-3 sentences long. Avoid one-liners.'}`;
   }
 
