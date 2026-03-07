@@ -1,6 +1,6 @@
 {
   "name": "rizz-master",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -8,6 +8,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@admob-plus/capacitor": "^2.0.0-alpha.0",
     "@capacitor/android": "8.1.0",
     "@capacitor/app": "8.0.1",
     "@capacitor/camera": "8.0.1",
@@ -21,7 +22,6 @@
     "@capacitor/splash-screen": "8.0.1",
     "@capacitor/status-bar": "8.0.1",
     "@capacitor/toast": "8.0.1",
-    "@capgo/capacitor-admob": "^8.0.11",
     "@codetrix-studio/capacitor-google-auth": "3.4.0-rc.4",
     "@google/genai": "*",
     "@supabase/supabase-js": "^2.39.8",

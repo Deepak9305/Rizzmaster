@@ -3,7 +3,7 @@
   "appName": "RizzMaster",
   "webDir": "dist",
   "server": {
-    "url": "https://rizzmaster.vercel.app/",
+    "url": "https://rizzmaster.online/",
     "cleartext": false,
     "androidScheme": "https"
   },
@@ -34,7 +34,8 @@
       "resizeOnFullScreen": true
     },
     "AdMob": {
-      "appId": "ca-app-pub-7381421031784616~3292048441"
+      "appId": "ca-app-pub-7381421031784616~3292048441",
+      "initializeForTesting": false
     }
   }
 }

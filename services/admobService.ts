@@ -1,25 +1,26 @@
 import {
-    AdMob,
+    AdMobPlus,
     BannerAd,
     InterstitialAd,
     RewardedAd
-} from '@capgo/capacitor-admob';
+} from '@admob-plus/capacitor';
 import { Capacitor } from '@capacitor/core';
+
+let bannerInstance: BannerAd | null = null;
 
 export const AdMobService = {
     initialized: false,
-    banner: null as any,
 
     async initialize() {
         if (!Capacitor.isNativePlatform()) return;
         if (this.initialized) return;
 
         try {
-            await AdMob.start();
+            await AdMobPlus.start();
             this.initialized = true;
-            console.log('AdMob Initialized');
+            console.log('AdMob Plus Initialized');
         } catch (error) {
-            console.error('AdMob initialization failed', error);
+            console.error('AdMob Plus initialization failed', error);
         }
     },
 
@@ -28,19 +29,14 @@ export const AdMobService = {
 
         try {
             await this.initialize();
-
-            if (this.banner) {
-                try {
-                    await this.banner.hide();
-                } catch (e) { }
+            // Hide old banner if any
+            if (bannerInstance) {
+                try { await bannerInstance.hide(); } catch (_) { }
+                bannerInstance = null;
             }
-
-            this.banner = new BannerAd({
-                adUnitId: adId,
-                position: 'bottom'
-            });
-
-            await this.banner.show();
+            bannerInstance = new BannerAd({ adUnitId: adId, position: 'bottom' });
+            await bannerInstance.load();
+            await bannerInstance.show();
             console.log('AdMob Banner shown');
         } catch (e) {
             console.error('AdMob Show Banner Error:', e);
@@ -50,8 +46,8 @@ export const AdMobService = {
     async hideBanner() {
         if (!Capacitor.isNativePlatform()) return;
         try {
-            if (this.banner) {
-                await this.banner.hide();
+            if (bannerInstance) {
+                await bannerInstance.hide();
             }
         } catch (e) {
             console.error('AdMob Hide Banner Error:', e);
@@ -64,9 +60,7 @@ export const AdMobService = {
         await this.initialize();
 
         try {
-            const ad = new InterstitialAd({
-                adUnitId: adId
-            });
+            const ad = new InterstitialAd({ adUnitId: adId });
             await ad.load();
             await ad.show();
             return true;
@@ -82,16 +76,11 @@ export const AdMobService = {
         await this.initialize();
 
         try {
-            // Using direct adCreate for AppOpenAd cls
-            const id = Math.floor(Math.random() * 10000);
-            await AdMob.adCreate({
-                id,
-                adUnitId: adId,
-                cls: 'AppOpenAd'
-            } as any);
-
-            await AdMob.adLoad({ id });
-            await AdMob.adShow({ id });
+            // AppOpenAd via low-level API (cls-based)
+            const id = Math.floor(Math.random() * 100000);
+            await AdMobPlus.adCreate({ id, adUnitId: adId, cls: 'AppOpenAd' } as any);
+            await AdMobPlus.adLoad({ id });
+            await AdMobPlus.adShow({ id });
             return true;
         } catch (error) {
             console.error('AdMob App Open Error', error);
@@ -106,19 +95,17 @@ export const AdMobService = {
 
         return new Promise(async (resolve) => {
             try {
-                const ad = new RewardedAd({
-                    adUnitId: adId
-                });
+                const ad = new RewardedAd({ adUnitId: adId });
 
                 let earned = false;
 
-                const rewardListener = AdMob.addListener('admob.rewarded.reward', () => {
+                // Listen via plugin-level listener (low-level event bridge)
+                const rewardHandle = await AdMobPlus.addListener('admob.rewarded.reward', () => {
                     earned = true;
                 });
-
-                const dismissListener = AdMob.addListener('admob.rewarded.dismiss', () => {
-                    rewardListener.remove();
-                    dismissListener.remove();
+                const dismissHandle = await AdMobPlus.addListener('admob.rewarded.dismiss', () => {
+                    rewardHandle.remove();
+                    dismissHandle.remove();
                     resolve(earned);
                 });
 

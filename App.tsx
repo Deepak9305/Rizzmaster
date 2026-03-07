@@ -26,10 +26,10 @@ const InfoPages = lazy(() => import('./components/InfoPages'));
 const DAILY_CREDITS = 5;
 const REWARD_CREDITS = 5;
 const AD_DURATION = 10;
-const SIMULATE_REWARD_AD = true; // Use 10s blank timer instead of real AdMob
+const SIMULATE_REWARD_AD = true; // Set to true for dev testing without real AdMob
 
 // --- AD CONFIGURATION ---
-const USE_TEST_ADS = true; // Set to false for Production
+const USE_TEST_ADS = false; // Set to true for testing with Google test ads
 
 const AD_IDS = {
   BANNER: {
@@ -915,16 +915,6 @@ const AppContentInner: React.FC = () => {
   }, [handleOpenPremium, showToast]);
 
   // Active Time tracking handles the grace period now (see useEffect above)
-
-  // --- OFFICIAL GOOGLE TEST IDS (INTERSTITIAL) ---
-  const TEST_INTERSTITIAL_ID_ANDROID = 'ca-app-pub-3940256099942544/1033173712';
-  const TEST_INTERSTITIAL_ID_IOS = 'ca-app-pub-3940256099942544/4411468910';
-
-  // PROD INTERSTITIAL ID
-  const PROD_INTERSTITIAL_ID_ANDROID = 'ca-app-pub-7381421031784616/5183026259';
-
-  // PROD REWARD ID
-  const PROD_REWARD_ID_ANDROID = 'ca-app-pub-7381421031784616/6580197977';
 
   const handleGenerate = useCallback(async () => {
     const currentProfile = profileRef.current;

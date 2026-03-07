@@ -17,16 +17,16 @@ export default defineConfig(({ mode }) => {
       // Gemini Key
       'process.env.API_KEY': JSON.stringify(env.API_KEY || ''),
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || ''),
-      
+
       // Llama / OpenAI Compatible Keys
       'process.env.GROQ_API_KEY': JSON.stringify(env.GROQ_API_KEY || ''),
       'process.env.LLAMA_API_KEY': JSON.stringify(env.LLAMA_API_KEY || ''),
-      'process.env.LLAMA_BASE_URL': JSON.stringify(env.LLAMA_BASE_URL || ''), 
+      'process.env.LLAMA_BASE_URL': JSON.stringify(env.LLAMA_BASE_URL || ''),
       'process.env.LLAMA_MODEL_NAME': JSON.stringify(env.LLAMA_MODEL_NAME || ''),
-      
+
       // Google Perspective API
       'process.env.PERSPECTIVE_API_KEY': JSON.stringify(env.PERSPECTIVE_API_KEY || ''),
-      
+
       // Supabase
       'process.env.REACT_APP_SUPABASE_URL': JSON.stringify(env.REACT_APP_SUPABASE_URL || ''),
       'process.env.REACT_APP_SUPABASE_ANON_KEY': JSON.stringify(env.REACT_APP_SUPABASE_ANON_KEY || ''),
@@ -35,8 +35,17 @@ export default defineConfig(({ mode }) => {
       chunkSizeWarningLimit: 1000,
       outDir: 'dist',
       assetsDir: 'assets',
-      // Ensure empty output directory before building
       emptyOutDir: true,
+      sourcemap: false,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'react-vendor': ['react', 'react-dom'],
+            'supabase-vendor': ['@supabase/supabase-js'],
+            'openai-vendor': ['openai'],
+          }
+        }
+      }
     },
   };
 });
