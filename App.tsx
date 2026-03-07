@@ -27,16 +27,32 @@ const DAILY_CREDITS = 5;
 const REWARD_CREDITS = 5;
 const AD_DURATION = 15;
 
-// --- OFFICIAL GOOGLE TEST IDS (REWARD VIDEO) ---
-const TEST_REWARD_ID_ANDROID = 'ca-app-pub-3940256099942544/5224354917';
-const TEST_REWARD_ID_IOS = 'ca-app-pub-3940256099942544/1712485313';
+// --- AD CONFIGURATION ---
+const USE_TEST_ADS = true; // Set to false for Production
 
-// --- OFFICIAL GOOGLE TEST IDS (BANNER) ---
-const TEST_BANNER_ID_ANDROID = 'ca-app-pub-3940256099942544/6300978111';
-const TEST_BANNER_ID_IOS = 'ca-app-pub-3940256099942544/2934735716';
+const AD_IDS = {
+  BANNER: {
+    ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/6300978111' : 'ca-app-pub-7381421031784616/7234804095',
+    IOS: 'ca-app-pub-3940256099942544/2934735716' // Test ID
+  },
+  INTERSTITIAL: {
+    ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/1033173712' : 'ca-app-pub-7381421031784616/5183026259',
+    IOS: 'ca-app-pub-3940256099942544/4411468910' // Test ID
+  },
+  REWARD: {
+    ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/5224354917' : 'ca-app-pub-7381421031784616/6580197977',
+    IOS: 'ca-app-pub-3940256099942544/1712485313' // Test ID
+  },
+  APP_OPEN: {
+    ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/3419835294' : 'ca-app-pub-7381421031784616/2705366298',
+    IOS: 'ca-app-pub-3940256099942544/5662855259' // Test ID
+  }
+};
 
-// PROD BANNER ID
-const PROD_BANNER_ID_ANDROID = 'ca-app-pub-7381421031784616/7234804095';
+const getAdId = (type: keyof typeof AD_IDS) => {
+  const platform = Capacitor.getPlatform() as 'ios' | 'android';
+  return platform === 'ios' ? AD_IDS[type].IOS : AD_IDS[type].ANDROID;
+};
 
 // Placeholder for Web AdSense
 const ADSENSE_SLOT_ID = '1234567890';
@@ -266,14 +282,7 @@ const AppContentInner: React.FC = () => {
   const backgroundTimestamp = useRef<number | null>(null);
 
   // App Open Ad (simulated via Interstitial) — 1hr cooldown persisted in localStorage.
-  // NOTE: @capacitor-community/admob does NOT support the App Open ad format in any version.
-  // The App Open ID (ca-app-pub-7381421031784616/2705366298) CANNOT be loaded via
-  // prepareInterstitial — AdMob rejects cross-type ad unit requests.
-  // We use the PROD Interstitial ID for this simulated "App Open" experience instead.
-  // Official App Open ID
   const APP_OPEN_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
-  const APP_OPEN_ID_ANDROID = 'ca-app-pub-7381421031784616/2705366298';
-  const APP_OPEN_ID_IOS = 'ca-app-pub-3940256099942544/5662855259'; // Google Test ID
 
   const handleAppOpenAd = useCallback(async () => {
     if (!profileRef.current || profileRef.current.is_premium || !Capacitor.isNativePlatform()) return;
@@ -284,7 +293,7 @@ const AppContentInner: React.FC = () => {
 
       if (now - lastShown > APP_OPEN_COOLDOWN_MS) {
         setIsAdLoading(true);
-        const adId = Capacitor.getPlatform() === 'ios' ? APP_OPEN_ID_IOS : APP_OPEN_ID_ANDROID;
+        const adId = getAdId('APP_OPEN');
 
         // Wait for UI to settle before showing
         setTimeout(async () => {
@@ -375,7 +384,7 @@ const AppContentInner: React.FC = () => {
         if (profile.is_premium) {
           AdMobService.hideBanner();
         } else {
-          const adId = Capacitor.getPlatform() === 'ios' ? TEST_BANNER_ID_IOS : PROD_BANNER_ID_ANDROID;
+          const adId = getAdId('BANNER');
           // Delay slightly to ensure layout is settled and old banners are gone
           timer = setTimeout(() => AdMobService.showBanner(adId), 2000);
         }
@@ -392,7 +401,7 @@ const AppContentInner: React.FC = () => {
           // 1. Refresh Banner
           if (profile && !profile.is_premium) {
             AdMobService.hideBanner().then(() => {
-              const adId = Capacitor.getPlatform() === 'ios' ? TEST_BANNER_ID_IOS : PROD_BANNER_ID_ANDROID;
+              const adId = getAdId('BANNER');
               timer = setTimeout(() => AdMobService.showBanner(adId), 1000);
             });
           }
@@ -954,7 +963,7 @@ const AppContentInner: React.FC = () => {
 
         // 2. Check for Active Interstitial Cooldown
         if (currentActiveTime - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS) {
-          const adId = Capacitor.getPlatform() === 'ios' ? TEST_INTERSTITIAL_ID_IOS : PROD_INTERSTITIAL_ID_ANDROID;
+          const adId = getAdId('INTERSTITIAL');
 
           try {
             await AdMobService.showInterstitial(adId);
@@ -1016,7 +1025,7 @@ const AppContentInner: React.FC = () => {
     if (Capacitor.isNativePlatform()) {
       setIsAdLoading(true);
       try {
-        const adUnitId = Capacitor.getPlatform() === 'ios' ? TEST_REWARD_ID_IOS : PROD_REWARD_ID_ANDROID;
+        const adUnitId = getAdId('REWARD');
         const rewardEarned = await AdMobService.showRewardVideo(adUnitId);
         setIsAdLoading(false);
 
