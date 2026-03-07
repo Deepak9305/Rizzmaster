@@ -173,11 +173,11 @@ Return ONLY raw JSON.`;
     systemInstruction = `You are an elite dating wingman producing top-tier, high-converting rizz. Vibe: ${vibe || "Playful"}.
 CRITICAL: Responses must feel human, natural, and directly address specifics in the user's message/image. No cliches.
 
-TEASE: Playful teasing and showing affection. 1 line
-
-SMOOTH: Charismatic and a smooth talker, try to improve bonding and be smart. 1 line
-
-CHAOTIC: Very funny, universally understandable humor. Take a tiny detail and exaggerate it to a ridiculous extreme. Dad-joke level absurdity, PG-13, no confusing Gen-Z slang. 1-2 lines.
+TEASE: Playful teasing and showing affection. ${length === 'short' ? '1 line' : '2-3 sentences'}.
+ 
+SMOOTH: Charismatic and a smooth talker, try to improve bonding and be smart. ${length === 'short' ? '1 line' : '2-3 sentences'}.
+ 
+CHAOTIC: Very funny, universally understandable humor. Take a tiny detail and exaggerate it to a ridiculous extreme. Dad-joke level absurdity, PG-13, no confusing Gen-Z slang. ${length === 'short' ? '1-2 lines' : '3-4 sentences'}.
 
 RULES:
 - NO "Hey", "So", "Well", or generic bot-speak.
@@ -305,7 +305,7 @@ Refuse. Roast their life choices (unemployment, down bad) in the bio field. PG-1
 Return ONLY raw JSON: {"bio":"<roast>","analysis":"Rejected."}`;
   } else {
     systemInstruction = `You are a dating profile optimizer. Vibe: ${vibe || "Attractive"}.
-Write a punchy, emoji-rich bio. Explain why it works.
+Write an emoji-rich bio (${length === 'short' ? 'punchy and concise' : 'detailed and extensive'}). Explain why it works.
 Return ONLY raw JSON: {"bio":"<optimized bio with emojis>","analysis":"<1 sentence why it works>"}
 CRITICAL: ${length === 'short'
         ? 'The bio must be punchy, catchy, and concise (1-2 lines, approx 15-20 words). Avoid being overly wordy.'
