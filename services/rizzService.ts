@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { RizzResponse, BioResponse } from "../types";
+import { RizzResponse, BioResponse, ResponseLength } from "../types";
 
 // --- CLIENT INITIALIZATION ---
 
@@ -151,7 +151,8 @@ const sanitizeResponse = <T>(data: T): T => {
 export const generateRizz = async (
   inputText: string,
   image?: string | undefined, // Base64 Data URL
-  vibe?: string | undefined
+  vibe?: string | undefined,
+  length: ResponseLength = 'short'
 ): Promise<RizzResponse> => { // Return type simplified for consistency
 
   // ... (Safety checks remain the same) ...
@@ -186,7 +187,9 @@ RULES:
 
 Return ONLY raw JSON:
 {"tease":"...","smooth":"...","chaotic":"...","loveScore":0,"potentialStatus":"...","analysis":"..."}
-CRITICAL: Each rizz response (tease, smooth, chaotic) MUST be substantive and at least 2-3 sentences long. Avoid one-liners.`;
+CRITICAL: ${length === 'short'
+        ? 'Each rizz response (tease, smooth, chaotic) MUST be concise, punchy, and high-impact. Avoid unnecessary filler or repetition.'
+        : 'Each rizz response (tease, smooth, chaotic) MUST be substantive and at least 2-3 sentences long. Avoid one-liners.'}`;
   }
 
   try {
@@ -284,7 +287,8 @@ CRITICAL: Each rizz response (tease, smooth, chaotic) MUST be substantive and at
  */
 export const generateBio = async (
   inputText: string,
-  vibe?: string | undefined
+  vibe?: string | undefined,
+  length: ResponseLength = 'short'
 ): Promise<BioResponse | { analysis: string }> => {
 
   const isToxic = HARD_BLOCK_REGEX.test(inputText);
@@ -303,7 +307,9 @@ Return ONLY raw JSON: {"bio":"<roast>","analysis":"Rejected."}`;
     systemInstruction = `You are a dating profile optimizer. Vibe: ${vibe || "Attractive"}.
 Write a punchy, emoji-rich bio. Explain why it works.
 Return ONLY raw JSON: {"bio":"<optimized bio with emojis>","analysis":"<1 sentence why it works>"}
-CRITICAL: The bio must be detailed and substantial, at least 100 tokens long.`;
+CRITICAL: ${length === 'short'
+        ? 'The bio must be punchy, catchy, and concise. Avoid being overly wordy.'
+        : 'The bio must be detailed and substantial, at least 100 tokens long.'}`;
   }
 
   try {

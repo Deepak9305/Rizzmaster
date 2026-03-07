@@ -4,6 +4,8 @@ export enum InputMode {
   BIO = 'BIO'
 }
 
+export type ResponseLength = 'short' | 'long';
+
 export interface UserProfile {
   id: string;
   email?: string;

@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect, lazy, Suspense, useCallback } from 
 import { generateRizz, generateBio } from './services/rizzService';
 import { NativeBridge } from './services/nativeBridge';
 import { ToastProvider, useToast } from './context/ToastContext';
-import { InputMode, RizzResponse, BioResponse, SavedItem, UserProfile, RizzOrBioResponse } from './types';
+import { InputMode, RizzResponse, BioResponse, SavedItem, UserProfile, RizzOrBioResponse, ResponseLength } from './types';
 import { supabase } from './services/supabaseClient';
 import RizzCard from './components/RizzCard';
 import LoginPage from './components/LoginPage';
@@ -186,6 +186,7 @@ const AppContentInner: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [image, setImage] = useState<string | null>(null);
   const [selectedVibe, setSelectedVibe] = useState<string | null>(null);
+  const [responseLength, setResponseLength] = useState<ResponseLength>('short');
 
   // Loading State
   const [loading, setLoading] = useState(false);
@@ -975,9 +976,9 @@ const AppContentInner: React.FC = () => {
 
       let res;
       if (mode === InputMode.CHAT) {
-        res = await generateRizz(inputText, image || undefined, selectedVibe || undefined);
+        res = await generateRizz(inputText, image || undefined, selectedVibe || undefined, responseLength);
       } else {
-        res = await generateBio(inputText, selectedVibe || undefined);
+        res = await generateBio(inputText, selectedVibe || undefined, responseLength);
       }
 
       if ('potentialStatus' in res && (res.potentialStatus === 'Error' || res.potentialStatus === 'Blocked')) {
@@ -1200,9 +1201,25 @@ const AppContentInner: React.FC = () => {
                     <label className="block text-xs font-bold text-white/50 uppercase tracking-widest">
                       {mode === InputMode.CHAT ? 'The Context' : 'About You'}
                     </label>
-                    {inputText.length > 0 && (
-                      <button onClick={() => setInputText('')} className="text-xs text-white/30 hover:text-white">Clear</button>
-                    )}
+                    <div className="flex items-center gap-3">
+                      <div className="flex p-0.5 bg-white/5 rounded-lg border border-white/10 select-none">
+                        <button
+                          onClick={() => setResponseLength('short')}
+                          className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${responseLength === 'short' ? 'bg-rose-500 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
+                        >
+                          SHORT
+                        </button>
+                        <button
+                          onClick={() => setResponseLength('long')}
+                          className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${responseLength === 'long' ? 'bg-rose-500 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
+                        >
+                          LONG
+                        </button>
+                      </div>
+                      {inputText.length > 0 && (
+                        <button onClick={() => setInputText('')} className="text-xs text-white/30 hover:text-white">Clear</button>
+                      )}
+                    </div>
                   </div>
                   <textarea
                     value={inputText}
