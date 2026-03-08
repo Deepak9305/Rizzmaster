@@ -1065,7 +1065,11 @@ const AppContentInner: React.FC = () => {
 
         if (sessionGenCount.current === 0) return;
 
-        if (currentActiveTime - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS) {
+        // Trigger if 3 mins have passed OR if it's exactly the 2nd generation (1st ad)
+        const isSecondGeneration = sessionGenCount.current === 1 && lastAdActiveTime.current === 0;
+        const cooldownPassed = currentActiveTime - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS;
+
+        if (cooldownPassed || isSecondGeneration) {
           setIsAdLoading('interstitial'); // SHOW OVERLAY
           const adId = getAdId('INTERSTITIAL');
 
