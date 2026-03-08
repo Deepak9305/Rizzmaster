@@ -236,8 +236,6 @@ const AppContentInner: React.FC = () => {
   const [inputError, setInputError] = useState<string | null>(null);
 
   // Modals & Flags
-  const [isAdPlaying, setIsAdPlaying] = useState(false);
-  const [adTimer, setAdTimer] = useState(0);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showSavedModal, setShowSavedModal] = useState(false);
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
@@ -1088,22 +1086,19 @@ const AppContentInner: React.FC = () => {
         const adUnitId = getAdId('REWARD');
         const rewardEarned = await AdMobService.showRewardVideo(adUnitId);
 
-        setIsAdLoading(false); // HIDE OVERLAY
-
         if (rewardEarned) {
           updateCredits((profileRef.current?.credits || 0) + REWARD_CREDITS);
           showToast(`+${REWARD_CREDITS} Credits Added!`, 'success');
-          return;
         } else {
           showToast('Ad failed to load. Please try again later.', 'error');
-          return;
         }
       } catch (e) {
         console.warn("Native Ad failed:", e);
         showToast('Ad failed to load. Please try again later.', 'error');
-        setIsAdLoading(false); // HIDE OVERLAY
-        return;
+      } finally {
+        setIsAdLoading(false); // ALWAYS HIDE OVERLAY
       }
+      return;
     }
 
     showToast('Ads are only available on mobile devices.', 'info');
@@ -1203,18 +1198,6 @@ const AppContentInner: React.FC = () => {
                 <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 flex flex-col items-center">
                   <svg className="animate-spin h-8 w-8 text-rose-500 mb-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                   <p className="text-white font-bold">Loading Ad...</p>
-                </div>
-              </div>
-            )}
-
-            {isAdPlaying && (
-              <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-8 safe-top safe-bottom">
-                <div className="w-full max-w-md bg-zinc-900 rounded-3xl p-8 text-center border border-white/10 relative overflow-hidden flex flex-col h-[60vh] justify-center">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-white/20">
-                    <div className="h-full bg-rose-500 transition-all ease-linear w-full" style={{ width: '0%', transitionDuration: `${AD_DURATION}s` }}></div>
-                  </div>
-                  <div className="text-4xl font-black text-rose-500 mb-4">{adTimer}s</div>
-                  <p className="text-white/60 mb-6">{SIMULATE_REWARD_AD ? "Simulating Ad Content..." : "Watching Rewarded Ad..."}</p>
                 </div>
               </div>
             )}
