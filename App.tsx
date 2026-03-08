@@ -185,7 +185,6 @@ const AppContentInner: React.FC = () => {
   // Auth State
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isGuest, setIsGuest] = useState(false);
   const [isAuthReady, setIsAuthReady] = useState(false);
 
   // Refs
@@ -680,7 +679,6 @@ const AppContentInner: React.FC = () => {
       console.error("Logout failed:", err);
     } finally {
       setSession(null);
-      setIsGuest(false);
       setProfile(null);
       setSavedItems([]);
       setResult(null);
@@ -696,18 +694,7 @@ const AppContentInner: React.FC = () => {
     }
   }, [showToast]);
 
-  const handleGuestLogin = useCallback(() => {
-    setIsGuest(true);
-    const guestUser: UserProfile = {
-      id: 'guest-' + Date.now(),
-      email: 'guest@rizzmaster.local',
-      credits: DAILY_CREDITS,
-      is_premium: false,
-      last_daily_reset: new Date().toISOString().split('T')[0]
-    };
-    setProfile(guestUser);
-    showToast("Continuing as Guest ⚡", 'info');
-  }, [showToast]);
+
 
 
   const updateCredits = useCallback(async (newAmount: number) => {
@@ -1116,8 +1103,8 @@ const AppContentInner: React.FC = () => {
               </button>
             </div>
           </div>
-        ) : (!session && !isGuest) ? (
-          <LoginPage onGuestLogin={handleGuestLogin} />
+        ) : !session ? (
+          <LoginPage />
         ) : !profile ? (
           <div className="min-h-screen flex flex-col items-center justify-center text-white p-4 bg-black safe-top safe-bottom">
             <svg className="animate-spin h-8 w-8 text-rose-500 mb-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
