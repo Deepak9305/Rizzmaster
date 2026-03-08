@@ -124,13 +124,25 @@ export const AdMobService = {
         }
     },
 
+    async prepareRewardVideo(adId: string) {
+        if (!Capacitor.isNativePlatform()) return;
+        await this.initialize();
+        try {
+            await AdMob.prepareRewardVideoAd({ adId });
+            console.log('AdMob Reward Video Prepared');
+        } catch (e) {
+            console.error('AdMob Prepare Reward Error:', e);
+        }
+    },
+
     async showRewardVideo(adId: string): Promise<boolean> {
         if (!Capacitor.isNativePlatform()) return false;
 
         await this.initialize();
 
         try {
-            await AdMob.prepareRewardVideoAd({ adId });
+            // No need to call prepare here if it's already pre-loaded.
+            // await AdMob.prepareRewardVideoAd({ adId });
 
             return new Promise(async (resolve) => {
                 let resolved = false;
@@ -168,6 +180,9 @@ export const AdMobService = {
                 }, 5000);
 
                 await AdMob.showRewardVideoAd();
+
+                // Immediately start preparing the NEXT one in the background
+                this.prepareRewardVideo(adId);
             });
         } catch (error) {
             console.error('AdMob Reward Error', error);

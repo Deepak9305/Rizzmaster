@@ -448,8 +448,10 @@ const AppContentInner: React.FC = () => {
   // Ad Pre-loading (Initial)
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
-      const adId = getAdId('INTERSTITIAL');
-      AdMobService.prepareInterstitial(adId);
+      const interId = getAdId('INTERSTITIAL');
+      const rewardId = getAdId('REWARD');
+      AdMobService.prepareInterstitial(interId);
+      AdMobService.prepareRewardVideo(rewardId);
     }
   }, []);
 
