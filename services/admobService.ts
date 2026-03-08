@@ -90,11 +90,11 @@ export const AdMobService = {
                     cleanupAndResolve(false);
                 });
 
-                // Timeout fail-safe (8 seconds)
+                // Timeout fail-safe (3.5 seconds)
                 const timeout = setTimeout(() => {
                     console.warn('AdMob Interstitial Timeout: Proceeding automatically.');
                     cleanupAndResolve(false);
-                }, 8000);
+                }, 3500);
 
                 await AdMob.showInterstitial();
             });
@@ -141,11 +141,11 @@ export const AdMobService = {
                     cleanupAndResolve(false);
                 });
 
-                // Fail-safe timeout (15 seconds for rewards)
+                // Fail-safe timeout (3.5 seconds)
                 const timeout = setTimeout(() => {
                     console.warn('AdMob Reward Timeout');
                     cleanupAndResolve(false);
-                }, 15000);
+                }, 3500);
 
                 await AdMob.showRewardVideoAd();
             });
