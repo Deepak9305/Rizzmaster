@@ -107,11 +107,11 @@ export const AdMobService = {
                     cleanupAndResolve(false);
                 });
 
-                // Timeout fail-safe (2 seconds)
+                // Timeout fail-safe (5 seconds)
                 const timeout = setTimeout(() => {
                     console.warn('AdMob Interstitial Timeout: Proceeding automatically.');
                     cleanupAndResolve(false);
-                }, 2000);
+                }, 5000);
 
                 await AdMob.showInterstitial();
 
