@@ -56,8 +56,8 @@ export const AdMobService = {
         }
     },
 
-    async showInterstitial(adId: string): Promise<void> {
-        if (!Capacitor.isNativePlatform()) return;
+    async showInterstitial(adId: string): Promise<boolean> {
+        if (!Capacitor.isNativePlatform()) return false;
 
         await this.initialize();
 
@@ -66,29 +66,41 @@ export const AdMobService = {
 
             return new Promise(async (resolve) => {
                 let resolved = false;
+                let showed = false;
 
-                const cleanupAndResolve = () => {
+                const cleanupAndResolve = (success: boolean) => {
                     if (resolved) return;
                     resolved = true;
                     dismissListener.remove();
                     failedListener.remove();
+                    showedListener.remove();
                     clearTimeout(timeout);
-                    resolve();
+                    resolve(success);
                 };
 
-                const dismissListener = await AdMob.addListener(InterstitialAdPluginEvents.Dismissed, cleanupAndResolve);
-                const failedListener = await AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, cleanupAndResolve);
+                const showedListener = await AdMob.addListener(InterstitialAdPluginEvents.Showed, () => {
+                    showed = true;
+                });
+
+                const dismissListener = await AdMob.addListener(InterstitialAdPluginEvents.Dismissed, () => {
+                    cleanupAndResolve(showed);
+                });
+
+                const failedListener = await AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, () => {
+                    cleanupAndResolve(false);
+                });
 
                 // Timeout fail-safe (12 seconds)
                 const timeout = setTimeout(() => {
                     console.warn('AdMob Interstitial Timeout: Proceeding automatically.');
-                    cleanupAndResolve();
+                    cleanupAndResolve(false);
                 }, 12000);
 
                 await AdMob.showInterstitial();
             });
         } catch (error) {
             console.error('AdMob Interstitial Error', error);
+            return false;
         }
     },
 

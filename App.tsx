@@ -500,18 +500,51 @@ const AppContentInner: React.FC = () => {
   // Navigation Wrappers
   const showCoachTransitionAd = async () => {
     const isPremium = profileRef.current?.is_premium;
-    if (isPremium || !Capacitor.isNativePlatform()) return;
+    if (isPremium) return;
 
     const currentActiveTime = activeTimeMs.current;
 
-    // Check grace period (3 mins)
-    if (currentActiveTime < COACH_AD_GRACE_PERIOD_MS) return;
+    // Check grace period (3 mins) or if on Web (always show once every 5 mins for testing)
+    if (currentActiveTime < COACH_AD_GRACE_PERIOD_MS && Capacitor.isNativePlatform()) return;
 
     // Check 5 min cooldown
     if (currentActiveTime - lastCoachAdTime.current >= COACH_AD_COOLDOWN_MS) {
-      const adId = getAdId('INTERSTITIAL');
-      try {
-        await AdMobService.showInterstitial(adId);
+      let rewardEarned = false;
+
+      if (Capacitor.isNativePlatform()) {
+        const adId = getAdId('INTERSTITIAL');
+        try {
+          rewardEarned = await AdMobService.showInterstitial(adId);
+        } catch (e) {
+          console.warn("Coach transition ad failed, using fallback:", e);
+        }
+      }
+
+      // Fallback to Simulated Timer (for Web or Native failures)
+      if (!rewardEarned) {
+        setIsAdPlaying(true);
+        setAdTimer(AD_DURATION);
+
+        await new Promise<void>((resolve) => {
+          const interval = setInterval(() => {
+            setAdTimer((prev) => {
+              if (prev <= 1) {
+                clearInterval(interval);
+                return 0;
+              }
+              return prev - 1;
+            });
+          }, 1000);
+
+          setTimeout(() => {
+            setIsAdPlaying(false);
+            rewardEarned = true;
+            resolve();
+          }, AD_DURATION * 1000);
+        });
+      }
+
+      if (rewardEarned) {
         lastCoachAdTime.current = activeTimeMs.current;
         lastAdActiveTime.current = activeTimeMs.current; // Synchronize with generation ads
 
@@ -520,8 +553,6 @@ const AppContentInner: React.FC = () => {
           updateCredits((profileRef.current.credits || 0) + 7);
           showToast('+7 Credits for watching! ⚡', 'success');
         }
-      } catch (e) {
-        console.warn("Coach transition ad failed:", e);
       }
     }
   };
