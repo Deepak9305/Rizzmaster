@@ -291,7 +291,7 @@ const AppContentInner: React.FC = () => {
   const sessionGenCount = useRef<number>(0);
 
   const INTERSTITIAL_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutes of active time between ads
-  const COACH_AD_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes between coach ads
+  const COACH_AD_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutes between coach ads (Combined with interstitial)
   const COACH_AD_GRACE_PERIOD_MS = 3 * 60 * 1000; // 3 minutes before first coach ad
   const INACTIVITY_RESET_MS = 30 * 60 * 1000; // 30 minutes of background time to reset
 
@@ -529,8 +529,9 @@ const AppContentInner: React.FC = () => {
 
 
       if (rewardEarned) {
-        lastCoachAdTime.current = activeTimeMs.current;
-        lastAdActiveTime.current = activeTimeMs.current; // Synchronize with generation ads
+        const now = activeTimeMs.current;
+        lastCoachAdTime.current = now;
+        lastAdActiveTime.current = now; // Synchronize with generation ads
 
         // Give 7 credits for watching the coach transition ad
         if (profileRef.current) {
@@ -1004,8 +1005,10 @@ const AppContentInner: React.FC = () => {
             // Await the ad to be dismissed or fail
             const success = await AdMobService.showInterstitial(adId);
             if (success) {
-              // Only record the active time if the ad was actually shown
-              lastAdActiveTime.current = activeTimeMs.current;
+              // Record the active time for BOTH to synchronize cooldowns
+              const now = activeTimeMs.current;
+              lastAdActiveTime.current = now;
+              lastCoachAdTime.current = now;
             }
           } catch (e) {
             console.warn("Interstitial failed to show:", e);
