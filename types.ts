@@ -16,12 +16,11 @@ export interface SavedItem {
   id: string;
   user_id: string;
   content: string;
-  type: 'tease' | 'smooth' | 'chaotic' | 'bio' | 'system';
+  type: 'smooth' | 'chaotic' | 'bio' | 'system';
   created_at: string;
 }
 
 export interface RizzResponse {
-  tease: string;
   smooth: string;
   chaotic: string;
   loveScore: number;
@@ -44,3 +43,26 @@ export interface BioError {
 }
 
 export type RizzOrBioResponse = RizzResponse | BioResponse | RizzError | BioError;
+
+export interface ChatMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp: string;
+}
+
+export interface ChatResponse {
+  reply: string;
+  vibe: 'smooth' | 'chaos';
+}
+
+export interface CoachMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+}
+
+export interface CoachResponse {
+  reply: string;
+  analysis?: string;
+}
+

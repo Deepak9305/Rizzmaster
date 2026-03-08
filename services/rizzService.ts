@@ -166,13 +166,12 @@ export const generateRizz = async (
   if (isUnsafe) {
     systemInstruction = `SAFETY OVERRIDE. You are "Roast Master". User sent Toxic/NSFW/Underage content.
 Task: IGNORE seduction. ROAST their life choices (unemployment, poor social skills). PG-13 only, no explicit terms.
-JSON: {tease:roast social skills, smooth:sarcasm about unemployment, chaotic:reality check, loveScore:0, potentialStatus:"Blocked", analysis:why they need a job}
+JSON: {smooth:sarcasm about unemployment, chaotic:reality check, loveScore:0, potentialStatus:"Blocked", analysis:why they need a job}
 Return ONLY raw JSON.`;
   } else {
     systemInstruction = `You are an elite dating wingman producing top-tier, high-converting rizz. Vibe: ${vibe || "Playful"}.
 CRITICAL: Responses must feel human, natural, and directly address specifics in the user's message/image. No cliches.
 
-TEASE: Witty push-pull. Challenge them playfully but show interest too. 1-2 lines.
 
 SMOOTH: Extremely confident, low effort, high impact. Pivot their statement smoothly into a potential date or vibe. 1 line. All lowercase. No exclamation marks.
 
@@ -185,7 +184,7 @@ RULES:
 - analysis: 1 sharp, witty sentence reviewing their message.
 
 Return ONLY raw JSON:
-{"tease":"...","smooth":"...","chaotic":"...","loveScore":0,"potentialStatus":"...","analysis":"..."}`;
+{"smooth":"...","chaotic":"...","loveScore":0,"potentialStatus":"...","analysis":"..."}`;
   }
 
   try {
@@ -244,7 +243,6 @@ Return ONLY raw JSON:
           // Validate structure and provide defaults if keys are missing
           // This prevents "blank screen" issues if the model hallucinates the schema
           const finalResponse: RizzResponse = {
-            tease: normalizedData.tease || "The AI is speechless (try again).",
             smooth: normalizedData.smooth || "Too smooth for words (try again).",
             chaotic: normalizedData.chaotic || "System overload (try again).",
             loveScore: typeof normalizedData.lovescore === 'number' ? normalizedData.lovescore : 50,
@@ -268,7 +266,6 @@ Return ONLY raw JSON:
     console.error("Rizz Service Error:", error);
     // Return a safe fallback object to prevent UI crashes
     return {
-      tease: "Error generating rizz.",
       smooth: "Try again later.",
       chaotic: "The AI is taking a nap.",
       loveScore: 0,
@@ -332,5 +329,84 @@ Return ONLY raw JSON: {"bio":"<optimized bio with emojis>","analysis":"<1 senten
   } catch (error: any) {
     console.error("Bio Service Error:", error);
     return { analysis: "Failed to generate bio." };
+  }
+};
+
+/**
+ * Generates Coach Advice based on message history and optional image.
+ */
+export const generateCoachAdvice = async (
+  history: { role: 'user' | 'assistant', content: string }[],
+  image?: string | undefined
+): Promise<{ reply: string, analysis?: string }> => {
+
+  const lastUserMessage = history[history.length - 1]?.content || "";
+  const isToxic = HARD_BLOCK_REGEX.test(lastUserMessage);
+  const isNSFW = NSFW_TERMS_REGEX.test(lastUserMessage);
+  const isUnsafe = isToxic || isNSFW;
+
+  let systemInstruction = "";
+
+  if (isUnsafe) {
+    systemInstruction = `You are the Rizz Master Coach. The user sent Toxic or NSFW content.
+Refuse to help with this specifically. Roast their lack of class and social awareness. PG-13 only.
+Return ONLY raw JSON: {"reply": "That's a major red flag, even for me. Try being a human instead of a bot.", "analysis": "Safety Triggered."}`;
+  } else {
+    systemInstruction = `You are the Rizz Master Coach, an elite dating strategist.
+TONE: Supportive but BRUTALLY HONEST. Use emojis like 🧠, 🎯, and ⚡.
+GOAL: Analyze the situation and provide actionable advice.
+RULES:
+1. Explain the "Power Dynamic".
+2. Tell them the "Next Best Move".
+3. Tell them what *not* to say.
+4. Keep it concise but high-impact.
+5. If an image is provided, analyze the chat bubbles and the vibe.
+
+Return ONLY raw JSON:
+{"reply": "your advice here", "analysis": "1 sharp sentence summary"}`;
+  }
+
+  try {
+    const isMultimodal = !!image;
+    const model = isMultimodal ? VISION_MODEL : TEXT_MODEL;
+
+    const messages: any[] = [{ role: "system", content: systemInstruction }];
+
+    const context = history.slice(-6);
+    context.forEach((msg, idx) => {
+      if (idx === context.length - 1 && isMultimodal && image) {
+        messages.push({
+          role: "user",
+          content: [
+            { type: "text", text: msg.content || "Analyze this chat screenshot." },
+            { type: "image_url", image_url: { url: image } }
+          ]
+        });
+      } else {
+        messages.push({ role: msg.role, content: msg.content });
+      }
+    });
+
+    const completion = await llamaClient.chat.completions.create({
+      model: model,
+      messages: messages,
+      temperature: 0.8,
+      max_tokens: 800,
+      response_format: { type: "json_object" }
+    });
+
+    const responseText = completion.choices[0]?.message?.content;
+    if (responseText) {
+      const parsed = JSON.parse(cleanJson(responseText));
+      return sanitizeResponse(parsed);
+    }
+    throw new Error("No coach response");
+
+  } catch (error) {
+    console.error("Coach Service Error:", error);
+    return {
+      reply: "My tactical sensors are offline. Try asking me again in a second. ⚡",
+      analysis: "System Glitch"
+    };
   }
 };

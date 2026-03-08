@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect, lazy, Suspense, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { generateRizz, generateBio } from './services/rizzService';
 import { NativeBridge } from './services/nativeBridge';
 import { ToastProvider, useToast } from './context/ToastContext';
@@ -21,6 +22,8 @@ import OnboardingFlow from './components/OnboardingFlow';
 const PremiumModal = lazy(() => import('./components/PremiumModal'));
 const SavedModal = lazy(() => import('./components/SavedModal'));
 const InfoPages = lazy(() => import('./components/InfoPages'));
+const Chatbot = lazy(() => import('./components/Chatbot'));
+const RizzCoach = lazy(() => import('./components/RizzCoach'));
 
 const DAILY_CREDITS = 5;
 const REWARD_CREDITS = 5;
@@ -40,7 +43,7 @@ const PROD_BANNER_ID_ANDROID = 'ca-app-pub-7381421031784616/7234804095';
 // Placeholder for Web AdSense
 const ADSENSE_SLOT_ID = '1234567890';
 
-type ViewState = 'HOME' | 'PRIVACY' | 'TERMS' | 'SUPPORT';
+type ViewState = 'HOME' | 'PRIVACY' | 'TERMS' | 'SUPPORT' | 'CHATBOT' | 'COACH';
 
 const LOADING_MESSAGES = [
   "Analyzing context...",
@@ -641,17 +644,22 @@ const AppContentInner: React.FC = () => {
   }, []);
 
   const updateCredits = useCallback(async (newAmount: number) => {
-    const currentProfile = profileRef.current;
-    if (!currentProfile) return;
+    setProfile(prev => {
+      if (!prev) return null;
+      const updated = { ...prev, credits: newAmount };
 
-    const updatedProfile = { ...currentProfile, credits: newAmount };
-    setProfile(updatedProfile);
+      // Update persistent storage
+      if (supabase && prev.id !== 'guest') {
+        supabase.from('profiles').update({ credits: newAmount }).eq('id', prev.id)
+          .then(({ error }) => {
+            if (error) console.error("Error updating credits in Supabase:", error);
+          });
+      } else {
+        localStorage.setItem('guest_profile', JSON.stringify(updated));
+      }
 
-    if (supabase && currentProfile.id !== 'guest') {
-      await supabase.from('profiles').update({ credits: newAmount }).eq('id', currentProfile.id);
-    } else {
-      localStorage.setItem('guest_profile', JSON.stringify(updatedProfile));
-    }
+      return updated;
+    });
   }, []);
 
   const handleRestorePurchases = useCallback(async () => {
@@ -665,7 +673,7 @@ const AppContentInner: React.FC = () => {
     }
   }, [handleUpgrade]);
 
-  const toggleSave = useCallback(async (content: string, type: 'tease' | 'smooth' | 'chaotic' | 'bio') => {
+  const toggleSave = useCallback(async (content: string, type: 'smooth' | 'chaotic' | 'bio') => {
     const currentProfile = profileRef.current;
     if (!currentProfile) return;
 
@@ -780,7 +788,7 @@ const AppContentInner: React.FC = () => {
     }
   }, [showToast]);
 
-  const handleSaveWrapper = useCallback((content: string, type: 'tease' | 'smooth' | 'chaotic' | 'bio') => {
+  const handleSaveWrapper = useCallback((content: string, type: 'smooth' | 'chaotic' | 'bio') => {
     toggleSave(content, type);
   }, [toggleSave]);
 
@@ -958,7 +966,8 @@ const AppContentInner: React.FC = () => {
         setIsAdLoading(false);
 
         if (rewardEarned) {
-          updateCredits((profileRef.current?.credits || 0) + REWARD_CREDITS);
+          const currentCredits = profileRef.current?.credits || 0;
+          updateCredits(currentCredits + REWARD_CREDITS);
           NativeBridge.haptic('success');
           showToast(`+${REWARD_CREDITS} Credits Added!`, 'success');
         } else {
@@ -985,11 +994,10 @@ const AppContentInner: React.FC = () => {
 
     setTimeout(() => {
       setIsAdPlaying(false);
-      if (profileRef.current) {
-        updateCredits((profileRef.current.credits || 0) + REWARD_CREDITS);
-        NativeBridge.haptic('success');
-        showToast(`+${REWARD_CREDITS} Credits Added!`, 'success');
-      }
+      const currentCredits = profileRef.current?.credits || 0;
+      updateCredits(currentCredits + REWARD_CREDITS);
+      NativeBridge.haptic('success');
+      showToast(`+${REWARD_CREDITS} Credits Added!`, 'success');
     }, AD_DURATION * 1000);
   };
 
@@ -1035,11 +1043,34 @@ const AppContentInner: React.FC = () => {
             <svg className="animate-spin h-8 w-8 text-rose-500 mb-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
             <p className="text-white/50 animate-pulse">Loading Profile...</p>
           </div>
+        ) : currentView === 'COACH' ? (
+          <div className="fixed inset-0 z-[100] safe-top safe-bottom">
+            <Suspense fallback={null}>
+              <RizzCoach
+                isOpen={true}
+                onClose={handleBackNavigation}
+                credits={profile?.credits || 0}
+                onUpdateCredits={updateCredits}
+                isPremium={profile?.is_premium || false}
+              />
+            </Suspense>
+          </div>
+        ) : currentView === 'CHATBOT' ? (
+          <div className="fixed inset-0 z-[50] safe-top safe-bottom bg-black">
+            <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white">Loading Chat...</div>}>
+              <Chatbot
+                onBack={handleBackNavigation}
+                credits={profile?.credits || 0}
+                onUpdateCredits={updateCredits}
+                isPremium={profile?.is_premium || false}
+              />
+            </Suspense>
+          </div>
         ) : currentView !== 'HOME' ? (
           <div className="safe-top safe-bottom">
             <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white">Loading...</div>}>
               <InfoPages
-                page={currentView}
+                page={currentView as any}
                 onBack={handleBackNavigation}
                 onDeleteAccount={handleDeleteAccount}
               />
@@ -1047,6 +1078,7 @@ const AppContentInner: React.FC = () => {
           </div>
         ) : (
           <div className="max-w-4xl mx-auto px-4 py-6 md:py-12 pb-40 relative min-h-[100dvh] flex flex-col animate-fade-in safe-top">
+
 
             <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden bg-black" />
 
@@ -1077,13 +1109,27 @@ const AppContentInner: React.FC = () => {
             )}
 
             {isAdPlaying && (
-              <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-8 safe-top safe-bottom">
-                <div className="w-full max-w-md bg-zinc-900 rounded-3xl p-8 text-center border border-white/10 relative overflow-hidden flex flex-col h-[60vh] justify-center">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-white/20">
-                    <div className="h-full bg-rose-500 transition-all ease-linear w-full" style={{ width: '0%', transitionDuration: `${AD_DURATION}s` }}></div>
+              <div className="fixed inset-0 z-[100] bg-black/90 flex flex-col items-center justify-center p-6 safe-top safe-bottom backdrop-blur-md">
+                <div className="w-full max-w-sm bg-zinc-900 rounded-[2.5rem] p-8 text-center border border-white/10 relative overflow-hidden flex flex-col items-center shadow-2xl">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-white/5">
+                    <div
+                      className="h-full bg-rose-500 transition-all ease-linear"
+                      style={{
+                        width: `${(AD_DURATION - adTimer) / AD_DURATION * 100} %`,
+                        transitionDuration: '1s'
+                      }}
+                    />
                   </div>
-                  <div className="text-4xl font-black text-rose-500 mb-4">{adTimer}s</div>
-                  <p className="text-white/60 mb-6">Watching Rewarded Ad...</p>
+                  <div className="w-20 h-20 bg-rose-500/10 rounded-full flex items-center justify-center mb-6 border border-rose-500/20">
+                    <div className="text-3xl font-black text-rose-500">{adTimer}</div>
+                  </div>
+                  <h3 className="text-white text-xl font-bold mb-2">Generating Credits</h3>
+                  <p className="text-white/40 text-sm mb-6 px-4">Keep this open to claim your reward</p>
+                  <div className="flex gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
                 </div>
               </div>
             )}
@@ -1105,6 +1151,8 @@ const AppContentInner: React.FC = () => {
                     <span>👑</span> Go Premium
                   </button>
                 )}
+
+
 
                 <div className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full border backdrop-blur-md ${profile?.is_premium ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-white/5 border-white/10'}`}>
                   <span className={profile?.is_premium ? "text-yellow-400 text-lg" : "text-yellow-400 text-lg"}>
@@ -1128,6 +1176,46 @@ const AppContentInner: React.FC = () => {
                 Never send a boring text again.
               </p>
             </header>
+
+            {/* Premium Rizz Coach Hero Card */}
+            <motion.div
+              whileHover={{ scale: 1.02, translateY: -5 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => { setCurrentView('COACH'); NativeBridge.haptic('medium'); }}
+              className="mb-12 relative group cursor-pointer max-w-lg mx-auto w-full"
+            >
+              <div className="absolute -inset-1 bg-gradient-to-r from-rose-500 via-purple-500 to-amber-500 rounded-[3rem] blur-xl opacity-20 group-hover:opacity-40 transition duration-700"></div>
+              <div className="relative glass-heavy rounded-[2.5rem] p-8 luxe-border flex items-center justify-between overflow-hidden shadow-2xl">
+                <div className="flex items-center gap-6">
+                  <div className="relative">
+                    <div className="w-16 h-16 rounded-[1.5rem] bg-gradient-to-br from-zinc-800 to-black border border-white/10 flex items-center justify-center text-4xl shadow-2xl coach-glow group-hover:scale-110 transition-transform duration-700">
+                      🤵‍♂️
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 rounded-full border-4 border-[#0a0a0a] flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
+                    </div>
+                  </div>
+                  <div className="text-left">
+                    <div className="flex items-center gap-3 mb-1.5">
+                      <h3 className="text-2xl font-black text-white uppercase tracking-tighter leading-none text-premium">The Coach</h3>
+                      <div className="px-2 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/30">
+                        <span className="text-[8px] font-black text-rose-400 uppercase tracking-widest">Active</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-white/40 font-bold uppercase tracking-[0.1em]">Tactical Dating Analysis</p>
+                  </div>
+                </div>
+                <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 group-hover:bg-rose-500 group-hover:border-rose-500 transition-all duration-500 flex items-center justify-center shadow-lg group-hover:shadow-rose-500/40">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </div>
+
+                {/* Decorative Aurora Elements */}
+                <div className="absolute -top-10 -right-10 w-32 h-32 bg-rose-500/10 rounded-full blur-3xl group-hover:bg-rose-500/20 transition-colors"></div>
+                <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl group-hover:bg-purple-500/20 transition-colors"></div>
+              </div>
+            </motion.div>
 
             <div className="flex p-1 bg-white/5 rounded-full mb-8 relative border border-white/10 max-w-md mx-auto w-full select-none">
               <button onClick={() => { setMode(InputMode.CHAT); clear(); }} className={`flex-1 py-3 rounded-full font-medium text-sm md:text-base transition-all duration-300 relative z-10 ${mode === InputMode.CHAT ? 'text-white shadow-lg' : 'text-white/50 hover:text-white/80'}`}>Chat Reply</button>
@@ -1247,26 +1335,29 @@ const AppContentInner: React.FC = () => {
                   </div>
                 )}
 
-                {result && 'tease' in result && (
+                {result && 'smooth' in result && (
                   <>
                     <div className="glass rounded-3xl p-5 md:p-6 border border-white/10 animate-fade-in-up">
                       <div className="flex justify-between items-center mb-3">
-                        <h3 className="text-xs font-bold uppercase tracking-widest text-white/40">Analysis</h3>
-                        <span className="text-2xl md:text-3xl font-black text-white">{result.loveScore}%</span>
+                        <span className="text-[10px] font-black tracking-[0.2em] text-white/30 uppercase">Analysis</span>
+                        <div className="px-2 py-1 rounded-md bg-white/5 border border-white/10">
+                          <span className="text-[10px] font-bold text-amber-400">{(result as RizzResponse).loveScore}% Rizz</span>
+                        </div>
                       </div>
-                      <div className="mb-4">
-                        <div className="text-xl md:text-2xl font-black text-rose-500 uppercase italic leading-none">{result.potentialStatus}</div>
+                      <p className="text-sm md:text-base text-white/80 leading-relaxed font-medium capitalize-first italic">
+                        "{(result as RizzResponse).analysis}"
+                      </p>
+                      <div className="mt-4 flex items-center gap-2">
+                        <div className="h-1 flex-1 bg-white/5 rounded-full overflow-hidden">
+                          <div className="h-full bg-gradient-to-r from-rose-500 to-amber-500" style={{ width: `${(result as RizzResponse).loveScore}%` }} />
+                        </div>
+                        <span className="text-[10px] font-black text-white/40 uppercase tracking-tighter">{(result as RizzResponse).potentialStatus}</span>
                       </div>
-                      <div className="relative h-3 md:h-4 bg-black/40 rounded-full overflow-hidden border border-white/5">
-                        <div className="absolute top-0 left-0 h-full rizz-gradient transition-all duration-1000 ease-out" style={{ width: `${result.loveScore}%` }}></div>
-                      </div>
-                      {result.analysis && <p className="mt-4 text-xs md:text-sm text-white/60 leading-relaxed border-t border-white/5 pt-3">{result.analysis}</p>}
                     </div>
 
                     <div className="grid gap-3 md:gap-4 pb-12">
-                      <RizzCard label="Tease" content={result.tease} icon="😏" color="from-purple-500 to-indigo-500" isSaved={isSaved(result.tease)} onSave={() => handleSaveWrapper(result.tease, 'tease')} onShare={() => handleShare(result.tease)} onReport={handleReport} delay={0.1} />
-                      <RizzCard label="Smooth" content={result.smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved(result.smooth)} onSave={() => handleSaveWrapper(result.smooth, 'smooth')} onShare={() => handleShare(result.smooth)} onReport={handleReport} delay={0.2} />
-                      <RizzCard label="Chaotic" content={result.chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved(result.chaotic)} onSave={() => handleSaveWrapper(result.chaotic, 'chaotic')} onShare={() => handleShare(result.chaotic)} onReport={handleReport} delay={0.3} />
+                      <RizzCard label="Smooth" content={(result as RizzResponse).smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved((result as RizzResponse).smooth)} type="smooth" onSave={handleSaveWrapper} onShare={() => handleShare((result as RizzResponse).smooth)} onReport={handleReport} delay={0.2} />
+                      <RizzCard label="Chaotic" content={(result as RizzResponse).chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved((result as RizzResponse).chaotic)} type="chaotic" onSave={handleSaveWrapper} onShare={() => handleShare((result as RizzResponse).chaotic)} onReport={handleReport} delay={0.3} />
                     </div>
                   </>
                 )}
@@ -1301,6 +1392,22 @@ const AppContentInner: React.FC = () => {
                 </div>
               </div>
             )}
+
+            {/* Floating Coach Button */}
+            <motion.button
+              onClick={() => { setCurrentView('COACH'); NativeBridge.haptic('medium'); }}
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.93 }}
+              className="fixed bottom-24 right-5 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-2xl active:scale-95"
+              style={{
+                background: 'linear-gradient(135deg, #FF0080 0%, #7928CA 100%)',
+                boxShadow: '0 8px 32px rgba(255,0,128,0.35)',
+              }}
+              aria-label="Open Rizz Coach"
+            >
+              <span className="text-lg leading-none">⚡</span>
+              <span className="text-sm font-black text-white tracking-tight">Coach</span>
+            </motion.button>
 
             <Footer className="mt-12 md:mt-20" onNavigate={handleViewNavigation} />
           </div>

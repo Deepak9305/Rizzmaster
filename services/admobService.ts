@@ -172,13 +172,16 @@ export const AdMobService = {
                 });
                 listeners.push(onShowFailed);
 
-                // Prepare and Show
+                // Prepare first, then show
                 const options: RewardAdOptions = {
                     adId: adId,
                     isTesting: false
                 };
 
+                console.log('Preparing Reward Video Ad...');
                 await AdMob.prepareRewardVideoAd(options);
+
+                console.log('Showing Reward Video Ad...');
                 await AdMob.showRewardVideoAd();
 
             } catch (error) {
