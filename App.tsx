@@ -525,29 +525,8 @@ const AppContentInner: React.FC = () => {
         }
       }
 
-      // Fallback to Simulated Timer (for Web or Native failures)
-      if (!rewardEarned) {
-        setIsAdPlaying(true);
-        setAdTimer(AD_DURATION);
+      // Fallback timer removed per user request
 
-        await new Promise<void>((resolve) => {
-          const interval = setInterval(() => {
-            setAdTimer((prev) => {
-              if (prev <= 1) {
-                clearInterval(interval);
-                return 0;
-              }
-              return prev - 1;
-            });
-          }, 1000);
-
-          setTimeout(() => {
-            setIsAdPlaying(false);
-            rewardEarned = true;
-            resolve();
-          }, AD_DURATION * 1000);
-        });
-      }
 
       if (rewardEarned) {
         lastCoachAdTime.current = activeTimeMs.current;
@@ -1023,9 +1002,11 @@ const AppContentInner: React.FC = () => {
 
           try {
             // Await the ad to be dismissed or fail
-            await AdMobService.showInterstitial(adId);
-            // Record the active time when the ad was shown
-            lastAdActiveTime.current = activeTimeMs.current;
+            const success = await AdMobService.showInterstitial(adId);
+            if (success) {
+              // Only record the active time if the ad was actually shown
+              lastAdActiveTime.current = activeTimeMs.current;
+            }
           } catch (e) {
             console.warn("Interstitial failed to show:", e);
           }
@@ -1092,38 +1073,20 @@ const AppContentInner: React.FC = () => {
           updateCredits((profileRef.current?.credits || 0) + REWARD_CREDITS);
           showToast(`+${REWARD_CREDITS} Credits Added!`, 'success');
           return;
-        } else if (!SIMULATE_REWARD_AD) {
-          // If real ad was canceled or failed, we can optionally just return
-          // or still offer the fallback. Let's offer the fallback timer
-          // to ensure the user isn't frustrated by ad load failures.
-          showToast('Ad failed to load. Using fallback...', 'info');
+        } else {
+          showToast('Ad failed to load. Please try again later.', 'error');
+          return;
         }
       } catch (e) {
-        console.warn("Native Ad failed, fallback to timer.", e);
+        console.warn("Native Ad failed:", e);
+        showToast('Ad failed to load. Please try again later.', 'error');
         setIsAdLoading(false);
+        return;
       }
     }
 
-    // 2. Fallback to Simulated Timer (for Web or Native failures)
-    setIsAdPlaying(true);
-    setAdTimer(AD_DURATION);
-    const interval = setInterval(() => {
-      setAdTimer((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    setTimeout(() => {
-      setIsAdPlaying(false);
-      if (profileRef.current) {
-        updateCredits((profileRef.current.credits || 0) + REWARD_CREDITS);
-        showToast(`+${REWARD_CREDITS} Credits Added!`, 'success');
-      }
-    }, AD_DURATION * 1000);
+    // Fallback timer removed per user request
+    showToast('Ads are only available on mobile devices.', 'info');
   }, [handleBackNavigation, showToast, updateCredits]);
 
   const isSaved = useCallback((content: string) => savedItems.some(item => item.content === content), [savedItems]);
