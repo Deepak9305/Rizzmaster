@@ -85,19 +85,10 @@ export const AdMobService = {
                 let resolved = false;
                 let showed = false;
 
-                const cleanupAndResolve = (success: boolean) => {
-                    if (resolved) return;
-                    resolved = true;
-                    dismissListener.remove();
-                    failedListener.remove();
-                    failedShowListener.remove();
-                    showedListener.remove();
-                    clearTimeout(timeout);
-                    resolve(success);
-                };
-
                 const showedListener = await AdMob.addListener(InterstitialAdPluginEvents.Showed, () => {
                     showed = true;
+                    console.log('[AdMob] Interstitial showing, clearing timeout');
+                    clearTimeout(timeout);
                 });
 
                 const dismissListener = await AdMob.addListener(InterstitialAdPluginEvents.Dismissed, () => {
@@ -119,6 +110,17 @@ export const AdMobService = {
                     console.warn('AdMob Interstitial Timeout: Proceeding automatically.');
                     cleanupAndResolve(false);
                 }, 5000);
+
+                const cleanupAndResolve = (success: boolean) => {
+                    if (resolved) return;
+                    resolved = true;
+                    dismissListener.remove();
+                    failedListener.remove();
+                    failedShowListener.remove();
+                    showedListener.remove();
+                    clearTimeout(timeout);
+                    resolve(success);
+                };
 
                 try {
                     await AdMob.showInterstitial();
@@ -159,17 +161,10 @@ export const AdMobService = {
                 let resolved = false;
                 let earned = false;
 
-                const cleanupAndResolve = (success: boolean) => {
-                    if (resolved) return;
-                    resolved = true;
-                    rewardListener.remove();
-                    dismissListener.remove();
-                    failedListener.remove();
-                    failedShowListener.remove();
+                const showedListener = await AdMob.addListener(RewardAdPluginEvents.Showed, () => {
+                    console.log('[AdMob] Reward video showing, clearing timeout');
                     clearTimeout(timeout);
-                    console.log(`[AdMob] Reward video finished. Success: ${success}`);
-                    resolve(success);
-                };
+                });
 
                 // Listen for reward
                 const rewardListener = await AdMob.addListener(RewardAdPluginEvents.Rewarded, (info) => {
@@ -202,6 +197,19 @@ export const AdMobService = {
                     console.warn('[AdMob] Reward video show timeout');
                     cleanupAndResolve(false);
                 }, 12000);
+
+                const cleanupAndResolve = (success: boolean) => {
+                    if (resolved) return;
+                    resolved = true;
+                    showedListener.remove();
+                    rewardListener.remove();
+                    dismissListener.remove();
+                    failedListener.remove();
+                    failedShowListener.remove();
+                    clearTimeout(timeout);
+                    console.log(`[AdMob] Reward video finished. Success: ${success}`);
+                    resolve(success);
+                };
 
                 try {
                     await AdMob.showRewardVideoAd();
