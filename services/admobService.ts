@@ -114,7 +114,7 @@ export const AdMobService = {
                     this.prepareInterstitial(adId);
                 });
 
-                // Timeout fail-safe (5 seconds)
+                // Timeout fail-safe (5 seconds) - Optimized for better UX
                 const timeout = setTimeout(() => {
                     console.warn('AdMob Interstitial Timeout: Proceeding automatically.');
                     cleanupAndResolve(false);
@@ -153,6 +153,8 @@ export const AdMobService = {
         console.log(`[AdMob] Attempting to show reward video: ${adId}`);
 
         try {
+            await AdMob.prepareRewardVideoAd({ adId });
+
             return new Promise(async (resolve) => {
                 let resolved = false;
                 let earned = false;
@@ -195,7 +197,7 @@ export const AdMobService = {
                     this.prepareRewardVideo(adId);
                 });
 
-                // Fail-safe timeout (12 seconds for reward ads)
+                // Fail-safe timeout (12 seconds for reward ads - reduced from 15 for better UX)
                 const timeout = setTimeout(() => {
                     console.warn('[AdMob] Reward video show timeout');
                     cleanupAndResolve(false);
