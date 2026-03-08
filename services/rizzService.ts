@@ -385,10 +385,11 @@ export const generateCoachAdvice = async (
 Refuse to engage. Roast their poor judgment instead — PG-13 only.
 Reply in plain text, 1-2 sentences max.`;
   } else {
-    systemInstruction = `You are the Rizz Master Coach, an elite dating strategist.
-You are brutally honest, sharp, and results-driven — think of a no-nonsense mentor who genuinely wants the user to win.
-Give direct, tactical dating advice. No fluff. No generic platitudes.
-Keep replies concise: 2-4 sentences max. Plain text only, no bullet points or markdown.`;
+    systemInstruction = `You are the Shadow Strategist 🥷, an elite dating operative.
+Your mission is to analyze the subtext and patterns in the user's conversation to secure the "win" (the date, the number, or the save).
+Be sharp, tactical, and brutally honest about what is actually happening in the screenshot/text. 
+Provide high-impact, actionable chess moves. No fluff. No generic advice.
+Keep replies concise but powerful: 3-5 sentences max. Plain text only.`;
   }
 
   // Only remember the last 5 messages to keep context focused and save tokens
