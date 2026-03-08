@@ -176,6 +176,23 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ isAppReady, onComplete }) =
   );
 };
 
+const AdLoadingOverlay: React.FC<{ isVisible: boolean }> = ({ isVisible }) => {
+  if (!isVisible) return null;
+  return (
+    <div className="fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-black/60 backdrop-blur-md animate-fade-in">
+      <div className="relative">
+        {/* Animated Rings */}
+        <div className="absolute inset-0 scale-150 blur-2xl bg-rose-500/20 rounded-full animate-pulse"></div>
+        <div className="w-16 h-16 border-4 border-rose-500/20 border-t-rose-500 rounded-full animate-spin"></div>
+      </div>
+      <div className="mt-8 text-center">
+        <h3 className="text-xl font-bold text-white tracking-tight uppercase">Preparing Ad</h3>
+        <p className="text-white/40 text-xs mt-2 uppercase tracking-[0.3em] animate-pulse">Just a moment...</p>
+      </div>
+    </div>
+  );
+};
+
 const AppContent: React.FC = React.memo(() => {
   return (
     <Suspense fallback={<div className="fixed inset-0 bg-black z-50" />}>
@@ -509,31 +526,32 @@ const AppContentInner: React.FC = () => {
 
     const currentActiveTime = activeTimeMs.current;
 
-    // Check grace period (3 mins) or if on Web (always show once every 5 mins for testing)
+    // Check grace period (3 mins) or if on Web
     if (currentActiveTime < COACH_AD_GRACE_PERIOD_MS && Capacitor.isNativePlatform()) return;
 
-    // Check 5 min cooldown
+    // Check combined 3 min cooldown
     if (currentActiveTime - lastCoachAdTime.current >= COACH_AD_COOLDOWN_MS) {
-      let rewardEarned = false;
+      setIsAdLoading(true); // SHOW OVERLAY
 
+      let rewardEarned = false;
       if (Capacitor.isNativePlatform()) {
         const adId = getAdId('INTERSTITIAL');
         try {
           rewardEarned = await AdMobService.showInterstitial(adId);
         } catch (e) {
-          console.warn("Coach transition ad failed:", e);
+          console.warn("Transition ad error:", e);
+        } finally {
+          setIsAdLoading(false); // ALWAYS HIDE OVERLAY
         }
+      } else {
+        setIsAdLoading(false);
       }
-
-      // Fallback timer removed per user request
-
 
       if (rewardEarned) {
         const now = activeTimeMs.current;
         lastCoachAdTime.current = now;
         lastAdActiveTime.current = now; // Synchronize with generation ads
 
-        // Give 7 credits for watching the coach transition ad
         if (profileRef.current) {
           updateCredits((profileRef.current.credits || 0) + 7);
           showToast('+7 Credits for watching! ⚡', 'success');
@@ -992,26 +1010,23 @@ const AppContentInner: React.FC = () => {
       if (!currentProfile.is_premium && Capacitor.isNativePlatform()) {
         const currentActiveTime = activeTimeMs.current;
 
-        // 1. Skip ad on the very first generation of the session (The "Hook")
-        if (sessionGenCount.current === 0) {
-          return;
-        }
+        if (sessionGenCount.current === 0) return;
 
-        // 2. Check for Active Interstitial Cooldown
         if (currentActiveTime - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS) {
+          setIsAdLoading(true); // SHOW OVERLAY
           const adId = getAdId('INTERSTITIAL');
 
           try {
-            // Await the ad to be dismissed or fail
             const success = await AdMobService.showInterstitial(adId);
             if (success) {
-              // Record the active time for BOTH to synchronize cooldowns
               const now = activeTimeMs.current;
               lastAdActiveTime.current = now;
               lastCoachAdTime.current = now;
             }
           } catch (e) {
-            console.warn("Interstitial failed to show:", e);
+            console.warn("Generation ad error:", e);
+          } finally {
+            setIsAdLoading(false); // ALWAYS HIDE OVERLAY
           }
         }
       }
@@ -1064,13 +1079,13 @@ const AppContentInner: React.FC = () => {
   }, [mode, inputText, image, selectedVibe, responseLength, showToast, handleOpenPremium, updateCredits]);
 
   const handleWatchAd = useCallback(async () => {
-    // 1. Try Native AdMob first
     if (Capacitor.isNativePlatform()) {
-      setIsAdLoading(true);
+      setIsAdLoading(true); // SHOW OVERLAY
       try {
         const adUnitId = getAdId('REWARD');
         const rewardEarned = await AdMobService.showRewardVideo(adUnitId);
-        setIsAdLoading(false);
+
+        setIsAdLoading(false); // HIDE OVERLAY
 
         if (rewardEarned) {
           updateCredits((profileRef.current?.credits || 0) + REWARD_CREDITS);
@@ -1083,12 +1098,11 @@ const AppContentInner: React.FC = () => {
       } catch (e) {
         console.warn("Native Ad failed:", e);
         showToast('Ad failed to load. Please try again later.', 'error');
-        setIsAdLoading(false);
+        setIsAdLoading(false); // HIDE OVERLAY
         return;
       }
     }
 
-    // Fallback timer removed per user request
     showToast('Ads are only available on mobile devices.', 'info');
   }, [handleBackNavigation, showToast, updateCredits]);
 
@@ -1110,6 +1124,9 @@ const AppContentInner: React.FC = () => {
           onComplete={() => setShowSplash(false)}
         />
       )}
+
+      {/* Optimized Ad Loading UI */}
+      <AdLoadingOverlay isVisible={isAdLoading} />
 
       {/* Onboarding Flow: Shows after Splash if not completed */}
       {!showSplash && showOnboarding && (
