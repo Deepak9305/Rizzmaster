@@ -1237,7 +1237,10 @@ const AppContentInner: React.FC = () => {
                   </button>
                 )}
 
-                <div className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full border backdrop-blur-md ${profile?.is_premium ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-white/5 border-white/10'}`}>
+                <div
+                  onClick={() => showToast("Credits reset to 5 daily. Extra ad credits do not stack.", "info")}
+                  className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full border backdrop-blur-md cursor-pointer active:scale-95 transition-all ${profile?.is_premium ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-white/5 border-white/10'}`}
+                >
                   <span className={profile?.is_premium ? "text-yellow-400 text-lg" : "text-yellow-400 text-lg"}>
                     {profile?.is_premium ? '👑' : '⚡'}
                   </span>
@@ -1405,7 +1408,14 @@ const AppContentInner: React.FC = () => {
                     </button>
                   </div>
                 )}
-                {!profile?.is_premium && <p className="text-center text-[10px] md:text-xs text-white/30 mt-3 md:mt-4">{profile?.credits} daily credits remaining. <span className="text-yellow-500/80 cursor-pointer hover:underline" onClick={handleOpenPremium}>Upgrade.</span></p>}
+                {!profile?.is_premium && (
+                  <p
+                    onClick={() => showToast("Credits reset to 5 daily. Extra ad credits do not stack.", "info")}
+                    className="text-center text-[10px] md:text-xs text-white/30 mt-3 md:mt-4 cursor-pointer hover:text-white transition-colors"
+                  >
+                    {profile?.credits} daily credits remaining. <span className="text-yellow-500/80 cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); handleOpenPremium(); }}>Upgrade.</span>
+                  </p>
+                )}
               </section>
 
               <section className="flex flex-col gap-4 md:gap-6 min-h-[300px]">

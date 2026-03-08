@@ -3,6 +3,7 @@ import { CoachMessage } from '../types';
 import { generateCoachAdvice } from '../services/rizzService';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
+import { useToast } from '../context/ToastContext';
 
 interface RizzCoachProps {
     isOpen: boolean;
@@ -85,6 +86,7 @@ const MessageBubble = ({ msg }: MsgProps) => {
 };
 
 const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdateCredits, isPremium, onWatchAd, onGoPremium }) => {
+    const { showToast } = useToast();
     const [messages, setMessages] = useState<CoachMessage[]>([INITIAL_MESSAGE]);
     const [input, setInput] = useState('');
     const [image, setImage] = useState<string | null>(null);
@@ -289,11 +291,15 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
 
                         {/* Credits / Premium pill */}
                         {!isPremium ? (
-                            <div style={{
-                                flexShrink: 0, display: 'flex', alignItems: 'center', gap: '6px',
-                                padding: '6px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: 700,
-                                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)'
-                            }}>
+                            <div
+                                onClick={() => showToast("Credits reset to 5 daily. Extra ad credits do not stack.", "info")}
+                                style={{
+                                    flexShrink: 0, display: 'flex', alignItems: 'center', gap: '6px',
+                                    padding: '6px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: 700,
+                                    background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                                    cursor: 'pointer'
+                                }}
+                            >
                                 <span style={{ color: '#facc15' }}>⚡</span>
                                 <span style={{ color: 'rgba(255,255,255,0.7)' }}>{credits}</span>
                             </div>
@@ -435,7 +441,10 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                         </div>
                     </div>
                     {!isPremium && credits <= 2 && credits > 0 && (
-                        <p style={{ textAlign: 'center', fontSize: '11px', color: 'rgba(255,255,255,0.25)', marginTop: '8px', fontWeight: 500 }}>
+                        <p
+                            onClick={() => showToast("Credits reset to 5 daily. Extra ad credits do not stack.", "info")}
+                            style={{ textAlign: 'center', fontSize: '11px', color: 'rgba(255,255,255,0.25)', marginTop: '8px', fontWeight: 500, cursor: 'pointer' }}
+                        >
                             {credits} credit{credits !== 1 ? 's' : ''} left
                         </p>
                     )}
