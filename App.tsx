@@ -615,11 +615,21 @@ const AppContentInner: React.FC = () => {
     setCurrentView(view);
   }, [currentView]);
 
-  const handleBackNavigation = useCallback(async () => {
-    if (currentView === 'COACH') {
-      await showCoachTransitionAd();
+  const handleBackNavigation = useCallback(() => {
+    // Navigate back immediately — don't block on the ad
+    if (window.history.state?.view && window.history.state.view !== 'HOME') {
+      window.history.back();
+    } else {
+      // Fallback: directly set the view in case history is missing
+      setCurrentView('HOME');
+      setShowPremiumModal(false);
+      setShowSavedModal(false);
     }
-    window.history.back();
+
+    // Fire the transition ad in the background (non-blocking)
+    if (currentView === 'COACH') {
+      showCoachTransitionAd();
+    }
   }, [currentView]);
 
   const handleOpenPremium = useCallback(() => {
