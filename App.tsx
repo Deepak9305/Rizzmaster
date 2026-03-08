@@ -179,15 +179,32 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ isAppReady, onComplete }) =
 const AdLoadingOverlay: React.FC<{ isVisible: boolean }> = ({ isVisible }) => {
   if (!isVisible) return null;
   return (
-    <div className="fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-black/60 backdrop-blur-md animate-fade-in">
-      <div className="relative">
-        {/* Animated Rings */}
-        <div className="absolute inset-0 scale-150 blur-2xl bg-rose-500/20 rounded-full animate-pulse"></div>
-        <div className="w-16 h-16 border-4 border-rose-500/20 border-t-rose-500 rounded-full animate-spin"></div>
-      </div>
-      <div className="mt-8 text-center">
-        <h3 className="text-xl font-bold text-white tracking-tight uppercase">Preparing Ad</h3>
-        <p className="text-white/40 text-xs mt-2 uppercase tracking-[0.3em] animate-pulse">Just a moment...</p>
+    <div className="fixed inset-0 z-[1000] flex flex-col items-center justify-center p-6 animate-fade-in">
+      {/* Premium Backdrop Overlay */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+
+      {/* Compact Content Card */}
+      <div className="relative bg-zinc-900/90 border border-white/10 p-8 rounded-[2.5rem] flex flex-col items-center max-w-sm w-full shadow-2xl animate-scale-in">
+        <div className="relative mb-6">
+          {/* Animated Glow Rings */}
+          <div className="absolute inset-0 scale-150 blur-2xl bg-rose-500/20 rounded-full animate-pulse" />
+          <div className="w-14 h-14 border-4 border-rose-500/10 border-t-rose-500 rounded-full animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-xl animate-pulse">⚡</span>
+          </div>
+        </div>
+
+        <div className="text-center">
+          <h3 className="text-xl font-bold text-white tracking-tight">Generating Credits</h3>
+          <p className="text-white/40 text-[10px] mt-2 font-bold uppercase tracking-[0.3em] animate-pulse">
+            Your Rizz is processing...
+          </p>
+        </div>
+
+        {/* Simulating Progress Bar */}
+        <div className="w-full mt-8 h-1 bg-white/5 rounded-full overflow-hidden">
+          <div className="h-full bg-rose-500 animate-progress-fast" />
+        </div>
       </div>
     </div>
   );
@@ -765,16 +782,25 @@ const AppContentInner: React.FC = () => {
 
 
 
-  const updateCredits = useCallback(async (newAmount: number) => {
-    const currentProfile = profileRef.current;
-    if (!currentProfile) return;
+  const updateCredits = useCallback(async (newAmountOrUpdater: number | ((prev: number) => number)) => {
+    // We update the profile state functionally to ensure we never lose updates 
+    // due to race conditions or stale closures.
+    setProfile(prev => {
+      if (!prev) return null;
+      const newAmount = typeof newAmountOrUpdater === 'function'
+        ? newAmountOrUpdater(prev.credits || 0)
+        : newAmountOrUpdater;
 
-    const updatedProfile = { ...currentProfile, credits: newAmount };
-    setProfile(updatedProfile);
+      const updated = { ...prev, credits: newAmount };
 
-    if (supabase) {
-      await supabase.from('profiles').update({ credits: newAmount }).eq('id', currentProfile.id);
-    }
+      // Update persistent storage (Background task)
+      if (supabase) {
+        supabase.from('profiles').update({ credits: newAmount }).eq('id', prev.id)
+          .then(({ error }) => { if (error) console.error("Credit Sync Error:", error); });
+      }
+
+      return updated;
+    });
   }, []);
 
   const handleRestorePurchases = useCallback(async () => {
@@ -1094,16 +1120,19 @@ const AppContentInner: React.FC = () => {
       setIsAdLoading(true); // SHOW OVERLAY
       try {
         const adUnitId = getAdId('REWARD');
+        console.log("Showing Reward Ad:", adUnitId);
+
         const rewardEarned = await AdMobService.showRewardVideo(adUnitId);
 
         if (rewardEarned) {
-          updateCredits((profileRef.current?.credits || 0) + REWARD_CREDITS);
-          showToast(`+${REWARD_CREDITS} Credits Added!`, 'success');
+          // Use functional update to ensure reward is added to MOST RECENT credit count
+          updateCredits((prevCredits) => prevCredits + REWARD_CREDITS);
+          showToast(`+${REWARD_CREDITS} Credits Added! ⚡`, 'success');
         } else {
-          showToast('Ad failed to load. Please try again later.', 'error');
+          showToast('Ad dismissed or failed to give reward.', 'info');
         }
       } catch (e) {
-        console.warn("Native Ad failed:", e);
+        console.warn("Native Ad Error:", e);
         showToast('Ad failed to load. Please try again later.', 'error');
       } finally {
         setIsAdLoading(false); // ALWAYS HIDE OVERLAY
@@ -1112,7 +1141,7 @@ const AppContentInner: React.FC = () => {
     }
 
     showToast('Ads are only available on mobile devices.', 'info');
-  }, [handleBackNavigation, showToast, updateCredits]);
+  }, [showToast, updateCredits]);
 
   const isSaved = useCallback((content: string) => savedItems.some(item => item.content === content), [savedItems]);
   const clear = useCallback(() => {

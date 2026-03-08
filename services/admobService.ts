@@ -139,11 +139,9 @@ export const AdMobService = {
         if (!Capacitor.isNativePlatform()) return false;
 
         await this.initialize();
+        console.log(`[AdMob] Attempting to show reward video: ${adId}`);
 
         try {
-            // No need to call prepare here if it's already pre-loaded.
-            // await AdMob.prepareRewardVideoAd({ adId });
-
             return new Promise(async (resolve) => {
                 let resolved = false;
                 let earned = false;
@@ -155,29 +153,33 @@ export const AdMobService = {
                     dismissListener.remove();
                     failedListener.remove();
                     clearTimeout(timeout);
+                    console.log(`[AdMob] Reward video finished. Success: ${success}`);
                     resolve(success);
                 };
 
                 // Listen for reward
-                const rewardListener = await AdMob.addListener(RewardAdPluginEvents.Rewarded, () => {
+                const rewardListener = await AdMob.addListener(RewardAdPluginEvents.Rewarded, (info) => {
+                    console.log('[AdMob] User earned reward:', info);
                     earned = true;
                 });
 
                 // Listen for dismiss
                 const dismissListener = await AdMob.addListener(RewardAdPluginEvents.Dismissed, () => {
+                    console.log('[AdMob] Reward video dismissed');
                     cleanupAndResolve(earned);
                 });
 
                 // Listen for failure
-                const failedListener = await AdMob.addListener(RewardAdPluginEvents.FailedToLoad, () => {
+                const failedListener = await AdMob.addListener(RewardAdPluginEvents.FailedToLoad, (err) => {
+                    console.error('[AdMob] Reward video failed to load/show:', err);
                     cleanupAndResolve(false);
                 });
 
-                // Fail-safe timeout (5 seconds)
+                // Fail-safe timeout (8 seconds for reward ads)
                 const timeout = setTimeout(() => {
-                    console.warn('AdMob Reward Timeout');
+                    console.warn('[AdMob] Reward video show timeout');
                     cleanupAndResolve(false);
-                }, 5000);
+                }, 8000);
 
                 await AdMob.showRewardVideoAd();
 
@@ -185,7 +187,7 @@ export const AdMobService = {
                 this.prepareRewardVideo(adId);
             });
         } catch (error) {
-            console.error('AdMob Reward Error', error);
+            console.error('[AdMob] Critical Reward Error', error);
             return false;
         }
     }
