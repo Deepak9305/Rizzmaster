@@ -46,3 +46,15 @@ export interface BioError {
 }
 
 export type RizzOrBioResponse = RizzResponse | BioResponse | RizzError | BioError;
+
+export interface CoachMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  image?: string | null;
+  systemContext?: string | null;
+  timestamp: string;
+}
+
+export interface CoachResponse {
+  reply: string;
+}

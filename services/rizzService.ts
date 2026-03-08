@@ -196,35 +196,54 @@ CRITICAL: ${length === 'short'
   }
 
   try {
-    // ... (Model selection and messages setup remain the same) ...
-    const isMultimodal = !!image;
-    const model = isMultimodal ? VISION_MODEL : TEXT_MODEL;
+    let imageAnalysisContext = "";
+    if (image) {
+      try {
+        const visionCompletion = await llamaClient.chat.completions.create({
+          model: VISION_MODEL,
+          messages: [
+            {
+              role: "system",
+              content: "You are an expert dating analyst. Briefly describe the contents of this screenshot (chat history, dating profile, etc). Focus ONLY on the text exchange, vibe, and key details. Keep it under 3 sentences."
+            },
+            {
+              role: "user",
+              content: [
+                { type: "text", text: inputText || "Analyze this screenshot." },
+                { type: "image_url", image_url: { url: image } }
+              ]
+            }
+          ],
+          temperature: 0.5,
+          max_tokens: 300,
+        });
+        imageAnalysisContext = visionCompletion.choices[0]?.message?.content?.trim() || "";
+      } catch (error) {
+        console.error("Rizz Vision Error:", error);
+        imageAnalysisContext = "[Failed to thoroughly analyze image, proceed with user context only]";
+      }
+    }
 
     const messages: any[] = [
       { role: "system", content: systemInstruction }
     ];
 
-    if (isMultimodal && image) {
-      messages.push({
-        role: "user",
-        content: [
-          { type: "text", text: inputText || "Analyze this." },
-          { type: "image_url", image_url: { url: image } }
-        ]
-      });
-    } else {
-      messages.push({
-        role: "user",
-        content: inputText || "Generate rizz."
-      });
+    let finalInput = inputText || "Generate rizz.";
+    if (imageAnalysisContext) {
+      finalInput = `[User provided an image. Image Analysis: ${imageAnalysisContext}]\n\nUser's message: ${finalInput}`;
     }
+
+    messages.push({
+      role: "user",
+      content: finalInput
+    });
 
     // Retry logic for robustness
     let attempts = 0;
     while (attempts < 2) {
       try {
         const completion = await llamaClient.chat.completions.create({
-          model: model,
+          model: TEXT_MODEL,
           messages: messages,
           temperature: 0.7,
           max_tokens: 1000,
@@ -345,5 +364,101 @@ CRITICAL: ${length === 'short'
   } catch (error: any) {
     console.error("Bio Service Error:", error);
     return { analysis: "Failed to generate bio." };
+  }
+};
+
+/**
+ * Generates coaching advice based on conversation history.
+ */
+export const generateCoachAdvice = async (
+  messages: { role: 'user' | 'assistant'; content: string; image?: string | null; systemContext?: string | null; }[]
+): Promise<{ reply: string }> => {
+  const lastMessage = messages[messages.length - 1]?.content || '';
+
+  const isToxic = HARD_BLOCK_REGEX.test(lastMessage);
+  const isNSFW = NSFW_TERMS_REGEX.test(lastMessage);
+
+  let systemInstruction: string;
+
+  if (isToxic || isNSFW) {
+    systemInstruction = `You are the Rizz Master Coach. The user sent Toxic or NSFW content.
+Refuse to engage. Roast their poor judgment instead — PG-13 only.
+Reply in plain text, 1-2 sentences max.`;
+  } else {
+    systemInstruction = `You are the Rizz Master Coach, an elite dating strategist.
+You are brutally honest, sharp, and results-driven — think of a no-nonsense mentor who genuinely wants the user to win.
+Give direct, tactical dating advice. No fluff. No generic platitudes.
+Keep replies concise: 2-4 sentences max. Plain text only, no bullet points or markdown.`;
+  }
+
+  // Only remember the last 5 messages to keep context focused and save tokens
+  const recentMessages = messages.slice(-5);
+
+  const lastRawMessage = recentMessages[recentMessages.length - 1];
+
+  // STEP 1: If there's an image, analyze it with Llama 4 Scout first
+  let imageAnalysisContext = "";
+  if (lastRawMessage?.image) {
+    try {
+      const visionCompletion = await llamaClient.chat.completions.create({
+        model: VISION_MODEL,
+        messages: [
+          {
+            role: "system",
+            content: "You are an expert dating analyst. Briefly describe the contents of this screenshot (chat history, dating profile, etc). Focus ONLY on the text exchange, vibe, and key details. Keep it under 3 sentences."
+          },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: lastRawMessage.content || "Analyze this screenshot." },
+              { type: "image_url", image_url: { url: lastRawMessage.image } }
+            ]
+          }
+        ],
+        temperature: 0.5,
+        max_tokens: 300,
+      });
+      imageAnalysisContext = visionCompletion.choices[0]?.message?.content?.trim() || "";
+    } catch (error) {
+      console.error("Coach Vision Error:", error);
+      imageAnalysisContext = "[Failed to thoroughly analyze image, proceed with user context only]";
+    }
+  }
+
+  // STEP 2: Format messages for the main Llama 3.1 8B Coach model
+  const formatted = recentMessages.map(m => {
+    let content = m.content;
+
+    // Inject the vision analysis into the prompt for the last message
+    if (m === lastRawMessage && imageAnalysisContext) {
+      content = `[User provided an image. Image Analysis: ${imageAnalysisContext}]\n\nUser's message: ${content}`;
+    }
+
+    // Inject any manual system context (like the "Chat Reply" continuity)
+    if (m.systemContext) {
+      content = `[System Note: ${m.systemContext}]\n\n${content}`;
+    }
+
+    return {
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      content: content,
+    };
+  }) as any[];
+
+  try {
+    const completion = await llamaClient.chat.completions.create({
+      model: TEXT_MODEL,
+      messages: [{ role: 'system', content: systemInstruction }, ...formatted],
+      temperature: 0.75,
+      max_tokens: 200,
+    });
+
+    const reply = completion.choices[0]?.message?.content?.trim();
+    if (!reply) throw new Error("No coach response");
+
+    return { reply: sanitizeText(reply) };
+  } catch (error) {
+    console.error("Coach Service Error:", error);
+    return { reply: "Something went wrong on my end. Try again. 🔁" };
   }
 };

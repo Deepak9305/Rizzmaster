@@ -1,0 +1,498 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { CoachMessage } from '../types';
+import { generateCoachAdvice } from '../services/rizzService';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
+
+interface RizzCoachProps {
+    isOpen: boolean;
+    onClose: () => void;
+    credits: number;
+    onUpdateCredits: (newAmount: number) => void;
+    isPremium: boolean;
+    onWatchAd?: () => void;
+    onGoPremium?: () => void;
+}
+
+const INITIAL_MESSAGE: CoachMessage = {
+    role: 'assistant',
+    content: "You came to the right place. I've seen every fumble, every ghost, every 'haha' reply. Tell me your situation and I'll coach you through it.",
+    timestamp: new Date().toISOString(),
+};
+
+const TypingIndicator = () => (
+    <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem' }}>
+            <div style={{
+                width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
+                background: 'linear-gradient(135deg, #FF0080, #7928CA)',
+            }}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14" style={{ color: 'white' }}>
+                    <path fillRule="evenodd" d="M7.5 5.25a3 3 0 0 1 3-3h3a3 3 0 0 1 3 3v.252a6 6 0 0 1 5.043 5.34l.286 2.508c.11.966-.34 1.916-1.163 2.479l-4.502 3.085a2.25 2.25 0 0 1-2.529 0l-4.502-3.085a2.25 2.25 0 0 1-1.163-2.479l.286-2.508A6 6 0 0 1 7.5 5.502V5.25ZM10.5 3.75A1.5 1.5 0 0 0 9 5.25v.252a4.5 4.5 0 0 1-3 4.252h12a4.5 4.5 0 0 1-3-4.252V5.25A1.5 1.5 0 0 0 15 3.75h-3Z" clipRule="evenodd" />
+                    <path d="M12 12.75a.75.75 0 0 0-1.5 0v2.25a.75.75 0 0 0 1.5 0v-2.25Z" />
+                    <path fillRule="evenodd" d="M2.574 13.916A4.5 4.5 0 0 0 6.75 18h10.5a4.5 4.5 0 0 0 4.176-4.084l-4.502 3.084a3.75 3.75 0 0 1-4.215 0l-4.502-3.084Z" clipRule="evenodd" />
+                </svg>
+            </div>
+            <div style={{
+                padding: '1rem 1.25rem', borderRadius: '1.5rem 1.5rem 1.5rem 4px',
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)'
+            }}>
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center', height: '16px' }}>
+                    {[0, 1, 2].map(i => (
+                        <span key={i} style={{
+                            display: 'block', width: '6px', height: '6px', borderRadius: '50%',
+                            background: '#fb7185', animation: `coachBounce 1.2s ease-in-out ${i * 0.2}s infinite`
+                        }} />
+                    ))}
+                </div>
+            </div>
+        </div>
+    </div>
+);
+
+interface MsgProps { msg: CoachMessage; }
+const MessageBubble = ({ msg }: MsgProps) => {
+    const isUser = msg.role === 'user';
+    return (
+        <div style={{
+            display: 'flex', alignItems: 'flex-end', gap: '0.5rem',
+            justifyContent: isUser ? 'flex-end' : 'flex-start',
+            animation: 'coachMsgIn 0.35s cubic-bezier(0.16,1,0.3,1) both'
+        }}>
+            {!isUser && (
+                <div style={{
+                    width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
+                    background: 'linear-gradient(135deg, #FF0080, #7928CA)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                    <span style={{ fontSize: '14px', lineHeight: 1 }}>🥷</span>
+                </div>
+            )}
+            <div style={{
+                maxWidth: '78%', padding: '0.875rem 1.25rem', fontSize: '15px',
+                lineHeight: 1.65, fontWeight: 500, whiteSpace: 'pre-wrap',
+                borderRadius: isUser ? '1.5rem 1.5rem 4px 1.5rem' : '1.5rem 1.5rem 1.5rem 4px',
+                color: 'white',
+                ...(isUser
+                    ? { background: 'linear-gradient(135deg, #FF0080 0%, #7928CA 100%)', boxShadow: '0 4px 24px rgba(255,0,128,0.25)' }
+                    : { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }
+                )
+            }}>
+                {msg.content}
+            </div>
+        </div>
+    );
+};
+
+const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdateCredits, isPremium, onWatchAd, onGoPremium }) => {
+    const [messages, setMessages] = useState<CoachMessage[]>([INITIAL_MESSAGE]);
+    const [input, setInput] = useState('');
+    const [image, setImage] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [showOutofCredits, setShowOutOfCredits] = useState(false);
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+        }
+    }, [messages, loading]);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setInput(e.target.value);
+        const ta = e.target;
+        ta.style.height = 'auto';
+        ta.style.height = Math.min(ta.scrollHeight, 128) + 'px';
+    };
+
+    const handleSend = async () => {
+        const trimmed = input.trim();
+        if ((!trimmed && !image) || loading) return;
+
+        if (!isPremium && credits <= 0) {
+            setShowOutOfCredits(true);
+            return;
+        }
+
+        const userMsg: CoachMessage = {
+            role: 'user',
+            content: trimmed || "Analyze this.",
+            image: image,
+            timestamp: new Date().toISOString()
+        };
+
+        const next = [...messages, userMsg];
+        setMessages(next);
+        setInput('');
+        setImage(null);
+        if (textareaRef.current) textareaRef.current.style.height = 'auto';
+        setLoading(true);
+
+        try {
+            const response = await generateCoachAdvice(next);
+            setMessages(prev => [...prev, {
+                role: 'assistant', content: response.reply, timestamp: new Date().toISOString()
+            }]);
+
+            // Image costs 2 credits, text costs 1
+            const cost = image ? 2 : 1;
+            if (!isPremium) onUpdateCredits(credits - cost);
+        } catch (err) {
+            console.error('Coach error:', err);
+            setMessages(prev => [...prev, {
+                role: 'assistant', content: "Got a connection issue. Try again in a second. 🔁",
+                timestamp: new Date().toISOString()
+            }]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleImageUpload = async () => {
+        if (!Capacitor.isNativePlatform()) {
+            fileInputRef.current?.click();
+            return;
+        }
+
+        try {
+            const photo = await Camera.getPhoto({
+                quality: 80,
+                allowEditing: false,
+                resultType: CameraResultType.DataUrl,
+                source: CameraSource.Prompt
+            });
+
+            if (photo.dataUrl) {
+                setImage(photo.dataUrl);
+            }
+        } catch (e: any) {
+            if (e.message !== 'User cancelled photos app') {
+                console.error('Camera Error:', e);
+            }
+        }
+    };
+
+    const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) return; // 5MB limit
+            const reader = new FileReader();
+            reader.onloadend = () => setImage(reader.result as string);
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+    };
+
+    const canSend = (input.trim().length > 0 || image !== null) && !loading;
+
+    if (!isOpen) return null;
+
+    return (
+        <>
+            <style>{`
+                @keyframes coachBounce {
+                    0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
+                    40% { transform: translateY(-6px); opacity: 1; }
+                }
+                @keyframes coachAurora {
+                    0% { transform: translate(-10%, -10%) scale(1); }
+                    50% { transform: translate(5%, 8%) scale(1.08); }
+                    100% { transform: translate(-10%, -10%) scale(1); }
+                }
+                @keyframes coachPulseRing {
+                    0% { transform: scale(1); opacity: 0.6; }
+                    100% { transform: scale(1.8); opacity: 0; }
+                }
+                @keyframes coachSlideIn {
+                    from { opacity: 0; transform: translateY(48px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                @keyframes coachMsgIn {
+                    from { opacity: 0; transform: translateY(12px) scale(0.97); }
+                    to { opacity: 1; transform: translateY(0) scale(1); }
+                }
+            `}</style>
+
+            <div style={{
+                position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column',
+                background: '#050505', zIndex: 100,
+                animation: 'coachSlideIn 0.45s cubic-bezier(0.16,1,0.3,1) both'
+            }}>
+                {/* Aurora blobs */}
+                <div aria-hidden style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+                    <div style={{
+                        position: 'absolute', width: '70%', height: '70%', top: '-15%', left: '-15%', borderRadius: '50%',
+                        background: 'radial-gradient(circle, rgba(255,0,128,0.13) 0%, transparent 70%)',
+                        filter: 'blur(60px)', animation: 'coachAurora 18s ease-in-out infinite',
+                    }} />
+                    <div style={{
+                        position: 'absolute', width: '60%', height: '60%', bottom: '10%', right: '-10%', borderRadius: '50%',
+                        background: 'radial-gradient(circle, rgba(121,40,202,0.12) 0%, transparent 70%)',
+                        filter: 'blur(60px)', animation: 'coachAurora 22s ease-in-out 5s infinite reverse',
+                    }} />
+                </div>
+
+                {/* Header */}
+                <div style={{
+                    flexShrink: 0, position: 'relative', zIndex: 10,
+                    paddingTop: 'calc(env(safe-area-inset-top) + 1rem)',
+                    paddingBottom: '1rem', paddingLeft: '1.25rem', paddingRight: '1.25rem',
+                    borderBottom: '1px solid rgba(255,255,255,0.06)',
+                    background: 'rgba(5,5,5,0.75)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', maxWidth: '672px', margin: '0 auto' }}>
+                        {/* Back */}
+                        <button onClick={onClose} aria-label="Go back"
+                            style={{
+                                width: '36px', height: '36px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)',
+                                background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                cursor: 'pointer', flexShrink: 0, transition: 'transform 0.15s',
+                            }}
+                            onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.05)')}
+                            onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="rgba(255,255,255,0.7)" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+
+                        {/* Pulsing avatar */}
+                        <div style={{ position: 'relative', flexShrink: 0 }}>
+                            <div style={{
+                                position: 'absolute', inset: '-4px', borderRadius: '50%',
+                                background: 'linear-gradient(135deg, #FF0080, #7928CA)',
+                                animation: 'coachPulseRing 2s ease-out infinite',
+                            }} />
+                            <div style={{
+                                position: 'relative', width: '44px', height: '44px', borderRadius: '50%',
+                                background: 'linear-gradient(135deg, #FF0080 0%, #7928CA 100%)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px',
+                                boxShadow: '0 4px 20px rgba(255,0,128,0.3)',
+                            }}>
+                                <span style={{ fontSize: '24px', lineHeight: 1, paddingTop: '1px' }}>🥷</span>
+                            </div>
+                        </div>
+
+                        {/* Identity */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: '15px', fontWeight: 900, color: 'white', letterSpacing: '-0.02em', lineHeight: 1 }}>Rizz Coach</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#34d399', display: 'inline-block', animation: 'pulse 2s ease-in-out infinite' }} />
+                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Online · Elite Strategist</span>
+                            </div>
+                        </div>
+
+                        {/* Credits / Premium pill */}
+                        {!isPremium ? (
+                            <div style={{
+                                flexShrink: 0, display: 'flex', alignItems: 'center', gap: '6px',
+                                padding: '6px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: 700,
+                                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)'
+                            }}>
+                                <span style={{ color: '#facc15' }}>⚡</span>
+                                <span style={{ color: 'rgba(255,255,255,0.7)' }}>{credits}</span>
+                            </div>
+                        ) : (
+                            <div style={{
+                                flexShrink: 0, display: 'flex', alignItems: 'center', gap: '4px',
+                                padding: '6px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: 700,
+                                background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.25)'
+                            }}>
+                                <span>👑</span>
+                                <span style={{ color: '#facc15' }}>VIP</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Messages */}
+                <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 10, padding: '1.5rem 1.25rem 1rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '672px', margin: '0 auto', paddingBottom: '1rem' }}>
+                        {messages.map((msg, i) => <MessageBubble key={i} msg={msg} />)}
+                        {loading && <TypingIndicator />}
+                    </div>
+                </div>
+
+                {/* Input Container Wrapper */}
+                <div style={{
+                    flexShrink: 0, position: 'relative', zIndex: 10,
+                    padding: '0 0 calc(env(safe-area-inset-bottom) + 0.875rem)',
+                    background: 'rgba(5,5,5,0.85)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+                    borderTop: '1px solid rgba(255,255,255,0.06)',
+                }}>
+
+                    {/* Quick-Tap Prompts */}
+                    {messages.length === 1 && !loading && !image && (
+                        <div style={{
+                            padding: '12px 16px 0', display: 'flex', gap: '8px', overflowX: 'auto',
+                            WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none'
+                        }}>
+                            {[
+                                { text: "She ghosted me 👻", icon: "👻" },
+                                { text: "Good opener for Bumble? 🐝", icon: "🐝" },
+                                { text: "How do I ask her out? 🍷", icon: "🍷" }
+                            ].map((prompt, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => {
+                                        setInput(prompt.text);
+                                        if (textareaRef.current) textareaRef.current.focus();
+                                    }}
+                                    style={{
+                                        whiteSpace: 'nowrap', padding: '10px 16px', background: 'rgba(255,255,255,0.05)',
+                                        border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px',
+                                        color: 'rgba(255,255,255,0.9)', fontSize: '13.5px', fontWeight: 600,
+                                        cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0
+                                    }}
+                                >
+                                    {prompt.text}
+                                </button>
+                            ))}
+                            <style>{`
+                                div::-webkit-scrollbar { display: none; }
+                            `}</style>
+                        </div>
+                    )}
+
+                    {/* Image Preview Area */}
+                    {image && (
+                        <div style={{ padding: '12px 20px 0', display: 'flex' }}>
+                            <div style={{ position: 'relative', display: 'inline-block' }}>
+                                <img src={image} alt="Upload preview" style={{ height: '70px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.2)', objectFit: 'cover' }} />
+                                <button
+                                    onClick={() => setImage(null)}
+                                    style={{
+                                        position: 'absolute', top: '-6px', right: '-6px', background: '#FF0080',
+                                        color: 'white', border: 'none', borderRadius: '50%', width: '20px', height: '20px',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                                        fontSize: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.5)'
+                                    }}
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                    <div style={{ padding: '12px 20px' }}>
+                        <div style={{
+                            display: 'flex', alignItems: 'flex-end', gap: '8px', maxWidth: '672px', margin: '0 auto',
+                            borderRadius: '1.25rem', padding: '8px 8px 8px 16px',
+                            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                        }}>
+                            <button
+                                onClick={handleImageUpload}
+                                style={{
+                                    flexShrink: 0, width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
+                                    borderRadius: '8px', transition: 'color 0.2s', paddingBottom: '2px'
+                                }}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5h.01M10.5 10.5h.01M9 15c.5.5 1.5.8 3 .8s2.5-.3 3-.8" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.974 0-5.699-1.082-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                                </svg>
+                            </button>
+                            <input type="file" ref={fileInputRef} onChange={handleFileInput} accept="image/*" style={{ display: 'none' }} />
+
+                            <textarea
+                                ref={textareaRef}
+                                value={input}
+                                onChange={handleInputChange}
+                                onKeyDown={handleKeyDown}
+                                placeholder={image ? "Add context..." : "What's the situation?"}
+                                rows={1}
+                                disabled={loading}
+                                style={{
+                                    flex: 1, background: 'transparent', border: 'none', outline: 'none',
+                                    color: 'white', fontSize: '15px', lineHeight: 1.6, resize: 'none',
+                                    fontFamily: 'inherit', minHeight: '24px', maxHeight: '128px',
+                                    opacity: loading ? 0.4 : 1,
+                                }}
+                            />
+                            <button onClick={handleSend} disabled={!canSend} aria-label="Send"
+                                style={{
+                                    flexShrink: 0, width: '40px', height: '40px', borderRadius: '50%', border: 'none',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    cursor: canSend ? 'pointer' : 'not-allowed', opacity: canSend ? 1 : 0.4,
+                                    transition: 'all 0.2s', paddingLeft: '2px',
+                                    ...(canSend
+                                        ? { background: 'linear-gradient(135deg, #FF0080, #7928CA)', boxShadow: '0 4px 16px rgba(255,0,128,0.35)' }
+                                        : { background: 'rgba(255,255,255,0.1)' }
+                                    )
+                                }}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="white">
+                                    <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    {!isPremium && credits <= 2 && credits > 0 && (
+                        <p style={{ textAlign: 'center', fontSize: '11px', color: 'rgba(255,255,255,0.25)', marginTop: '8px', fontWeight: 500 }}>
+                            {credits} credit{credits !== 1 ? 's' : ''} left
+                        </p>
+                    )}
+                </div>
+
+                {/* Out of Credits Modal */}
+                {showOutofCredits && (
+                    <div style={{
+                        position: 'absolute', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)'
+                    }}>
+                        <div style={{
+                            background: '#111', borderRadius: '24px', padding: '24px', width: '85%', maxWidth: '320px',
+                            border: '1px solid rgba(255,255,255,0.1)', textAlign: 'center',
+                            animation: 'coachMsgIn 0.3s cubic-bezier(0.16,1,0.3,1)'
+                        }}>
+                            <h3 style={{ color: 'white', fontSize: '20px', fontWeight: 900, marginBottom: '8px' }}>Out of Credits</h3>
+                            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', marginBottom: '24px', lineHeight: 1.5 }}>
+                                You need more juice to keep the wingman active. Watch a quick ad or go Unlimited.
+                            </p>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <button
+                                    onClick={() => { setShowOutOfCredits(false); onWatchAd?.(); }}
+                                    style={{
+                                        background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)',
+                                        color: 'white', fontWeight: 700, padding: '14px', borderRadius: '16px',
+                                        display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', gap: '8px',
+                                        cursor: 'pointer'
+                                    }}>
+                                    <span style={{ fontSize: '18px' }}>📺</span> Watch Ad (+5)
+                                </button>
+                                <button
+                                    onClick={() => { setShowOutOfCredits(false); onGoPremium?.(); }}
+                                    style={{
+                                        background: 'linear-gradient(to right, #d97706, #d97706)',
+                                        border: 'none', color: 'black', fontWeight: 900, padding: '14px', borderRadius: '16px',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                                        cursor: 'pointer', boxShadow: '0 4px 12px rgba(217,119,6,0.2)'
+                                    }}>
+                                    <span style={{ fontSize: '18px' }}>👑</span> Go Unlimited
+                                </button>
+                                <button
+                                    onClick={() => setShowOutOfCredits(false)}
+                                    style={{
+                                        background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)',
+                                        fontSize: '13px', padding: '8px', marginTop: '4px', cursor: 'pointer', fontWeight: 600
+                                    }}>
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </>
+    );
+};
+
+export default RizzCoach;
