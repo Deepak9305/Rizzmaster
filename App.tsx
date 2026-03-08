@@ -521,7 +521,7 @@ const AppContentInner: React.FC = () => {
         try {
           rewardEarned = await AdMobService.showInterstitial(adId);
         } catch (e) {
-          console.warn("Coach transition ad failed, using fallback:", e);
+          console.warn("Coach transition ad failed:", e);
         }
       }
 
