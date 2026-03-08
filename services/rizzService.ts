@@ -450,7 +450,7 @@ Keep replies concise: 2-4 sentences max. Plain text only, no bullet points or ma
       model: TEXT_MODEL,
       messages: [{ role: 'system', content: systemInstruction }, ...formatted],
       temperature: 0.75,
-      max_tokens: 200,
+      max_tokens: 300,
     });
 
     const reply = completion.choices[0]?.message?.content?.trim();
