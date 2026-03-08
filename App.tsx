@@ -576,11 +576,11 @@ const AppContentInner: React.FC = () => {
     if (currentActiveTime - lastCoachAdTime.current >= COACH_AD_COOLDOWN_MS) {
       setIsAdLoading('interstitial'); // SHOW OVERLAY
 
-      let rewardEarned = false;
+      let adShowed = false;
       if (Capacitor.isNativePlatform()) {
         const adId = getAdId('INTERSTITIAL');
         try {
-          rewardEarned = await AdMobService.showInterstitial(adId);
+          adShowed = await AdMobService.showInterstitial(adId);
         } catch (e) {
           console.warn("Transition ad error:", e);
         } finally {
@@ -590,15 +590,16 @@ const AppContentInner: React.FC = () => {
         setIsAdLoading('hidden');
       }
 
-      if (rewardEarned) {
-        const now = activeTimeMs.current;
-        lastCoachAdTime.current = now;
-        lastAdActiveTime.current = now; // Synchronize with generation ads
+      // Always reset the cooldown after attempting to show an ad,
+      // regardless of whether it succeeded or failed. This prevents the
+      // ad gate from firing on every single navigation when ads fail.
+      const now = activeTimeMs.current;
+      lastCoachAdTime.current = now;
+      lastAdActiveTime.current = now; // Synchronize with generation ads
 
-        if (profileRef.current) {
-          updateCredits((prev) => prev + 7);
-          showToast('+7 Credits for watching! ⚡', 'success');
-        }
+      if (adShowed && profileRef.current) {
+        updateCredits((prev) => prev + 7);
+        showToast('+7 Credits for watching! ⚡', 'success');
       }
     }
   };

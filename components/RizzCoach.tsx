@@ -125,6 +125,9 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
             timestamp: new Date().toISOString()
         };
 
+        // Capture image status BEFORE clearing state (used for credit cost below)
+        const hadImage = !!image;
+
         const next = [...messages, userMsg];
         setMessages(next);
         setInput('');
@@ -139,7 +142,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
             }]);
 
             // Image costs 2 credits, text costs 1
-            const cost = image ? 2 : 1;
+            const cost = hadImage ? 2 : 1;
             if (!isPremium) onUpdateCredits((prev) => prev - cost);
         } catch (err) {
             console.error('Coach error:', err);
