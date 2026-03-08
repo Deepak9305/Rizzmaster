@@ -5,7 +5,8 @@ import {
     BannerAdPosition,
     BannerAdPluginEvents,
     AdMobBannerSize,
-    RewardAdPluginEvents
+    RewardAdPluginEvents,
+    InterstitialAdPluginEvents
 } from '@capacitor-community/admob';
 import { Capacitor } from '@capacitor/core';
 
@@ -33,11 +34,10 @@ export const AdMobService = {
 
             const options: BannerAdOptions = {
                 adId: adId,
-                adSize: BannerAdSize.BANNER,
+                adSize: BannerAdSize.ADAPTIVE_BANNER,
                 position: BannerAdPosition.BOTTOM_CENTER,
-                margin: 0,
+                margin: 50,
                 isTesting: false
-                // isTesting is handled by the overall config, or left false for prod/test IDs
             };
 
             await AdMob.showBanner(options);
@@ -56,18 +56,39 @@ export const AdMobService = {
         }
     },
 
-    async showInterstitial(adId: string): Promise<boolean> {
-        if (!Capacitor.isNativePlatform()) return false;
+    async showInterstitial(adId: string): Promise<void> {
+        if (!Capacitor.isNativePlatform()) return;
 
         await this.initialize();
 
         try {
             await AdMob.prepareInterstitial({ adId });
-            await AdMob.showInterstitial();
-            return true;
+
+            return new Promise(async (resolve) => {
+                let resolved = false;
+
+                const cleanupAndResolve = () => {
+                    if (resolved) return;
+                    resolved = true;
+                    dismissListener.remove();
+                    failedListener.remove();
+                    clearTimeout(timeout);
+                    resolve();
+                };
+
+                const dismissListener = await AdMob.addListener(InterstitialAdPluginEvents.Dismissed, cleanupAndResolve);
+                const failedListener = await AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, cleanupAndResolve);
+
+                // Timeout fail-safe (12 seconds)
+                const timeout = setTimeout(() => {
+                    console.warn('AdMob Interstitial Timeout: Proceeding automatically.');
+                    cleanupAndResolve();
+                }, 12000);
+
+                await AdMob.showInterstitial();
+            });
         } catch (error) {
             console.error('AdMob Interstitial Error', error);
-            return false;
         }
     },
 

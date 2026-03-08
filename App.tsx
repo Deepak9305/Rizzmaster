@@ -26,7 +26,7 @@ const InfoPages = lazy(() => import('./components/InfoPages'));
 const DAILY_CREDITS = 5;
 const REWARD_CREDITS = 5;
 const AD_DURATION = 10;
-const SIMULATE_REWARD_AD = true; // Set to true for dev testing without real AdMob
+const SIMULATE_REWARD_AD = false; // Real AdMob by default, timer only as fallback
 
 // --- AD CONFIGURATION ---
 const USE_TEST_ADS = false; // Set to true for testing with Google test ads
@@ -281,9 +281,8 @@ const AppContentInner: React.FC = () => {
   const activeTimeMs = useRef<number>(0);
   const lastAdActiveTime = useRef<number>(0);
   const backgroundTimestamp = useRef<number | null>(null);
+  const sessionGenCount = useRef<number>(0);
 
-
-  const APP_LAUNCH_GRACE_PERIOD = 5 * 60 * 1000; // 5 minutes of active time
   const INTERSTITIAL_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutes of active time between ads
   const INACTIVITY_RESET_MS = 30 * 60 * 1000; // 30 minutes of background time to reset
 
@@ -316,6 +315,7 @@ const AppContentInner: React.FC = () => {
             // Reset active time and ad tracking to grant a new grace period
             activeTimeMs.current = 0;
             lastAdActiveTime.current = 0;
+            sessionGenCount.current = 0;
           }
           // We are no longer in the background
           backgroundTimestamp.current = null;
@@ -902,15 +902,16 @@ const AppContentInner: React.FC = () => {
 
     setLoading(true);
 
-    // INTERSTITIAL AD LOGIC - MOVED TO AFTER GENERATION
-    // This ensures we don't violate AdMob policy by showing ads during "loading" or "generating" states.
+    // INTERSTITIAL AD LOGIC - "GATE" STRATEGY
+    // This ensures we show ads BEFORE generation as a natural transition,
+    // allowing the user to view results without interruption.
     // We prepare the ad logic here but execute it later.
     const showInterstitialIfReady = async () => {
       if (!currentProfile.is_premium && Capacitor.isNativePlatform()) {
         const currentActiveTime = activeTimeMs.current;
 
-        // 1. Check for Initial Launch Grace Period (based on active time)
-        if (currentActiveTime < APP_LAUNCH_GRACE_PERIOD) {
+        // 1. Skip ad on the very first generation of the session (The "Hook")
+        if (sessionGenCount.current === 0) {
           return;
         }
 
@@ -919,6 +920,7 @@ const AppContentInner: React.FC = () => {
           const adId = getAdId('INTERSTITIAL');
 
           try {
+            // Await the ad to be dismissed or fail
             await AdMobService.showInterstitial(adId);
             // Record the active time when the ad was shown
             lastAdActiveTime.current = activeTimeMs.current;
@@ -928,6 +930,10 @@ const AppContentInner: React.FC = () => {
         }
       }
     };
+
+    // --- TRIGGER INTERSTITIAL BEFORE GENERATION ---
+    await showInterstitialIfReady();
+    // ----------------------------------------------
 
     const creditsBefore = currentProfile.credits || 0;
 
@@ -958,9 +964,8 @@ const AppContentInner: React.FC = () => {
         setResult(res);
       } else {
         setResult(res);
-        // Show Ad AFTER result is ready and displayed
-        // Increased delay to 3 seconds to allow user to see the result first
-        setTimeout(() => showInterstitialIfReady(), 3000);
+        // Successful generation: Increment session counter
+        sessionGenCount.current += 1;
       }
 
     } catch (error) {
@@ -975,30 +980,7 @@ const AppContentInner: React.FC = () => {
   const handleWatchAd = useCallback(async () => {
     handleBackNavigation();
 
-    if (SIMULATE_REWARD_AD) {
-      // Bypassing real AdMob to show the 10s blank timer reward flow
-      setIsAdPlaying(true);
-      setAdTimer(AD_DURATION);
-      const interval = setInterval(() => {
-        setAdTimer((prev) => {
-          if (prev <= 1) {
-            clearInterval(interval);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      setTimeout(() => {
-        setIsAdPlaying(false);
-        if (profileRef.current) {
-          updateCredits((profileRef.current.credits || 0) + REWARD_CREDITS);
-          showToast(`+${REWARD_CREDITS} Credits Added!`, 'success');
-        }
-      }, AD_DURATION * 1000);
-      return;
-    }
-
+    // 1. Try Native AdMob first
     if (Capacitor.isNativePlatform()) {
       setIsAdLoading(true);
       try {
@@ -1009,16 +991,20 @@ const AppContentInner: React.FC = () => {
         if (rewardEarned) {
           updateCredits((profileRef.current?.credits || 0) + REWARD_CREDITS);
           showToast(`+${REWARD_CREDITS} Credits Added!`, 'success');
-        } else {
-          showToast('Ad was canceled or failed.', 'info');
+          return;
+        } else if (!SIMULATE_REWARD_AD) {
+          // If real ad was canceled or failed, we can optionally just return
+          // or still offer the fallback. Let's offer the fallback timer
+          // to ensure the user isn't frustrated by ad load failures.
+          showToast('Ad failed to load. Using fallback...', 'info');
         }
-        return;
       } catch (e) {
-        console.warn("Native Ad failed, fallback to web.", e);
+        console.warn("Native Ad failed, fallback to timer.", e);
         setIsAdLoading(false);
       }
     }
 
+    // 2. Fallback to Simulated Timer (for Web or Native failures)
     setIsAdPlaying(true);
     setAdTimer(AD_DURATION);
     const interval = setInterval(() => {
