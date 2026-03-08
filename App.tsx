@@ -161,10 +161,15 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ isAppReady, onComplete }) =
             style={{ width: `${progress}%` }}
           />
         </div>
-        <div className="mt-4 h-6 overflow-hidden">
+        <div className="mt-4 h-10 overflow-hidden flex flex-col items-center">
           <p className="text-[10px] md:text-xs font-bold tracking-[0.5em] text-white/40 uppercase animate-fade-in-up">
             {progress < 30 ? 'ANALYZING...' : progress < 70 ? 'COOKING...' : (isAppReady ? 'READY.' : 'AUTHENTICATING...')}
           </p>
+          {progress >= 100 && !isAppReady && (
+            <p className="text-[9px] text-white/20 mt-2 animate-pulse">
+              JUST A MOMENT...
+            </p>
+          )}
         </div>
       </div>
     </div>
@@ -591,14 +596,34 @@ const AppContentInner: React.FC = () => {
       return;
     }
 
+    // FAIL-SAFE: If authentication takes more than 10 seconds, force the app to "ready" 
+    // to prevent a permanent blank screen.
+    const failSafeTimeout = setTimeout(() => {
+      if (!isAuthReady) {
+        console.warn("Startup Hang Detected: Forcing App Ready (Fail-safe)");
+        setIsAuthReady(true);
+      }
+    }, 10000);
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) {
-        loadUserData(session.user.id, session.user.email).finally(() => setIsAuthReady(true));
+        loadUserData(session.user.id, session.user.email)
+          .catch(e => console.error("Session Load Auth Err:", e))
+          .finally(() => {
+            clearTimeout(failSafeTimeout);
+            setIsAuthReady(true);
+          });
       } else {
+        clearTimeout(failSafeTimeout);
         setIsAuthReady(true);
       }
+    }).catch(err => {
+      console.error("Auth Session Error:", err);
+      clearTimeout(failSafeTimeout);
+      setIsAuthReady(true);
     });
+
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
@@ -615,7 +640,10 @@ const AppContentInner: React.FC = () => {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(failSafeTimeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
