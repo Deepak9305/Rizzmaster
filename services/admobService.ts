@@ -56,13 +56,30 @@ export const AdMobService = {
         }
     },
 
+    async prepareInterstitial(adId: string) {
+        if (!Capacitor.isNativePlatform()) return;
+        await this.initialize();
+        try {
+            await AdMob.prepareInterstitial({ adId });
+            console.log('AdMob Interstitial Prepared');
+        } catch (e) {
+            console.error('AdMob Prepare Interstitial Error:', e);
+        }
+    },
+
     async showInterstitial(adId: string): Promise<boolean> {
         if (!Capacitor.isNativePlatform()) return false;
 
         await this.initialize();
 
         try {
-            await AdMob.prepareInterstitial({ adId });
+            // No need to call prepare here if it's already pre-loaded, 
+            // but calling it again won't hurt if we want to be safe.
+            // However, the "Community" plugin usually requires an explicit prepare call 
+            // before show if it hasn't been done yet.
+            // We'll trust the pre-loading logic in App.tsx but keep a safety prepare here 
+            // just in case it was missed (though it might cause a slight delay).
+            // await AdMob.prepareInterstitial({ adId }); 
 
             return new Promise(async (resolve) => {
                 let resolved = false;
@@ -97,6 +114,9 @@ export const AdMobService = {
                 }, 2000);
 
                 await AdMob.showInterstitial();
+
+                // Immediately start preparing the NEXT one in the background
+                this.prepareInterstitial(adId);
             });
         } catch (error) {
             console.error('AdMob Interstitial Error', error);

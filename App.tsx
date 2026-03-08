@@ -445,6 +445,14 @@ const AppContentInner: React.FC = () => {
     }
   }, [showToast]);
 
+  // Ad Pre-loading (Initial)
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      const adId = getAdId('INTERSTITIAL');
+      AdMobService.prepareInterstitial(adId);
+    }
+  }, []);
+
   // Initialize Native Services
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
