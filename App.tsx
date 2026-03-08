@@ -22,6 +22,7 @@ import OnboardingFlow from './components/OnboardingFlow';
 const PremiumModal = lazy(() => import('./components/PremiumModal'));
 const SavedModal = lazy(() => import('./components/SavedModal'));
 const InfoPages = lazy(() => import('./components/InfoPages'));
+const RizzCoach = lazy(() => import('./components/RizzCoach'));
 
 const DAILY_CREDITS = 5;
 const REWARD_CREDITS = 5;
@@ -58,7 +59,7 @@ const getAdId = (type: keyof typeof AD_IDS) => {
 // Placeholder for Web AdSense
 const ADSENSE_SLOT_ID = '1234567890';
 
-type ViewState = 'HOME' | 'PRIVACY' | 'TERMS' | 'SUPPORT';
+type ViewState = 'HOME' | 'PRIVACY' | 'TERMS' | 'SUPPORT' | 'COACH';
 
 const LOADING_MESSAGES = [
   "Analyzing context...",
@@ -184,6 +185,7 @@ const AppContentInner: React.FC = () => {
   // Auth State
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isGuest, setIsGuest] = useState(false);
   const [isAuthReady, setIsAuthReady] = useState(false);
 
   // Refs
@@ -280,10 +282,13 @@ const AppContentInner: React.FC = () => {
   // in background/foreground event listeners and intervals without causing re-renders.
   const activeTimeMs = useRef<number>(0);
   const lastAdActiveTime = useRef<number>(0);
+  const lastCoachAdTime = useRef<number>(0);
   const backgroundTimestamp = useRef<number | null>(null);
   const sessionGenCount = useRef<number>(0);
 
   const INTERSTITIAL_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutes of active time between ads
+  const COACH_AD_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes between coach ads
+  const COACH_AD_GRACE_PERIOD_MS = 3 * 60 * 1000; // 3 minutes before first coach ad
   const INACTIVITY_RESET_MS = 30 * 60 * 1000; // 30 minutes of background time to reset
 
   // Track Active Time (Foreground)
@@ -315,6 +320,7 @@ const AppContentInner: React.FC = () => {
             // Reset active time and ad tracking to grant a new grace period
             activeTimeMs.current = 0;
             lastAdActiveTime.current = 0;
+            lastCoachAdTime.current = 0;
             sessionGenCount.current = 0;
           }
           // We are no longer in the background
@@ -493,15 +499,51 @@ const AppContentInner: React.FC = () => {
   }, []);
 
   // Navigation Wrappers
-  const handleViewNavigation = useCallback((view: ViewState) => {
+  const showCoachTransitionAd = async () => {
+    const isPremium = profileRef.current?.is_premium;
+    if (isPremium || !Capacitor.isNativePlatform()) return;
+
+    const currentActiveTime = activeTimeMs.current;
+
+    // Check grace period (3 mins)
+    if (currentActiveTime < COACH_AD_GRACE_PERIOD_MS) return;
+
+    // Check 5 min cooldown
+    if (currentActiveTime - lastCoachAdTime.current >= COACH_AD_COOLDOWN_MS) {
+      const adId = getAdId('INTERSTITIAL');
+      try {
+        await AdMobService.showInterstitial(adId);
+        lastCoachAdTime.current = activeTimeMs.current;
+        lastAdActiveTime.current = activeTimeMs.current; // Synchronize with generation ads
+
+        // Give 7 credits for watching the coach transition ad
+        if (profileRef.current) {
+          updateCredits((profileRef.current.credits || 0) + 7);
+          showToast('+7 Credits for watching! ⚡', 'success');
+        }
+      } catch (e) {
+        console.warn("Coach transition ad failed:", e);
+      }
+    }
+  };
+
+  const handleViewNavigation = useCallback(async (view: ViewState) => {
     if (view === currentView) return;
+
+    if (view === 'COACH' || (currentView === 'COACH' && view === 'HOME')) {
+      await showCoachTransitionAd();
+    }
+
     window.history.pushState({ view }, '');
     setCurrentView(view);
   }, [currentView]);
 
-  const handleBackNavigation = useCallback(() => {
+  const handleBackNavigation = useCallback(async () => {
+    if (currentView === 'COACH') {
+      await showCoachTransitionAd();
+    }
     window.history.back();
-  }, []);
+  }, [currentView]);
 
   const handleOpenPremium = useCallback(() => {
     window.history.pushState({ view: currentView, premium: true }, '');
@@ -638,6 +680,7 @@ const AppContentInner: React.FC = () => {
       console.error("Logout failed:", err);
     } finally {
       setSession(null);
+      setIsGuest(false);
       setProfile(null);
       setSavedItems([]);
       setResult(null);
@@ -651,6 +694,19 @@ const AppContentInner: React.FC = () => {
       showToast("Successfully logged out 👋", 'success');
       window.history.replaceState({ view: 'HOME' }, '', '/');
     }
+  }, [showToast]);
+
+  const handleGuestLogin = useCallback(() => {
+    setIsGuest(true);
+    const guestUser: UserProfile = {
+      id: 'guest-' + Date.now(),
+      email: 'guest@rizzmaster.local',
+      credits: DAILY_CREDITS,
+      is_premium: false,
+      last_daily_reset: new Date().toISOString().split('T')[0]
+    };
+    setProfile(guestUser);
+    showToast("Continuing as Guest ⚡", 'info');
   }, [showToast]);
 
 
@@ -1060,12 +1116,26 @@ const AppContentInner: React.FC = () => {
               </button>
             </div>
           </div>
-        ) : !session ? (
-          <LoginPage />
+        ) : (!session && !isGuest) ? (
+          <LoginPage onGuestLogin={handleGuestLogin} />
         ) : !profile ? (
           <div className="min-h-screen flex flex-col items-center justify-center text-white p-4 bg-black safe-top safe-bottom">
             <svg className="animate-spin h-8 w-8 text-rose-500 mb-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
             <p className="text-white/50 animate-pulse">Loading Profile...</p>
+          </div>
+        ) : currentView === 'COACH' ? (
+          <div className="fixed inset-0 z-[100] safe-top safe-bottom">
+            <Suspense fallback={null}>
+              <RizzCoach
+                isOpen={true}
+                onClose={handleBackNavigation}
+                credits={profile?.credits || 0}
+                onUpdateCredits={updateCredits}
+                isPremium={profile?.is_premium || false}
+                onWatchAd={handleWatchAd}
+                onGoPremium={() => { handleBackNavigation(); handleOpenPremium(); }}
+              />
+            </Suspense>
           </div>
         ) : currentView !== 'HOME' ? (
           <div className="safe-top safe-bottom">
@@ -1160,10 +1230,11 @@ const AppContentInner: React.FC = () => {
               </p>
             </header>
 
-            <div className="flex p-1 bg-white/5 rounded-full mb-8 relative border border-white/10 max-w-md mx-auto w-full select-none">
-              <button onClick={() => { setMode(InputMode.CHAT); clear(); }} className={`flex-1 py-3 rounded-full font-medium text-sm md:text-base transition-all duration-300 relative z-10 ${mode === InputMode.CHAT ? 'text-white shadow-lg' : 'text-white/50 hover:text-white/80'}`}>Chat Reply</button>
-              <button onClick={() => { setMode(InputMode.BIO); clear(); }} className={`flex-1 py-3 rounded-full font-medium text-sm md:text-base transition-all duration-300 relative z-10 ${mode === InputMode.BIO ? 'text-white shadow-lg' : 'text-white/50 hover:text-white/80'}`}>Profile Bio</button>
-              <div className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full rizz-gradient transition-all duration-300 ${mode === InputMode.CHAT ? 'left-1' : 'left-[calc(50%+4px)]'}`} />
+            {/* Main Mode Selection */}
+            <div className="flex gap-3 mb-8 max-w-lg mx-auto w-full select-none">
+              <button onClick={() => { setMode(InputMode.CHAT); clear(); }} className={`flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 ${mode === InputMode.CHAT ? 'rizz-gradient text-white shadow-lg shadow-rose-500/20 shadow-purple-500/20' : 'bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10'}`}>Chat Reply</button>
+              <button onClick={() => { setMode(InputMode.BIO); clear(); }} className={`flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 ${mode === InputMode.BIO ? 'rizz-gradient text-white shadow-lg shadow-rose-500/20 shadow-purple-500/20' : 'bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10'}`}>Profile Bio</button>
+              <button onClick={() => { handleViewNavigation('COACH'); }} className="flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 flex items-center justify-center gap-1.5">Coach</button>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 items-start">
