@@ -1247,14 +1247,6 @@ const AppContentInner: React.FC = () => {
               />
             </Suspense>
 
-            {isAdLoading && (
-              <div className="fixed inset-0 z-[100] bg-black/80 flex flex-col items-center justify-center p-8 backdrop-blur-sm">
-                <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 flex flex-col items-center">
-                  <svg className="animate-spin h-8 w-8 text-rose-500 mb-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                  <p className="text-white font-bold">Loading Ad...</p>
-                </div>
-              </div>
-            )}
 
             <nav className="flex justify-between items-center mb-8 md:mb-12">
               <button onClick={handleLogout} className="px-3 py-1.5 text-xs md:text-sm text-white/40 hover:text-white hover:bg-white/5 rounded-lg transition-all uppercase tracking-widest font-medium border border-transparent hover:border-white/10 flex items-center gap-2 active:scale-95">

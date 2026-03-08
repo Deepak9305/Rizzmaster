@@ -4,11 +4,7 @@ import LegalModals from './LegalModals';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { Capacitor } from '@capacitor/core';
 
-interface LoginPageProps {
-    onGuestLogin?: () => void;
-}
-
-const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
+const LoginPage: React.FC = () => {
     const [isEmailMode, setIsEmailMode] = useState(false);
     const [isSignUp, setIsSignUp] = useState(false);
     const [email, setEmail] = useState('');
@@ -298,13 +294,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestLogin }) => {
                                 >
                                     <svg className="w-5 h-5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                                     Sign in with Email
-                                </button>
-
-                                <button
-                                    onClick={onGuestLogin}
-                                    className="w-full py-3 bg-white/5 border border-white/10 text-white/40 rounded-xl font-bold hover:text-white/60 hover:bg-white/10 transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-4"
-                                >
-                                    <span>⚡</span> Continue as Guest
                                 </button>
 
                                 <div className="py-4 invisible" />
