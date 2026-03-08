@@ -176,36 +176,51 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ isAppReady, onComplete }) =
   );
 };
 
-const AdLoadingOverlay: React.FC<{ isVisible: boolean }> = ({ isVisible }) => {
-  if (!isVisible) return null;
+const AdLoadingOverlay: React.FC<{ mode: 'hidden' | 'interstitial' | 'reward' }> = ({ mode }) => {
+  if (mode === 'hidden') return null;
+
+  const isReward = mode === 'reward';
+
   return (
     <div className="fixed inset-0 z-[1000] flex flex-col items-center justify-center p-6 animate-fade-in">
       {/* Premium Backdrop Overlay */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
 
       {/* Compact Content Card */}
-      <div className="relative bg-zinc-900/90 border border-white/10 p-8 rounded-[2.5rem] flex flex-col items-center max-w-sm w-full shadow-2xl animate-scale-in">
-        <div className="relative mb-6">
+      <div className="relative bg-zinc-900/90 border border-white/10 p-6 rounded-[2rem] flex flex-col items-center max-w-xs w-full shadow-2xl animate-scale-in">
+        <div className="relative mb-4">
           {/* Animated Glow Rings */}
-          <div className="absolute inset-0 scale-150 blur-2xl bg-rose-500/20 rounded-full animate-pulse" />
-          <div className="w-14 h-14 border-4 border-rose-500/10 border-t-rose-500 rounded-full animate-spin" />
+          <div className={`absolute inset-0 scale-150 blur-2xl ${isReward ? 'bg-amber-500/20' : 'bg-rose-500/20'} rounded-full animate-pulse`} />
+          <div className={`w-12 h-12 border-4 ${isReward ? 'border-amber-500/10 border-t-amber-400' : 'border-rose-500/10 border-t-rose-500'} rounded-full animate-spin`} />
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-xl animate-pulse">⚡</span>
+            <span className="text-lg animate-pulse">{isReward ? '🎁' : '⚡'}</span>
           </div>
         </div>
 
         <div className="text-center">
-          <h3 className="text-xl font-bold text-white tracking-tight">Generating Credits</h3>
-          <p className="text-white/40 text-[10px] mt-2 font-bold uppercase tracking-[0.3em] animate-pulse">
-            Your Rizz is processing...
+          <h3 className="text-base font-bold text-white tracking-tight">{isReward ? 'Loading Reward Ad' : 'Loading Ad'}</h3>
+          <p className="text-white/40 text-[10px] mt-1 font-bold uppercase tracking-[0.3em] animate-pulse">
+            {isReward ? 'Watch to earn credits...' : 'Please wait...'}
           </p>
         </div>
 
-        {/* Simulating Progress Bar */}
-        <div className="w-full mt-8 h-1 bg-white/5 rounded-full overflow-hidden">
-          <div className="h-full bg-rose-500 animate-progress-fast" />
+        {/* Looping shimmer progress bar */}
+        <div className="w-full mt-5 h-[2px] bg-white/5 rounded-full overflow-hidden">
+          <div
+            className={`h-full ${isReward ? 'bg-amber-400' : 'bg-rose-500'} rounded-full`}
+            style={{ animation: 'shimmerProgress 1.6s ease-in-out infinite' }}
+          />
         </div>
       </div>
+
+      {/* Inline keyframe for the shimmer progress bar */}
+      <style>{`
+        @keyframes shimmerProgress {
+          0%   { width: 0%;   margin-left: 0; }
+          50%  { width: 60%;  margin-left: 20%; }
+          100% { width: 0%;   margin-left: 100%; }
+        }
+      `}</style>
     </div>
   );
 };
@@ -257,7 +272,7 @@ const AppContentInner: React.FC = () => {
   const [showSavedModal, setShowSavedModal] = useState(false);
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
   const [isSessionBlocked, setIsSessionBlocked] = useState(false);
-  const [isAdLoading, setIsAdLoading] = useState(false);
+  const [isAdLoading, setIsAdLoading] = useState<'hidden' | 'interstitial' | 'reward'>('hidden');
 
   // Ref to track state for event listeners without re-binding
   const stateRef = useRef({
@@ -559,7 +574,7 @@ const AppContentInner: React.FC = () => {
 
     // Check combined 3 min cooldown
     if (currentActiveTime - lastCoachAdTime.current >= COACH_AD_COOLDOWN_MS) {
-      setIsAdLoading(true); // SHOW OVERLAY
+      setIsAdLoading('interstitial'); // SHOW OVERLAY
 
       let rewardEarned = false;
       if (Capacitor.isNativePlatform()) {
@@ -569,10 +584,10 @@ const AppContentInner: React.FC = () => {
         } catch (e) {
           console.warn("Transition ad error:", e);
         } finally {
-          setIsAdLoading(false); // ALWAYS HIDE OVERLAY
+          setIsAdLoading('hidden'); // ALWAYS HIDE OVERLAY
         }
       } else {
-        setIsAdLoading(false);
+        setIsAdLoading('hidden');
       }
 
       if (rewardEarned) {
@@ -581,7 +596,7 @@ const AppContentInner: React.FC = () => {
         lastAdActiveTime.current = now; // Synchronize with generation ads
 
         if (profileRef.current) {
-          updateCredits((profileRef.current.credits || 0) + 7);
+          updateCredits((prev) => prev + 7);
           showToast('+7 Credits for watching! ⚡', 'success');
         }
       }
@@ -1050,7 +1065,7 @@ const AppContentInner: React.FC = () => {
         if (sessionGenCount.current === 0) return;
 
         if (currentActiveTime - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS) {
-          setIsAdLoading(true); // SHOW OVERLAY
+          setIsAdLoading('interstitial'); // SHOW OVERLAY
           const adId = getAdId('INTERSTITIAL');
 
           try {
@@ -1063,7 +1078,7 @@ const AppContentInner: React.FC = () => {
           } catch (e) {
             console.warn("Generation ad error:", e);
           } finally {
-            setIsAdLoading(false); // ALWAYS HIDE OVERLAY
+            setIsAdLoading('hidden'); // ALWAYS HIDE OVERLAY
           }
         }
       }
@@ -1117,7 +1132,7 @@ const AppContentInner: React.FC = () => {
 
   const handleWatchAd = useCallback(async () => {
     if (Capacitor.isNativePlatform()) {
-      setIsAdLoading(true); // SHOW OVERLAY
+      setIsAdLoading('reward'); // SHOW OVERLAY
       try {
         const adUnitId = getAdId('REWARD');
         console.log("Showing Reward Ad:", adUnitId);
@@ -1135,7 +1150,7 @@ const AppContentInner: React.FC = () => {
         console.warn("Native Ad Error:", e);
         showToast('Ad failed to load. Please try again later.', 'error');
       } finally {
-        setIsAdLoading(false); // ALWAYS HIDE OVERLAY
+        setIsAdLoading('hidden'); // ALWAYS HIDE OVERLAY
       }
       return;
     }
@@ -1163,7 +1178,7 @@ const AppContentInner: React.FC = () => {
       )}
 
       {/* Optimized Ad Loading UI */}
-      <AdLoadingOverlay isVisible={isAdLoading} />
+      <AdLoadingOverlay mode={isAdLoading} />
 
       {/* Onboarding Flow: Shows after Splash if not completed */}
       {!showSplash && showOnboarding && (
@@ -1422,8 +1437,8 @@ const AppContentInner: React.FC = () => {
                   </button>
                 ) : (
                   <div className="grid grid-cols-2 gap-3">
-                    <button onClick={handleWatchAd} disabled={isAdLoading} className="bg-white/10 border border-white/10 py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base hover:bg-white/20 active:scale-[0.98] transition-all flex flex-col items-center justify-center">
-                      {isAdLoading ? <span className="text-white/50 text-xs">Loading...</span> : <><span className="text-xl mb-1">📺</span> <span>Watch Ad (+5)</span></>}
+                    <button onClick={handleWatchAd} disabled={isAdLoading !== 'hidden'} className="bg-white/10 border border-white/10 py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base hover:bg-white/20 active:scale-[0.98] transition-all flex flex-col items-center justify-center">
+                      {isAdLoading !== 'hidden' ? <span className="text-white/50 text-xs">Loading...</span> : <><span className="text-xl mb-1">📺</span> <span>Watch Ad (+5)</span></>}
                     </button>
                     <button onClick={handleOpenPremium} className="bg-gradient-to-r from-yellow-500 to-amber-600 text-black py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base shadow-xl hover:brightness-110 active:scale-[0.98] transition-all flex flex-col items-center justify-center animate-pulse">
                       <span className="text-xl mb-1">👑</span> <span>Go Unlimited</span>

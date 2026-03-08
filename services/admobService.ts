@@ -90,6 +90,7 @@ export const AdMobService = {
                     resolved = true;
                     dismissListener.remove();
                     failedListener.remove();
+                    failedShowListener.remove();
                     showedListener.remove();
                     clearTimeout(timeout);
                     resolve(success);
@@ -105,6 +106,12 @@ export const AdMobService = {
 
                 const failedListener = await AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, () => {
                     cleanupAndResolve(false);
+                    this.prepareInterstitial(adId);
+                });
+
+                const failedShowListener = await AdMob.addListener(InterstitialAdPluginEvents.FailedToShow, () => {
+                    cleanupAndResolve(false);
+                    this.prepareInterstitial(adId);
                 });
 
                 // Timeout fail-safe (5 seconds)
@@ -152,6 +159,7 @@ export const AdMobService = {
                     rewardListener.remove();
                     dismissListener.remove();
                     failedListener.remove();
+                    failedShowListener.remove();
                     clearTimeout(timeout);
                     console.log(`[AdMob] Reward video finished. Success: ${success}`);
                     resolve(success);
@@ -169,17 +177,25 @@ export const AdMobService = {
                     cleanupAndResolve(earned);
                 });
 
-                // Listen for failure
+                // Listen for failure (load)
                 const failedListener = await AdMob.addListener(RewardAdPluginEvents.FailedToLoad, (err) => {
-                    console.error('[AdMob] Reward video failed to load/show:', err);
+                    console.error('[AdMob] Reward video failed to load:', err);
                     cleanupAndResolve(false);
+                    this.prepareRewardVideo(adId);
                 });
 
-                // Fail-safe timeout (8 seconds for reward ads)
+                // Listen for failure (show)
+                const failedShowListener = await AdMob.addListener(RewardAdPluginEvents.FailedToShow, (err) => {
+                    console.error('[AdMob] Reward video failed to show:', err);
+                    cleanupAndResolve(false);
+                    this.prepareRewardVideo(adId);
+                });
+
+                // Fail-safe timeout (12 seconds for reward ads)
                 const timeout = setTimeout(() => {
                     console.warn('[AdMob] Reward video show timeout');
                     cleanupAndResolve(false);
-                }, 8000);
+                }, 12000);
 
                 await AdMob.showRewardVideoAd();
 

@@ -9,7 +9,7 @@ interface RizzCoachProps {
     isOpen: boolean;
     onClose: () => void;
     credits: number;
-    onUpdateCredits: (newAmount: number) => void;
+    onUpdateCredits: (newAmountOrUpdater: number | ((prev: number) => number)) => void;
     isPremium: boolean;
     onWatchAd?: () => void;
     onGoPremium?: () => void;
@@ -140,7 +140,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
 
             // Image costs 2 credits, text costs 1
             const cost = image ? 2 : 1;
-            if (!isPremium) onUpdateCredits(credits - cost);
+            if (!isPremium) onUpdateCredits((prev) => prev - cost);
         } catch (err) {
             console.error('Coach error:', err);
             setMessages(prev => [...prev, {
