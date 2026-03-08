@@ -387,8 +387,11 @@ const AppContentInner: React.FC = () => {
           const adId = getAdId('BANNER');
           const position = currentView === 'COACH' ? 'TOP' : 'BOTTOM';
 
-          // Delay slightly to ensure layout is settled and old banners are gone
-          timer = setTimeout(() => AdMobService.showBanner(adId, position), 2000);
+          // Force hide first to ensure the plugin repositions cleanly
+          AdMobService.hideBanner().then(() => {
+            // Delay slightly to ensure layout is settled and old banners are gone
+            timer = setTimeout(() => AdMobService.showBanner(adId, position), 1500);
+          });
         }
       }
     };
