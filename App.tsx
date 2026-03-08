@@ -1021,8 +1021,6 @@ const AppContentInner: React.FC = () => {
   }, [mode, inputText, image, selectedVibe, responseLength, showToast, handleOpenPremium, updateCredits]);
 
   const handleWatchAd = useCallback(async () => {
-    handleBackNavigation();
-
     // 1. Try Native AdMob first
     if (Capacitor.isNativePlatform()) {
       setIsAdLoading(true);
