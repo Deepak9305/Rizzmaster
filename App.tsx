@@ -385,8 +385,10 @@ const AppContentInner: React.FC = () => {
           AdMobService.hideBanner();
         } else {
           const adId = getAdId('BANNER');
+          const position = currentView === 'COACH' ? 'TOP' : 'BOTTOM';
+
           // Delay slightly to ensure layout is settled and old banners are gone
-          timer = setTimeout(() => AdMobService.showBanner(adId), 2000);
+          timer = setTimeout(() => AdMobService.showBanner(adId, position), 2000);
         }
       }
     };
@@ -402,7 +404,8 @@ const AppContentInner: React.FC = () => {
           if (profile && !profile.is_premium) {
             AdMobService.hideBanner().then(() => {
               const adId = getAdId('BANNER');
-              timer = setTimeout(() => AdMobService.showBanner(adId), 1000);
+              const position = currentView === 'COACH' ? 'TOP' : 'BOTTOM';
+              timer = setTimeout(() => AdMobService.showBanner(adId, position), 1000);
             });
           }
 
@@ -413,11 +416,8 @@ const AppContentInner: React.FC = () => {
     return () => {
       if (timer) clearTimeout(timer);
       if (appListener) appListener.remove();
-      // Don't hide banner on unmount to prevent flickering during quick state changes,
-      // unless logout handles it.
     };
-    // Optimized dependency array: only re-run if premium status changes, not on every credit update
-  }, [profile?.is_premium, session]);
+  }, [profile?.is_premium, session, currentView]);
 
   // Define handleUpgrade using REF to avoid stale closures
   const handleUpgrade = useCallback(async () => {

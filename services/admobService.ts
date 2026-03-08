@@ -26,7 +26,7 @@ export const AdMobService = {
         }
     },
 
-    async showBanner(adId: string) {
+    async showBanner(adId: string, position: 'TOP' | 'BOTTOM' = 'BOTTOM') {
         if (!Capacitor.isNativePlatform()) return;
 
         try {
@@ -35,13 +35,13 @@ export const AdMobService = {
             const options: BannerAdOptions = {
                 adId: adId,
                 adSize: BannerAdSize.ADAPTIVE_BANNER,
-                position: BannerAdPosition.BOTTOM_CENTER,
-                margin: 50,
+                position: position === 'TOP' ? BannerAdPosition.TOP_CENTER : BannerAdPosition.BOTTOM_CENTER,
+                margin: position === 'TOP' ? 0 : 50,
                 isTesting: false
             };
 
             await AdMob.showBanner(options);
-            console.log('AdMob Banner shown');
+            console.log(`AdMob Banner shown at ${position}`);
         } catch (e) {
             console.error('AdMob Show Banner Error:', e);
         }

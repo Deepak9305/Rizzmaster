@@ -240,7 +240,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                 {/* Header */}
                 <div style={{
                     flexShrink: 0, position: 'relative', zIndex: 10,
-                    paddingTop: 'calc(env(safe-area-inset-top) + 1rem)',
+                    paddingTop: !isPremium ? 'calc(env(safe-area-inset-top) + 60px)' : 'calc(env(safe-area-inset-top) + 1rem)',
                     paddingBottom: '1rem', paddingLeft: '1.25rem', paddingRight: '1.25rem',
                     borderBottom: '1px solid rgba(255,255,255,0.06)',
                     background: 'rgba(5,5,5,0.75)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
@@ -321,7 +321,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                 {/* Input Container Wrapper */}
                 <div style={{
                     flexShrink: 0, position: 'relative', zIndex: 10,
-                    padding: `0 0 calc(env(safe-area-inset-bottom) + ${!isPremium ? '65px' : '0.875rem'})`,
+                    padding: '0 0 calc(env(safe-area-inset-bottom) + 0.875rem)',
                     background: 'rgba(5,5,5,0.85)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
                     borderTop: '1px solid rgba(255,255,255,0.06)',
                 }}>
