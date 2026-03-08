@@ -120,10 +120,14 @@ export const AdMobService = {
                     cleanupAndResolve(false);
                 }, 5000);
 
-                await AdMob.showInterstitial();
-
-                // Immediately start preparing the NEXT one in the background
-                this.prepareInterstitial(adId);
+                try {
+                    await AdMob.showInterstitial();
+                    // Immediately start preparing the NEXT one in the background
+                    this.prepareInterstitial(adId);
+                } catch (e) {
+                    console.error('AdMob showInterstitial threw:', e);
+                    cleanupAndResolve(false);
+                }
             });
         } catch (error) {
             console.error('AdMob Interstitial Error', error);
@@ -197,10 +201,14 @@ export const AdMobService = {
                     cleanupAndResolve(false);
                 }, 12000);
 
-                await AdMob.showRewardVideoAd();
-
-                // Immediately start preparing the NEXT one in the background
-                this.prepareRewardVideo(adId);
+                try {
+                    await AdMob.showRewardVideoAd();
+                    // Immediately start preparing the NEXT one in the background
+                    this.prepareRewardVideo(adId);
+                } catch (err) {
+                    console.error('AdMob showRewardVideoAd threw:', err);
+                    cleanupAndResolve(false);
+                }
             });
         } catch (error) {
             console.error('[AdMob] Critical Reward Error', error);
