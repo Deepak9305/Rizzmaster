@@ -1208,7 +1208,7 @@ const AppContentInner: React.FC = () => {
             <p className="text-white/50 animate-pulse">Loading Profile...</p>
           </div>
         ) : currentView === 'COACH' ? (
-          <div className="fixed inset-0 z-[100] safe-top safe-bottom">
+          <div className="animate-slide-in-right-view w-full h-full relative">
             <Suspense fallback={null}>
               <RizzCoach
                 isOpen={true}
