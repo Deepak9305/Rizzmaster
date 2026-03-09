@@ -314,15 +314,26 @@ const AppContentInner: React.FC = () => {
   useEffect(() => {
     // Initial State
     Network.getStatus().then(status => {
-      setIsOffline(!status.connected);
+      const isCurrentlyOffline = !status.connected;
+      setIsOffline(isCurrentlyOffline);
+      lastOfflineStatusRef.current = isCurrentlyOffline;
     });
 
     const listener = Network.addListener('networkStatusChange', status => {
-      setIsOffline(!status.connected);
-      if (status.connected) {
-        showToast("Connection Restored 📡", "success");
-      } else {
-        showToast("Connection Lost ⚠️", "error");
+      const isNowOffline = !status.connected;
+      const wasOffline = lastOfflineStatusRef.current;
+
+      // Update State
+      setIsOffline(isNowOffline);
+      lastOfflineStatusRef.current = isNowOffline;
+
+      // Only show toast if the status actually CHANGED
+      if (isNowOffline !== wasOffline) {
+        if (!isNowOffline) {
+          showToast("Connection Restored 📡", "success");
+        } else {
+          showToast("Connection Lost ⚠️", "error");
+        }
       }
     });
 
