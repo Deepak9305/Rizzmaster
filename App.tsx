@@ -1260,7 +1260,7 @@ const AppContentInner: React.FC = () => {
             </Suspense>
           </div>
         ) : (
-          <div className="max-w-4xl mx-auto px-4 py-6 md:py-12 pb-20 relative min-h-[100dvh] flex flex-col animate-fade-in safe-top">
+          <div className="max-w-4xl mx-auto px-4 py-6 md:py-12 pb-0 relative min-h-[100dvh] flex flex-col animate-fade-in safe-top">
 
             <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden bg-black" />
 

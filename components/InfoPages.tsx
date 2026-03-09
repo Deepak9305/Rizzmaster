@@ -131,7 +131,7 @@ const InfoPages: React.FC<InfoPagesProps> = ({ page, onBack, onDeleteAccount }) 
   };
 
   return (
-    <div className="min-h-screen w-full bg-black text-white animate-fade-in pb-20">
+    <div className="min-h-screen w-full bg-black text-white animate-fade-in pb-0">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <button
           onClick={onBack}

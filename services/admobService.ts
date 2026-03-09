@@ -39,7 +39,7 @@ export const AdMobService = {
                 adId: adId,
                 adSize: BannerAdSize.ADAPTIVE_BANNER,
                 position: position === 'TOP' ? BannerAdPosition.TOP_CENTER : BannerAdPosition.BOTTOM_CENTER,
-                margin: position === 'TOP' ? 0 : 50,
+                margin: position === 'TOP' ? 0 : 0,
                 isTesting: false
             };
 
