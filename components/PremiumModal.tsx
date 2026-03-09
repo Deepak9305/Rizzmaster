@@ -112,13 +112,16 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onResto
 
                 <button
                     onClick={handleSubscribe}
-                    className="w-full py-3 bg-gradient-to-r from-yellow-600 to-amber-500 text-black font-bold rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-lg flex flex-col items-center leading-tight mb-4 animate-shimmer bg-[length:200%_100%]"
+                    disabled={!Capacitor.isNativePlatform()}
+                    className={`w-full py-3 bg-gradient-to-r from-yellow-600 to-amber-500 text-black font-bold rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-lg flex flex-col items-center leading-tight mb-4 animate-shimmer bg-[length:200%_100%] ${!Capacitor.isNativePlatform() ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
                 >
-                    <span className="text-sm">Subscribe & Upgrade</span>
+                    <span className="text-sm">
+                        {Capacitor.isNativePlatform() ? 'Subscribe & Upgrade' : 'Available on Mobile App'}
+                    </span>
                     <span className="text-[10px] opacity-80 uppercase">
-                        {selectedPlan === 'WEEKLY'
-                            ? `${prices.weekly} billed weekly`
-                            : `${prices.monthly} billed monthly`}
+                        {Capacitor.isNativePlatform()
+                            ? (selectedPlan === 'WEEKLY' ? `${prices.weekly} billed weekly` : `${prices.monthly} billed monthly`)
+                            : 'Coming soon to web'}
                     </span>
                 </button>
 
