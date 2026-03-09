@@ -16,6 +16,7 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 import { AdMobService } from './services/admobService';
 import IAPService from './services/iapService';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Network } from '@capacitor/network';
 import AdSenseBanner from './components/AdSenseBanner';
 import OnboardingFlow from './components/OnboardingFlow';
 
@@ -25,6 +26,7 @@ const SavedModal = lazy(() => import('./components/SavedModal'));
 const InfoPages = lazy(() => import('./components/InfoPages'));
 const RizzCoach = lazy(() => import('./components/RizzCoach'));
 import ErrorBoundary from './components/ErrorBoundary';
+import NoInternetOverlay from './components/NoInternetOverlay';
 
 const DAILY_CREDITS = 5;
 const REWARD_CREDITS = 5;
@@ -256,6 +258,7 @@ const AppContentInner: React.FC = () => {
   const [isSessionBlocked, setIsSessionBlocked] = useState(false);
   const [isAdLoading, setIsAdLoading] = useState<'hidden' | 'interstitial' | 'reward'>('hidden');
   const [isProfileLoadingHung, setIsProfileLoadingHung] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
 
   // Ref to track state for event listeners without re-binding
   const stateRef = useRef({
@@ -305,6 +308,27 @@ const AppContentInner: React.FC = () => {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Network Connectivity Monitoring
+  useEffect(() => {
+    // Initial State
+    Network.getStatus().then(status => {
+      setIsOffline(!status.connected);
+    });
+
+    const listener = Network.addListener('networkStatusChange', status => {
+      setIsOffline(!status.connected);
+      if (status.connected) {
+        showToast("Connection Restored 📡", "success");
+      } else {
+        showToast("Connection Lost ⚠️", "error");
+      }
+    });
+
+    return () => {
+      listener.then(l => l.remove());
+    };
+  }, [showToast]);
 
   // Sync profile ref
   useEffect(() => {
@@ -1226,6 +1250,16 @@ const AppContentInner: React.FC = () => {
 
       {/* Optimized Ad Loading UI */}
       <AdLoadingOverlay mode={isAdLoading} />
+
+      {/* No Internet Overlay */}
+      <NoInternetOverlay
+        isVisible={isOffline}
+        onRetry={async () => {
+          const status = await Network.getStatus();
+          setIsOffline(!status.connected);
+          if (status.connected) showToast("We're back online! 📡", "success");
+        }}
+      />
 
       {/* Onboarding Flow: Shows after Splash if not completed */}
       {!showSplash && showOnboarding && (
