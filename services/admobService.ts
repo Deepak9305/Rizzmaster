@@ -39,7 +39,7 @@ export const AdMobService = {
         }
     },
 
-    async showBanner(adId: string) {
+    async showBanner(adId: string, position: 'TOP' | 'BOTTOM' = 'BOTTOM') {
         if (!Capacitor.isNativePlatform()) return;
 
         try {
@@ -56,8 +56,8 @@ export const AdMobService = {
             const options: BannerAdOptions = {
                 adId: adId,
                 adSize: BannerAdSize.ADAPTIVE_BANNER,
-                position: BannerAdPosition.TOP_CENTER,
-                margin: 40, // Height buffer for status bar/top nav
+                position: position === 'TOP' ? BannerAdPosition.TOP_CENTER : BannerAdPosition.BOTTOM_CENTER,
+                margin: position === 'TOP' ? 40 : 0, // Margin for top to avoid status bar
                 isTesting: false,
                 npa: false // Enable personalized ads for better production fill rate
             };
