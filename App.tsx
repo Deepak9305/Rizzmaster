@@ -317,9 +317,9 @@ const AppContentInner: React.FC = () => {
   const backgroundTimestamp = useRef<number | null>(null);
   const sessionGenCount = useRef<number>(0);
 
-  const INTERSTITIAL_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutes of active time between ads
-  const COACH_AD_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutes between coach ads (Combined with interstitial)
-  const COACH_AD_GRACE_PERIOD_MS = 3 * 60 * 1000; // 3 minutes before first coach ad
+  const INTERSTITIAL_COOLDOWN_MS = 2 * 60 * 1000; // 2 minutes (Reduced from 3m)
+  const COACH_AD_COOLDOWN_MS = 2 * 60 * 1000; // 2 minutes (Reduced from 3m)
+  const COACH_AD_GRACE_PERIOD_MS = 1 * 60 * 1000; // 1 minute (Reduced from 3m)
   const INACTIVITY_RESET_MS = 30 * 60 * 1000; // 30 minutes of background time to reset
 
   // Track Active Time (Foreground)
@@ -1060,11 +1060,11 @@ const AppContentInner: React.FC = () => {
 
         if (sessionGenCount.current === 0) return;
 
-        // Trigger if 3 mins have passed OR if it's exactly the 3rd generation (1st ad)
-        const isThirdGeneration = sessionGenCount.current === 2 && lastAdActiveTime.current === 0;
-        const cooldownPassed = currentActiveTime - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS;
+        // Trigger if 2 mins have passed OR if it's the 3rd generation (1st ad guarantee)
+        const isThirdGeneration = sessionGenCount.current === 2;
+        const cooldownPassed = (currentActiveTime - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS) && lastAdActiveTime.current !== 0;
 
-        if (cooldownPassed || isThirdGeneration) {
+        if (isThirdGeneration || cooldownPassed) {
           setIsAdLoading('interstitial'); // SHOW OVERLAY
           const adId = getAdId('INTERSTITIAL');
 
