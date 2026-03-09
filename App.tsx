@@ -11,6 +11,7 @@ import Footer from './components/Footer';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
+import { Dialog } from '@capacitor/dialog';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { AdMobService } from './services/admobService';
 import IAPService from './services/iapService';
@@ -1151,18 +1152,29 @@ const AppContentInner: React.FC = () => {
           AdMobService.prepareRewardInterstitial(rewardInterId);
 
           // 3. Chained Bonus Ad Sequence
-          await new Promise(resolve => setTimeout(resolve, 1500));
+          // Wait briefly for first ad dismissal to settle
+          await new Promise(resolve => setTimeout(resolve, 800));
 
-          setIsAdLoading('reward'); // Show overlay for second ad prep
+          // Prompt the user with a native dialog
+          const { value } = await Dialog.confirm({
+            title: 'Bonus Reward! 🎁',
+            message: 'Want +7 more credits? Watch one more short ad.',
+            okButtonTitle: 'Watch Now',
+            cancelButtonTitle: 'No Thanks'
+          });
 
-          try {
-            const bonusEarned = await AdMobService.showRewardInterstitial(rewardInterId, onShow);
-            if (bonusEarned) {
-              updateCredits((prevCredits) => prevCredits + 7);
-              showToast(`+7 Bonus Credits! 🥷`, 'success');
+          if (value) {
+            setIsAdLoading('reward'); // Show overlay for second ad prep
+
+            try {
+              const bonusEarned = await AdMobService.showRewardInterstitial(rewardInterId, onShow);
+              if (bonusEarned) {
+                updateCredits((prevCredits) => prevCredits + 7);
+                showToast(`+7 Bonus Credits! 🥷`, 'success');
+              }
+            } catch (e) {
+              console.warn("Chained bonus ad error:", e);
             }
-          } catch (e) {
-            console.warn("Chained bonus ad error:", e);
           }
         } else {
           showToast('Ad dismissed or failed to give reward.', 'info');
