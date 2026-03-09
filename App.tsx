@@ -38,8 +38,12 @@ const AD_IDS = {
     IOS: 'ca-app-pub-3940256099942544/2934735716' // Test ID
   },
   INTERSTITIAL: {
-    ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/1033173712' : 'ca-app-pub-7381421031784616/8079257109',
+    ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/1033173712' : 'ca-app-pub-7381421031784616/2405898864',
     IOS: 'ca-app-pub-3940256099942544/4411468910' // Test ID
+  },
+  REWARD_INTERSTITIAL: {
+    ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/6978759866' : 'ca-app-pub-7381421031784616/8079257109',
+    IOS: 'ca-app-pub-3940256099942544/6978759866' // Test ID
   },
   REWARD: {
     ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/5224354917' : 'ca-app-pub-7381421031784616/6580197977',
@@ -481,11 +485,23 @@ const AppContentInner: React.FC = () => {
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
       const interId = getAdId('INTERSTITIAL');
-      const rewardId = getAdId('REWARD');
+      // Only pre-load Interstitial at startup. Banner is handled by its own effect.
+      // Reward ads are now pre-loaded conditionally to save resources.
       AdMobService.prepareInterstitial(interId);
-      AdMobService.prepareRewardVideo(rewardId);
     }
   }, []);
+
+  // Conditional Pre-loading: Reward Video (Low Credits)
+  useEffect(() => {
+    if (Capacitor.isNativePlatform() && profile && !profile.is_premium) {
+      const credits = profile.credits || 0;
+      // Pre-load Reward Video when credits are low (<= 1)
+      if (credits <= 1) {
+        const rewardId = getAdId('REWARD');
+        AdMobService.prepareRewardVideo(rewardId);
+      }
+    }
+  }, [profile?.credits, profile?.is_premium]);
 
   // Initialize Native Services
   useEffect(() => {
@@ -590,17 +606,10 @@ const AppContentInner: React.FC = () => {
         setIsAdLoading('hidden');
       }
 
-      // Always reset the cooldown after attempting to show an ad,
-      // regardless of whether it succeeded or failed. This prevents the
-      // ad gate from firing on every single navigation when ads fail.
+      // Always reset the cooldown after attempting to show an ad
       const now = activeTimeMs.current;
       lastCoachAdTime.current = now;
       lastAdActiveTime.current = now; // Synchronize with generation ads
-
-      if (adShowed && profileRef.current) {
-        updateCredits((prev) => prev + 7);
-        showToast('+7 Credits for watching! ⚡', 'success');
-      }
     }
   };
 
@@ -1075,11 +1084,11 @@ const AppContentInner: React.FC = () => {
 
         if (sessionGenCount.current === 0) return;
 
-        // Trigger if 3 mins have passed OR if it's exactly the 2nd generation (1st ad)
-        const isSecondGeneration = sessionGenCount.current === 1 && lastAdActiveTime.current === 0;
+        // Trigger if 3 mins have passed OR if it's exactly the 3rd generation (1st ad)
+        const isThirdGeneration = sessionGenCount.current === 2 && lastAdActiveTime.current === 0;
         const cooldownPassed = currentActiveTime - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS;
 
-        if (cooldownPassed || isSecondGeneration) {
+        if (cooldownPassed || isThirdGeneration) {
           setIsAdLoading('interstitial'); // SHOW OVERLAY
           const adId = getAdId('INTERSTITIAL');
 
@@ -1155,9 +1164,30 @@ const AppContentInner: React.FC = () => {
         const rewardEarned = await AdMobService.showRewardVideo(adUnitId);
 
         if (rewardEarned) {
-          // Use functional update to ensure reward is added to MOST RECENT credit count
+          // 1. First Reward (+5)
           updateCredits((prevCredits) => prevCredits + REWARD_CREDITS);
           showToast(`+${REWARD_CREDITS} Credits Added! ⚡`, 'success');
+
+          // 2. Pre-load Chained Bonus Ad (+10)
+          // We prepare it here so it's ready by the time the user finishes the first ad
+          const rewardInterId = getAdId('REWARD_INTERSTITIAL');
+          AdMobService.prepareRewardInterstitial(rewardInterId);
+
+          // 3. Chained Bonus Ad Sequence
+          // Wait 1.5s for the first ad dismissal to settle
+          await new Promise(resolve => setTimeout(resolve, 1500));
+
+          setIsAdLoading('reward'); // Show overlay for second ad prep
+
+          try {
+            const bonusEarned = await AdMobService.showRewardInterstitial(rewardInterId);
+            if (bonusEarned) {
+              updateCredits((prevCredits) => prevCredits + 10);
+              showToast(`+10 Bonus Credits! 🥷`, 'success');
+            }
+          } catch (e) {
+            console.warn("Chained bonus ad error:", e);
+          }
         } else {
           showToast('Ad dismissed or failed to give reward.', 'info');
         }
