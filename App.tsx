@@ -259,6 +259,7 @@ const AppContentInner: React.FC = () => {
   const [isAdLoading, setIsAdLoading] = useState<'hidden' | 'interstitial' | 'reward'>('hidden');
   const [isProfileLoadingHung, setIsProfileLoadingHung] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
+  const lastOfflineStatusRef = useRef(false);
 
   // Ref to track state for event listeners without re-binding
   const stateRef = useRef({
