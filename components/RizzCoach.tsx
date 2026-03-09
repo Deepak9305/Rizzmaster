@@ -226,7 +226,6 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
             <div style={{
                 position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column',
                 background: '#050505', zIndex: 100,
-                animation: 'coachSlideIn 0.45s cubic-bezier(0.16,1,0.3,1) both'
             }}>
                 {/* Aurora blobs */}
                 <div aria-hidden style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>

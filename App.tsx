@@ -620,7 +620,7 @@ const AppContentInner: React.FC = () => {
     if (view === currentView) return;
 
     if (view === 'COACH' || (currentView === 'COACH' && view === 'HOME')) {
-      await showCoachTransitionAd();
+      showCoachTransitionAd(); // DON'T AWAIT: Start ad logic in background
     }
 
     window.history.pushState({ view }, '');
