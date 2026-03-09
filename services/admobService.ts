@@ -56,8 +56,8 @@ export const AdMobService = {
             const options: BannerAdOptions = {
                 adId: adId,
                 adSize: BannerAdSize.ADAPTIVE_BANNER,
-                position: BannerAdPosition.BOTTOM_CENTER,
-                margin: 0,
+                position: BannerAdPosition.TOP_CENTER,
+                margin: 40, // Height buffer for status bar/top nav
                 isTesting: false,
                 npa: false // Enable personalized ads for better production fill rate
             };
