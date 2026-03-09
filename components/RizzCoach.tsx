@@ -27,12 +27,9 @@ const TypingIndicator = () => (
             <div style={{
                 width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
                 background: 'linear-gradient(135deg, #FF0080, #7928CA)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14" style={{ color: 'white' }}>
-                    <path fillRule="evenodd" d="M7.5 5.25a3 3 0 0 1 3-3h3a3 3 0 0 1 3 3v.252a6 6 0 0 1 5.043 5.34l.286 2.508c.11.966-.34 1.916-1.163 2.479l-4.502 3.085a2.25 2.25 0 0 1-2.529 0l-4.502-3.085a2.25 2.25 0 0 1-1.163-2.479l.286-2.508A6 6 0 0 1 7.5 5.502V5.25ZM10.5 3.75A1.5 1.5 0 0 0 9 5.25v.252a4.5 4.5 0 0 1-3 4.252h12a4.5 4.5 0 0 1-3-4.252V5.25A1.5 1.5 0 0 0 15 3.75h-3Z" clipRule="evenodd" />
-                    <path d="M12 12.75a.75.75 0 0 0-1.5 0v2.25a.75.75 0 0 0 1.5 0v-2.25Z" />
-                    <path fillRule="evenodd" d="M2.574 13.916A4.5 4.5 0 0 0 6.75 18h10.5a4.5 4.5 0 0 0 4.176-4.084l-4.502 3.084a3.75 3.75 0 0 1-4.215 0l-4.502-3.084Z" clipRule="evenodd" />
-                </svg>
+                <span style={{ fontSize: '14px', lineHeight: 1 }}>🥷</span>
             </div>
             <div style={{
                 padding: '1rem 1.25rem', borderRadius: '1.5rem 1.5rem 1.5rem 4px',
