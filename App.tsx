@@ -471,8 +471,8 @@ const AppContentInner: React.FC = () => {
   useEffect(() => {
     if (Capacitor.isNativePlatform() && profile && !profile.is_premium) {
       const credits = profile.credits || 0;
-      // Pre-load Reward Video when credits are low (<= 1)
-      if (credits <= 1) {
+      // Pre-load Reward Video when credits are low (<= 2)
+      if (credits <= 2) {
         const rewardId = getAdId('REWARD');
         AdMobService.prepareRewardVideo(rewardId);
       }
