@@ -186,11 +186,11 @@ export const AdMobService = {
                     this.prepareRewardInterstitial(adId);
                 });
 
-                // Fail-safe timeout (4 seconds for transitions)
+                // Fail-safe timeout (8 seconds for rewards - users are more patient for credits)
                 const timeout = setTimeout(() => {
                     console.warn('[AdMob] Reward Interstitial show timeout');
                     cleanupAndResolve(false);
-                }, 4000);
+                }, 8000);
 
                 const cleanupAndResolve = (success: boolean) => {
                     if (resolved) return;
@@ -271,10 +271,11 @@ export const AdMobService = {
                     this.prepareRewardVideo(adId);
                 });
 
+                // Fail-safe timeout (8 seconds for rewards)
                 const timeout = setTimeout(() => {
                     console.warn('[AdMob] Reward video show timeout');
                     cleanupAndResolve(false);
-                }, 4000);
+                }, 8000);
 
                 const cleanupAndResolve = (success: boolean) => {
                     if (resolved) return;
