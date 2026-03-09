@@ -1137,7 +1137,9 @@ const AppContentInner: React.FC = () => {
         const adUnitId = getAdId('REWARD');
         console.log("Showing Reward Ad:", adUnitId);
 
-        const rewardEarned = await AdMobService.showRewardVideo(adUnitId);
+        const onShow = () => setIsAdLoading('hidden');
+
+        const rewardEarned = await AdMobService.showRewardVideo(adUnitId, onShow);
 
         if (rewardEarned) {
           // 1. First Reward (+5)
@@ -1145,18 +1147,16 @@ const AppContentInner: React.FC = () => {
           showToast(`+${REWARD_CREDITS} Credits Added! ⚡`, 'success');
 
           // 2. Pre-load Chained Bonus Ad (+10)
-          // We prepare it here so it's ready by the time the user finishes the first ad
           const rewardInterId = getAdId('REWARD_INTERSTITIAL');
           AdMobService.prepareRewardInterstitial(rewardInterId);
 
           // 3. Chained Bonus Ad Sequence
-          // Wait 1.5s for the first ad dismissal to settle
           await new Promise(resolve => setTimeout(resolve, 1500));
 
           setIsAdLoading('reward'); // Show overlay for second ad prep
 
           try {
-            const bonusEarned = await AdMobService.showRewardInterstitial(rewardInterId);
+            const bonusEarned = await AdMobService.showRewardInterstitial(rewardInterId, onShow);
             if (bonusEarned) {
               updateCredits((prevCredits) => prevCredits + 10);
               showToast(`+10 Bonus Credits! 🥷`, 'success');

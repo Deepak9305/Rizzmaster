@@ -70,7 +70,7 @@ export const AdMobService = {
         }
     },
 
-    async showInterstitial(adId: string): Promise<boolean> {
+    async showInterstitial(adId: string, onShow?: () => void): Promise<boolean> {
         if (!Capacitor.isNativePlatform()) return false;
 
         await this.initialize();
@@ -84,6 +84,7 @@ export const AdMobService = {
                     showed = true;
                     console.log('[AdMob] Interstitial showing, clearing timeout');
                     clearTimeout(timeout);
+                    if (onShow) onShow();
                 });
 
                 const dismissListener = await AdMob.addListener(InterstitialAdPluginEvents.Dismissed, () => {
@@ -145,7 +146,7 @@ export const AdMobService = {
         }
     },
 
-    async showRewardInterstitial(adId: string): Promise<boolean> {
+    async showRewardInterstitial(adId: string, onShow?: () => void): Promise<boolean> {
         if (!Capacitor.isNativePlatform()) return false;
 
         await this.initialize();
@@ -162,6 +163,7 @@ export const AdMobService = {
                 const showedListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.Showed, () => {
                     console.log('[AdMob] Reward Interstitial showing, clearing timeout');
                     clearTimeout(timeout);
+                    if (onShow) onShow();
                 });
 
                 const rewardListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.Rewarded, (info: AdMobRewardInterstitialItem) => {
@@ -231,7 +233,7 @@ export const AdMobService = {
         }
     },
 
-    async showRewardVideo(adId: string): Promise<boolean> {
+    async showRewardVideo(adId: string, onShow?: () => void): Promise<boolean> {
         if (!Capacitor.isNativePlatform()) return false;
 
         await this.initialize();
@@ -247,6 +249,7 @@ export const AdMobService = {
                 const showedListener = await AdMob.addListener(RewardAdPluginEvents.Showed, () => {
                     console.log('[AdMob] Reward video showing, clearing timeout');
                     clearTimeout(timeout);
+                    if (onShow) onShow();
                 });
 
                 const rewardListener = await AdMob.addListener(RewardAdPluginEvents.Rewarded, (info) => {
