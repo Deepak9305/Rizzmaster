@@ -1397,21 +1397,7 @@ const AppContentInner: React.FC = () => {
               </div>
             )}
 
-            {/* Floating Coach Button */}
-            <motion.button
-              onClick={() => { setCurrentView('COACH'); NativeBridge.haptic('medium'); }}
-              whileHover={{ scale: 1.08 }}
-              whileTap={{ scale: 0.93 }}
-              className="fixed bottom-24 right-5 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-2xl active:scale-95"
-              style={{
-                background: 'linear-gradient(135deg, #FF0080 0%, #7928CA 100%)',
-                boxShadow: '0 8px 32px rgba(255,0,128,0.35)',
-              }}
-              aria-label="Open Rizz Coach"
-            >
-              <span className="text-lg leading-none">⚡</span>
-              <span className="text-sm font-black text-white tracking-tight">Coach</span>
-            </motion.button>
+
 
             <Footer className="mt-12 md:mt-20" onNavigate={handleViewNavigation} />
           </div>
