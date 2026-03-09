@@ -183,48 +183,24 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ isAppReady, onComplete }) =
 const AdLoadingOverlay: React.FC<{ mode: 'hidden' | 'interstitial' | 'reward' }> = ({ mode }) => {
   if (mode === 'hidden') return null;
 
-  const isReward = mode === 'reward';
-
   return (
-    <div className="fixed inset-0 z-[1000] flex flex-col items-center justify-center p-6 animate-fade-in">
-      {/* Premium Backdrop Overlay */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center animate-fade-in">
+      {/* Deep, clean backdrop */}
+      <div className="absolute inset-0 bg-black/90 backdrop-blur-2xl" />
 
-      {/* Compact Content Card */}
-      <div className="relative bg-zinc-900/90 border border-white/10 p-6 rounded-[2rem] flex flex-col items-center max-w-xs w-full shadow-2xl animate-scale-in">
-        <div className="relative mb-4">
-          {/* Animated Glow Rings */}
-          <div className={`absolute inset-0 scale-150 blur-2xl ${isReward ? 'bg-amber-500/20' : 'bg-rose-500/20'} rounded-full animate-pulse`} />
-          <div className={`w-12 h-12 border-4 ${isReward ? 'border-amber-500/10 border-t-amber-400' : 'border-rose-500/10 border-t-rose-500'} rounded-full animate-spin`} />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-lg animate-pulse">{isReward ? '🎁' : '⚡'}</span>
-          </div>
+      {/* Minimal Loader Content */}
+      <div className="relative flex flex-col items-center">
+        {/* Subtle, elegant spinner */}
+        <div className="h-12 w-12 relative mb-6">
+          <div className="absolute inset-0 rounded-full border-2 border-white/5" />
+          <div className="absolute inset-0 rounded-full border-2 border-white/80 border-t-transparent animate-spin" style={{ animationDuration: '1s' }} />
         </div>
 
-        <div className="text-center">
-          <h3 className="text-base font-bold text-white tracking-tight">{isReward ? 'Loading Reward Ad' : 'Loading Ad'}</h3>
-          <p className="text-white/40 text-[10px] mt-1 font-bold uppercase tracking-[0.3em] animate-pulse">
-            {isReward ? 'Watch to earn credits...' : 'Please wait...'}
-          </p>
-        </div>
-
-        {/* Looping shimmer progress bar */}
-        <div className="w-full mt-5 h-[2px] bg-white/5 rounded-full overflow-hidden">
-          <div
-            className={`h-full ${isReward ? 'bg-amber-400' : 'bg-rose-500'} rounded-full`}
-            style={{ animation: 'shimmerProgress 1.6s ease-in-out infinite' }}
-          />
-        </div>
+        {/* Minimal Typography */}
+        <h3 className="text-xs font-medium tracking-[0.3em] text-white/60 uppercase">
+          {mode === 'reward' ? 'Loading Reward' : 'Loading'}
+        </h3>
       </div>
-
-      {/* Inline keyframe for the shimmer progress bar */}
-      <style>{`
-        @keyframes shimmerProgress {
-          0%   { width: 0%;   margin-left: 0; }
-          50%  { width: 60%;  margin-left: 20%; }
-          100% { width: 0%;   margin-left: 100%; }
-        }
-      `}</style>
     </div>
   );
 };
