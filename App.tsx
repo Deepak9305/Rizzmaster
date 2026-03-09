@@ -1158,8 +1158,8 @@ const AppContentInner: React.FC = () => {
           try {
             const bonusEarned = await AdMobService.showRewardInterstitial(rewardInterId, onShow);
             if (bonusEarned) {
-              updateCredits((prevCredits) => prevCredits + 10);
-              showToast(`+10 Bonus Credits! 🥷`, 'success');
+              updateCredits((prevCredits) => prevCredits + 7);
+              showToast(`+7 Bonus Credits! 🥷`, 'success');
             }
           } catch (e) {
             console.warn("Chained bonus ad error:", e);
