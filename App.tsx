@@ -24,6 +24,7 @@ const PremiumModal = lazy(() => import('./components/PremiumModal'));
 const SavedModal = lazy(() => import('./components/SavedModal'));
 const InfoPages = lazy(() => import('./components/InfoPages'));
 const RizzCoach = lazy(() => import('./components/RizzCoach'));
+import ErrorBoundary from './components/ErrorBoundary';
 
 const DAILY_CREDITS = 5;
 const REWARD_CREDITS = 5;
@@ -254,6 +255,7 @@ const AppContentInner: React.FC = () => {
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
   const [isSessionBlocked, setIsSessionBlocked] = useState(false);
   const [isAdLoading, setIsAdLoading] = useState<'hidden' | 'interstitial' | 'reward'>('hidden');
+  const [isProfileLoadingHung, setIsProfileLoadingHung] = useState(false);
 
   // Ref to track state for event listeners without re-binding
   const stateRef = useRef({
@@ -683,6 +685,18 @@ const AppContentInner: React.FC = () => {
       subscription.unsubscribe();
     };
   }, []);
+
+  // Profile Loading Timeout: Prevent indefinite loading spinner
+  useEffect(() => {
+    if (session && !profile && !isProfileLoadingHung) {
+      const timer = setTimeout(() => {
+        setIsProfileLoadingHung(true);
+      }, 8000); // 8 seconds timeout
+      return () => clearTimeout(timer);
+    } else if (profile) {
+      setIsProfileLoadingHung(false);
+    }
+  }, [session, profile, isProfileLoadingHung]);
 
   useEffect(() => {
     if (typeof BroadcastChannel === 'undefined') return;
@@ -1232,8 +1246,33 @@ const AppContentInner: React.FC = () => {
           <LoginPage />
         ) : !profile ? (
           <div className="min-h-screen flex flex-col items-center justify-center text-white p-4 bg-black safe-top safe-bottom">
-            <svg className="animate-spin h-8 w-8 text-rose-500 mb-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-            <p className="text-white/50 animate-pulse">Loading Profile...</p>
+            <div className="absolute inset-0 bg-rose-900/5 blur-[100px] pointer-events-none" />
+
+            {isProfileLoadingHung ? (
+              <div className="relative z-10 max-w-sm w-full glass p-8 rounded-3xl border border-white/10 text-center animate-fade-in">
+                <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center text-3xl mb-6 mx-auto border border-white/10">
+                  🔌
+                </div>
+                <h2 className="text-xl font-bold text-white mb-3">Connection is weak</h2>
+                <p className="text-sm text-white/50 mb-8">
+                  Taking longer than usual to fetch your profile.
+                </p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="w-full py-3.5 rizz-gradient rounded-xl font-bold text-white active:scale-95 transition-all"
+                >
+                  Try Again
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center animate-fade-in">
+                <svg className="animate-spin h-8 w-8 text-rose-500 mb-4" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p className="text-white/50 animate-pulse font-medium tracking-wide">COOKING PROFILE...</p>
+              </div>
+            )}
           </div>
         ) : currentView === 'COACH' ? (
           <div className="animate-slide-in-right-view fixed inset-0 z-50 bg-black">
@@ -1553,9 +1592,11 @@ const AppContentInner: React.FC = () => {
 // Wrap AppContent with Provider
 const App: React.FC = () => {
   return (
-    <ToastProvider>
-      <AppContent />
-    </ToastProvider>
+    <ErrorBoundary>
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
+    </ErrorBoundary>
   );
 };
 
