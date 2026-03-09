@@ -10,18 +10,30 @@ export const AdMobService = {
         if (this.initialized) return;
 
         try {
-            // Request tracking authorization (iOS 14+)
+            // 1. Request tracking authorization (iOS 14+)
             try {
                 await AdMob.requestTrackingAuthorization();
             } catch (e) {
                 console.warn("Tracking authorization skipped:", e);
             }
 
+            // 2. Handle GDPR/EU Consent
+            try {
+                const consentInfo = await AdMob.requestConsentInfo();
+                if (consentInfo.isConsentFormAvailable && consentInfo.status === 'REQUIRED') {
+                    await AdMob.showConsentForm();
+                }
+            } catch (e) {
+                console.warn("Consent check failed or skipped:", e);
+            }
+
+            // 3. Initialize AdMob
             await AdMob.initialize({
                 initializeForTesting: false, // Disables test mode for production
             });
+
             this.initialized = true;
-            console.log('AdMob Initialized');
+            console.log('AdMob Initialized with Consent Check');
         } catch (error) {
             console.error('AdMob initialization failed', error);
         }
