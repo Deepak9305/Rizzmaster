@@ -35,12 +35,21 @@ interface RizzCoachProps {
 
 const INITIAL_MESSAGE: CoachMessage = {
     role: 'assistant',
-    content: "Shadow Strategist online. 🥷\n\nDrop your situation — screenshot, chat log, opener, or bio. Whatever you've got. The more context you share, the sharper the play. What are we working with?",
-    timestamp: new Date().toISOString(),
+    content: "I'm the Rizz Coach. Tell me what's happening or show me the chat. I'll tell you exactly how to play it.",
+    timestamp: new Date().toISOString()
 };
 
-const COACH_STORAGE_KEY = 'rizz_coach_history';
-const SHADOW_NOTES_KEY = 'rizz_coach_shadow';
+const COACH_VIBES = [
+    { label: "Funny & Witty", isPro: false },
+    { label: "Chill & Low-Key", isPro: false },
+    { label: "Direct & Bold", isPro: true },
+    { label: "Savage / Chaotic", isPro: true },
+    { label: "Romantic", isPro: true },
+    { label: "Nonchalant", isPro: true }
+];
+
+const COACH_STORAGE_KEY = 'rizz_coach_messages_v2';
+const SHADOW_NOTES_KEY = 'rizz_coach_shadow_notes';
 const MAX_STORED_MESSAGES = 50; // cap to avoid localStorage bloat
 
 const TypingIndicator = React.memo(() => (
@@ -123,6 +132,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
     // Uncontrolled textarea: only track empty vs non-empty to avoid re-rendering on every keystroke
     const [hasContent, setHasContent] = useState(false);
     const [image, setImage] = useState<string | null>(null);
+    const [selectedVibe, setSelectedVibe] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [showOutofCredits, setShowOutOfCredits] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -180,7 +190,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
         setLoading(true);
 
         try {
-            const response = await generateCoachAdvice(next, shadowNotes);
+            const response = await generateCoachAdvice(next, shadowNotes, selectedVibe || undefined);
             // Persist updated intel dossier if the AI tacked one on
             if (response.updatedNotes && response.updatedNotes !== shadowNotes) {
                 setShadowNotes(response.updatedNotes);
@@ -202,7 +212,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
         } finally {
             setLoading(false);
         }
-    }, [image, loading, isPremium, credits, messages, shadowNotes, onUpdateCredits, showToast]);
+    }, [image, loading, isPremium, credits, messages, shadowNotes, onUpdateCredits, showToast, selectedVibe]);
 
     const handleImageUpload = useCallback(async () => {
         if (!Capacitor.isNativePlatform()) {
@@ -248,8 +258,19 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
         setMessages([INITIAL_MESSAGE]);
         setShadowNotes('');
         setHasContent(false);
+        setSelectedVibe(null);
         if (textareaRef.current) { textareaRef.current.value = ''; textareaRef.current.style.height = 'auto'; }
     }, []);
+
+    const handleVibeClick = useCallback((vibe: { label: string, isPro: boolean }) => {
+        if (vibe.isPro && !isPremium) {
+            showToast(`'${vibe.label}' is a Pro vibe!`, 'error');
+            onClose(); // Close coach
+            setTimeout(() => onGoPremium && onGoPremium(), 300); // Trigger premium modal after transition
+            return;
+        }
+        setSelectedVibe(prev => prev === vibe.label ? null : vibe.label);
+    }, [isPremium, onClose, onGoPremium, showToast]);
 
     const canSend = useMemo(() => (hasContent || image !== null) && !loading, [hasContent, image, loading]);
 
@@ -430,18 +451,50 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                                 <button
                                     onClick={() => setImage(null)}
                                     style={{
-                                        position: 'absolute', top: '-6px', right: '-6px', background: '#FF0080',
-                                        color: 'white', border: 'none', borderRadius: '50%', width: '20px', height: '20px',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                                        fontSize: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.5)'
+                                        position: 'absolute', top: '-8px', right: '-8px', width: '24px', height: '24px',
+                                        background: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.2)', padding: 0,
+                                        borderRadius: '50%', color: 'white', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        cursor: 'pointer'
                                     }}
-                                >
-                                    ✕
-                                </button>
+                                >✕</button>
                             </div>
                         </div>
                     )}
-                    <div style={{ padding: '12px 20px' }}>
+
+                    {/* Vibe Selection Row */}
+                    {!loading && (
+                        <div style={{
+                            padding: '12px 16px 8px', display: 'flex', gap: '8px', overflowX: 'auto',
+                            WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none',
+                            alignItems: 'center'
+                        }}>
+                            <span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px', flexShrink: 0, paddingRight: '4px' }}>
+                                Vibe
+                            </span>
+                            {COACH_VIBES.map((vibe) => (
+                                <button
+                                    key={vibe.label}
+                                    onClick={() => handleVibeClick(vibe)}
+                                    style={{
+                                        whiteSpace: 'nowrap', padding: '6px 14px', flexShrink: 0,
+                                        background: selectedVibe === vibe.label ? 'rgba(244, 63, 94, 0.15)' : (vibe.isPro && !isPremium ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.05)'),
+                                        border: selectedVibe === vibe.label ? '1px solid rgba(244,63,94,0.5)' : (vibe.isPro && !isPremium ? '1px solid rgba(234, 179, 8, 0.2)' : '1px solid rgba(255,255,255,0.1)'),
+                                        borderRadius: '100px',
+                                        color: selectedVibe === vibe.label ? '#fda4af' : (vibe.isPro && !isPremium ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.7)'),
+                                        fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
+                                        display: 'flex', alignItems: 'center', gap: '4px'
+                                    }}
+                                >
+                                    {vibe.label}
+                                    {vibe.isPro && !isPremium && <span style={{ fontSize: '10px' }}>🔒</span>}
+                                    {vibe.isPro && isPremium && selectedVibe !== vibe.label && <span style={{ fontSize: '10px' }}>👑</span>}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Input Area */}
+                    <div style={{ padding: '8px 16px 16px' }}>
                         <div style={{
                             display: 'flex', alignItems: 'flex-end', gap: '8px', maxWidth: '672px', margin: '0 auto',
                             borderRadius: '1.25rem', padding: '8px 8px 8px 16px',
@@ -507,55 +560,57 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                 </div>
 
                 {/* Out of Credits Modal */}
-                {showOutofCredits && (
-                    <div style={{
-                        position: 'absolute', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)'
-                    }}>
+                {
+                    showOutofCredits && (
                         <div style={{
-                            background: '#111', borderRadius: '24px', padding: '24px', width: '85%', maxWidth: '320px',
-                            border: '1px solid rgba(255,255,255,0.1)', textAlign: 'center',
-                            animation: 'coachMsgIn 0.3s cubic-bezier(0.16,1,0.3,1)'
+                            position: 'absolute', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)'
                         }}>
-                            <h3 style={{ color: 'white', fontSize: '20px', fontWeight: 900, marginBottom: '8px' }}>Out of Credits</h3>
-                            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', marginBottom: '24px', lineHeight: 1.5 }}>
-                                You need more juice to keep the wingman active. Watch a quick ad or go Unlimited.
-                            </p>
+                            <div style={{
+                                background: '#111', borderRadius: '24px', padding: '24px', width: '85%', maxWidth: '320px',
+                                border: '1px solid rgba(255,255,255,0.1)', textAlign: 'center',
+                                animation: 'coachMsgIn 0.3s cubic-bezier(0.16,1,0.3,1)'
+                            }}>
+                                <h3 style={{ color: 'white', fontSize: '20px', fontWeight: 900, marginBottom: '8px' }}>Out of Credits</h3>
+                                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', marginBottom: '24px', lineHeight: 1.5 }}>
+                                    You need more juice to keep the wingman active. Watch a quick ad or go Unlimited.
+                                </p>
 
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                <button
-                                    onClick={() => { setShowOutOfCredits(false); onWatchAd?.(); }}
-                                    style={{
-                                        background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)',
-                                        color: 'white', fontWeight: 700, padding: '14px', borderRadius: '16px',
-                                        display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', gap: '8px',
-                                        cursor: 'pointer'
-                                    }}>
-                                    <span style={{ fontSize: '18px' }}>📺</span> Watch Ad (+5)
-                                </button>
-                                <button
-                                    onClick={() => { setShowOutOfCredits(false); onGoPremium?.(); }}
-                                    style={{
-                                        background: 'linear-gradient(to right, #d97706, #d97706)',
-                                        border: 'none', color: 'black', fontWeight: 900, padding: '14px', borderRadius: '16px',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                                        cursor: 'pointer', boxShadow: '0 4px 12px rgba(217,119,6,0.2)'
-                                    }}>
-                                    <span style={{ fontSize: '18px' }}>👑</span> Go Unlimited
-                                </button>
-                                <button
-                                    onClick={() => setShowOutOfCredits(false)}
-                                    style={{
-                                        background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)',
-                                        fontSize: '13px', padding: '8px', marginTop: '4px', cursor: 'pointer', fontWeight: 600
-                                    }}>
-                                    Cancel
-                                </button>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    <button
+                                        onClick={() => { setShowOutOfCredits(false); onWatchAd?.(); }}
+                                        style={{
+                                            background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)',
+                                            color: 'white', fontWeight: 700, padding: '14px', borderRadius: '16px',
+                                            display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', gap: '8px',
+                                            cursor: 'pointer'
+                                        }}>
+                                        <span style={{ fontSize: '18px' }}>📺</span> Watch Ad (+5)
+                                    </button>
+                                    <button
+                                        onClick={() => { setShowOutOfCredits(false); onGoPremium?.(); }}
+                                        style={{
+                                            background: 'linear-gradient(to right, #d97706, #d97706)',
+                                            border: 'none', color: 'black', fontWeight: 900, padding: '14px', borderRadius: '16px',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                                            cursor: 'pointer', boxShadow: '0 4px 12px rgba(217,119,6,0.2)'
+                                        }}>
+                                        <span style={{ fontSize: '18px' }}>👑</span> Go Unlimited
+                                    </button>
+                                    <button
+                                        onClick={() => setShowOutOfCredits(false)}
+                                        style={{
+                                            background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)',
+                                            fontSize: '13px', padding: '8px', marginTop: '4px', cursor: 'pointer', fontWeight: 600
+                                        }}>
+                                        Cancel
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )}
-            </div>
+                    )
+                }
+            </div >
         </>
     );
 };

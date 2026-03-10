@@ -373,7 +373,8 @@ CRITICAL: ${length === 'short'
  */
 export const generateCoachAdvice = async (
   messages: { role: 'user' | 'assistant'; content: string; image?: string | null; systemContext?: string | null; }[],
-  shadowNotes?: string
+  shadowNotes?: string,
+  vibe?: string
 ): Promise<{ reply: string; updatedNotes?: string }> => {
   const lastMessage = messages[messages.length - 1]?.content || '';
 
@@ -396,7 +397,7 @@ Tone & Style:
 
 Inside your natural response, you MUST cover:
 1. The Read: Briefly call out her actual vibe. If the user is being boring/needy, call them out.
-2. The Line: Give them ONE exact message to send right now. Put it in "quotes" so it's obvious. Make it bold and specific.
+2. The Line: Give them ONE exact message to send right now. Put it in "quotes" so it's obvious. Make it bold and specific.${vibe ? ` CRUCIAL: You MUST construct THIS specific line using the requested tone/vibe: [${vibe.toUpperCase()}].` : ''}
 3. The Follow-up: Always end with a quick, punchy question so they reply back to you (e.g. "Send that and let me know her excuse.", "What's the last thing she said?", etc.).
 
 NEVER use structural labels like "THE READ:", "THE LINE:", or "FOLLOW-UP:". Weave it all naturally into a conversational text like: "Bro she's just testing you. You're being way too eager right now. Send her '...' and tell me what she says."
