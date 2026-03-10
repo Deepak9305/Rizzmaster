@@ -35,7 +35,7 @@ interface RizzCoachProps {
 
 const INITIAL_MESSAGE: CoachMessage = {
     role: 'assistant',
-    content: "You came to the right place. I've seen every fumble, every ghost, every 'haha' reply. Tell me your situation and I'll coach you through it.",
+    content: "Shadow Strategist online. 🥷\n\nDrop your situation — screenshot, chat log, opener, or bio. Whatever you've got. The more context you share, the sharper the play. What are we working with?",
     timestamp: new Date().toISOString(),
 };
 
@@ -336,9 +336,9 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                             WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none'
                         }}>
                             {[
-                                { text: "She ghosted me 👻", icon: "👻" },
-                                { text: "Good opener for Bumble? 🐝", icon: "🐝" },
-                                { text: "How do I ask her out? 🍷", icon: "🍷" }
+                                { text: "She left me on read 📵", icon: "📵" },
+                                { text: "She's going cold 🥶", icon: "🥶" },
+                                { text: "Help me ask her out 🍷", icon: "🍷" }
                             ].map((prompt, i) => (
                                 <button
                                     key={i}
