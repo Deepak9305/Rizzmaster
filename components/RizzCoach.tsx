@@ -5,6 +5,24 @@ import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import { useToast } from '../context/ToastContext';
 
+// Inject keyframe styles once at module load — avoids re-comparing the CSS string on every keystroke
+if (typeof document !== 'undefined') {
+    const STYLE_ID = 'rizz-coach-keyframes';
+    if (!document.getElementById(STYLE_ID)) {
+        const el = document.createElement('style');
+        el.id = STYLE_ID;
+        el.textContent = [
+            '@keyframes coachBounce { 0%, 80%, 100% { transform: translateY(0); opacity: 0.5; } 40% { transform: translateY(-6px); opacity: 1; } }',
+            '@keyframes coachAurora { 0% { transform: translate(-10%, -10%) scale(1); } 50% { transform: translate(5%, 8%) scale(1.08); } 100% { transform: translate(-10%, -10%) scale(1); } }',
+            '@keyframes coachPulseRing { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.8); opacity: 0; } }',
+            '@keyframes coachSlideIn { from { opacity: 0; transform: translateY(48px); } to { opacity: 1; transform: translateY(0); } }',
+            '@keyframes coachMsgIn { from { opacity: 0; transform: translateY(12px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }',
+            'div::-webkit-scrollbar { display: none; }',
+        ].join(' ');
+        document.head.appendChild(el);
+    }
+}
+
 interface RizzCoachProps {
     isOpen: boolean;
     onClose: () => void;
@@ -85,7 +103,8 @@ const MessageBubble = React.memo(({ msg }: MsgProps) => {
 const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdateCredits, isPremium, onWatchAd, onGoPremium }) => {
     const { showToast } = useToast();
     const [messages, setMessages] = useState<CoachMessage[]>([INITIAL_MESSAGE]);
-    const [input, setInput] = useState('');
+    // Uncontrolled textarea: only track empty vs non-empty to avoid re-rendering on every keystroke
+    const [hasContent, setHasContent] = useState(false);
     const [image, setImage] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [showOutofCredits, setShowOutOfCredits] = useState(false);
@@ -100,14 +119,16 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
     }, [messages, loading]);
 
     const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setInput(e.target.value);
         const ta = e.target;
         ta.style.height = 'auto';
         ta.style.height = Math.min(ta.scrollHeight, 128) + 'px';
+        // Only flip React state when empty↔non-empty — prevents re-render on every typed character
+        const nowHasContent = ta.value.trim().length > 0;
+        setHasContent(prev => prev === nowHasContent ? prev : nowHasContent);
     }, []);
 
     const handleSend = useCallback(async () => {
-        const trimmed = input.trim();
+        const trimmed = textareaRef.current?.value.trim() || '';
         if ((!trimmed && !image) || loading) return;
 
         if (!isPremium && credits <= 0) {
@@ -127,7 +148,8 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
 
         const next = [...messages, userMsg];
         setMessages(next);
-        setInput('');
+        if (textareaRef.current) textareaRef.current.value = '';
+        setHasContent(false);
         setImage(null);
         if (textareaRef.current) textareaRef.current.style.height = 'auto';
         setLoading(true);
@@ -150,7 +172,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
         } finally {
             setLoading(false);
         }
-    }, [input, image, loading, isPremium, credits, messages, onUpdateCredits, showToast]);
+    }, [image, loading, isPremium, credits, messages, onUpdateCredits, showToast]);
 
     const handleImageUpload = useCallback(async () => {
         if (!Capacitor.isNativePlatform()) {
@@ -190,36 +212,12 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
     }, [handleSend]);
 
-    const canSend = useMemo(() => (input.trim().length > 0 || image !== null) && !loading, [input, image, loading]);
+    const canSend = useMemo(() => (hasContent || image !== null) && !loading, [hasContent, image, loading]);
 
     if (!isOpen) return null;
 
     return (
         <>
-            <style>{`
-                @keyframes coachBounce {
-                    0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
-                    40% { transform: translateY(-6px); opacity: 1; }
-                }
-                @keyframes coachAurora {
-                    0% { transform: translate(-10%, -10%) scale(1); }
-                    50% { transform: translate(5%, 8%) scale(1.08); }
-                    100% { transform: translate(-10%, -10%) scale(1); }
-                }
-                @keyframes coachPulseRing {
-                    0% { transform: scale(1); opacity: 0.6; }
-                    100% { transform: scale(1.8); opacity: 0; }
-                }
-                @keyframes coachSlideIn {
-                    from { opacity: 0; transform: translateY(48px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                @keyframes coachMsgIn {
-                    from { opacity: 0; transform: translateY(12px) scale(0.97); }
-                    to { opacity: 1; transform: translateY(0) scale(1); }
-                }
-            `}</style>
-
             <div style={{
                 position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column',
                 background: '#050505', zIndex: 100,
@@ -345,8 +343,13 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                                 <button
                                     key={i}
                                     onClick={() => {
-                                        setInput(prompt.text);
-                                        if (textareaRef.current) textareaRef.current.focus();
+                                        if (textareaRef.current) {
+                                            textareaRef.current.value = prompt.text;
+                                            textareaRef.current.style.height = 'auto';
+                                            textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 128) + 'px';
+                                            textareaRef.current.focus();
+                                        }
+                                        setHasContent(true);
                                     }}
                                     style={{
                                         whiteSpace: 'nowrap', padding: '10px 16px', background: 'rgba(255,255,255,0.05)',
@@ -358,9 +361,6 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                                     {prompt.text}
                                 </button>
                             ))}
-                            <style>{`
-                                div::-webkit-scrollbar { display: none; }
-                            `}</style>
                         </div>
                     )}
 
@@ -407,7 +407,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
 
                             <textarea
                                 ref={textareaRef}
-                                value={input}
+                                defaultValue=""
                                 onChange={handleInputChange}
                                 onKeyDown={handleKeyDown}
                                 placeholder={image ? "Add context..." : "What's the situation?"}
