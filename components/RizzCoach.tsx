@@ -40,10 +40,6 @@ const INITIAL_MESSAGE: CoachMessage = {
 };
 
 const COACH_VIBES = [
-    { label: "Funny & Witty", isPro: false },
-    { label: "Chill & Low-Key", isPro: false },
-    { label: "Direct & Bold", isPro: true },
-    { label: "Savage / Chaotic", isPro: true },
     { label: "Romantic", isPro: true },
     { label: "Nonchalant", isPro: true }
 ];
@@ -133,6 +129,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
     const [hasContent, setHasContent] = useState(false);
     const [image, setImage] = useState<string | null>(null);
     const [selectedVibe, setSelectedVibe] = useState<string | null>(null);
+    const [showVibeDropdown, setShowVibeDropdown] = useState(false);
     const [loading, setLoading] = useState(false);
     const [showOutofCredits, setShowOutOfCredits] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -337,13 +334,27 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                             </div>
                         </div>
 
-                        {/* Identity */}
-                        <div style={{ flex: 1, minWidth: 0 }}>
+                        {/* Identity & Dropdown */}
+                        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                             <div style={{ fontSize: '15px', fontWeight: 900, color: 'white', letterSpacing: '-0.02em', lineHeight: 1 }}>Rizz Coach</div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-                                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: shadowNotes ? '#FF0080' : '#34d399', display: 'inline-block', animation: 'pulse 2s ease-in-out infinite' }} />
-                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{shadowNotes ? '🥷 Intel Active' : 'Online · Elite Strategist'}</span>
-                            </div>
+                            <button
+                                onClick={() => setShowVibeDropdown(!showVibeDropdown)}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px',
+                                    padding: '4px 10px', borderRadius: '12px',
+                                    background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+                                    cursor: 'pointer', transition: 'background 0.2s', width: 'fit-content'
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.12)'}
+                                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+                            >
+                                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.9)', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                                    {selectedVibe ? `Vibe: ${selectedVibe}` : 'Vibe: Default'}
+                                </span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} style={{ opacity: 0.7 }}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
                         </div>
 
                         {/* Credits / Premium pill */}
@@ -391,6 +402,53 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                         )}
                     </div>
                 </div>
+
+                {/* Vibe Dropdown Menu */}
+                {showVibeDropdown && (
+                    <div style={{
+                        position: 'absolute', top: 'calc(env(safe-area-inset-top) + 80px)', left: '50%', transform: 'translateX(-50%)',
+                        background: 'rgba(20,20,20,0.95)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+                        border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '8px',
+                        display: 'flex', flexDirection: 'column', gap: '4px', zIndex: 100, width: '220px',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                        animation: 'coachMsgIn 0.2s cubic-bezier(0.16,1,0.3,1)'
+                    }}>
+                        <button
+                            onClick={() => { setSelectedVibe(null); setShowVibeDropdown(false); }}
+                            style={{
+                                textAlign: 'left', padding: '10px 12px', background: !selectedVibe ? 'rgba(255,0,128,0.15)' : 'transparent',
+                                border: 'none', borderRadius: '10px', color: !selectedVibe ? '#FF0080' : 'white',
+                                fontSize: '14px', fontWeight: !selectedVibe ? 700 : 500, cursor: 'pointer'
+                            }}
+                        >
+                            Default Strategist
+                        </button>
+                        {COACH_VIBES.map((vibe) => (
+                            <button
+                                key={vibe.label}
+                                onClick={() => {
+                                    handleVibeClick(vibe);
+                                    if (!vibe.isPro || isPremium) setShowVibeDropdown(false);
+                                }}
+                                style={{
+                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                    textAlign: 'left', padding: '10px 12px', background: selectedVibe === vibe.label ? 'rgba(255,0,128,0.15)' : 'transparent',
+                                    border: 'none', borderRadius: '10px', color: selectedVibe === vibe.label ? '#FF0080' : 'rgba(255,255,255,0.8)',
+                                    fontSize: '14px', fontWeight: selectedVibe === vibe.label ? 700 : 500, cursor: 'pointer'
+                                }}
+                            >
+                                {vibe.label}
+                                {vibe.isPro && !isPremium && <span style={{ fontSize: '12px' }}>🔒</span>}
+                                {vibe.isPro && isPremium && selectedVibe !== vibe.label && <span style={{ fontSize: '12px', opacity: 0.5 }}>👑</span>}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {/* Backdrop handler to close dropdown */}
+                {showVibeDropdown && (
+                    <div onClick={() => setShowVibeDropdown(false)} style={{ position: 'absolute', inset: 0, zIndex: 90 }} />
+                )}
 
                 {/* Messages */}
                 <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 10, padding: '1.5rem 1.25rem 1rem' }}>
@@ -458,38 +516,6 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                                     }}
                                 >✕</button>
                             </div>
-                        </div>
-                    )}
-
-                    {/* Vibe Selection Row */}
-                    {!loading && (
-                        <div style={{
-                            padding: '12px 16px 8px', display: 'flex', gap: '8px', overflowX: 'auto',
-                            WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none',
-                            alignItems: 'center'
-                        }}>
-                            <span style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px', flexShrink: 0, paddingRight: '4px' }}>
-                                Vibe
-                            </span>
-                            {COACH_VIBES.map((vibe) => (
-                                <button
-                                    key={vibe.label}
-                                    onClick={() => handleVibeClick(vibe)}
-                                    style={{
-                                        whiteSpace: 'nowrap', padding: '6px 14px', flexShrink: 0,
-                                        background: selectedVibe === vibe.label ? 'rgba(244, 63, 94, 0.15)' : (vibe.isPro && !isPremium ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.05)'),
-                                        border: selectedVibe === vibe.label ? '1px solid rgba(244,63,94,0.5)' : (vibe.isPro && !isPremium ? '1px solid rgba(234, 179, 8, 0.2)' : '1px solid rgba(255,255,255,0.1)'),
-                                        borderRadius: '100px',
-                                        color: selectedVibe === vibe.label ? '#fda4af' : (vibe.isPro && !isPremium ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.7)'),
-                                        fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
-                                        display: 'flex', alignItems: 'center', gap: '4px'
-                                    }}
-                                >
-                                    {vibe.label}
-                                    {vibe.isPro && !isPremium && <span style={{ fontSize: '10px' }}>🔒</span>}
-                                    {vibe.isPro && isPremium && selectedVibe !== vibe.label && <span style={{ fontSize: '10px' }}>👑</span>}
-                                </button>
-                            ))}
                         </div>
                     )}
 
