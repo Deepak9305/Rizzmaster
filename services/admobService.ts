@@ -120,8 +120,6 @@ export const AdMobService = {
 
                 try {
                     await AdMob.showInterstitial();
-                    // Immediately start preparing the NEXT one in the background
-                    this.prepareInterstitial(adId);
                 } catch (e) {
                     console.error('AdMob showInterstitial threw:', e);
                     cleanupAndResolve(false);

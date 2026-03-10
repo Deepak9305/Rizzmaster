@@ -496,15 +496,7 @@ const AppContentInner: React.FC = () => {
     }
   }, [showToast]);
 
-  // Ad Pre-loading (Initial)
-  useEffect(() => {
-    if (Capacitor.isNativePlatform()) {
-      const interId = getAdId('INTERSTITIAL');
-      // Only pre-load Interstitial at startup. Banner is handled by its own effect.
-      // Reward ads are now pre-loaded conditionally to save resources.
-      AdMobService.prepareInterstitial(interId);
-    }
-  }, []);
+  // Interstitial ads are now pre-loaded strategically (see handleViewNavigation/handleGenerate)
 
   // Conditional Pre-loading: Reward Video (Low Credits)
   useEffect(() => {
@@ -635,6 +627,12 @@ const AppContentInner: React.FC = () => {
       showCoachTransitionAd(); // DON'T AWAIT: Start ad logic in background
     }
 
+    // Strategic Preload: Pre-load the interstitial if we are moving towards the Coach 
+    // to ensure it's ready for the next transition, but only if not premium.
+    if (view === 'COACH' && !profileRef.current?.is_premium && Capacitor.isNativePlatform()) {
+      AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'));
+    }
+
     window.history.pushState({ view }, '');
     setCurrentView(view);
   }, [currentView]);
@@ -653,6 +651,11 @@ const AppContentInner: React.FC = () => {
     // Fire the transition ad in the background (non-blocking)
     if (currentView === 'COACH') {
       showCoachTransitionAd();
+
+      // Pre-load next one after exiting coach to be ready for next entry
+      if (!profileRef.current?.is_premium && Capacitor.isNativePlatform()) {
+        AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'));
+      }
     }
   }, [currentView]);
 
@@ -1170,6 +1173,12 @@ const AppContentInner: React.FC = () => {
         setResult(res);
         // Successful generation: Increment session counter
         sessionGenCount.current += 1;
+
+        // Strategic Preload: Load if we just finished the 2nd generation
+        // (to be ready for the 3rd guaranteed ad)
+        if (sessionGenCount.current === 2 && !currentProfile.is_premium && Capacitor.isNativePlatform()) {
+          AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'));
+        }
       }
 
     } catch (error) {
