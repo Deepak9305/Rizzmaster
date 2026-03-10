@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { CoachMessage } from '../types';
 import { generateCoachAdvice } from '../services/rizzService';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
@@ -21,7 +21,7 @@ const INITIAL_MESSAGE: CoachMessage = {
     timestamp: new Date().toISOString(),
 };
 
-const TypingIndicator = () => (
+const TypingIndicator = React.memo(() => (
     <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem' }}>
             <div style={{
@@ -46,10 +46,10 @@ const TypingIndicator = () => (
             </div>
         </div>
     </div>
-);
+));
 
 interface MsgProps { msg: CoachMessage; }
-const MessageBubble = ({ msg }: MsgProps) => {
+const MessageBubble = React.memo(({ msg }: MsgProps) => {
     const isUser = msg.role === 'user';
     return (
         <div style={{
@@ -80,7 +80,7 @@ const MessageBubble = ({ msg }: MsgProps) => {
             </div>
         </div>
     );
-};
+});
 
 const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdateCredits, isPremium, onWatchAd, onGoPremium }) => {
     const { showToast } = useToast();
@@ -99,14 +99,14 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
         }
     }, [messages, loading]);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setInput(e.target.value);
         const ta = e.target;
         ta.style.height = 'auto';
         ta.style.height = Math.min(ta.scrollHeight, 128) + 'px';
-    };
+    }, []);
 
-    const handleSend = async () => {
+    const handleSend = useCallback(async () => {
         const trimmed = input.trim();
         if ((!trimmed && !image) || loading) return;
 
@@ -150,9 +150,9 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
         } finally {
             setLoading(false);
         }
-    };
+    }, [input, image, loading, isPremium, credits, messages, onUpdateCredits, showToast]);
 
-    const handleImageUpload = async () => {
+    const handleImageUpload = useCallback(async () => {
         if (!Capacitor.isNativePlatform()) {
             fileInputRef.current?.click();
             return;
@@ -174,9 +174,9 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                 console.error('Camera Error:', e);
             }
         }
-    };
+    }, []);
 
-    const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
             if (file.size > 5 * 1024 * 1024) return; // 5MB limit
@@ -184,13 +184,13 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
             reader.onloadend = () => setImage(reader.result as string);
             reader.readAsDataURL(file);
         }
-    };
+    }, []);
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
+    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
-    };
+    }, [handleSend]);
 
-    const canSend = (input.trim().length > 0 || image !== null) && !loading;
+    const canSend = useMemo(() => (input.trim().length > 0 || image !== null) && !loading, [input, image, loading]);
 
     if (!isOpen) return null;
 

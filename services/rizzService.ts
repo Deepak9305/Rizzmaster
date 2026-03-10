@@ -108,18 +108,19 @@ const cleanJson = (text: string): string => {
   return cleaned;
 };
 
+// Pre-compiled global regexes for sanitization — built once at module load, not per call.
+// Safe to use with String.replace() as it always resets lastIndex after completing.
+const HARD_BLOCK_GLOBAL = new RegExp(HARD_BLOCK_REGEX.source, 'gi');
+const NSFW_GLOBAL = new RegExp(NSFW_TERMS_REGEX.source, 'gi');
+const MINOR_GLOBAL = new RegExp(MINOR_SAFETY_REGEX.source, 'gi');
+
 // Helper to sanitize output text (Post-Processing)
 const sanitizeText = (text: string): string => {
   if (!text) return text;
-  // Create global versions for replacement
-  const hardBlockGlobal = new RegExp(HARD_BLOCK_REGEX.source, 'gi');
-  const nsfwGlobal = new RegExp(NSFW_TERMS_REGEX.source, 'gi');
-  const minorGlobal = new RegExp(MINOR_SAFETY_REGEX.source, 'gi');
-
   return text
-    .replace(hardBlockGlobal, "🤬") // Replace hate/violence with Angry Face
-    .replace(nsfwGlobal, "🫣")      // Replace NSFW with Peeking Face
-    .replace(minorGlobal, "🔞");    // Replace Minor terms with No Under 18
+    .replace(HARD_BLOCK_GLOBAL, "🤬") // Replace hate/violence with Angry Face
+    .replace(NSFW_GLOBAL, "🫣")       // Replace NSFW with Peeking Face
+    .replace(MINOR_GLOBAL, "🔞");     // Replace Minor terms with No Under 18
 };
 
 // Helper to recursively sanitize response object
