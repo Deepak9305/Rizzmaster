@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+﻿import OpenAI from "openai";
 import { RizzResponse, BioResponse, ResponseLength } from "../types";
 
 // --- CLIENT INITIALIZATION ---
@@ -108,7 +108,7 @@ const cleanJson = (text: string): string => {
   return cleaned;
 };
 
-// Pre-compiled global regexes for sanitization — built once at module load, not per call.
+// Pre-compiled global regexes for sanitization â€” built once at module load, not per call.
 // Safe to use with String.replace() as it always resets lastIndex after completing.
 const HARD_BLOCK_GLOBAL = new RegExp(HARD_BLOCK_REGEX.source, 'gi');
 const NSFW_GLOBAL = new RegExp(NSFW_TERMS_REGEX.source, 'gi');
@@ -118,9 +118,9 @@ const MINOR_GLOBAL = new RegExp(MINOR_SAFETY_REGEX.source, 'gi');
 const sanitizeText = (text: string): string => {
   if (!text) return text;
   return text
-    .replace(HARD_BLOCK_GLOBAL, "🤬") // Replace hate/violence with Angry Face
-    .replace(NSFW_GLOBAL, "🫣")       // Replace NSFW with Peeking Face
-    .replace(MINOR_GLOBAL, "🔞");     // Replace Minor terms with No Under 18
+    .replace(HARD_BLOCK_GLOBAL, "ðŸ¤¬") // Replace hate/violence with Angry Face
+    .replace(NSFW_GLOBAL, "ðŸ«£")       // Replace NSFW with Peeking Face
+    .replace(MINOR_GLOBAL, "ðŸ”ž");     // Replace Minor terms with No Under 18
 };
 
 // Helper to recursively sanitize response object
@@ -372,8 +372,9 @@ CRITICAL: ${length === 'short'
  * Generates coaching advice based on conversation history.
  */
 export const generateCoachAdvice = async (
-  messages: { role: 'user' | 'assistant'; content: string; image?: string | null; systemContext?: string | null; }[]
-): Promise<{ reply: string }> => {
+  messages: { role: 'user' | 'assistant'; content: string; image?: string | null; systemContext?: string | null; }[],
+  shadowNotes?: string
+): Promise<{ reply: string; updatedNotes?: string }> => {
   const lastMessage = messages[messages.length - 1]?.content || '';
 
   const isToxic = HARD_BLOCK_REGEX.test(lastMessage);
@@ -383,23 +384,38 @@ export const generateCoachAdvice = async (
 
   if (isToxic || isNSFW) {
     systemInstruction = `You are the Rizz Master Coach. The user sent Toxic or NSFW content.
-Refuse to engage. Roast their poor judgment instead — PG-13 only.
+Refuse to engage. Roast their poor judgment instead â€” PG-13 only.
 Reply in plain text, 1-2 sentences max.`;
   } else {
-    systemInstruction = `You are the Shadow Strategist 🥷 — an elite dating coach who has seen every situation unfold. You decode what's ACTUALLY going on and tell the user exactly what to do next.
+    systemInstruction = `You are the Shadow Strategist ðŸ¥· â€” an elite dating coach who has seen every situation unfold. You decode what's ACTUALLY going on and tell the user exactly what to do next.
 
 ALWAYS follow this structure (5-6 sentences MAX, plain text only):
-1. 🧠 THE READ: What's her vibe right now? What is she actually thinking? (1 sentence, brutally honest — no sugarcoating).
-2. 🎯 THE MOVE: One specific, high-status action to take. Bold. No wishy-washy "maybe try" advice.
-3. 💬 THE LINE: Give ONE exact message the user can copy and send right now. Make it good.
-4. 🔥 THE FOLLOW-UP: End with a short, punchy question that makes the user want to come back and share what happened (e.g. "Send that and tell me what she says." or "What's her last message? Drop it here.").
+1. ðŸ§  THE READ: What's her vibe right now? What is she actually thinking? (1 sentence, brutally honest â€” no sugarcoating).
+2. ðŸŽ¯ THE MOVE: One specific, high-status action to take. Bold. No wishy-washy "maybe try" advice.
+3. ðŸ’¬ THE LINE: Give ONE exact message the user can copy and send right now. Make it good.
+4. ðŸ”¥ THE FOLLOW-UP: End with a short, punchy question that makes the user want to come back and share what happened (e.g. "Send that and tell me what she says." or "What's her last message? Drop it here.").
 
 Rules:
-- If the user is being boring, needy, or desperate — CALL THEM OUT first. Be a real mentor.
+- If the user is being boring, needy, or desperate â€” CALL THEM OUT first. Be a real mentor.
 - Use casual, punchy language. No jargon. Talk like a smart friend, not a therapist.
-- The "Line" must be specific to their situation — never generic.
+- The "Line" must be specific to their situation â€” never generic.
 - Always end with a question. Always. This keeps the coaching session alive.
-- Plain text only. No bullet points, no markdown.`;
+- Plain text only. No bullet points, no markdown.
+
+SHADOW INTEL (Your persistent memory of this user's situation):
+${shadowNotes || 'No intel yet â€” start gathering as the user shares.'}
+
+INTEL UPDATE PROTOCOL:
+After your coaching response, append a rich intelligence dossier using these exact markers:
+<<<INTEL_START>>>
+Target: [Name, age, platform, how they met]
+Status: [Current state of the interaction]
+Her Vibe: [Personality, interests, communication style, green/red flags]
+Key Events: [Important moments so far]
+User Patterns: [How the user tends to behave â€” weaknesses to watch]
+Objective: [What they are trying to achieve right now]
+<<<INTEL_END>>>
+Dossier rules: max 400 words, carry over all existing intel, be specific with real names and details, never show markers to the user.`;
   }
 
   // Only remember the last 5 messages to keep context focused and save tokens
@@ -461,15 +477,22 @@ Rules:
       model: TEXT_MODEL,
       messages: [{ role: 'system', content: systemInstruction }, ...formatted],
       temperature: 0.75,
-      max_tokens: 300,
+      max_tokens: 650,
     });
 
-    const reply = completion.choices[0]?.message?.content?.trim();
-    if (!reply) throw new Error("No coach response");
+    const rawReply = completion.choices[0]?.message?.content?.trim();
+    if (!rawReply) throw new Error('No coach response');
 
-    return { reply: sanitizeText(reply) };
+    // Strip the hidden intel dossier block before showing to user
+    const INTEL_RE = new RegExp('<<<INTEL_START>>>([^]*?)<<<INTEL_END>>>');
+    const intelMatch = rawReply.match(INTEL_RE);
+    const updatedNotes = intelMatch ? intelMatch[1].trim() : undefined;
+    const cleanReply = rawReply.replace(INTEL_RE, '').trim();
+
+    return { reply: sanitizeText(cleanReply), updatedNotes };
   } catch (error) {
     console.error("Coach Service Error:", error);
-    return { reply: "Something went wrong on my end. Try again. 🔁" };
+    return { reply: "Something went wrong on my end. Try again. ðŸ”" };
   }
 };
+

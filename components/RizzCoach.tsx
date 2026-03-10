@@ -40,6 +40,7 @@ const INITIAL_MESSAGE: CoachMessage = {
 };
 
 const COACH_STORAGE_KEY = 'rizz_coach_history';
+const SHADOW_NOTES_KEY = 'rizz_coach_shadow';
 const MAX_STORED_MESSAGES = 50; // cap to avoid localStorage bloat
 
 const TypingIndicator = React.memo(() => (
@@ -115,6 +116,10 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
         } catch { }
         return [INITIAL_MESSAGE];
     });
+    // Rich Shadow Notes — persistent intel dossier for this user's situation
+    const [shadowNotes, setShadowNotes] = useState<string>(() => {
+        try { return localStorage.getItem(SHADOW_NOTES_KEY) || ''; } catch { return ''; }
+    });
     // Uncontrolled textarea: only track empty vs non-empty to avoid re-rendering on every keystroke
     const [hasContent, setHasContent] = useState(false);
     const [image, setImage] = useState<string | null>(null);
@@ -175,7 +180,12 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
         setLoading(true);
 
         try {
-            const response = await generateCoachAdvice(next);
+            const response = await generateCoachAdvice(next, shadowNotes);
+            // Persist updated intel dossier if the AI tacked one on
+            if (response.updatedNotes && response.updatedNotes !== shadowNotes) {
+                setShadowNotes(response.updatedNotes);
+                try { localStorage.setItem(SHADOW_NOTES_KEY, response.updatedNotes); } catch { }
+            }
             setMessages(prev => [...prev, {
                 role: 'assistant', content: response.reply, timestamp: new Date().toISOString()
             }]);
@@ -192,7 +202,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
         } finally {
             setLoading(false);
         }
-    }, [image, loading, isPremium, credits, messages, onUpdateCredits, showToast]);
+    }, [image, loading, isPremium, credits, messages, shadowNotes, onUpdateCredits, showToast]);
 
     const handleImageUpload = useCallback(async () => {
         if (!Capacitor.isNativePlatform()) {
@@ -234,7 +244,9 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
 
     const handleClearChat = useCallback(() => {
         try { localStorage.removeItem(COACH_STORAGE_KEY); } catch { }
+        try { localStorage.removeItem(SHADOW_NOTES_KEY); } catch { }
         setMessages([INITIAL_MESSAGE]);
+        setShadowNotes('');
         setHasContent(false);
         if (textareaRef.current) { textareaRef.current.value = ''; textareaRef.current.style.height = 'auto'; }
     }, []);
@@ -308,8 +320,8 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                         <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: '15px', fontWeight: 900, color: 'white', letterSpacing: '-0.02em', lineHeight: 1 }}>Rizz Coach</div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-                                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#34d399', display: 'inline-block', animation: 'pulse 2s ease-in-out infinite' }} />
-                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Online · Elite Strategist</span>
+                                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: shadowNotes ? '#FF0080' : '#34d399', display: 'inline-block', animation: 'pulse 2s ease-in-out infinite' }} />
+                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{shadowNotes ? '🥷 Intel Active' : 'Online · Elite Strategist'}</span>
                             </div>
                         </div>
 
