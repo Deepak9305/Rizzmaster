@@ -241,7 +241,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                 {/* Header */}
                 <div style={{
                     flexShrink: 0, position: 'relative', zIndex: 10,
-                    paddingTop: !isPremium ? 'calc(env(safe-area-inset-top) + 60px)' : 'calc(env(safe-area-inset-top) + 1rem)',
+                    paddingTop: !isPremium ? 'calc(env(safe-area-inset-top) + 80px)' : 'calc(env(safe-area-inset-top) + 1rem)',
                     paddingBottom: '1rem', paddingLeft: '1.25rem', paddingRight: '1.25rem',
                     borderBottom: '1px solid rgba(255,255,255,0.06)',
                     background: 'rgba(5,5,5,0.75)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',

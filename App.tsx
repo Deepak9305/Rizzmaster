@@ -434,7 +434,7 @@ const AppContentInner: React.FC = () => {
           AdMobService.hideBanner();
         } else {
           const adId = getAdId('BANNER');
-          const position = currentView === 'COACH' ? 'TOP' : 'BOTTOM';
+          const position = 'TOP';
 
           // Force hide first to ensure the plugin repositions cleanly
           AdMobService.hideBanner().then(() => {
@@ -456,7 +456,7 @@ const AppContentInner: React.FC = () => {
           if (profile && !profile.is_premium) {
             AdMobService.hideBanner().then(() => {
               const adId = getAdId('BANNER');
-              const position = currentView === 'COACH' ? 'TOP' : 'BOTTOM';
+              const position = 'TOP';
               timer = setTimeout(() => AdMobService.showBanner(adId, position), 1000);
             });
           }
