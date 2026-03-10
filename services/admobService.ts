@@ -15,6 +15,8 @@ import { Capacitor } from '@capacitor/core';
 
 export const AdMobService = {
     initialized: false,
+    interstitialReady: false,
+    interstitialPreparing: false,
     rewardVideoReady: false,
     rewardVideoPreparing: false,
     rewardInterstitialReady: false,
@@ -65,19 +67,30 @@ export const AdMobService = {
 
     async prepareInterstitial(adId: string) {
         if (!Capacitor.isNativePlatform()) return;
+        if (AdMobService.interstitialReady || AdMobService.interstitialPreparing) return;
+
         await this.initialize();
+        AdMobService.interstitialPreparing = true;
         try {
             await AdMob.prepareInterstitial({ adId });
+            AdMobService.interstitialReady = true;
             console.log('AdMob Interstitial Prepared');
         } catch (e) {
             console.error('AdMob Prepare Interstitial Error:', e);
+        } finally {
+            AdMobService.interstitialPreparing = false;
         }
     },
 
     async showInterstitial(adId: string, onShow?: () => void): Promise<boolean> {
         if (!Capacitor.isNativePlatform()) return false;
 
-        await this.initialize();
+        console.log(`[AdMob] Attempting to show interstitial: ${adId}`);
+
+        if (!AdMobService.interstitialReady) {
+            console.warn('[AdMob] Interstitial not ready, attempting JIT prepare...');
+            await AdMobService.prepareInterstitial(adId);
+        }
 
         try {
             return new Promise(async (resolve) => {
@@ -97,12 +110,10 @@ export const AdMobService = {
 
                 const failedListener = await AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, () => {
                     cleanupAndResolve(false);
-                    this.prepareInterstitial(adId);
                 });
 
                 const failedShowListener = await AdMob.addListener(InterstitialAdPluginEvents.FailedToShow, () => {
                     cleanupAndResolve(false);
-                    this.prepareInterstitial(adId);
                 });
 
                 // Timeout fail-safe (4 seconds) - Optimized for better UX
@@ -119,6 +130,7 @@ export const AdMobService = {
                     failedShowListener.remove();
                     showedListener.remove();
                     clearTimeout(timeout);
+                    AdMobService.interstitialReady = false; // Reset state so it pulls fresh next time
                     resolve(success);
                 };
 
