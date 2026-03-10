@@ -15,6 +15,10 @@ import { Capacitor } from '@capacitor/core';
 
 export const AdMobService = {
     initialized: false,
+    rewardVideoReady: false,
+    rewardVideoPreparing: false,
+    rewardInterstitialReady: false,
+    rewardInterstitialPreparing: false,
 
     async initialize() {
         if (!Capacitor.isNativePlatform()) return;
@@ -135,12 +139,18 @@ export const AdMobService = {
 
     async prepareRewardInterstitial(adId: string) {
         if (!Capacitor.isNativePlatform()) return;
+        if (AdMobService.rewardInterstitialReady || AdMobService.rewardInterstitialPreparing) return;
+
         await this.initialize();
+        AdMobService.rewardInterstitialPreparing = true;
         try {
             await AdMob.prepareRewardInterstitialAd({ adId });
+            AdMobService.rewardInterstitialReady = true;
             console.log('AdMob Reward Interstitial Prepared');
         } catch (e) {
             console.error('AdMob Prepare Reward Interstitial Error:', e);
+        } finally {
+            AdMobService.rewardInterstitialPreparing = false;
         }
     },
 
@@ -150,9 +160,12 @@ export const AdMobService = {
         await this.initialize();
         console.log(`[AdMob] Attempting to show reward interstitial: ${adId}`);
 
+        if (!AdMobService.rewardInterstitialReady) {
+            console.warn('[AdMob] Ad not ready, attempting JIT prepare...');
+            await AdMobService.prepareRewardInterstitial(adId);
+        }
+
         try {
-            // Rely on background pre-loading for instant display
-            // (Ad id is used for listener cleanup/retry logic only)
 
             return new Promise(async (resolve) => {
                 let resolved = false;
@@ -177,13 +190,11 @@ export const AdMobService = {
                 const failedListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.FailedToLoad, (err) => {
                     console.error('[AdMob] Reward Interstitial failed to load:', err);
                     cleanupAndResolve(false);
-                    this.prepareRewardInterstitial(adId);
                 });
 
                 const failedShowListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.FailedToShow, (err) => {
                     console.error('[AdMob] Reward Interstitial failed to show:', err);
                     cleanupAndResolve(false);
-                    this.prepareRewardInterstitial(adId);
                 });
 
                 // Fail-safe timeout (8 seconds for rewards - users are more patient for credits)
@@ -201,6 +212,7 @@ export const AdMobService = {
                     failedListener.remove();
                     failedShowListener.remove();
                     clearTimeout(timeout);
+                    AdMobService.rewardInterstitialReady = false; // Reset state so it pulls fresh next time
                     console.log(`[AdMob] Reward Interstitial finished. Success: ${success}`);
                     resolve(success);
                 };
@@ -222,12 +234,18 @@ export const AdMobService = {
 
     async prepareRewardVideo(adId: string) {
         if (!Capacitor.isNativePlatform()) return;
+        if (AdMobService.rewardVideoReady || AdMobService.rewardVideoPreparing) return;
+
         await this.initialize();
+        AdMobService.rewardVideoPreparing = true;
         try {
             await AdMob.prepareRewardVideoAd({ adId });
+            AdMobService.rewardVideoReady = true;
             console.log('AdMob Reward Video Prepared');
         } catch (e) {
             console.error('AdMob Prepare Reward Error:', e);
+        } finally {
+            AdMobService.rewardVideoPreparing = false;
         }
     },
 
@@ -237,8 +255,12 @@ export const AdMobService = {
         await this.initialize();
         console.log(`[AdMob] Attempting to show reward video: ${adId}`);
 
+        if (!AdMobService.rewardVideoReady) {
+            console.warn('[AdMob] Ad not ready, attempting JIT prepare...');
+            await AdMobService.prepareRewardVideo(adId);
+        }
+
         try {
-            // Rely on background pre-loading for instant display
 
             return new Promise(async (resolve) => {
                 let resolved = false;
@@ -263,13 +285,11 @@ export const AdMobService = {
                 const failedListener = await AdMob.addListener(RewardAdPluginEvents.FailedToLoad, (err) => {
                     console.error('[AdMob] Reward video failed to load:', err);
                     cleanupAndResolve(false);
-                    this.prepareRewardVideo(adId);
                 });
 
                 const failedShowListener = await AdMob.addListener(RewardAdPluginEvents.FailedToShow, (err) => {
                     console.error('[AdMob] Reward video failed to show:', err);
                     cleanupAndResolve(false);
-                    this.prepareRewardVideo(adId);
                 });
 
                 // Fail-safe timeout (8 seconds for rewards)
@@ -287,6 +307,7 @@ export const AdMobService = {
                     failedListener.remove();
                     failedShowListener.remove();
                     clearTimeout(timeout);
+                    AdMobService.rewardVideoReady = false; // Reset state so it pulls fresh next time
                     console.log(`[AdMob] Reward video finished. Success: ${success}`);
                     resolve(success);
                 };
