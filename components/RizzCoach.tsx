@@ -39,6 +39,9 @@ const INITIAL_MESSAGE: CoachMessage = {
     timestamp: new Date().toISOString(),
 };
 
+const COACH_STORAGE_KEY = 'rizz_coach_history';
+const MAX_STORED_MESSAGES = 50; // cap to avoid localStorage bloat
+
 const TypingIndicator = React.memo(() => (
     <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem' }}>
@@ -102,7 +105,16 @@ const MessageBubble = React.memo(({ msg }: MsgProps) => {
 
 const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdateCredits, isPremium, onWatchAd, onGoPremium }) => {
     const { showToast } = useToast();
-    const [messages, setMessages] = useState<CoachMessage[]>([INITIAL_MESSAGE]);
+    const [messages, setMessages] = useState<CoachMessage[]>(() => {
+        try {
+            const stored = localStorage.getItem(COACH_STORAGE_KEY);
+            if (stored) {
+                const parsed = JSON.parse(stored) as CoachMessage[];
+                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            }
+        } catch { }
+        return [INITIAL_MESSAGE];
+    });
     // Uncontrolled textarea: only track empty vs non-empty to avoid re-rendering on every keystroke
     const [hasContent, setHasContent] = useState(false);
     const [image, setImage] = useState<string | null>(null);
@@ -117,6 +129,14 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
             scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
         }
     }, [messages, loading]);
+
+    // Persist coach history in localStorage whenever messages change (images stripped to save space)
+    useEffect(() => {
+        try {
+            const toStore = messages.slice(-MAX_STORED_MESSAGES).map(m => ({ ...m, image: m.image ? '[Photo]' : null }));
+            localStorage.setItem(COACH_STORAGE_KEY, JSON.stringify(toStore));
+        } catch { } // Fail silently if quota is exceeded
+    }, [messages]);
 
     const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const ta = e.target;
@@ -211,6 +231,13 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
     const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
     }, [handleSend]);
+
+    const handleClearChat = useCallback(() => {
+        try { localStorage.removeItem(COACH_STORAGE_KEY); } catch { }
+        setMessages([INITIAL_MESSAGE]);
+        setHasContent(false);
+        if (textareaRef.current) { textareaRef.current.value = ''; textareaRef.current.style.height = 'auto'; }
+    }, []);
 
     const canSend = useMemo(() => (hasContent || image !== null) && !loading, [hasContent, image, loading]);
 
@@ -309,6 +336,25 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                                 <span>👑</span>
                                 <span style={{ color: '#facc15' }}>VIP</span>
                             </div>
+                        )}
+                        {/* Clear chat — shown when history exists */}
+                        {messages.length > 1 && (
+                            <button
+                                onClick={handleClearChat}
+                                aria-label="Clear chat history"
+                                style={{
+                                    flexShrink: 0, width: '32px', height: '32px', borderRadius: '50%',
+                                    border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    cursor: 'pointer', opacity: 0.5, transition: 'opacity 0.2s', padding: 0,
+                                }}
+                                onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+                                onMouseLeave={e => (e.currentTarget.style.opacity = '0.5')}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="rgba(255,255,255,0.65)" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
                         )}
                     </div>
                 </div>
