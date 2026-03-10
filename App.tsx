@@ -452,8 +452,11 @@ const AppContentInner: React.FC = () => {
     if (Capacitor.isNativePlatform()) {
       CapacitorApp.addListener('appStateChange', ({ isActive }) => {
         if (isActive) {
-          // 1. Refresh Banner
-          if (profile && !profile.is_premium) {
+          // 1. Refresh Banner using refs to avoid listener churn
+          const currentProfile = profileRef.current;
+          const currentView = stateRef.current.currentView;
+
+          if (currentProfile && !currentProfile.is_premium) {
             AdMobService.hideBanner().then(() => {
               const adId = getAdId('BANNER');
               const position = currentView === 'COACH' ? 'TOP' : 'BOTTOM';
@@ -599,11 +602,15 @@ const AppContentInner: React.FC = () => {
     if (currentActiveTime - lastCoachAdTime.current >= COACH_AD_COOLDOWN_MS) {
       setIsAdLoading('interstitial'); // SHOW OVERLAY
 
-      let adShowed = false;
+      // Update timer synchronously BEFORE async execution to prevent race condition "double-taps"
+      const now = activeTimeMs.current;
+      lastCoachAdTime.current = now;
+      lastAdActiveTime.current = now; // Synchronize with generation ads
+
       if (Capacitor.isNativePlatform()) {
         const adId = getAdId('INTERSTITIAL');
         try {
-          adShowed = await AdMobService.showInterstitial(adId);
+          await AdMobService.showInterstitial(adId);
         } catch (e) {
           console.warn("Transition ad error:", e);
         } finally {
@@ -612,11 +619,6 @@ const AppContentInner: React.FC = () => {
       } else {
         setIsAdLoading('hidden');
       }
-
-      // Always reset the cooldown after attempting to show an ad
-      const now = activeTimeMs.current;
-      lastCoachAdTime.current = now;
-      lastAdActiveTime.current = now; // Synchronize with generation ads
     }
   };
 
@@ -1122,13 +1124,13 @@ const AppContentInner: React.FC = () => {
           setIsAdLoading('interstitial'); // SHOW OVERLAY
           const adId = getAdId('INTERSTITIAL');
 
+          // Update timer synchronously BEFORE async execution to prevent race conditions
+          const now = activeTimeMs.current;
+          lastAdActiveTime.current = now;
+          lastCoachAdTime.current = now;
+
           try {
-            const success = await AdMobService.showInterstitial(adId);
-            if (success) {
-              const now = activeTimeMs.current;
-              lastAdActiveTime.current = now;
-              lastCoachAdTime.current = now;
-            }
+            await AdMobService.showInterstitial(adId);
           } catch (e) {
             console.warn("Generation ad error:", e);
           } finally {

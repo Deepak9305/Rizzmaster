@@ -17,10 +17,13 @@ export const AdMobService = {
     initialized: false,
     interstitialReady: false,
     interstitialPreparing: false,
+    isInterstitialShowing: false,
     rewardVideoReady: false,
     rewardVideoPreparing: false,
+    isRewardVideoShowing: false,
     rewardInterstitialReady: false,
     rewardInterstitialPreparing: false,
+    isRewardInterstitialShowing: false,
 
     async initialize() {
         if (!Capacitor.isNativePlatform()) return;
@@ -84,6 +87,7 @@ export const AdMobService = {
 
     async showInterstitial(adId: string, onShow?: () => void): Promise<boolean> {
         if (!Capacitor.isNativePlatform()) return false;
+        if (AdMobService.isInterstitialShowing) return false;
 
         console.log(`[AdMob] Attempting to show interstitial: ${adId}`);
 
@@ -131,10 +135,12 @@ export const AdMobService = {
                     showedListener.remove();
                     clearTimeout(timeout);
                     AdMobService.interstitialReady = false; // Reset state so it pulls fresh next time
+                    AdMobService.isInterstitialShowing = false;
                     resolve(success);
                 };
 
                 try {
+                    AdMobService.isInterstitialShowing = true;
                     await AdMob.showInterstitial();
                 } catch (e) {
                     console.error('AdMob showInterstitial threw:', e);
@@ -168,6 +174,7 @@ export const AdMobService = {
 
     async showRewardInterstitial(adId: string, onShow?: () => void): Promise<boolean> {
         if (!Capacitor.isNativePlatform()) return false;
+        if (AdMobService.isRewardInterstitialShowing) return false;
 
         await this.initialize();
         console.log(`[AdMob] Attempting to show reward interstitial: ${adId}`);
@@ -225,11 +232,13 @@ export const AdMobService = {
                     failedShowListener.remove();
                     clearTimeout(timeout);
                     AdMobService.rewardInterstitialReady = false; // Reset state so it pulls fresh next time
+                    AdMobService.isRewardInterstitialShowing = false;
                     console.log(`[AdMob] Reward Interstitial finished. Success: ${success}`);
                     resolve(success);
                 };
 
                 try {
+                    AdMobService.isRewardInterstitialShowing = true;
                     await AdMob.showRewardInterstitialAd();
                 } catch (err) {
                     console.error('AdMob showRewardInterstitialAd threw:', err);
@@ -263,6 +272,7 @@ export const AdMobService = {
 
     async showRewardVideo(adId: string, onShow?: () => void): Promise<boolean> {
         if (!Capacitor.isNativePlatform()) return false;
+        if (AdMobService.isRewardVideoShowing) return false;
 
         await this.initialize();
         console.log(`[AdMob] Attempting to show reward video: ${adId}`);
@@ -320,11 +330,13 @@ export const AdMobService = {
                     failedShowListener.remove();
                     clearTimeout(timeout);
                     AdMobService.rewardVideoReady = false; // Reset state so it pulls fresh next time
+                    AdMobService.isRewardVideoShowing = false;
                     console.log(`[AdMob] Reward video finished. Success: ${success}`);
                     resolve(success);
                 };
 
                 try {
+                    AdMobService.isRewardVideoShowing = true;
                     await AdMob.showRewardVideoAd();
                 } catch (err) {
                     console.error('AdMob showRewardVideoAd threw:', err);
