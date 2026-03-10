@@ -12,6 +12,7 @@ export interface UserProfile {
   credits: number;
   is_premium: boolean;
   last_daily_reset: string;
+  premium_source?: string | null;
 }
 
 export interface SavedItem {

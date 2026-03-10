@@ -17,9 +17,22 @@ create table public.saved_items (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- Create premium_subscriptions table
+create table public.premium_subscriptions (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  platform text not null, -- 'android' or 'ios'
+  product_id text not null,
+  transaction_id text,
+  purchase_date timestamp with time zone default now(),
+  is_active boolean default true,
+  constraint unique_user_subscription unique (user_id)
+);
+
 -- Enable RLS
 alter table public.profiles enable row level security;
 alter table public.saved_items enable row level security;
+alter table public.premium_subscriptions enable row level security;
 
 -- Policies for profiles
 create policy "Users can view own profile" 
@@ -49,6 +62,11 @@ create policy "Users can insert own saved items"
 
 create policy "Users can delete own saved items" 
   on public.saved_items for delete 
+  using ( auth.uid() = user_id );
+
+-- Policies for premium_subscriptions
+create policy "Users can view own subscription" 
+  on public.premium_subscriptions for select 
   using ( auth.uid() = user_id );
 
 -- RPC Function for Complete Account Deletion

@@ -120,11 +120,11 @@ export const AdMobService = {
                     cleanupAndResolve(false);
                 });
 
-                // Timeout fail-safe (4 seconds) - Optimized for better UX
+                // Timeout fail-safe (8 seconds) - Increased for better reliability
                 const timeout = setTimeout(() => {
                     console.warn('AdMob Interstitial Timeout: Proceeding automatically.');
                     cleanupAndResolve(false);
-                }, 4000);
+                }, 8000);
 
                 const cleanupAndResolve = (success: boolean) => {
                     if (resolved) return;

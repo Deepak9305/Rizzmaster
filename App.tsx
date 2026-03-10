@@ -356,7 +356,7 @@ const AppContentInner: React.FC = () => {
   const backgroundTimestamp = useRef<number | null>(null);
   const sessionGenCount = useRef<number>(0);
 
-  const INTERSTITIAL_COOLDOWN_MS = 2 * 60 * 1000; // 2 minutes (Reduced from 3m)
+  const INTERSTITIAL_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutes
   const COACH_AD_COOLDOWN_MS = 2 * 60 * 1000; // 2 minutes (Reduced from 3m)
   const COACH_AD_GRACE_PERIOD_MS = 1 * 60 * 1000; // 1 minute (Reduced from 3m)
   const INACTIVITY_RESET_MS = 30 * 60 * 1000; // 30 minutes of background time to reset
@@ -479,8 +479,9 @@ const AppContentInner: React.FC = () => {
     const currentProfile = profileRef.current;
     if (!currentProfile) return;
 
-    const updatedProfile = { ...currentProfile, is_premium: true };
+    const updatedProfile = { ...currentProfile, is_premium: true, premium_source: 'native' };
     setProfile(updatedProfile);
+    profileRef.current = updatedProfile; // Sync ref immediately to avoid stale reads
 
     // Hide Banner Immediately
     if (Capacitor.isNativePlatform()) {
@@ -494,8 +495,26 @@ const AppContentInner: React.FC = () => {
 
     showToast(`Welcome to the Elite Club! 👑`, 'success');
 
-    if (supabase) {
-      await supabase.from('profiles').update({ is_premium: true }).eq('id', currentProfile.id);
+    // 4. Update Database
+    if (supabase && currentProfile) {
+      // Profile Status
+      await supabase.from('profiles').update({
+        is_premium: true,
+        premium_source: 'native'
+      }).eq('id', currentProfile.id);
+
+      // Detailed Subscription Entry
+      const platform = Capacitor.getPlatform();
+      const products = IAPService.products; // Using the latest products state from service or state
+      const mainSub = products.find(p => p.owned || p.state === 'owned');
+
+      await supabase.from('premium_subscriptions').upsert({
+        user_id: currentProfile.id,
+        platform: platform,
+        product_id: mainSub?.id || 'premium_manual',
+        transaction_id: mainSub?.transactionId || null,
+        is_active: true
+      }, { onConflict: 'user_id' });
     }
   }, [showToast]);
 
@@ -537,6 +556,46 @@ const AppContentInner: React.FC = () => {
           showToast(errorMessage, 'error');
         }
       );
+
+      // --- SILENT RE-VERIFICATION FOR "WEB-BUY" EXPLOITERS ---
+      // If user is premium but 'unverified', they likely used the web loophole.
+      // We force a Restore to confirm they have a real Store receipt.
+      setTimeout(async () => {
+        const currentProfile = profileRef.current;
+        if (currentProfile?.is_premium && currentProfile.premium_source === 'unverified') {
+          console.log("IAP: User is premium but 'unverified'. Starting silent restore check...");
+
+          try {
+            // 1. Try to restore. If IAPService.onSuccess triggers, handleUpgrade will run and set source to 'native'.
+            await IAPService.restore();
+
+            // 2. Wait a bit for the restore to propagate. 
+            // If after 15 seconds the source is STILL unverified, we revoke status.
+            setTimeout(async () => {
+              const refreshedProfile = profileRef.current;
+              if (refreshedProfile?.is_premium && refreshedProfile.premium_source === 'unverified') {
+                console.warn("IAP: Re-verification failed (No Store Receipt). Revoking premium.");
+                setProfile(prev => prev ? { ...prev, is_premium: false, premium_source: 'revoked' } : null);
+                showToast("Subscription verification failed. Access revoked.", 'error');
+
+                if (supabase) {
+                  await supabase.from('profiles').update({
+                    is_premium: false,
+                    premium_source: 'revoked'
+                  }).eq('id', refreshedProfile.id);
+
+                  // Also mark active subscription as inactive
+                  await supabase.from('premium_subscriptions')
+                    .update({ is_active: false })
+                    .eq('user_id', refreshedProfile.id);
+                }
+              }
+            }, 15000);
+          } catch (e) {
+            console.error("IAP: Re-verification process error", e);
+          }
+        }
+      }, 5000); // Wait 5s after init to settle
     }
   }, [handleUpgrade, showToast]);
 
@@ -789,11 +848,11 @@ const AppContentInner: React.FC = () => {
       const savedData = savedResult.data;
 
       if (savedData) {
-        const items = savedData as SavedItem[];
-        setSavedItems(items);
+        setSavedItems(savedData as SavedItem[]);
       }
 
       if (profileResult.error?.code === 'PGRST116') {
+        // New user — create their profile
         const { data: newProfile } = await supabase.from('profiles').insert([{
           id: userId,
           email: email,
@@ -803,6 +862,7 @@ const AppContentInner: React.FC = () => {
         }]).select().single();
         if (newProfile) profileData = newProfile;
       } else if (profileData) {
+        // Existing user — check if daily reset is needed
         const today = new Date().toISOString().split('T')[0];
         if (profileData.last_daily_reset !== today) {
           const { data: updated } = await supabase.from('profiles').update({ credits: DAILY_CREDITS, last_daily_reset: today }).eq('id', userId).select().single();
@@ -811,7 +871,6 @@ const AppContentInner: React.FC = () => {
       }
 
       if (profileData) setProfile(profileData as UserProfile);
-      if (savedData) setSavedItems(savedData as SavedItem[]);
 
     } catch (e) {
       console.error("Error loading user data", e);
@@ -1116,9 +1175,9 @@ const AppContentInner: React.FC = () => {
 
         if (sessionGenCount.current === 0) return;
 
-        // Trigger if 2 mins have passed OR if it's the 3rd generation (1st ad guarantee)
+        // Trigger on the 3rd generation (index 2) OR if cooldown passed
         const isThirdGeneration = sessionGenCount.current === 2;
-        const cooldownPassed = (currentActiveTime - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS) && lastAdActiveTime.current !== 0;
+        const cooldownPassed = (currentActiveTime - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS);
 
         if (isThirdGeneration || cooldownPassed) {
           setIsAdLoading('interstitial'); // SHOW OVERLAY
