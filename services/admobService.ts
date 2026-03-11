@@ -9,7 +9,9 @@ import {
     InterstitialAdPluginEvents,
     RewardInterstitialAdPluginEvents,
     AdOptions,
-    AdMobRewardInterstitialItem
+    AdMobRewardInterstitialItem,
+    AdmobConsentStatus,
+    AdmobConsentDebugGeography
 } from '@capacitor-community/admob';
 import { Capacitor } from '@capacitor/core';
 
@@ -25,16 +27,36 @@ export const AdMobService = {
     rewardInterstitialPreparing: false,
     isRewardInterstitialShowing: false,
 
+    // Set this to true to force the GDPR popup to show for everyone during testing/development.
+    // Set to false before releasing to the Play Store.
+    DEBUG_FORCE_GDPR: true,
+
     async initialize() {
         if (!Capacitor.isNativePlatform()) return;
         if (this.initialized) return;
 
         try {
+            // --- GDPR / UMP CONSENT FLOW ---
+            // 1. Request consent info from Google
+            const consentInfo = await AdMob.requestConsentInfo({
+                debugGeography: this.DEBUG_FORCE_GDPR ? AdmobConsentDebugGeography.EEA : AdmobConsentDebugGeography.DISABLED,
+            });
+
+            // 2. If a form is available and we need to show it, do it now
+            if (consentInfo.isConsentFormAvailable && consentInfo.status === AdmobConsentStatus.REQUIRED) {
+                console.log('AdMob: GDPR Consent Required. Showing form...');
+                await AdMob.showConsentForm();
+            }
+            // -------------------------------
+
             await AdMob.initialize({});
             this.initialized = true;
             console.log('AdMob Community Initialized');
         } catch (error) {
             console.error('AdMob Community initialization failed', error);
+            // Fallback: Try to initialize anyway so ads might still show
+            await AdMob.initialize({});
+            this.initialized = true;
         }
     },
 
