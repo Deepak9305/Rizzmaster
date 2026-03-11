@@ -22,8 +22,10 @@ dependencies {
     implementation project(':capacitor-toast')
     implementation project(':codetrix-studio-capacitor-google-auth')
     implementation "com.android.billingclient:billing:8.3.0"
+    implementation "com.onesignal:OneSignal:5.7.1"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.7.10"
 }
-
+apply from: "../../node_modules/onesignal-cordova-plugin/build-extras-onesignal.gradle"
 
 if (hasProperty('postBuildExtras')) {
   postBuildExtras()

@@ -14,6 +14,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { Dialog } from '@capacitor/dialog';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { AdMobService } from './services/admobService';
+import { OneSignalService } from './services/oneSignalService';
 import IAPService from './services/iapService';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Network } from '@capacitor/network';
@@ -351,6 +352,11 @@ const AppContentInner: React.FC = () => {
   // Sync profile ref
   useEffect(() => {
     profileRef.current = profile;
+
+    // Link OneSignal External ID when profile is loaded
+    if (Capacitor.isNativePlatform() && profile?.id) {
+      OneSignalService.setExternalId(profile.id);
+    }
   }, [profile]);
 
   // --- INTERSTITIAL AD ACTIVE TIME TRACKING ---
@@ -551,6 +557,9 @@ const AppContentInner: React.FC = () => {
 
       // AdMob
       AdMobService.initialize();
+
+      // OneSignal Push Notifications
+      OneSignalService.initialize();
 
       // In-App Purchases
       IAPService.initialize(
@@ -891,6 +900,7 @@ const AppContentInner: React.FC = () => {
       if (Capacitor.isNativePlatform()) {
         try { await GoogleAuth.signOut(); } catch (error) { console.warn("Native Logout err", error); }
         AdMobService.hideBanner();
+        OneSignalService.logout();
       }
     } catch (err) {
       console.error("Logout failed:", err);

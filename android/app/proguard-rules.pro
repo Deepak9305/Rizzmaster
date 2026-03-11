@@ -49,6 +49,15 @@
 -keep class androidx.** { *; }
 -dontwarn androidx.**
 
+# ============================================================
+# OneSignal & Dependencies (Jackson / AutoValue)
+# ============================================================
+-keep class com.onesignal.** { *; }
+-dontwarn com.onesignal.**
+-dontwarn com.fasterxml.jackson.core.JsonFactory
+-dontwarn com.fasterxml.jackson.core.JsonGenerator
+-dontwarn com.google.auto.value.AutoValue$CopyAnnotations
+
 # Preserve line number information for debugging stack traces.
 -keepattributes SourceFile,LineNumberTable
 
