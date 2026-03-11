@@ -29,7 +29,7 @@ export const AdMobService = {
 
     // Set this to true to force the GDPR popup to show for everyone during testing/development.
     // Set to false before releasing to the Play Store.
-    DEBUG_FORCE_GDPR: true,
+    DEBUG_FORCE_GDPR: false,
 
     async initialize() {
         if (!Capacitor.isNativePlatform()) return;
