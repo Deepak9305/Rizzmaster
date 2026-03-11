@@ -37,6 +37,11 @@ export const AdMobService = {
 
         try {
             // --- GDPR / UMP CONSENT FLOW ---
+            if (this.DEBUG_FORCE_GDPR) {
+                // Completely reset the user's consent state so the form shows up every time we test
+                try { await AdMob.resetConsentInfo(); } catch (e) { console.warn("Reset GDPR info failed", e); }
+            }
+
             // 1. Request consent info from Google
             const consentInfo = await AdMob.requestConsentInfo({
                 debugGeography: this.DEBUG_FORCE_GDPR ? AdmobConsentDebugGeography.EEA : AdmobConsentDebugGeography.DISABLED,
