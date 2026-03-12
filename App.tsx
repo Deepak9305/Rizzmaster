@@ -364,7 +364,6 @@ const AppContentInner: React.FC = () => {
   const lastAdActiveTime = useRef<number>(0);
   const lastCoachAdTime = useRef<number>(0);
   const backgroundTimestamp = useRef<number | null>(null);
-  const sessionGenCount = useRef<number>(0);
 
   const INTERSTITIAL_COOLDOWN_MS = 2 * 60 * 1000; // 2 minutes (Reduced from 3m)
   const COACH_AD_COOLDOWN_MS = 2 * 60 * 1000; // 2 minutes (Reduced from 3m)
@@ -401,7 +400,6 @@ const AppContentInner: React.FC = () => {
             activeTimeMs.current = 0;
             lastAdActiveTime.current = 0;
             lastCoachAdTime.current = 0;
-            sessionGenCount.current = 0;
           }
           // We are no longer in the background
           backgroundTimestamp.current = null;
@@ -697,8 +695,8 @@ const AppContentInner: React.FC = () => {
   const handleViewNavigation = useCallback(async (view: ViewState) => {
     if (view === currentView) return;
 
-    if (view === 'COACH' || (currentView === 'COACH' && view === 'HOME')) {
-      showCoachTransitionAd(); // DON'T AWAIT: Start ad logic in background
+    if (currentView === 'COACH' && view === 'HOME') {
+      showCoachTransitionAd(); // Trigger when LEAVING coach
     }
 
     // Strategic Preload: Pre-load the interstitial if we are moving towards the Coach 
@@ -1179,52 +1177,7 @@ const AppContentInner: React.FC = () => {
 
     setLoading(true);
 
-    // INTERSTITIAL AD LOGIC - "GATE" STRATEGY
-    // This ensures we show ads BEFORE generation as a natural transition,
-    // allowing the user to view results without interruption.
-    // We prepare the ad logic here but execute it later.
-    const showInterstitialIfReady = async () => {
-      if (!currentProfile.is_premium && Capacitor.isNativePlatform()) {
-        const currentActiveTime = activeTimeMs.current;
-
-        // Trigger logic
-        const isFirstAdOfSession = lastAdActiveTime.current === 0;
-        const isThirdGeneration = sessionGenCount.current === 2;
-        const cooldownPassed = (currentActiveTime - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS);
-
-        // STRICT RULE: First ad MUST be 3rd generation. 
-        // Subsequent ads can trigger on cooldown OR 3rd-gen milestones.
-        let shouldShow = false;
-        if (isFirstAdOfSession) {
-          shouldShow = isThirdGeneration;
-        } else {
-          shouldShow = isThirdGeneration || cooldownPassed;
-        }
-
-        if (shouldShow) {
-          setIsAdLoading('interstitial'); // SHOW OVERLAY
-          const adId = getAdId('INTERSTITIAL');
-
-          // Update timer synchronously BEFORE async execution to prevent race conditions
-          const now = activeTimeMs.current;
-          lastAdActiveTime.current = now;
-          lastCoachAdTime.current = now;
-
-          try {
-            await AdMobService.showInterstitial(adId);
-          } catch (e) {
-            console.warn("Generation ad error:", e);
-          } finally {
-            setIsAdLoading('hidden'); // ALWAYS HIDE OVERLAY
-          }
-        }
-      }
-    };
-
-    // --- TRIGGER INTERSTITIAL BEFORE GENERATION ---
-    await showInterstitialIfReady();
-    // ----------------------------------------------
-
+    // --- GENERATION START ---
     const creditsBefore = currentProfile.credits || 0;
 
     try {
@@ -1254,18 +1207,6 @@ const AppContentInner: React.FC = () => {
         setResult(res);
       } else {
         setResult(res);
-        // Successful generation: Increment session counter
-        sessionGenCount.current += 1;
-
-        // Strategic Preload: Load if we just finished the 2nd generation
-        // (to be ready for the 3rd guaranteed ad)
-        // Optimization: Only preload if the cooldown has likely passed
-        const currentActiveTime = activeTimeMs.current;
-        const cooldownPassed = (currentActiveTime - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS);
-
-        if (sessionGenCount.current === 2 && cooldownPassed && !currentProfile.is_premium && Capacitor.isNativePlatform()) {
-          AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'));
-        }
       }
 
     } catch (error) {
