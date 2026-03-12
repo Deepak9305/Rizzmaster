@@ -42,12 +42,12 @@ const INITIAL_MESSAGE: CoachMessage = {
 
 const COACH_VIBES = [
     {
-        label: "The Wingman", isPro: false, icon: "🤘",
+        label: "Wingman", isPro: false, icon: "🤵",
         welcome: "Yo! I'm your Wingman. What's on your mind? Whether it's the grind, the gym, or the girl, I've got your back.",
         colors: { primary: '#FF0080', secondary: '#7928CA', background: 'rgba(255,0,128,0.13)', glow: 'rgba(255,0,128,0.3)' }
     },
     {
-        label: "The Bestie", isPro: false, icon: "💅",
+        label: "Bestie", isPro: false, icon: "💅",
         welcome: "Hey! Your bestie is here. Let's talk—tell me everything about your day or that person you're thinking about.",
         colors: { primary: '#Ec4899', secondary: '#8B5CF6', background: 'rgba(236,72,153,0.13)', glow: 'rgba(236,72,153,0.3)' }
     },
@@ -57,7 +57,7 @@ const COACH_VIBES = [
         colors: { primary: '#F97316', secondary: '#EF4444', background: 'rgba(249,115,22,0.13)', glow: 'rgba(249,115,22,0.3)' }
     },
     {
-        label: "The Chaotic", isPro: true, icon: "🃏",
+        label: "Chaotic", isPro: true, icon: "🃏",
         welcome: "The Chaotic one has entered the chat. Tell me something wild or let's find a way to shake things up.",
         colors: { primary: '#A855F7', secondary: '#22C55E', background: 'rgba(168,85,247,0.13)', glow: 'rgba(168,85,247,0.3)' }
     }
@@ -143,7 +143,7 @@ const MessageBubble = React.memo(({ msg, onReport, icon, colors }: MsgProps) => 
                     onClick={(e) => { e.stopPropagation(); onReport(); }}
                     style={{
                         position: 'absolute',
-                        top: '-8px',
+                        bottom: '-4px',
                         [isUser ? 'left' : 'right']: '-8px',
                         background: '#1a1a1a',
                         border: '1px solid rgba(255,255,255,0.1)',
@@ -162,7 +162,7 @@ const MessageBubble = React.memo(({ msg, onReport, icon, colors }: MsgProps) => 
                     }}
                     title="Report message"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FF0080" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
                         <line x1="4" y1="22" x2="4" y2="15"></line>
                     </svg>
@@ -191,7 +191,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
     // Uncontrolled textarea: only track empty vs non-empty to avoid re-rendering on every keystroke
     const [hasContent, setHasContent] = useState(false);
     const [image, setImage] = useState<string | null>(null);
-    const [selectedVibe, setSelectedVibe] = useState<string | null>("The Wingman");
+    const [selectedVibe, setSelectedVibe] = useState<string | null>("Wingman");
     const [showVibeDropdown, setShowVibeDropdown] = useState(false);
     const [loading, setLoading] = useState(false);
     const [showOutofCredits, setShowOutOfCredits] = useState(false);
@@ -324,7 +324,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
         }]);
         setShadowNotes('');
         setHasContent(false);
-        setSelectedVibe("The Wingman");
+        setSelectedVibe("Wingman");
         if (textareaRef.current) { textareaRef.current.value = ''; textareaRef.current.style.height = 'auto'; }
     }, []);
 
@@ -431,7 +431,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                                     flex: 1
                                 }}>
-                                    {`Expert: ${selectedVibe || 'The Wingman'}`}
+                                    {`Expert: ${selectedVibe || 'Wingman'}`}
                                 </span>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} style={{ opacity: 0.7, flexShrink: 0 }}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -488,7 +488,8 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                 {/* Vibe Dropdown Menu */}
                 {showVibeDropdown && (
                     <div style={{
-                        position: 'absolute', top: 'calc(env(safe-area-inset-top) + 80px)', left: '50%', transform: 'translateX(-50%) translateZ(0)',
+                        position: 'absolute', top: 'calc(env(safe-area-inset-top) + 80px)',
+                        left: 0, right: 0, margin: '0 auto',
                         background: 'rgba(20,20,20,0.98)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
                         border: '1px solid rgba(255,255,255,0.12)', borderRadius: '16px', padding: '8px',
                         display: 'flex', flexDirection: 'column', gap: '4px', zIndex: 100, width: '220px',
@@ -524,8 +525,8 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                 )}
 
                 {/* Messages */}
-                <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 10, padding: '1rem 1.25rem 0.5rem' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', maxWidth: '672px', margin: '0 auto', paddingBottom: '0.75rem' }}>
+                <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 10, padding: '1rem 1.25rem 0' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', maxWidth: '672px', margin: '0 auto', paddingBottom: '0.5rem' }}>
                         {messages.map((msg, i) => (
                             <MessageBubble
                                 key={i}
@@ -542,7 +543,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                 {/* Input Container Wrapper */}
                 <div style={{
                     flexShrink: 0, position: 'relative', zIndex: 10,
-                    padding: '0 0 calc(env(safe-area-inset-bottom) + 0.625rem)',
+                    padding: '0 0 env(safe-area-inset-bottom)',
                     background: 'rgba(5,5,5,0.8)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)',
                     borderTop: '1px solid rgba(255,255,255,0.06)',
                 }}>
@@ -602,7 +603,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                     )}
 
                     {/* Input Area */}
-                    <div style={{ padding: '6px 16px 12px' }}>
+                    <div style={{ padding: '8px 16px 6px' }}>
                         <div style={{
                             display: 'flex', alignItems: 'flex-end', gap: '8px', maxWidth: '672px', margin: '0 auto',
                             borderRadius: '1.25rem', padding: '8px 8px 8px 16px',
@@ -665,7 +666,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                     {!isPremium && credits <= 2 && credits > 0 && (
                         <p
                             onClick={() => showToast("Credits reset to 5 daily. Extra ad credits do not stack.", "info")}
-                            style={{ textAlign: 'center', fontSize: '11px', color: 'rgba(255,255,255,0.25)', marginTop: '8px', fontWeight: 500, cursor: 'pointer' }}
+                            style={{ textAlign: 'center', fontSize: '10.5px', color: 'rgba(255,255,255,0.25)', paddingBottom: '10px', fontWeight: 500, cursor: 'pointer' }}
                         >
                             {credits} credit{credits !== 1 ? 's' : ''} left
                         </p>

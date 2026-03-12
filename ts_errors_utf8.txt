@@ -1,0 +1,3 @@
+﻿App.tsx(16,34): error TS2307: Cannot find module '@capacitor/status-bar' or its corresponding type declarations.
+services/rizzService.ts(1,20): error TS2307: Cannot find module 'openai' or its corresponding type declarations.
+vite.config.ts(4,25): error TS2307: Cannot find module 'vite-plugin-pwa' or its corresponding type declarations.
