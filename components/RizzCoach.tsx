@@ -16,7 +16,8 @@ if (typeof document !== 'undefined') {
             '@keyframes coachAurora { 0% { transform: translate(-10%, -10%) scale(1); } 50% { transform: translate(5%, 8%) scale(1.08); } 100% { transform: translate(-10%, -10%) scale(1); } }',
             '@keyframes coachPulseRing { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.8); opacity: 0; } }',
             '@keyframes coachSlideIn { from { opacity: 0; transform: translateY(48px); } to { opacity: 1; transform: translateY(0); } }',
-            '@keyframes coachMsgIn { from { opacity: 0; transform: translateY(12px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }',
+            '@keyframes coachMsgIn { from { opacity: 0; transform: translateY(16px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }',
+            '@keyframes coachEntrance { from { opacity: 0; transform: scale(0.9) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }',
             'div::-webkit-scrollbar { display: none; }',
         ].join(' ');
         document.head.appendChild(el);
@@ -40,35 +41,53 @@ const INITIAL_MESSAGE: CoachMessage = {
 };
 
 const COACH_VIBES = [
-    { label: "The Wingman", isPro: false, icon: "🤘", welcome: "Yo! I'm your Wingman. What's on your mind? Whether it's the grind, the gym, or the girl, I've got your back." },
-    { label: "The Bestie", isPro: false, icon: "💅", welcome: "Hey! Your bestie is here. Let's talk—tell me everything about your day or that person you're thinking about." },
-    { label: "Roast Master", isPro: true, icon: "🔥", welcome: "I'm here. Say something interesting or show me a text that needs a reality check. Don't be boring." },
-    { label: "The Chaotic", isPro: true, icon: "🃏", welcome: "The Chaotic one has entered the chat. Tell me something wild or let's find a way to shake things up." }
+    {
+        label: "The Wingman", isPro: false, icon: "🤘",
+        welcome: "Yo! I'm your Wingman. What's on your mind? Whether it's the grind, the gym, or the girl, I've got your back.",
+        colors: { primary: '#FF0080', secondary: '#7928CA', background: 'rgba(255,0,128,0.13)', glow: 'rgba(255,0,128,0.3)' }
+    },
+    {
+        label: "The Bestie", isPro: false, icon: "💅",
+        welcome: "Hey! Your bestie is here. Let's talk—tell me everything about your day or that person you're thinking about.",
+        colors: { primary: '#Ec4899', secondary: '#8B5CF6', background: 'rgba(236,72,153,0.13)', glow: 'rgba(236,72,153,0.3)' }
+    },
+    {
+        label: "Roast Master", isPro: true, icon: "🔥",
+        welcome: "I'm here. Say something interesting or show me a text that needs a reality check. Don't be boring.",
+        colors: { primary: '#F97316', secondary: '#EF4444', background: 'rgba(249,115,22,0.13)', glow: 'rgba(249,115,22,0.3)' }
+    },
+    {
+        label: "The Chaotic", isPro: true, icon: "🃏",
+        welcome: "The Chaotic one has entered the chat. Tell me something wild or let's find a way to shake things up.",
+        colors: { primary: '#A855F7', secondary: '#22C55E', background: 'rgba(168,85,247,0.13)', glow: 'rgba(168,85,247,0.3)' }
+    }
 ];
 
 const COACH_STORAGE_KEY = 'rizz_coach_messages_v2';
 const SHADOW_NOTES_KEY = 'rizz_coach_shadow_notes';
 const MAX_STORED_MESSAGES = 50; // cap to avoid localStorage bloat
 
-const TypingIndicator = React.memo(({ icon }: { icon?: string }) => (
-    <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+const TypingIndicator = React.memo(({ icon, colors }: { icon?: string, colors?: any }) => (
+    <div style={{ display: 'flex', justifyContent: 'flex-start', animation: 'coachEntrance 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both' }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem' }}>
             <div style={{
                 width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
-                background: 'linear-gradient(135deg, #FF0080, #7928CA)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                background: `linear-gradient(135deg, ${colors?.primary || '#FF0080'}, ${colors?.secondary || '#7928CA'})`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: `0 2px 10px ${colors?.glow || 'rgba(0,0,0,0.3)'}`
             }}>
                 <span style={{ fontSize: '14px', lineHeight: 1 }}>{icon || '🥷'}</span>
             </div>
             <div style={{
                 padding: '1rem 1.25rem', borderRadius: '1.5rem 1.5rem 1.5rem 4px',
-                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)'
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+                backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)'
             }}>
                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center', height: '16px' }}>
                     {[0, 1, 2].map(i => (
                         <span key={i} style={{
                             display: 'block', width: '6px', height: '6px', borderRadius: '50%',
-                            background: '#fb7185', animation: `coachBounce 1.2s ease-in-out ${i * 0.2}s infinite`
+                            background: colors?.primary || '#fb7185', animation: `coachBounce 1.2s ease-in-out ${i * 0.2}s infinite`
                         }} />
                     ))}
                 </div>
@@ -77,8 +96,8 @@ const TypingIndicator = React.memo(({ icon }: { icon?: string }) => (
     </div>
 ));
 
-interface MsgProps { msg: CoachMessage; onReport: () => void; icon?: string; }
-const MessageBubble = React.memo(({ msg, onReport, icon }: MsgProps) => {
+interface MsgProps { msg: CoachMessage; onReport: () => void; icon?: string; colors?: any; }
+const MessageBubble = React.memo(({ msg, onReport, icon, colors }: MsgProps) => {
     const isUser = msg.role === 'user';
     const [isHovered, setIsHovered] = useState(false);
 
@@ -89,15 +108,16 @@ const MessageBubble = React.memo(({ msg, onReport, icon }: MsgProps) => {
             style={{
                 display: 'flex', alignItems: 'flex-end', gap: '0.5rem',
                 justifyContent: isUser ? 'flex-end' : 'flex-start',
-                animation: 'coachMsgIn 0.35s cubic-bezier(0.16,1,0.3,1) both',
+                animation: 'coachEntrance 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both',
                 position: 'relative'
             }}
         >
             {!isUser && (
                 <div style={{
                     width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
-                    background: 'linear-gradient(135deg, #FF0080, #7928CA)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    background: `linear-gradient(135deg, ${colors?.primary || '#FF0080'}, ${colors?.secondary || '#7928CA'})`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: `0 2px 10px ${colors?.glow || 'rgba(0,0,0,0.3)'}`
                 }}>
                     <span style={{ fontSize: '14px', lineHeight: 1 }}>{icon || '🥷'}</span>
                 </div>
@@ -109,9 +129,11 @@ const MessageBubble = React.memo(({ msg, onReport, icon }: MsgProps) => {
                 borderRadius: isUser ? '1.5rem 1.5rem 4px 1.5rem' : '1.5rem 1.5rem 1.5rem 4px',
                 color: 'white',
                 position: 'relative',
+                backdropFilter: !isUser ? 'blur(12px)' : 'none',
+                WebkitBackdropFilter: !isUser ? 'blur(12px)' : 'none',
                 ...(isUser
-                    ? { background: 'linear-gradient(135deg, #FF0080 0%, #7928CA 100%)', boxShadow: '0 4px 24px rgba(255,0,128,0.25)' }
-                    : { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }
+                    ? { background: `linear-gradient(135deg, ${colors?.primary || '#FF0080'} 0%, ${colors?.secondary || '#7928CA'} 100%)`, boxShadow: `0 4px 24px ${colors?.glow || 'rgba(255,0,128,0.25)'}` }
+                    : { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }
                 )
             }}>
                 {msg.content}
@@ -318,6 +340,10 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
 
     const canSend = useMemo(() => (hasContent || image !== null) && !loading, [hasContent, image, loading]);
 
+    const currentTheme = useMemo(() => {
+        return COACH_VIBES.find(v => v.label === selectedVibe) || COACH_VIBES[0];
+    }, [selectedVibe]);
+
     if (!isOpen) return null;
 
     return (
@@ -330,23 +356,23 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                 <div aria-hidden style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
                     <div style={{
                         position: 'absolute', width: '70%', height: '70%', top: '-15%', left: '-15%', borderRadius: '50%',
-                        background: 'radial-gradient(circle, rgba(255,0,128,0.13) 0%, transparent 70%)',
+                        background: `radial-gradient(circle, ${currentTheme.colors.background} 0%, transparent 70%)`,
                         filter: 'blur(60px)', animation: 'coachAurora 18s ease-in-out infinite',
-                        willChange: 'transform'
+                        willChange: 'transform', transition: 'background 1.5s ease-in-out'
                     }} />
                     <div style={{
                         position: 'absolute', width: '60%', height: '60%', bottom: '10%', right: '-10%', borderRadius: '50%',
-                        background: 'radial-gradient(circle, rgba(121,40,202,0.12) 0%, transparent 70%)',
+                        background: `radial-gradient(circle, ${currentTheme.colors.secondary}14 0%, transparent 70%)`,
                         filter: 'blur(60px)', animation: 'coachAurora 22s ease-in-out 5s infinite reverse',
-                        willChange: 'transform'
+                        willChange: 'transform', transition: 'background 1.5s ease-in-out'
                     }} />
                 </div>
 
                 {/* Header */}
                 <div style={{
                     flexShrink: 0, position: 'relative', zIndex: 10,
-                    paddingTop: !isPremium ? 'calc(env(safe-area-inset-top) + 60px)' : 'calc(env(safe-area-inset-top) + 1rem)',
-                    paddingBottom: '1rem', paddingLeft: '1.25rem', paddingRight: '1.25rem',
+                    paddingTop: !isPremium ? 'calc(env(safe-area-inset-top) + 44px)' : 'calc(env(safe-area-inset-top) + 0.75rem)',
+                    paddingBottom: '0.75rem', paddingLeft: '1.25rem', paddingRight: '1.25rem',
                     borderBottom: '1px solid rgba(255,255,255,0.06)',
                     background: 'rgba(5,5,5,0.75)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
                 }}>
@@ -370,14 +396,14 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                         <div style={{ position: 'relative', flexShrink: 0 }}>
                             <div style={{
                                 position: 'absolute', inset: '-4px', borderRadius: '50%',
-                                background: 'linear-gradient(135deg, #FF0080, #7928CA)',
+                                background: `linear-gradient(135deg, ${currentTheme.colors.primary}, ${currentTheme.colors.secondary})`,
                                 animation: 'coachPulseRing 2s ease-out infinite',
                             }} />
                             <div style={{
                                 position: 'relative', width: '44px', height: '44px', borderRadius: '50%',
-                                background: 'linear-gradient(135deg, #FF0080 0%, #7928CA 100%)',
+                                background: `linear-gradient(135deg, ${currentTheme.colors.primary} 0%, ${currentTheme.colors.secondary} 100%)`,
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px',
-                                boxShadow: '0 4px 20px rgba(255,0,128,0.3)',
+                                boxShadow: `0 4px 20px ${currentTheme.colors.glow}`,
                             }}>
                                 <span style={{ fontSize: '24px', lineHeight: 1, paddingTop: '1px' }}>
                                     {COACH_VIBES.find(v => v.label === selectedVibe)?.icon || '🥷'}
@@ -391,18 +417,23 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                             <button
                                 onClick={() => setShowVibeDropdown(!showVibeDropdown)}
                                 style={{
-                                    display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px',
-                                    padding: '4px 10px', borderRadius: '12px',
+                                    display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px',
+                                    padding: '3px 9px', borderRadius: '10px',
                                     background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
-                                    cursor: 'pointer', transition: 'background 0.2s', width: 'fit-content'
+                                    cursor: 'pointer', transition: 'background 0.2s', width: 'fit-content',
+                                    maxWidth: '130px' // Prevent overlap on smaller screens
                                 }}
                                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.12)'}
                                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
                             >
-                                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.9)', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                                <span style={{
+                                    fontSize: '10.5px', color: 'rgba(255,255,255,0.9)', fontWeight: 700,
+                                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                    flex: 1
+                                }}>
                                     {`Expert: ${selectedVibe || 'The Wingman'}`}
                                 </span>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} style={{ opacity: 0.7 }}>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} style={{ opacity: 0.7, flexShrink: 0 }}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                                 </svg>
                             </button>
@@ -493,33 +524,35 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                 )}
 
                 {/* Messages */}
-                <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 10, padding: '1.5rem 1.25rem 1rem' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '672px', margin: '0 auto', paddingBottom: '1rem' }}>
+                <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 10, padding: '1rem 1.25rem 0.5rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', maxWidth: '672px', margin: '0 auto', paddingBottom: '0.75rem' }}>
                         {messages.map((msg, i) => (
                             <MessageBubble
                                 key={i}
                                 msg={msg}
                                 onReport={() => showToast("Report received! We'll review this. 🤝", 'success')}
-                                icon={COACH_VIBES.find(v => v.label === selectedVibe)?.icon}
+                                icon={currentTheme.icon}
+                                colors={currentTheme.colors}
                             />
                         ))}
-                        {loading && <TypingIndicator icon={COACH_VIBES.find(v => v.label === selectedVibe)?.icon} />}
+                        {loading && <TypingIndicator icon={currentTheme.icon} colors={currentTheme.colors} />}
                     </div>
                 </div>
 
                 {/* Input Container Wrapper */}
                 <div style={{
                     flexShrink: 0, position: 'relative', zIndex: 10,
-                    padding: '0 0 calc(env(safe-area-inset-bottom) + 0.875rem)',
-                    background: 'rgba(5,5,5,0.85)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+                    padding: '0 0 calc(env(safe-area-inset-bottom) + 0.625rem)',
+                    background: 'rgba(5,5,5,0.8)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)',
                     borderTop: '1px solid rgba(255,255,255,0.06)',
                 }}>
 
                     {/* Quick-Tap Prompts */}
                     {messages.length === 1 && !loading && !image && (
                         <div style={{
-                            padding: '12px 16px 0', display: 'flex', gap: '8px', overflowX: 'auto',
-                            WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none'
+                            padding: '10px 16px 0', display: 'flex', gap: '8px', overflowX: 'auto',
+                            WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none',
+                            animation: 'coachEntrance 0.5s ease-out'
                         }}>
                             {[
                                 { text: "She left me on read 📵", icon: "📵" },
@@ -569,7 +602,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                     )}
 
                     {/* Input Area */}
-                    <div style={{ padding: '8px 16px 16px' }}>
+                    <div style={{ padding: '6px 16px 12px' }}>
                         <div style={{
                             display: 'flex', alignItems: 'flex-end', gap: '8px', maxWidth: '672px', margin: '0 auto',
                             borderRadius: '1.25rem', padding: '8px 8px 8px 16px',
@@ -611,9 +644,14 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                                     flexShrink: 0, width: '40px', height: '40px', borderRadius: '50%', border: 'none',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     cursor: canSend ? 'pointer' : 'not-allowed', opacity: canSend ? 1 : 0.4,
-                                    transition: 'all 0.2s', paddingLeft: '2px',
+                                    transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)', paddingLeft: '2px',
+                                    transform: canSend ? 'scale(1)' : 'scale(0.9)',
                                     ...(canSend
-                                        ? { background: 'linear-gradient(135deg, #FF0080, #7928CA)', boxShadow: '0 4px 16px rgba(255,0,128,0.35)' }
+                                        ? {
+                                            background: `linear-gradient(135deg, ${currentTheme.colors.primary}, ${currentTheme.colors.secondary})`,
+                                            boxShadow: `0 4px 16px ${currentTheme.colors.glow}`,
+                                            animation: 'coachPulseRing 2s infinite'
+                                        }
                                         : { background: 'rgba(255,255,255,0.1)' }
                                     )
                                 }}
