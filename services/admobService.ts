@@ -71,16 +71,31 @@ export const AdMobService = {
         try {
             await this.initialize();
 
+            // Note: AdMob plugin might not support removeAllListeners directly.
+            // We rely on the plugin handling re-registrations or handle them via the returned handles if needed.
+
+            AdMob.addListener(BannerAdPluginEvents.Loaded, () => {
+                console.log('[AdMob] Banner Loaded Successfully');
+            });
+
+            AdMob.addListener(BannerAdPluginEvents.AdImpression, () => {
+                console.log('[AdMob] Banner Impression Reported - Visibility confirmed!');
+            });
+
+            AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (info) => {
+                console.error('[AdMob] Banner Failed to Load:', info);
+            });
+
             const options: BannerAdOptions = {
                 adId: adId,
                 adSize: BannerAdSize.ADAPTIVE_BANNER,
                 position: position === 'TOP' ? BannerAdPosition.TOP_CENTER : BannerAdPosition.BOTTOM_CENTER,
-                margin: position === 'TOP' ? 0 : 0,
+                margin: position === 'TOP' ? 0 : 60, // 60px margin for bottom banners to avoid system navigation bar
                 isTesting: false
             };
 
             await AdMob.showBanner(options);
-            console.log(`AdMob Banner shown at ${position}`);
+            console.log(`AdMob Banner request sent at ${position}`);
         } catch (e) {
             console.error('AdMob Show Banner Error:', e);
         }
