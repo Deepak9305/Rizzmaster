@@ -18,6 +18,7 @@ if (typeof document !== 'undefined') {
             '@keyframes coachSlideIn { from { opacity: 0; transform: translateY(48px); } to { opacity: 1; transform: translateY(0); } }',
             '@keyframes coachMsgIn { from { opacity: 0; transform: translateY(16px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }',
             '@keyframes coachEntrance { from { opacity: 0; transform: scale(0.9) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }',
+            '@keyframes coachStaggerIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }',
             'div::-webkit-scrollbar { display: none; }',
         ].join(' ');
         document.head.appendChild(el);
@@ -372,9 +373,9 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                 <div style={{
                     flexShrink: 0, position: 'relative', zIndex: 10,
                     paddingTop: !isPremium ? 'calc(env(safe-area-inset-top) + 44px)' : 'calc(env(safe-area-inset-top) + 0.75rem)',
-                    paddingBottom: '0.75rem', paddingLeft: '1.25rem', paddingRight: '1.25rem',
-                    borderBottom: '1px solid rgba(255,255,255,0.06)',
                     background: 'rgba(5,5,5,0.75)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+                    animation: 'coachStaggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both',
+                    willChange: 'transform, opacity',
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', maxWidth: '672px', margin: '0 auto' }}>
                         {/* Back */}
@@ -525,7 +526,11 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                 )}
 
                 {/* Messages */}
-                <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 10, padding: '1rem 1.25rem 0' }}>
+                <div ref={scrollRef} style={{
+                    flex: 1, overflowY: 'auto', position: 'relative', zIndex: 10, padding: '1rem 1.25rem 0',
+                    animation: 'coachStaggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both',
+                    willChange: 'transform, opacity',
+                }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', maxWidth: '672px', margin: '0 auto', paddingBottom: '0.5rem' }}>
                         {messages.map((msg, i) => (
                             <MessageBubble
@@ -544,8 +549,9 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                 <div style={{
                     flexShrink: 0, position: 'relative', zIndex: 10,
                     padding: '0 0 env(safe-area-inset-bottom)',
-                    background: 'rgba(5,5,5,0.8)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)',
                     borderTop: '1px solid rgba(255,255,255,0.06)',
+                    animation: 'coachStaggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both',
+                    willChange: 'transform, opacity',
                 }}>
 
                     {/* Quick-Tap Prompts */}

@@ -257,33 +257,52 @@
     @keyframes slideInRightView {
       from {
         opacity: 0;
-        transform: translateX(20px);
+        transform: translate3d(40px, 0, 0) scale(1.01);
       }
 
       to {
         opacity: 1;
-        transform: translateX(0);
+        transform: translate3d(0, 0, 0) scale(1);
       }
     }
 
     @keyframes slideInLeftView {
       from {
         opacity: 0;
-        transform: translateX(-20px);
+        transform: translate3d(-40px, 0, 0) scale(0.99);
       }
 
       to {
         opacity: 1;
-        transform: translateX(0);
+        transform: translate3d(0, 0, 0) scale(1);
+      }
+    }
+
+    @keyframes viewZoomOut {
+      from {
+        transform: translate3d(0, 0, 0) scale(1);
+        opacity: 1;
+      }
+
+      to {
+        transform: translate3d(0, 0, 0) scale(0.96);
+        opacity: 0.4;
       }
     }
 
     .animate-slide-in-right-view {
-      animation: slideInRightView 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      will-change: transform, opacity;
+      animation: slideInRightView 0.55s cubic-bezier(0.3, 0, 0.2, 1) forwards;
     }
 
     .animate-slide-in-left-view {
-      animation: slideInLeftView 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      will-change: transform, opacity;
+      animation: slideInLeftView 0.55s cubic-bezier(0.3, 0, 0.2, 1) forwards;
+    }
+
+    .animate-view-zoom-out {
+      will-change: transform, opacity;
+      animation: viewZoomOut 0.55s cubic-bezier(0.3, 0, 0.2, 1) forwards;
     }
   </style>
 </head>
