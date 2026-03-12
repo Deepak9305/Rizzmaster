@@ -50,7 +50,7 @@ const COACH_STORAGE_KEY = 'rizz_coach_messages_v2';
 const SHADOW_NOTES_KEY = 'rizz_coach_shadow_notes';
 const MAX_STORED_MESSAGES = 50; // cap to avoid localStorage bloat
 
-const TypingIndicator = React.memo(() => (
+const TypingIndicator = React.memo(({ icon }: { icon?: string }) => (
     <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem' }}>
             <div style={{
@@ -58,7 +58,7 @@ const TypingIndicator = React.memo(() => (
                 background: 'linear-gradient(135deg, #FF0080, #7928CA)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}>
-                <span style={{ fontSize: '14px', lineHeight: 1 }}>🥷</span>
+                <span style={{ fontSize: '14px', lineHeight: 1 }}>{icon || '🥷'}</span>
             </div>
             <div style={{
                 padding: '1rem 1.25rem', borderRadius: '1.5rem 1.5rem 1.5rem 4px',
@@ -132,8 +132,8 @@ const MessageBubble = React.memo(({ msg, onReport, icon }: MsgProps) => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         cursor: 'pointer',
-                        opacity: isHovered ? 1 : 0,
-                        transform: isHovered ? 'scale(1)' : 'scale(0.8)',
+                        opacity: isHovered ? 1 : 0.25, // Subtly visible for mobile discovery
+                        transform: isHovered ? 'scale(1)' : 'scale(0.85)',
                         transition: 'all 0.2s cubic-bezier(0.16,1,0.3,1)',
                         zIndex: 10,
                         boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
@@ -293,7 +293,13 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
     const handleClearChat = useCallback(() => {
         try { localStorage.removeItem(COACH_STORAGE_KEY); } catch { }
         try { localStorage.removeItem(SHADOW_NOTES_KEY); } catch { }
-        setMessages([INITIAL_MESSAGE]);
+
+        const defaultVibe = COACH_VIBES.find(v => v.label === "The Wingman");
+        setMessages([{
+            role: 'assistant',
+            content: defaultVibe?.welcome || INITIAL_MESSAGE.content,
+            timestamp: new Date().toISOString()
+        }]);
         setShadowNotes('');
         setHasContent(false);
         setSelectedVibe("The Wingman");
@@ -373,7 +379,9 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px',
                                 boxShadow: '0 4px 20px rgba(255,0,128,0.3)',
                             }}>
-                                <span style={{ fontSize: '24px', lineHeight: 1, paddingTop: '1px' }}>🥷</span>
+                                <span style={{ fontSize: '24px', lineHeight: 1, paddingTop: '1px' }}>
+                                    {COACH_VIBES.find(v => v.label === selectedVibe)?.icon || '🥷'}
+                                </span>
                             </div>
                         </div>
 
@@ -495,7 +503,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                                 icon={COACH_VIBES.find(v => v.label === selectedVibe)?.icon}
                             />
                         ))}
-                        {loading && <TypingIndicator />}
+                        {loading && <TypingIndicator icon={COACH_VIBES.find(v => v.label === selectedVibe)?.icon} />}
                     </div>
                 </div>
 
