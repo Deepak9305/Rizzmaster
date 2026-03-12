@@ -311,11 +311,11 @@ const LoginPage: React.FC = () => {
                                     Sign in with Email
                                 </button>
 
-                                <div className="py-4 invisible" />
+
                             </div>
                         )}
 
-                        <div className="mt-8 pt-6 border-t border-white/5 text-center">
+                        <div className="mt-4 pt-6 border-t border-white/5 text-center">
                             <p className="text-[10px] text-white/20 leading-relaxed max-w-xs mx-auto">
                                 By entering the Rizz Master terminal, you agree to our{' '}
                                 <button

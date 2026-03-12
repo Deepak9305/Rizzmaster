@@ -1644,7 +1644,7 @@ const AppContentInner: React.FC = () => {
 
               <section className="flex flex-col gap-4 md:gap-6 min-h-[300px]">
                 {!result && !loading && (
-                  <div className="h-full flex flex-col items-center justify-center text-white/20 py-12 px-4 text-center border-2 border-dashed border-white/5 rounded-3xl bg-white/[0.02] select-none">
+                  <div className="h-full flex flex-col items-center justify-center text-white/20 py-6 px-4 text-center border-2 border-dashed border-white/5 rounded-3xl bg-white/[0.02] select-none">
                     <span className="text-5xl md:text-6xl mb-4 grayscale opacity-50">✨</span>
                     <p className="text-sm md:text-xl font-medium max-w-[200px] md:max-w-none mx-auto">Results will appear here.</p>
                   </div>
@@ -1666,7 +1666,7 @@ const AppContentInner: React.FC = () => {
                       {result.analysis && <p className="mt-4 text-xs md:text-sm text-white/60 leading-relaxed border-t border-white/5 pt-3">{result.analysis}</p>}
                     </div>
 
-                    <div className="grid gap-3 md:gap-4 pb-12">
+                    <div className="grid gap-3 md:gap-4 pb-6">
                       <RizzCard label="Tease" content={result.tease} icon="😏" color="from-purple-500 to-indigo-500" isSaved={isSaved(result.tease)} type="tease" onSave={handleSaveWrapper} onReport={handleReport} delay={0.1} />
                       <RizzCard label="Smooth" content={result.smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved(result.smooth)} type="smooth" onSave={handleSaveWrapper} onReport={handleReport} delay={0.2} />
                       <RizzCard label="Chaotic" content={result.chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved(result.chaotic)} type="chaotic" onSave={handleSaveWrapper} onReport={handleReport} delay={0.3} />
@@ -1675,7 +1675,7 @@ const AppContentInner: React.FC = () => {
                 )}
 
                 {result && 'bio' in result && (
-                  <div className="glass rounded-3xl p-6 md:p-8 border border-white/10 animate-fade-in-up pb-12">
+                  <div className="glass rounded-3xl p-6 md:p-8 border border-white/10 animate-fade-in-up pb-6">
                     <div className="flex items-center gap-2 mb-4 md:mb-6">
                       <span className="text-2xl">📝</span>
                       <h3 className="text-xs md:text-sm font-semibold uppercase tracking-widest text-white/60">Bio Result</h3>
@@ -1704,7 +1704,7 @@ const AppContentInner: React.FC = () => {
               </div>
             )}
 
-            <Footer className="mt-12 md:mt-20" onNavigate={handleViewNavigation} />
+            <Footer className="mt-6 md:mt-10" onNavigate={handleViewNavigation} />
           </div>
         )}
       </div>
