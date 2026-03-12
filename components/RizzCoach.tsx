@@ -199,10 +199,15 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
     const scrollRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const isFirstMount = useRef(true);
 
     useEffect(() => {
         if (scrollRef.current) {
-            scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+            const behavior = isFirstMount.current ? 'auto' : 'smooth';
+            scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior });
+            if (isFirstMount.current && messages.length > 0) {
+                isFirstMount.current = false;
+            }
         }
     }, [messages, loading]);
 
