@@ -189,26 +189,24 @@ const AdLoadingOverlay: React.FC<{ mode: 'hidden' | 'interstitial' | 'reward', c
   if (mode === 'hidden') return null;
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center animate-fade-in">
-      {/* Deep, clean backdrop */}
-      <div className="absolute inset-0 bg-black/90 backdrop-blur-2xl" />
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center animate-fade-in pointer-events-none">
+      {/* Semi-transparent backdrop to ensure viewability signals pass through if needed */}
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
 
       {/* Minimal Loader Content */}
-      <div className="relative flex flex-col items-center">
-        {/* Subtle, elegant spinner */}
+      <div className="relative flex flex-col items-center pointer-events-auto">
         <div className="h-12 w-12 relative mb-6">
           <div className="absolute inset-0 rounded-full border-2 border-white/5" />
           <div className="absolute inset-0 rounded-full border-2 border-white/80 border-t-transparent animate-spin" style={{ animationDuration: '1s' }} />
         </div>
 
-        {/* Minimal Typography */}
         <h3 className="text-xs font-medium tracking-[0.3em] text-white/60 uppercase text-center px-4">
           {countdown !== null
-            ? `Safe Reward Stream: ${countdown}s left`
-            : (mode === 'reward' ? 'Loading Reward' : 'Loading')}
+            ? `Syncing Reward: ${countdown}s`
+            : (mode === 'reward' ? 'Initializing Reward' : 'Preparing Ad')}
         </h3>
         {countdown !== null && (
-          <p className="text-[10px] text-white/30 mt-2 tracking-widest uppercase">Optimizing for your region</p>
+          <p className="text-[9px] text-white/20 mt-2 tracking-widest uppercase">Optimizing for your network</p>
         )}
       </div>
     </div>
@@ -368,7 +366,7 @@ const AppContentInner: React.FC = () => {
   const backgroundTimestamp = useRef<number | null>(null);
   const sessionGenCount = useRef<number>(0);
 
-  const INTERSTITIAL_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutes
+  const INTERSTITIAL_COOLDOWN_MS = 2 * 60 * 1000; // 2 minutes (Reduced from 3m)
   const COACH_AD_COOLDOWN_MS = 2 * 60 * 1000; // 2 minutes (Reduced from 3m)
   const COACH_AD_GRACE_PERIOD_MS = 1 * 60 * 1000; // 1 minute (Reduced from 3m)
   const INACTIVITY_RESET_MS = 30 * 60 * 1000; // 30 minutes of background time to reset
@@ -435,22 +433,30 @@ const AppContentInner: React.FC = () => {
   };
 
   // Manage Native Banner Ads
+  const lastBannerPosition = useRef<'TOP' | 'BOTTOM' | null>(null);
+
   useEffect(() => {
     let timer: any;
-    const refreshBanner = () => {
+    const refreshBanner = (force = false) => {
       if (Capacitor.isNativePlatform() && session) {
-        // Wait for profile to load before making ad decisions
         if (!profile) return;
 
         if (profile.is_premium) {
           AdMobService.hideBanner();
+          lastBannerPosition.current = null;
         } else {
           const adId = getAdId('BANNER');
           const position = currentView === 'COACH' ? 'TOP' : 'BOTTOM';
 
+          // Optimization: Only refresh if position changed or forced
+          if (!force && lastBannerPosition.current === position) {
+            return;
+          }
+
+          lastBannerPosition.current = position;
+
           // Force hide first to ensure the plugin repositions cleanly
           AdMobService.hideBanner().then(() => {
-            // Delay slightly to ensure layout is settled and old banners are gone
             timer = setTimeout(() => AdMobService.showBanner(adId, position), 1500);
           });
         }
@@ -459,23 +465,15 @@ const AppContentInner: React.FC = () => {
 
     refreshBanner();
 
-    // Listen for App Resume to refresh ads (often needed if they disappear)
+    // Listen for App Resume to refresh ads
     let appListener: any;
     if (Capacitor.isNativePlatform()) {
       CapacitorApp.addListener('appStateChange', ({ isActive }) => {
         if (isActive) {
-          // 1. Refresh Banner using refs to avoid listener churn
           const currentProfile = profileRef.current;
-          const currentView = stateRef.current.currentView;
-
           if (currentProfile && !currentProfile.is_premium) {
-            AdMobService.hideBanner().then(() => {
-              const adId = getAdId('BANNER');
-              const position = currentView === 'COACH' ? 'TOP' : 'BOTTOM';
-              timer = setTimeout(() => AdMobService.showBanner(adId, position), 1000);
-            });
+            refreshBanner(true); // Force refresh on resume
           }
-
         }
       }).then(l => appListener = l);
     }
@@ -484,7 +482,7 @@ const AppContentInner: React.FC = () => {
       if (timer) clearTimeout(timer);
       if (appListener) appListener.remove();
     };
-  }, [profile?.is_premium, session, currentView]);
+  }, [profile?.is_premium, session, currentView === 'COACH']); // Only trigger on COACH/Not COACH transition
 
   // Define handleUpgrade using REF to avoid stale closures
   const handleUpgrade = useCallback(async () => {
@@ -1189,13 +1187,21 @@ const AppContentInner: React.FC = () => {
       if (!currentProfile.is_premium && Capacitor.isNativePlatform()) {
         const currentActiveTime = activeTimeMs.current;
 
-        if (sessionGenCount.current === 0) return;
-
-        // Trigger on the 3rd generation (index 2) OR if cooldown passed
+        // Trigger logic
+        const isFirstAdOfSession = lastAdActiveTime.current === 0;
         const isThirdGeneration = sessionGenCount.current === 2;
         const cooldownPassed = (currentActiveTime - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS);
 
-        if (isThirdGeneration || cooldownPassed) {
+        // STRICT RULE: First ad MUST be 3rd generation. 
+        // Subsequent ads can trigger on cooldown OR 3rd-gen milestones.
+        let shouldShow = false;
+        if (isFirstAdOfSession) {
+          shouldShow = isThirdGeneration;
+        } else {
+          shouldShow = isThirdGeneration || cooldownPassed;
+        }
+
+        if (shouldShow) {
           setIsAdLoading('interstitial'); // SHOW OVERLAY
           const adId = getAdId('INTERSTITIAL');
 
@@ -1253,7 +1259,11 @@ const AppContentInner: React.FC = () => {
 
         // Strategic Preload: Load if we just finished the 2nd generation
         // (to be ready for the 3rd guaranteed ad)
-        if (sessionGenCount.current === 2 && !currentProfile.is_premium && Capacitor.isNativePlatform()) {
+        // Optimization: Only preload if the cooldown has likely passed
+        const currentActiveTime = activeTimeMs.current;
+        const cooldownPassed = (currentActiveTime - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS);
+
+        if (sessionGenCount.current === 2 && cooldownPassed && !currentProfile.is_premium && Capacitor.isNativePlatform()) {
           AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'));
         }
       }
@@ -1269,7 +1279,8 @@ const AppContentInner: React.FC = () => {
 
   const runSimulatedAd = useCallback(async () => {
     return new Promise<boolean>((resolve) => {
-      setAdCountdown(7);
+      const DURATION = 15; // Increased to 15s to allow real ad adapters more time
+      setAdCountdown(DURATION);
       setIsAdLoading('reward');
 
       const interval = setInterval(() => {
@@ -1314,8 +1325,8 @@ const AppContentInner: React.FC = () => {
           AdMobService.prepareRewardInterstitial(rewardInterId);
 
           // 3. Chained Bonus Ad Sequence
-          // Wait briefly for first ad dismissal to settle
-          await new Promise(resolve => setTimeout(resolve, 800));
+          // Wait briefly for first ad dismissal to settle (Increased to 2s)
+          await new Promise(resolve => setTimeout(resolve, 2000));
 
           // Prompt the user with a native dialog
           const { value } = await Dialog.confirm({

@@ -147,21 +147,21 @@ export const AdMobService = {
                     cleanupAndResolve(false);
                 });
 
-                // Timeout fail-safe (8 seconds) - Increased for better reliability
+                // Timeout fail-safe (15 seconds) - Increased for better reliability in high-latency environments
                 const timeout = setTimeout(() => {
                     console.warn('AdMob Interstitial Timeout: Proceeding automatically.');
                     cleanupAndResolve(false);
-                }, 8000);
+                }, 15000);
 
                 const cleanupAndResolve = (success: boolean) => {
                     if (resolved) return;
                     resolved = true;
-                    dismissListener.remove();
-                    failedListener.remove();
-                    failedShowListener.remove();
-                    showedListener.remove();
+                    // Robust cleanup
+                    [dismissListener, failedListener, failedShowListener, showedListener].forEach(l => {
+                        try { l.remove(); } catch (e) { }
+                    });
                     clearTimeout(timeout);
-                    AdMobService.interstitialReady = false; // Reset state so it pulls fresh next time
+                    AdMobService.interstitialReady = false;
                     AdMobService.isInterstitialShowing = false;
                     resolve(success);
                 };
@@ -243,22 +243,20 @@ export const AdMobService = {
                     cleanupAndResolve(false);
                 });
 
-                // Fail-safe timeout (8 seconds for rewards - users are more patient for credits)
+                // Fail-safe timeout (15 seconds)
                 const timeout = setTimeout(() => {
                     console.warn('[AdMob] Reward Interstitial show timeout');
                     cleanupAndResolve(false);
-                }, 8000);
+                }, 15000);
 
                 const cleanupAndResolve = (success: boolean) => {
                     if (resolved) return;
                     resolved = true;
-                    showedListener.remove();
-                    rewardListener.remove();
-                    dismissListener.remove();
-                    failedListener.remove();
-                    failedShowListener.remove();
+                    [showedListener, rewardListener, dismissListener, failedListener, failedShowListener].forEach(l => {
+                        try { l.remove(); } catch (e) { }
+                    });
                     clearTimeout(timeout);
-                    AdMobService.rewardInterstitialReady = false; // Reset state so it pulls fresh next time
+                    AdMobService.rewardInterstitialReady = false;
                     AdMobService.isRewardInterstitialShowing = false;
                     console.log(`[AdMob] Reward Interstitial finished. Success: ${success}`);
                     resolve(success);
@@ -341,22 +339,20 @@ export const AdMobService = {
                     cleanupAndResolve(false);
                 });
 
-                // Fail-safe timeout (8 seconds for rewards)
+                // Fail-safe timeout (15 seconds)
                 const timeout = setTimeout(() => {
                     console.warn('[AdMob] Reward video show timeout');
                     cleanupAndResolve(false);
-                }, 8000);
+                }, 15000);
 
                 const cleanupAndResolve = (success: boolean) => {
                     if (resolved) return;
                     resolved = true;
-                    showedListener.remove();
-                    rewardListener.remove();
-                    dismissListener.remove();
-                    failedListener.remove();
-                    failedShowListener.remove();
+                    [showedListener, rewardListener, dismissListener, failedListener, failedShowListener].forEach(l => {
+                        try { l.remove(); } catch (e) { }
+                    });
                     clearTimeout(timeout);
-                    AdMobService.rewardVideoReady = false; // Reset state so it pulls fresh next time
+                    AdMobService.rewardVideoReady = false;
                     AdMobService.isRewardVideoShowing = false;
                     console.log(`[AdMob] Reward video finished. Success: ${success}`);
                     resolve(success);
