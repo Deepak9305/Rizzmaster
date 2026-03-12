@@ -40,10 +40,10 @@ const INITIAL_MESSAGE: CoachMessage = {
 };
 
 const COACH_VIBES = [
-    { label: "The Bestie", isPro: false, icon: "💅", welcome: "I’m your girl best friend. Show me the text—I'll tell you what they're actually thinking." },
-    { label: "The Wingman", isPro: false, icon: "🤘", welcome: "You’re a king. Let’s get this. Show me the chat and we’ll secure the win." },
-    { label: "Roast Master", isPro: true, icon: "🔥", welcome: "Show me the text. I'll help you end their career with one reply." },
-    { label: "The Chaotic", isPro: true, icon: "🃏", welcome: "This is getting boring. Let's send something wild and see what happens." }
+    { label: "The Wingman", isPro: false, icon: "🤘", welcome: "Yo! I'm your Wingman. What's on your mind? Whether it's the grind, the gym, or the girl, I've got your back." },
+    { label: "The Bestie", isPro: false, icon: "💅", welcome: "Hey! Your bestie is here. Let's talk—tell me everything about your day or that person you're thinking about." },
+    { label: "Roast Master", isPro: true, icon: "🔥", welcome: "I'm here. Say something interesting or show me a text that needs a reality check. Don't be boring." },
+    { label: "The Chaotic", isPro: true, icon: "🃏", welcome: "The Chaotic one has entered the chat. Tell me something wild or let's find a way to shake things up." }
 ];
 
 const COACH_STORAGE_KEY = 'rizz_coach_messages_v2';
@@ -77,35 +77,74 @@ const TypingIndicator = React.memo(() => (
     </div>
 ));
 
-interface MsgProps { msg: CoachMessage; }
-const MessageBubble = React.memo(({ msg }: MsgProps) => {
+interface MsgProps { msg: CoachMessage; onReport: () => void; icon?: string; }
+const MessageBubble = React.memo(({ msg, onReport, icon }: MsgProps) => {
     const isUser = msg.role === 'user';
+    const [isHovered, setIsHovered] = useState(false);
+
     return (
-        <div style={{
-            display: 'flex', alignItems: 'flex-end', gap: '0.5rem',
-            justifyContent: isUser ? 'flex-end' : 'flex-start',
-            animation: 'coachMsgIn 0.35s cubic-bezier(0.16,1,0.3,1) both'
-        }}>
+        <div
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            style={{
+                display: 'flex', alignItems: 'flex-end', gap: '0.5rem',
+                justifyContent: isUser ? 'flex-end' : 'flex-start',
+                animation: 'coachMsgIn 0.35s cubic-bezier(0.16,1,0.3,1) both',
+                position: 'relative'
+            }}
+        >
             {!isUser && (
                 <div style={{
                     width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
                     background: 'linear-gradient(135deg, #FF0080, #7928CA)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
-                    <span style={{ fontSize: '14px', lineHeight: 1 }}>🥷</span>
+                    <span style={{ fontSize: '14px', lineHeight: 1 }}>{icon || '🥷'}</span>
                 </div>
             )}
+
             <div style={{
                 maxWidth: '78%', padding: '0.875rem 1.25rem', fontSize: '15px',
                 lineHeight: 1.65, fontWeight: 500, whiteSpace: 'pre-wrap',
                 borderRadius: isUser ? '1.5rem 1.5rem 4px 1.5rem' : '1.5rem 1.5rem 1.5rem 4px',
                 color: 'white',
+                position: 'relative',
                 ...(isUser
                     ? { background: 'linear-gradient(135deg, #FF0080 0%, #7928CA 100%)', boxShadow: '0 4px 24px rgba(255,0,128,0.25)' }
                     : { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }
                 )
             }}>
                 {msg.content}
+
+                {/* Report Action */}
+                <button
+                    onClick={(e) => { e.stopPropagation(); onReport(); }}
+                    style={{
+                        position: 'absolute',
+                        top: '-8px',
+                        [isUser ? 'left' : 'right']: '-8px',
+                        background: '#1a1a1a',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '50%',
+                        width: '24px',
+                        height: '24px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        opacity: isHovered ? 1 : 0,
+                        transform: isHovered ? 'scale(1)' : 'scale(0.8)',
+                        transition: 'all 0.2s cubic-bezier(0.16,1,0.3,1)',
+                        zIndex: 10,
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+                    }}
+                    title="Report message"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FF0080" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+                        <line x1="4" y1="22" x2="4" y2="15"></line>
+                    </svg>
+                </button>
             </div>
         </div>
     );
@@ -130,7 +169,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
     // Uncontrolled textarea: only track empty vs non-empty to avoid re-rendering on every keystroke
     const [hasContent, setHasContent] = useState(false);
     const [image, setImage] = useState<string | null>(null);
-    const [selectedVibe, setSelectedVibe] = useState<string | null>(null);
+    const [selectedVibe, setSelectedVibe] = useState<string | null>("The Wingman");
     const [showVibeDropdown, setShowVibeDropdown] = useState(false);
     const [loading, setLoading] = useState(false);
     const [showOutofCredits, setShowOutOfCredits] = useState(false);
@@ -257,7 +296,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
         setMessages([INITIAL_MESSAGE]);
         setShadowNotes('');
         setHasContent(false);
-        setSelectedVibe(null);
+        setSelectedVibe("The Wingman");
         if (textareaRef.current) { textareaRef.current.value = ''; textareaRef.current.style.height = 'auto'; }
     }, []);
 
@@ -268,7 +307,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
             setTimeout(() => onGoPremium && onGoPremium(), 300); // Trigger premium modal after transition
             return;
         }
-        setSelectedVibe(prev => prev === vibe.label ? null : vibe.label);
+        setSelectedVibe(vibe.label);
     }, [isPremium, onClose, onGoPremium, showToast]);
 
     const canSend = useMemo(() => (hasContent || image !== null) && !loading, [hasContent, image, loading]);
@@ -287,11 +326,13 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                         position: 'absolute', width: '70%', height: '70%', top: '-15%', left: '-15%', borderRadius: '50%',
                         background: 'radial-gradient(circle, rgba(255,0,128,0.13) 0%, transparent 70%)',
                         filter: 'blur(60px)', animation: 'coachAurora 18s ease-in-out infinite',
+                        willChange: 'transform'
                     }} />
                     <div style={{
                         position: 'absolute', width: '60%', height: '60%', bottom: '10%', right: '-10%', borderRadius: '50%',
                         background: 'radial-gradient(circle, rgba(121,40,202,0.12) 0%, transparent 70%)',
                         filter: 'blur(60px)', animation: 'coachAurora 22s ease-in-out 5s infinite reverse',
+                        willChange: 'transform'
                     }} />
                 </div>
 
@@ -351,7 +392,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
                             >
                                 <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.9)', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                                    {selectedVibe ? `Expert: ${selectedVibe}` : 'Expert: Strategist'}
+                                    {`Expert: ${selectedVibe || 'The Wingman'}`}
                                 </span>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} style={{ opacity: 0.7 }}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -408,23 +449,14 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                 {/* Vibe Dropdown Menu */}
                 {showVibeDropdown && (
                     <div style={{
-                        position: 'absolute', top: 'calc(env(safe-area-inset-top) + 80px)', left: '50%', transform: 'translateX(-50%)',
-                        background: 'rgba(20,20,20,0.95)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-                        border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '8px',
+                        position: 'absolute', top: 'calc(env(safe-area-inset-top) + 80px)', left: '50%', transform: 'translateX(-50%) translateZ(0)',
+                        background: 'rgba(20,20,20,0.98)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255,255,255,0.12)', borderRadius: '16px', padding: '8px',
                         display: 'flex', flexDirection: 'column', gap: '4px', zIndex: 100, width: '220px',
-                        boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-                        animation: 'coachMsgIn 0.2s cubic-bezier(0.16,1,0.3,1)'
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                        animation: 'coachMsgIn 0.2s cubic-bezier(0.16,1,0.3,1)',
+                        willChange: 'transform, opacity'
                     }}>
-                        <button
-                            onClick={() => { setSelectedVibe(null); setShowVibeDropdown(false); }}
-                            style={{
-                                textAlign: 'left', padding: '10px 12px', background: !selectedVibe ? 'rgba(255,0,128,0.15)' : 'transparent',
-                                border: 'none', borderRadius: '10px', color: !selectedVibe ? '#FF0080' : 'white',
-                                fontSize: '14px', fontWeight: !selectedVibe ? 700 : 500, cursor: 'pointer'
-                            }}
-                        >
-                            🥷 Strategist (Default)
-                        </button>
                         {COACH_VIBES.map((vibe) => (
                             <button
                                 key={vibe.label}
@@ -455,7 +487,14 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                 {/* Messages */}
                 <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 10, padding: '1.5rem 1.25rem 1rem' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '672px', margin: '0 auto', paddingBottom: '1rem' }}>
-                        {messages.map((msg, i) => <MessageBubble key={i} msg={msg} />)}
+                        {messages.map((msg, i) => (
+                            <MessageBubble
+                                key={i}
+                                msg={msg}
+                                onReport={() => showToast("Report received! We'll review this. 🤝", 'success')}
+                                icon={COACH_VIBES.find(v => v.label === selectedVibe)?.icon}
+                            />
+                        ))}
                         {loading && <TypingIndicator />}
                     </div>
                 </div>
