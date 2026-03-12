@@ -35,13 +35,15 @@ interface RizzCoachProps {
 
 const INITIAL_MESSAGE: CoachMessage = {
     role: 'assistant',
-    content: "I'm the Rizz Coach. Tell me what's happening or show me the chat. I'll tell you exactly how to play it.",
+    content: "I'm Rizz AI. Tell me what's happening or show me the chat. I'll decode the vibe and give you the perfect move.",
     timestamp: new Date().toISOString()
 };
 
 const COACH_VIBES = [
-    { label: "Romantic", isPro: true },
-    { label: "Nonchalant", isPro: true }
+    { label: "The Bestie", isPro: false, icon: "💅", welcome: "I’m your girl best friend. Show me the text—I'll tell you what they're actually thinking." },
+    { label: "The Wingman", isPro: false, icon: "🤘", welcome: "You’re a king. Let’s get this. Show me the chat and we’ll secure the win." },
+    { label: "Roast Master", isPro: true, icon: "🔥", welcome: "Show me the text. I'll help you end their career with one reply." },
+    { label: "The Chaotic", isPro: true, icon: "🃏", welcome: "This is getting boring. Let's send something wild and see what happens." }
 ];
 
 const COACH_STORAGE_KEY = 'rizz_coach_messages_v2';
@@ -336,7 +338,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
 
                         {/* Identity & Dropdown */}
                         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                            <div style={{ fontSize: '15px', fontWeight: 900, color: 'white', letterSpacing: '-0.02em', lineHeight: 1 }}>Rizz Coach</div>
+                            <div style={{ fontSize: '15px', fontWeight: 900, color: 'white', letterSpacing: '-0.02em', lineHeight: 1 }}>Rizz AI</div>
                             <button
                                 onClick={() => setShowVibeDropdown(!showVibeDropdown)}
                                 style={{
@@ -349,7 +351,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
                             >
                                 <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.9)', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                                    {selectedVibe ? `Vibe: ${selectedVibe}` : 'Vibe: Default'}
+                                    {selectedVibe ? `Expert: ${selectedVibe}` : 'Expert: Strategist'}
                                 </span>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} style={{ opacity: 0.7 }}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -421,13 +423,13 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                                 fontSize: '14px', fontWeight: !selectedVibe ? 700 : 500, cursor: 'pointer'
                             }}
                         >
-                            Default Strategist
+                            🥷 Strategist (Default)
                         </button>
                         {COACH_VIBES.map((vibe) => (
                             <button
                                 key={vibe.label}
                                 onClick={() => {
-                                    handleVibeClick(vibe);
+                                    handleVibeClick({ label: vibe.label, isPro: vibe.isPro });
                                     if (!vibe.isPro || isPremium) setShowVibeDropdown(false);
                                 }}
                                 style={{
@@ -437,7 +439,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                                     fontSize: '14px', fontWeight: selectedVibe === vibe.label ? 700 : 500, cursor: 'pointer'
                                 }}
                             >
-                                {vibe.label}
+                                <span>{vibe.icon} {vibe.label}</span>
                                 {vibe.isPro && !isPremium && <span style={{ fontSize: '12px' }}>🔒</span>}
                                 {vibe.isPro && isPremium && selectedVibe !== vibe.label && <span style={{ fontSize: '12px', opacity: 0.5 }}>👑</span>}
                             </button>
