@@ -10,7 +10,7 @@ const Footer: React.FC<FooterProps> = ({ className = "", onNavigate }) => {
     <footer
       className={`w-full border-t border-white/5 bg-gradient-to-t from-black via-black/80 to-transparent ${className}`}
       style={{
-        paddingTop: '1.5rem',
+        paddingTop: '0.5rem', // Tightened to reduce gap above navigation buttons
         paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' // Ensures content sits above iPhone Home Indicator
       }}
     >

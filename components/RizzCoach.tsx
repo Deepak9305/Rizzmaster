@@ -43,13 +43,13 @@ const INITIAL_MESSAGE: CoachMessage = {
 
 const COACH_VIBES = [
     {
-        label: "Wingman", isPro: false, icon: "🤵",
-        welcome: "Yo! I'm your Wingman. What's on your mind? Whether it's the grind, the gym, or the girl, I've got your back.",
+        label: "Elite Wingman", isPro: false, icon: "🤘",
+        welcome: "Yo! Senior Wingman here. I'm not just hype—I'm tactical. Show me the chat, let's secure this win. 🤘",
         colors: { primary: '#FF0080', secondary: '#7928CA', background: 'rgba(255,0,128,0.13)', glow: 'rgba(255,0,128,0.3)' }
     },
     {
         label: "Bestie", isPro: false, icon: "💅",
-        welcome: "Hey! Your bestie is here. Let's talk—tell me everything about your day or that person you're thinking about.",
+        welcome: "Hey! Your Bestie is here to spill the tea. I'll tell you exactly what they're thinking. First off—are you a guy or a girl? 💅",
         colors: { primary: '#Ec4899', secondary: '#8B5CF6', background: 'rgba(236,72,153,0.13)', glow: 'rgba(236,72,153,0.3)' }
     },
     {
@@ -192,7 +192,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
     // Uncontrolled textarea: only track empty vs non-empty to avoid re-rendering on every keystroke
     const [hasContent, setHasContent] = useState(false);
     const [image, setImage] = useState<string | null>(null);
-    const [selectedVibe, setSelectedVibe] = useState<string | null>("Wingman");
+    const [selectedVibe, setSelectedVibe] = useState<string | null>("Elite Wingman");
     const [showVibeDropdown, setShowVibeDropdown] = useState(false);
     const [loading, setLoading] = useState(false);
     const [showOutofCredits, setShowOutOfCredits] = useState(false);
@@ -330,7 +330,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
         }]);
         setShadowNotes('');
         setHasContent(false);
-        setSelectedVibe("Wingman");
+        setSelectedVibe("Elite Wingman");
         if (textareaRef.current) { textareaRef.current.value = ''; textareaRef.current.style.height = 'auto'; }
     }, []);
 
@@ -437,7 +437,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                                     flex: 1
                                 }}>
-                                    {`Expert: ${selectedVibe || 'Wingman'}`}
+                                    {`Expert: ${selectedVibe || 'Elite Wingman'}`}
                                 </span>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} style={{ opacity: 0.7, flexShrink: 0 }}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -614,7 +614,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                     )}
 
                     {/* Input Area */}
-                    <div style={{ padding: '8px 16px 6px' }}>
+                    <div style={{ padding: '0px 16px 6px' }}>
                         <div style={{
                             display: 'flex', alignItems: 'flex-end', gap: '8px', maxWidth: '672px', margin: '0 auto',
                             borderRadius: '1.25rem', padding: '8px 8px 8px 16px',
