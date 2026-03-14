@@ -33,6 +33,8 @@ interface RizzCoachProps {
     isPremium: boolean;
     onWatchAd?: () => void;
     onGoPremium?: () => void;
+    shadowNotes: string;
+    onUpdateShadowNotes: (notes: string) => void;
 }
 
 const INITIAL_MESSAGE: CoachMessage = {
@@ -195,7 +197,7 @@ const AuroraBackground = React.memo(({ colors }: { colors: any }) => (
     </div>
 ));
 
-const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdateCredits, isPremium, onWatchAd, onGoPremium }) => {
+const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdateCredits, isPremium, onWatchAd, onGoPremium, shadowNotes, onUpdateShadowNotes }) => {
     const { showToast } = useToast();
     const [messages, setMessages] = useState<CoachMessage[]>(() => {
         try {
@@ -207,10 +209,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
         } catch { }
         return [INITIAL_MESSAGE];
     });
-    // Rich Shadow Notes — persistent intel dossier for this user's situation
-    const [shadowNotes, setShadowNotes] = useState<string>(() => {
-        try { return localStorage.getItem(SHADOW_NOTES_KEY) || ''; } catch { return ''; }
-    });
+    // messages are already initialized from local storage in useState below
     // Uncontrolled textarea: only track empty vs non-empty to avoid re-rendering on every keystroke
     const [hasContent, setHasContent] = useState(false);
     const [image, setImage] = useState<string | null>(null);
@@ -292,8 +291,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
             const response = await generateCoachAdvice(next, shadowNotes, selectedVibe || undefined);
             // Persist updated intel dossier if the AI tacked one on
             if (response.updatedNotes && response.updatedNotes !== shadowNotes) {
-                setShadowNotes(response.updatedNotes);
-                try { localStorage.setItem(SHADOW_NOTES_KEY, response.updatedNotes); } catch { }
+                onUpdateShadowNotes(response.updatedNotes);
             }
             setMessages(prev => [...prev, {
                 role: 'assistant', content: response.reply, timestamp: new Date().toISOString()
@@ -361,11 +359,11 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
             content: defaultVibe?.welcome || INITIAL_MESSAGE.content,
             timestamp: new Date().toISOString()
         }]);
-        setShadowNotes('');
+        onUpdateShadowNotes('');
         setHasContent(false);
         setSelectedVibe("Elite Wingman");
         if (textareaRef.current) { textareaRef.current.value = ''; textareaRef.current.style.height = 'auto'; }
-    }, []);
+    }, [onUpdateShadowNotes]);
 
     const handleVibeClick = useCallback((vibe: { label: string, isPro: boolean }) => {
         if (vibe.isPro && !isPremium) {

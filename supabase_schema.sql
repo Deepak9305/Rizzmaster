@@ -5,7 +5,8 @@ create table public.profiles (
   email text,
   credits integer default 5,
   is_premium boolean default false,
-  last_daily_reset date default current_date
+  last_daily_reset date default current_date,
+  shadow_notes text
 );
 
 -- Create saved_items table

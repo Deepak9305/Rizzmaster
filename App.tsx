@@ -870,7 +870,8 @@ const AppContentInner: React.FC = () => {
           email: email,
           credits: DAILY_CREDITS,
           is_premium: false,
-          last_daily_reset: new Date().toISOString().split('T')[0]
+          last_daily_reset: new Date().toISOString().split('T')[0],
+          shadow_notes: ''
         }]).select().single();
         if (newProfile) profileData = newProfile;
       } else if (profileData) {
@@ -882,7 +883,33 @@ const AppContentInner: React.FC = () => {
         }
       }
 
-      if (profileData) setProfile(profileData as UserProfile);
+      if (profileData) {
+        setProfile(profileData as UserProfile);
+
+        // --- DATA MIGRATION: Sync legacy local notes to Supabase ---
+        if (!profileData.shadow_notes) {
+          try {
+            const localNotes = localStorage.getItem('rizz_coach_shadow_notes');
+            if (localNotes && localNotes.trim()) {
+              console.log("Migrating local shadow notes to cloud...");
+              const { data: migratedProfile } = await supabase
+                .from('profiles')
+                .update({ shadow_notes: localNotes })
+                .eq('id', userId)
+                .select()
+                .single();
+
+              if (migratedProfile) {
+                setProfile(migratedProfile as UserProfile);
+                // Optional: Clear local storage after successful migration
+                // localStorage.removeItem('rizz_coach_shadow_notes');
+              }
+            }
+          } catch (err) {
+            console.warn("Migration check failed:", err);
+          }
+        }
+      }
 
     } catch (e) {
       console.error("Error loading user data", e);
@@ -1330,6 +1357,20 @@ const AppContentInner: React.FC = () => {
     setSelectedVibe(null);
   }, []);
 
+  const updateShadowNotes = useCallback(async (newNotes: string) => {
+    setProfile(prev => {
+      if (!prev) return null;
+      const updated = { ...prev, shadow_notes: newNotes };
+
+      if (supabase) {
+        supabase.from('profiles').update({ shadow_notes: newNotes }).eq('id', prev.id)
+          .then(({ error }) => { if (error) console.error("Shadow Notes Sync Error:", error); });
+      }
+
+      return updated;
+    });
+  }, []);
+
   return (
     <div className="relative min-h-screen bg-black overflow-x-hidden">
 
@@ -1411,304 +1452,307 @@ const AppContentInner: React.FC = () => {
                 isPremium={profile?.is_premium || false}
                 onWatchAd={handleWatchAd}
                 onGoPremium={() => { handleBackNavigation(); handleOpenPremium(); }}
+                shadowNotes={profile?.shadow_notes || ''}
+                onUpdateShadowNotes={updateShadowNotes}
               />
             </Suspense>
           </div>
-        ) : currentView !== 'HOME' ? (
-          <div className="safe-top safe-bottom">
-            <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white">Loading...</div>}>
-              <InfoPages
-                page={currentView}
-                onBack={handleBackNavigation}
-                onDeleteAccount={handleDeleteAccount}
-              />
-            </Suspense>
-          </div>
-        ) : (
-          <div className={`max-w-4xl mx-auto px-4 py-6 md:py-12 pb-0 relative min-h-[100dvh] flex flex-col safe-top ${currentView === 'HOME' ? 'animate-fade-in' : 'animate-view-zoom-out'}`}>
-
-            <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden bg-black" />
-
-            <Suspense fallback={null}>
-              {showPremiumModal && (
-                <PremiumModal
-                  onClose={handleBackNavigation}
-                  onUpgrade={handleUpgrade}
-                  onRestore={handleRestorePurchases}
+        )
+          : currentView !== 'HOME' ? (
+            <div className="safe-top safe-bottom">
+              <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white">Loading...</div>}>
+                <InfoPages
+                  page={currentView}
+                  onBack={handleBackNavigation}
+                  onDeleteAccount={handleDeleteAccount}
                 />
-              )}
-              <SavedModal
-                isOpen={showSavedModal}
-                onClose={handleBackNavigation}
-                savedItems={savedItems}
-                onDelete={handleDeleteSaved}
-              />
-            </Suspense>
+              </Suspense>
+            </div>
+          ) : (
+            <div className={`max-w-4xl mx-auto px-4 py-6 md:py-12 pb-0 relative min-h-[100dvh] flex flex-col safe-top ${currentView === 'HOME' ? 'animate-fade-in' : 'animate-view-zoom-out'}`}>
+
+              <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden bg-black" />
+
+              <Suspense fallback={null}>
+                {showPremiumModal && (
+                  <PremiumModal
+                    onClose={handleBackNavigation}
+                    onUpgrade={handleUpgrade}
+                    onRestore={handleRestorePurchases}
+                  />
+                )}
+                <SavedModal
+                  isOpen={showSavedModal}
+                  onClose={handleBackNavigation}
+                  savedItems={savedItems}
+                  onDelete={handleDeleteSaved}
+                />
+              </Suspense>
 
 
-            <nav className="flex justify-between items-center mb-8 md:mb-12">
-              <button onClick={handleLogout} className="px-3 py-1.5 text-xs md:text-sm text-white/40 hover:text-white hover:bg-white/5 rounded-lg transition-all uppercase tracking-widest font-medium border border-transparent hover:border-white/10 flex items-center gap-2 active:scale-95">
-                <span className="text-lg">←</span> <span>Logout</span>
-              </button>
-
-              <div className="flex items-center gap-2 md:gap-3">
-
-                <button onClick={handleOpenSaved} className="p-2 md:px-4 md:py-2 bg-white/5 hover:bg-white/10 rounded-full flex items-center gap-1.5 transition-all border border-white/5 active:scale-95">
-                  <span className="text-rose-500 text-base md:text-lg">♥</span>
-                  <span className="hidden md:inline text-xs font-bold text-white">Saved</span>
+              <nav className="flex justify-between items-center mb-8 md:mb-12">
+                <button onClick={handleLogout} className="px-3 py-1.5 text-xs md:text-sm text-white/40 hover:text-white hover:bg-white/5 rounded-lg transition-all uppercase tracking-widest font-medium border border-transparent hover:border-white/10 flex items-center gap-2 active:scale-95">
+                  <span className="text-lg">←</span> <span>Logout</span>
                 </button>
 
-                {!profile?.is_premium && (
-                  <button onClick={handleOpenPremium} className="hidden md:flex px-4 py-2 bg-gradient-to-r from-yellow-600 to-yellow-400 text-black text-xs font-bold rounded-full items-center gap-1 hover:brightness-110 transition-all active:scale-95">
-                    <span>👑</span> Go Premium
+                <div className="flex items-center gap-2 md:gap-3">
+
+                  <button onClick={handleOpenSaved} className="p-2 md:px-4 md:py-2 bg-white/5 hover:bg-white/10 rounded-full flex items-center gap-1.5 transition-all border border-white/5 active:scale-95">
+                    <span className="text-rose-500 text-base md:text-lg">♥</span>
+                    <span className="hidden md:inline text-xs font-bold text-white">Saved</span>
                   </button>
-                )}
 
-                <div
-                  onClick={() => showToast("Credits reset to 5 daily. Extra ad credits do not stack.", "info")}
-                  className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full border backdrop-blur-md cursor-pointer active:scale-95 transition-all ${profile?.is_premium ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-white/5 border-white/10'}`}
-                >
-                  <span className={profile?.is_premium ? "text-yellow-400 text-lg" : "text-yellow-400 text-lg"}>
-                    {profile?.is_premium ? '👑' : '⚡'}
-                  </span>
-                  <span className={`font-bold text-xs md:text-sm ${profile?.is_premium ? 'text-yellow-400' : 'text-white'}`}>
-                    {profile?.is_premium ? 'Unlimited' : `${profile?.credits} Credits`}
-                  </span>
-                </div>
-              </div>
-            </nav>
-
-            <header className="text-center mb-6 md:mb-8">
-              <div className="inline-block relative">
-                <h1 className="text-5xl md:text-7xl font-black mb-2 tracking-tighter bg-gradient-to-r from-rose-400 via-amber-200 to-rose-400 bg-clip-text text-transparent pb-2 animate-text-shimmer">
-                  Rizz Master
-                </h1>
-                {profile?.is_premium && <div className="absolute -top-4 -right-6 md:-right-8 rotate-12 bg-yellow-500 text-black font-bold text-[10px] md:text-xs px-2 py-1 rounded shadow-lg">PRO</div>}
-              </div>
-              <p className="text-white/60 text-sm md:text-xl font-light max-w-md mx-auto leading-relaxed">
-                Never send a boring text again.
-              </p>
-            </header>
-
-            {/* Main Mode Selection */}
-            <div className="flex gap-3 mb-6 max-w-lg mx-auto w-full select-none">
-              <button onClick={() => { setMode(InputMode.CHAT); if (textareaRef.current) textareaRef.current.value = ''; setImage(null); setResult(null); }} className={`flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 ${mode === InputMode.CHAT ? 'rizz-gradient text-white shadow-lg shadow-rose-500/20 shadow-purple-500/20' : 'bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10'}`}>Chat Reply</button>
-              <button onClick={() => { setMode(InputMode.BIO); if (textareaRef.current) textareaRef.current.value = ''; setImage(null); setResult(null); }} className={`flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 ${mode === InputMode.BIO ? 'rizz-gradient text-white shadow-lg shadow-rose-500/20 shadow-purple-500/20' : 'bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10'}`}>Profile Bio</button>
-              <button onClick={() => { handleViewNavigation('COACH'); }} className="flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 flex items-center justify-center gap-1.5">Rizz AI</button>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 items-start">
-              <section className="glass rounded-3xl p-5 md:p-6 border border-white/10 lg:sticky lg:top-8 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
-                <div className="mb-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="block text-xs font-bold text-white/50 uppercase tracking-widest">
-                      {mode === InputMode.CHAT ? 'The Context' : 'About You'}
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <button onClick={() => { if (textareaRef.current) textareaRef.current.value = ''; }} className="text-xs text-white/30 hover:text-white">Clear</button>
-                    </div>
-                  </div>
-                  <textarea
-                    ref={textareaRef}
-                    defaultValue={inputText}
-                    onChange={() => { if (inputError) setInputError(null); }}
-                    placeholder={mode === InputMode.CHAT ? "Paste chat. Get Rizz." : "Hobbies, job, vibes..."}
-                    className="w-full h-32 md:h-40 bg-black/40 border border-white/10 rounded-2xl p-4 text-sm md:text-base focus:ring-2 focus:ring-rose-500/50 focus:outline-none resize-none transition-all placeholder:text-white/20"
-                    style={{ fontSize: '16px' }}
-                  />
-                </div>
-
-                <div className="mb-6">
-                  <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-3">
-                    Select Vibe (Optional)
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {(mode === InputMode.CHAT ? VIBES_CHAT : VIBES_BIO).map((vibe) => (
-                      <button
-                        key={vibe.label}
-                        onClick={() => handleVibeClick(vibe)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all active:scale-95 flex items-center gap-1.5 ${selectedVibe === vibe.label
-                          ? 'bg-rose-500/20 border-rose-500 text-rose-300'
-                          : vibe.isPro && !profile?.is_premium
-                            ? 'bg-white/5 border-yellow-500/30 text-white/40 hover:bg-white/10'
-                            : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
-                          }`}
-                      >
-                        {vibe.label}
-                        {vibe.isPro && !profile?.is_premium && <span className="text-[10px]">🔒</span>}
-                        {vibe.isPro && profile?.is_premium && selectedVibe !== vibe.label && <span className="text-[10px] text-yellow-500">👑</span>}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mb-6">
-                  <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-3">
-                    Response Length
-                  </label>
-                  <div className="flex p-0.5 bg-white/5 rounded-xl border border-white/10 select-none w-fit">
-                    <button
-                      onClick={() => setResponseLength('short')}
-                      className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all min-w-[80px] ${responseLength === 'short' ? 'bg-rose-500 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
-                    >
-                      SHORT
+                  {!profile?.is_premium && (
+                    <button onClick={handleOpenPremium} className="hidden md:flex px-4 py-2 bg-gradient-to-r from-yellow-600 to-yellow-400 text-black text-xs font-bold rounded-full items-center gap-1 hover:brightness-110 transition-all active:scale-95">
+                      <span>👑</span> Go Premium
                     </button>
-                    <button
-                      onClick={() => setResponseLength('medium')}
-                      className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all min-w-[80px] ${responseLength === 'medium' ? 'bg-rose-500 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
-                    >
-                      MEDIUM
-                    </button>
-                    <button
-                      onClick={() => setResponseLength('long')}
-                      className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all min-w-[80px] ${responseLength === 'long' ? 'bg-rose-500 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
-                    >
-                      LONG
-                    </button>
-                  </div>
-                </div>
+                  )}
 
-                {mode === InputMode.CHAT && (
-                  <div className="mb-4 md:mb-6">
-                    <div className="grid grid-cols-2 gap-3 mb-3">
-                      <button
-                        onClick={handleCameraCapture}
-                        className="flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all active:scale-[0.98]"
-                      >
-                        <span className="text-xl">📸</span>
-                        <span className="text-sm font-bold text-white/80">Camera</span>
-                      </button>
-                      <button
-                        onClick={handleGalleryCapture}
-                        className="flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all active:scale-[0.98]"
-                      >
-                        <span className="text-xl">🖼️</span>
-                        <span className="text-sm font-bold text-white/80">Gallery</span>
-                      </button>
-                    </div>
-
-                    {image && (
-                      <div
-                        className="group border-2 border-dashed border-white/10 rounded-2xl transition-all p-2 relative"
-                      >
-                        <img src={image} alt="Preview" className="w-full max-h-48 object-contain rounded-lg mx-auto" />
-                        <button onClick={(e) => { e.stopPropagation(); setImage(null); }} className="absolute top-2 right-2 bg-black/80 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm border border-white/20">✕</button>
-                      </div>
-                    )}
-                    <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
-                  </div>
-                )}
-
-                {inputError && (
-                  <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-xl flex items-center justify-center gap-2 animate-pulse">
-                    <span className="text-lg">⚠️</span>
-                    <p className="text-sm text-red-200 font-medium">{inputError}</p>
-                  </div>
-                )}
-
-                {(profile?.is_premium || (profile?.credits || 0) > 0) ? (
-                  <button
-                    onClick={() => handleGenerate(textareaRef.current?.value || '')}
-                    disabled={loading}
-                    className={`w-full py-3.5 md:py-4 rounded-2xl font-bold text-base md:text-lg shadow-xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed ${profile?.is_premium
-                      ? "bg-gradient-to-r from-yellow-500 to-amber-600 text-black"
-                      : "rizz-gradient text-white"
-                      }`}
-                  >
-                    {loading ? (
-                      <span className="flex items-center justify-center gap-2 animate-pulse">
-                        <svg className={`animate-spin h-5 w-5 ${profile?.is_premium ? 'text-black' : 'text-white'}`} viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        {loadingMsg}
-                      </span>
-                    ) : (
-                      profile?.is_premium ? "Get Rizz (VIP)" : `Get Rizz (${(mode === InputMode.CHAT && image) ? 2 : 1} ⚡)`
-                    )}
-                  </button>
-                ) : (
-                  <div className="grid grid-cols-2 gap-3">
-                    <button onClick={handleWatchAd} disabled={isAdLoading !== 'hidden'} className="bg-white/10 border border-white/10 py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base hover:bg-white/20 active:scale-[0.98] transition-all flex flex-col items-center justify-center">
-                      {isAdLoading !== 'hidden' ? <span className="text-white/50 text-xs">Loading...</span> : <><span className="text-xl mb-1">📺</span> <span>Watch Ad (+5)</span></>}
-                    </button>
-                    <button onClick={handleOpenPremium} className="bg-gradient-to-r from-yellow-500 to-amber-600 text-black py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base shadow-xl hover:brightness-110 active:scale-[0.98] transition-all flex flex-col items-center justify-center animate-pulse">
-                      <span className="text-xl mb-1">👑</span> <span>Go Unlimited</span>
-                    </button>
-                  </div>
-                )}
-                {!profile?.is_premium && (
-                  <p
+                  <div
                     onClick={() => showToast("Credits reset to 5 daily. Extra ad credits do not stack.", "info")}
-                    className="text-center text-[10px] md:text-xs text-white/30 mt-3 md:mt-4 cursor-pointer hover:text-white transition-colors"
+                    className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full border backdrop-blur-md cursor-pointer active:scale-95 transition-all ${profile?.is_premium ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-white/5 border-white/10'}`}
                   >
-                    {profile?.credits} daily credits remaining. <span className="text-yellow-500/80 cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); handleOpenPremium(); }}>Upgrade.</span>
-                  </p>
-                )}
-              </section>
-
-              <section className="flex flex-col gap-4 md:gap-6 min-h-[300px]">
-                {!result && !loading && (
-                  <div className="h-full flex flex-col items-center justify-center text-white/20 py-6 px-4 text-center border-2 border-dashed border-white/5 rounded-3xl bg-white/[0.02] select-none">
-                    <span className="text-5xl md:text-6xl mb-4 grayscale opacity-50">✨</span>
-                    <p className="text-sm md:text-xl font-medium max-w-[200px] md:max-w-none mx-auto">Results will appear here.</p>
+                    <span className={profile?.is_premium ? "text-yellow-400 text-lg" : "text-yellow-400 text-lg"}>
+                      {profile?.is_premium ? '👑' : '⚡'}
+                    </span>
+                    <span className={`font-bold text-xs md:text-sm ${profile?.is_premium ? 'text-yellow-400' : 'text-white'}`}>
+                      {profile?.is_premium ? 'Unlimited' : `${profile?.credits} Credits`}
+                    </span>
                   </div>
-                )}
-
-                {result && 'tease' in result && (
-                  <>
-                    <div className="glass rounded-3xl p-5 md:p-6 border border-white/10 animate-fade-in-up">
-                      <div className="flex justify-between items-center mb-3">
-                        <h3 className="text-xs font-bold uppercase tracking-widest text-white/40">Analysis</h3>
-                        <span className="text-2xl md:text-3xl font-black text-white">{result.loveScore}%</span>
-                      </div>
-                      <div className="mb-4">
-                        <div className="text-xl md:text-2xl font-black text-rose-500 uppercase italic leading-none">{result.potentialStatus}</div>
-                      </div>
-                      <div className="relative h-3 md:h-4 bg-black/40 rounded-full overflow-hidden border border-white/5">
-                        <div className="absolute top-0 left-0 h-full rizz-gradient transition-all duration-1000 ease-out" style={{ width: `${result.loveScore}%` }}></div>
-                      </div>
-                      {result.analysis && <p className="mt-4 text-xs md:text-sm text-white/60 leading-relaxed border-t border-white/5 pt-3">{result.analysis}</p>}
-                    </div>
-
-                    <div className="grid gap-3 md:gap-4 pb-6">
-                      <RizzCard label="Tease" content={result.tease} icon="😏" color="from-purple-500 to-indigo-500" isSaved={isSaved(result.tease)} type="tease" onSave={handleSaveWrapper} onReport={handleReport} delay={0.1} />
-                      <RizzCard label="Smooth" content={result.smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved(result.smooth)} type="smooth" onSave={handleSaveWrapper} onReport={handleReport} delay={0.2} />
-                      <RizzCard label="Chaotic" content={result.chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved(result.chaotic)} type="chaotic" onSave={handleSaveWrapper} onReport={handleReport} delay={0.3} />
-                    </div>
-                  </>
-                )}
-
-                {result && 'bio' in result && (
-                  <div className="glass rounded-3xl p-6 md:p-8 border border-white/10 animate-fade-in-up pb-6">
-                    <div className="flex items-center gap-2 mb-4 md:mb-6">
-                      <span className="text-2xl">📝</span>
-                      <h3 className="text-xs md:text-sm font-semibold uppercase tracking-widest text-white/60">Bio Result</h3>
-                      <div className="ml-auto flex gap-2">
-                        <button onClick={() => { NativeBridge.copyToClipboard(result.bio); showToast('Bio copied!', 'success'); }} className="p-2 rounded-full hover:bg-white/10 transition-all text-white/50 hover:text-white"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg></button>
-                        <button onClick={() => toggleSave(result.bio, 'bio')} className={`p-2 rounded-full hover:bg-white/10 transition-all ${isSaved(result.bio) ? 'text-rose-500' : 'text-white/50 hover:text-rose-400'}`}><svg className="w-5 h-5" fill={isSaved(result.bio) ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg></button>
-                      </div>
-                    </div>
-                    <p className="text-lg md:text-xl leading-relaxed font-medium mb-6 md:mb-8 text-white">{result.bio}</p>
-                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5 mb-4"><h4 className="text-[10px] uppercase font-bold text-rose-400 mb-1">Why it works</h4><p className="text-xs md:text-sm text-white/60">{result.analysis}</p></div>
-                    <button onClick={() => { NativeBridge.copyToClipboard(result.bio); showToast('Bio copied!', 'success'); }} className="w-full py-3 border border-white/20 rounded-xl hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2"><span>📋</span> Copy Bio</button>
-                  </div>
-                )}
-              </section>
-            </div>
-
-            {/* Sticky Ad Container (WEB ONLY) - Hidden on Native to prevent overlap */}
-            {!profile?.is_premium && !Capacitor.isNativePlatform() && (
-              <div className="fixed bottom-0 left-0 right-0 z-40 bg-black/90 backdrop-blur-md border-t border-white/10 pb-[env(safe-area-inset-bottom)] pt-2 animate-slide-up-fade">
-                <div className="max-w-md mx-auto px-2">
-                  <AdSenseBanner
-                    dataAdSlot={ADSENSE_SLOT_ID}
-                    className="!my-0 !min-h-[50px] !bg-transparent !border-none"
-                  />
                 </div>
-              </div>
-            )}
+              </nav>
 
-            <Footer className="mt-2 md:mt-4" onNavigate={handleViewNavigation} />
-          </div>
-        )}
+              <header className="text-center mb-6 md:mb-8">
+                <div className="inline-block relative">
+                  <h1 className="text-5xl md:text-7xl font-black mb-2 tracking-tighter bg-gradient-to-r from-rose-400 via-amber-200 to-rose-400 bg-clip-text text-transparent pb-2 animate-text-shimmer">
+                    Rizz Master
+                  </h1>
+                  {profile?.is_premium && <div className="absolute -top-4 -right-6 md:-right-8 rotate-12 bg-yellow-500 text-black font-bold text-[10px] md:text-xs px-2 py-1 rounded shadow-lg">PRO</div>}
+                </div>
+                <p className="text-white/60 text-sm md:text-xl font-light max-w-md mx-auto leading-relaxed">
+                  Never send a boring text again.
+                </p>
+              </header>
+
+              {/* Main Mode Selection */}
+              <div className="flex gap-3 mb-6 max-w-lg mx-auto w-full select-none">
+                <button onClick={() => { setMode(InputMode.CHAT); if (textareaRef.current) textareaRef.current.value = ''; setImage(null); setResult(null); }} className={`flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 ${mode === InputMode.CHAT ? 'rizz-gradient text-white shadow-lg shadow-rose-500/20 shadow-purple-500/20' : 'bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10'}`}>Chat Reply</button>
+                <button onClick={() => { setMode(InputMode.BIO); if (textareaRef.current) textareaRef.current.value = ''; setImage(null); setResult(null); }} className={`flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 ${mode === InputMode.BIO ? 'rizz-gradient text-white shadow-lg shadow-rose-500/20 shadow-purple-500/20' : 'bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10'}`}>Profile Bio</button>
+                <button onClick={() => { handleViewNavigation('COACH'); }} className="flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 flex items-center justify-center gap-1.5">Rizz AI</button>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 items-start">
+                <section className="glass rounded-3xl p-5 md:p-6 border border-white/10 lg:sticky lg:top-8 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
+                  <div className="mb-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-xs font-bold text-white/50 uppercase tracking-widest">
+                        {mode === InputMode.CHAT ? 'The Context' : 'About You'}
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <button onClick={() => { if (textareaRef.current) textareaRef.current.value = ''; }} className="text-xs text-white/30 hover:text-white">Clear</button>
+                      </div>
+                    </div>
+                    <textarea
+                      ref={textareaRef}
+                      defaultValue={inputText}
+                      onChange={() => { if (inputError) setInputError(null); }}
+                      placeholder={mode === InputMode.CHAT ? "Paste chat. Get Rizz." : "Hobbies, job, vibes..."}
+                      className="w-full h-32 md:h-40 bg-black/40 border border-white/10 rounded-2xl p-4 text-sm md:text-base focus:ring-2 focus:ring-rose-500/50 focus:outline-none resize-none transition-all placeholder:text-white/20"
+                      style={{ fontSize: '16px' }}
+                    />
+                  </div>
+
+                  <div className="mb-6">
+                    <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-3">
+                      Select Vibe (Optional)
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {(mode === InputMode.CHAT ? VIBES_CHAT : VIBES_BIO).map((vibe) => (
+                        <button
+                          key={vibe.label}
+                          onClick={() => handleVibeClick(vibe)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all active:scale-95 flex items-center gap-1.5 ${selectedVibe === vibe.label
+                            ? 'bg-rose-500/20 border-rose-500 text-rose-300'
+                            : vibe.isPro && !profile?.is_premium
+                              ? 'bg-white/5 border-yellow-500/30 text-white/40 hover:bg-white/10'
+                              : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+                            }`}
+                        >
+                          {vibe.label}
+                          {vibe.isPro && !profile?.is_premium && <span className="text-[10px]">🔒</span>}
+                          {vibe.isPro && profile?.is_premium && selectedVibe !== vibe.label && <span className="text-[10px] text-yellow-500">👑</span>}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mb-6">
+                    <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-3">
+                      Response Length
+                    </label>
+                    <div className="flex p-0.5 bg-white/5 rounded-xl border border-white/10 select-none w-fit">
+                      <button
+                        onClick={() => setResponseLength('short')}
+                        className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all min-w-[80px] ${responseLength === 'short' ? 'bg-rose-500 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
+                      >
+                        SHORT
+                      </button>
+                      <button
+                        onClick={() => setResponseLength('medium')}
+                        className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all min-w-[80px] ${responseLength === 'medium' ? 'bg-rose-500 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
+                      >
+                        MEDIUM
+                      </button>
+                      <button
+                        onClick={() => setResponseLength('long')}
+                        className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all min-w-[80px] ${responseLength === 'long' ? 'bg-rose-500 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
+                      >
+                        LONG
+                      </button>
+                    </div>
+                  </div>
+
+                  {mode === InputMode.CHAT && (
+                    <div className="mb-4 md:mb-6">
+                      <div className="grid grid-cols-2 gap-3 mb-3">
+                        <button
+                          onClick={handleCameraCapture}
+                          className="flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all active:scale-[0.98]"
+                        >
+                          <span className="text-xl">📸</span>
+                          <span className="text-sm font-bold text-white/80">Camera</span>
+                        </button>
+                        <button
+                          onClick={handleGalleryCapture}
+                          className="flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all active:scale-[0.98]"
+                        >
+                          <span className="text-xl">🖼️</span>
+                          <span className="text-sm font-bold text-white/80">Gallery</span>
+                        </button>
+                      </div>
+
+                      {image && (
+                        <div
+                          className="group border-2 border-dashed border-white/10 rounded-2xl transition-all p-2 relative"
+                        >
+                          <img src={image} alt="Preview" className="w-full max-h-48 object-contain rounded-lg mx-auto" />
+                          <button onClick={(e) => { e.stopPropagation(); setImage(null); }} className="absolute top-2 right-2 bg-black/80 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm border border-white/20">✕</button>
+                        </div>
+                      )}
+                      <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
+                    </div>
+                  )}
+
+                  {inputError && (
+                    <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-xl flex items-center justify-center gap-2 animate-pulse">
+                      <span className="text-lg">⚠️</span>
+                      <p className="text-sm text-red-200 font-medium">{inputError}</p>
+                    </div>
+                  )}
+
+                  {(profile?.is_premium || (profile?.credits || 0) > 0) ? (
+                    <button
+                      onClick={() => handleGenerate(textareaRef.current?.value || '')}
+                      disabled={loading}
+                      className={`w-full py-3.5 md:py-4 rounded-2xl font-bold text-base md:text-lg shadow-xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed ${profile?.is_premium
+                        ? "bg-gradient-to-r from-yellow-500 to-amber-600 text-black"
+                        : "rizz-gradient text-white"
+                        }`}
+                    >
+                      {loading ? (
+                        <span className="flex items-center justify-center gap-2 animate-pulse">
+                          <svg className={`animate-spin h-5 w-5 ${profile?.is_premium ? 'text-black' : 'text-white'}`} viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                          {loadingMsg}
+                        </span>
+                      ) : (
+                        profile?.is_premium ? "Get Rizz (VIP)" : `Get Rizz (${(mode === InputMode.CHAT && image) ? 2 : 1} ⚡)`
+                      )}
+                    </button>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3">
+                      <button onClick={handleWatchAd} disabled={isAdLoading !== 'hidden'} className="bg-white/10 border border-white/10 py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base hover:bg-white/20 active:scale-[0.98] transition-all flex flex-col items-center justify-center">
+                        {isAdLoading !== 'hidden' ? <span className="text-white/50 text-xs">Loading...</span> : <><span className="text-xl mb-1">📺</span> <span>Watch Ad (+5)</span></>}
+                      </button>
+                      <button onClick={handleOpenPremium} className="bg-gradient-to-r from-yellow-500 to-amber-600 text-black py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base shadow-xl hover:brightness-110 active:scale-[0.98] transition-all flex flex-col items-center justify-center animate-pulse">
+                        <span className="text-xl mb-1">👑</span> <span>Go Unlimited</span>
+                      </button>
+                    </div>
+                  )}
+                  {!profile?.is_premium && (
+                    <p
+                      onClick={() => showToast("Credits reset to 5 daily. Extra ad credits do not stack.", "info")}
+                      className="text-center text-[10px] md:text-xs text-white/30 mt-3 md:mt-4 cursor-pointer hover:text-white transition-colors"
+                    >
+                      {profile?.credits} daily credits remaining. <span className="text-yellow-500/80 cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); handleOpenPremium(); }}>Upgrade.</span>
+                    </p>
+                  )}
+                </section>
+
+                <section className="flex flex-col gap-4 md:gap-6 min-h-[300px]">
+                  {!result && !loading && (
+                    <div className="h-full flex flex-col items-center justify-center text-white/20 py-6 px-4 text-center border-2 border-dashed border-white/5 rounded-3xl bg-white/[0.02] select-none">
+                      <span className="text-5xl md:text-6xl mb-4 grayscale opacity-50">✨</span>
+                      <p className="text-sm md:text-xl font-medium max-w-[200px] md:max-w-none mx-auto">Results will appear here.</p>
+                    </div>
+                  )}
+
+                  {result && 'tease' in result && (
+                    <>
+                      <div className="glass rounded-3xl p-5 md:p-6 border border-white/10 animate-fade-in-up">
+                        <div className="flex justify-between items-center mb-3">
+                          <h3 className="text-xs font-bold uppercase tracking-widest text-white/40">Analysis</h3>
+                          <span className="text-2xl md:text-3xl font-black text-white">{result.loveScore}%</span>
+                        </div>
+                        <div className="mb-4">
+                          <div className="text-xl md:text-2xl font-black text-rose-500 uppercase italic leading-none">{result.potentialStatus}</div>
+                        </div>
+                        <div className="relative h-3 md:h-4 bg-black/40 rounded-full overflow-hidden border border-white/5">
+                          <div className="absolute top-0 left-0 h-full rizz-gradient transition-all duration-1000 ease-out" style={{ width: `${result.loveScore}%` }}></div>
+                        </div>
+                        {result.analysis && <p className="mt-4 text-xs md:text-sm text-white/60 leading-relaxed border-t border-white/5 pt-3">{result.analysis}</p>}
+                      </div>
+
+                      <div className="grid gap-3 md:gap-4 pb-6">
+                        <RizzCard label="Tease" content={result.tease} icon="😏" color="from-purple-500 to-indigo-500" isSaved={isSaved(result.tease)} type="tease" onSave={handleSaveWrapper} onReport={handleReport} delay={0.1} />
+                        <RizzCard label="Smooth" content={result.smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved(result.smooth)} type="smooth" onSave={handleSaveWrapper} onReport={handleReport} delay={0.2} />
+                        <RizzCard label="Chaotic" content={result.chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved(result.chaotic)} type="chaotic" onSave={handleSaveWrapper} onReport={handleReport} delay={0.3} />
+                      </div>
+                    </>
+                  )}
+
+                  {result && 'bio' in result && (
+                    <div className="glass rounded-3xl p-6 md:p-8 border border-white/10 animate-fade-in-up pb-6">
+                      <div className="flex items-center gap-2 mb-4 md:mb-6">
+                        <span className="text-2xl">📝</span>
+                        <h3 className="text-xs md:text-sm font-semibold uppercase tracking-widest text-white/60">Bio Result</h3>
+                        <div className="ml-auto flex gap-2">
+                          <button onClick={() => { NativeBridge.copyToClipboard(result.bio); showToast('Bio copied!', 'success'); }} className="p-2 rounded-full hover:bg-white/10 transition-all text-white/50 hover:text-white"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg></button>
+                          <button onClick={() => toggleSave(result.bio, 'bio')} className={`p-2 rounded-full hover:bg-white/10 transition-all ${isSaved(result.bio) ? 'text-rose-500' : 'text-white/50 hover:text-rose-400'}`}><svg className="w-5 h-5" fill={isSaved(result.bio) ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg></button>
+                        </div>
+                      </div>
+                      <p className="text-lg md:text-xl leading-relaxed font-medium mb-6 md:mb-8 text-white">{result.bio}</p>
+                      <div className="p-4 bg-white/5 rounded-2xl border border-white/5 mb-4"><h4 className="text-[10px] uppercase font-bold text-rose-400 mb-1">Why it works</h4><p className="text-xs md:text-sm text-white/60">{result.analysis}</p></div>
+                      <button onClick={() => { NativeBridge.copyToClipboard(result.bio); showToast('Bio copied!', 'success'); }} className="w-full py-3 border border-white/20 rounded-xl hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2"><span>📋</span> Copy Bio</button>
+                    </div>
+                  )}
+                </section>
+              </div>
+
+              {/* Sticky Ad Container (WEB ONLY) - Hidden on Native to prevent overlap */}
+              {!profile?.is_premium && !Capacitor.isNativePlatform() && (
+                <div className="fixed bottom-0 left-0 right-0 z-40 bg-black/90 backdrop-blur-md border-t border-white/10 pb-[env(safe-area-inset-bottom)] pt-2 animate-slide-up-fade">
+                  <div className="max-w-md mx-auto px-2">
+                    <AdSenseBanner
+                      dataAdSlot={ADSENSE_SLOT_ID}
+                      className="!my-0 !min-h-[50px] !bg-transparent !border-none"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <Footer className="mt-2 md:mt-4" onNavigate={handleViewNavigation} />
+            </div>
+          )}
       </div>
     </div>
   );
