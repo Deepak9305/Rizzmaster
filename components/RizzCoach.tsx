@@ -204,7 +204,14 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
     useEffect(() => {
         if (scrollRef.current) {
             const behavior = isFirstMount.current ? 'auto' : 'smooth';
-            scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior });
+            // Wrap in requestAnimationFrame for smoother sync with browser paint cycles
+            const requestScroll = () => {
+                if (scrollRef.current) {
+                    scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior });
+                }
+            };
+            requestAnimationFrame(requestScroll);
+
             if (isFirstMount.current && messages.length > 0) {
                 isFirstMount.current = false;
             }
@@ -357,20 +364,25 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
             <div style={{
                 position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column',
                 background: '#050505', zIndex: 100,
+                willChange: 'transform', // HW acceleration hint for the whole container
             }}>
                 {/* Aurora blobs */}
                 <div aria-hidden style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
                     <div style={{
                         position: 'absolute', width: '70%', height: '70%', top: '-15%', left: '-15%', borderRadius: '50%',
                         background: `radial-gradient(circle, ${currentTheme.colors.background} 0%, transparent 70%)`,
-                        filter: 'blur(60px)', animation: 'coachAurora 18s ease-in-out infinite',
-                        willChange: 'transform', transition: 'background 1.5s ease-in-out'
+                        filter: 'blur(45px)', animation: 'coachAurora 18s ease-in-out infinite',
+                        willChange: 'transform', transition: 'background 1.5s ease-in-out',
+                        transform: 'translateZ(0)', // Force GPU layer
+                        backfaceVisibility: 'hidden'
                     }} />
                     <div style={{
                         position: 'absolute', width: '60%', height: '60%', bottom: '10%', right: '-10%', borderRadius: '50%',
                         background: `radial-gradient(circle, ${currentTheme.colors.secondary}14 0%, transparent 70%)`,
-                        filter: 'blur(60px)', animation: 'coachAurora 22s ease-in-out 5s infinite reverse',
-                        willChange: 'transform', transition: 'background 1.5s ease-in-out'
+                        filter: 'blur(45px)', animation: 'coachAurora 22s ease-in-out 5s infinite reverse',
+                        willChange: 'transform', transition: 'background 1.5s ease-in-out',
+                        transform: 'translateZ(0)', // Force GPU layer
+                        backfaceVisibility: 'hidden'
                     }} />
                 </div>
 
