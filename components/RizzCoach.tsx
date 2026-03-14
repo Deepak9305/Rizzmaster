@@ -223,6 +223,10 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
     const fileInputRef = useRef<HTMLInputElement>(null);
     const isFirstMount = useRef(true);
 
+    const handleReportMessage = useCallback(() => {
+        showToast("Report received! We'll review this. 🤝", 'success');
+    }, [showToast]);
+
     useEffect(() => {
         if (scrollRef.current) {
             const behavior = isFirstMount.current ? 'auto' : 'smooth';
@@ -557,7 +561,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                             <MessageBubble
                                 key={i}
                                 msg={msg}
-                                onReport={useCallback(() => showToast("Report received! We'll review this. 🤝", 'success'), [showToast])}
+                                onReport={handleReportMessage}
                                 icon={currentTheme.icon}
                                 colors={currentTheme.colors}
                             />
