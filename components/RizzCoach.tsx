@@ -49,7 +49,7 @@ const COACH_VIBES = [
     },
     {
         label: "Bestie", isPro: false, icon: "💅",
-        welcome: "Hey! Your Bestie is here to spill the tea. I'll tell you exactly what they're thinking. First off—are you a guy or a girl? 💅",
+        welcome: "Hey! Your Bestie is here to spill the tea. I'll tell you exactly what they're thinking. 💅",
         colors: { primary: '#Ec4899', secondary: '#8B5CF6', background: 'rgba(236,72,153,0.13)', glow: 'rgba(236,72,153,0.3)' }
     },
     {
