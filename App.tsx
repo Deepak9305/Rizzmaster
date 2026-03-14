@@ -232,6 +232,7 @@ const AppContentInner: React.FC = () => {
   // Refs
   const profileRef = useRef<UserProfile | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const sessionChannelRef = useRef<BroadcastChannel | null>(null);
 
   // Splash State
@@ -1153,15 +1154,17 @@ const AppContentInner: React.FC = () => {
 
   // Active Time tracking handles the grace period now (see useEffect above)
 
-  const handleGenerate = useCallback(async () => {
+  const handleGenerate = useCallback(async (textToProcess?: string) => {
     const currentProfile = profileRef.current;
     if (!currentProfile) return;
 
-    if (mode === InputMode.CHAT && !inputText.trim() && !image) {
+    const text = typeof textToProcess === 'string' ? textToProcess : inputText;
+
+    if (mode === InputMode.CHAT && !text.trim() && !image) {
       setInputError("Give me some context! Paste the chat or upload a screenshot.");
       return;
     }
-    if (mode === InputMode.BIO && !inputText.trim()) {
+    if (mode === InputMode.BIO && !text.trim()) {
       setInputError("I can't write a bio for a ghost! Tell me about your hobbies, job, or vibes.");
       return;
     }
@@ -1187,9 +1190,9 @@ const AppContentInner: React.FC = () => {
 
       let res;
       if (mode === InputMode.CHAT) {
-        res = await generateRizz(inputText, image || undefined, selectedVibe || undefined, responseLength);
+        res = await generateRizz(text, image || undefined, selectedVibe || undefined, responseLength);
       } else {
-        res = await generateBio(inputText, selectedVibe || undefined, responseLength);
+        res = await generateBio(text, selectedVibe || undefined, responseLength);
       }
 
       if ('potentialStatus' in res && (res.potentialStatus === 'Error' || res.potentialStatus === 'Blocked')) {
@@ -1489,8 +1492,8 @@ const AppContentInner: React.FC = () => {
 
             {/* Main Mode Selection */}
             <div className="flex gap-3 mb-6 max-w-lg mx-auto w-full select-none">
-              <button onClick={() => { setMode(InputMode.CHAT); clear(); }} className={`flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 ${mode === InputMode.CHAT ? 'rizz-gradient text-white shadow-lg shadow-rose-500/20 shadow-purple-500/20' : 'bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10'}`}>Chat Reply</button>
-              <button onClick={() => { setMode(InputMode.BIO); clear(); }} className={`flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 ${mode === InputMode.BIO ? 'rizz-gradient text-white shadow-lg shadow-rose-500/20 shadow-purple-500/20' : 'bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10'}`}>Profile Bio</button>
+              <button onClick={() => { setMode(InputMode.CHAT); if (textareaRef.current) textareaRef.current.value = ''; setImage(null); setResult(null); }} className={`flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 ${mode === InputMode.CHAT ? 'rizz-gradient text-white shadow-lg shadow-rose-500/20 shadow-purple-500/20' : 'bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10'}`}>Chat Reply</button>
+              <button onClick={() => { setMode(InputMode.BIO); if (textareaRef.current) textareaRef.current.value = ''; setImage(null); setResult(null); }} className={`flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 ${mode === InputMode.BIO ? 'rizz-gradient text-white shadow-lg shadow-rose-500/20 shadow-purple-500/20' : 'bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10'}`}>Profile Bio</button>
               <button onClick={() => { handleViewNavigation('COACH'); }} className="flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 flex items-center justify-center gap-1.5">Rizz AI</button>
             </div>
 
@@ -1502,14 +1505,13 @@ const AppContentInner: React.FC = () => {
                       {mode === InputMode.CHAT ? 'The Context' : 'About You'}
                     </label>
                     <div className="flex items-center gap-3">
-                      {inputText.length > 0 && (
-                        <button onClick={() => setInputText('')} className="text-xs text-white/30 hover:text-white">Clear</button>
-                      )}
+                      <button onClick={() => { if (textareaRef.current) textareaRef.current.value = ''; }} className="text-xs text-white/30 hover:text-white">Clear</button>
                     </div>
                   </div>
                   <textarea
-                    value={inputText}
-                    onChange={(e) => { setInputText(e.target.value); if (inputError) setInputError(null); }}
+                    ref={textareaRef}
+                    defaultValue={inputText}
+                    onChange={() => { if (inputError) setInputError(null); }}
                     placeholder={mode === InputMode.CHAT ? "Paste chat. Get Rizz." : "Hobbies, job, vibes..."}
                     className="w-full h-32 md:h-40 bg-black/40 border border-white/10 rounded-2xl p-4 text-sm md:text-base focus:ring-2 focus:ring-rose-500/50 focus:outline-none resize-none transition-all placeholder:text-white/20"
                     style={{ fontSize: '16px' }}
@@ -1606,7 +1608,7 @@ const AppContentInner: React.FC = () => {
 
                 {(profile?.is_premium || (profile?.credits || 0) > 0) ? (
                   <button
-                    onClick={handleGenerate}
+                    onClick={() => handleGenerate(textareaRef.current?.value || '')}
                     disabled={loading}
                     className={`w-full py-3.5 md:py-4 rounded-2xl font-bold text-base md:text-lg shadow-xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed ${profile?.is_premium
                       ? "bg-gradient-to-r from-yellow-500 to-amber-600 text-black"

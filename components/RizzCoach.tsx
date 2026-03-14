@@ -110,7 +110,8 @@ const MessageBubble = React.memo(({ msg, onReport, icon, colors }: MsgProps) => 
                 display: 'flex', alignItems: 'flex-end', gap: '0.5rem',
                 justifyContent: isUser ? 'flex-end' : 'flex-start',
                 animation: 'coachEntrance 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both',
-                position: 'relative'
+                position: 'relative',
+                transform: 'translateZ(0)', // GPU promotion
             }}
         >
             {!isUser && (
@@ -172,6 +173,27 @@ const MessageBubble = React.memo(({ msg, onReport, icon, colors }: MsgProps) => 
         </div>
     );
 });
+
+const AuroraBackground = React.memo(({ colors }: { colors: any }) => (
+    <div aria-hidden style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+        <div style={{
+            position: 'absolute', width: '70%', height: '70%', top: '-15%', left: '-15%', borderRadius: '50%',
+            background: `radial-gradient(circle, ${colors.background} 0%, transparent 70%)`,
+            filter: 'blur(45px)', animation: 'coachAurora 18s ease-in-out infinite',
+            willChange: 'transform', transition: 'background 1.5s ease-in-out',
+            transform: 'translateZ(0)',
+            backfaceVisibility: 'hidden'
+        }} />
+        <div style={{
+            position: 'absolute', width: '60%', height: '60%', bottom: '10%', right: '-10%', borderRadius: '50%',
+            background: `radial-gradient(circle, ${colors.secondary}14 0%, transparent 70%)`,
+            filter: 'blur(45px)', animation: 'coachAurora 22s ease-in-out 5s infinite reverse',
+            willChange: 'transform', transition: 'background 1.5s ease-in-out',
+            transform: 'translateZ(0)',
+            backfaceVisibility: 'hidden'
+        }} />
+    </div>
+));
 
 const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdateCredits, isPremium, onWatchAd, onGoPremium }) => {
     const { showToast } = useToast();
@@ -364,27 +386,9 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
             <div style={{
                 position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column',
                 background: '#050505', zIndex: 100,
-                willChange: 'transform', // HW acceleration hint for the whole container
+                willChange: 'transform',
             }}>
-                {/* Aurora blobs */}
-                <div aria-hidden style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-                    <div style={{
-                        position: 'absolute', width: '70%', height: '70%', top: '-15%', left: '-15%', borderRadius: '50%',
-                        background: `radial-gradient(circle, ${currentTheme.colors.background} 0%, transparent 70%)`,
-                        filter: 'blur(45px)', animation: 'coachAurora 18s ease-in-out infinite',
-                        willChange: 'transform', transition: 'background 1.5s ease-in-out',
-                        transform: 'translateZ(0)', // Force GPU layer
-                        backfaceVisibility: 'hidden'
-                    }} />
-                    <div style={{
-                        position: 'absolute', width: '60%', height: '60%', bottom: '10%', right: '-10%', borderRadius: '50%',
-                        background: `radial-gradient(circle, ${currentTheme.colors.secondary}14 0%, transparent 70%)`,
-                        filter: 'blur(45px)', animation: 'coachAurora 22s ease-in-out 5s infinite reverse',
-                        willChange: 'transform', transition: 'background 1.5s ease-in-out',
-                        transform: 'translateZ(0)', // Force GPU layer
-                        backfaceVisibility: 'hidden'
-                    }} />
-                </div>
+                <AuroraBackground colors={currentTheme.colors} />
 
                 {/* Header */}
                 <div style={{
@@ -553,7 +557,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                             <MessageBubble
                                 key={i}
                                 msg={msg}
-                                onReport={() => showToast("Report received! We'll review this. 🤝", 'success')}
+                                onReport={useCallback(() => showToast("Report received! We'll review this. 🤝", 'success'), [showToast])}
                                 icon={currentTheme.icon}
                                 colors={currentTheme.colors}
                             />
