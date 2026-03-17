@@ -16,8 +16,7 @@ const llamaClient = new OpenAI({
 });
 
 // Model Configuration
-const VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
-const TEXT_MODEL = 'llama-3.1-8b-instant';
+const MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
 
 // --- LOCAL PRE-FILTERS ---
 
@@ -200,7 +199,7 @@ CRITICAL: ${length === 'short'
     if (image) {
       try {
         const visionCompletion = await llamaClient.chat.completions.create({
-          model: VISION_MODEL,
+          model: MODEL,
           messages: [
             {
               role: "system",
@@ -243,7 +242,7 @@ CRITICAL: ${length === 'short'
     while (attempts < 2) {
       try {
         const completion = await llamaClient.chat.completions.create({
-          model: TEXT_MODEL,
+          model: MODEL,
           messages: messages,
           temperature: 0.75,
           max_tokens: 1000,
@@ -338,7 +337,7 @@ CRITICAL: ${length === 'short'
 
   try {
     const completion = await llamaClient.chat.completions.create({
-      model: TEXT_MODEL,
+      model: MODEL,
       messages: [
         { role: "system", content: systemInstruction },
         { role: "user", content: isUnsafe ? "Generate roast." : inputText }
@@ -473,7 +472,7 @@ Carry over all existing intel and update it when new facts emerge.`;
   if (lastRawMessage?.image) {
     try {
       const visionCompletion = await llamaClient.chat.completions.create({
-        model: VISION_MODEL,
+        model: MODEL,
         messages: [
           {
             role: "system",
@@ -519,7 +518,7 @@ Carry over all existing intel and update it when new facts emerge.`;
 
   try {
     const completion = await llamaClient.chat.completions.create({
-      model: TEXT_MODEL,
+      model: MODEL,
       messages: [{ role: 'system', content: systemInstruction }, ...formatted],
       temperature: 0.75,
       max_tokens: 650,
