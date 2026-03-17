@@ -1312,7 +1312,7 @@ const AppContentInner: React.FC = () => {
                 updateCredits((prevCredits) => prevCredits + 5);
                 showToast(`+5 Bonus Credits! 🥷`, 'success');
               } else {
-                showToast('Reward not earned.', 'info');
+                showToast('Ad failed to load. Please try again later.', 'error');
               }
             } catch (e) {
               console.warn("Chained bonus ad error:", e);
@@ -1320,7 +1320,7 @@ const AppContentInner: React.FC = () => {
             }
           }
         } else {
-          showToast('Ad dismissed or failed to load.', 'info');
+          showToast('Ad failed to load. Please try again later.', 'error');
         }
       } catch (e) {
         console.warn("Native Ad Error:", e);
