@@ -454,11 +454,15 @@ SHADOW INTEL (Your persistent Dossier on the user):
 ${shadowNotes || 'No intel yet — start gathering facts as the user shares.'}
 
 INTEL UPDATE PROTOCOL:
-After your response, append the dossier block (<<<INTEL_START>>> ... <<<INTEL_END>>>).
-Always organize intel into these headers inside the block:
+1. First, write your character's natural reply.
+2. Then, on a NEW LINE at the very end of your message, append the dossier block EXACTLY like this:
+<<<INTEL_START>>>
 [USER]: Gender, goals, style (e.g., "Guy, wants LTR, flirty style").
 [TARGET]: Personality, red flags, interest level (e.g., "Girl, low interest, bad texter").
 [SITUATION]: Match status, current vibe (e.g., "Just matched on Hinge, dry convo").
+<<<INTEL_END>>>
+
+CRITICAL: Do NOT write "Here is the intel:" or any conversational filler before or after the intel block. The block MUST start exactly with <<<INTEL_START>>> and end with <<<INTEL_END>>>.
 Carry over all existing intel and update it when new facts emerge.`;
   }
 
@@ -527,11 +531,18 @@ Carry over all existing intel and update it when new facts emerge.`;
     const rawReply = completion.choices[0]?.message?.content?.trim();
     if (!rawReply) throw new Error('No coach response');
 
-    // Strip the hidden intel dossier block before showing to user
-    const INTEL_RE = new RegExp('<<<INTEL_START>>>([^]*?)<<<INTEL_END>>>');
+    // Strip the hidden intel dossier block before showing to user, handling potential formatting issues from the model
+    // This regex looks for <<<INTEL_START>>>, takes everything until <<<INTEL_END>>> or the end of the string.
+    // It also handles optional markdown codeblocks often added by AI
+    const INTEL_RE = /(?:```(?:markdown|text)?\n?)?<<<INTEL_START>>>([\s\S]*?)(?:<<<INTEL_END>>>|$)(?:\n?```)?/i;
     const intelMatch = rawReply.match(INTEL_RE);
     const updatedNotes = intelMatch ? intelMatch[1].trim() : undefined;
-    const cleanReply = rawReply.replace(INTEL_RE, '').trim();
+
+    // Remove the entirely matched block
+    let cleanReply = rawReply.replace(INTEL_RE, '').trim();
+
+    // Sometimes the AI might still add filler like "Here is the updated intel:", let's strip common trailing filler
+    cleanReply = cleanReply.replace(/(?:\n|^)(?:Here is the updated intel|Updated Intel|Shadow Intel|Here is the intel).*:?\s*$/i, '').trim();
 
     return { reply: sanitizeText(cleanReply), updatedNotes };
   } catch (error) {
