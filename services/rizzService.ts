@@ -173,9 +173,9 @@ Return ONLY raw JSON.`;
   } else {
     systemInstruction = `User will provide you messages you will give replies as the user, so he can copy them and send to target. Vibe: ${vibe || "Playful"}.
 
-TEASE: A charming and playful reply, show affection, don't be mean. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
+TEASE: Be charming, playful reply, show affection. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
  
-SMOOTH: A charismatic reply for the user to send that improves bonding and shows emotional intelligence. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
+SMOOTH: A charismatic smooth reply for the user to send that improves bonding. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
  
 CHAOTIC: A funny, absurdity-filled reply for the user to send. Take a tiny detail and exaggerate it. PG-13, no confusing Gen-Z slang. ${length === 'short' ? '1-2 lines' : length === 'medium' ? '2-3 lines' : '3-4 sentences'}.
 
