@@ -90,7 +90,7 @@ export const AdMobService = {
                 adId: adId,
                 adSize: BannerAdSize.ADAPTIVE_BANNER,
                 position: position === 'TOP' ? BannerAdPosition.TOP_CENTER : BannerAdPosition.BOTTOM_CENTER,
-                margin: position === 'TOP' ? 0 : 90, // 90px margin to clear system nav bars and app footers
+                margin: position === 'TOP' ? 0 : 60, // 60px margin for bottom banners to avoid system navigation bar
                 isTesting: false
             };
 
