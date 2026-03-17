@@ -30,7 +30,7 @@ const SLIDES = [
   },
   {
     id: 'coach',
-    icon: '🥷',
+    icon: '🕴️',
     title: 'Rizz AI Coach',
     desc: 'Unlock Pro Vibes like Roast Master and Chaotic to perfectly match your desired persona and tone.',
     color: 'from-fuchsia-500 to-pink-600'
