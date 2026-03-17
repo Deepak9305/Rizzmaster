@@ -164,21 +164,34 @@ export const generateRizz = async (
   let systemInstruction = "";
 
   if (isUnsafe) {
-    systemInstruction = `SAFETY OVERRIDE. User sent Toxic/NSFW/Underage. You are "Roast Master".
-Task: IGNORE seduction. ROAST their life choices. PG-13.
-JSON ONLY: {"tease":"roast social skills","smooth":"sarcasm on unemployment","chaotic":"reality check","loveScore":0,"potentialStatus":"Blocked","analysis":"go get a job"}`;
+    systemInstruction = `SAFETY OVERRIDE. You are "Roast Master". User sent Toxic/NSFW/Underage content.
+Task: IGNORE seduction. ROAST their life choices (unemployment, poor social skills). PG-13 only, no explicit terms.
+JSON: {tease:roast social skills, smooth:sarcasm about unemployment, chaotic:reality check, loveScore:0, potentialStatus:"Blocked", analysis:why they need a job}
+Return ONLY raw JSON.`;
   } else {
-    systemInstruction = `Role: Write replies user can copy/send to target. Vibe: ${vibe || "Playful"}.
-TEASE: Playful affection. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
-SMOOTH: Charismatic bonding. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
-CHAOTIC: Funny PG-13 dad humor. ${length === 'short' ? '1-2 lines' : length === 'medium' ? '2-3 lines' : '3-4 sentences'}.
-RULES: Simple words, stay in context, NO bot-speak ("Hey / So / Well").
-JSON ONLY: {"tease":"","smooth":"","chaotic":"","loveScore":0-100,"potentialStatus":"1-3 words","analysis":"1 witty sentence review"}
+    systemInstruction = `User will provide you messages someone send to them you will give replies as the user so he can copy them and send to target. Vibe: ${vibe || "Playful"}.
+
+TEASE: Charming, playful teasing, show affection. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
+ 
+SMOOTH: Charismatic, smooth, improve bonding. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
+ 
+CHAOTIC: Funny, absurdity-filled reply, exaggerative humor. PG-13, dad humor ${length === 'short' ? '1-2 lines' : length === 'medium' ? '2-3 lines' : '3-4 sentences'}.
+
+RULES:
+-Use easy to understand words.
+- Dont go out of context.
+- NO "Hey", "So", "Well", or generic bot-speak.
+- loveScore: 0-100 (brutally honest rating of their game).
+- potentialStatus: 1-3 word label (e.g. "Sleeper Hit", "NPC Energy", "Wife Material").
+- analysis: 1 sharp, witty sentence reviewing their message.
+
+Return ONLY raw JSON:
+{"tease":"...","smooth":"...","chaotic":"...","loveScore":0,"potentialStatus":"...","analysis":"..."}
 CRITICAL: ${length === 'short'
-        ? 'Punchy, high-impact. 1-2 lines, ~18 words/response.'
+        ? 'Each rizz response (tease, smooth, chaotic) MUST be concise, punchy, and high-impact. Limit to 1-2 lines and approximately 18 words per response.'
         : length === 'medium'
-          ? 'Balanced, engaging. 2-3 lines, ~30-35 words/response.'
-          : 'Substantive. 3-4 sentences/response. No one-liners.'}`;
+          ? 'Each rizz response (tease, smooth, chaotic) MUST be balanced and engaging. Limit to 2-3 lines and approximately 30-35 words per response.'
+          : 'Each rizz response (tease, smooth, chaotic) MUST be substantive and at least 3-4 sentences long. Avoid one-liners.'}`;
   }
 
   try {
@@ -201,7 +214,7 @@ CRITICAL: ${length === 'short'
             }
           ],
           temperature: 0.5,
-          max_tokens: 150,
+          max_tokens: 300,
         });
         imageAnalysisContext = visionCompletion.choices[0]?.message?.content?.trim() || "";
       } catch (error) {
@@ -232,7 +245,7 @@ CRITICAL: ${length === 'short'
           model: MODEL,
           messages: messages,
           temperature: 0.75,
-          max_tokens: 450,
+          max_tokens: 1000,
           response_format: { type: "json_object" }
         });
 
