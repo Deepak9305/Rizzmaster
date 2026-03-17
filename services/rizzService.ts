@@ -1,4 +1,4 @@
-﻿import OpenAI from "openai";
+import OpenAI from "openai";
 import { RizzResponse, BioResponse, ResponseLength } from "../types";
 
 // --- CLIENT INITIALIZATION ---
@@ -108,7 +108,7 @@ const cleanJson = (text: string): string => {
   return cleaned;
 };
 
-// Pre-compiled global regexes for sanitization â€” built once at module load, not per call.
+// Pre-compiled global regexes for sanitization — built once at module load, not per call.
 // Safe to use with String.replace() as it always resets lastIndex after completing.
 const HARD_BLOCK_GLOBAL = new RegExp(HARD_BLOCK_REGEX.source, 'gi');
 const NSFW_GLOBAL = new RegExp(NSFW_TERMS_REGEX.source, 'gi');
@@ -118,9 +118,9 @@ const MINOR_GLOBAL = new RegExp(MINOR_SAFETY_REGEX.source, 'gi');
 const sanitizeText = (text: string): string => {
   if (!text) return text;
   return text
-    .replace(HARD_BLOCK_GLOBAL, "ðŸ¤¬") // Replace hate/violence with Angry Face
-    .replace(NSFW_GLOBAL, "ðŸ«£")       // Replace NSFW with Peeking Face
-    .replace(MINOR_GLOBAL, "ðŸ”ž");     // Replace Minor terms with No Under 18
+    .replace(HARD_BLOCK_GLOBAL, "🤬") // Replace hate/violence with Angry Face
+    .replace(NSFW_GLOBAL, "🫣")       // Replace NSFW with Peeking Face
+    .replace(MINOR_GLOBAL, "🔞");     // Replace Minor terms with No Under 18
 };
 
 // Helper to recursively sanitize response object
@@ -156,7 +156,6 @@ export const generateRizz = async (
   length: ResponseLength = 'short'
 ): Promise<RizzResponse> => { // Return type simplified for consistency
 
-  // ... (Safety checks remain the same) ...
   const isToxic = HARD_BLOCK_REGEX.test(inputText);
   const isNSFW = NSFW_TERMS_REGEX.test(inputText);
   const isMinor = MINOR_SAFETY_REGEX.test(inputText);
@@ -193,7 +192,7 @@ CRITICAL: ${length === 'short'
         ? 'Each rizz response (tease, smooth, chaotic) MUST be concise, punchy, and high-impact. Limit to 1-2 lines and approximately 18 words per response.'
         : length === 'medium'
           ? 'Each rizz response (tease, smooth, chaotic) MUST be balanced and engaging. Limit to 2-3 lines and approximately 30-35 words per response.'
-        : length === 'long'
+          : length === 'long'
           ? 'Each rizz response (tease, smooth, chaotic) MUST be substantive and at least 3-4 sentences long. Avoid one-liners.'}`;
   }
 
@@ -386,7 +385,7 @@ export const generateCoachAdvice = async (
 
   if (isToxic || isNSFW) {
     systemInstruction = `You are the Rizz Master Coach. The user sent Toxic or NSFW content.
-Refuse to engage. Roast their poor judgment instead â€” PG-13 only.
+Refuse to engage. Roast their poor judgment instead — PG-13 only.
 Reply in plain text, 1-2 sentences max.`;
   } else {
     // PERSONA-SPECIFIC BASE PROMPTS
@@ -539,7 +538,6 @@ Carry over all existing intel and update it when new facts emerge.`;
     return { reply: sanitizeText(cleanReply), updatedNotes };
   } catch (error) {
     console.error("Coach Service Error:", error);
-    return { reply: "Something went wrong on my end. Try again. ðŸ”" };
+    return { reply: "Something went wrong on my end. Try again. 🔧" };
   }
 };
-
