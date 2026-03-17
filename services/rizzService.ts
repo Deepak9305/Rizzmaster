@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+﻿import OpenAI from "openai";
 import { RizzResponse, BioResponse, ResponseLength } from "../types";
 
 // --- CLIENT INITIALIZATION ---
@@ -172,11 +172,11 @@ Return ONLY raw JSON.`;
   } else {
     systemInstruction = `User will provide you messages someone send to them you will give replies as the user so he can copy them and send to target. Vibe: ${vibe || "Playful"}.
 
-TEASE: Charming, playful teasing, show affection. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : length === 'long' ? '2-3 sentences'}.
+TEASE: Charming, playful teasing, show affection. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
  
-SMOOTH: Charismatic, smooth, improve bonding. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : length === 'long' ? '2-3 sentences'}.
+SMOOTH: Charismatic, smooth, improve bonding. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
  
-CHAOTIC: Funny, absurdity-filled reply, exaggerative humor. PG-13, dad humor ${length === 'short' ? '1-2 lines' : length === 'medium' ? '2-3 lines' : length === 'long' ? '3-4 sentences'}.
+CHAOTIC: Funny, absurdity-filled reply, exaggerative humor. PG-13, dad humor ${length === 'short' ? '1-2 lines' : length === 'medium' ? '2-3 lines' : '3-4 sentences'}.
 
 RULES:
 -Use easy to understand words.
@@ -192,8 +192,7 @@ CRITICAL: ${length === 'short'
         ? 'Each rizz response (tease, smooth, chaotic) MUST be concise, punchy, and high-impact. Limit to 1-2 lines and approximately 18 words per response.'
         : length === 'medium'
           ? 'Each rizz response (tease, smooth, chaotic) MUST be balanced and engaging. Limit to 2-3 lines and approximately 30-35 words per response.'
-          : length === 'long'
-          ? 'Each rizz response (tease, smooth, chaotic) MUST be substantive and at least 3-4 sentences long. Avoid one-liners.'}`;
+          : 'Each rizz response (tease, smooth, chaotic) MUST be substantive and at least 3-4 sentences long. Avoid one-liners.'}`;
   }
 
   try {
