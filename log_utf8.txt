@@ -1,0 +1,10 @@
+﻿9ca3f1f (HEAD -> main, origin/main, origin/HEAD) Trigger redeploy to 316c254 state
+316c254 feat: implement Supabase shadow notes sync, data migration, and general-purpose persona refinement
+9bf8c67 Refine Bestie persona to consistently address user as bestie/girlie
+1e634fc Refine Wingman persona (punchy/buddy) and fix RizzCoach crash
+d64fbbe Optimize typing and messaging performance with uncontrolled inputs and stabilized rendering
+8a0543a Enhance persona interactivity and engagement hooks
+139d23e Optimize RizzCoach UI performance for smoother keyboard animations
+43ac97f Enhance Rizz AI personas and implement structured Shadow Intel system
+1e9a091 Improve personas: Gender-aware Bestie and Elite Wingman
+97f06f3 fix(ui): remove redundant spacing and fix layout gap above navigation buttons

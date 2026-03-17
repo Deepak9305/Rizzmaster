@@ -728,7 +728,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                                             display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', gap: '8px',
                                             cursor: 'pointer'
                                         }}>
-                                        <span style={{ fontSize: '18px' }}>📺</span> Watch Ad (+5)
+                                        <span style={{ fontSize: '18px' }}>📺</span> Watch Ad (+3)
                                     </button>
                                     <button
                                         onClick={() => { setShowOutOfCredits(false); onGoPremium?.(); }}
