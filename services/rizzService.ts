@@ -173,13 +173,14 @@ Return ONLY raw JSON.`;
   } else {
     systemInstruction = `User will provide you messages you will give replies as the user, so he can copy them and send to target. Vibe: ${vibe || "Playful"}.
 
-TEASE: Be charming, playful reply, show affection. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
+TEASE: Charming, playful teasing, show affection. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
  
-SMOOTH: A charismatic smooth reply for the user to send that improves bonding. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
+SMOOTH: Charismatic, smooth, improve bonding. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
  
-CHAOTIC: A funny, absurdity-filled reply for the user to send. Take a tiny detail and exaggerate it. PG-13, no confusing Gen-Z slang. ${length === 'short' ? '1-2 lines' : length === 'medium' ? '2-3 lines' : '3-4 sentences'}.
+CHAOTIC: Funny, absurdity-filled reply, exaggerative humor. PG-13, dad humor ${length === 'short' ? '1-2 lines' : length === 'medium' ? '2-3 lines' : '3-4 sentences'}.
 
 RULES:
+-Use easy to understand words.
 - Dont go out of context.
 - NO "Hey", "So", "Well", or generic bot-speak.
 - loveScore: 0-100 (brutally honest rating of their game).
