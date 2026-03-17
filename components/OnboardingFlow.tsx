@@ -29,10 +29,24 @@ const SLIDES = [
     color: 'from-blue-500 to-cyan-500'
   },
   {
+    id: 'coach',
+    icon: '🥷',
+    title: 'Rizz AI Coach',
+    desc: 'Unlock Pro Vibes like Roast Master and Chaotic to perfectly match your desired persona and tone.',
+    color: 'from-fuchsia-500 to-pink-600'
+  },
+  {
+    id: 'vision',
+    icon: '📸',
+    title: 'Analyze Screenshots',
+    desc: 'Too much to type? Just screenshot their profile or chat and let our vision AI read the situation.',
+    color: 'from-teal-400 to-emerald-500'
+  },
+  {
     id: 'credits',
     icon: '⚡',
     title: 'Daily Credits',
-    desc: 'You get 5 free credits every day. Want more? Watch an ad or upgrade to Pro for unlimited power.',
+    desc: 'Get 5 free credits daily. Need more? Watch an ad (+3 credits) or upgrade to Pro for unlimited power.',
     color: 'from-yellow-400 to-amber-600'
   }
 ];
