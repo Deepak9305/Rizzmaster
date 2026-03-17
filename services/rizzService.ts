@@ -171,7 +171,7 @@ Task: IGNORE seduction. ROAST their life choices (unemployment, poor social skil
 JSON: {tease:roast social skills, smooth:sarcasm about unemployment, chaotic:reality check, loveScore:0, potentialStatus:"Blocked", analysis:why they need a job}
 Return ONLY raw JSON.`;
   } else {
-    systemInstruction = `User will provide you messages you will give replies as the user, so he can copy them and send to target. Vibe: ${vibe || "Playful"}.
+    systemInstruction = `User will provide you messages someone send to them you will give replies as the user so he can copy them and send to target. Vibe: ${vibe || "Playful"}.
 
 TEASE: Charming, playful teasing, show affection. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
  
@@ -193,7 +193,7 @@ CRITICAL: ${length === 'short'
         ? 'Each rizz response (tease, smooth, chaotic) MUST be concise, punchy, and high-impact. Limit to 1-2 lines and approximately 18 words per response.'
         : length === 'medium'
           ? 'Each rizz response (tease, smooth, chaotic) MUST be balanced and engaging. Limit to 2-3 lines and approximately 30-35 words per response.'
-          : 'Each rizz response (tease, smooth, chaotic) MUST be substantive and at least 2-3 sentences long. Avoid one-liners.'}`;
+          : 'Each rizz response (tease, smooth, chaotic) MUST be substantive and at least 3-4 sentences long. Avoid one-liners.'}`;
   }
 
   try {
