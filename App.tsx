@@ -447,16 +447,12 @@ const AppContentInner: React.FC = () => {
           const adId = getAdId('BANNER');
           const position = currentView === 'COACH' ? 'TOP' : 'BOTTOM';
 
-          // Optimization: Only refresh if position changed or forced
-          if (!force && lastBannerPosition.current === position) {
-            return;
-          }
-
+          // Always refresh banner on view change - position tracks just TOP/BOTTOM for repositioning
           lastBannerPosition.current = position;
 
           // Force hide first to ensure the plugin repositions cleanly
           AdMobService.hideBanner().then(() => {
-            timer = setTimeout(() => AdMobService.showBanner(adId, position), 1500);
+            timer = setTimeout(() => AdMobService.showBanner(adId, position), 1000);
           });
         }
       }
@@ -481,7 +477,7 @@ const AppContentInner: React.FC = () => {
       if (timer) clearTimeout(timer);
       if (appListener) appListener.remove();
     };
-  }, [profile?.is_premium, session, currentView === 'COACH']); // Only trigger on COACH/Not COACH transition
+  }, [profile?.is_premium, session, currentView]); // Refresh banner on every view navigation
 
   // Define handleUpgrade using REF to avoid stale closures
   const handleUpgrade = useCallback(async () => {
