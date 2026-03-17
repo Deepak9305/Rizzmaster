@@ -30,7 +30,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import NoInternetOverlay from './components/NoInternetOverlay';
 
 const DAILY_CREDITS = 5;
-const REWARD_CREDITS = 5;
+const REWARD_CREDITS = 3;
 const AD_DURATION = 10;
 const SIMULATE_REWARD_AD = false; // Real AdMob by default, timer only as fallback
 
@@ -1280,14 +1280,9 @@ const AppContentInner: React.FC = () => {
 
         let rewardEarned = await AdMobService.showRewardVideo(adUnitId, onShow);
 
-        // FALLBACK: If real ad fails (common in EU without GDPR fix yet), simulate it
-        if (!rewardEarned) {
-          console.log("Real ad failed, running 7s simulation fallback...");
-          rewardEarned = await runSimulatedAd();
-        }
-
+        // If real ad fails, we do NOT simulate it. The user gets no reward.
         if (rewardEarned) {
-          // 1. First Reward (+5)
+          // 1. First Reward (+3)
           updateCredits((prevCredits) => prevCredits + REWARD_CREDITS);
           showToast(`+${REWARD_CREDITS} Credits Added! ⚡`, 'success');
 
@@ -1302,7 +1297,7 @@ const AppContentInner: React.FC = () => {
           // Prompt the user with a native dialog
           const { value } = await Dialog.confirm({
             title: 'Bonus Reward! 🎁',
-            message: 'Want +7 more credits? Watch one more short ad.',
+            message: 'Want +5 more credits? Watch one more short ad.',
             okButtonTitle: 'Watch Now',
             cancelButtonTitle: 'No Thanks'
           });
@@ -1313,31 +1308,23 @@ const AppContentInner: React.FC = () => {
             try {
               let bonusEarned = await AdMobService.showRewardInterstitial(rewardInterId, onShow);
 
-              // FALLBACK for Bonus Ad
-              if (!bonusEarned) {
-                console.log("Real bonus ad failed, running simulation fallback...");
-                bonusEarned = await runSimulatedAd();
-              }
-
               if (bonusEarned) {
-                updateCredits((prevCredits) => prevCredits + 7);
-                showToast(`+7 Bonus Credits! 🥷`, 'success');
+                updateCredits((prevCredits) => prevCredits + 5);
+                showToast(`+5 Bonus Credits! 🥷`, 'success');
+              } else {
+                showToast('Reward not earned.', 'info');
               }
             } catch (e) {
               console.warn("Chained bonus ad error:", e);
+              showToast('Bonus ad failed. Please try again later.', 'error');
             }
           }
         } else {
-          showToast('Ad dismissed or failed to give reward.', 'info');
+          showToast('Ad dismissed or failed to load.', 'info');
         }
       } catch (e) {
         console.warn("Native Ad Error:", e);
-        // Even if there's a crash/error, let's try the simulation as a last resort
-        const fallbackPossible = await runSimulatedAd();
-        if (fallbackPossible) {
-          updateCredits((prevCredits) => prevCredits + REWARD_CREDITS);
-          showToast(`+${REWARD_CREDITS} Credits Added! 🤝`, 'success');
-        }
+        showToast('Ad failed to load. Please try again later.', 'error');
       } finally {
         setIsAdLoading('hidden'); // ALWAYS HIDE OVERLAY
         setAdCountdown(null);
@@ -1671,7 +1658,7 @@ const AppContentInner: React.FC = () => {
                   ) : (
                     <div className="grid grid-cols-2 gap-3">
                       <button onClick={handleWatchAd} disabled={isAdLoading !== 'hidden'} className="bg-white/10 border border-white/10 py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base hover:bg-white/20 active:scale-[0.98] transition-all flex flex-col items-center justify-center">
-                        {isAdLoading !== 'hidden' ? <span className="text-white/50 text-xs">Loading...</span> : <><span className="text-xl mb-1">📺</span> <span>Watch Ad (+5)</span></>}
+                        {isAdLoading !== 'hidden' ? <span className="text-white/50 text-xs">Loading...</span> : <><span className="text-xl mb-1">📺</span> <span>Watch Ad (+3)</span></>}
                       </button>
                       <button onClick={handleOpenPremium} className="bg-gradient-to-r from-yellow-500 to-amber-600 text-black py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base shadow-xl hover:brightness-110 active:scale-[0.98] transition-all flex flex-col items-center justify-center animate-pulse">
                         <span className="text-xl mb-1">👑</span> <span>Go Unlimited</span>
