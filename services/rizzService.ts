@@ -193,7 +193,8 @@ CRITICAL: ${length === 'short'
         ? 'Each rizz response (tease, smooth, chaotic) MUST be concise, punchy, and high-impact. Limit to 1-2 lines and approximately 18 words per response.'
         : length === 'medium'
           ? 'Each rizz response (tease, smooth, chaotic) MUST be balanced and engaging. Limit to 2-3 lines and approximately 30-35 words per response.'
-          : 'Each rizz response (tease, smooth, chaotic) MUST be substantive and at least 3-4 sentences long. Avoid one-liners.'}`;
+        : length === 'long'
+          ? 'Each rizz response (tease, smooth, chaotic) MUST be substantive and at least 3-4 sentences long. Avoid one-liners.'}`;
   }
 
   try {
