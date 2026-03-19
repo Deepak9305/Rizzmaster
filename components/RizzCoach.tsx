@@ -46,8 +46,7 @@ const INITIAL_MESSAGE: CoachMessage = {
 // SVG icon components for each persona (no emojis)
 const WingmanIcon = () => (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-        <path d="M12 2L8 6H4l2.5 4L4 14h4l4 4 4-4h4l-2.5-4L16 6h-4L12 2z" stroke="white" strokeWidth="1.8" strokeLinejoin="round" fill="rgba(255,255,255,0.15)" />
-        <circle cx="12" cy="10" r="2" fill="white" />
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-5l-2.25 2.25-1.5-1.5L12 7l4.75 4.75-1.5 1.5L13 11.5v5h-2z" fill="white" fillOpacity="0.8" />
     </svg>
 );
 const BestieIcon = () => (
@@ -57,8 +56,7 @@ const BestieIcon = () => (
 );
 const RoastIcon = () => (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-        <path d="M7 20c0-2.76 2.69-5 6-5s6 2.24 6 5" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
-        <path d="M12 3C9 3 6.5 5 6.5 7.5c0 1.2.5 2.3 1.3 3.1-.2.4-.3.9-.3 1.4 0 1.93 1.57 3.5 3.5 3.5s3.5-1.57 3.5-3.5c0-.5-.1-.95-.3-1.4.8-.8 1.3-1.9 1.3-3.1C15.5 5 13 3 12 3z" stroke="white" strokeWidth="1.8" strokeLinejoin="round" fill="rgba(255,255,255,0.15)" />
+        <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L12 15.45 7.77 18l1.12-4.81-3.73-3.23 4.92-.42L12 5l1.92 4.53 4.92.42-3.73 3.23L16.23 18z" fill="white" fillOpacity="0.8" />
     </svg>
 );
 const ChaoticIcon = () => (
