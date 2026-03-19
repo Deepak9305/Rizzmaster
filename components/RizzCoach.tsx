@@ -46,8 +46,10 @@ const INITIAL_MESSAGE: CoachMessage = {
 // SVG icon components for each persona (no emojis)
 const WingmanIcon = () => (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-        <path d="M4.6 13c1.7-1 4.5-2.2 7.4-2.2 2.9 0 5.7 1.2 7.4 2.2V7.1C16.9 8.6 14.5 9.5 12 9.5S7.1 8.6 4.6 7.1V13z" fill="rgba(255,255,255,0.2)" />
-        <path d="M12 21L2.5 13.6c-1-.8-1-2.4 0-3.3l1-1c1-.8 2.6-1.2 4-.8l3.7 1 1.8.5 1.8-.5 3.7-1c1.4-.4 3 .1 4 .8l1 1c1 .8 1 2.4 0 3.3L12 21z" stroke="white" strokeWidth="1.8" strokeLinejoin="round" />
+        {/* Left Wing */}
+        <path d="M10 18s-4-4-6-10c0 0 3 0 5 4 0 0-2-3-2-6 0 0 4 2 5 7v5z" fill="white" fillOpacity="0.8" />
+        {/* Right Wing */}
+        <path d="M14 18s4-4 6-10c0 0-3 0-5 4 0 0 2-3 2-6 0 0-4 2-5 7v5z" fill="white" fillOpacity="0.8" />
     </svg>
 );
 const BestieIcon = () => (
