@@ -46,10 +46,7 @@ const INITIAL_MESSAGE: CoachMessage = {
 // SVG icon components for each persona (no emojis)
 const WingmanIcon = () => (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-        {/* Left Wing */}
-        <path d="M10 18s-4-4-6-10c0 0 3 0 5 4 0 0-2-3-2-6 0 0 4 2 5 7v5z" fill="white" fillOpacity="0.8" />
-        {/* Right Wing */}
-        <path d="M14 18s4-4 6-10c0 0-3 0-5 4 0 0 2-3 2-6 0 0-4 2-5 7v5z" fill="white" fillOpacity="0.8" />
+        <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L12 15.45 7.77 18l1.12-4.81-3.73-3.23 4.92-.42L12 5l1.92 4.53 4.92.42-3.73 3.23L16.23 18z" fill="white" fillOpacity="0.8" />
     </svg>
 );
 const BestieIcon = () => (
@@ -59,7 +56,10 @@ const BestieIcon = () => (
 );
 const RoastIcon = () => (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-        <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L12 15.45 7.77 18l1.12-4.81-3.73-3.23 4.92-.42L12 5l1.92 4.53 4.92.42-3.73 3.23L16.23 18z" fill="white" fillOpacity="0.8" />
+        {/* Left Wing */}
+        <path d="M10 18s-4-4-6-10c0 0 3 0 5 4 0 0-2-3-2-6 0 0 4 2 5 7v5z" fill="white" fillOpacity="0.8" />
+        {/* Right Wing */}
+        <path d="M14 18s4-4 6-10c0 0-3 0-5 4 0 0 2-3 2-6 0 0-4 2-5 7v5z" fill="white" fillOpacity="0.8" />
     </svg>
 );
 const ChaoticIcon = () => (
