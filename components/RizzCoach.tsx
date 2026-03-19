@@ -43,24 +43,69 @@ const INITIAL_MESSAGE: CoachMessage = {
     timestamp: new Date().toISOString()
 };
 
+// SVG icon components for each persona (no emojis)
+const WingmanIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+        <path d="M12 2L8 6H4l2.5 4L4 14h4l4 4 4-4h4l-2.5-4L16 6h-4L12 2z" stroke="white" strokeWidth="1.8" strokeLinejoin="round" fill="rgba(255,255,255,0.15)" />
+        <circle cx="12" cy="10" r="2" fill="white" />
+    </svg>
+);
+const BestieIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" stroke="white" strokeWidth="1.8" fill="rgba(255,255,255,0.15)" />
+    </svg>
+);
+const RoastIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+        <path d="M7 20c0-2.76 2.69-5 6-5s6 2.24 6 5" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
+        <path d="M12 3C9 3 6.5 5 6.5 7.5c0 1.2.5 2.3 1.3 3.1-.2.4-.3.9-.3 1.4 0 1.93 1.57 3.5 3.5 3.5s3.5-1.57 3.5-3.5c0-.5-.1-.95-.3-1.4.8-.8 1.3-1.9 1.3-3.1C15.5 5 13 3 12 3z" stroke="white" strokeWidth="1.8" strokeLinejoin="round" fill="rgba(255,255,255,0.15)" />
+    </svg>
+);
+const ChaoticIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="white" strokeWidth="1.8" strokeLinejoin="round" fill="rgba(255,255,255,0.15)" />
+    </svg>
+);
+const DefaultIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+        <circle cx="12" cy="8" r="4" stroke="white" strokeWidth="1.8" />
+        <path d="M4 20c0-4 3.58-7 8-7s8 3 8 7" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+);
+const CrownIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
+        <path d="M3 17l2-8 4.5 4L12 5l2.5 8L19 9l2 8H3z" stroke="#facc15" strokeWidth="1.8" strokeLinejoin="round" fill="rgba(250,204,21,0.2)" />
+    </svg>
+);
+const LockIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="12" height="12">
+        <rect x="5" y="11" width="14" height="10" rx="2" stroke="rgba(255,255,255,0.5)" strokeWidth="1.8" />
+        <path d="M8 11V7a4 4 0 018 0v4" stroke="rgba(255,255,255,0.5)" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+);
+
 const COACH_VIBES = [
     {
-        label: "Elite Wingman", isPro: false, icon: "🤘",
-        welcome: "Yo! Senior Wingman here. I'm not just hype—I'm tactical. Show me the chat, let's secure this win. 🤘",
+        label: "Elite Wingman", isPro: false,
+        icon: <WingmanIcon />,
+        welcome: "Yo! Senior Wingman here. I'm not just hype — I'm tactical. Show me the chat, let's secure this win.",
         colors: { primary: '#FF0080', secondary: '#7928CA', background: 'rgba(255,0,128,0.13)', glow: 'rgba(255,0,128,0.3)' }
     },
     {
-        label: "Bestie", isPro: false, icon: "💅",
-        welcome: "Hey! Your Bestie is here to spill the tea. I'll tell you exactly what they're thinking. 💅",
+        label: "Bestie", isPro: false,
+        icon: <BestieIcon />,
+        welcome: "Hey! Your Bestie is here to read the room. I'll tell you exactly what they're thinking.",
         colors: { primary: '#Ec4899', secondary: '#8B5CF6', background: 'rgba(236,72,153,0.13)', glow: 'rgba(236,72,153,0.3)' }
     },
     {
-        label: "Roast Master", isPro: true, icon: "🔥",
+        label: "Roast Master", isPro: true,
+        icon: <RoastIcon />,
         welcome: "I'm here. Say something interesting or show me a text that needs a reality check. Don't be boring.",
         colors: { primary: '#F97316', secondary: '#EF4444', background: 'rgba(249,115,22,0.13)', glow: 'rgba(249,115,22,0.3)' }
     },
     {
-        label: "Chaotic", isPro: true, icon: "🃏",
+        label: "Chaotic", isPro: true,
+        icon: <ChaoticIcon />,
         welcome: "The Chaotic one has entered the chat. Tell me something wild or let's find a way to shake things up.",
         colors: { primary: '#A855F7', secondary: '#22C55E', background: 'rgba(168,85,247,0.13)', glow: 'rgba(168,85,247,0.3)' }
     }
@@ -70,7 +115,7 @@ const COACH_STORAGE_KEY = 'rizz_coach_messages_v2';
 const SHADOW_NOTES_KEY = 'rizz_coach_shadow_notes';
 const MAX_STORED_MESSAGES = 50; // cap to avoid localStorage bloat
 
-const TypingIndicator = React.memo(({ icon, colors }: { icon?: string, colors?: any }) => (
+const TypingIndicator = React.memo(({ icon, colors }: { icon?: React.ReactNode, colors?: any }) => (
     <div style={{ display: 'flex', justifyContent: 'flex-start', animation: 'coachEntrance 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both' }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem' }}>
             <div style={{
@@ -79,7 +124,7 @@ const TypingIndicator = React.memo(({ icon, colors }: { icon?: string, colors?: 
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 boxShadow: `0 2px 10px ${colors?.glow || 'rgba(0,0,0,0.3)'}`
             }}>
-                <span style={{ fontSize: '14px', lineHeight: 1 }}>{icon || '🥷'}</span>
+                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{icon || <DefaultIcon />}</span>
             </div>
             <div style={{
                 padding: '1rem 1.25rem', borderRadius: '1.5rem 1.5rem 1.5rem 4px',
@@ -99,7 +144,7 @@ const TypingIndicator = React.memo(({ icon, colors }: { icon?: string, colors?: 
     </div>
 ));
 
-interface MsgProps { msg: CoachMessage; onReport: () => void; icon?: string; colors?: any; }
+interface MsgProps { msg: CoachMessage; onReport: () => void; icon?: React.ReactNode; colors?: any; }
 const MessageBubble = React.memo(({ msg, onReport, icon, colors }: MsgProps) => {
     const isUser = msg.role === 'user';
     const [isHovered, setIsHovered] = useState(false);
@@ -123,7 +168,7 @@ const MessageBubble = React.memo(({ msg, onReport, icon, colors }: MsgProps) => 
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     boxShadow: `0 2px 10px ${colors?.glow || 'rgba(0,0,0,0.3)'}`
                 }}>
-                    <span style={{ fontSize: '14px', lineHeight: 1 }}>{icon || '🥷'}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{icon || <DefaultIcon />}</span>
                 </div>
             )}
 
@@ -426,11 +471,11 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                             <div style={{
                                 position: 'relative', width: '44px', height: '44px', borderRadius: '50%',
                                 background: `linear-gradient(135deg, ${currentTheme.colors.primary} 0%, ${currentTheme.colors.secondary} 100%)`,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 boxShadow: `0 4px 20px ${currentTheme.colors.glow}`,
                             }}>
-                                <span style={{ fontSize: '24px', lineHeight: 1, paddingTop: '1px' }}>
-                                    {COACH_VIBES.find(v => v.label === selectedVibe)?.icon || '🥷'}
+                                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', transform: 'scale(1.5)' }}>
+                                    {COACH_VIBES.find(v => v.label === selectedVibe)?.icon || <DefaultIcon />}
                                 </span>
                             </div>
                         </div>
@@ -474,7 +519,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                                     cursor: 'pointer'
                                 }}
                             >
-                                <span style={{ color: '#facc15' }}>⚡</span>
+                                <svg viewBox="0 0 24 24" fill="none" width="12" height="12"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#facc15" /></svg>
                                 <span style={{ color: 'rgba(255,255,255,0.7)' }}>{credits}</span>
                             </div>
                         ) : (
@@ -483,7 +528,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                                 padding: '6px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: 700,
                                 background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.25)'
                             }}>
-                                <span>👑</span>
+                                <CrownIcon />
                                 <span style={{ color: '#facc15' }}>VIP</span>
                             </div>
                         )}
@@ -535,9 +580,12 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                                     fontSize: '14px', fontWeight: selectedVibe === vibe.label ? 700 : 500, cursor: 'pointer'
                                 }}
                             >
-                                <span>{vibe.icon} {vibe.label}</span>
-                                {vibe.isPro && !isPremium && <span style={{ fontSize: '12px' }}>🔒</span>}
-                                {vibe.isPro && isPremium && selectedVibe !== vibe.label && <span style={{ fontSize: '12px', opacity: 0.5 }}>👑</span>}
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', borderRadius: '6px', background: 'rgba(255,255,255,0.08)' }}>{vibe.icon}</span>
+                                    {vibe.label}
+                                </span>
+                                {vibe.isPro && !isPremium && <LockIcon />}
+                                {vibe.isPro && isPremium && selectedVibe !== vibe.label && <CrownIcon />}
                             </button>
                         ))}
                     </div>
@@ -728,7 +776,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                                             display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', gap: '8px',
                                             cursor: 'pointer'
                                         }}>
-                                        <span style={{ fontSize: '18px' }}>📺</span> Watch Ad (+3)
+                                        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><rect x="2" y="5" width="20" height="14" rx="2" stroke="white" strokeWidth="1.8" /><path d="M8 10l8 4-8 4V10z" fill="white" /></svg> Watch Ad (+3)
                                     </button>
                                     <button
                                         onClick={() => { setShowOutOfCredits(false); onGoPremium?.(); }}
@@ -738,7 +786,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                                             cursor: 'pointer', boxShadow: '0 4px 12px rgba(217,119,6,0.2)'
                                         }}>
-                                        <span style={{ fontSize: '18px' }}>👑</span> Go Unlimited
+                                        <CrownIcon /> Go Unlimited
                                     </button>
                                     <button
                                         onClick={() => setShowOutOfCredits(false)}
