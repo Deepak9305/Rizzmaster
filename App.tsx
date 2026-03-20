@@ -1464,6 +1464,24 @@ const AppContentInner: React.FC = () => {
                 shadowNotes={profile?.shadow_notes || ''}
                 onUpdateShadowNotes={updateShadowNotes}
                 customPersonas={customPersonas}
+                onAddPersona={() => {
+                  const limit = profile?.is_premium ? 3 : 1;
+                  if (customPersonas.length >= limit) {
+                    if (!profile?.is_premium) {
+                      showToast("Free users can only have 1 custom persona. Upgrade to get 3!", "info");
+                      handleOpenPremium();
+                    } else {
+                      showToast("Pro users can have up to 3 custom personas.", "info");
+                    }
+                    return;
+                  }
+                  setEditingPersona(null);
+                  setShowPersonaModal(true);
+                }}
+                onEditPersona={(persona) => {
+                  setEditingPersona(persona);
+                  setShowPersonaModal(true);
+                }}
               />
             </Suspense>
           </div>
@@ -1636,40 +1654,6 @@ const AppContentInner: React.FC = () => {
                           {vibe.isPro && profile?.is_premium && selectedVibe !== vibe.label && <span className="text-[10px] text-yellow-500">👑</span>}
                         </button>
                       ))}
-                      {customPersonas.map((persona) => (
-                        <button
-                          key={persona.id}
-                          onClick={() => handleVibeClick({ label: `custom:${persona.id}`, isPro: false })}
-                          className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all active:scale-95 flex items-center gap-1.5 ${selectedVibe === `custom:${persona.id}`
-                            ? 'bg-rose-500/20 border-rose-500 text-rose-300'
-                            : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
-                            }`}
-                        >
-                          {persona.name}
-                          <span onClick={(e) => { e.stopPropagation(); setEditingPersona(persona); setShowPersonaModal(true); }} className="ml-0.5 text-[10px] opacity-60 hover:opacity-100 p-1 bg-white/5 rounded-full">✏️</span>
-                        </button>
-                      ))}
-                      <button
-                        onClick={() => {
-                          const limit = profile?.is_premium ? 3 : 1;
-                          if (customPersonas.length >= limit) {
-                            if (!profile?.is_premium) {
-                              showToast("Free users can only have 1 custom persona. Upgrade to get 3!", "info");
-                              handleOpenPremium();
-                            } else {
-                              showToast("Pro users can have up to 3 custom personas.", "info");
-                            }
-                            return;
-                          }
-                          setEditingPersona(null);
-                          setShowPersonaModal(true);
-                        }}
-                        className="px-3 py-1.5 rounded-full text-xs font-bold border border-white/10 border-dashed bg-white/5 text-white/50 hover:text-white hover:bg-white/10 transition-all active:scale-95 flex items-center gap-1"
-                      >
-                        <span>+ Persona</span>
-                        {(!profile?.is_premium && customPersonas.length === 0) && <span className="text-[10px] text-yellow-500 ml-1">(Free)</span>}
-                        {(!profile?.is_premium && customPersonas.length >= 1) && <span className="text-[10px]">🔒</span>}
-                      </button>
                     </div>
                   </div>
 

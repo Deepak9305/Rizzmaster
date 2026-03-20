@@ -36,6 +36,8 @@ interface RizzCoachProps {
     shadowNotes: string;
     onUpdateShadowNotes: (notes: string) => void;
     customPersonas?: CustomPersona[];
+    onAddPersona: () => void;
+    onEditPersona: (persona: CustomPersona) => void;
 }
 
 const INITIAL_MESSAGE: CoachMessage = {
@@ -244,7 +246,7 @@ const AuroraBackground = React.memo(({ colors }: { colors: any }) => (
     </div>
 ));
 
-const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdateCredits, isPremium, onWatchAd, onGoPremium, shadowNotes, onUpdateShadowNotes, customPersonas = [] }) => {
+const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdateCredits, isPremium, onWatchAd, onGoPremium, shadowNotes, onUpdateShadowNotes, customPersonas = [], onAddPersona, onEditPersona }) => {
     const { showToast } = useToast();
     const [messages, setMessages] = useState<CoachMessage[]>(() => {
         try {
@@ -624,8 +626,22 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                                     <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', borderRadius: '6px', background: 'rgba(255,255,255,0.08)' }}>👤</span>
                                     {persona.name}
                                 </span>
+                                <span onClick={(e) => { e.stopPropagation(); onEditPersona(persona); setShowVibeDropdown(false); }} style={{ opacity: 0.5, padding: '4px' }}>✏️</span>
                             </button>
                         ))}
+                        <button
+                            onClick={() => { onAddPersona(); setShowVibeDropdown(false); }}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: '8px',
+                                textAlign: 'left', padding: '10px 12px', background: 'transparent',
+                                border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '10px', color: 'rgba(255,255,255,0.5)',
+                                fontSize: '13px', fontWeight: 600, cursor: 'pointer', marginTop: '4px'
+                            }}
+                        >
+                            <span>+ Persona</span>
+                            {(!isPremium && customPersonas.length === 0) && <span style={{ fontSize: '10px', color: '#facc15' }}>(Free)</span>}
+                            {(!isPremium && customPersonas.length >= 1) && <span style={{ fontSize: '10px' }}>🔒</span>}
+                        </button>
                     </div>
                 )}
 
