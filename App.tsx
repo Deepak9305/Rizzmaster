@@ -271,6 +271,8 @@ const AppContentInner: React.FC = () => {
   const [customPersonas, setCustomPersonas] = useState<CustomPersona[]>([]);
   const [showPersonaModal, setShowPersonaModal] = useState(false);
   const [editingPersona, setEditingPersona] = useState<CustomPersona | null>(null);
+  const [personaName, setPersonaName] = useState('');
+  const [personaInstruction, setPersonaInstruction] = useState('');
 
   useEffect(() => {
     if (profile?.id) {
@@ -1476,10 +1478,14 @@ const AppContentInner: React.FC = () => {
                     return;
                   }
                   setEditingPersona(null);
+                  setPersonaName('');
+                  setPersonaInstruction('');
                   setShowPersonaModal(true);
                 }}
                 onEditPersona={(persona) => {
                   setEditingPersona(persona);
+                  setPersonaName(persona.name);
+                  setPersonaInstruction(persona.instruction);
                   setShowPersonaModal(true);
                 }}
               />
@@ -1523,16 +1529,28 @@ const AppContentInner: React.FC = () => {
                       <div className="space-y-4">
                         <div>
                           <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-2">Persona Name</label>
-                          <input id="personaNameInput" type="text" maxLength={20} defaultValue={editingPersona?.name || ''} placeholder="e.g. Tough Boss, Shy Nerd" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-sm focus:ring-2 focus:ring-rose-500/50 outline-none text-white placeholder:text-white/20" />
+                          <input
+                            type="text"
+                            maxLength={20}
+                            value={personaName}
+                            onChange={(e) => setPersonaName(e.target.value)}
+                            placeholder="e.g. Tough Boss, Shy Nerd"
+                            className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-sm focus:ring-2 focus:ring-rose-500/50 outline-none text-white placeholder:text-white/20"
+                          />
                         </div>
                         <div>
                           <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-2">Instructions / Rules</label>
-                          <textarea id="personaInstructionInput" defaultValue={editingPersona?.instruction || ''} placeholder="e.g. You are a tough but fair boss. Be sarcastic but give good advice." className="w-full h-32 bg-black/40 border border-white/10 rounded-xl p-3 text-sm focus:ring-2 focus:ring-rose-500/50 outline-none resize-none text-white placeholder:text-white/20" />
+                          <textarea
+                            value={personaInstruction}
+                            onChange={(e) => setPersonaInstruction(e.target.value)}
+                            placeholder="e.g. You are a tough but fair boss. Be sarcastic but give good advice."
+                            className="w-full h-32 bg-black/40 border border-white/10 rounded-xl p-3 text-sm focus:ring-2 focus:ring-rose-500/50 outline-none resize-none text-white placeholder:text-white/20"
+                          />
                         </div>
                         <div className="flex gap-3 pt-2">
                           <button onClick={() => {
-                            const name = (document.getElementById('personaNameInput') as HTMLInputElement).value.trim();
-                            const inst = (document.getElementById('personaInstructionInput') as HTMLTextAreaElement).value.trim();
+                            const name = personaName.trim();
+                            const inst = personaInstruction.trim();
                             if (!name || !inst) { showToast("Name and instructions required", "error"); return; }
                             if (editingPersona) {
                               saveCustomPersonas(customPersonas.map(p => p.id === editingPersona.id ? { ...p, name, instruction: inst } : p));
