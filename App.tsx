@@ -1486,9 +1486,64 @@ const AppContentInner: React.FC = () => {
                   setEditingPersona(persona);
                   setPersonaName(persona.name);
                   setPersonaInstruction(persona.instruction);
-                  setShowPersonaModal(true);
+                  setResult(null);
                 }}
               />
+              {showPersonaModal && (
+                <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+                  <div className="bg-[#111] rounded-3xl p-6 w-full max-w-md border border-white/10 animate-scale-up relative">
+                    <button onClick={() => setShowPersonaModal(false)} className="absolute top-4 right-4 text-white/50 hover:text-white pb-1 w-8 h-8 rounded-full border border-white/10 bg-white/5">✕</button>
+                    <h2 className="text-xl font-bold text-white mb-4">{editingPersona ? 'Edit Persona' : 'New Persona'}</h2>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-2">Persona Name</label>
+                        <input
+                          type="text"
+                          maxLength={20}
+                          value={personaName}
+                          onChange={(e) => setPersonaName(e.target.value)}
+                          placeholder="e.g. Tough Boss, Shy Nerd"
+                          className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-sm focus:ring-2 focus:ring-rose-500/50 outline-none text-white placeholder:text-white/20"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-2">Instructions / Rules</label>
+                        <textarea
+                          value={personaInstruction}
+                          onChange={(e) => setPersonaInstruction(e.target.value)}
+                          placeholder="e.g. You are a tough but fair boss. Be sarcastic but give good advice."
+                          className="w-full h-32 bg-black/40 border border-white/10 rounded-xl p-3 text-sm focus:ring-2 focus:ring-rose-500/50 outline-none resize-none text-white placeholder:text-white/20"
+                        />
+                      </div>
+                      <div className="flex gap-3 pt-2">
+                        <button onClick={() => {
+                          const name = personaName.trim();
+                          const inst = personaInstruction.trim();
+                          if (!name || !inst) { showToast("Name and instructions required", "error"); return; }
+                          if (editingPersona) {
+                            saveCustomPersonas(customPersonas.map(p => p.id === editingPersona.id ? { ...p, name, instruction: inst } : p));
+                            showToast("Persona updated", "success");
+                          } else {
+                            saveCustomPersonas([...customPersonas, { id: generateUUID(), name, instruction: inst }]);
+                            showToast("Persona created", "success");
+                          }
+                          setShowPersonaModal(false);
+                        }} className="flex-1 bg-white text-black font-bold py-3 rounded-xl hover:bg-white/90 transition-all active:scale-95">Save</button>
+                        {editingPersona && (
+                          <button onClick={() => {
+                            if (window.confirm("Delete this persona?")) {
+                              saveCustomPersonas(customPersonas.filter(p => p.id !== editingPersona.id));
+                              if (selectedVibe === `custom:${editingPersona.id}`) setSelectedVibe(null);
+                              setShowPersonaModal(false);
+                              showToast("Persona deleted", "info");
+                            }
+                          }} className="px-4 bg-rose-500/10 text-rose-500 font-bold py-3 rounded-xl hover:bg-rose-500/20 transition-all border border-rose-500/20 active:scale-95">Delete</button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </Suspense>
           </div>
         )
@@ -1521,61 +1576,6 @@ const AppContentInner: React.FC = () => {
                   savedItems={savedItems}
                   onDelete={handleDeleteSaved}
                 />
-                {showPersonaModal && (
-                  <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
-                    <div className="bg-[#111] rounded-3xl p-6 w-full max-w-md border border-white/10 animate-scale-up relative">
-                      <button onClick={() => setShowPersonaModal(false)} className="absolute top-4 right-4 text-white/50 hover:text-white pb-1 w-8 h-8 rounded-full border border-white/10 bg-white/5">✕</button>
-                      <h2 className="text-xl font-bold text-white mb-4">{editingPersona ? 'Edit Persona' : 'New Persona'}</h2>
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-2">Persona Name</label>
-                          <input
-                            type="text"
-                            maxLength={20}
-                            value={personaName}
-                            onChange={(e) => setPersonaName(e.target.value)}
-                            placeholder="e.g. Tough Boss, Shy Nerd"
-                            className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-sm focus:ring-2 focus:ring-rose-500/50 outline-none text-white placeholder:text-white/20"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-2">Instructions / Rules</label>
-                          <textarea
-                            value={personaInstruction}
-                            onChange={(e) => setPersonaInstruction(e.target.value)}
-                            placeholder="e.g. You are a tough but fair boss. Be sarcastic but give good advice."
-                            className="w-full h-32 bg-black/40 border border-white/10 rounded-xl p-3 text-sm focus:ring-2 focus:ring-rose-500/50 outline-none resize-none text-white placeholder:text-white/20"
-                          />
-                        </div>
-                        <div className="flex gap-3 pt-2">
-                          <button onClick={() => {
-                            const name = personaName.trim();
-                            const inst = personaInstruction.trim();
-                            if (!name || !inst) { showToast("Name and instructions required", "error"); return; }
-                            if (editingPersona) {
-                              saveCustomPersonas(customPersonas.map(p => p.id === editingPersona.id ? { ...p, name, instruction: inst } : p));
-                              showToast("Persona updated", "success");
-                            } else {
-                              saveCustomPersonas([...customPersonas, { id: generateUUID(), name, instruction: inst }]);
-                              showToast("Persona created", "success");
-                            }
-                            setShowPersonaModal(false);
-                          }} className="flex-1 bg-white text-black font-bold py-3 rounded-xl hover:bg-white/90 transition-all active:scale-95">Save</button>
-                          {editingPersona && (
-                            <button onClick={() => {
-                              if (window.confirm("Delete this persona?")) {
-                                saveCustomPersonas(customPersonas.filter(p => p.id !== editingPersona.id));
-                                if (selectedVibe === `custom:${editingPersona.id}`) setSelectedVibe(null);
-                                setShowPersonaModal(false);
-                                showToast("Persona deleted", "info");
-                              }
-                            }} className="px-5 bg-red-500/20 text-red-500 border border-red-500/30 font-bold rounded-xl hover:bg-red-500/30 transition-all active:scale-95">Delete</button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </Suspense>
 
 
