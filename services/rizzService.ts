@@ -150,9 +150,10 @@ const sanitizeResponse = <T>(data: T): T => {
  */
 export const generateRizz = async (
   inputText: string,
-  image?: string | undefined, // Base64 Data URL
+  image?: string | undefined,
   vibe?: string | undefined,
-  length: ResponseLength = 'short'
+  length: ResponseLength = 'short',
+  customInstruction?: string
 ): Promise<RizzResponse> => { // Return type simplified for consistency
 
   const isToxic = HARD_BLOCK_REGEX.test(inputText);
@@ -169,7 +170,13 @@ Task: IGNORE seduction. ROAST their life choices (unemployment, poor social skil
 JSON: {tease:roast social skills, smooth:sarcasm about unemployment, chaotic:reality check, loveScore:0, potentialStatus:"Blocked", analysis:why they need a job}
 Return ONLY raw JSON.`;
   } else {
-    systemInstruction = `User will provide you messages someone send to them you will give replies as the user so he can copy them and send to target. Vibe: ${vibe || "Playful"}.
+    const basePrompt = customInstruction
+      ? `User will provide you messages someone send to them you will give replies as the user so he can copy them and send to target. Vibe: Custom.
+CUSTOM PERSONA INSTRUCTIONS:
+"${customInstruction}"`
+      : `User will provide you messages someone send to them you will give replies as the user so he can copy them and send to target. Vibe: ${vibe || "Playful"}.`;
+
+    systemInstruction = `${basePrompt}
 
 TEASE: Charming, playful teasing, show affection. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
  
@@ -309,7 +316,8 @@ CRITICAL: ${length === 'short'
 export const generateBio = async (
   inputText: string,
   vibe?: string | undefined,
-  length: ResponseLength = 'short'
+  length: ResponseLength = 'short',
+  customInstruction?: string
 ): Promise<BioResponse | { analysis: string }> => {
 
   const isToxic = HARD_BLOCK_REGEX.test(inputText);
@@ -325,7 +333,13 @@ export const generateBio = async (
 Refuse. Roast their life choices (unemployment, down bad) in the bio field. PG-13.
 Return ONLY raw JSON: {"bio":"<roast>","analysis":"Rejected."}`;
   } else {
-    systemInstruction = `You are a dating profile optimizer. Vibe: ${vibe || "Attractive"}.
+    const basePrompt = customInstruction
+      ? `You are a dating profile optimizer. Vibe: Custom.
+CUSTOM PERSONA INSTRUCTIONS:
+"${customInstruction}"`
+      : `You are a dating profile optimizer. Vibe: ${vibe || "Attractive"}.`;
+
+    systemInstruction = `${basePrompt}
 Write a high-impact bio (${length === 'short' ? 'punchy and concise' : length === 'medium' ? 'balanced and engaging' : 'detailed and extensive'}). Do not use emojis unless they are essential for the vibe.
 Return ONLY raw JSON: {"bio":"<optimized bio>","analysis":"<1 sentence why it works>"}
 CRITICAL: ${length === 'short'
@@ -372,7 +386,8 @@ CRITICAL: ${length === 'short'
 export const generateCoachAdvice = async (
   messages: { role: 'user' | 'assistant'; content: string; image?: string | null; systemContext?: string | null; }[],
   shadowNotes?: string,
-  vibe?: string
+  vibe?: string,
+  customInstruction?: string
 ): Promise<{ reply: string; updatedNotes?: string }> => {
   const lastMessage = messages[messages.length - 1]?.content || '';
 
@@ -390,7 +405,13 @@ Reply in plain text, 1-2 sentences max.`;
     let personaBase = "";
     const p = (vibe || "").toLowerCase();
 
-    if (p.includes("bestie")) {
+    if (customInstruction) {
+      personaBase = `You are a Custom Persona created by the user.
+CUSTOM PERSONA INSTRUCTIONS:
+"${customInstruction}"
+
+Follow the user's instructions for your personality and tone. Be engaging and helpful.`;
+    } else if (p.includes("bestie")) {
       personaBase = `You are "The Bestie" — the user's high-energy, protective, and EQ-maximized girl best friend. You are elite at decoding vibes, subtext, and social dynamics in any situation.
 TONE: Sisterly, warm but brutally honest. Avoid emojis. 
 VOICE: "Bestie, we need to talk...", "Obsessed with this energy!", "Sweetheart, NO.", "The vibes are actually rancid right now."

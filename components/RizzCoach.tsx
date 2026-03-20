@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { CoachMessage } from '../types';
+import { CoachMessage, CustomPersona } from '../types';
 import { generateCoachAdvice } from '../services/rizzService';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
@@ -35,6 +35,7 @@ interface RizzCoachProps {
     onGoPremium?: () => void;
     shadowNotes: string;
     onUpdateShadowNotes: (notes: string) => void;
+    customPersonas?: CustomPersona[];
 }
 
 const INITIAL_MESSAGE: CoachMessage = {
@@ -243,7 +244,7 @@ const AuroraBackground = React.memo(({ colors }: { colors: any }) => (
     </div>
 ));
 
-const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdateCredits, isPremium, onWatchAd, onGoPremium, shadowNotes, onUpdateShadowNotes }) => {
+const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdateCredits, isPremium, onWatchAd, onGoPremium, shadowNotes, onUpdateShadowNotes, customPersonas = [] }) => {
     const { showToast } = useToast();
     const [messages, setMessages] = useState<CoachMessage[]>(() => {
         try {
@@ -334,7 +335,8 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
         setLoading(true);
 
         try {
-            const response = await generateCoachAdvice(next, shadowNotes, selectedVibe || undefined);
+            const customInstruction = selectedVibe?.startsWith('custom:') ? customPersonas?.find(p => p.id === selectedVibe.split(':')[1])?.instruction : undefined;
+            const response = await generateCoachAdvice(next, shadowNotes, selectedVibe || undefined, customInstruction);
             // Persist updated intel dossier if the AI tacked one on
             if (response.updatedNotes && response.updatedNotes !== shadowNotes) {
                 onUpdateShadowNotes(response.updatedNotes);
@@ -355,7 +357,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
         } finally {
             setLoading(false);
         }
-    }, [image, loading, isPremium, credits, messages, shadowNotes, onUpdateCredits, showToast, selectedVibe]);
+    }, [image, loading, isPremium, credits, messages, shadowNotes, onUpdateCredits, showToast, selectedVibe, customPersonas]);
 
     const handleImageUpload = useCallback(async () => {
         if (!Capacitor.isNativePlatform()) {
@@ -424,8 +426,23 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
     const canSend = useMemo(() => (hasContent || image !== null) && !loading, [hasContent, image, loading]);
 
     const currentTheme = useMemo(() => {
-        return COACH_VIBES.find(v => v.label === selectedVibe) || COACH_VIBES[0];
-    }, [selectedVibe]);
+        let defaultTheme = COACH_VIBES.find(v => v.label === selectedVibe);
+        if (defaultTheme) return defaultTheme;
+
+        // If it's a custom persona like 'custom:123'
+        if (selectedVibe?.startsWith('custom:')) {
+            const personaName = customPersonas.find(p => p.id === selectedVibe.split(':')[1])?.name || 'Custom Persona';
+            return {
+                label: personaName,
+                isPro: false,
+                icon: <DefaultIcon />, // Reusing default icon for custom personas
+                welcome: "I'm ready. Let's do this.",
+                colors: { primary: '#FF0080', secondary: '#7928CA', background: 'rgba(255,0,128,0.13)', glow: 'rgba(255,0,128,0.3)' }
+            };
+        }
+
+        return COACH_VIBES[0];
+    }, [selectedVibe, customPersonas]);
 
     if (!isOpen) return null;
 
@@ -501,7 +518,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                                     flex: 1
                                 }}>
-                                    {`Expert: ${selectedVibe || 'Elite Wingman'}`}
+                                    {`Expert: ${currentTheme.label || 'Elite Wingman'}`}
                                 </span>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} style={{ opacity: 0.7, flexShrink: 0 }}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -587,6 +604,26 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
                                 </span>
                                 {vibe.isPro && !isPremium && <LockIcon />}
                                 {vibe.isPro && isPremium && selectedVibe !== vibe.label && <CrownIcon />}
+                            </button>
+                        ))}
+                        {customPersonas.map((persona) => (
+                            <button
+                                key={`custom:${persona.id}`}
+                                onClick={() => {
+                                    handleVibeClick({ label: `custom:${persona.id}`, isPro: false });
+                                    setShowVibeDropdown(false);
+                                }}
+                                style={{
+                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                    textAlign: 'left', padding: '10px 12px', background: selectedVibe === `custom:${persona.id}` ? 'rgba(255,0,128,0.15)' : 'transparent',
+                                    border: 'none', borderRadius: '10px', color: selectedVibe === `custom:${persona.id}` ? '#FF0080' : 'rgba(255,255,255,0.8)',
+                                    fontSize: '14px', fontWeight: selectedVibe === `custom:${persona.id}` ? 700 : 500, cursor: 'pointer'
+                                }}
+                            >
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', borderRadius: '6px', background: 'rgba(255,255,255,0.08)' }}>👤</span>
+                                    {persona.name}
+                                </span>
                             </button>
                         ))}
                     </div>

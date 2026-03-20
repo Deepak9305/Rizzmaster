@@ -60,3 +60,9 @@ export interface CoachMessage {
 export interface CoachResponse {
   reply: string;
 }
+
+export interface CustomPersona {
+  id: string;
+  name: string;
+  instruction: string;
+}

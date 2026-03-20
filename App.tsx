@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect, lazy, Suspense, useCallback } from 
 import { generateRizz, generateBio } from './services/rizzService';
 import { NativeBridge } from './services/nativeBridge';
 import { ToastProvider, useToast } from './context/ToastContext';
-import { InputMode, RizzResponse, BioResponse, SavedItem, UserProfile, RizzOrBioResponse, ResponseLength } from './types';
+import { InputMode, RizzResponse, BioResponse, SavedItem, UserProfile, RizzOrBioResponse, ResponseLength, CustomPersona } from './types';
 import { supabase } from './services/supabaseClient';
 import RizzCard from './components/RizzCard';
 import LoginPage from './components/LoginPage';
@@ -266,6 +266,30 @@ const AppContentInner: React.FC = () => {
   const [isProfileLoadingHung, setIsProfileLoadingHung] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
   const lastOfflineStatusRef = useRef(false);
+
+  // Custom Personas State
+  const [customPersonas, setCustomPersonas] = useState<CustomPersona[]>([]);
+  const [showPersonaModal, setShowPersonaModal] = useState(false);
+  const [editingPersona, setEditingPersona] = useState<CustomPersona | null>(null);
+
+  useEffect(() => {
+    if (profile?.id) {
+      try {
+        const stored = localStorage.getItem(`rizz_custom_personas_${profile?.id}`);
+        if (stored) setCustomPersonas(JSON.parse(stored));
+      } catch (e) {
+        console.warn("Failed to load personas:", e);
+      }
+    } else {
+      setCustomPersonas([]);
+    }
+  }, [profile?.id]);
+
+  const saveCustomPersonas = useCallback((newPersonas: CustomPersona[]) => {
+    if (!profile?.id) return;
+    setCustomPersonas(newPersonas);
+    localStorage.setItem(`rizz_custom_personas_${profile.id}`, JSON.stringify(newPersonas));
+  }, [profile?.id]);
 
   // Ref to track state for event listeners without re-binding
   const stateRef = useRef({
@@ -1211,11 +1235,13 @@ const AppContentInner: React.FC = () => {
         updateCredits(creditsBefore - cost);
       }
 
+      const customInstruction = selectedVibe?.startsWith('custom:') ? customPersonas.find(p => p.id === selectedVibe.split(':')[1])?.instruction : undefined;
+
       let res;
       if (mode === InputMode.CHAT) {
-        res = await generateRizz(text, image || undefined, selectedVibe || undefined, responseLength);
+        res = await generateRizz(text, image || undefined, selectedVibe || undefined, responseLength, customInstruction);
       } else {
-        res = await generateBio(text, selectedVibe || undefined, responseLength);
+        res = await generateBio(text, selectedVibe || undefined, responseLength, customInstruction);
       }
 
       if ('potentialStatus' in res && (res.potentialStatus === 'Error' || res.potentialStatus === 'Blocked')) {
@@ -1242,7 +1268,7 @@ const AppContentInner: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [mode, inputText, image, selectedVibe, responseLength, showToast, handleOpenPremium, updateCredits]);
+  }, [mode, inputText, image, selectedVibe, responseLength, showToast, handleOpenPremium, updateCredits, customPersonas]);
 
   const runSimulatedAd = useCallback(async () => {
     return new Promise<boolean>((resolve) => {
@@ -1437,6 +1463,7 @@ const AppContentInner: React.FC = () => {
                 onGoPremium={() => { handleBackNavigation(); handleOpenPremium(); }}
                 shadowNotes={profile?.shadow_notes || ''}
                 onUpdateShadowNotes={updateShadowNotes}
+                customPersonas={customPersonas}
               />
             </Suspense>
           </div>
@@ -1470,6 +1497,49 @@ const AppContentInner: React.FC = () => {
                   savedItems={savedItems}
                   onDelete={handleDeleteSaved}
                 />
+                {showPersonaModal && (
+                  <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-[#111] rounded-3xl p-6 w-full max-w-md border border-white/10 animate-scale-up relative">
+                      <button onClick={() => setShowPersonaModal(false)} className="absolute top-4 right-4 text-white/50 hover:text-white pb-1 w-8 h-8 rounded-full border border-white/10 bg-white/5">✕</button>
+                      <h2 className="text-xl font-bold text-white mb-4">{editingPersona ? 'Edit Persona' : 'New Persona'}</h2>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-2">Persona Name</label>
+                          <input id="personaNameInput" type="text" maxLength={20} defaultValue={editingPersona?.name || ''} placeholder="e.g. Tough Boss, Shy Nerd" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-sm focus:ring-2 focus:ring-rose-500/50 outline-none text-white placeholder:text-white/20" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-2">Instructions / Rules</label>
+                          <textarea id="personaInstructionInput" defaultValue={editingPersona?.instruction || ''} placeholder="e.g. You are a tough but fair boss. Be sarcastic but give good advice." className="w-full h-32 bg-black/40 border border-white/10 rounded-xl p-3 text-sm focus:ring-2 focus:ring-rose-500/50 outline-none resize-none text-white placeholder:text-white/20" />
+                        </div>
+                        <div className="flex gap-3 pt-2">
+                          <button onClick={() => {
+                            const name = (document.getElementById('personaNameInput') as HTMLInputElement).value.trim();
+                            const inst = (document.getElementById('personaInstructionInput') as HTMLTextAreaElement).value.trim();
+                            if (!name || !inst) { showToast("Name and instructions required", "error"); return; }
+                            if (editingPersona) {
+                              saveCustomPersonas(customPersonas.map(p => p.id === editingPersona.id ? { ...p, name, instruction: inst } : p));
+                              showToast("Persona updated", "success");
+                            } else {
+                              saveCustomPersonas([...customPersonas, { id: generateUUID(), name, instruction: inst }]);
+                              showToast("Persona created", "success");
+                            }
+                            setShowPersonaModal(false);
+                          }} className="flex-1 bg-white text-black font-bold py-3 rounded-xl hover:bg-white/90 transition-all active:scale-95">Save</button>
+                          {editingPersona && (
+                            <button onClick={() => {
+                              if (window.confirm("Delete this persona?")) {
+                                saveCustomPersonas(customPersonas.filter(p => p.id !== editingPersona.id));
+                                if (selectedVibe === `custom:${editingPersona.id}`) setSelectedVibe(null);
+                                setShowPersonaModal(false);
+                                showToast("Persona deleted", "info");
+                              }
+                            }} className="px-5 bg-red-500/20 text-red-500 border border-red-500/30 font-bold rounded-xl hover:bg-red-500/30 transition-all active:scale-95">Delete</button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </Suspense>
 
 
@@ -1566,6 +1636,40 @@ const AppContentInner: React.FC = () => {
                           {vibe.isPro && profile?.is_premium && selectedVibe !== vibe.label && <span className="text-[10px] text-yellow-500">👑</span>}
                         </button>
                       ))}
+                      {customPersonas.map((persona) => (
+                        <button
+                          key={persona.id}
+                          onClick={() => handleVibeClick({ label: `custom:${persona.id}`, isPro: false })}
+                          className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all active:scale-95 flex items-center gap-1.5 ${selectedVibe === `custom:${persona.id}`
+                            ? 'bg-rose-500/20 border-rose-500 text-rose-300'
+                            : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+                            }`}
+                        >
+                          {persona.name}
+                          <span onClick={(e) => { e.stopPropagation(); setEditingPersona(persona); setShowPersonaModal(true); }} className="ml-0.5 text-[10px] opacity-60 hover:opacity-100 p-1 bg-white/5 rounded-full">✏️</span>
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => {
+                          const limit = profile?.is_premium ? 3 : 1;
+                          if (customPersonas.length >= limit) {
+                            if (!profile?.is_premium) {
+                              showToast("Free users can only have 1 custom persona. Upgrade to get 3!", "info");
+                              handleOpenPremium();
+                            } else {
+                              showToast("Pro users can have up to 3 custom personas.", "info");
+                            }
+                            return;
+                          }
+                          setEditingPersona(null);
+                          setShowPersonaModal(true);
+                        }}
+                        className="px-3 py-1.5 rounded-full text-xs font-bold border border-white/10 border-dashed bg-white/5 text-white/50 hover:text-white hover:bg-white/10 transition-all active:scale-95 flex items-center gap-1"
+                      >
+                        <span>+ Persona</span>
+                        {(!profile?.is_premium && customPersonas.length === 0) && <span className="text-[10px] text-yellow-500 ml-1">(Free)</span>}
+                        {(!profile?.is_premium && customPersonas.length >= 1) && <span className="text-[10px]">🔒</span>}
+                      </button>
                     </div>
                   </div>
 
