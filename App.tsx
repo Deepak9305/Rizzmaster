@@ -20,6 +20,7 @@ import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Network } from '@capacitor/network';
 import AdSenseBanner from './components/AdSenseBanner';
 import OnboardingFlow from './components/OnboardingFlow';
+import logo from './assets/logo.png';
 
 // Lazy Load Heavy Components / Modals
 const PremiumModal = lazy(() => import('./components/PremiumModal'));
@@ -158,11 +159,13 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ isAppReady, onComplete }) =
       <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-amber-900/10 rounded-full blur-[80px] animate-float" />
 
       <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-4xl px-4">
-        <div className="relative mb-12">
-          <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-rose-200 via-amber-100 to-rose-200 animate-text-shimmer drop-shadow-2xl">
-            Rizz Master
-          </h1>
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent blur-xl opacity-50 animate-text-shimmer" style={{ backgroundSize: '200% 100%' }}></div>
+        <div className="relative mb-8">
+          <img
+            src={logo}
+            alt="Rizz Master Logo"
+            className="w-48 h-48 md:w-64 md:h-64 object-contain animate-blur-in drop-shadow-[0_0_30px_rgba(255,0,128,0.3)]"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent blur-2xl opacity-30 animate-text-shimmer pointer-events-none" style={{ backgroundSize: '200% 100%' }}></div>
         </div>
         <div className="w-64 md:w-80 h-[2px] bg-white/10 rounded-full overflow-hidden relative">
           <div
