@@ -153,7 +153,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ isAppReady, onComplete }) =
   }, [progress, isAppReady, isExiting, onComplete]);
 
   return (
-    <div className={`fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center overflow-hidden transition-all duration-800 ${isExiting ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100'}`}>
+    <div className={`fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center overflow-hidden transition-all duration-[800ms] ${isExiting ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100'}`}>
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-rose-900/20 rounded-full blur-[100px] animate-pulse-glow" />
       <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-amber-900/10 rounded-full blur-[80px] animate-float" />
 
@@ -1329,7 +1329,7 @@ const AppContentInner: React.FC = () => {
     }
 
     showToast('Ads are only available on mobile devices.', 'info');
-  }, [showToast, updateCredits, runSimulatedAd]);
+  }, [showToast, updateCredits]);
 
   const isSaved = useCallback((content: string) => savedItems.some(item => item.content === content), [savedItems]);
   const clear = useCallback(() => {
