@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect, lazy, Suspense, useCallback } from 'react';
 import { generateRizz, generateBio } from './services/rizzService';
 import { NativeBridge } from './services/nativeBridge';
+import { NotificationService } from './services/notificationService';
 import { ToastProvider, useToast } from './context/ToastContext';
 import { InputMode, RizzResponse, BioResponse, SavedItem, UserProfile, RizzOrBioResponse, ResponseLength, CustomPersona } from './types';
 import { supabase } from './services/supabaseClient';
@@ -430,6 +431,10 @@ const AppContentInner: React.FC = () => {
           }
           // We are no longer in the background
           backgroundTimestamp.current = null;
+
+          // Record usage and refresh notification schedule
+          NotificationService.recordUsage();
+          NotificationService.schedulePersonalizedNotifications();
         }
       } else {
         // App went to BACKGROUND
@@ -579,6 +584,9 @@ const AppContentInner: React.FC = () => {
 
       // OneSignal Push Notifications
       OneSignalService.initialize();
+
+      // Local Notifications & Usage Tracking
+      NotificationService.initialize();
 
       // In-App Purchases
       IAPService.initialize(
