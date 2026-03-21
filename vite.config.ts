@@ -43,6 +43,8 @@ export default defineConfig(({ mode }) => {
             'react-vendor': ['react', 'react-dom'],
             'supabase-vendor': ['@supabase/supabase-js'],
             'openai-vendor': ['openai'],
+            'capacitor-vendor': ['@capacitor/core', '@capacitor/app', '@capacitor/status-bar', '@capacitor/camera', '@capacitor/network', '@capacitor/dialog', '@capacitor/preferences', '@capacitor/local-notifications'],
+            'admob-vendor': ['@capacitor-community/admob'],
           }
         }
       }

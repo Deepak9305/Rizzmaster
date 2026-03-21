@@ -316,14 +316,41 @@
       animation: viewZoomOut 0.55s cubic-bezier(0.3, 0, 0.2, 1) forwards;
     }
   </style>
-  <script type="module" crossorigin src="./assets/index-D8Bjxl4j.js"></script>
+  <script type="module" crossorigin src="./assets/index-BbIakkJh.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/react-vendor-KfUPlHYY.js">
+  <link rel="modulepreload" crossorigin href="./assets/capacitor-vendor-C2F12d5e.js">
   <link rel="modulepreload" crossorigin href="./assets/openai-vendor-DU3xAm2I.js">
   <link rel="modulepreload" crossorigin href="./assets/supabase-vendor-sXOJW4tQ.js">
+  <link rel="modulepreload" crossorigin href="./assets/admob-vendor-D8wGe1AD.js">
 </head>
 
 <body>
-  <div id="root"></div>
+  <div id="root">
+    <div id="app-preloader"
+      style="position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #050505; z-index: 99999; overflow: hidden;">
+      <!-- Matching glow orbs from React SplashScreen -->
+      <div
+        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 600px; height: 600px; background: rgba(136,19,55,0.2); border-radius: 50%; filter: blur(100px); animation: pulse-glow 4s ease-in-out infinite; pointer-events: none;">
+      </div>
+      <div
+        style="position: absolute; top: 25%; left: 25%; width: 300px; height: 300px; background: rgba(120,69,14,0.1); border-radius: 50%; filter: blur(80px); animation: float 6s ease-in-out infinite; pointer-events: none;">
+      </div>
+      <!-- Logo -->
+      <img src="./logo.png"
+        style="position: relative; width: 200px; height: 200px; object-fit: contain; margin-bottom: 32px;"
+        alt="Rizz Master" />
+      <!-- Loading bar slot -->
+      <div
+        style="position: relative; width: 256px; height: 2px; background: rgba(255,255,255,0.1); border-radius: 9999px; overflow: hidden;">
+        <div
+          style="position: absolute; top: 0; left: 0; height: 100%; width: 100%; background: linear-gradient(90deg, #f43f8e, #fbbf24, #f43f8e); background-size: 200% 100%; animation: shimmer 1.5s linear infinite; box-shadow: 0 0 15px rgba(251,191,36,0.5);">
+        </div>
+      </div>
+      <p
+        style="position: relative; margin-top: 14px; font-size: 10px; letter-spacing: 0.5em; color: rgba(255,255,255,0.4); font-family: 'Space Grotesk', sans-serif; text-transform: uppercase; font-weight: 700;">
+        LOADING...</p>
+    </div>
+  </div>
 </body>
 
 </html>

@@ -7,7 +7,6 @@ import { ToastProvider, useToast } from './context/ToastContext';
 import { InputMode, RizzResponse, BioResponse, SavedItem, UserProfile, RizzOrBioResponse, ResponseLength, CustomPersona } from './types';
 import { supabase } from './services/supabaseClient';
 import RizzCard from './components/RizzCard';
-import LoginPage from './components/LoginPage';
 import Footer from './components/Footer';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { Capacitor } from '@capacitor/core';
@@ -19,14 +18,15 @@ import { OneSignalService } from './services/oneSignalService';
 import IAPService from './services/iapService';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Network } from '@capacitor/network';
-import AdSenseBanner from './components/AdSenseBanner';
-import OnboardingFlow from './components/OnboardingFlow';
 
 // Lazy Load Heavy Components / Modals
 const PremiumModal = lazy(() => import('./components/PremiumModal'));
 const SavedModal = lazy(() => import('./components/SavedModal'));
 const InfoPages = lazy(() => import('./components/InfoPages'));
 const RizzCoach = lazy(() => import('./components/RizzCoach'));
+const LoginPage = lazy(() => import('./components/LoginPage'));
+const OnboardingFlow = lazy(() => import('./components/OnboardingFlow'));
+const AdSenseBanner = lazy(() => import('./components/AdSenseBanner'));
 import ErrorBoundary from './components/ErrorBoundary';
 import NoInternetOverlay from './components/NoInternetOverlay';
 
@@ -571,33 +571,36 @@ const AppContentInner: React.FC = () => {
   // Initialize Native Services
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
-      // Google Auth
-      const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
-      GoogleAuth.initialize({
-        clientId: clientId || 'YOUR_WEB_CLIENT_ID_PLACEHOLDER',
-        scopes: ['profile', 'email'],
-        grantOfflineAccess: false,
-      });
+      // Defer heavy native plugin initialization so the initial React render is fully unblocked
+      setTimeout(() => {
+        // Google Auth
+        const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
+        GoogleAuth.initialize({
+          clientId: clientId || 'YOUR_WEB_CLIENT_ID_PLACEHOLDER',
+          scopes: ['profile', 'email'],
+          grantOfflineAccess: false,
+        });
 
-      // AdMob
-      AdMobService.initialize();
+        // AdMob
+        AdMobService.initialize();
 
-      // OneSignal Push Notifications
-      OneSignalService.initialize();
+        // OneSignal Push Notifications
+        OneSignalService.initialize();
 
-      // Local Notifications & Usage Tracking
-      NotificationService.initialize();
+        // Local Notifications & Usage Tracking
+        NotificationService.initialize();
 
-      // In-App Purchases
-      IAPService.initialize(
-        () => {
-          // On successful purchase/restore
-          handleUpgrade();
-        },
-        (errorMessage) => {
-          showToast(errorMessage, 'error');
-        }
-      );
+        // In-App Purchases
+        IAPService.initialize(
+          () => {
+            // On successful purchase/restore
+            handleUpgrade();
+          },
+          (errorMessage) => {
+            showToast(errorMessage, 'error');
+          }
+        );
+      }, 1000); // Deferred by 1 second to prioritize frame rendering initial paint
 
       // --- SILENT RE-VERIFICATION FOR "WEB-BUY" EXPLOITERS ---
       // If user is premium but 'unverified', they likely used the web loophole.
@@ -1860,7 +1863,9 @@ const App: React.FC = () => {
   return (
     <ErrorBoundary>
       <ToastProvider>
-        <AppContent />
+        <Suspense fallback={<div className="min-h-screen bg-black" />}>
+          <AppContent />
+        </Suspense>
       </ToastProvider>
     </ErrorBoundary>
   );
