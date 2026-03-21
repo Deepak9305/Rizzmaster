@@ -65,26 +65,29 @@ export const AdMobService = {
         }
     },
 
+    bannerListeners: [] as any[],
+
     async showBanner(adId: string, position: 'TOP' | 'BOTTOM' = 'BOTTOM') {
         if (!Capacitor.isNativePlatform()) return;
 
         try {
             await this.initialize();
 
-            // Note: AdMob plugin might not support removeAllListeners directly.
-            // We rely on the plugin handling re-registrations or handle them via the returned handles if needed.
+            // Remove any stale listeners before adding fresh ones to prevent accumulation
+            this.bannerListeners.forEach(l => { try { l.remove(); } catch { } });
+            this.bannerListeners = [];
 
-            AdMob.addListener(BannerAdPluginEvents.Loaded, () => {
-                console.log('[AdMob] Banner Loaded Successfully');
-            });
-
-            AdMob.addListener(BannerAdPluginEvents.AdImpression, () => {
-                console.log('[AdMob] Banner Impression Reported - Visibility confirmed!');
-            });
-
-            AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (info) => {
-                console.error('[AdMob] Banner Failed to Load:', info);
-            });
+            this.bannerListeners.push(
+                await AdMob.addListener(BannerAdPluginEvents.Loaded, () => {
+                    console.log('[AdMob] Banner Loaded Successfully');
+                }),
+                await AdMob.addListener(BannerAdPluginEvents.AdImpression, () => {
+                    console.log('[AdMob] Banner Impression Reported - Visibility confirmed!');
+                }),
+                await AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (info) => {
+                    console.error('[AdMob] Banner Failed to Load:', info);
+                })
+            );
 
             const options: BannerAdOptions = {
                 adId: adId,

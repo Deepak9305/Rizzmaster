@@ -127,7 +127,7 @@ export const NotificationService = {
             const shuffledTips = [...RIZZ_TIPS].sort(() => Math.random() - 0.5);
 
             for (let i = 1; i <= 7; i++) {
-                const tip = shuffledTips[i % shuffledTips.length];
+                const tip = shuffledTips[(i - 1) % shuffledTips.length];
 
                 notifications.push({
                     title: "Rizz Master ⚡",
@@ -138,7 +138,6 @@ export const NotificationService = {
                         repeats: false, // We re-schedule every time they open the app anyway
                         allowWhileIdle: true,
                     },
-                    sound: 'default'
                 });
             }
 
