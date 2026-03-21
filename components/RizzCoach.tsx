@@ -403,7 +403,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdat
         try { localStorage.removeItem(COACH_STORAGE_KEY); } catch { }
         try { localStorage.removeItem(SHADOW_NOTES_KEY); } catch { }
 
-        const defaultVibe = COACH_VIBES.find(v => v.label === "The Wingman");
+        const defaultVibe = COACH_VIBES.find(v => v.label === "Elite Wingman");
         setMessages([{
             role: 'assistant',
             content: defaultVibe?.welcome || INITIAL_MESSAGE.content,

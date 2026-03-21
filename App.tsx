@@ -1486,7 +1486,7 @@ const AppContentInner: React.FC = () => {
                   setEditingPersona(persona);
                   setPersonaName(persona.name);
                   setPersonaInstruction(persona.instruction);
-                  setResult(null);
+                  setShowPersonaModal(true);
                 }}
               />
               {showPersonaModal && (
