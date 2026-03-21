@@ -113,6 +113,18 @@ export const AdMobService = {
         }
     },
 
+    async removeBanner() {
+        if (!Capacitor.isNativePlatform()) return;
+        try {
+            await AdMob.removeBanner();
+            // Also clean up listeners since the banner is gone
+            this.bannerListeners.forEach(l => { try { l.remove(); } catch { } });
+            this.bannerListeners = [];
+        } catch (e) {
+            console.error('AdMob Remove Banner Error:', e);
+        }
+    },
+
     async prepareInterstitial(adId: string) {
         if (!Capacitor.isNativePlatform()) return;
         if (AdMobService.interstitialReady || AdMobService.interstitialPreparing) return;

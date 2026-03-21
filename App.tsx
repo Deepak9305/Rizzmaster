@@ -472,7 +472,7 @@ const AppContentInner: React.FC = () => {
         if (!profile) return;
 
         if (profile.is_premium) {
-          AdMobService.hideBanner();
+          AdMobService.removeBanner();
           lastBannerPosition.current = null;
         } else {
           const adId = getAdId('BANNER');
@@ -481,8 +481,8 @@ const AppContentInner: React.FC = () => {
           // Always refresh banner on view change - position tracks just TOP/BOTTOM for repositioning
           lastBannerPosition.current = position;
 
-          // Force hide first to ensure the plugin repositions cleanly
-          AdMobService.hideBanner().then(() => {
+          // Force remove first to ensure the plugin repositions cleanly (hideBanner just hides it)
+          AdMobService.removeBanner().then(() => {
             timer = setTimeout(() => AdMobService.showBanner(adId, position), 1000);
           });
         }
@@ -521,7 +521,7 @@ const AppContentInner: React.FC = () => {
 
     // Hide Banner Immediately
     if (Capacitor.isNativePlatform()) {
-      AdMobService.hideBanner();
+      AdMobService.removeBanner();
     }
 
     // Close modal via back navigation if open
@@ -817,7 +817,7 @@ const AppContentInner: React.FC = () => {
         setProfile(null);
         setSavedItems([]);
         if (Capacitor.isNativePlatform()) {
-          AdMobService.hideBanner();
+          AdMobService.removeBanner();
         }
       }
     });
