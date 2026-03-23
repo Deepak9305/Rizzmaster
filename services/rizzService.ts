@@ -202,47 +202,26 @@ CRITICAL: ${length === 'short'
   }
 
   try {
-    let imageAnalysisContext = "";
-    if (image) {
-      try {
-        const visionCompletion = await llamaClient.chat.completions.create({
-          model: MODEL,
-          messages: [
-            {
-              role: "system",
-              content: "You are an expert dating analyst. Briefly describe the contents of this screenshot (chat history, dating profile, etc). Focus ONLY on the text exchange, vibe, and key details. Keep it under 3 sentences."
-            },
-            {
-              role: "user",
-              content: [
-                { type: "text", text: inputText || "Analyze this screenshot." },
-                { type: "image_url", image_url: { url: image } }
-              ]
-            }
-          ],
-          temperature: 0.5,
-          max_tokens: 300,
-        });
-        imageAnalysisContext = visionCompletion.choices[0]?.message?.content?.trim() || "";
-      } catch (error) {
-        console.error("Rizz Vision Error:", error);
-        imageAnalysisContext = "[Failed to thoroughly analyze image, proceed with user context only]";
-      }
-    }
-
     const messages: any[] = [
       { role: "system", content: systemInstruction }
     ];
 
-    let finalInput = inputText || "Generate rizz.";
-    if (imageAnalysisContext) {
-      finalInput = `[User provided an image. Image Analysis: ${imageAnalysisContext}]\n\nUser's message: ${finalInput}`;
-    }
+    const finalInput = inputText || "Generate rizz.";
 
-    messages.push({
-      role: "user",
-      content: finalInput
-    });
+    if (image) {
+      messages.push({
+        role: "user",
+        content: [
+          { type: "text", text: finalInput },
+          { type: "image_url", image_url: { url: image } }
+        ]
+      });
+    } else {
+      messages.push({
+        role: "user",
+        content: finalInput
+      });
+    }
 
     // Retry logic for robustness
     let attempts = 0;
@@ -488,59 +467,32 @@ Carry over all existing intel and update it when new facts emerge.`;
 
   const lastRawMessage = recentMessages[recentMessages.length - 1];
 
-  // STEP 1: If there's an image, analyze it with Llama 4 Scout first
-  let imageAnalysisContext = "";
-  if (lastRawMessage?.image) {
-    try {
-      const visionCompletion = await llamaClient.chat.completions.create({
-        model: MODEL,
-        messages: [
-          {
-            role: "system",
-            content: "You are an expert dating analyst. Briefly describe the contents of this screenshot (chat history, dating profile, etc). Focus ONLY on the text exchange, vibe, and key details. Keep it under 3 sentences."
-          },
-          {
-            role: "user",
-            content: [
-              { type: "text", text: lastRawMessage.content || "Analyze this screenshot." },
-              { type: "image_url", image_url: { url: lastRawMessage.image } }
-            ]
-          }
-        ],
-        temperature: 0.5,
-        max_tokens: 300,
-      });
-      imageAnalysisContext = visionCompletion.choices[0]?.message?.content?.trim() || "";
-    } catch (error) {
-      console.error("Coach Vision Error:", error);
-      imageAnalysisContext = "[Failed to thoroughly analyze image, proceed with user context only]";
-    }
-  }
-
-  // STEP 2: Format messages for the main Llama 3.1 8B Coach model
-  const formatted = recentMessages.map(m => {
-    let content = m.content;
-
-    // Inject the vision analysis into the prompt for the last message
-    if (m === lastRawMessage && imageAnalysisContext) {
-      content = `[User provided an image. Image Analysis: ${imageAnalysisContext}]\n\nUser's message: ${content}`;
-    }
+  const rawMessages = recentMessages.map(m => {
+    let textContent = m.content;
 
     // Inject any manual system context (like the "Chat Reply" continuity)
     if (m.systemContext) {
-      content = `[System Note: ${m.systemContext}]\n\n${content}`;
+      textContent = `[System Note: ${m.systemContext}]\n\n${textContent}`;
+    }
+
+    let finalContent: any = textContent;
+    if (m.image) {
+      finalContent = [
+        { type: "text", text: textContent },
+        { type: "image_url", image_url: { url: m.image } }
+      ];
     }
 
     return {
       role: m.role === 'assistant' ? 'assistant' : 'user',
-      content: content,
+      content: finalContent,
     };
   }) as any[];
 
   try {
     const completion = await llamaClient.chat.completions.create({
       model: MODEL,
-      messages: [{ role: 'system', content: systemInstruction }, ...formatted],
+      messages: [{ role: 'system', content: systemInstruction }, ...rawMessages],
       temperature: 0.75,
       max_tokens: 650,
     });
