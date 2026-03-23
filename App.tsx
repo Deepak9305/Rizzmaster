@@ -1305,12 +1305,18 @@ const AppContentInner: React.FC = () => {
   // Active Time tracking handles the grace period now (see useEffect above)
 
   const handleGenerate = useCallback(async (textToProcess?: string) => {
-    const currentProfile = profileRef.current;
-    if (!currentProfile) return;
+    const currentProfile = profileRef.current || profile;
+    if (!currentProfile) {
+      console.error("handleGenerate: currentProfile is null.");
+      return;
+    }
 
     const text = typeof textToProcess === 'string' ? textToProcess : inputText;
 
-    if (mode === InputMode.CHAT && !text.trim() && !image) {
+    // Fix uncontrolled component state mismatch by relying on the passed textToProcess string directly when available
+    const finalProcessText = (typeof textToProcess === 'string' ? textToProcess : (textareaRef.current?.value || inputText));
+
+    if (mode === InputMode.CHAT && !finalProcessText.trim() && !image) {
       setInputError("Give me some context! Paste the chat or upload a screenshot.");
       return;
     }
@@ -1342,9 +1348,9 @@ const AppContentInner: React.FC = () => {
 
       let res;
       if (mode === InputMode.CHAT) {
-        res = await generateRizz(text, image || undefined, selectedVibe || undefined, responseLength, customInstruction);
+        res = await generateRizz(finalProcessText, image || undefined, selectedVibe || undefined, responseLength, customInstruction);
       } else {
-        res = await generateBio(text, selectedVibe || undefined, responseLength, customInstruction);
+        res = await generateBio(finalProcessText, selectedVibe || undefined, responseLength, customInstruction);
       }
 
       if ('potentialStatus' in res && (res.potentialStatus === 'Error' || res.potentialStatus === 'Blocked')) {
@@ -1371,7 +1377,7 @@ const AppContentInner: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [mode, inputText, image, selectedVibe, responseLength, showToast, handleOpenPremium, updateCredits, customPersonas]);
+  }, [mode, inputText, image, selectedVibe, responseLength, showToast, handleOpenPremium, updateCredits, customPersonas, profile]);
 
   const runSimulatedAd = useCallback(async () => {
     return new Promise<boolean>((resolve) => {

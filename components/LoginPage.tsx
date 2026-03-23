@@ -162,7 +162,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry }) => {
                 {/* Ambient Effects */}
                 <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-rose-500/10 rounded-full blur-[100px] animate-pulse-glow" />
                 <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-amber-500/10 rounded-full blur-[80px] animate-float" />
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-50 contrast-150"></div>
+                {/* Removed remote grainy-gradient background causing 403 errors on startup */}
 
                 <div className="relative z-10 text-center">
                     <div className="mb-6 inline-block">
