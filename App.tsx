@@ -298,6 +298,11 @@ const AppContentInner: React.FC = () => {
     setProfile(null);
     setSession(null);
     setCurrentView('HOME');
+
+    // Privacy: Wipe all session-based Rizz AI data
+    localStorage.removeItem('rizz_coach_messages_v2');
+    localStorage.removeItem('rizzmaster_guest_shadow_notes');
+    localStorage.removeItem('rizz_coach_shadow_notes');
   }, []);
 
   useEffect(() => {
@@ -989,6 +994,12 @@ const AppContentInner: React.FC = () => {
 
     try {
       if (supabase) await supabase.auth.signOut();
+
+      // Clear AI Session Data
+      localStorage.removeItem('rizz_coach_messages_v2');
+      localStorage.removeItem('rizzmaster_guest_shadow_notes');
+      localStorage.removeItem('rizz_coach_shadow_notes');
+
       if (Capacitor.isNativePlatform()) {
         try { await GoogleAuth.signOut(); } catch (error) { console.warn("Native Logout err", error); }
         AdMobService.hideBanner();
@@ -1125,6 +1136,14 @@ const AppContentInner: React.FC = () => {
 
       // 2. Sign Out & Cleanup (Only if RPC succeeded)
       await supabase.auth.signOut();
+
+      // Clear AI Session Data
+      localStorage.removeItem('rizz_coach_messages_v2');
+      localStorage.removeItem('rizzmaster_guest_shadow_notes');
+      localStorage.removeItem('rizz_coach_shadow_notes');
+      if (currentProfile?.id) {
+        localStorage.removeItem(`rizz_custom_personas_${currentProfile.id}`);
+      }
 
       // Clear Local State
       setSession(null);
@@ -1510,6 +1529,8 @@ const AppContentInner: React.FC = () => {
           <div className="animate-slide-in-right-view fixed inset-0 z-[100] bg-black">
             <Suspense fallback={null}>
               <RizzCoach
+                key={profile?.id || 'guest_user'}
+                userId={profile?.id || 'guest_user'}
                 isOpen={true}
                 onClose={handleBackNavigation}
                 credits={profile?.credits || 0}

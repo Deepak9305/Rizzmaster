@@ -28,6 +28,7 @@ if (typeof document !== 'undefined') {
 interface RizzCoachProps {
     isOpen: boolean;
     onClose: () => void;
+    userId: string;
     credits: number;
     onUpdateCredits: (newAmountOrUpdater: number | ((prev: number) => number)) => void;
     isPremium: boolean;
@@ -115,8 +116,6 @@ const COACH_VIBES = [
     }
 ];
 
-const COACH_STORAGE_KEY = 'rizz_coach_messages_v2';
-const SHADOW_NOTES_KEY = 'rizz_coach_shadow_notes';
 const MAX_STORED_MESSAGES = 50; // cap to avoid localStorage bloat
 
 const TypingIndicator = React.memo(({ icon, colors }: { icon?: React.ReactNode, colors?: any }) => (
@@ -246,8 +245,13 @@ const AuroraBackground = React.memo(({ colors }: { colors: any }) => (
     </div>
 ));
 
-const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, credits, onUpdateCredits, isPremium, onWatchAd, onGoPremium, shadowNotes, onUpdateShadowNotes, customPersonas = [], onAddPersona, onEditPersona }) => {
+const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits, onUpdateCredits, isPremium, onWatchAd, onGoPremium, shadowNotes, onUpdateShadowNotes, customPersonas = [], onAddPersona, onEditPersona }) => {
     const { showToast } = useToast();
+
+    // Dynamically scoped keys to prevent cross-account pollution on shared devices
+    const COACH_STORAGE_KEY = `rizz_coach_messages_v2_${userId}`;
+    const SHADOW_NOTES_KEY = `rizz_coach_shadow_notes_${userId}`;
+
     const [messages, setMessages] = useState<CoachMessage[]>(() => {
         try {
             const stored = localStorage.getItem(COACH_STORAGE_KEY);
