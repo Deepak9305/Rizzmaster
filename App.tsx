@@ -303,6 +303,7 @@ const AppContentInner: React.FC = () => {
     localStorage.removeItem('rizz_coach_messages_v2_guest_user');
     localStorage.removeItem('rizzmaster_guest_shadow_notes');
     localStorage.removeItem('rizz_coach_shadow_notes_guest_user');
+    localStorage.removeItem('rizz_custom_personas_guest_user');
 
     // Legacy generic cleanup
     localStorage.removeItem('rizz_coach_messages_v2');
@@ -546,7 +547,7 @@ const AppContentInner: React.FC = () => {
   // Define handleUpgrade using REF to avoid stale closures
   const handleUpgrade = useCallback(async () => {
     const currentProfile = profileRef.current;
-    if (!currentProfile) return;
+    if (!currentProfile || currentProfile.id === 'guest_user' || isGuest) return;
 
     const updatedProfile = { ...currentProfile, is_premium: true, premium_source: 'native' };
     setProfile(updatedProfile);
