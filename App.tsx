@@ -300,9 +300,12 @@ const AppContentInner: React.FC = () => {
     setCurrentView('HOME');
 
     // Privacy: Wipe all session-based Rizz AI data
-    localStorage.removeItem('rizz_coach_messages_v2');
+    localStorage.removeItem('rizz_coach_messages_v2_guest_user');
     localStorage.removeItem('rizzmaster_guest_shadow_notes');
-    localStorage.removeItem('rizz_coach_shadow_notes');
+    localStorage.removeItem('rizz_coach_shadow_notes_guest_user');
+
+    // Legacy generic cleanup
+    localStorage.removeItem('rizz_coach_messages_v2');
   }, []);
 
   useEffect(() => {
@@ -1138,8 +1141,12 @@ const AppContentInner: React.FC = () => {
       await supabase.auth.signOut();
 
       // Clear AI Session Data
-      localStorage.removeItem('rizz_coach_messages_v2');
+      localStorage.removeItem(`rizz_coach_messages_v2_${currentProfile.id}`);
+      localStorage.removeItem(`rizz_coach_shadow_notes_${currentProfile.id}`);
       localStorage.removeItem('rizzmaster_guest_shadow_notes');
+
+      // Cleanup any dangling legacy global data
+      localStorage.removeItem('rizz_coach_messages_v2');
       localStorage.removeItem('rizz_coach_shadow_notes');
       if (currentProfile?.id) {
         localStorage.removeItem(`rizz_custom_personas_${currentProfile.id}`);
