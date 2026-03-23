@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 type PageType = 'PRIVACY' | 'TERMS' | 'SUPPORT';
 
@@ -9,6 +9,8 @@ interface InfoPagesProps {
 }
 
 const InfoPages: React.FC<InfoPagesProps> = ({ page, onBack, onDeleteAccount }) => {
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+
   const renderContent = () => {
     switch (page) {
       case 'PRIVACY':
@@ -110,19 +112,33 @@ const InfoPages: React.FC<InfoPagesProps> = ({ page, onBack, onDeleteAccount }) 
             </div>
 
             <div className="mt-12 border-t border-red-500/20 pt-8">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="text-left">
-                  <h3 className="text-red-400 font-bold mb-2 text-lg">Danger Zone</h3>
-                  <p className="text-white/40 text-sm max-w-md">
-                    Once you delete your account, there is no going back. All your saved rizz, bio, and credits will be permanently removed.
-                  </p>
+              <h3 className="text-red-400 font-bold mb-4 text-lg">Danger Zone</h3>
+              <div className="bg-red-500/5 border border-red-500/20 p-6 rounded-2xl">
+                <p className="text-white/40 text-sm mb-6">
+                  Once you delete your account, there is no going back. All your saved data will be permanently removed.
+                </p>
+
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-white/60 text-xs mb-2 tracking-wide uppercase font-bold">Type "delete my account" to confirm</p>
+                    <input
+                      type="text"
+                      placeholder="delete my account"
+                      value={deleteConfirmText}
+                      onChange={(e) => setDeleteConfirmText(e.target.value)}
+                      onPaste={(e) => e.preventDefault()}
+                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-red-500/50 outline-none transition-all placeholder:text-white/10"
+                    />
+                  </div>
+
+                  <button
+                    onClick={onDeleteAccount}
+                    disabled={deleteConfirmText !== 'delete my account'}
+                    className="w-full mt-4 px-6 py-4 bg-red-500 text-white font-black rounded-xl hover:bg-red-600 disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed transition-all shadow-xl active:scale-95 text-center flex justify-center items-center"
+                  >
+                    DELETE ACCOUNT PERMANENTLY
+                  </button>
                 </div>
-                <button
-                  onClick={onDeleteAccount}
-                  className="px-6 py-3 bg-red-500/5 border border-red-500/20 text-red-400 font-bold rounded-xl hover:bg-red-500/20 transition-all w-full md:w-auto flex-shrink-0"
-                >
-                  Delete Account
-                </button>
               </div>
             </div>
           </>

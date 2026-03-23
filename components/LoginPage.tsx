@@ -4,7 +4,11 @@ import LegalModals from './LegalModals';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { Capacitor } from '@capacitor/core';
 
-const LoginPage: React.FC = () => {
+interface LoginPageProps {
+    onGuestEntry?: () => void;
+}
+
+const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry }) => {
     const [isEmailMode, setIsEmailMode] = useState(false);
     const [isSignUp, setIsSignUp] = useState(false);
     const [email, setEmail] = useState('');
@@ -311,7 +315,14 @@ const LoginPage: React.FC = () => {
                                     Sign in with Email
                                 </button>
 
-
+                                {onGuestEntry && (
+                                    <button
+                                        onClick={onGuestEntry}
+                                        className="w-full py-4 bg-transparent border border-white/5 text-white/50 rounded-xl font-bold hover:bg-white/5 hover:text-white transition-all active:scale-[0.98] flex items-center justify-center gap-3 mt-2"
+                                    >
+                                        Continue as Guest
+                                    </button>
+                                )}
                             </div>
                         )}
 

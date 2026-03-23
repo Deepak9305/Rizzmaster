@@ -275,6 +275,31 @@ const AppContentInner: React.FC = () => {
   const [personaName, setPersonaName] = useState('');
   const [personaInstruction, setPersonaInstruction] = useState('');
 
+  // Guest Mode State
+  const [isGuest, setIsGuest] = useState(false);
+
+  const handleGuestEntry = useCallback(() => {
+    setIsGuest(true);
+    const guestNotes = localStorage.getItem('rizzmaster_guest_shadow_notes') || 'Playing it cool as a guest. 😎';
+    // Provide a mock guest profile
+    setProfile({
+      id: 'guest_user',
+      email: 'guest@rizzmaster.local',
+      credits: DAILY_CREDITS, // Same as normal sign-in
+      is_premium: false,
+      last_daily_reset: new Date().toISOString(),
+      shadow_notes: guestNotes
+    } as any);
+    showToast(`Entered Guest Mode! ⚡ (${DAILY_CREDITS} Credits)`, "info");
+  }, [showToast]);
+
+  const handleExitGuestMode = useCallback(() => {
+    setIsGuest(false);
+    setProfile(null);
+    setSession(null);
+    setCurrentView('HOME');
+  }, []);
+
   useEffect(() => {
     if (profile?.id) {
       try {
@@ -766,9 +791,14 @@ const AppContentInner: React.FC = () => {
   }, [currentView]);
 
   const handleOpenPremium = useCallback(() => {
+    if (isGuest) {
+      showToast("Please sign in or create an account to go Unlimited!", "info");
+      handleExitGuestMode();
+      return;
+    }
     window.history.pushState({ view: currentView, premium: true }, '');
     setShowPremiumModal(true);
-  }, [currentView]);
+  }, [currentView, isGuest, showToast, handleExitGuestMode]);
 
   const handleOpenSaved = useCallback(() => {
     window.history.pushState({ view: currentView, saved: true }, '');
@@ -1384,14 +1414,16 @@ const AppContentInner: React.FC = () => {
       if (!prev) return null;
       const updated = { ...prev, shadow_notes: newNotes };
 
-      if (supabase) {
+      if (isGuest || prev.id === 'guest_user') {
+        localStorage.setItem('rizzmaster_guest_shadow_notes', newNotes);
+      } else if (supabase) {
         supabase.from('profiles').update({ shadow_notes: newNotes }).eq('id', prev.id)
           .then(({ error }) => { if (error) console.error("Shadow Notes Sync Error:", error); });
       }
 
       return updated;
     });
-  }, []);
+  }, [isGuest]);
 
   return (
     <div className="relative min-h-screen bg-black overflow-x-hidden">
@@ -1431,8 +1463,8 @@ const AppContentInner: React.FC = () => {
               </button>
             </div>
           </div>
-        ) : !session ? (
-          <LoginPage />
+        ) : (!session && !isGuest) ? (
+          <LoginPage onGuestEntry={handleGuestEntry} />
         ) : !profile ? (
           <div className="min-h-screen flex flex-col items-center justify-center text-white p-4 bg-black safe-top safe-bottom">
             <div className="absolute inset-0 bg-rose-900/5 blur-[100px] pointer-events-none" />
