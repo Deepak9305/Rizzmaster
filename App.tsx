@@ -281,16 +281,34 @@ const AppContentInner: React.FC = () => {
   const handleGuestEntry = useCallback(() => {
     setIsGuest(true);
     const guestNotes = localStorage.getItem('rizzmaster_guest_shadow_notes') || 'Playing it cool as a guest. 😎';
+
+    // --- GUEST CREDIT EXPLOIT FIX ---
+    let guestCredits = DAILY_CREDITS;
+    const lastReset = localStorage.getItem('rizzmaster_guest_last_reset');
+    const todayStr = new Date().toDateString();
+
+    if (lastReset === todayStr) {
+      // Same day, load existing credits
+      const savedCredits = localStorage.getItem('rizzmaster_guest_credits');
+      if (savedCredits !== null && !isNaN(parseInt(savedCredits))) {
+        guestCredits = parseInt(savedCredits);
+      }
+    } else {
+      // New day (or first time), reset to DAILY_CREDITS and store new date
+      localStorage.setItem('rizzmaster_guest_last_reset', todayStr);
+      localStorage.setItem('rizzmaster_guest_credits', DAILY_CREDITS.toString());
+    }
+
     // Provide a mock guest profile
     setProfile({
       id: 'guest_user',
       email: 'guest@rizzmaster.local',
-      credits: DAILY_CREDITS, // Same as normal sign-in
+      credits: guestCredits, // Dynamically loaded
       is_premium: false,
       last_daily_reset: new Date().toISOString(),
       shadow_notes: guestNotes
     } as any);
-    showToast(`Entered Guest Mode! ⚡ (${DAILY_CREDITS} Credits)`, "info");
+    showToast(`Entered Guest Mode! ⚡ (${guestCredits} Credits)`, "info");
   }, [showToast]);
 
   const handleExitGuestMode = useCallback(() => {
@@ -1040,8 +1058,10 @@ const AppContentInner: React.FC = () => {
 
       const updated = { ...prev, credits: newAmount };
 
-      // Skip Supabase sync for guest users
-      if (prev.id !== 'guest_user' && supabase) {
+      // Update Database or LocalStorage
+      if (prev.id === 'guest_user') {
+        localStorage.setItem('rizzmaster_guest_credits', newAmount.toString());
+      } else if (supabase) {
         supabase.from('profiles').update({ credits: newAmount }).eq('id', prev.id)
           .then(({ error }) => { if (error) console.error("Credit Sync Error:", error); });
       }
@@ -1113,6 +1133,8 @@ const AppContentInner: React.FC = () => {
 
     if (currentProfile.id === 'guest_user' || isGuest) {
       localStorage.removeItem('rizzmaster_guest_shadow_notes');
+      localStorage.removeItem('rizzmaster_guest_credits');
+      localStorage.removeItem('rizzmaster_guest_last_reset');
       handleExitGuestMode();
       showToast("Guest account deleted", 'success');
       return;
