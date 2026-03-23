@@ -980,6 +980,11 @@ const AppContentInner: React.FC = () => {
   };
 
   const handleLogout = useCallback(async () => {
+    if (isGuest) {
+      handleExitGuestMode();
+      showToast("Successfully logged out 👋", 'success');
+      return;
+    }
     if (!window.confirm("Are you sure you want to log out of Rizz Master?")) return;
 
     try {
@@ -1012,8 +1017,6 @@ const AppContentInner: React.FC = () => {
 
 
   const updateCredits = useCallback(async (newAmountOrUpdater: number | ((prev: number) => number)) => {
-    // We update the profile state functionally to ensure we never lose updates 
-    // due to race conditions or stale closures.
     setProfile(prev => {
       if (!prev) return null;
       const newAmount = typeof newAmountOrUpdater === 'function'
@@ -1022,8 +1025,8 @@ const AppContentInner: React.FC = () => {
 
       const updated = { ...prev, credits: newAmount };
 
-      // Update persistent storage (Background task)
-      if (supabase) {
+      // Skip Supabase sync for guest users
+      if (prev.id !== 'guest_user' && supabase) {
         supabase.from('profiles').update({ credits: newAmount }).eq('id', prev.id)
           .then(({ error }) => { if (error) console.error("Credit Sync Error:", error); });
       }
@@ -1046,6 +1049,7 @@ const AppContentInner: React.FC = () => {
     const currentProfile = profileRef.current;
     if (!currentProfile) return;
 
+    const isGuestUser = currentProfile.id === 'guest_user';
     const exists = savedItems.find(item => item.content === content);
 
     if (exists) {
@@ -1053,7 +1057,7 @@ const AppContentInner: React.FC = () => {
       setSavedItems(newItems);
       showToast("Removed from saved", 'info');
 
-      if (supabase) {
+      if (!isGuestUser && supabase) {
         await supabase.from('saved_items').delete().eq('id', exists.id);
       }
     } else {
@@ -1069,28 +1073,35 @@ const AppContentInner: React.FC = () => {
       setSavedItems(newItems);
       showToast("Saved to your gems", 'success');
 
-      if (supabase) {
-        const { data } = await supabase.from('profiles').select('id').eq('id', currentProfile.id).single(); // Just a ping to ensure they exist
+      if (!isGuestUser && supabase) {
+        const { data } = await supabase.from('profiles').select('id').eq('id', currentProfile.id).single();
         await supabase.from('saved_items').insert([{ user_id: currentProfile.id, content, type }]);
       }
     }
   }, [savedItems, showToast]);
 
   const handleDeleteSaved = useCallback(async (id: string) => {
+    const isGuestUser = profileRef.current?.id === 'guest_user';
     const newItems = savedItems.filter(item => item.id !== id);
     setSavedItems(newItems);
     showToast("Item deleted", 'info');
 
-    if (supabase) {
+    if (!isGuestUser && supabase) {
       await supabase.from('saved_items').delete().eq('id', id);
     }
   }, [savedItems, showToast]);
 
   const handleDeleteAccount = useCallback(async () => {
-    if (!window.confirm("Are you sure? This cannot be undone. Your account and data will be permanently deleted.")) return;
-
+    // Confirmation is handled by the InfoPages UI — no window.confirm needed here.
     const currentProfile = profileRef.current;
     if (!currentProfile) return;
+
+    if (currentProfile.id === 'guest_user' || isGuest) {
+      localStorage.removeItem('rizzmaster_guest_shadow_notes');
+      handleExitGuestMode();
+      showToast("Guest account deleted", 'success');
+      return;
+    }
 
     if (!supabase) return;
 
