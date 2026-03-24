@@ -550,7 +550,8 @@ const AppContentInner: React.FC = () => {
       CapacitorApp.addListener('appStateChange', ({ isActive }) => {
         if (isActive) {
           const currentProfile = profileRef.current;
-          if (currentProfile && !currentProfile.is_premium) {
+          // Guard: only refresh if logged in and not premium
+          if (currentProfile && !currentProfile.is_premium && currentProfile.id !== 'guest_user') {
             refreshBanner(true); // Force refresh on resume
           }
         }
@@ -1025,7 +1026,7 @@ const AppContentInner: React.FC = () => {
 
       if (Capacitor.isNativePlatform()) {
         try { await GoogleAuth.signOut(); } catch (error) { console.warn("Native Logout err", error); }
-        AdMobService.hideBanner();
+        AdMobService.removeBanner(); // removeBanner fully destroys it; hideBanner only hides
         OneSignalService.logout();
       }
     } catch (err) {
