@@ -467,8 +467,6 @@ Carry over all existing intel and update it when new facts emerge.`;
   // Only remember the last 5 messages to keep context focused and save tokens
   const recentMessages = messages.slice(-5);
 
-  const lastRawMessage = recentMessages[recentMessages.length - 1];
-
   const rawMessages = await Promise.all(recentMessages.map(async m => {
     let textContent = m.content;
 

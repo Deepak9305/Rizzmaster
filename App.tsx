@@ -1214,10 +1214,15 @@ const AppContentInner: React.FC = () => {
         setImage(reader.result as string);
         if (fileInputRef.current) fileInputRef.current.value = '';
       };
+      reader.onerror = () => {
+        console.error('FileReader error reading image.');
+        showToast('Failed to load image. Please try another file.', 'error');
+      };
       reader.readAsDataURL(file);
       if (inputError) setInputError(null);
     }
   }, [inputError, showToast]);
+
 
   const handleCameraCapture = useCallback(async () => {
     if (!Capacitor.isNativePlatform()) {
@@ -1354,10 +1359,10 @@ const AppContentInner: React.FC = () => {
       genCount += 1;
       localStorage.setItem('rizz_daily_gen_count', genCount.toString());
 
-      // Show ad ONLY on the 3rd generation of the day
+      // Show ad ONLY on the 3rd generation of the day — await it so it doesn't race with setLoading
       if (genCount === 3) {
         console.log('[AdMob] Triggering 3rd generation daily interstitial...');
-        AdMobService.showInterstitial(getAdId('INTERSTITIAL'));
+        await AdMobService.showInterstitial(getAdId('INTERSTITIAL'));
       }
     }
     // --------------------------------------------------
