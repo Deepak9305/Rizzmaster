@@ -27,6 +27,11 @@ export const AdMobService = {
     rewardInterstitialPreparing: false,
     isRewardInterstitialShowing: false,
 
+    // Internal Promise tracking to avoid redundant fetches and handle race conditions
+    interstitialPromise: null as Promise<void> | null,
+    rewardVideoPromise: null as Promise<void> | null,
+    rewardInterstitialPromise: null as Promise<void> | null,
+
     // Set this to true to force the GDPR popup to show for everyone during testing/development.
     // Set to false before releasing to the Play Store.
     DEBUG_FORCE_GDPR: false,
@@ -125,21 +130,30 @@ export const AdMobService = {
         }
     },
 
-    async prepareInterstitial(adId: string) {
+    async prepareInterstitial(adId: string): Promise<void> {
         if (!Capacitor.isNativePlatform()) return;
-        if (AdMobService.interstitialReady || AdMobService.interstitialPreparing) return;
+        if (AdMobService.interstitialReady) return;
+
+        // If already preparing, return the existing promise so caller can await it
+        if (AdMobService.interstitialPromise) return AdMobService.interstitialPromise;
 
         await this.initialize();
         AdMobService.interstitialPreparing = true;
-        try {
-            await AdMob.prepareInterstitial({ adId });
-            AdMobService.interstitialReady = true;
-            console.log('AdMob Interstitial Prepared');
-        } catch (e) {
-            console.error('AdMob Prepare Interstitial Error:', e);
-        } finally {
-            AdMobService.interstitialPreparing = false;
-        }
+
+        AdMobService.interstitialPromise = (async () => {
+            try {
+                await AdMob.prepareInterstitial({ adId });
+                AdMobService.interstitialReady = true;
+                console.log('AdMob Interstitial Prepared');
+            } catch (e) {
+                console.error('AdMob Prepare Interstitial Error:', e);
+            } finally {
+                AdMobService.interstitialPreparing = false;
+                AdMobService.interstitialPromise = null;
+            }
+        })();
+
+        return AdMobService.interstitialPromise;
     },
 
     async showInterstitial(adId: string, onShow?: () => void): Promise<boolean> {
@@ -212,21 +226,29 @@ export const AdMobService = {
 
     // --- REWARDED INTERSTITIAL (New) ---
 
-    async prepareRewardInterstitial(adId: string) {
+    async prepareRewardInterstitial(adId: string): Promise<void> {
         if (!Capacitor.isNativePlatform()) return;
-        if (AdMobService.rewardInterstitialReady || AdMobService.rewardInterstitialPreparing) return;
+        if (AdMobService.rewardInterstitialReady) return;
+
+        if (AdMobService.rewardInterstitialPromise) return AdMobService.rewardInterstitialPromise;
 
         await this.initialize();
         AdMobService.rewardInterstitialPreparing = true;
-        try {
-            await AdMob.prepareRewardInterstitialAd({ adId });
-            AdMobService.rewardInterstitialReady = true;
-            console.log('AdMob Reward Interstitial Prepared');
-        } catch (e) {
-            console.error('AdMob Prepare Reward Interstitial Error:', e);
-        } finally {
-            AdMobService.rewardInterstitialPreparing = false;
-        }
+
+        AdMobService.rewardInterstitialPromise = (async () => {
+            try {
+                await AdMob.prepareRewardInterstitialAd({ adId });
+                AdMobService.rewardInterstitialReady = true;
+                console.log('AdMob Reward Interstitial Prepared');
+            } catch (e) {
+                console.error('AdMob Prepare Reward Interstitial Error:', e);
+            } finally {
+                AdMobService.rewardInterstitialPreparing = false;
+                AdMobService.rewardInterstitialPromise = null;
+            }
+        })();
+
+        return AdMobService.rewardInterstitialPromise;
     },
 
     async showRewardInterstitial(adId: string, onShow?: () => void): Promise<boolean> {
@@ -308,21 +330,29 @@ export const AdMobService = {
 
     // --- REWARDED VIDEO ---
 
-    async prepareRewardVideo(adId: string) {
+    async prepareRewardVideo(adId: string): Promise<void> {
         if (!Capacitor.isNativePlatform()) return;
-        if (AdMobService.rewardVideoReady || AdMobService.rewardVideoPreparing) return;
+        if (AdMobService.rewardVideoReady) return;
+
+        if (AdMobService.rewardVideoPromise) return AdMobService.rewardVideoPromise;
 
         await this.initialize();
         AdMobService.rewardVideoPreparing = true;
-        try {
-            await AdMob.prepareRewardVideoAd({ adId });
-            AdMobService.rewardVideoReady = true;
-            console.log('AdMob Reward Video Prepared');
-        } catch (e) {
-            console.error('AdMob Prepare Reward Error:', e);
-        } finally {
-            AdMobService.rewardVideoPreparing = false;
-        }
+
+        AdMobService.rewardVideoPromise = (async () => {
+            try {
+                await AdMob.prepareRewardVideoAd({ adId });
+                AdMobService.rewardVideoReady = true;
+                console.log('AdMob Reward Video Prepared');
+            } catch (e) {
+                console.error('AdMob Prepare Reward Error:', e);
+            } finally {
+                AdMobService.rewardVideoPreparing = false;
+                AdMobService.rewardVideoPromise = null;
+            }
+        })();
+
+        return AdMobService.rewardVideoPromise;
     },
 
     async showRewardVideo(adId: string, onShow?: () => void): Promise<boolean> {

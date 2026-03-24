@@ -14,6 +14,9 @@ export interface UserProfile {
   last_daily_reset: string;
   shadow_notes?: string | null;
   premium_source?: string | null;
+  streak_count?: number;
+  last_streak_claim?: string | null;
+  total_time_spent_ms?: number;
 }
 
 export interface SavedItem {

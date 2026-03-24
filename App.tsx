@@ -31,7 +31,8 @@ import ErrorBoundary from './components/ErrorBoundary';
 import NoInternetOverlay from './components/NoInternetOverlay';
 
 const DAILY_CREDITS = 5;
-const REWARD_CREDITS = 3;
+const REWARD_CREDITS = 5;
+const REWARD_INTERSTITIAL_CREDITS = 6;
 const AD_DURATION = 10;
 const SIMULATE_REWARD_AD = false; // Real AdMob by default, timer only as fallback
 
@@ -443,12 +444,9 @@ const AppContentInner: React.FC = () => {
   // in background/foreground event listeners and intervals without causing re-renders.
   const activeTimeMs = useRef<number>(0);
   const lastAdActiveTime = useRef<number>(0);
-  const lastCoachAdTime = useRef<number>(0);
   const backgroundTimestamp = useRef<number | null>(null);
 
-  const INTERSTITIAL_COOLDOWN_MS = 2 * 60 * 1000; // 2 minutes (Reduced from 3m)
-  const COACH_AD_COOLDOWN_MS = 2 * 60 * 1000; // 2 minutes (Reduced from 3m)
-  const COACH_AD_GRACE_PERIOD_MS = 1 * 60 * 1000; // 1 minute (Reduced from 3m)
+  const INTERSTITIAL_COOLDOWN_MS = 2 * 60 * 1000; // 2 minutes (Cooldown between ads)
   const INACTIVITY_RESET_MS = 30 * 60 * 1000; // 30 minutes of background time to reset
 
   // Track Active Time (Foreground)
@@ -480,7 +478,6 @@ const AppContentInner: React.FC = () => {
             // Reset active time and ad tracking to grant a new grace period
             activeTimeMs.current = 0;
             lastAdActiveTime.current = 0;
-            lastCoachAdTime.current = 0;
           }
           // We are no longer in the background
           backgroundTimestamp.current = null;
@@ -490,8 +487,25 @@ const AppContentInner: React.FC = () => {
           NotificationService.schedulePersonalizedNotifications();
         }
       } else {
-        // App went to BACKGROUND
+        // App went to BACKGROUND — flush session time to Supabase
         backgroundTimestamp.current = now;
+
+        const sessionTimeMs = activeTimeMs.current;
+        if (sessionTimeMs > 0) {
+          const currentProfile = profileRef.current;
+          if (supabase && currentProfile && currentProfile.id !== 'guest_user') {
+            const newTotal = (currentProfile.total_time_spent_ms || 0) + sessionTimeMs;
+            supabase.from('profiles')
+              .update({ total_time_spent_ms: newTotal })
+              .eq('id', currentProfile.id)
+              .then(({ error }) => {
+                if (error) console.warn('[Analytics] Time flush failed:', error.message);
+                else console.log(`[Analytics] Flushed ${Math.round(sessionTimeMs / 1000)}s of session time.`);
+              });
+          }
+          // Reset so we don't double-count on next foreground
+          activeTimeMs.current = 0;
+        }
       }
     }).then(listener => appStateListener = listener);
 
@@ -747,23 +761,16 @@ const AppContentInner: React.FC = () => {
   }, []);
 
   // Navigation Wrappers
-  const showCoachTransitionAd = async () => {
+  const showCoachTransitionAd = useCallback(async () => {
     const isPremium = profileRef.current?.is_premium;
     if (isPremium) return;
 
-    const currentActiveTime = activeTimeMs.current;
-
-    // Check grace period (3 mins) or if on Web
-    if (currentActiveTime < COACH_AD_GRACE_PERIOD_MS && Capacitor.isNativePlatform()) return;
-
-    // Check combined 3 min cooldown
-    if (currentActiveTime - lastCoachAdTime.current >= COACH_AD_COOLDOWN_MS) {
+    const now = activeTimeMs.current;
+    if (now - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS) {
       setIsAdLoading('interstitial'); // SHOW OVERLAY
 
       // Update timer synchronously BEFORE async execution to prevent race condition "double-taps"
-      const now = activeTimeMs.current;
-      lastCoachAdTime.current = now;
-      lastAdActiveTime.current = now; // Synchronize with generation ads
+      lastAdActiveTime.current = now;
 
       if (Capacitor.isNativePlatform()) {
         const adId = getAdId('INTERSTITIAL');
@@ -778,7 +785,7 @@ const AppContentInner: React.FC = () => {
         setIsAdLoading('hidden');
       }
     }
-  };
+  }, [INTERSTITIAL_COOLDOWN_MS]);
 
   const handleViewNavigation = useCallback(async (view: ViewState) => {
     if (view === currentView) return;
@@ -817,7 +824,7 @@ const AppContentInner: React.FC = () => {
         AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'));
       }
     }
-  }, [currentView]);
+  }, [currentView, showCoachTransitionAd]);
 
   const handleOpenPremium = useCallback(() => {
     if (isGuest) {
@@ -963,20 +970,83 @@ const AppContentInner: React.FC = () => {
           credits: DAILY_CREDITS,
           is_premium: false,
           last_daily_reset: new Date().toISOString().split('T')[0],
-          shadow_notes: ''
+          shadow_notes: '',
+          streak_count: 1,
+          last_streak_claim: new Date().toISOString().split('T')[0],
+          total_time_spent_ms: 0,
         }]).select().single();
         if (newProfile) profileData = newProfile;
       } else if (profileData) {
-        // Existing user — check if daily reset is needed
         const today = new Date().toISOString().split('T')[0];
+
+        // --- DAILY CREDIT RESET ---
+        let updates: Record<string, any> = {};
         if (profileData.last_daily_reset !== today) {
-          const { data: updated } = await supabase.from('profiles').update({ credits: DAILY_CREDITS, last_daily_reset: today }).eq('id', userId).select().single();
+          updates.credits = DAILY_CREDITS;
+          updates.last_daily_reset = today;
+        }
+
+        // --- STREAK LOGIC ---
+        const lastClaim = profileData.last_streak_claim;
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+        if (lastClaim !== today) {
+          let newStreak = 1;
+          let bonusCredits = 0;
+          let streakMsg = '';
+
+          if (lastClaim === yesterdayStr) {
+            // Streak continues
+            newStreak = (profileData.streak_count || 0) + 1;
+          }
+          // else: streak broken, reset to 1
+
+          // Calculate bonus credits based on streak day
+          if (newStreak >= 8) {
+            bonusCredits = 3;
+            streakMsg = `🔥 Day ${newStreak} Streak! +${bonusCredits} Bonus Credits!`;
+          } else if (newStreak >= 5) {
+            bonusCredits = 2;
+            streakMsg = `🔥 Day ${newStreak} Streak! +${bonusCredits} Bonus Credits!`;
+          } else if (newStreak >= 2) {
+            bonusCredits = 1;
+            streakMsg = `🔥 Day ${newStreak} Streak! +${bonusCredits} Bonus Credit!`;
+          } else {
+            streakMsg = `Welcome back! 🔥 Day 1 – keep it up for bonus credits!`;
+          }
+
+          updates.streak_count = newStreak;
+          updates.last_streak_claim = today;
+          if (bonusCredits > 0 && !profileData.is_premium) {
+            updates.credits = (updates.credits ?? profileData.credits ?? 0) + bonusCredits;
+          }
+
+          // Show the streak toast after a brief delay so splash is gone
+          setTimeout(() => showToast(streakMsg, 'success'), 1500);
+        }
+
+        // Apply all DB updates in one call
+        if (Object.keys(updates).length > 0) {
+          const { data: updated } = await supabase
+            .from('profiles').update(updates).eq('id', userId).select().single();
           if (updated) profileData = updated;
         }
       }
 
       if (profileData) {
         setProfile(profileData as UserProfile);
+
+        // --- DAU ACTIVITY LOG (silent, fire-and-forget) ---
+        // The PRIMARY KEY prevents duplicate inserts for the same user on the same day.
+        supabase.from('user_activity_log')
+          .insert([{ user_id: userId }])
+          .then(({ error }) => {
+            if (error && error.code !== '23505') { // 23505 = unique violation (expected)
+              console.warn('[Analytics] Activity log insert failed:', error.message);
+            }
+          });
 
         // --- DATA MIGRATION: Sync legacy local notes to Supabase ---
         if (!profileData.shadow_notes) {
@@ -993,8 +1063,6 @@ const AppContentInner: React.FC = () => {
 
               if (migratedProfile) {
                 setProfile(migratedProfile as UserProfile);
-                // Optional: Clear local storage after successful migration
-                // localStorage.removeItem('rizz_coach_shadow_notes');
               }
             }
           } catch (err) {
@@ -1346,24 +1414,33 @@ const AppContentInner: React.FC = () => {
       return;
     }
 
-    // --- DAILY 3RD GENERATION INTERSTITIAL AD LOGIC ---
+    // --- RECURRING INTERSTITIAL AD LOGIC ---
     if (!currentProfile.is_premium && Capacitor.isNativePlatform()) {
       const today = new Date().toDateString();
       const lastAdDate = localStorage.getItem('rizz_last_ad_date');
       let genCount = parseInt(localStorage.getItem('rizz_daily_gen_count') || '0');
+      let lastAdGen = parseInt(localStorage.getItem('rizz_last_ad_gen_count') || '0');
 
       if (lastAdDate !== today) {
         genCount = 0;
+        lastAdGen = 0;
         localStorage.setItem('rizz_last_ad_date', today);
+        localStorage.setItem('rizz_last_ad_gen_count', '0');
       }
 
       genCount += 1;
       localStorage.setItem('rizz_daily_gen_count', genCount.toString());
 
-      // Show ad ONLY on the 3rd generation of the day — await it so it doesn't race with setLoading
-      if (genCount === 3) {
-        console.log('[AdMob] Triggering 3rd generation daily interstitial...');
+      // Target: 3rd gen for first ad, then lastAdGen + 4 for subsequent ads
+      const isFirstAd = lastAdGen === 0;
+      const targetGen = isFirstAd ? 3 : lastAdGen + 4;
+
+      const now = activeTimeMs.current;
+      if (genCount >= targetGen && (now - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS)) {
+        console.log(`[AdMob] Triggering deferred interstitial at gen ${genCount} (Target was ${targetGen})...`);
         await AdMobService.showInterstitial(getAdId('INTERSTITIAL'));
+        lastAdActiveTime.current = now;
+        localStorage.setItem('rizz_last_ad_gen_count', genCount.toString());
       }
     }
     // --------------------------------------------------
@@ -1462,7 +1539,7 @@ const AppContentInner: React.FC = () => {
           // Prompt the user with a native dialog
           const { value } = await Dialog.confirm({
             title: 'Bonus Reward! 🎁',
-            message: 'Want +5 more credits? Watch one more short ad.',
+            message: `Want +${REWARD_INTERSTITIAL_CREDITS} more credits? Watch one more short ad.`,
             okButtonTitle: 'Watch Now',
             cancelButtonTitle: 'No Thanks'
           });
@@ -1474,8 +1551,8 @@ const AppContentInner: React.FC = () => {
               let bonusEarned = await AdMobService.showRewardInterstitial(rewardInterId, onShow);
 
               if (bonusEarned) {
-                updateCredits((prevCredits) => prevCredits + 5);
-                showToast(`+5 Bonus Credits! 🥷`, 'success');
+                updateCredits((prevCredits) => prevCredits + REWARD_INTERSTITIAL_CREDITS);
+                showToast(`+${REWARD_INTERSTITIAL_CREDITS} Bonus Credits! 🥷`, 'success');
               } else {
                 showToast('Ad failed to load. Please try again later.', 'error');
               }
