@@ -277,6 +277,7 @@ const AppContentInner: React.FC = () => {
 
   // Guest Mode State
   const [isGuest, setIsGuest] = useState(false);
+  const [showGuestCreditsModal, setShowGuestCreditsModal] = useState(false);
 
   const handleGuestEntry = useCallback(() => {
     setIsGuest(true);
@@ -1329,8 +1330,13 @@ const AppContentInner: React.FC = () => {
     const cost = (mode === InputMode.CHAT && image) ? 2 : 1;
 
     if (!currentProfile.is_premium && (currentProfile.credits || 0) < cost) {
-      if ((currentProfile.credits || 0) > 0) showToast(`Need ${cost} credits.`, 'error');
-      handleOpenPremium();
+      if (isGuest) {
+        // Guests should NOT be booted to login. Show the in-context modal instead.
+        setShowGuestCreditsModal(true);
+      } else {
+        if ((currentProfile.credits || 0) > 0) showToast(`Need ${cost} credits.`, 'error');
+        handleOpenPremium();
+      }
       return;
     }
 
@@ -1377,7 +1383,7 @@ const AppContentInner: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [mode, inputText, image, selectedVibe, responseLength, showToast, handleOpenPremium, updateCredits, customPersonas, profile]);
+  }, [mode, inputText, image, selectedVibe, responseLength, showToast, handleOpenPremium, updateCredits, customPersonas, profile, isGuest]);
 
   const runSimulatedAd = useCallback(async () => {
     return new Promise<boolean>((resolve) => {
@@ -1688,6 +1694,39 @@ const AppContentInner: React.FC = () => {
                   onDelete={handleDeleteSaved}
                 />
               </Suspense>
+
+              {/* Guest Out of Credits Modal — shown instead of booting guest to login */}
+              {showGuestCreditsModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                  <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowGuestCreditsModal(false)} />
+                  <div className="relative bg-[#111] rounded-3xl p-6 max-w-sm w-full border border-white/10 animate-scale-in text-center">
+                    <div className="w-14 h-14 mx-auto mb-3 bg-rose-500/10 rounded-full flex items-center justify-center text-2xl border border-rose-500/20">⚡</div>
+                    <h2 className="text-xl font-bold text-white mb-1">Out of Credits</h2>
+                    <p className="text-sm text-white/50 mb-6">You need more juice to keep going. Watch an ad or sign up for the full experience.</p>
+                    <div className="flex flex-col gap-3">
+                      <button
+                        onClick={() => { setShowGuestCreditsModal(false); handleWatchAd(); }}
+                        className="w-full py-3.5 bg-white/10 hover:bg-white/15 border border-white/10 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><rect x="2" y="5" width="20" height="14" rx="2" stroke="white" strokeWidth="1.8" /><path d="M8 10l8 4-8 4V10z" fill="white" /></svg>
+                        Watch Ad (+3 Credits)
+                      </button>
+                      <button
+                        onClick={() => { setShowGuestCreditsModal(false); handleExitGuestMode(); }}
+                        className="w-full py-3.5 bg-gradient-to-r from-yellow-600 to-amber-500 text-black font-bold rounded-xl flex items-center justify-center gap-2 hover:brightness-110 transition-all active:scale-95"
+                      >
+                        <span>👑</span> Sign Up for Unlimited
+                      </button>
+                      <button
+                        onClick={() => setShowGuestCreditsModal(false)}
+                        className="text-xs text-white/30 hover:text-white/60 py-2 transition-all"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
 
               <nav className="flex justify-between items-center mb-8 md:mb-12">
