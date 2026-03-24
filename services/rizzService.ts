@@ -1,5 +1,6 @@
 ﻿import OpenAI from "openai";
 import { RizzResponse, BioResponse, ResponseLength } from "../types";
+import { resizeImage } from "./imageService";
 
 // --- CLIENT INITIALIZATION ---
 
@@ -209,11 +210,12 @@ CRITICAL: ${length === 'short'
     const finalInput = inputText || "Generate rizz.";
 
     if (image) {
+      const optimizedImage = await resizeImage(image);
       messages.push({
         role: "user",
         content: [
           { type: "text", text: finalInput },
-          { type: "image_url", image_url: { url: image } }
+          { type: "image_url", image_url: { url: optimizedImage } }
         ]
       });
     } else {
@@ -467,7 +469,7 @@ Carry over all existing intel and update it when new facts emerge.`;
 
   const lastRawMessage = recentMessages[recentMessages.length - 1];
 
-  const rawMessages = recentMessages.map(m => {
+  const rawMessages = await Promise.all(recentMessages.map(async m => {
     let textContent = m.content;
 
     // Inject any manual system context (like the "Chat Reply" continuity)
@@ -477,9 +479,10 @@ Carry over all existing intel and update it when new facts emerge.`;
 
     let finalContent: any = textContent;
     if (m.image) {
+      const optimizedImage = await resizeImage(m.image);
       finalContent = [
         { type: "text", text: textContent },
-        { type: "image_url", image_url: { url: m.image } }
+        { type: "image_url", image_url: { url: optimizedImage } }
       ];
     }
 
@@ -487,7 +490,7 @@ Carry over all existing intel and update it when new facts emerge.`;
       role: m.role === 'assistant' ? 'assistant' : 'user',
       content: finalContent,
     };
-  }) as any[];
+  })) as any[];
 
   try {
     const completion = await llamaClient.chat.completions.create({
