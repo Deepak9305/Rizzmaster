@@ -1340,6 +1340,28 @@ const AppContentInner: React.FC = () => {
       return;
     }
 
+    // --- DAILY 3RD GENERATION INTERSTITIAL AD LOGIC ---
+    if (!currentProfile.is_premium && Capacitor.isNativePlatform()) {
+      const today = new Date().toDateString();
+      const lastAdDate = localStorage.getItem('rizz_last_ad_date');
+      let genCount = parseInt(localStorage.getItem('rizz_daily_gen_count') || '0');
+
+      if (lastAdDate !== today) {
+        genCount = 0;
+        localStorage.setItem('rizz_last_ad_date', today);
+      }
+
+      genCount += 1;
+      localStorage.setItem('rizz_daily_gen_count', genCount.toString());
+
+      // Show ad ONLY on the 3rd generation of the day
+      if (genCount === 3) {
+        console.log('[AdMob] Triggering 3rd generation daily interstitial...');
+        AdMobService.showInterstitial(getAdId('INTERSTITIAL'));
+      }
+    }
+    // --------------------------------------------------
+
     setLoading(true);
 
     // --- GENERATION START ---
