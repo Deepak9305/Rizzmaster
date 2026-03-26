@@ -1826,7 +1826,7 @@ const AppContentInner: React.FC = () => {
                         className="w-full py-3.5 bg-white/10 hover:bg-white/15 border border-white/10 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95"
                       >
                         <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><rect x="2" y="5" width="20" height="14" rx="2" stroke="white" strokeWidth="1.8" /><path d="M8 10l8 4-8 4V10z" fill="white" /></svg>
-                        Watch Ad (+3 Credits)
+                        Watch Ad (+{REWARD_CREDITS} Credits)
                       </button>
                       <button
                         onClick={() => { setShowGuestCreditsModal(false); handleExitGuestMode(); }}
