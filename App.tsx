@@ -623,7 +623,18 @@ const AppContentInner: React.FC = () => {
   }, [showToast]);
 
   // Interstitial ads are now pre-loaded strategically (see handleViewNavigation/handleGenerate)
-  // Reward ads will now be prepared JIT (Just-In-Time) when the user clicks 'Watch Ad' to improve show rates.
+
+  // Conditional Pre-loading: Reward Video (Low Credits)
+  useEffect(() => {
+    if (Capacitor.isNativePlatform() && profile && !profile.is_premium) {
+      const credits = profile.credits || 0;
+      // Pre-load Reward Video when credits are low (<= 2)
+      if (credits <= 2) {
+        const rewardId = getAdId('REWARD');
+        AdMobService.prepareRewardVideo(rewardId);
+      }
+    }
+  }, [profile?.credits, profile?.is_premium]);
 
   // Initialize Native Services
   useEffect(() => {
@@ -1543,7 +1554,12 @@ const AppContentInner: React.FC = () => {
           updateCredits((prevCredits) => prevCredits + REWARD_CREDITS);
           showToast(`+${REWARD_CREDITS} Credits Added! ⚡`, 'success');
 
-          // wait briefly for first ad dismissal to settle
+          // 2. Pre-load Chained Bonus Ad (+10)
+          const rewardInterId = getAdId('REWARD_INTERSTITIAL');
+          AdMobService.prepareRewardInterstitial(rewardInterId);
+
+          // 3. Chained Bonus Ad Sequence
+          // Wait briefly for first ad dismissal to settle (Increased to 2s)
           await new Promise(resolve => setTimeout(resolve, 2000));
 
           // Prompt the user with a native dialog
@@ -1556,10 +1572,6 @@ const AppContentInner: React.FC = () => {
 
           if (value) {
             setIsAdLoading('reward'); // Show overlay for second ad prep
-
-            // 2. Prepare Chained Bonus Ad ONLY if user agreed to watch it (Improves match/show rate)
-            const rewardInterId = getAdId('REWARD_INTERSTITIAL');
-            await AdMobService.prepareRewardInterstitial(rewardInterId);
 
             try {
               let bonusEarned = await AdMobService.showRewardInterstitial(rewardInterId, onShow);
