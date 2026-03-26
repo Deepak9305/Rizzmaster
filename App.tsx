@@ -1435,6 +1435,12 @@ const AppContentInner: React.FC = () => {
       const isFirstAd = lastAdGen === 0;
       const targetGen = isFirstAd ? 3 : lastAdGen + 4;
 
+      // Eager Preload: Prepare the ad one generation before it is needed
+      if (genCount === targetGen - 1) {
+        console.log(`[AdMob] Eagerly preloading interstitial for upcoming gen ${targetGen}`);
+        AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'));
+      }
+
       const now = activeTimeMs.current;
       // For the first ad, skip the cooldown check (both `now` and `lastAdActiveTime` are 0 at startup,
       // so `0 - 0 >= COOLDOWN` is always false, blocking the ad from ever showing).
@@ -1443,16 +1449,24 @@ const AppContentInner: React.FC = () => {
         console.log(`[AdMob] Triggering deferred interstitial at gen ${genCount} (Target was ${targetGen}, isFirstAd: ${isFirstAd})...`);
 
         setIsAdLoading('interstitial'); // Show loading state while preparing ad
+        let adShown = false;
         try {
-          await AdMobService.showInterstitial(getAdId('INTERSTITIAL'));
+          adShown = await AdMobService.showInterstitial(getAdId('INTERSTITIAL'));
         } catch (e) {
           console.warn("[AdMob] Deferred interstitial failed:", e);
         } finally {
           setIsAdLoading('hidden');
         }
 
-        lastAdActiveTime.current = now;
-        localStorage.setItem('rizz_last_ad_gen_count', genCount.toString());
+        // Only move the counter if the ad successfully showed
+        if (adShown) {
+          lastAdActiveTime.current = now;
+          localStorage.setItem('rizz_last_ad_gen_count', genCount.toString());
+        } else {
+          console.log("[AdMob] Interstitial didn't show. Will retry on next generation.");
+          // Attempt another preload for the next retry
+          AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'));
+        }
       }
     }
     // --------------------------------------------------
