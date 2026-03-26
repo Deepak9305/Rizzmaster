@@ -545,13 +545,15 @@ const AppContentInner: React.FC = () => {
           const adId = getAdId('BANNER');
           const position = currentView === 'COACH' ? 'TOP' : 'BOTTOM';
 
-          // Always refresh banner on view change - position tracks just TOP/BOTTOM for repositioning
-          lastBannerPosition.current = position;
+          // Only refresh if we are forcing it (like App Resume) or if the position changed
+          if (force || lastBannerPosition.current !== position) {
+            lastBannerPosition.current = position;
 
-          // Force remove first to ensure the plugin repositions cleanly (hideBanner just hides it)
-          AdMobService.removeBanner().then(() => {
-            timer = setTimeout(() => AdMobService.showBanner(adId, position), 1000);
-          });
+            // Force remove first to ensure the plugin repositions cleanly
+            AdMobService.removeBanner().then(() => {
+              timer = setTimeout(() => AdMobService.showBanner(adId, position), 1000);
+            });
+          }
         }
       }
     };
