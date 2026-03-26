@@ -611,14 +611,15 @@ const AppContentInner: React.FC = () => {
 
       // Detailed Subscription Entry
       const platform = Capacitor.getPlatform();
-      const products = IAPService.products; // Using the latest products state from service or state
-      const mainSub = products.find(p => p.owned || p.state === 'owned');
+      const products = IAPService.products;
+      // Use standard CdvPurchase 'state' property correctly
+      const mainSub = products.find(p => p.state === 'owned' || p.state === 'approved' || p.state === 'verified');
 
       await supabase.from('premium_subscriptions').upsert({
         user_id: currentProfile.id,
         platform: platform,
         product_id: mainSub?.id || 'premium_manual',
-        transaction_id: mainSub?.transactionId || null,
+        transaction_id: mainSub?.transactionId || (mainSub as any)?.purchase?.transactionId || null,
         is_active: true
       }, { onConflict: 'user_id' });
     }
@@ -676,41 +677,43 @@ const AppContentInner: React.FC = () => {
       // If user is premium but 'unverified', they likely used the web loophole.
       // We force a Restore to confirm they have a real Store receipt.
       setTimeout(async () => {
-        const currentProfile = profileRef.current;
-        if (currentProfile?.is_premium && currentProfile.premium_source === 'unverified') {
-          console.log("IAP: User is premium but 'unverified'. Starting silent restore check...");
-
-          try {
-            // 1. Try to restore. If IAPService.onSuccess triggers, handleUpgrade will run and set source to 'native'.
-            await IAPService.restore();
-
-            // 2. Wait a bit for the restore to propagate. 
-            // If after 15 seconds the source is STILL unverified, we revoke status.
-            setTimeout(async () => {
-              const refreshedProfile = profileRef.current;
-              if (refreshedProfile?.is_premium && refreshedProfile.premium_source === 'unverified') {
-                console.warn("IAP: Re-verification failed (No Store Receipt). Revoking premium.");
-                setProfile(prev => prev ? { ...prev, is_premium: false, premium_source: 'revoked' } : null);
-                showToast("Subscription verification failed. Access revoked.", 'error');
-
-                if (supabase) {
-                  await supabase.from('profiles').update({
-                    is_premium: false,
-                    premium_source: 'revoked'
-                  }).eq('id', refreshedProfile.id);
-
-                  // Also mark active subscription as inactive
-                  await supabase.from('premium_subscriptions')
-                    .update({ is_active: false })
-                    .eq('user_id', refreshedProfile.id);
-                }
-              }
-            }, 15000);
-          } catch (e) {
-            console.error("IAP: Re-verification process error", e);
+        // Wait for profile to settle if it hasn't yet (avoid false revocations)
+        const checkVerification = async () => {
+          const currentProfile = profileRef.current;
+          if (!currentProfile) {
+            // If profile not loaded yet, retry once after 5s
+            setTimeout(checkVerification, 5000);
+            return;
           }
-        }
-      }, 5000); // Wait 5s after init to settle
+
+          if (currentProfile.is_premium && currentProfile.premium_source === 'unverified') {
+            console.log("IAP: User is premium but 'unverified'. Starting silent restore check...");
+            try {
+              await IAPService.restore();
+
+              // Wait 15s for store status to update
+              setTimeout(async () => {
+                const refreshedProfile = profileRef.current;
+                // If source is STILL unverified, it means no store receipt was found during restore
+                if (refreshedProfile?.is_premium && refreshedProfile.premium_source === 'unverified') {
+                  console.warn("IAP: Re-verification failed (No Store Receipt). Revoking premium.");
+                  setProfile(prev => prev ? { ...prev, is_premium: false, premium_source: 'revoked' } : null);
+                  showToast("Subscription verification failed. Access revoked.", 'error');
+
+                  if (supabase) {
+                    await supabase.from('profiles').update({ is_premium: false, premium_source: 'revoked' }).eq('id', refreshedProfile.id);
+                    await supabase.from('premium_subscriptions').update({ is_active: false }).eq('user_id', refreshedProfile.id);
+                  }
+                }
+              }, 15000);
+            } catch (e) {
+              console.error("IAP: Re-verification process error", e);
+            }
+          }
+        };
+
+        checkVerification();
+      }, 5000);
     }
   }, [handleUpgrade, showToast]);
 

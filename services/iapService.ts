@@ -12,21 +12,21 @@ const getCdvPurchase = () => {
         Platform: { GOOGLE_PLAY: 'google-play', APPLE_APPSTORE: 'apple-appstore' },
         ErrorCode: { PAYMENT_CANCELLED: 6777006 },
         store: {
-            register: () => {},
-            when: () => ({ 
-                approved: () => {}, 
-                verified: () => ({ finish: () => {} }), 
-                finished: () => {}, 
-                productUpdated: () => {},
-                updated: () => {}
+            register: () => { },
+            when: () => ({
+                approved: () => { },
+                verified: () => ({ finish: () => { } }),
+                finished: () => { },
+                productUpdated: () => { },
+                updated: () => { }
             }),
-            initialize: async () => {},
-            update: async () => {},
+            initialize: async () => { },
+            update: async () => { },
             get: () => null,
-            restore: async () => {},
+            restore: async () => { },
             products: [],
-            error: () => {},
-            order: async () => {}
+            error: () => { },
+            order: async () => { }
         }
     };
 };
@@ -38,16 +38,16 @@ const getProductType = () => getCdvPurchase().ProductType.PAID_SUBSCRIPTION;
 
 export const IAP_CONFIG = {
     WEEKLY: {
-        alias: 'weekly_sub', 
-        androidId: 'premium',               
-        androidBasePlanId: 'weekly',   
+        alias: 'weekly_sub',
+        androidId: 'premium',
+        androidBasePlanId: 'weekly',
         iosId: 'premium_weekly', // iOS typically requires unique product IDs per subscription duration
         get type() { return getProductType(); }
     },
     MONTHLY: {
         alias: 'monthly_sub',
-        androidId: 'premium',               
-        androidBasePlanId: 'monthly',  
+        androidId: 'premium',
+        androidBasePlanId: 'monthly',
         iosId: 'premium_monthly', // iOS typically requires unique product IDs per subscription duration
         get type() { return getProductType(); }
     }
@@ -55,8 +55,8 @@ export const IAP_CONFIG = {
 
 class IAPService {
     isInitialized = false;
-    products: any[] = []; 
-    
+    products: any[] = [];
+
     // Callbacks to update UI/DB
     onSuccess: (() => void) | null = null;
     onError: ((msg: string) => void) | null = null;
@@ -91,11 +91,11 @@ class IAPService {
         };
 
         if (Capacitor.getPlatform() === 'android') {
-             addProduct(IAP_CONFIG.WEEKLY.androidId, IAP_CONFIG.WEEKLY.type, Platform.GOOGLE_PLAY);
-             addProduct(IAP_CONFIG.MONTHLY.androidId, IAP_CONFIG.MONTHLY.type, Platform.GOOGLE_PLAY);
+            addProduct(IAP_CONFIG.WEEKLY.androidId, IAP_CONFIG.WEEKLY.type, Platform.GOOGLE_PLAY);
+            addProduct(IAP_CONFIG.MONTHLY.androidId, IAP_CONFIG.MONTHLY.type, Platform.GOOGLE_PLAY);
         } else if (Capacitor.getPlatform() === 'ios') {
-             addProduct(IAP_CONFIG.WEEKLY.iosId, IAP_CONFIG.WEEKLY.type, Platform.APPLE_APPSTORE);
-             addProduct(IAP_CONFIG.MONTHLY.iosId, IAP_CONFIG.MONTHLY.type, Platform.APPLE_APPSTORE);
+            addProduct(IAP_CONFIG.WEEKLY.iosId, IAP_CONFIG.WEEKLY.type, Platform.APPLE_APPSTORE);
+            addProduct(IAP_CONFIG.MONTHLY.iosId, IAP_CONFIG.MONTHLY.type, Platform.APPLE_APPSTORE);
         }
 
         if (productsToRegister.length > 0) {
@@ -103,14 +103,17 @@ class IAPService {
         }
 
         // 2. Setup Listeners
+        // IMPORTANT: onSuccess fires on 'verified' (after receipt auth), not 'approved'.
+        // Firing on 'approved' would grant premium before Google/Apple confirms payment.
         store.when().approved((transaction: any) => {
-            console.log("IAP: Transaction approved", transaction);
-            if (this.onSuccess) this.onSuccess();
-            transaction.finish();
+            console.log("IAP: Transaction approved. Verifying with server...", transaction);
+            transaction.verify();
         });
 
         store.when().verified((receipt: any) => {
-            console.log("IAP: Receipt verified", receipt);
+            console.log("IAP: Receipt verified. Granting premium...", receipt);
+            // Now safe to grant premium access
+            if (this.onSuccess) this.onSuccess();
             receipt.finish();
         });
 
@@ -130,7 +133,7 @@ class IAPService {
         store.error((error: any) => {
             console.error('IAP Error:', error);
             if (error && error.code !== CdvPurchase.ErrorCode.PAYMENT_CANCELLED) {
-                 if (this.onError) this.onError(`Store Error: ${error.message}`);
+                if (this.onError) this.onError(`Store Error: ${error.message}`);
             }
         });
 
@@ -138,7 +141,7 @@ class IAPService {
         store.initialize().then(() => {
             this.isInitialized = true;
             console.log("IAP: Store initialized");
-            store.update(); 
+            store.update();
         });
     }
 
@@ -147,12 +150,12 @@ class IAPService {
             console.warn("IAP: Cannot purchase on web.");
             return;
         }
-        
+
         const CdvPurchase = getCdvPurchase();
         const { store } = CdvPurchase;
         const isIOS = Capacitor.getPlatform() === 'ios';
         const config = plan === 'WEEKLY' ? IAP_CONFIG.WEEKLY : IAP_CONFIG.MONTHLY;
-        
+
         const productId = isIOS ? config.iosId : config.androidId;
         const basePlanId = isIOS ? null : config.androidBasePlanId;
 
@@ -181,9 +184,9 @@ class IAPService {
                 } else {
                     const offer = product.getOffer();
                     if (offer) {
-                         await offer.order();
+                        await offer.order();
                     } else {
-                         await store.order(productId);
+                        await store.order(productId);
                     }
                 }
             } catch (err: any) {
@@ -193,7 +196,7 @@ class IAPService {
         } else {
             store.update();
             if (this.onError) {
-                 this.onError("Product unavailable. Retrying connection...");
+                this.onError("Product unavailable. Retrying connection...");
             }
         }
     }
@@ -211,13 +214,13 @@ class IAPService {
 
     getPrice(plan: 'WEEKLY' | 'MONTHLY'): string | null {
         if (!Capacitor.isNativePlatform()) return null;
-        
+
         const isIOS = Capacitor.getPlatform() === 'ios';
         const config = plan === 'WEEKLY' ? IAP_CONFIG.WEEKLY : IAP_CONFIG.MONTHLY;
 
         const productId = isIOS ? config.iosId : config.androidId;
         const basePlanId = isIOS ? null : config.androidBasePlanId;
-        
+
         const product = this.products.find((p: any) => p.id === productId);
         if (!product) return null;
 

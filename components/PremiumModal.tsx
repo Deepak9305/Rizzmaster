@@ -102,9 +102,22 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onResto
                         onClick={() => setSelectedPlan('MONTHLY')}
                         className={`p-3 rounded-xl border transition-all flex flex-col items-center justify-center text-center relative ${selectedPlan === 'MONTHLY' ? 'bg-yellow-500/10 border-yellow-500 text-white shadow-[0_0_15px_rgba(234,179,8,0.2)]' : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/10'}`}
                     >
-                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-gradient-to-r from-rose-500 to-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shadow-lg">
-                            SAVE 20%
-                        </div>
+                        {(() => {
+                            const w = parseFloat(prices.weekly.replace(/[^0-9.]/g, ''));
+                            const m = parseFloat(prices.monthly.replace(/[^0-9.]/g, ''));
+                            if (!isNaN(w) && !isNaN(m)) {
+                                const weeklyCostOfMonthly = m / 4.33; // average weeks in month
+                                const savings = Math.round((1 - (weeklyCostOfMonthly / w)) * 100);
+                                if (savings > 0) {
+                                    return (
+                                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-gradient-to-r from-rose-500 to-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shadow-lg">
+                                            SAVE {savings}%
+                                        </div>
+                                    );
+                                }
+                            }
+                            return null;
+                        })()}
                         <span className="text-[10px] font-bold uppercase tracking-wider mb-1 opacity-70">Monthly</span>
                         <span className="text-lg font-black text-yellow-400">{prices.monthly}</span>
                     </button>
