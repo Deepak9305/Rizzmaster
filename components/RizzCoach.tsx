@@ -834,7 +834,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                                             display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', gap: '8px',
                                             cursor: 'pointer'
                                         }}>
-                                        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><rect x="2" y="5" width="20" height="14" rx="2" stroke="white" strokeWidth="1.8" /><path d="M8 10l8 4-8 4V10z" fill="white" /></svg> Watch Ad (+3)
+                                        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><rect x="2" y="5" width="20" height="14" rx="2" stroke="white" strokeWidth="1.8" /><path d="M8 10l8 4-8 4V10z" fill="white" /></svg> Watch Ad (+5)
                                     </button>
                                     <button
                                         onClick={() => { setShowOutOfCredits(false); onGoPremium?.(); }}
