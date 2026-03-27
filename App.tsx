@@ -566,13 +566,14 @@ const AppContentInner: React.FC = () => {
       CapacitorApp.addListener('appStateChange', ({ isActive }) => {
         if (isActive) {
           const currentProfile = profileRef.current;
-          // Guard: only refresh if logged in and not premium
+          // Guard: only refresh if logged in, not premium, and NOT a guest
           if (currentProfile && !currentProfile.is_premium && currentProfile.id !== 'guest_user') {
             refreshBanner(true); // Force refresh on resume
           }
         }
       }).then(l => appListener = l);
     }
+
 
     return () => {
       if (timer) clearTimeout(timer);
@@ -1590,9 +1591,13 @@ const AppContentInner: React.FC = () => {
             } catch (e) {
               console.warn("Chained bonus ad error:", e);
               showToast('Bonus ad failed. Please try again later.', 'error');
+            } finally {
+              // Explicitly clear overlay for the inner ad to prevent it getting stuck
+              setIsAdLoading('hidden');
             }
           }
         } else {
+
           showToast('Ad failed to load. Please try again later.', 'error');
         }
       } catch (e) {

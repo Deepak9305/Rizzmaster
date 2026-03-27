@@ -132,13 +132,16 @@ export const AdMobService = {
 
     async prepareInterstitial(adId: string): Promise<void> {
         if (!Capacitor.isNativePlatform()) return;
+        
+        await this.initialize(); // Bug 4 Fix: Initialize before state checking to avoid double-prepares
+
         if (AdMobService.interstitialReady) return;
 
         // If already preparing, return the existing promise so caller can await it
         if (AdMobService.interstitialPromise) return AdMobService.interstitialPromise;
 
-        await this.initialize();
         AdMobService.interstitialPreparing = true;
+
 
         AdMobService.interstitialPromise = (async () => {
             try {
@@ -162,16 +165,31 @@ export const AdMobService = {
 
         console.log(`[AdMob] Attempting to show interstitial: ${adId}`);
 
-        if (!AdMobService.interstitialReady) {
-            console.warn('[AdMob] Interstitial not ready, attempting JIT prepare...');
-            await AdMobService.prepareInterstitial(adId);
-        }
-
         try {
             return new Promise(async (resolve) => {
                 let resolved = false;
                 let showed = false;
 
+                const cleanupAndResolve = (success: boolean) => {
+                    if (resolved) return;
+                    resolved = true;
+                    // Robust cleanup
+                    [dismissListener, failedListener, failedShowListener, showedListener].forEach(l => {
+                        try { l.remove(); } catch (e) { }
+                    });
+                    clearTimeout(timeout);
+                    AdMobService.interstitialReady = false;
+                    AdMobService.isInterstitialShowing = false;
+                    resolve(success);
+                };
+
+                // Timeout fail-safe (15 seconds)
+                const timeout = setTimeout(() => {
+                    console.warn('AdMob Interstitial Timeout: Proceeding automatically.');
+                    cleanupAndResolve(false);
+                }, 15000);
+
+                // Bug 1 Fix: Register listeners FIRST
                 const showedListener = await AdMob.addListener(InterstitialAdPluginEvents.Showed, () => {
                     showed = true;
                     console.log('[AdMob] Interstitial showing, clearing timeout');
@@ -191,24 +209,11 @@ export const AdMobService = {
                     cleanupAndResolve(false);
                 });
 
-                // Timeout fail-safe (15 seconds) - Increased for better reliability in high-latency environments
-                const timeout = setTimeout(() => {
-                    console.warn('AdMob Interstitial Timeout: Proceeding automatically.');
-                    cleanupAndResolve(false);
-                }, 15000);
-
-                const cleanupAndResolve = (success: boolean) => {
-                    if (resolved) return;
-                    resolved = true;
-                    // Robust cleanup
-                    [dismissListener, failedListener, failedShowListener, showedListener].forEach(l => {
-                        try { l.remove(); } catch (e) { }
-                    });
-                    clearTimeout(timeout);
-                    AdMobService.interstitialReady = false;
-                    AdMobService.isInterstitialShowing = false;
-                    resolve(success);
-                };
+                // Then await preparation if needed
+                if (!AdMobService.interstitialReady) {
+                    console.warn('[AdMob] Interstitial not ready, attempting JIT prepare...');
+                    await AdMobService.prepareInterstitial(adId);
+                }
 
                 try {
                     AdMobService.isInterstitialShowing = true;
@@ -228,12 +233,15 @@ export const AdMobService = {
 
     async prepareRewardInterstitial(adId: string): Promise<void> {
         if (!Capacitor.isNativePlatform()) return;
+        
+        await this.initialize(); // Bug 4 Fix
+
         if (AdMobService.rewardInterstitialReady) return;
 
         if (AdMobService.rewardInterstitialPromise) return AdMobService.rewardInterstitialPromise;
 
-        await this.initialize();
         AdMobService.rewardInterstitialPreparing = true;
+
 
         AdMobService.rewardInterstitialPromise = (async () => {
             try {
@@ -258,17 +266,32 @@ export const AdMobService = {
         await this.initialize();
         console.log(`[AdMob] Attempting to show reward interstitial: ${adId}`);
 
-        if (!AdMobService.rewardInterstitialReady) {
-            console.warn('[AdMob] Ad not ready, attempting JIT prepare...');
-            await AdMobService.prepareRewardInterstitial(adId);
-        }
-
         try {
 
             return new Promise(async (resolve) => {
                 let resolved = false;
                 let earned = false;
 
+                const cleanupAndResolve = (success: boolean) => {
+                    if (resolved) return;
+                    resolved = true;
+                    [showedListener, rewardListener, dismissListener, failedListener, failedShowListener].forEach(l => {
+                        try { l.remove(); } catch (e) { }
+                    });
+                    clearTimeout(timeout);
+                    AdMobService.rewardInterstitialReady = false;
+                    AdMobService.isRewardInterstitialShowing = false;
+                    console.log(`[AdMob] Reward Interstitial finished. Success: ${success}`);
+                    resolve(success);
+                };
+
+                // Fail-safe timeout (15 seconds)
+                const timeout = setTimeout(() => {
+                    console.warn('[AdMob] Reward Interstitial show timeout');
+                    cleanupAndResolve(false);
+                }, 15000);
+
+                // Bug 2 Fix: Register listeners FIRST
                 const showedListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.Showed, () => {
                     console.log('[AdMob] Reward Interstitial showing, clearing timeout');
                     clearTimeout(timeout);
@@ -295,24 +318,11 @@ export const AdMobService = {
                     cleanupAndResolve(false);
                 });
 
-                // Fail-safe timeout (15 seconds)
-                const timeout = setTimeout(() => {
-                    console.warn('[AdMob] Reward Interstitial show timeout');
-                    cleanupAndResolve(false);
-                }, 15000);
+                if (!AdMobService.rewardInterstitialReady) {
+                    console.warn('[AdMob] Ad not ready, attempting JIT prepare...');
+                    await AdMobService.prepareRewardInterstitial(adId);
+                }
 
-                const cleanupAndResolve = (success: boolean) => {
-                    if (resolved) return;
-                    resolved = true;
-                    [showedListener, rewardListener, dismissListener, failedListener, failedShowListener].forEach(l => {
-                        try { l.remove(); } catch (e) { }
-                    });
-                    clearTimeout(timeout);
-                    AdMobService.rewardInterstitialReady = false;
-                    AdMobService.isRewardInterstitialShowing = false;
-                    console.log(`[AdMob] Reward Interstitial finished. Success: ${success}`);
-                    resolve(success);
-                };
 
                 try {
                     AdMobService.isRewardInterstitialShowing = true;
@@ -332,12 +342,15 @@ export const AdMobService = {
 
     async prepareRewardVideo(adId: string): Promise<void> {
         if (!Capacitor.isNativePlatform()) return;
+        
+        await this.initialize(); // Bug 4 Fix
+
         if (AdMobService.rewardVideoReady) return;
 
         if (AdMobService.rewardVideoPromise) return AdMobService.rewardVideoPromise;
 
-        await this.initialize();
         AdMobService.rewardVideoPreparing = true;
+
 
         AdMobService.rewardVideoPromise = (async () => {
             try {
@@ -362,17 +375,32 @@ export const AdMobService = {
         await this.initialize();
         console.log(`[AdMob] Attempting to show reward video: ${adId}`);
 
-        if (!AdMobService.rewardVideoReady) {
-            console.warn('[AdMob] Ad not ready, attempting JIT prepare...');
-            await AdMobService.prepareRewardVideo(adId);
-        }
-
         try {
 
             return new Promise(async (resolve) => {
                 let resolved = false;
                 let earned = false;
 
+                const cleanupAndResolve = (success: boolean) => {
+                    if (resolved) return;
+                    resolved = true;
+                    [showedListener, rewardListener, dismissListener, failedListener, failedShowListener].forEach(l => {
+                        try { l.remove(); } catch (e) { }
+                    });
+                    clearTimeout(timeout);
+                    AdMobService.rewardVideoReady = false;
+                    AdMobService.isRewardVideoShowing = false;
+                    console.log(`[AdMob] Reward video finished. Success: ${success}`);
+                    resolve(success);
+                };
+
+                // Fail-safe timeout (15 seconds)
+                const timeout = setTimeout(() => {
+                    console.warn('[AdMob] Reward video show timeout');
+                    cleanupAndResolve(false);
+                }, 15000);
+
+                // Bug 3 Fix: Register listeners FIRST
                 const showedListener = await AdMob.addListener(RewardAdPluginEvents.Showed, () => {
                     console.log('[AdMob] Reward video showing, clearing timeout');
                     clearTimeout(timeout);
@@ -399,24 +427,11 @@ export const AdMobService = {
                     cleanupAndResolve(false);
                 });
 
-                // Fail-safe timeout (15 seconds)
-                const timeout = setTimeout(() => {
-                    console.warn('[AdMob] Reward video show timeout');
-                    cleanupAndResolve(false);
-                }, 15000);
+                if (!AdMobService.rewardVideoReady) {
+                    console.warn('[AdMob] Ad not ready, attempting JIT prepare...');
+                    await AdMobService.prepareRewardVideo(adId);
+                }
 
-                const cleanupAndResolve = (success: boolean) => {
-                    if (resolved) return;
-                    resolved = true;
-                    [showedListener, rewardListener, dismissListener, failedListener, failedShowListener].forEach(l => {
-                        try { l.remove(); } catch (e) { }
-                    });
-                    clearTimeout(timeout);
-                    AdMobService.rewardVideoReady = false;
-                    AdMobService.isRewardVideoShowing = false;
-                    console.log(`[AdMob] Reward video finished. Success: ${success}`);
-                    resolve(success);
-                };
 
                 try {
                     AdMobService.isRewardVideoShowing = true;
