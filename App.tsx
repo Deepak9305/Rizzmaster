@@ -812,7 +812,8 @@ const AppContentInner: React.FC = () => {
 
   const handleBackNavigation = useCallback(() => {
     // Navigate back immediately — don't block on the ad
-    if (window.history.state?.view && window.history.state.view !== 'HOME') {
+    const state = window.history.state;
+    if (state && (state.view !== 'HOME' || state.saved || state.premium)) {
       window.history.back();
     } else {
       // Fallback: directly set the view in case history is missing
