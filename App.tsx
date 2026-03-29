@@ -1442,9 +1442,10 @@ const AppContentInner: React.FC = () => {
       const isFirstAd = lastAdGen === 0;
       const targetGen = isFirstAd ? 3 : lastAdGen + 4;
 
-      // Eager Preload: Prepare the ad one generation before it is needed
-      if (genCount === targetGen - 1) {
-        console.log(`[AdMob] Eagerly preloading interstitial for upcoming gen ${targetGen}`);
+      // Eager Preload: Prepare the ad earlier to ensure high show rates
+      // Preload 1st interstitial on the 1st generation; subsequent ads preload 1 generation before showing.
+      if ((isFirstAd && genCount === 1) || genCount === targetGen - 1) {
+        console.log(`[AdMob] Eagerly preloading interstitial (genCount: ${genCount}, targetGen: ${targetGen})`);
         AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'));
       }
 
