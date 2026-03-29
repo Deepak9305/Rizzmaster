@@ -59,13 +59,20 @@ export const AdMobService = {
             }
             // -------------------------------
 
-            await AdMob.initialize({});
+            // 3. Initialize AdMob with advertising ID tracking for better show rates
+            await AdMob.initialize({
+                initializeForAdvertisingId: true,
+            });
             this.initialized = true;
-            console.log('AdMob Community Initialized');
+            console.log('AdMob Community Initialized with Advertising ID tracking');
         } catch (error) {
             console.error('AdMob Community initialization failed', error);
-            // Fallback: Try to initialize anyway so ads might still show
-            await AdMob.initialize({});
+            // Fallback: Try to initialize anyway
+            try {
+                await AdMob.initialize({ initializeForAdvertisingId: true });
+            } catch {
+                await AdMob.initialize({});
+            }
             this.initialized = true;
         }
     },
@@ -132,7 +139,7 @@ export const AdMobService = {
 
     async prepareInterstitial(adId: string): Promise<void> {
         if (!Capacitor.isNativePlatform()) return;
-        
+
         await this.initialize(); // Bug 4 Fix: Initialize before state checking to avoid double-prepares
 
         if (AdMobService.interstitialReady) return;
@@ -145,7 +152,7 @@ export const AdMobService = {
 
         AdMobService.interstitialPromise = (async () => {
             try {
-                await AdMob.prepareInterstitial({ adId });
+                await AdMob.prepareInterstitial({ adId, isTesting: false });
                 AdMobService.interstitialReady = true;
                 console.log('AdMob Interstitial Prepared');
             } catch (e) {
@@ -205,18 +212,28 @@ export const AdMobService = {
                     cleanupAndResolve(false);
                 });
 
-                const failedShowListener = await AdMob.addListener(InterstitialAdPluginEvents.FailedToShow, () => {
+                const failedShowListener = await AdMob.addListener(InterstitialAdPluginEvents.FailedToShow, (info) => {
+                    console.error('[AdMob] Interstitial Failed to Show:', info);
                     cleanupAndResolve(false);
                 });
 
                 // Then await preparation if needed
                 if (!AdMobService.interstitialReady) {
                     console.warn('[AdMob] Interstitial not ready, attempting JIT prepare...');
-                    await AdMobService.prepareInterstitial(adId);
+                    try {
+                        await AdMobService.prepareInterstitial(adId);
+                        // Add a small delay for JIT preparation to allow bridge to settle
+                        await new Promise(r => setTimeout(r, 400));
+                    } catch (e) {
+                        console.error('[AdMob] JIT Prepare failed:', e);
+                        cleanupAndResolve(false);
+                        return;
+                    }
                 }
 
                 try {
                     AdMobService.isInterstitialShowing = true;
+                    // Passing adId again manually during show to ensure referential integrity for some device types
                     await AdMob.showInterstitial();
                 } catch (e) {
                     console.error('AdMob showInterstitial threw:', e);
@@ -233,7 +250,7 @@ export const AdMobService = {
 
     async prepareRewardInterstitial(adId: string): Promise<void> {
         if (!Capacitor.isNativePlatform()) return;
-        
+
         await this.initialize(); // Bug 4 Fix
 
         if (AdMobService.rewardInterstitialReady) return;
@@ -245,7 +262,7 @@ export const AdMobService = {
 
         AdMobService.rewardInterstitialPromise = (async () => {
             try {
-                await AdMob.prepareRewardInterstitialAd({ adId });
+                await AdMob.prepareRewardInterstitialAd({ adId, isTesting: false });
                 AdMobService.rewardInterstitialReady = true;
                 console.log('AdMob Reward Interstitial Prepared');
             } catch (e) {
@@ -342,7 +359,7 @@ export const AdMobService = {
 
     async prepareRewardVideo(adId: string): Promise<void> {
         if (!Capacitor.isNativePlatform()) return;
-        
+
         await this.initialize(); // Bug 4 Fix
 
         if (AdMobService.rewardVideoReady) return;
@@ -354,7 +371,7 @@ export const AdMobService = {
 
         AdMobService.rewardVideoPromise = (async () => {
             try {
-                await AdMob.prepareRewardVideoAd({ adId });
+                await AdMob.prepareRewardVideoAd({ adId, isTesting: false });
                 AdMobService.rewardVideoReady = true;
                 console.log('AdMob Reward Video Prepared');
             } catch (e) {
