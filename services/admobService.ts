@@ -61,7 +61,7 @@ export const AdMobService = {
 
             // 3. Initialize AdMob with advertising ID tracking for better show rates
             await AdMob.initialize({
-                initializeForAdvertisingId: true,
+                testingDevices: []
             });
             this.initialized = true;
             console.log('AdMob Community Initialized with Advertising ID tracking');
@@ -69,7 +69,7 @@ export const AdMobService = {
             console.error('AdMob Community initialization failed', error);
             // Fallback: Try to initialize anyway
             try {
-                await AdMob.initialize({ initializeForAdvertisingId: true });
+                await AdMob.initialize({ testingDevices: [] });
             } catch {
                 await AdMob.initialize({});
             }
@@ -214,6 +214,7 @@ export const AdMobService = {
 
                 const failedShowListener = await AdMob.addListener(InterstitialAdPluginEvents.FailedToShow, (info) => {
                     console.error('[AdMob] Interstitial Failed to Show:', info);
+                    AdMobService.interstitialReady = false;
                     cleanupAndResolve(false);
                 });
 
@@ -222,8 +223,15 @@ export const AdMobService = {
                     console.warn('[AdMob] Interstitial not ready, attempting JIT prepare...');
                     try {
                         await AdMobService.prepareInterstitial(adId);
+
+                        if (!AdMobService.interstitialReady) {
+                            console.error('[AdMob] JIT Prepare failed: Ad not ready after preparation.');
+                            cleanupAndResolve(false);
+                            return;
+                        }
+
                         // Add a small delay for JIT preparation to allow bridge to settle
-                        await new Promise(r => setTimeout(r, 400));
+                        await new Promise(r => setTimeout(r, 800));
                     } catch (e) {
                         console.error('[AdMob] JIT Prepare failed:', e);
                         cleanupAndResolve(false);
@@ -237,6 +245,7 @@ export const AdMobService = {
                     await AdMob.showInterstitial();
                 } catch (e) {
                     console.error('AdMob showInterstitial threw:', e);
+                    AdMobService.interstitialReady = false;
                     cleanupAndResolve(false);
                 }
             });
@@ -332,12 +341,20 @@ export const AdMobService = {
 
                 const failedShowListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.FailedToShow, (err) => {
                     console.error('[AdMob] Reward Interstitial failed to show:', err);
+                    AdMobService.rewardInterstitialReady = false;
                     cleanupAndResolve(false);
                 });
 
                 if (!AdMobService.rewardInterstitialReady) {
                     console.warn('[AdMob] Ad not ready, attempting JIT prepare...');
                     await AdMobService.prepareRewardInterstitial(adId);
+
+                    if (!AdMobService.rewardInterstitialReady) {
+                        console.error('[AdMob] JIT Prepare failed: Ad not ready.');
+                        cleanupAndResolve(false);
+                        return;
+                    }
+                    await new Promise(r => setTimeout(r, 800));
                 }
 
 
@@ -346,6 +363,7 @@ export const AdMobService = {
                     await AdMob.showRewardInterstitialAd();
                 } catch (err) {
                     console.error('AdMob showRewardInterstitialAd threw:', err);
+                    AdMobService.rewardInterstitialReady = false;
                     cleanupAndResolve(false);
                 }
             });
@@ -441,12 +459,20 @@ export const AdMobService = {
 
                 const failedShowListener = await AdMob.addListener(RewardAdPluginEvents.FailedToShow, (err) => {
                     console.error('[AdMob] Reward video failed to show:', err);
+                    AdMobService.rewardVideoReady = false;
                     cleanupAndResolve(false);
                 });
 
                 if (!AdMobService.rewardVideoReady) {
                     console.warn('[AdMob] Ad not ready, attempting JIT prepare...');
                     await AdMobService.prepareRewardVideo(adId);
+
+                    if (!AdMobService.rewardVideoReady) {
+                        console.error('[AdMob] JIT Prepare failed: Ad not ready.');
+                        cleanupAndResolve(false);
+                        return;
+                    }
+                    await new Promise(r => setTimeout(r, 800));
                 }
 
 
@@ -455,6 +481,7 @@ export const AdMobService = {
                     await AdMob.showRewardVideoAd();
                 } catch (err) {
                     console.error('AdMob showRewardVideoAd threw:', err);
+                    AdMobService.rewardVideoReady = false;
                     cleanupAndResolve(false);
                 }
             });
