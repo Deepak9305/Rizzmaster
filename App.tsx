@@ -443,8 +443,9 @@ const AppContentInner: React.FC = () => {
   // We use refs here because we need these values to be immediately available
   // in background/foreground event listeners and intervals without causing re-renders.
   const activeTimeMs = useRef<number>(0);
-  const lastAdActiveTime = useRef<number>(0);
+  const lastAdActiveTime = useRef<number>(-120000); // Bug 6 fix: pre-subtract 1 cooldown so the first ad can show immediately
   const backgroundTimestamp = useRef<number | null>(null);
+  const adTransitionInProgressRef = useRef<boolean>(false); // Bug 3 fix: prevents double-fire from both nav handlers
 
   const INTERSTITIAL_COOLDOWN_MS = 2 * 60 * 1000; // 2 minutes (Cooldown between ads)
   const INACTIVITY_RESET_MS = 30 * 60 * 1000; // 30 minutes of background time to reset
@@ -771,8 +772,12 @@ const AppContentInner: React.FC = () => {
     const isPremium = profileRef.current?.is_premium;
     if (isPremium) return;
 
+    // Bug 3 fix: guard against double-fire when both handleViewNavigation and handleBackNavigation trigger
+    if (adTransitionInProgressRef.current) return;
+
     const now = activeTimeMs.current;
     if (now - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS) {
+      adTransitionInProgressRef.current = true;
       setIsAdLoading('interstitial'); // SHOW OVERLAY
 
       // Update timer synchronously BEFORE async execution to prevent race condition "double-taps"
@@ -786,9 +791,11 @@ const AppContentInner: React.FC = () => {
           console.warn("Transition ad error:", e);
         } finally {
           setIsAdLoading('hidden'); // ALWAYS HIDE OVERLAY
+          adTransitionInProgressRef.current = false;
         }
       } else {
         setIsAdLoading('hidden');
+        adTransitionInProgressRef.current = false;
       }
     }
   }, [INTERSTITIAL_COOLDOWN_MS]);
@@ -797,18 +804,20 @@ const AppContentInner: React.FC = () => {
     if (view === currentView) return;
 
     if (currentView === 'COACH' && view === 'HOME') {
-      showCoachTransitionAd(); // Trigger when LEAVING coach
-    }
-
-    // Strategic Preload: Pre-load the interstitial if we are moving towards the Coach 
-    // to ensure it's ready for the next transition, but only if not premium.
-    if (view === 'COACH' && !profileRef.current?.is_premium && Capacitor.isNativePlatform()) {
+      // Bug 2 fix: await the ad so the overlay plays BEFORE the view transitions
+      await showCoachTransitionAd();
+      // Bug 5 fix: preload AFTER the ad cycle completes to avoid resetting a freshly-loaded ad
+      if (!profileRef.current?.is_premium && Capacitor.isNativePlatform()) {
+        AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'));
+      }
+    } else if (view === 'COACH' && !profileRef.current?.is_premium && Capacitor.isNativePlatform()) {
+      // Strategic Preload: Pre-load when moving TO coach so it's ready for exit
       AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'));
     }
 
     window.history.pushState({ view }, '');
     setCurrentView(view);
-  }, [currentView]);
+  }, [currentView, showCoachTransitionAd]); // Bug 1 fix: showCoachTransitionAd added to deps
 
   const handleBackNavigation = useCallback(() => {
     // Navigate back immediately — don't block on the ad
@@ -824,12 +833,12 @@ const AppContentInner: React.FC = () => {
 
     // Fire the transition ad in the background (non-blocking)
     if (currentView === 'COACH') {
-      showCoachTransitionAd();
-
-      // Pre-load next one after exiting coach to be ready for next entry
-      if (!profileRef.current?.is_premium && Capacitor.isNativePlatform()) {
-        AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'));
-      }
+      // Bug 5 fix: preload only AFTER the ad cycle finishes to avoid racing with cleanupAndResolve
+      showCoachTransitionAd().finally(() => {
+        if (!profileRef.current?.is_premium && Capacitor.isNativePlatform()) {
+          AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'));
+        }
+      });
     }
   }, [currentView, showCoachTransitionAd]);
 
@@ -1548,10 +1557,15 @@ const AppContentInner: React.FC = () => {
   const handleWatchAd = useCallback(async () => {
     if (Capacitor.isNativePlatform()) {
       setIsAdLoading('reward'); // SHOW OVERLAY
+
+      // Hide banner so it doesn't render under the full-screen reward ad
+      AdMobService.hideBanner();
+
       try {
         const adUnitId = getAdId('REWARD');
         console.log("Showing Reward Ad:", adUnitId);
 
+        // onShow: the ad is now visible — hide our loading overlay
         const onShow = () => setIsAdLoading('hidden');
 
         let rewardEarned = await AdMobService.showRewardVideo(adUnitId, onShow);
@@ -1562,12 +1576,12 @@ const AppContentInner: React.FC = () => {
           updateCredits((prevCredits) => prevCredits + REWARD_CREDITS);
           showToast(`+${REWARD_CREDITS} Credits Added! ⚡`, 'success');
 
-          // 2. Pre-load Chained Bonus Ad (+10)
+          // 2. Pre-load Chained Bonus Ad (+6)
           const rewardInterId = getAdId('REWARD_INTERSTITIAL');
           AdMobService.prepareRewardInterstitial(rewardInterId);
 
           // 3. Chained Bonus Ad Sequence
-          // Wait briefly for first ad dismissal to settle (Increased to 2s)
+          // Wait briefly for first ad dismissal to settle
           await new Promise(resolve => setTimeout(resolve, 2000));
 
           // Prompt the user with a native dialog
@@ -1581,8 +1595,10 @@ const AppContentInner: React.FC = () => {
           if (value) {
             setIsAdLoading('reward'); // Show overlay for second ad prep
 
+            const onBonusShow = () => setIsAdLoading('hidden');
+
             try {
-              let bonusEarned = await AdMobService.showRewardInterstitial(rewardInterId, onShow);
+              let bonusEarned = await AdMobService.showRewardInterstitial(rewardInterId, onBonusShow);
 
               if (bonusEarned) {
                 updateCredits((prevCredits) => prevCredits + REWARD_INTERSTITIAL_CREDITS);
@@ -1594,12 +1610,10 @@ const AppContentInner: React.FC = () => {
               console.warn("Chained bonus ad error:", e);
               showToast('Bonus ad failed. Please try again later.', 'error');
             } finally {
-              // Explicitly clear overlay for the inner ad to prevent it getting stuck
-              setIsAdLoading('hidden');
+              setIsAdLoading('hidden'); // Clear overlay for inner ad
             }
           }
         } else {
-
           showToast('Ad failed to load. Please try again later.', 'error');
         }
       } catch (e) {
@@ -1608,12 +1622,17 @@ const AppContentInner: React.FC = () => {
       } finally {
         setIsAdLoading('hidden'); // ALWAYS HIDE OVERLAY
         setAdCountdown(null);
+        // Restore banner now that the reward ad session is fully over
+        if (profileRef.current && !profileRef.current.is_premium) {
+          const bannerPosition = currentView === 'COACH' ? 'TOP' : 'BOTTOM';
+          AdMobService.showBanner(getAdId('BANNER'), bannerPosition);
+        }
       }
       return;
     }
 
     showToast('Ads are only available on mobile devices.', 'info');
-  }, [showToast, updateCredits]);
+  }, [showToast, updateCredits, currentView]);
 
   const isSaved = useCallback((content: string) => savedItems.some(item => item.content === content), [savedItems]);
   const clear = useCallback(() => {

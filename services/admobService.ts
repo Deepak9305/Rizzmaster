@@ -251,6 +251,9 @@ export const AdMobService = {
             });
         } catch (error) {
             console.error('AdMob Interstitial Error', error);
+            // Bug 4 fix: hard reset in case the inner Promise never settled (silent native bridge crash)
+            AdMobService.isInterstitialShowing = false;
+            AdMobService.interstitialReady = false;
             return false;
         }
     },
@@ -369,6 +372,9 @@ export const AdMobService = {
             });
         } catch (error) {
             console.error('[AdMob] Critical Reward Interstitial Error', error);
+            // Hard reset: prevent permanent lock if inner Promise never settled
+            AdMobService.isRewardInterstitialShowing = false;
+            AdMobService.rewardInterstitialReady = false;
             return false;
         }
     },
@@ -487,6 +493,9 @@ export const AdMobService = {
             });
         } catch (error) {
             console.error('[AdMob] Critical Reward Error', error);
+            // Hard reset: prevent permanent lock if inner Promise never settled
+            AdMobService.isRewardVideoShowing = false;
+            AdMobService.rewardVideoReady = false;
             return false;
         }
     }

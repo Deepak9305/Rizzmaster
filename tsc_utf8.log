@@ -1,0 +1,2 @@
+﻿services/admobService.ts(64,17): error TS2561: Object literal may only specify known properties, but 'initializeForAdvertisingId' does not exist in type 'AdMobInitializationOptions'. Did you mean to write 'initializeForTesting'?
+services/admobService.ts(73,42): error TS2561: Object literal may only specify known properties, but 'initializeForAdvertisingId' does not exist in type 'AdMobInitializationOptions'. Did you mean to write 'initializeForTesting'?
