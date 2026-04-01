@@ -233,7 +233,7 @@ CRITICAL: ${length === 'short'
         const completion = await llamaClient.chat.completions.create({
           model: IMAGE_MODEL,
           messages: messages,
-          temperature: .9,
+          temperature: 1.1,
           max_tokens: 1000,
           response_format: { type: "json_object" }
         });
