@@ -184,7 +184,7 @@ TEASE: Playful teasing, show affection. ${length === 'short' ? '1 line' : length
  
 SMOOTH: Charismatic, smooth, improve bonding. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
  
-CHAOTIC: Absurdity-filled reply, exaggerative humor. PG-16 ${length === 'short' ? '1-2 lines' : length === 'medium' ? '2-3 lines' : '3-4 sentences'}.
+CHAOTIC: Funny, awkward humor, relatable jokes ${length === 'short' ? '1-2 lines' : length === 'medium' ? '2-3 lines' : '3-4 sentences'}.
 
 RULES:
 -Use easy to understand words.
