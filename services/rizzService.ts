@@ -338,7 +338,7 @@ CRITICAL: ${length === 'short'
         { role: "system", content: systemInstruction },
         { role: "user", content: isUnsafe ? "Generate roast." : inputText }
       ],
-      temperature: 0.7,
+      temperature: 0.85,
       response_format: { type: "json_object" }
     });
 
@@ -495,7 +495,7 @@ Carry over all existing intel and update it when new facts emerge.`;
     const completion = await llamaClient.chat.completions.create({
       model: messages.some(m => m.image) ? IMAGE_MODEL : TEXT_MODEL,
       messages: [{ role: 'system', content: systemInstruction }, ...rawMessages],
-      temperature: 0.75,
+      temperature: 0.85,
       max_tokens: 650,
     });
 
