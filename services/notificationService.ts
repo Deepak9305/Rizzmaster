@@ -6,6 +6,7 @@ const USAGE_HISTORY_KEY = 'rizz_app_usage_history';
 const MAX_HISTORY_SAMPLES = 14; // Last 14 opens
 
 const RIZZ_TIPS = [
+    // --- General Rizz & Chat ---
     "Pro Tip: If they're using one-word replies, it's time to pivot. Want a pivot line? 🔄",
     "The Rizz God is watching... don't leave them on read for too long! ⚡",
     "Ready to cook some new replies? Don't let that match go cold. 🍳",
@@ -14,13 +15,35 @@ const RIZZ_TIPS = [
     "Are you really going to send that boring 'How's your day?' Do better. 😤",
     "Nonchalant energy only. Don't double text unless it's fire. 🤫",
     "Mystery is your best friend. Keep them guessing. 🕵️‍♂️",
-    "If they sent a meme, the door is open. Send a better one. 🖼️",
     "Confidence is 90% of the game. The other 10% is here. 👑",
     "Avoid being the 'interviewer'. Ask questions they actually want to answer. 🎤",
+    "Stop overthinking. The best reply is usually the one you're afraid to send. 🚀",
+    "First dates are won in the chat. Let's polish those lines. 💎",
+
+    // --- Bestie / Persona Modes ---
+    "Need a sister's take? Use the Bestie mode for an elite vibe check. 💅",
+    "Switch to Chaotic mode if the convo is getting too predictable. 🌪️",
+    "The Roast Master is ready. Don't send that mid reply! 🔥",
+    "The Smooth mode is for the closers. Ready to lock it in? 🤝",
+    "Don't be an NPC. Refresh your vibe with a new persona. 🎭",
+    "Level up your game with a custom persona. Your style, your rules. 👑",
+
+    // --- Bio Writer ---
+    "Your bio is your first impression. Let's make it magnetic. ✨",
+    "Is your profile doing the work? Let's refresh that bio. ✍️",
+
+    // --- Vision AI ---
+    "Got a screenshot? Upload it and let Vision AI read the subtext for you. 📸",
     "Wife material or just a sleeper hit? Let's check the subtext. 🧐",
+
+    // --- Saved Items ---
+    "Build your personal library. Save your best lines for later! 📚",
+    "Your secret weapon is waiting. Review your saved rizz. 📂",
+
+    // --- General Engagement ---
     "NPC energy detected! Refresh your replies before you get ghosted. 👻",
     "A well-timed roast is worth 100 compliments. Want a subtle burn? 🔥",
-    "Stop overthinking. The best reply is usually the one you're afraid to send. 🚀"
+    "Running low on juice? Watch a quick ad for a credit boost! ⚡"
 ];
 
 export const NotificationService = {
