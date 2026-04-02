@@ -625,7 +625,7 @@ const AppContentInner: React.FC = () => {
         is_active: true
       }, { onConflict: 'user_id' });
     }
-  }, [showToast]);
+  }, [showToast, isGuest]);
 
   // Interstitial ads are now pre-loaded strategically (see handleViewNavigation/handleGenerate)
 
@@ -1130,7 +1130,7 @@ const AppContentInner: React.FC = () => {
       showToast("Successfully logged out 👋", 'success');
       window.history.replaceState({ view: 'HOME' }, '', '/');
     }
-  }, [showToast]);
+  }, [showToast, isGuest, handleExitGuestMode]);
 
 
 
@@ -1195,7 +1195,6 @@ const AppContentInner: React.FC = () => {
       showToast("Saved to your gems", 'success');
 
       if (!isGuestUser && supabase) {
-        const { data } = await supabase.from('profiles').select('id').eq('id', currentProfile.id).single();
         await supabase.from('saved_items').insert([{ user_id: currentProfile.id, content, type }]);
       }
     }
@@ -1277,7 +1276,7 @@ const AppContentInner: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [showToast]);
+  }, [showToast, isGuest, handleExitGuestMode]);
 
   const handleSaveWrapper = useCallback((content: string, type: 'tease' | 'smooth' | 'chaotic' | 'bio') => {
     toggleSave(content, type);

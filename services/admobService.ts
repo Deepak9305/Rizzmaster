@@ -70,8 +70,8 @@ export const AdMobService = {
             // Fallback: Try to initialize anyway
             try {
                 await AdMob.initialize({ testingDevices: [] });
-            } catch {
-                await AdMob.initialize({});
+            } catch (innerError) {
+                console.warn('AdMob: Secondary init fallback also failed:', innerError);
             }
             this.initialized = true;
         }

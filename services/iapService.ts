@@ -162,7 +162,11 @@ class IAPService {
         console.log(`IAP: Attempting purchase for ${productId} (BasePlan: ${basePlanId || 'N/A'})`);
 
         if (!this.isInitialized) {
-            await store.update();
+            console.warn("IAP: Store not initialized yet. Aborting purchase.");
+            if (this.onError) {
+                this.onError("Store not ready. Please try again in a moment.");
+            }
+            return;
         }
 
         const product = store.get(productId);

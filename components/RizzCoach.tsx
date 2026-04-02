@@ -302,7 +302,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
             const toStore = messages.slice(-MAX_STORED_MESSAGES).map(m => ({ ...m, image: m.image ? '[Photo]' : null }));
             localStorage.setItem(COACH_STORAGE_KEY, JSON.stringify(toStore));
         } catch { } // Fail silently if quota is exceeded
-    }, [messages]);
+    }, [messages, COACH_STORAGE_KEY]);
 
     const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const ta = e.target;
@@ -417,7 +417,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
         setHasContent(false);
         setSelectedVibe("Elite Wingman");
         if (textareaRef.current) { textareaRef.current.value = ''; textareaRef.current.style.height = 'auto'; }
-    }, [onUpdateShadowNotes]);
+    }, [onUpdateShadowNotes, COACH_STORAGE_KEY, SHADOW_NOTES_KEY]);
 
     const handleVibeClick = useCallback((vibe: { label: string, isPro: boolean }) => {
         if (vibe.isPro && !isPremium) {
