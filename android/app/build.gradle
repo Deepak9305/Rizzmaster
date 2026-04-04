@@ -7,8 +7,8 @@ android {
         applicationId "app.vercel.rizzmaster"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 10010
-        versionName "1.1.2"
+        versionCode 10012
+        versionName "1.1.4"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -26,7 +26,7 @@ android {
             enableSplit = true
         }
         abi {
-            enableSplit = true
+            enableSplit = false
         }
     }
 
