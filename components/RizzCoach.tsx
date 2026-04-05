@@ -317,7 +317,8 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
         const trimmed = textareaRef.current?.value.trim() || '';
         if ((!trimmed && !image) || loading) return;
 
-        if (!isPremium && credits <= 0) {
+        const cost = image ? 2 : 1;
+        if (!isPremium && credits < cost) {
             setShowOutOfCredits(true);
             return;
         }
