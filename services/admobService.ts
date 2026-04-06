@@ -28,9 +28,9 @@ export const AdMobService = {
     isRewardInterstitialShowing: false,
 
     // Internal Promise tracking to avoid redundant fetches and handle race conditions
-    interstitialPromise: null as Promise<void> | null,
-    rewardVideoPromise: null as Promise<void> | null,
-    rewardInterstitialPromise: null as Promise<void> | null,
+    interstitialPromise: null as Promise<any> | null,
+    rewardVideoPromise: null as Promise<any> | null,
+    rewardInterstitialPromise: null as Promise<any> | null,
 
     // Set this to true to force the GDPR popup to show for everyone during testing/development.
     // Set to false before releasing to the Play Store.
@@ -140,7 +140,7 @@ export const AdMobService = {
     async prepareInterstitial(adId: string): Promise<void> {
         if (!Capacitor.isNativePlatform()) return;
 
-        await this.initialize(); // Bug 4 Fix: Initialize before state checking to avoid double-prepares
+        await this.initialize();
 
         if (AdMobService.interstitialReady) return;
 
@@ -149,14 +149,40 @@ export const AdMobService = {
 
         AdMobService.interstitialPreparing = true;
 
-
         AdMobService.interstitialPromise = (async () => {
             try {
-                await AdMob.prepareInterstitial({ adId, isTesting: false });
+                await new Promise<void>(async (resolve, reject) => {
+                    let loadedListener: any, failedListener: any;
+
+                    const cleanup = () => {
+                        if (loadedListener) loadedListener.remove();
+                        if (failedListener) failedListener.remove();
+                    };
+
+                    loadedListener = await AdMob.addListener(InterstitialAdPluginEvents.Loaded, () => {
+                        console.log('[AdMob] Interstitial Loaded Successfully (Event confirmed)');
+                        cleanup();
+                        resolve();
+                    });
+
+                    failedListener = await AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, (info) => {
+                        console.error('[AdMob] Interstitial Failed to Load (Event confirmed):', info);
+                        cleanup();
+                        reject(info);
+                    });
+
+                    // Start the loading process
+                    try {
+                        await AdMob.prepareInterstitial({ adId, isTesting: false });
+                    } catch (e) {
+                        cleanup();
+                        reject(e);
+                    }
+                });
                 AdMobService.interstitialReady = true;
-                console.log('AdMob Interstitial Prepared');
             } catch (e) {
-                console.error('AdMob Prepare Interstitial Error:', e);
+                console.error('AdMob Prepare Interstitial Exception:', e);
+                AdMobService.interstitialReady = false;
             } finally {
                 AdMobService.interstitialPreparing = false;
                 AdMobService.interstitialPromise = null;
@@ -230,15 +256,17 @@ export const AdMobService = {
                             cleanupAndResolve(false);
                             return;
                         }
-
-                        // Add a small delay for JIT preparation to allow bridge to settle
-                        await new Promise(r => setTimeout(r, 800));
                     } catch (e) {
                         console.error('[AdMob] JIT Prepare failed:', e);
                         cleanupAndResolve(false);
                         return;
                     }
                 }
+
+                // OPTIMIZATION: Small 250ms delay to allow React DOM/View transitions 
+                // to settle before the native ad overlay triggers. 
+                // This significantly improves show success rates during heavy transitions.
+                await new Promise(r => setTimeout(r, 250));
 
                 try {
                     AdMobService.isInterstitialShowing = true;

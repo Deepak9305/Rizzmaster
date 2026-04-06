@@ -780,13 +780,17 @@ const AppContentInner: React.FC = () => {
       adTransitionInProgressRef.current = true;
       setIsAdLoading('interstitial'); // SHOW OVERLAY
 
-      // Update timer synchronously BEFORE async execution to prevent race condition "double-taps"
-      lastAdActiveTime.current = now;
-
       if (Capacitor.isNativePlatform()) {
         const adId = getAdId('INTERSTITIAL');
         try {
-          await AdMobService.showInterstitial(adId);
+          const showed = await AdMobService.showInterstitial(adId);
+
+          // Only update the cooldown timer if the ad actually showed successfully!
+          // If it failed (e.g. no fill, or transition error), we want to try again on the next view move.
+          if (showed) {
+            lastAdActiveTime.current = now;
+            console.log(`[AdMob] Success-based cooldown triggered at ${now}ms`);
+          }
         } catch (e) {
           console.warn("Transition ad error:", e);
         } finally {
@@ -794,6 +798,7 @@ const AppContentInner: React.FC = () => {
           adTransitionInProgressRef.current = false;
         }
       } else {
+        // Web fallback: Just clear the loading state
         setIsAdLoading('hidden');
         adTransitionInProgressRef.current = false;
       }
