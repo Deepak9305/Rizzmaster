@@ -211,12 +211,16 @@ CRITICAL: ${length === 'short'
     const finalInput = inputText || "Generate rizz.";
 
     if (image) {
-      const optimizedImage = await resizeImage(image);
+      // Strip formatting characters and newlines that Capacitor might embed,
+      // which cause the Groq parser to fail with "unsupported protocol".
+      const rawOptimized = await resizeImage(image);
+      const cleanOptimized = rawOptimized.replace(/[\r\n\s]+/g, '');
+
       messages.push({
         role: "user",
         content: [
           { type: "text", text: finalInput },
-          { type: "image_url", image_url: { url: optimizedImage } }
+          { type: "image_url", image_url: { url: cleanOptimized } }
         ]
       });
     } else {
@@ -228,14 +232,13 @@ CRITICAL: ${length === 'short'
 
     // Retry logic for robustness
     let attempts = 0;
-    while (attempts < 2) {
+    while (attempts < 3) {
       try {
         const completion = await llamaClient.chat.completions.create({
           model: IMAGE_MODEL,
           messages: messages,
           temperature: 1.1,
-          max_tokens: 1000,
-          response_format: { type: "json_object" }
+          max_tokens: 1000
         });
 
         const responseText = completion.choices[0]?.message?.content;
@@ -270,9 +273,12 @@ CRITICAL: ${length === 'short'
         } else {
           throw new Error("Empty response text from model.");
         }
-      } catch (e) {
-        console.warn(`Attempt ${attempts + 1} failed:`, e);
+      } catch (e: any) {
+        console.warn(`Attempt ${attempts + 1} failed:`, e?.message || e);
         attempts++;
+        if (attempts >= 3) break;
+        // Exponential backoff
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempts - 1)));
       }
     }
 
@@ -331,35 +337,43 @@ CRITICAL: ${length === 'short'
           : 'The bio must be detailed and substantial, at least 100 tokens long.'}`;
   }
 
-  try {
-    const completion = await llamaClient.chat.completions.create({
-      model: TEXT_MODEL,
-      messages: [
-        { role: "system", content: systemInstruction },
-        { role: "user", content: isUnsafe ? "Generate roast." : inputText }
-      ],
-      temperature: 0.85,
-      response_format: { type: "json_object" }
-    });
+  let attempts = 0;
+  while (attempts < 3) {
+    try {
+      const completion = await llamaClient.chat.completions.create({
+        model: TEXT_MODEL,
+        messages: [
+          { role: "system", content: systemInstruction },
+          { role: "user", content: isUnsafe ? "Generate roast." : inputText }
+        ],
+        temperature: 0.85
+      });
 
-    const responseText = completion.choices[0]?.message?.content;
+      const responseText = completion.choices[0]?.message?.content;
 
-    if (responseText) {
-      try {
-        const rawData = JSON.parse(cleanJson(responseText));
-        return sanitizeResponse(rawData) as BioResponse;
-      } catch (e) {
-        console.error("JSON Parse Error:", e);
-        throw new Error("Failed to parse AI response.");
+      if (responseText) {
+        try {
+          const rawData = JSON.parse(cleanJson(responseText));
+          return sanitizeResponse(rawData) as BioResponse;
+        } catch (e) {
+          console.error("JSON Parse Error:", e);
+          throw new Error("Failed to parse AI response.");
+        }
       }
+
+      throw new Error("No response generated.");
+
+    } catch (error: any) {
+      console.warn(`Bio Attempt ${attempts + 1} failed:`, error?.message || error);
+      attempts++;
+      if (attempts >= 3) {
+        console.error("Bio Service Error:", error);
+        return { analysis: "Failed to generate bio." };
+      }
+      await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempts - 1)));
     }
-
-    throw new Error("No response generated.");
-
-  } catch (error: any) {
-    console.error("Bio Service Error:", error);
-    return { analysis: "Failed to generate bio." };
   }
+  return { analysis: "Failed to generate bio." };
 };
 
 /**
@@ -477,10 +491,12 @@ Carry over all existing intel and update it when new facts emerge.`;
 
     let finalContent: any = textContent;
     if (m.image) {
-      const optimizedImage = await resizeImage(m.image);
+      const rawOptimized = await resizeImage(m.image);
+      const cleanOptimized = rawOptimized.replace(/[\r\n\s]+/g, '');
+
       finalContent = [
         { type: "text", text: textContent },
-        { type: "image_url", image_url: { url: optimizedImage } }
+        { type: "image_url", image_url: { url: cleanOptimized } }
       ];
     }
 
@@ -490,33 +506,42 @@ Carry over all existing intel and update it when new facts emerge.`;
     };
   })) as any[];
 
-  try {
-    const completion = await llamaClient.chat.completions.create({
-      model: messages.some(m => m.image) ? IMAGE_MODEL : TEXT_MODEL,
-      messages: [{ role: 'system', content: systemInstruction }, ...rawMessages],
-      temperature: 0.85,
-      max_tokens: 650,
-    });
+  let attempts = 0;
+  while (attempts < 3) {
+    try {
+      const completion = await llamaClient.chat.completions.create({
+        model: messages.some(m => m.image) ? IMAGE_MODEL : TEXT_MODEL,
+        messages: [{ role: 'system', content: systemInstruction }, ...rawMessages],
+        temperature: 0.85,
+        max_tokens: 650,
+      });
 
-    const rawReply = completion.choices[0]?.message?.content?.trim();
-    if (!rawReply) throw new Error('No coach response');
+      const rawReply = completion.choices[0]?.message?.content?.trim();
+      if (!rawReply) throw new Error('No coach response');
 
-    // Strip the hidden intel dossier block before showing to user, handling potential formatting issues from the model
-    // This regex looks for <<<INTEL_START>>>, takes everything until <<<INTEL_END>>> or the end of the string.
-    // It also handles optional markdown codeblocks often added by AI
-    const INTEL_RE = /(?:```(?:markdown|text)?\n?)?<<<INTEL_START>>>([\s\S]*?)(?:<<<INTEL_END>>>|$)(?:\n?```)?/i;
-    const intelMatch = rawReply.match(INTEL_RE);
-    const updatedNotes = intelMatch ? intelMatch[1].trim() : undefined;
+      // Strip the hidden intel dossier block before showing to user, handling potential formatting issues from the model
+      // This regex looks for <<<INTEL_START>>>, takes everything until <<<INTEL_END>>> or the end of the string.
+      // It also handles optional markdown codeblocks often added by AI
+      const INTEL_RE = /(?:```(?:markdown|text)?\n?)?<<<INTEL_START>>>([\s\S]*?)(?:<<<INTEL_END>>>|$)(?:\n?```)?/i;
+      const intelMatch = rawReply.match(INTEL_RE);
+      const updatedNotes = intelMatch ? intelMatch[1].trim() : undefined;
 
-    // Remove the entirely matched block
-    let cleanReply = rawReply.replace(INTEL_RE, '').trim();
+      // Remove the entirely matched block
+      let cleanReply = rawReply.replace(INTEL_RE, '').trim();
 
-    // Sometimes the AI might still add filler like "Here is the updated intel:", let's strip common trailing filler
-    cleanReply = cleanReply.replace(/(?:\n|^)(?:Here is the updated intel|Updated Intel|Shadow Intel|Here is the intel).*:?\s*$/i, '').trim();
+      // Sometimes the AI might still add filler like "Here is the updated intel:", let's strip common trailing filler
+      cleanReply = cleanReply.replace(/(?:\n|^)(?:Here is the updated intel|Updated Intel|Shadow Intel|Here is the intel).*:?\s*$/i, '').trim();
 
-    return { reply: sanitizeText(cleanReply), updatedNotes };
-  } catch (error) {
-    console.error("Coach Service Error:", error);
-    return { reply: "Something went wrong on my end. Try again. 🔧" };
+      return { reply: sanitizeText(cleanReply), updatedNotes };
+    } catch (error: any) {
+      console.warn(`Coach Attempt ${attempts + 1} failed:`, error?.message || error);
+      attempts++;
+      if (attempts >= 3) {
+        console.error("Coach Service Error:", error);
+        return { reply: "Something went wrong on my end. Try again. 🔧" };
+      }
+      await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempts - 1)));
+    }
   }
+  return { reply: "Something went wrong on my end. Try again. 🔧" };
 };
