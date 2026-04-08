@@ -908,6 +908,7 @@ const AppContentInner: React.FC = () => {
         setSavedItems([]);
         if (Capacitor.isNativePlatform()) {
           AdMobService.removeBanner();
+          lastBannerPosition.current = null; // Reset so banner re-shows on next login
         }
       }
     });
@@ -1116,6 +1117,7 @@ const AppContentInner: React.FC = () => {
       if (Capacitor.isNativePlatform()) {
         try { await GoogleAuth.signOut(); } catch (error) { console.warn("Native Logout err", error); }
         AdMobService.removeBanner(); // removeBanner fully destroys it; hideBanner only hides
+        lastBannerPosition.current = null; // Reset so banner re-shows on next login
         OneSignalService.logout();
       }
     } catch (err) {
@@ -1557,7 +1559,7 @@ const AppContentInner: React.FC = () => {
       setIsAdLoading('reward'); // SHOW OVERLAY
 
       // Hide banner so it doesn't render under the full-screen reward ad
-      AdMobService.hideBanner();
+      await AdMobService.hideBanner();
 
       try {
         const adUnitId = getAdId('REWARD');
@@ -1623,7 +1625,7 @@ const AppContentInner: React.FC = () => {
         // Restore banner now that the reward ad session is fully over
         if (profileRef.current && !profileRef.current.is_premium) {
           const bannerPosition = currentView === 'COACH' ? 'TOP' : 'BOTTOM';
-          AdMobService.showBanner(getAdId('BANNER'), bannerPosition);
+          await AdMobService.showBanner(getAdId('BANNER'), bannerPosition);
         }
       }
       return;

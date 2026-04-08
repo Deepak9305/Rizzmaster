@@ -15,7 +15,7 @@ const AdSenseBanner: React.FC<AdSenseBannerProps> = ({
   responsive = "true",
   className,
   refreshInterval = 60000,
-  devMode = true // Default to true so placeholders don't waste cycles
+  devMode = false // Set to true locally to show placeholder without loading real ads
 }) => {
   const adRef = useRef<HTMLModElement>(null);
   const isLoaded = useRef(false);

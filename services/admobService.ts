@@ -28,6 +28,7 @@ export const AdMobService = {
     isRewardInterstitialShowing: false,
 
     // Internal Promise tracking to avoid redundant fetches and handle race conditions
+    initPromise: null as Promise<void> | null,
     interstitialPromise: null as Promise<any> | null,
     rewardVideoPromise: null as Promise<any> | null,
     rewardInterstitialPromise: null as Promise<any> | null,
@@ -40,41 +41,48 @@ export const AdMobService = {
         if (!Capacitor.isNativePlatform()) return;
         if (this.initialized) return;
 
-        try {
-            // --- GDPR / UMP CONSENT FLOW ---
-            if (this.DEBUG_FORCE_GDPR) {
-                // Completely reset the user's consent state so the form shows up every time we test
-                try { await AdMob.resetConsentInfo(); } catch (e) { console.warn("Reset GDPR info failed", e); }
-            }
+        // If initialization is already in progress, await the same promise instead of starting a second one.
+        // Without this guard, concurrent callers (e.g. showBanner + deferred init) both pass the
+        // `this.initialized` check and call AdMob.initialize() simultaneously, corrupting plugin state.
+        if (this.initPromise) return this.initPromise;
 
-            // 1. Request consent info from Google
-            const consentInfo = await AdMob.requestConsentInfo({
-                debugGeography: this.DEBUG_FORCE_GDPR ? AdmobConsentDebugGeography.EEA : AdmobConsentDebugGeography.DISABLED,
-            });
-
-            // 2. If a form is available and we need to show it, do it now
-            if (consentInfo.isConsentFormAvailable && consentInfo.status === AdmobConsentStatus.REQUIRED) {
-                console.log('AdMob: GDPR Consent Required. Showing form...');
-                await AdMob.showConsentForm();
-            }
-            // -------------------------------
-
-            // 3. Initialize AdMob with advertising ID tracking for better show rates
-            await AdMob.initialize({
-                testingDevices: []
-            });
-            this.initialized = true;
-            console.log('AdMob Community Initialized with Advertising ID tracking');
-        } catch (error) {
-            console.error('AdMob Community initialization failed', error);
-            // Fallback: Try to initialize anyway
+        this.initPromise = (async () => {
             try {
+                // --- GDPR / UMP CONSENT FLOW ---
+                if (this.DEBUG_FORCE_GDPR) {
+                    try { await AdMob.resetConsentInfo(); } catch (e) { console.warn("Reset GDPR info failed", e); }
+                }
+
+                // 1. Request consent info from Google
+                const consentInfo = await AdMob.requestConsentInfo({
+                    debugGeography: this.DEBUG_FORCE_GDPR ? AdmobConsentDebugGeography.EEA : AdmobConsentDebugGeography.DISABLED,
+                });
+
+                // 2. If a form is available and we need to show it, do it now
+                if (consentInfo.isConsentFormAvailable && consentInfo.status === AdmobConsentStatus.REQUIRED) {
+                    console.log('AdMob: GDPR Consent Required. Showing form...');
+                    await AdMob.showConsentForm();
+                }
+
+                // 3. Initialize AdMob
                 await AdMob.initialize({ testingDevices: [] });
-            } catch (innerError) {
-                console.warn('AdMob: Secondary init fallback also failed:', innerError);
+                this.initialized = true;
+                console.log('AdMob Community Initialized with Advertising ID tracking');
+            } catch (error) {
+                console.error('AdMob Community initialization failed', error);
+                // Fallback: Try to initialize anyway
+                try {
+                    await AdMob.initialize({ testingDevices: [] });
+                } catch (innerError) {
+                    console.warn('AdMob: Secondary init fallback also failed:', innerError);
+                }
+                this.initialized = true;
+            } finally {
+                this.initPromise = null;
             }
-            this.initialized = true;
-        }
+        })();
+
+        return this.initPromise;
     },
 
     bannerListeners: [] as any[],
