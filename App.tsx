@@ -536,7 +536,7 @@ const AppContentInner: React.FC = () => {
   useEffect(() => {
     let timer: any;
     const refreshBanner = (force = false) => {
-      if (Capacitor.isNativePlatform() && session) {
+      if (Capacitor.isNativePlatform() && (session || isGuest)) {
         if (!profile) return;
 
         if (profile.is_premium) {
@@ -567,8 +567,8 @@ const AppContentInner: React.FC = () => {
       CapacitorApp.addListener('appStateChange', ({ isActive }) => {
         if (isActive) {
           const currentProfile = profileRef.current;
-          // Guard: only refresh if logged in, not premium, and NOT a guest
-          if (currentProfile && !currentProfile.is_premium && currentProfile.id !== 'guest_user') {
+          // Guard: only refresh if not premium (includes guests)
+          if (currentProfile && !currentProfile.is_premium) {
             refreshBanner(true); // Force refresh on resume
           }
         }
@@ -580,7 +580,7 @@ const AppContentInner: React.FC = () => {
       if (timer) clearTimeout(timer);
       if (appListener) appListener.remove();
     };
-  }, [profile?.is_premium, session, currentView]); // Refresh banner on every view navigation
+  }, [profile?.is_premium, session, isGuest, currentView]); // Refresh banner on every view navigation
 
   // Define handleUpgrade using REF to avoid stale closures
   const handleUpgrade = useCallback(async () => {

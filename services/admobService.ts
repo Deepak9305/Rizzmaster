@@ -58,9 +58,12 @@ export const AdMobService = {
                     debugGeography: this.DEBUG_FORCE_GDPR ? AdmobConsentDebugGeography.EEA : AdmobConsentDebugGeography.DISABLED,
                 });
 
-                // 2. If a form is available and we need to show it, do it now
-                if (consentInfo.isConsentFormAvailable && consentInfo.status === AdmobConsentStatus.REQUIRED) {
-                    console.log('AdMob: GDPR Consent Required. Showing form...');
+                // 2. If a form is available and consent is needed, show it
+                // UNKNOWN status (first install) also requires showing the form per UMP SDK docs
+                const needsConsent = consentInfo.status === AdmobConsentStatus.REQUIRED ||
+                    consentInfo.status === AdmobConsentStatus.UNKNOWN;
+                if (consentInfo.isConsentFormAvailable && needsConsent) {
+                    console.log('AdMob: GDPR Consent Required/Unknown. Showing form...');
                     await AdMob.showConsentForm();
                 }
 
@@ -70,13 +73,14 @@ export const AdMobService = {
                 console.log('AdMob Community Initialized with Advertising ID tracking');
             } catch (error) {
                 console.error('AdMob Community initialization failed', error);
-                // Fallback: Try to initialize anyway
+                // Fallback: Try to initialize without consent flow
                 try {
                     await AdMob.initialize({ testingDevices: [] });
+                    this.initialized = true;
                 } catch (innerError) {
                     console.warn('AdMob: Secondary init fallback also failed:', innerError);
+                    // Do NOT set initialized = true — allow retry on next call
                 }
-                this.initialized = true;
             } finally {
                 this.initPromise = null;
             }
@@ -311,11 +315,34 @@ export const AdMobService = {
 
         AdMobService.rewardInterstitialPromise = (async () => {
             try {
-                await AdMob.prepareRewardInterstitialAd({ adId, isTesting: false });
+                await new Promise<void>(async (resolve, reject) => {
+                    let loadedListener: any, failedListener: any;
+                    const cleanup = () => {
+                        if (loadedListener) loadedListener.remove();
+                        if (failedListener) failedListener.remove();
+                    };
+                    loadedListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.Loaded, () => {
+                        console.log('[AdMob] Reward Interstitial Loaded Successfully');
+                        cleanup();
+                        resolve();
+                    });
+                    failedListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.FailedToLoad, (info) => {
+                        console.error('[AdMob] Reward Interstitial Failed to Load:', info);
+                        cleanup();
+                        reject(info);
+                    });
+                    try {
+                        await AdMob.prepareRewardInterstitialAd({ adId, isTesting: false });
+                    } catch (e) {
+                        cleanup();
+                        reject(e);
+                    }
+                });
                 AdMobService.rewardInterstitialReady = true;
                 console.log('AdMob Reward Interstitial Prepared');
             } catch (e) {
                 console.error('AdMob Prepare Reward Interstitial Error:', e);
+                AdMobService.rewardInterstitialReady = false;
             } finally {
                 AdMobService.rewardInterstitialPreparing = false;
                 AdMobService.rewardInterstitialPromise = null;
@@ -433,11 +460,34 @@ export const AdMobService = {
 
         AdMobService.rewardVideoPromise = (async () => {
             try {
-                await AdMob.prepareRewardVideoAd({ adId, isTesting: false });
+                await new Promise<void>(async (resolve, reject) => {
+                    let loadedListener: any, failedListener: any;
+                    const cleanup = () => {
+                        if (loadedListener) loadedListener.remove();
+                        if (failedListener) failedListener.remove();
+                    };
+                    loadedListener = await AdMob.addListener(RewardAdPluginEvents.Loaded, () => {
+                        console.log('[AdMob] Reward Video Loaded Successfully');
+                        cleanup();
+                        resolve();
+                    });
+                    failedListener = await AdMob.addListener(RewardAdPluginEvents.FailedToLoad, (info) => {
+                        console.error('[AdMob] Reward Video Failed to Load:', info);
+                        cleanup();
+                        reject(info);
+                    });
+                    try {
+                        await AdMob.prepareRewardVideoAd({ adId, isTesting: false });
+                    } catch (e) {
+                        cleanup();
+                        reject(e);
+                    }
+                });
                 AdMobService.rewardVideoReady = true;
                 console.log('AdMob Reward Video Prepared');
             } catch (e) {
                 console.error('AdMob Prepare Reward Error:', e);
+                AdMobService.rewardVideoReady = false;
             } finally {
                 AdMobService.rewardVideoPreparing = false;
                 AdMobService.rewardVideoPromise = null;
