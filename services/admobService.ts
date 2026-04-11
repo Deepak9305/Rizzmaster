@@ -207,6 +207,7 @@ export const AdMobService = {
     async showInterstitial(adId: string, onShow?: () => void): Promise<boolean> {
         if (!Capacitor.isNativePlatform()) return false;
         if (AdMobService.isInterstitialShowing) return false;
+        AdMobService.isInterstitialShowing = true; // Lock immediately to prevent race conditions
 
         console.log(`[AdMob] Attempting to show interstitial: ${adId}`);
 
@@ -281,7 +282,6 @@ export const AdMobService = {
                 await new Promise(r => setTimeout(r, 250));
 
                 try {
-                    AdMobService.isInterstitialShowing = true;
                     // Passing adId again manually during show to ensure referential integrity for some device types
                     await AdMob.showInterstitial();
                 } catch (e) {
@@ -355,6 +355,7 @@ export const AdMobService = {
     async showRewardInterstitial(adId: string, onShow?: () => void): Promise<boolean> {
         if (!Capacitor.isNativePlatform()) return false;
         if (AdMobService.isRewardInterstitialShowing) return false;
+        AdMobService.isRewardInterstitialShowing = true; // Lock immediately
 
         await this.initialize();
         console.log(`[AdMob] Attempting to show reward interstitial: ${adId}`);
@@ -427,7 +428,6 @@ export const AdMobService = {
 
 
                 try {
-                    AdMobService.isRewardInterstitialShowing = true;
                     await AdMob.showRewardInterstitialAd();
                 } catch (err) {
                     console.error('AdMob showRewardInterstitialAd threw:', err);
@@ -500,6 +500,7 @@ export const AdMobService = {
     async showRewardVideo(adId: string, onShow?: () => void): Promise<boolean> {
         if (!Capacitor.isNativePlatform()) return false;
         if (AdMobService.isRewardVideoShowing) return false;
+        AdMobService.isRewardVideoShowing = true; // Lock immediately
 
         await this.initialize();
         console.log(`[AdMob] Attempting to show reward video: ${adId}`);
@@ -572,7 +573,6 @@ export const AdMobService = {
 
 
                 try {
-                    AdMobService.isRewardVideoShowing = true;
                     await AdMob.showRewardVideoAd();
                 } catch (err) {
                     console.error('AdMob showRewardVideoAd threw:', err);
