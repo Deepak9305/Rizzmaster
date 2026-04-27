@@ -6,8 +6,12 @@ import { Capacitor } from '@capacitor/core';
 export const ONESIGNAL_APP_ID = '1ef08667-85c4-42b4-8bce-247b558b9a8f';
 
 export const OneSignalService = {
+    initialized: false,
+
     async initialize() {
         if (!Capacitor.isNativePlatform()) return;
+        if (this.initialized) return;
+        this.initialized = true;
 
         // --- OneSignal Initialization ---
         // 1. Initialise OneSignal
