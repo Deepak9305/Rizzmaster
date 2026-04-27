@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 
 type ToastType = 'success' | 'error' | 'info';
 
@@ -24,15 +24,22 @@ const generateId = () => {
 
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const timerIds = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
+  useEffect(() => {
+    return () => { timerIds.current.forEach(id => clearTimeout(id)); };
+  }, []);
 
   const showToast = useCallback((message: string, type: ToastType = 'info') => {
     const id = generateId();
     setToasts((prev) => [...prev, { id, message, type }]);
 
     // Auto dismiss after 3 seconds
-    setTimeout(() => {
+    const timerId = setTimeout(() => {
+      timerIds.current.delete(id);
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 3000);
+    timerIds.current.set(id, timerId);
   }, []);
 
   return (

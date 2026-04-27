@@ -562,9 +562,9 @@ const AppContentInner: React.FC = () => {
     refreshBanner();
 
     // Listen for App Resume to refresh ads
-    let appListener: any;
+    const listenerRef = { current: null as any };
     if (Capacitor.isNativePlatform()) {
-      CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      const promise = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
         if (isActive) {
           const currentProfile = profileRef.current;
           // Guard: only refresh if not premium (includes guests)
@@ -572,13 +572,13 @@ const AppContentInner: React.FC = () => {
             refreshBanner(true); // Force refresh on resume
           }
         }
-      }).then(l => appListener = l);
+      });
+      promise.then(l => { listenerRef.current = l; });
     }
-
 
     return () => {
       if (timer) clearTimeout(timer);
-      if (appListener) appListener.remove();
+      if (listenerRef.current) listenerRef.current.remove();
     };
   }, [profile?.is_premium, session, isGuest, currentView]); // Refresh banner on every view navigation
 
@@ -643,80 +643,90 @@ const AppContentInner: React.FC = () => {
 
   // Initialize Native Services
   useEffect(() => {
-    if (Capacitor.isNativePlatform()) {
-      // Defer heavy native plugin initialization so the initial React render is fully unblocked
-      setTimeout(() => {
-        // Google Auth
-        const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
-        GoogleAuth.initialize({
-          clientId: clientId || 'YOUR_WEB_CLIENT_ID_PLACEHOLDER',
-          scopes: ['profile', 'email'],
-          grantOfflineAccess: false,
-        });
+    if (!Capacitor.isNativePlatform()) return;
 
-        // AdMob
-        AdMobService.initialize();
+    const timerIds: ReturnType<typeof setTimeout>[] = [];
+    let isMounted = true;
 
-        // OneSignal Push Notifications
-        OneSignalService.initialize();
+    // Defer heavy native plugin initialization so the initial React render is fully unblocked
+    timerIds.push(setTimeout(() => {
+      // Google Auth
+      const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
+      GoogleAuth.initialize({
+        clientId: clientId || 'YOUR_WEB_CLIENT_ID_PLACEHOLDER',
+        scopes: ['profile', 'email'],
+        grantOfflineAccess: false,
+      });
 
-        // Local Notifications & Usage Tracking
-        NotificationService.initialize();
+      // AdMob
+      AdMobService.initialize();
 
-        // In-App Purchases
-        IAPService.initialize(
-          () => {
-            // On successful purchase/restore
-            handleUpgrade();
-          },
-          (errorMessage) => {
-            showToast(errorMessage, 'error');
-          }
-        );
-      }, 1000); // Deferred by 1 second to prioritize frame rendering initial paint
+      // OneSignal Push Notifications
+      OneSignalService.initialize();
 
-      // --- SILENT RE-VERIFICATION FOR "WEB-BUY" EXPLOITERS ---
-      // If user is premium but 'unverified', they likely used the web loophole.
-      // We force a Restore to confirm they have a real Store receipt.
-      setTimeout(async () => {
-        // Wait for profile to settle if it hasn't yet (avoid false revocations)
-        const checkVerification = async () => {
-          const currentProfile = profileRef.current;
-          if (!currentProfile) {
-            // If profile not loaded yet, retry once after 5s
-            setTimeout(checkVerification, 5000);
-            return;
-          }
+      // Local Notifications & Usage Tracking
+      NotificationService.initialize();
 
-          if (currentProfile.is_premium && currentProfile.premium_source === 'unverified') {
-            console.log("IAP: User is premium but 'unverified'. Starting silent restore check...");
-            try {
-              await IAPService.restore();
+      // In-App Purchases
+      IAPService.initialize(
+        () => {
+          // On successful purchase/restore
+          handleUpgrade();
+        },
+        (errorMessage) => {
+          showToast(errorMessage, 'error');
+        }
+      );
+    }, 1000)); // Deferred by 1 second to prioritize frame rendering initial paint
 
-              // Wait 15s for store status to update
-              setTimeout(async () => {
-                const refreshedProfile = profileRef.current;
-                // If source is STILL unverified, it means no store receipt was found during restore
-                if (refreshedProfile?.is_premium && refreshedProfile.premium_source === 'unverified') {
-                  console.warn("IAP: Re-verification failed (No Store Receipt). Revoking premium.");
-                  setProfile(prev => prev ? { ...prev, is_premium: false, premium_source: 'revoked' } : null);
-                  showToast("Subscription verification failed. Access revoked.", 'error');
+    // --- SILENT RE-VERIFICATION FOR "WEB-BUY" EXPLOITERS ---
+    // If user is premium but 'unverified', they likely used the web loophole.
+    // We force a Restore to confirm they have a real Store receipt.
+    timerIds.push(setTimeout(async () => {
+      // Wait for profile to settle if it hasn't yet (avoid false revocations)
+      const checkVerification = async () => {
+        const currentProfile = profileRef.current;
+        if (!currentProfile) {
+          // If profile not loaded yet, retry once after 5s
+          if (!isMounted) return;
+          timerIds.push(setTimeout(checkVerification, 5000));
+          return;
+        }
 
-                  if (supabase) {
-                    await supabase.from('profiles').update({ is_premium: false, premium_source: 'revoked' }).eq('id', refreshedProfile.id);
-                    await supabase.from('premium_subscriptions').update({ is_active: false }).eq('user_id', refreshedProfile.id);
-                  }
+        if (currentProfile.is_premium && currentProfile.premium_source === 'unverified') {
+          console.log("IAP: User is premium but 'unverified'. Starting silent restore check...");
+          try {
+            await IAPService.restore();
+
+            // Wait 15s for store status to update
+            timerIds.push(setTimeout(async () => {
+              if (!isMounted) return;
+              const refreshedProfile = profileRef.current;
+              // If source is STILL unverified, it means no store receipt was found during restore
+              if (refreshedProfile?.is_premium && refreshedProfile.premium_source === 'unverified') {
+                console.warn("IAP: Re-verification failed (No Store Receipt). Revoking premium.");
+                setProfile(prev => prev ? { ...prev, is_premium: false, premium_source: 'revoked' } : null);
+                showToast("Subscription verification failed. Access revoked.", 'error');
+
+                if (supabase) {
+                  await supabase.from('profiles').update({ is_premium: false, premium_source: 'revoked' }).eq('id', refreshedProfile.id);
+                  await supabase.from('premium_subscriptions').update({ is_active: false }).eq('user_id', refreshedProfile.id);
                 }
-              }, 15000);
-            } catch (e) {
-              console.error("IAP: Re-verification process error", e);
-            }
+              }
+            }, 15000));
+          } catch (e) {
+            console.error("IAP: Re-verification process error", e);
           }
-        };
+        }
+      };
 
-        checkVerification();
-      }, 5000);
-    }
+      checkVerification();
+    }, 5000));
+
+    return () => {
+      isMounted = false;
+      timerIds.forEach(id => clearTimeout(id));
+    };
   }, [handleUpgrade, showToast]);
 
   // Handle History API for Mobile Back Button support
@@ -1066,13 +1076,14 @@ const AppContentInner: React.FC = () => {
 
         // --- DAU ACTIVITY LOG (silent, fire-and-forget) ---
         // The PRIMARY KEY prevents duplicate inserts for the same user on the same day.
-        supabase.from('user_activity_log')
-          .insert([{ user_id: userId }])
+        Promise.resolve(supabase.from('user_activity_log')
+          .insert([{ user_id: userId }]))
           .then(({ error }) => {
             if (error && error.code !== '23505') { // 23505 = unique violation (expected)
               console.warn('[Analytics] Activity log insert failed:', error.message);
             }
-          });
+          })
+          .catch((e: unknown) => console.warn('[Analytics] Activity log insert error:', e));
 
         // --- DATA MIGRATION: Sync legacy local notes to Supabase ---
         if (!profileData.shadow_notes) {
@@ -1648,19 +1659,20 @@ const AppContentInner: React.FC = () => {
   }, []);
 
   const updateShadowNotes = useCallback(async (newNotes: string) => {
-    setProfile(prev => {
-      if (!prev) return null;
-      const updated = { ...prev, shadow_notes: newNotes };
+    const currentProfile = profileRef.current;
+    if (!currentProfile) return;
 
-      if (isGuest || prev.id === 'guest_user') {
-        localStorage.setItem('rizzmaster_guest_shadow_notes', newNotes);
-      } else if (supabase) {
-        supabase.from('profiles').update({ shadow_notes: newNotes }).eq('id', prev.id)
-          .then(({ error }) => { if (error) console.error("Shadow Notes Sync Error:", error); });
-      }
+    setProfile(prev => prev ? { ...prev, shadow_notes: newNotes } : null);
 
-      return updated;
-    });
+    if (isGuest || currentProfile.id === 'guest_user') {
+      localStorage.setItem('rizzmaster_guest_shadow_notes', newNotes);
+    } else if (supabase) {
+      Promise.resolve(supabase.from('profiles')
+        .update({ shadow_notes: newNotes })
+        .eq('id', currentProfile.id))
+        .then(({ error }) => { if (error) console.error("Shadow Notes Sync Error:", error); })
+        .catch((e: unknown) => console.warn('[ShadowNotes] Sync error:', e));
+    }
   }, [isGuest]);
 
   return (
