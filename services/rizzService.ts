@@ -235,7 +235,7 @@ CRITICAL: ${length === 'short'
     while (attempts < 3) {
       try {
         const completion = await llamaClient.chat.completions.create({
-          model: IMAGE_MODEL,
+          model: image ? IMAGE_MODEL : TEXT_MODEL,
           messages: messages,
           temperature: 1.1,
           max_tokens: 1000
@@ -368,12 +368,12 @@ CRITICAL: ${length === 'short'
       attempts++;
       if (attempts >= 3) {
         console.error("Bio Service Error:", error);
-        return { analysis: "Failed to generate bio." };
+        return { bio: '', analysis: 'System Error' };
       }
       await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempts - 1)));
     }
   }
-  return { analysis: "Failed to generate bio." };
+  return { bio: '', analysis: 'System Error' };
 };
 
 /**

@@ -740,10 +740,14 @@ const AppContentInner: React.FC = () => {
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
-    const setupBackListener = async () => {
-      await CapacitorApp.removeAllListeners();
+    let backButtonListener: any;
 
-      CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+    const setupBackListener = async () => {
+      // Only remove the back-button listener specifically — removeAllListeners() would
+      // also kill the appStateChange listeners registered by other effects on the same mount.
+      if (backButtonListener) backButtonListener.remove();
+
+      backButtonListener = await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
         const { currentView, showPremiumModal, showSavedModal } = stateRef.current;
 
         if (showPremiumModal || showSavedModal) {
@@ -764,7 +768,7 @@ const AppContentInner: React.FC = () => {
     };
 
     setupBackListener();
-    return () => { CapacitorApp.removeAllListeners(); };
+    return () => { backButtonListener?.remove(); };
   }, []);
 
   // Navigation Wrappers
