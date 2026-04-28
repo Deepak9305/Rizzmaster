@@ -463,9 +463,10 @@ const AppContentInner: React.FC = () => {
     }, 1000);
 
     // Initial setup listener for App state to handle background/foreground
+    let cancelled = false;
     let appStateListener: any;
 
-    // Using a separate listener specifically for the vital time tracking 
+    // Using a separate listener specifically for the vital time tracking
     // to keep it decoupled from the ad refresh logic below.
     CapacitorApp.addListener('appStateChange', ({ isActive }) => {
       const now = Date.now();
@@ -508,9 +509,19 @@ const AppContentInner: React.FC = () => {
           activeTimeMs.current = 0;
         }
       }
-    }).then(listener => appStateListener = listener);
+    }).then(listener => {
+      // If the effect has already torn down (e.g. StrictMode double-invoke or fast refresh)
+      // before addListener resolved, remove it now — otherwise it leaks and double-counts
+      // session time on the next background event.
+      if (cancelled) {
+        listener.remove();
+        return;
+      }
+      appStateListener = listener;
+    });
 
     return () => {
+      cancelled = true;
       clearInterval(interval);
       if (appStateListener) appStateListener.remove();
     };
@@ -534,6 +545,11 @@ const AppContentInner: React.FC = () => {
   const lastBannerPosition = useRef<'TOP' | 'BOTTOM' | null>(null);
 
   useEffect(() => {
+    // `cancelled` guards against late async work resolving after this effect has torn down:
+    //   - removeBanner().then(...) calling showBanner with stale adId/position
+    //   - CapacitorApp.addListener resolving and registering a listener into a dead effect
+    //     (listenerRef is still null at cleanup time, so the listener leaks).
+    let cancelled = false;
     let timer: any;
     const refreshBanner = (force = false) => {
       if (Capacitor.isNativePlatform() && (session || isGuest)) {
@@ -551,9 +567,15 @@ const AppContentInner: React.FC = () => {
             lastBannerPosition.current = position;
 
             // Force remove first to ensure the plugin repositions cleanly
-            AdMobService.removeBanner().then(() => {
-              timer = setTimeout(() => AdMobService.showBanner(adId, position), 1000);
-            });
+            AdMobService.removeBanner()
+              .then(() => {
+                if (cancelled) return;
+                timer = setTimeout(() => {
+                  if (cancelled) return;
+                  AdMobService.showBanner(adId, position);
+                }, 1000);
+              })
+              .catch(e => console.warn('[AdMob] Banner refresh removeBanner failed:', e));
           }
         }
       }
@@ -564,7 +586,7 @@ const AppContentInner: React.FC = () => {
     // Listen for App Resume to refresh ads
     const listenerRef = { current: null as any };
     if (Capacitor.isNativePlatform()) {
-      const promise = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      CapacitorApp.addListener('appStateChange', ({ isActive }) => {
         if (isActive) {
           const currentProfile = profileRef.current;
           // Guard: only refresh if not premium (includes guests)
@@ -572,11 +594,17 @@ const AppContentInner: React.FC = () => {
             refreshBanner(true); // Force refresh on resume
           }
         }
+      }).then(l => {
+        if (cancelled) {
+          l.remove();
+          return;
+        }
+        listenerRef.current = l;
       });
-      promise.then(l => { listenerRef.current = l; });
     }
 
     return () => {
+      cancelled = true;
       if (timer) clearTimeout(timer);
       if (listenerRef.current) listenerRef.current.remove();
     };

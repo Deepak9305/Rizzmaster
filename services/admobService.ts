@@ -101,17 +101,19 @@ export const AdMobService = {
             this.bannerListeners.forEach(l => { try { l.remove(); } catch { } });
             this.bannerListeners = [];
 
-            this.bannerListeners.push(
-                await AdMob.addListener(BannerAdPluginEvents.Loaded, () => {
-                    console.log('[AdMob] Banner Loaded Successfully');
-                }),
-                await AdMob.addListener(BannerAdPluginEvents.AdImpression, () => {
-                    console.log('[AdMob] Banner Impression Reported - Visibility confirmed!');
-                }),
-                await AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (info) => {
-                    console.error('[AdMob] Banner Failed to Load:', info);
-                })
-            );
+            // Push each listener individually as it resolves. If we batched these into a
+            // single Array.push(...) with await expressions, a rejection on the 2nd or 3rd
+            // await would orphan the already-registered native listener (it'd live in the
+            // plugin but be untracked here, so removeBanner() couldn't clean it up).
+            this.bannerListeners.push(await AdMob.addListener(BannerAdPluginEvents.Loaded, () => {
+                console.log('[AdMob] Banner Loaded Successfully');
+            }));
+            this.bannerListeners.push(await AdMob.addListener(BannerAdPluginEvents.AdImpression, () => {
+                console.log('[AdMob] Banner Impression Reported - Visibility confirmed!');
+            }));
+            this.bannerListeners.push(await AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (info) => {
+                console.error('[AdMob] Banner Failed to Load:', info);
+            }));
 
             const options: BannerAdOptions = {
                 adId: adId,
@@ -171,21 +173,29 @@ export const AdMobService = {
                         if (failedListener) failedListener.remove();
                     };
 
-                    loadedListener = await AdMob.addListener(InterstitialAdPluginEvents.Loaded, () => {
-                        console.log('[AdMob] Interstitial Loaded Successfully (Event confirmed)');
-                        cleanup();
-                        resolve();
-                    });
-
-                    failedListener = await AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, (info) => {
-                        console.error('[AdMob] Interstitial Failed to Load (Event confirmed):', info);
-                        cleanup();
-                        reject(info);
-                    });
-
-                    // Start the loading process
+                    // Outer try ensures addListener rejections call reject() instead of
+                    // leaving the Promise hung forever (async-executor throws are not
+                    // forwarded by the Promise constructor).
                     try {
-                        await AdMob.prepareInterstitial({ adId, isTesting: false });
+                        loadedListener = await AdMob.addListener(InterstitialAdPluginEvents.Loaded, () => {
+                            console.log('[AdMob] Interstitial Loaded Successfully (Event confirmed)');
+                            cleanup();
+                            resolve();
+                        });
+
+                        failedListener = await AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, (info) => {
+                            console.error('[AdMob] Interstitial Failed to Load (Event confirmed):', info);
+                            cleanup();
+                            reject(info);
+                        });
+
+                        // Start the loading process
+                        try {
+                            await AdMob.prepareInterstitial({ adId, isTesting: false });
+                        } catch (e) {
+                            cleanup();
+                            reject(e);
+                        }
                     } catch (e) {
                         cleanup();
                         reject(e);
@@ -209,6 +219,9 @@ export const AdMobService = {
         if (AdMobService.isInterstitialShowing) return false;
         AdMobService.isInterstitialShowing = true; // Lock immediately to prevent race conditions
 
+        // Match the defensive init in showRewardVideo / showRewardInterstitial. Idempotent
+        // (guarded by this.initialized + this.initPromise), so cheap when already set up.
+        await this.initialize();
         console.log(`[AdMob] Attempting to show interstitial: ${adId}`);
 
         try {
@@ -236,56 +249,64 @@ export const AdMobService = {
                     cleanupAndResolve(false);
                 }, 15000);
 
-                // Bug 1 Fix: Register listeners FIRST
-                showedListener = await AdMob.addListener(InterstitialAdPluginEvents.Showed, () => {
-                    showed = true;
-                    console.log('[AdMob] Interstitial showing, clearing timeout');
-                    clearTimeout(timeout);
-                    if (onShow) onShow();
-                });
+                // Outer try wraps all awaits in this async executor. `new Promise(async ...)`
+                // doesn't propagate executor rejections to the outer Promise, so an unwrapped
+                // throw (e.g. addListener rejecting) would leave us hung until the 15s timeout.
+                try {
+                    // Bug 1 Fix: Register listeners FIRST
+                    showedListener = await AdMob.addListener(InterstitialAdPluginEvents.Showed, () => {
+                        showed = true;
+                        console.log('[AdMob] Interstitial showing, clearing timeout');
+                        clearTimeout(timeout);
+                        if (onShow) onShow();
+                    });
 
-                dismissListener = await AdMob.addListener(InterstitialAdPluginEvents.Dismissed, () => {
-                    cleanupAndResolve(showed);
-                });
+                    dismissListener = await AdMob.addListener(InterstitialAdPluginEvents.Dismissed, () => {
+                        cleanupAndResolve(showed);
+                    });
 
-                failedListener = await AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, () => {
-                    cleanupAndResolve(false);
-                });
+                    failedListener = await AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, () => {
+                        cleanupAndResolve(false);
+                    });
 
-                failedShowListener = await AdMob.addListener(InterstitialAdPluginEvents.FailedToShow, (info) => {
-                    console.error('[AdMob] Interstitial Failed to Show:', info);
-                    AdMobService.interstitialReady = false;
-                    cleanupAndResolve(false);
-                });
+                    failedShowListener = await AdMob.addListener(InterstitialAdPluginEvents.FailedToShow, (info) => {
+                        console.error('[AdMob] Interstitial Failed to Show:', info);
+                        AdMobService.interstitialReady = false;
+                        cleanupAndResolve(false);
+                    });
 
-                // Then await preparation if needed
-                if (!AdMobService.interstitialReady) {
-                    console.warn('[AdMob] Interstitial not ready, attempting JIT prepare...');
-                    try {
-                        await AdMobService.prepareInterstitial(adId);
+                    // Then await preparation if needed
+                    if (!AdMobService.interstitialReady) {
+                        console.warn('[AdMob] Interstitial not ready, attempting JIT prepare...');
+                        try {
+                            await AdMobService.prepareInterstitial(adId);
 
-                        if (!AdMobService.interstitialReady) {
-                            console.error('[AdMob] JIT Prepare failed: Ad not ready after preparation.');
+                            if (!AdMobService.interstitialReady) {
+                                console.error('[AdMob] JIT Prepare failed: Ad not ready after preparation.');
+                                cleanupAndResolve(false);
+                                return;
+                            }
+                        } catch (e) {
+                            console.error('[AdMob] JIT Prepare failed:', e);
                             cleanupAndResolve(false);
                             return;
                         }
-                    } catch (e) {
-                        console.error('[AdMob] JIT Prepare failed:', e);
-                        cleanupAndResolve(false);
-                        return;
                     }
-                }
 
-                // OPTIMIZATION: Small 250ms delay to allow React DOM/View transitions 
-                // to settle before the native ad overlay triggers. 
-                // This significantly improves show success rates during heavy transitions.
-                await new Promise(r => setTimeout(r, 250));
+                    // OPTIMIZATION: Small 250ms delay to allow React DOM/View transitions
+                    // to settle before the native ad overlay triggers.
+                    // This significantly improves show success rates during heavy transitions.
+                    await new Promise(r => setTimeout(r, 250));
 
-                try {
-                    // Passing adId again manually during show to ensure referential integrity for some device types
-                    await AdMob.showInterstitial();
+                    try {
+                        await AdMob.showInterstitial();
+                    } catch (e) {
+                        console.error('AdMob showInterstitial threw:', e);
+                        AdMobService.interstitialReady = false;
+                        cleanupAndResolve(false);
+                    }
                 } catch (e) {
-                    console.error('AdMob showInterstitial threw:', e);
+                    console.error('[AdMob] Interstitial executor error:', e);
                     AdMobService.interstitialReady = false;
                     cleanupAndResolve(false);
                 }
@@ -321,18 +342,23 @@ export const AdMobService = {
                         if (loadedListener) loadedListener.remove();
                         if (failedListener) failedListener.remove();
                     };
-                    loadedListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.Loaded, () => {
-                        console.log('[AdMob] Reward Interstitial Loaded Successfully');
-                        cleanup();
-                        resolve();
-                    });
-                    failedListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.FailedToLoad, (info) => {
-                        console.error('[AdMob] Reward Interstitial Failed to Load:', info);
-                        cleanup();
-                        reject(info);
-                    });
                     try {
-                        await AdMob.prepareRewardInterstitialAd({ adId, isTesting: false });
+                        loadedListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.Loaded, () => {
+                            console.log('[AdMob] Reward Interstitial Loaded Successfully');
+                            cleanup();
+                            resolve();
+                        });
+                        failedListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.FailedToLoad, (info) => {
+                            console.error('[AdMob] Reward Interstitial Failed to Load:', info);
+                            cleanup();
+                            reject(info);
+                        });
+                        try {
+                            await AdMob.prepareRewardInterstitialAd({ adId, isTesting: false });
+                        } catch (e) {
+                            cleanup();
+                            reject(e);
+                        }
                     } catch (e) {
                         cleanup();
                         reject(e);
@@ -386,51 +412,60 @@ export const AdMobService = {
                     cleanupAndResolve(false);
                 }, 15000);
 
-                // Bug 2 Fix: Register listeners FIRST
-                showedListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.Showed, () => {
-                    console.log('[AdMob] Reward Interstitial showing, clearing timeout');
-                    clearTimeout(timeout);
-                    if (onShow) onShow();
-                });
+                // Outer try wraps all awaits — async-executor rejections don't propagate to
+                // the outer Promise, so without this we'd hang until the 15s timeout on any
+                // unwrapped throw (e.g. addListener rejecting).
+                try {
+                    // Bug 2 Fix: Register listeners FIRST
+                    showedListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.Showed, () => {
+                        console.log('[AdMob] Reward Interstitial showing, clearing timeout');
+                        clearTimeout(timeout);
+                        if (onShow) onShow();
+                    });
 
-                rewardListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.Rewarded, (info: AdMobRewardInterstitialItem) => {
-                    console.log('[AdMob] User earned reward (Interstitial):', info);
-                    earned = true;
-                });
+                    rewardListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.Rewarded, (info: AdMobRewardInterstitialItem) => {
+                        console.log('[AdMob] User earned reward (Interstitial):', info);
+                        earned = true;
+                    });
 
-                dismissListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.Dismissed, () => {
-                    console.log('[AdMob] Reward Interstitial dismissed');
-                    cleanupAndResolve(earned);
-                });
+                    dismissListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.Dismissed, () => {
+                        console.log('[AdMob] Reward Interstitial dismissed');
+                        cleanupAndResolve(earned);
+                    });
 
-                failedListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.FailedToLoad, (err) => {
-                    console.error('[AdMob] Reward Interstitial failed to load:', err);
-                    cleanupAndResolve(false);
-                });
+                    failedListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.FailedToLoad, (err) => {
+                        console.error('[AdMob] Reward Interstitial failed to load:', err);
+                        cleanupAndResolve(false);
+                    });
 
-                failedShowListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.FailedToShow, (err) => {
-                    console.error('[AdMob] Reward Interstitial failed to show:', err);
-                    AdMobService.rewardInterstitialReady = false;
-                    cleanupAndResolve(false);
-                });
-
-                if (!AdMobService.rewardInterstitialReady) {
-                    console.warn('[AdMob] Ad not ready, attempting JIT prepare...');
-                    await AdMobService.prepareRewardInterstitial(adId);
+                    failedShowListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.FailedToShow, (err) => {
+                        console.error('[AdMob] Reward Interstitial failed to show:', err);
+                        AdMobService.rewardInterstitialReady = false;
+                        cleanupAndResolve(false);
+                    });
 
                     if (!AdMobService.rewardInterstitialReady) {
-                        console.error('[AdMob] JIT Prepare failed: Ad not ready.');
-                        cleanupAndResolve(false);
-                        return;
+                        console.warn('[AdMob] Ad not ready, attempting JIT prepare...');
+                        await AdMobService.prepareRewardInterstitial(adId);
+
+                        if (!AdMobService.rewardInterstitialReady) {
+                            console.error('[AdMob] JIT Prepare failed: Ad not ready.');
+                            cleanupAndResolve(false);
+                            return;
+                        }
+                        await new Promise(r => setTimeout(r, 800));
                     }
-                    await new Promise(r => setTimeout(r, 800));
-                }
 
 
-                try {
-                    await AdMob.showRewardInterstitialAd();
-                } catch (err) {
-                    console.error('AdMob showRewardInterstitialAd threw:', err);
+                    try {
+                        await AdMob.showRewardInterstitialAd();
+                    } catch (err) {
+                        console.error('AdMob showRewardInterstitialAd threw:', err);
+                        AdMobService.rewardInterstitialReady = false;
+                        cleanupAndResolve(false);
+                    }
+                } catch (e) {
+                    console.error('[AdMob] Reward Interstitial executor error:', e);
                     AdMobService.rewardInterstitialReady = false;
                     cleanupAndResolve(false);
                 }
@@ -466,18 +501,23 @@ export const AdMobService = {
                         if (loadedListener) loadedListener.remove();
                         if (failedListener) failedListener.remove();
                     };
-                    loadedListener = await AdMob.addListener(RewardAdPluginEvents.Loaded, () => {
-                        console.log('[AdMob] Reward Video Loaded Successfully');
-                        cleanup();
-                        resolve();
-                    });
-                    failedListener = await AdMob.addListener(RewardAdPluginEvents.FailedToLoad, (info) => {
-                        console.error('[AdMob] Reward Video Failed to Load:', info);
-                        cleanup();
-                        reject(info);
-                    });
                     try {
-                        await AdMob.prepareRewardVideoAd({ adId, isTesting: false });
+                        loadedListener = await AdMob.addListener(RewardAdPluginEvents.Loaded, () => {
+                            console.log('[AdMob] Reward Video Loaded Successfully');
+                            cleanup();
+                            resolve();
+                        });
+                        failedListener = await AdMob.addListener(RewardAdPluginEvents.FailedToLoad, (info) => {
+                            console.error('[AdMob] Reward Video Failed to Load:', info);
+                            cleanup();
+                            reject(info);
+                        });
+                        try {
+                            await AdMob.prepareRewardVideoAd({ adId, isTesting: false });
+                        } catch (e) {
+                            cleanup();
+                            reject(e);
+                        }
                     } catch (e) {
                         cleanup();
                         reject(e);
@@ -531,51 +571,60 @@ export const AdMobService = {
                     cleanupAndResolve(false);
                 }, 15000);
 
-                // Bug 3 Fix: Register listeners FIRST
-                showedListener = await AdMob.addListener(RewardAdPluginEvents.Showed, () => {
-                    console.log('[AdMob] Reward video showing, clearing timeout');
-                    clearTimeout(timeout);
-                    if (onShow) onShow();
-                });
+                // Outer try wraps all awaits — async-executor rejections don't propagate to
+                // the outer Promise, so without this we'd hang until the 15s timeout on any
+                // unwrapped throw (e.g. addListener rejecting).
+                try {
+                    // Bug 3 Fix: Register listeners FIRST
+                    showedListener = await AdMob.addListener(RewardAdPluginEvents.Showed, () => {
+                        console.log('[AdMob] Reward video showing, clearing timeout');
+                        clearTimeout(timeout);
+                        if (onShow) onShow();
+                    });
 
-                rewardListener = await AdMob.addListener(RewardAdPluginEvents.Rewarded, (info) => {
-                    console.log('[AdMob] User earned reward:', info);
-                    earned = true;
-                });
+                    rewardListener = await AdMob.addListener(RewardAdPluginEvents.Rewarded, (info) => {
+                        console.log('[AdMob] User earned reward:', info);
+                        earned = true;
+                    });
 
-                dismissListener = await AdMob.addListener(RewardAdPluginEvents.Dismissed, () => {
-                    console.log('[AdMob] Reward video dismissed');
-                    cleanupAndResolve(earned);
-                });
+                    dismissListener = await AdMob.addListener(RewardAdPluginEvents.Dismissed, () => {
+                        console.log('[AdMob] Reward video dismissed');
+                        cleanupAndResolve(earned);
+                    });
 
-                failedListener = await AdMob.addListener(RewardAdPluginEvents.FailedToLoad, (err) => {
-                    console.error('[AdMob] Reward video failed to load:', err);
-                    cleanupAndResolve(false);
-                });
+                    failedListener = await AdMob.addListener(RewardAdPluginEvents.FailedToLoad, (err) => {
+                        console.error('[AdMob] Reward video failed to load:', err);
+                        cleanupAndResolve(false);
+                    });
 
-                failedShowListener = await AdMob.addListener(RewardAdPluginEvents.FailedToShow, (err) => {
-                    console.error('[AdMob] Reward video failed to show:', err);
-                    AdMobService.rewardVideoReady = false;
-                    cleanupAndResolve(false);
-                });
-
-                if (!AdMobService.rewardVideoReady) {
-                    console.warn('[AdMob] Ad not ready, attempting JIT prepare...');
-                    await AdMobService.prepareRewardVideo(adId);
+                    failedShowListener = await AdMob.addListener(RewardAdPluginEvents.FailedToShow, (err) => {
+                        console.error('[AdMob] Reward video failed to show:', err);
+                        AdMobService.rewardVideoReady = false;
+                        cleanupAndResolve(false);
+                    });
 
                     if (!AdMobService.rewardVideoReady) {
-                        console.error('[AdMob] JIT Prepare failed: Ad not ready.');
-                        cleanupAndResolve(false);
-                        return;
+                        console.warn('[AdMob] Ad not ready, attempting JIT prepare...');
+                        await AdMobService.prepareRewardVideo(adId);
+
+                        if (!AdMobService.rewardVideoReady) {
+                            console.error('[AdMob] JIT Prepare failed: Ad not ready.');
+                            cleanupAndResolve(false);
+                            return;
+                        }
+                        await new Promise(r => setTimeout(r, 800));
                     }
-                    await new Promise(r => setTimeout(r, 800));
-                }
 
 
-                try {
-                    await AdMob.showRewardVideoAd();
-                } catch (err) {
-                    console.error('AdMob showRewardVideoAd threw:', err);
+                    try {
+                        await AdMob.showRewardVideoAd();
+                    } catch (err) {
+                        console.error('AdMob showRewardVideoAd threw:', err);
+                        AdMobService.rewardVideoReady = false;
+                        cleanupAndResolve(false);
+                    }
+                } catch (e) {
+                    console.error('[AdMob] Reward video executor error:', e);
                     AdMobService.rewardVideoReady = false;
                     cleanupAndResolve(false);
                 }
