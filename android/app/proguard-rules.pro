@@ -32,6 +32,12 @@
 -keep class com.getcapacitor.community.admob.** { *; }
 
 # ============================================================
+# Meta Audience Network
+# ============================================================
+-keep class com.facebook.** { *; }
+-dontwarn com.facebook.**
+
+# ============================================================
 # In-App Purchases
 # ============================================================
 -keep class com.android.vending.billing.** { *; }
