@@ -67,6 +67,16 @@ const getAdId = (type: keyof typeof AD_IDS) => {
   return platform === 'ios' ? AD_IDS[type].IOS : AD_IDS[type].ANDROID;
 };
 
+const runAdTask = (label: string, task: Promise<boolean>) => {
+  void task.then((success) => {
+    if (!success) {
+      console.warn(`[AdMob] ${label} did not complete successfully.`);
+    }
+  }).catch((error) => {
+    console.warn(`[AdMob] ${label} crashed unexpectedly:`, error);
+  });
+};
+
 // Placeholder for Web AdSense
 const ADSENSE_SLOT_ID = '1234567890';
 
@@ -664,7 +674,7 @@ const AppContentInner: React.FC = () => {
       // Pre-load Reward Video when credits are low (<= 2)
       if (credits <= 2) {
         const rewardId = getAdId('REWARD');
-        AdMobService.prepareRewardVideo(rewardId);
+        runAdTask('Reward video preload', AdMobService.prepareRewardVideo(rewardId));
       }
     }
   }, [profile?.credits, profile?.is_premium]);
@@ -687,7 +697,7 @@ const AppContentInner: React.FC = () => {
       });
 
       // AdMob
-      AdMobService.initialize();
+      runAdTask('Initial AdMob init', AdMobService.initialize());
 
       // OneSignal Push Notifications
       OneSignalService.initialize();
@@ -855,11 +865,11 @@ const AppContentInner: React.FC = () => {
       await showCoachTransitionAd();
       // Bug 5 fix: preload AFTER the ad cycle completes to avoid resetting a freshly-loaded ad
       if (!profileRef.current?.is_premium && Capacitor.isNativePlatform()) {
-        AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'));
+        runAdTask('Post-transition interstitial preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
       }
     } else if (view === 'COACH' && !profileRef.current?.is_premium && Capacitor.isNativePlatform()) {
       // Strategic Preload: Pre-load when moving TO coach so it's ready for exit
-      AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'));
+      runAdTask('Coach entry interstitial preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
     }
 
     window.history.pushState({ view }, '');
@@ -883,7 +893,7 @@ const AppContentInner: React.FC = () => {
       // Bug 5 fix: preload only AFTER the ad cycle finishes to avoid racing with cleanupAndResolve
       showCoachTransitionAd().finally(() => {
         if (!profileRef.current?.is_premium && Capacitor.isNativePlatform()) {
-          AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'));
+          runAdTask('Back-navigation interstitial preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
         }
       });
     }
@@ -1498,7 +1508,7 @@ const AppContentInner: React.FC = () => {
       // Preload 1st interstitial on the 1st generation; subsequent ads preload 1 generation before showing.
       if ((isFirstAd && genCount === 1) || genCount === targetGen - 1) {
         console.log(`[AdMob] Eagerly preloading interstitial (genCount: ${genCount}, targetGen: ${targetGen})`);
-        AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'));
+        runAdTask('Generation-based interstitial preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
       }
 
       const now = activeTimeMs.current;
@@ -1525,7 +1535,7 @@ const AppContentInner: React.FC = () => {
         } else {
           console.log("[AdMob] Interstitial didn't show. Will retry on next generation.");
           // Attempt another preload for the next retry
-          AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'));
+          runAdTask('Retry interstitial preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
         }
       }
     }
@@ -1621,7 +1631,7 @@ const AppContentInner: React.FC = () => {
 
           // 2. Pre-load Chained Bonus Ad (+6)
           const rewardInterId = getAdId('REWARD_INTERSTITIAL');
-          AdMobService.prepareRewardInterstitial(rewardInterId);
+          runAdTask('Reward interstitial preload', AdMobService.prepareRewardInterstitial(rewardInterId));
 
           // 3. Chained Bonus Ad Sequence
           // Wait briefly for first ad dismissal to settle
