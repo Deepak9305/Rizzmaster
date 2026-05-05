@@ -55,7 +55,8 @@ export const NotificationService = {
 
         const permission = await LocalNotifications.checkPermissions();
         if (permission.display !== 'granted') {
-            await LocalNotifications.requestPermissions();
+            const result = await LocalNotifications.requestPermissions();
+            if (result.display !== 'granted') return;
         }
 
         // Record a usage hit on every init
@@ -73,7 +74,11 @@ export const NotificationService = {
 
         try {
             const { value } = await Preferences.get({ key: USAGE_HISTORY_KEY });
-            let history: number[] = value ? JSON.parse(value) : [];
+            let history: number[] = [];
+            if (value) {
+                const parsed = JSON.parse(value);
+                if (Array.isArray(parsed)) history = parsed;
+            }
 
             const currentHour = new Date().getHours();
 
@@ -101,7 +106,11 @@ export const NotificationService = {
     async getOptimalHour(): Promise<number> {
         try {
             const { value } = await Preferences.get({ key: USAGE_HISTORY_KEY });
-            const history: number[] = value ? JSON.parse(value) : [];
+            let history: number[] = [];
+            if (value) {
+                const parsed = JSON.parse(value);
+                if (Array.isArray(parsed)) history = parsed;
+            }
 
             if (history.length < 3) return 19; // Default to 7 PM
 
@@ -179,11 +188,16 @@ export const NotificationService = {
     getNextOccurrence(hour: number, daysAhead: number): Date {
         const date = new Date();
         date.setDate(date.getDate() + daysAhead);
-        date.setHours(hour, 0, 0, 0); // Set to the start of the preferred hour
+        date.setHours(hour, 0, 0, 0);
 
         // Randomly offset by +/- 15 minutes to feel more "human"/natural
         const offsetMinutes = Math.floor(Math.random() * 30) - 15;
         date.setMinutes(date.getMinutes() + offsetMinutes);
+
+        // Ensure we never schedule in the past (can happen at hour=0 with negative offset)
+        if (date.getTime() <= Date.now()) {
+            date.setTime(Date.now() + 60_000);
+        }
 
         return date;
     }

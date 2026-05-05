@@ -495,8 +495,8 @@ const AppContentInner: React.FC = () => {
           backgroundTimestamp.current = null;
 
           // Record usage and refresh notification schedule
-          NotificationService.recordUsage();
-          NotificationService.schedulePersonalizedNotifications();
+          await NotificationService.recordUsage();
+          await NotificationService.schedulePersonalizedNotifications();
         }
       } else {
         // App went to BACKGROUND — flush session time to Supabase
