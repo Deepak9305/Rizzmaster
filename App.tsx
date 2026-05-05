@@ -457,7 +457,7 @@ const AppContentInner: React.FC = () => {
   const backgroundTimestamp = useRef<number | null>(null);
   const adTransitionInProgressRef = useRef<boolean>(false); // Bug 3 fix: prevents double-fire from both nav handlers
 
-  const INTERSTITIAL_COOLDOWN_MS = 90 * 1000; // 90 seconds (Cooldown between ads)
+  const INTERSTITIAL_COOLDOWN_MS = 2 * 60 * 1000; // 2 minutes (Cooldown between ads)
   const INACTIVITY_RESET_MS = 30 * 60 * 1000; // 30 minutes of background time to reset
 
   // Track Active Time (Foreground)
@@ -1502,7 +1502,7 @@ const AppContentInner: React.FC = () => {
 
       // Target: 3rd gen for first ad, then lastAdGen + 4 for subsequent ads
       const isFirstAd = lastAdGen === 0;
-      const targetGen = isFirstAd ? 2 : lastAdGen + 3;
+      const targetGen = isFirstAd ? 3 : lastAdGen + 4;
 
       // Eager Preload: Prepare the ad earlier to ensure high show rates
       // Preload 1st interstitial on the 1st generation; subsequent ads preload 1 generation before showing.

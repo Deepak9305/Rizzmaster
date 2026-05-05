@@ -41,7 +41,7 @@ export const AdMobService = {
     // Set this to true to force the GDPR popup to show for everyone during testing/development.
     // Set to false before releasing to the Play Store.
     DEBUG_FORCE_GDPR: false,
-    PREPARE_TIMEOUT_MS: 12000,
+    PREPARE_TIMEOUT_MS: 25000,
 
     removeListener(listener: any) {
         try {
@@ -290,7 +290,7 @@ export const AdMobService = {
                 const timeout = setTimeout(() => {
                     console.warn('AdMob Interstitial Timeout: Proceeding automatically.');
                     cleanupAndResolve(false);
-                }, 15000);
+                }, 30000);
 
                 const cleanupAndResolve = (success: boolean) => {
                     if (resolved) return;
@@ -430,7 +430,7 @@ export const AdMobService = {
                 const timeout = setTimeout(() => {
                     console.warn('[AdMob] Reward Interstitial show timeout');
                     cleanupAndResolve(false);
-                }, 15000);
+                }, 30000);
 
                 const cleanupAndResolve = (success: boolean) => {
                     if (resolved) return;
@@ -576,7 +576,7 @@ export const AdMobService = {
                 const timeout = setTimeout(() => {
                     console.warn('[AdMob] Reward video show timeout');
                     cleanupAndResolve(false);
-                }, 15000);
+                }, 30000);
 
                 const cleanupAndResolve = (success: boolean) => {
                     if (resolved) return;
