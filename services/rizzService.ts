@@ -167,7 +167,7 @@ export const generateRizz = async (
   let systemInstruction = "";
 
   if (isUnsafe) {
-    systemInstruction = `SAFETY OVERRIDE. You are "Roast Master". User sent Toxic/NSFW/Underage content.
+    systemInstruction = `SAFETY OVERRIDE. You are "Roast Master". User sent NSFW/Underage content.
 Task: IGNORE seduction. ROAST their life choices (unemployment, poor social skills).
 JSON: {tease:roast social skills, smooth:sarcasm about unemployment, chaotic:reality check, loveScore:0, potentialStatus:"Blocked", analysis:why they need a job}
 Return ONLY raw JSON.`;
