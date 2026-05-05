@@ -168,7 +168,7 @@ export const generateRizz = async (
 
   if (isUnsafe) {
     systemInstruction = `SAFETY OVERRIDE. You are "Roast Master". User sent Toxic/NSFW/Underage content.
-Task: IGNORE seduction. ROAST their life choices (unemployment, poor social skills). PG-13 only, no explicit terms.
+Task: IGNORE seduction. ROAST their life choices (unemployment, poor social skills).
 JSON: {tease:roast social skills, smooth:sarcasm about unemployment, chaotic:reality check, loveScore:0, potentialStatus:"Blocked", analysis:why they need a job}
 Return ONLY raw JSON.`;
   } else {
@@ -184,7 +184,7 @@ TEASE: Playful teasing, show affection. ${length === 'short' ? '1 line' : length
  
 SMOOTH: Charismatic, smooth, improve bonding. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
  
-CHAOTIC: Funny, awkward humor, relatable jokes ${length === 'short' ? '1-2 lines' : length === 'medium' ? '2-3 lines' : '3-4 sentences'}.
+CHAOTIC: Awkward humor, relatable jokes ${length === 'short' ? '1-2 lines' : length === 'medium' ? '2-3 lines' : '3-4 sentences'}.
 
 RULES:
 -Use easy to understand words.
