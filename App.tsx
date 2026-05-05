@@ -601,7 +601,7 @@ const AppContentInner: React.FC = () => {
           const currentProfile = profileRef.current;
           // Guard: only refresh if not premium (includes guests)
           if (currentProfile && !currentProfile.is_premium) {
-            refreshBanner(true); // Force refresh on resume
+            refreshBanner(); // Only refresh if position changed — don't tear down a live banner
           }
         }
       }).then(l => {
