@@ -237,7 +237,7 @@ CRITICAL: ${length === 'short'
         const completion = await llamaClient.chat.completions.create({
           model: image ? IMAGE_MODEL : TEXT_MODEL,
           messages: messages,
-          temperature: 1.1,
+          temperature: 1.3,
           max_tokens: 1000
         });
 
