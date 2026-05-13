@@ -497,6 +497,11 @@ const AppContentInner: React.FC = () => {
           // Record usage and refresh notification schedule
           await NotificationService.recordUsage();
           await NotificationService.schedulePersonalizedNotifications();
+
+          const currentProfile = profileRef.current;
+          if (currentProfile && !currentProfile.is_premium) {
+            runAdTask('Resume interstitial warm preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
+          }
         }
       } else {
         // App went to BACKGROUND — flush session time to Supabase
@@ -552,46 +557,35 @@ const AppContentInner: React.FC = () => {
   };
 
   // Manage Native Banner Ads
-  const lastBannerPosition = useRef<'TOP' | 'BOTTOM' | null>(null);
-
   useEffect(() => {
     // `cancelled` guards against late async work resolving after this effect has torn down:
     //   - removeBanner().then(...) calling showBanner with stale adId/position
     //   - CapacitorApp.addListener resolving and registering a listener into a dead effect
     //     (listenerRef is still null at cleanup time, so the listener leaks).
     let cancelled = false;
-    let timer: any;
-    const refreshBanner = (force = false) => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const syncBanner = (delayMs = 250) => {
       if (Capacitor.isNativePlatform() && (session || isGuest)) {
-        if (!profile) return;
+        const currentProfile = profileRef.current;
+        if (!currentProfile) return;
 
-        if (profile.is_premium) {
-          AdMobService.removeBanner();
-          lastBannerPosition.current = null;
+        if (currentProfile.is_premium) {
+          void AdMobService.removeBanner();
         } else {
           const adId = getAdId('BANNER');
           const position = currentView === 'COACH' ? 'TOP' : 'BOTTOM';
 
-          // Only refresh if we are forcing it (like App Resume) or if the position changed
-          if (force || lastBannerPosition.current !== position) {
-            lastBannerPosition.current = position;
-
-            // Force remove first to ensure the plugin repositions cleanly
-            AdMobService.removeBanner()
-              .then(() => {
-                if (cancelled) return;
-                timer = setTimeout(() => {
-                  if (cancelled) return;
-                  AdMobService.showBanner(adId, position);
-                }, 1000);
-              })
-              .catch(e => console.warn('[AdMob] Banner refresh removeBanner failed:', e));
-          }
+          if (timer) clearTimeout(timer);
+          timer = setTimeout(() => {
+            if (cancelled) return;
+            AdMobService.syncBanner(adId, position)
+              .catch(e => console.warn('[AdMob] Banner sync failed:', e));
+          }, delayMs);
         }
       }
     };
 
-    refreshBanner();
+    syncBanner(currentView === 'COACH' ? 350 : 0);
 
     // Listen for App Resume to refresh ads
     const listenerRef = { current: null as any };
@@ -601,7 +595,7 @@ const AppContentInner: React.FC = () => {
           const currentProfile = profileRef.current;
           // Guard: only refresh if not premium (includes guests)
           if (currentProfile && !currentProfile.is_premium) {
-            refreshBanner(); // Only refresh if position changed — don't tear down a live banner
+            syncBanner(150);
           }
         }
       }).then(l => {
@@ -618,7 +612,7 @@ const AppContentInner: React.FC = () => {
       if (timer) clearTimeout(timer);
       if (listenerRef.current) listenerRef.current.remove();
     };
-  }, [profile?.is_premium, session, isGuest, currentView]); // Refresh banner on every view navigation
+  }, [profile?.is_premium, session, isGuest, currentView]);
 
   // Define handleUpgrade using REF to avoid stale closures
   const handleUpgrade = useCallback(async () => {
@@ -678,6 +672,14 @@ const AppContentInner: React.FC = () => {
       }
     }
   }, [profile?.credits, profile?.is_premium]);
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() || !profile || profile.is_premium) return;
+    const timer = setTimeout(() => {
+      runAdTask('Warm interstitial preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [profile?.id, profile?.is_premium]);
 
   // Initialize Native Services
   useEffect(() => {
@@ -960,7 +962,6 @@ const AppContentInner: React.FC = () => {
         setSavedItems([]);
         if (Capacitor.isNativePlatform()) {
           AdMobService.removeBanner();
-          lastBannerPosition.current = null; // Reset so banner re-shows on next login
         }
       }
     });
@@ -1170,7 +1171,6 @@ const AppContentInner: React.FC = () => {
       if (Capacitor.isNativePlatform()) {
         try { await GoogleAuth.signOut(); } catch (error) { console.warn("Native Logout err", error); }
         AdMobService.removeBanner(); // removeBanner fully destroys it; hideBanner only hides
-        lastBannerPosition.current = null; // Reset so banner re-shows on next login
         OneSignalService.logout();
       }
     } catch (err) {
@@ -1678,7 +1678,7 @@ const AppContentInner: React.FC = () => {
         // Restore banner now that the reward ad session is fully over
         if (profileRef.current && !profileRef.current.is_premium) {
           const bannerPosition = currentView === 'COACH' ? 'TOP' : 'BOTTOM';
-          await AdMobService.showBanner(getAdId('BANNER'), bannerPosition);
+          await AdMobService.syncBanner(getAdId('BANNER'), bannerPosition);
         }
       }
       return;

@@ -37,11 +37,16 @@ export const AdMobService = {
     interstitialPromise: null as Promise<boolean> | null,
     rewardVideoPromise: null as Promise<boolean> | null,
     rewardInterstitialPromise: null as Promise<boolean> | null,
+    interstitialPreparedAt: 0,
+    lastInterstitialAdId: null as string | null,
 
     // Set this to true to force the GDPR popup to show for everyone during testing/development.
     // Set to false before releasing to the Play Store.
     DEBUG_FORCE_GDPR: false,
     PREPARE_TIMEOUT_MS: 25000,
+    INTERSTITIAL_STALE_AFTER_MS: 20 * 60 * 1000,
+    POST_PREPARE_SHOW_DELAY_MS: 700,
+    BANNER_RESHOW_DELAY_MS: 350,
 
     removeListener(listener: any) {
         try {
@@ -51,6 +56,24 @@ export const AdMobService = {
 
     cleanupListeners(listeners: any[]) {
         listeners.forEach(listener => this.removeListener(listener));
+    },
+
+    sleep(ms: number) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    },
+
+    invalidateInterstitial() {
+        this.interstitialReady = false;
+        this.interstitialPreparing = false;
+        this.interstitialPromise = null;
+        this.interstitialPreparedAt = 0;
+    },
+
+    hasFreshInterstitial(adId?: string) {
+        if (!this.interstitialReady) return false;
+        if (!this.lastInterstitialAdId) return false;
+        if (adId && this.lastInterstitialAdId !== adId) return false;
+        return Date.now() - this.interstitialPreparedAt < this.INTERSTITIAL_STALE_AFTER_MS;
     },
 
     async initialize(): Promise<boolean> {
@@ -167,6 +190,23 @@ export const AdMobService = {
     },
 
     bannerListeners: [] as any[],
+    bannerVisible: false,
+    bannerRequestInFlight: false,
+    bannerAdId: null as string | null,
+    bannerPosition: null as 'TOP' | 'BOTTOM' | null,
+
+    resetBannerState(clearConfig = true) {
+        this.bannerVisible = false;
+        this.bannerRequestInFlight = false;
+        if (clearConfig) {
+            this.bannerAdId = null;
+            this.bannerPosition = null;
+        }
+    },
+
+    isSameBanner(adId: string, position: 'TOP' | 'BOTTOM') {
+        return this.bannerAdId === adId && this.bannerPosition === position;
+    },
 
     async showBanner(adId: string, position: 'TOP' | 'BOTTOM' = 'BOTTOM') {
         if (!Capacitor.isNativePlatform()) return;
@@ -175,17 +215,31 @@ export const AdMobService = {
             const initialized = await this.ensureInitialized('Banner show');
             if (!initialized) return;
 
+            if (this.isSameBanner(adId, position) && (this.bannerVisible || this.bannerRequestInFlight)) {
+                console.log(`[AdMob] Banner already active for ${position}, skipping duplicate request`);
+                return;
+            }
+
             this.cleanupListeners(this.bannerListeners);
             this.bannerListeners = [];
+            this.bannerAdId = adId;
+            this.bannerPosition = position;
+            this.bannerVisible = false;
+            this.bannerRequestInFlight = true;
 
             this.bannerListeners.push(await AdMob.addListener(BannerAdPluginEvents.Loaded, () => {
                 console.log('[AdMob] Banner Loaded Successfully');
+                this.bannerVisible = true;
+                this.bannerRequestInFlight = false;
             }));
             this.bannerListeners.push(await AdMob.addListener(BannerAdPluginEvents.AdImpression, () => {
                 console.log('[AdMob] Banner Impression Reported - Visibility confirmed!');
+                this.bannerVisible = true;
+                this.bannerRequestInFlight = false;
             }));
             this.bannerListeners.push(await AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (info) => {
                 console.error('[AdMob] Banner Failed to Load:', info);
+                this.resetBannerState(false);
             }));
 
             const options: BannerAdOptions = {
@@ -199,14 +253,33 @@ export const AdMobService = {
             await AdMob.showBanner(options);
             console.log(`AdMob Banner request sent at ${position}`);
         } catch (error) {
+            this.resetBannerState(false);
             console.error('AdMob Show Banner Error:', error);
         }
+    },
+
+    async syncBanner(adId: string, position: 'TOP' | 'BOTTOM' = 'BOTTOM') {
+        if (!Capacitor.isNativePlatform()) return;
+
+        if (this.isSameBanner(adId, position) && (this.bannerVisible || this.bannerRequestInFlight)) {
+            return;
+        }
+
+        const needsReposition = this.bannerAdId !== null && !this.isSameBanner(adId, position);
+        if (needsReposition) {
+            await this.removeBanner();
+            await this.sleep(this.BANNER_RESHOW_DELAY_MS);
+        }
+
+        await this.showBanner(adId, position);
     },
 
     async hideBanner() {
         if (!Capacitor.isNativePlatform()) return;
         try {
             await AdMob.hideBanner();
+            this.bannerVisible = false;
+            this.bannerRequestInFlight = false;
         } catch (error) {
             console.error('AdMob Hide Banner Error:', error);
         }
@@ -218,6 +291,7 @@ export const AdMobService = {
             await AdMob.removeBanner();
             this.cleanupListeners(this.bannerListeners);
             this.bannerListeners = [];
+            this.resetBannerState();
         } catch (error) {
             console.error('AdMob Remove Banner Error:', error);
         }
@@ -228,16 +302,23 @@ export const AdMobService = {
 
         const initialized = await this.ensureInitialized('Interstitial prepare');
         if (!initialized) {
-            this.interstitialReady = false;
-            this.interstitialPreparing = false;
-            this.interstitialPromise = null;
+            this.invalidateInterstitial();
             return false;
         }
 
-        if (this.interstitialReady) return true;
+        if (this.lastInterstitialAdId && this.lastInterstitialAdId !== adId) {
+            this.invalidateInterstitial();
+        }
+        if (this.hasFreshInterstitial(adId)) return true;
+        if (this.interstitialReady && !this.hasFreshInterstitial(adId)) {
+            console.log('[AdMob] Cached interstitial went stale, refreshing it before show');
+            this.interstitialReady = false;
+            this.interstitialPreparedAt = 0;
+        }
         if (this.interstitialPromise) return this.interstitialPromise;
 
         this.interstitialPreparing = true;
+        this.lastInterstitialAdId = adId;
         this.interstitialPromise = (async (): Promise<boolean> => {
             let prepared = false;
             try {
@@ -248,14 +329,16 @@ export const AdMobService = {
                     prepareAction: () => AdMob.prepareInterstitial({ adId, isTesting: false }),
                 });
                 this.interstitialReady = prepared;
+                this.interstitialPreparedAt = prepared ? Date.now() : 0;
                 return prepared;
             } catch (error) {
                 console.error('AdMob Prepare Interstitial Exception:', error);
-                this.interstitialReady = false;
+                this.invalidateInterstitial();
                 return false;
             } finally {
                 if (!prepared) {
                     this.interstitialReady = false;
+                    this.interstitialPreparedAt = 0;
                 }
                 this.interstitialPreparing = false;
                 this.interstitialPromise = null;
@@ -273,7 +356,7 @@ export const AdMobService = {
         const initialized = await this.ensureInitialized('Interstitial show');
         if (!initialized) {
             this.isInterstitialShowing = false;
-            this.interstitialReady = false;
+            this.invalidateInterstitial();
             return false;
         }
         console.log(`[AdMob] Attempting to show interstitial: ${adId}`);
@@ -282,6 +365,7 @@ export const AdMobService = {
             return await new Promise<boolean>((resolve) => {
                 let resolved = false;
                 let showed = false;
+                let preparedJustInTime = false;
                 let showedListener: any = null;
                 let dismissListener: any = null;
                 let failedListener: any = null;
@@ -298,6 +382,7 @@ export const AdMobService = {
                     this.cleanupListeners([dismissListener, failedListener, failedShowListener, showedListener]);
                     clearTimeout(timeout);
                     this.interstitialReady = false;
+                    this.interstitialPreparedAt = 0;
                     this.isInterstitialShowing = false;
                     resolve(success);
                 };
@@ -322,31 +407,39 @@ export const AdMobService = {
                         failedShowListener = await AdMob.addListener(InterstitialAdPluginEvents.FailedToShow, (info) => {
                             console.error('[AdMob] Interstitial Failed to Show:', info);
                             this.interstitialReady = false;
+                            this.interstitialPreparedAt = 0;
                             cleanupAndResolve(false);
                         });
 
-                        if (!this.interstitialReady) {
+                        if (!this.hasFreshInterstitial(adId)) {
                             console.warn('[AdMob] Interstitial not ready, attempting JIT prepare...');
+                            preparedJustInTime = true;
                             const prepared = await this.prepareInterstitial(adId);
-                            if (!prepared || !this.interstitialReady) {
+                            if (!prepared || !this.hasFreshInterstitial(adId)) {
                                 console.error('[AdMob] JIT Prepare failed: Ad not ready after preparation.');
                                 cleanupAndResolve(false);
                                 return;
                             }
                         }
 
-                        await new Promise(resolveDelay => setTimeout(resolveDelay, 250));
+                        if (preparedJustInTime) {
+                            await this.sleep(this.POST_PREPARE_SHOW_DELAY_MS);
+                        } else {
+                            await this.sleep(250);
+                        }
 
                         try {
                             await AdMob.showInterstitial();
                         } catch (error) {
                             console.error('AdMob showInterstitial threw:', error);
                             this.interstitialReady = false;
+                            this.interstitialPreparedAt = 0;
                             cleanupAndResolve(false);
                         }
                     } catch (error) {
                         console.error('[AdMob] Interstitial executor error:', error);
                         this.interstitialReady = false;
+                        this.interstitialPreparedAt = 0;
                         cleanupAndResolve(false);
                     }
                 })();
@@ -354,7 +447,7 @@ export const AdMobService = {
         } catch (error) {
             console.error('AdMob Interstitial Error', error);
             this.isInterstitialShowing = false;
-            this.interstitialReady = false;
+            this.invalidateInterstitial();
             return false;
         }
     },
