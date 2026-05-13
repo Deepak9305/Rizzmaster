@@ -478,7 +478,7 @@ const AppContentInner: React.FC = () => {
 
     // Using a separate listener specifically for the vital time tracking
     // to keep it decoupled from the ad refresh logic below.
-    CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+    CapacitorApp.addListener('appStateChange', async ({ isActive }) => {
       const now = Date.now();
 
       if (isActive) {
