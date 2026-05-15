@@ -39,12 +39,17 @@ export const AdMobService = {
     rewardInterstitialPromise: null as Promise<boolean> | null,
     interstitialPreparedAt: 0,
     lastInterstitialAdId: null as string | null,
+    rewardVideoPreparedAt: 0,
+    lastRewardVideoAdId: null as string | null,
+    rewardInterstitialPreparedAt: 0,
+    lastRewardInterstitialAdId: null as string | null,
 
     // Set this to true to force the GDPR popup to show for everyone during testing/development.
     // Set to false before releasing to the Play Store.
     DEBUG_FORCE_GDPR: false,
     PREPARE_TIMEOUT_MS: 25000,
     INTERSTITIAL_STALE_AFTER_MS: 20 * 60 * 1000,
+    REWARDED_STALE_AFTER_MS: 50 * 60 * 1000,
     POST_PREPARE_SHOW_DELAY_MS: 700,
     BANNER_RESHOW_DELAY_MS: 350,
 
@@ -74,6 +79,34 @@ export const AdMobService = {
         if (!this.lastInterstitialAdId) return false;
         if (adId && this.lastInterstitialAdId !== adId) return false;
         return Date.now() - this.interstitialPreparedAt < this.INTERSTITIAL_STALE_AFTER_MS;
+    },
+
+    invalidateRewardVideo() {
+        this.rewardVideoReady = false;
+        this.rewardVideoPreparing = false;
+        this.rewardVideoPromise = null;
+        this.rewardVideoPreparedAt = 0;
+    },
+
+    hasFreshRewardVideo(adId?: string) {
+        if (!this.rewardVideoReady) return false;
+        if (!this.lastRewardVideoAdId) return false;
+        if (adId && this.lastRewardVideoAdId !== adId) return false;
+        return Date.now() - this.rewardVideoPreparedAt < this.REWARDED_STALE_AFTER_MS;
+    },
+
+    invalidateRewardInterstitial() {
+        this.rewardInterstitialReady = false;
+        this.rewardInterstitialPreparing = false;
+        this.rewardInterstitialPromise = null;
+        this.rewardInterstitialPreparedAt = 0;
+    },
+
+    hasFreshRewardInterstitial(adId?: string) {
+        if (!this.rewardInterstitialReady) return false;
+        if (!this.lastRewardInterstitialAdId) return false;
+        if (adId && this.lastRewardInterstitialAdId !== adId) return false;
+        return Date.now() - this.rewardInterstitialPreparedAt < this.REWARDED_STALE_AFTER_MS;
     },
 
     async initialize(): Promise<boolean> {
@@ -457,16 +490,22 @@ export const AdMobService = {
 
         const initialized = await this.ensureInitialized('Reward interstitial prepare');
         if (!initialized) {
-            this.rewardInterstitialReady = false;
-            this.rewardInterstitialPreparing = false;
-            this.rewardInterstitialPromise = null;
+            this.invalidateRewardInterstitial();
             return false;
         }
 
-        if (this.rewardInterstitialReady) return true;
+        if (this.lastRewardInterstitialAdId && this.lastRewardInterstitialAdId !== adId) {
+            this.invalidateRewardInterstitial();
+        }
+        if (this.hasFreshRewardInterstitial(adId)) return true;
+        if (this.rewardInterstitialReady && !this.hasFreshRewardInterstitial(adId)) {
+            console.log('[AdMob] Cached reward interstitial went stale, refreshing it before show');
+            this.invalidateRewardInterstitial();
+        }
         if (this.rewardInterstitialPromise) return this.rewardInterstitialPromise;
 
         this.rewardInterstitialPreparing = true;
+        this.lastRewardInterstitialAdId = adId;
         this.rewardInterstitialPromise = (async (): Promise<boolean> => {
             let prepared = false;
             try {
@@ -477,17 +516,19 @@ export const AdMobService = {
                     prepareAction: () => AdMob.prepareRewardInterstitialAd({ adId, isTesting: false }),
                 });
                 this.rewardInterstitialReady = prepared;
+                this.rewardInterstitialPreparedAt = prepared ? Date.now() : 0;
                 if (prepared) {
                     console.log('AdMob Reward Interstitial Prepared');
                 }
                 return prepared;
             } catch (error) {
                 console.error('AdMob Prepare Reward Interstitial Error:', error);
-                this.rewardInterstitialReady = false;
+                this.invalidateRewardInterstitial();
                 return false;
             } finally {
                 if (!prepared) {
                     this.rewardInterstitialReady = false;
+                    this.rewardInterstitialPreparedAt = 0;
                 }
                 this.rewardInterstitialPreparing = false;
                 this.rewardInterstitialPromise = null;
@@ -505,7 +546,7 @@ export const AdMobService = {
         const initialized = await this.ensureInitialized('Reward interstitial show');
         if (!initialized) {
             this.isRewardInterstitialShowing = false;
-            this.rewardInterstitialReady = false;
+            this.invalidateRewardInterstitial();
             return false;
         }
         console.log(`[AdMob] Attempting to show reward interstitial: ${adId}`);
@@ -531,6 +572,7 @@ export const AdMobService = {
                     this.cleanupListeners([showedListener, rewardListener, dismissListener, failedListener, failedShowListener]);
                     clearTimeout(timeout);
                     this.rewardInterstitialReady = false;
+                    this.rewardInterstitialPreparedAt = 0;
                     this.isRewardInterstitialShowing = false;
                     console.log(`[AdMob] Reward Interstitial finished. Success: ${success}`);
                     resolve(success);
@@ -561,14 +603,14 @@ export const AdMobService = {
 
                         failedShowListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.FailedToShow, (error) => {
                             console.error('[AdMob] Reward Interstitial failed to show:', error);
-                            this.rewardInterstitialReady = false;
+                            this.invalidateRewardInterstitial();
                             cleanupAndResolve(false);
                         });
 
-                        if (!this.rewardInterstitialReady) {
+                        if (!this.hasFreshRewardInterstitial(adId)) {
                             console.warn('[AdMob] Ad not ready, attempting JIT prepare...');
                             const prepared = await this.prepareRewardInterstitial(adId);
-                            if (!prepared || !this.rewardInterstitialReady) {
+                            if (!prepared || !this.hasFreshRewardInterstitial(adId)) {
                                 console.error('[AdMob] JIT Prepare failed: Ad not ready.');
                                 cleanupAndResolve(false);
                                 return;
@@ -580,12 +622,12 @@ export const AdMobService = {
                             await AdMob.showRewardInterstitialAd();
                         } catch (error) {
                             console.error('AdMob showRewardInterstitialAd threw:', error);
-                            this.rewardInterstitialReady = false;
+                            this.invalidateRewardInterstitial();
                             cleanupAndResolve(false);
                         }
                     } catch (error) {
                         console.error('[AdMob] Reward Interstitial executor error:', error);
-                        this.rewardInterstitialReady = false;
+                        this.invalidateRewardInterstitial();
                         cleanupAndResolve(false);
                     }
                 })();
@@ -593,7 +635,7 @@ export const AdMobService = {
         } catch (error) {
             console.error('[AdMob] Critical Reward Interstitial Error', error);
             this.isRewardInterstitialShowing = false;
-            this.rewardInterstitialReady = false;
+            this.invalidateRewardInterstitial();
             return false;
         }
     },
@@ -603,16 +645,22 @@ export const AdMobService = {
 
         const initialized = await this.ensureInitialized('Reward video prepare');
         if (!initialized) {
-            this.rewardVideoReady = false;
-            this.rewardVideoPreparing = false;
-            this.rewardVideoPromise = null;
+            this.invalidateRewardVideo();
             return false;
         }
 
-        if (this.rewardVideoReady) return true;
+        if (this.lastRewardVideoAdId && this.lastRewardVideoAdId !== adId) {
+            this.invalidateRewardVideo();
+        }
+        if (this.hasFreshRewardVideo(adId)) return true;
+        if (this.rewardVideoReady && !this.hasFreshRewardVideo(adId)) {
+            console.log('[AdMob] Cached reward video went stale, refreshing it before show');
+            this.invalidateRewardVideo();
+        }
         if (this.rewardVideoPromise) return this.rewardVideoPromise;
 
         this.rewardVideoPreparing = true;
+        this.lastRewardVideoAdId = adId;
         this.rewardVideoPromise = (async (): Promise<boolean> => {
             let prepared = false;
             try {
@@ -623,17 +671,19 @@ export const AdMobService = {
                     prepareAction: () => AdMob.prepareRewardVideoAd({ adId, isTesting: false }),
                 });
                 this.rewardVideoReady = prepared;
+                this.rewardVideoPreparedAt = prepared ? Date.now() : 0;
                 if (prepared) {
                     console.log('AdMob Reward Video Prepared');
                 }
                 return prepared;
             } catch (error) {
                 console.error('AdMob Prepare Reward Error:', error);
-                this.rewardVideoReady = false;
+                this.invalidateRewardVideo();
                 return false;
             } finally {
                 if (!prepared) {
                     this.rewardVideoReady = false;
+                    this.rewardVideoPreparedAt = 0;
                 }
                 this.rewardVideoPreparing = false;
                 this.rewardVideoPromise = null;
@@ -651,7 +701,7 @@ export const AdMobService = {
         const initialized = await this.ensureInitialized('Reward video show');
         if (!initialized) {
             this.isRewardVideoShowing = false;
-            this.rewardVideoReady = false;
+            this.invalidateRewardVideo();
             return false;
         }
         console.log(`[AdMob] Attempting to show reward video: ${adId}`);
@@ -677,6 +727,7 @@ export const AdMobService = {
                     this.cleanupListeners([showedListener, rewardListener, dismissListener, failedListener, failedShowListener]);
                     clearTimeout(timeout);
                     this.rewardVideoReady = false;
+                    this.rewardVideoPreparedAt = 0;
                     this.isRewardVideoShowing = false;
                     console.log(`[AdMob] Reward video finished. Success: ${success}`);
                     resolve(success);
@@ -707,14 +758,14 @@ export const AdMobService = {
 
                         failedShowListener = await AdMob.addListener(RewardAdPluginEvents.FailedToShow, (error) => {
                             console.error('[AdMob] Reward video failed to show:', error);
-                            this.rewardVideoReady = false;
+                            this.invalidateRewardVideo();
                             cleanupAndResolve(false);
                         });
 
-                        if (!this.rewardVideoReady) {
+                        if (!this.hasFreshRewardVideo(adId)) {
                             console.warn('[AdMob] Ad not ready, attempting JIT prepare...');
                             const prepared = await this.prepareRewardVideo(adId);
-                            if (!prepared || !this.rewardVideoReady) {
+                            if (!prepared || !this.hasFreshRewardVideo(adId)) {
                                 console.error('[AdMob] JIT Prepare failed: Ad not ready.');
                                 cleanupAndResolve(false);
                                 return;
@@ -726,12 +777,12 @@ export const AdMobService = {
                             await AdMob.showRewardVideoAd();
                         } catch (error) {
                             console.error('AdMob showRewardVideoAd threw:', error);
-                            this.rewardVideoReady = false;
+                            this.invalidateRewardVideo();
                             cleanupAndResolve(false);
                         }
                     } catch (error) {
                         console.error('[AdMob] Reward video executor error:', error);
-                        this.rewardVideoReady = false;
+                        this.invalidateRewardVideo();
                         cleanupAndResolve(false);
                     }
                 })();
@@ -739,7 +790,7 @@ export const AdMobService = {
         } catch (error) {
             console.error('[AdMob] Critical Reward Error', error);
             this.isRewardVideoShowing = false;
-            this.rewardVideoReady = false;
+            this.invalidateRewardVideo();
             return false;
         }
     }

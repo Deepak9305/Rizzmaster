@@ -498,10 +498,8 @@ const AppContentInner: React.FC = () => {
           await NotificationService.recordUsage();
           await NotificationService.schedulePersonalizedNotifications();
 
-          const currentProfile = profileRef.current;
-          if (currentProfile && !currentProfile.is_premium) {
-            runAdTask('Resume interstitial warm preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
-          }
+          // Do not warm-load full-screen ads on resume. Broad resume preloads create
+          // matched requests that often expire unused and hurt AdMob show rate.
         }
       } else {
         // App went to BACKGROUND — flush session time to Supabase
@@ -659,27 +657,24 @@ const AppContentInner: React.FC = () => {
     }
   }, [showToast, isGuest]);
 
-  // Interstitial ads are now pre-loaded strategically (see handleViewNavigation/handleGenerate)
-
-  // Conditional Pre-loading: Reward Video (Low Credits)
+  // Full-screen ads are preloaded only near high-intent moments. This keeps the
+  // matched-request count close to actual impressions, which improves show rate.
   useEffect(() => {
-    if (Capacitor.isNativePlatform() && profile && !profile.is_premium) {
-      const credits = profile.credits || 0;
-      // Pre-load Reward Video when credits are low (<= 2)
-      if (credits <= 2) {
-        const rewardId = getAdId('REWARD');
-        runAdTask('Reward video preload', AdMobService.prepareRewardVideo(rewardId));
-      }
+    if (!Capacitor.isNativePlatform() || !profile || profile.is_premium) {
+      return;
     }
-  }, [profile?.credits, profile?.is_premium]);
 
-  useEffect(() => {
-    if (!Capacitor.isNativePlatform() || !profile || profile.is_premium) return;
+    const rewardEntryVisible = showOutOfCreditsModal || (profile.credits || 0) <= 0;
+    if (!rewardEntryVisible) {
+      return;
+    }
+
     const timer = setTimeout(() => {
-      runAdTask('Warm interstitial preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
-    }, 1500);
+      runAdTask('Reward video intent preload', AdMobService.prepareRewardVideo(getAdId('REWARD')));
+    }, 250);
+
     return () => clearTimeout(timer);
-  }, [profile?.id, profile?.is_premium]);
+  }, [showOutOfCreditsModal, profile?.credits, profile?.is_premium]);
 
   // Initialize Native Services
   useEffect(() => {
@@ -1504,17 +1499,18 @@ const AppContentInner: React.FC = () => {
       const isFirstAd = lastAdGen === 0;
       const targetGen = isFirstAd ? 3 : lastAdGen + 4;
 
-      // Eager Preload: Prepare the ad earlier to ensure high show rates
-      // Preload 1st interstitial on the 1st generation; subsequent ads preload 1 generation before showing.
-      if ((isFirstAd && genCount === 1) || genCount === targetGen - 1) {
-        console.log(`[AdMob] Eagerly preloading interstitial (genCount: ${genCount}, targetGen: ${targetGen})`);
-        runAdTask('Generation-based interstitial preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
-      }
-
       const now = activeTimeMs.current;
       // For the first ad, skip the cooldown check (both `now` and `lastAdActiveTime` are 0 at startup,
       // so `0 - 0 >= COOLDOWN` is always false, blocking the ad from ever showing).
       const cooldownPassed = isFirstAd || (now - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS);
+
+      // Lead preload only one generation before an eligible show. Loading earlier
+      // raises matched requests without guaranteeing an impression.
+      if (genCount === targetGen - 1 && cooldownPassed) {
+        console.log(`[AdMob] Preloading next-generation interstitial (genCount: ${genCount}, targetGen: ${targetGen})`);
+        runAdTask('Generation-based interstitial preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
+      }
+
       if (genCount >= targetGen && cooldownPassed) {
         console.log(`[AdMob] Triggering deferred interstitial at gen ${genCount} (Target was ${targetGen}, isFirstAd: ${isFirstAd})...`);
 
@@ -1533,9 +1529,7 @@ const AppContentInner: React.FC = () => {
           lastAdActiveTime.current = now;
           localStorage.setItem('rizz_last_ad_gen_count', genCount.toString());
         } else {
-          console.log("[AdMob] Interstitial didn't show. Will retry on next generation.");
-          // Attempt another preload for the next retry
-          runAdTask('Retry interstitial preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
+          console.log("[AdMob] Interstitial didn't show. Will retry just-in-time on the next eligible generation.");
         }
       }
     }
