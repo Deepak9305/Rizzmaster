@@ -227,6 +227,8 @@ export const AdMobService = {
     bannerRequestInFlight: false,
     bannerAdId: null as string | null,
     bannerPosition: null as 'TOP' | 'BOTTOM' | null,
+    bannerLastFailedAt: 0,
+    BANNER_RETRY_DELAY_MS: 30 * 1000,
 
     resetBannerState(clearConfig = true) {
         this.bannerVisible = false;
@@ -241,6 +243,11 @@ export const AdMobService = {
         return this.bannerAdId === adId && this.bannerPosition === position;
     },
 
+    isBannerRetryCoolingDown() {
+        return this.bannerLastFailedAt > 0 &&
+            Date.now() - this.bannerLastFailedAt < this.BANNER_RETRY_DELAY_MS;
+    },
+
     async showBanner(adId: string, position: 'TOP' | 'BOTTOM' = 'BOTTOM') {
         if (!Capacitor.isNativePlatform()) return;
 
@@ -253,6 +260,11 @@ export const AdMobService = {
                 return;
             }
 
+            if (this.isBannerRetryCoolingDown()) {
+                console.log('[AdMob] Banner load recently failed, delaying retry to avoid request churn');
+                return;
+            }
+
             this.cleanupListeners(this.bannerListeners);
             this.bannerListeners = [];
             this.bannerAdId = adId;
@@ -262,16 +274,19 @@ export const AdMobService = {
 
             this.bannerListeners.push(await AdMob.addListener(BannerAdPluginEvents.Loaded, () => {
                 console.log('[AdMob] Banner Loaded Successfully');
+                this.bannerLastFailedAt = 0;
                 this.bannerVisible = true;
                 this.bannerRequestInFlight = false;
             }));
             this.bannerListeners.push(await AdMob.addListener(BannerAdPluginEvents.AdImpression, () => {
                 console.log('[AdMob] Banner Impression Reported - Visibility confirmed!');
+                this.bannerLastFailedAt = 0;
                 this.bannerVisible = true;
                 this.bannerRequestInFlight = false;
             }));
             this.bannerListeners.push(await AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (info) => {
                 console.error('[AdMob] Banner Failed to Load:', info);
+                this.bannerLastFailedAt = Date.now();
                 this.resetBannerState(false);
             }));
 
@@ -309,10 +324,13 @@ export const AdMobService = {
 
     async hideBanner() {
         if (!Capacitor.isNativePlatform()) return;
+        if (!this.bannerVisible && !this.bannerRequestInFlight) return;
+
         try {
             await AdMob.hideBanner();
-            this.bannerVisible = false;
-            this.bannerRequestInFlight = false;
+            this.cleanupListeners(this.bannerListeners);
+            this.bannerListeners = [];
+            this.resetBannerState(false);
         } catch (error) {
             console.error('AdMob Hide Banner Error:', error);
         }

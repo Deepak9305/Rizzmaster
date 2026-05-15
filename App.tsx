@@ -562,39 +562,53 @@ const AppContentInner: React.FC = () => {
     //     (listenerRef is still null at cleanup time, so the listener leaks).
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
-    const syncBanner = (delayMs = 250) => {
-      if (Capacitor.isNativePlatform() && (session || isGuest)) {
-        const currentProfile = profileRef.current;
-        if (!currentProfile) return;
-
-        if (currentProfile.is_premium) {
-          void AdMobService.removeBanner();
-        } else {
-          const adId = getAdId('BANNER');
-          const position = currentView === 'COACH' ? 'TOP' : 'BOTTOM';
-
-          if (timer) clearTimeout(timer);
-          timer = setTimeout(() => {
-            if (cancelled) return;
-            AdMobService.syncBanner(adId, position)
-              .catch(e => console.warn('[AdMob] Banner sync failed:', e));
-          }, delayMs);
-        }
-      }
+    const isNative = Capacitor.isNativePlatform();
+    const hasUserSurface = Boolean(session || isGuest);
+    const canShowBanner = () => {
+      const currentProfile = profileRef.current;
+      return Boolean(
+        isNative &&
+        hasUserSurface &&
+        currentProfile &&
+        !currentProfile.is_premium &&
+        isAuthReady &&
+        !showSplash &&
+        !showOnboarding &&
+        !isSessionBlocked &&
+        !isOffline &&
+        isAdLoading === 'hidden' &&
+        currentView === 'HOME'
+      );
     };
 
-    syncBanner(currentView === 'COACH' ? 350 : 0);
+    const syncBanner = (delayMs = 600) => {
+      if (!canShowBanner()) return;
 
-    // Listen for App Resume to refresh ads
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        if (cancelled || !canShowBanner()) return;
+        AdMobService.syncBanner(getAdId('BANNER'), 'BOTTOM')
+          .catch(e => console.warn('[AdMob] Banner sync failed:', e));
+      }, delayMs);
+    };
+
+    if (isNative && hasUserSurface) {
+      const currentProfile = profileRef.current;
+      if (currentProfile?.is_premium) {
+        void AdMobService.removeBanner();
+      } else if (!canShowBanner()) {
+        void AdMobService.hideBanner();
+      }
+    }
+
+    syncBanner(600);
+
+    // Resume only re-syncs when the HOME placement is visible.
     const listenerRef = { current: null as any };
-    if (Capacitor.isNativePlatform()) {
+    if (isNative) {
       CapacitorApp.addListener('appStateChange', ({ isActive }) => {
-        if (isActive) {
-          const currentProfile = profileRef.current;
-          // Guard: only refresh if not premium (includes guests)
-          if (currentProfile && !currentProfile.is_premium) {
-            syncBanner(150);
-          }
+        if (isActive && canShowBanner()) {
+          syncBanner(900);
         }
       }).then(l => {
         if (cancelled) {
@@ -610,7 +624,19 @@ const AppContentInner: React.FC = () => {
       if (timer) clearTimeout(timer);
       if (listenerRef.current) listenerRef.current.remove();
     };
-  }, [profile?.is_premium, session, isGuest, currentView]);
+  }, [
+    profile?.id,
+    profile?.is_premium,
+    session,
+    isGuest,
+    currentView,
+    isAuthReady,
+    showSplash,
+    showOnboarding,
+    isSessionBlocked,
+    isOffline,
+    isAdLoading
+  ]);
 
   // Define handleUpgrade using REF to avoid stale closures
   const handleUpgrade = useCallback(async () => {
@@ -1669,10 +1695,9 @@ const AppContentInner: React.FC = () => {
       } finally {
         setIsAdLoading('hidden'); // ALWAYS HIDE OVERLAY
         setAdCountdown(null);
-        // Restore banner now that the reward ad session is fully over
-        if (profileRef.current && !profileRef.current.is_premium) {
-          const bannerPosition = currentView === 'COACH' ? 'TOP' : 'BOTTOM';
-          await AdMobService.syncBanner(getAdId('BANNER'), bannerPosition);
+        // Restore the stable HOME banner only when that placement is actually visible.
+        if (currentView === 'HOME' && profileRef.current && !profileRef.current.is_premium) {
+          await AdMobService.syncBanner(getAdId('BANNER'), 'BOTTOM');
         }
       }
       return;

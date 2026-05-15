@@ -14,27 +14,44 @@ const AdSenseBanner: React.FC<AdSenseBannerProps> = ({
   format = "auto",
   responsive = "true",
   className,
-  refreshInterval = 60000,
+  refreshInterval = 0,
   devMode = false // Set to true locally to show placeholder without loading real ads
 }) => {
   const adRef = useRef<HTMLModElement>(null);
   const isLoaded = useRef(false);
   const [adKey, setAdKey] = useState(0);
+  const [pageVisible, setPageVisible] = useState(() => (
+    typeof document === 'undefined' || document.visibilityState === 'visible'
+  ));
 
   useEffect(() => {
-    // Only set up the refresh interval if we are NOT in dev mode
-    if (devMode) return;
+    if (devMode || typeof document === 'undefined') return;
+
+    const handleVisibilityChange = () => {
+      setPageVisible(document.visibilityState === 'visible');
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [devMode]);
+
+  useEffect(() => {
+    // Keep auto-refresh opt-in. Repeated sticky-banner refreshes can create
+    // ad requests while the user is not actively viewing the page.
+    if (devMode || !refreshInterval || !pageVisible) return;
 
     const timer = setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
       setAdKey(prev => prev + 1);
       isLoaded.current = false;
     }, refreshInterval);
 
     return () => clearInterval(timer);
-  }, [refreshInterval, devMode]);
+  }, [refreshInterval, devMode, pageVisible]);
 
   useEffect(() => {
     if (devMode) return; // Do not try to push ads in dev mode
+    if (!pageVisible) return;
 
     // Only push the ad once per mount to avoid multiple pushes to the same slot
     if (adRef.current && !isLoaded.current) {
@@ -46,7 +63,7 @@ const AdSenseBanner: React.FC<AdSenseBannerProps> = ({
         console.error("AdSense Error:", err);
       }
     }
-  }, [adKey, devMode]);
+  }, [adKey, devMode, pageVisible]);
 
   if (devMode) {
     return (
