@@ -562,53 +562,39 @@ const AppContentInner: React.FC = () => {
     //     (listenerRef is still null at cleanup time, so the listener leaks).
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
-    const isNative = Capacitor.isNativePlatform();
-    const hasUserSurface = Boolean(session || isGuest);
-    const canShowBanner = () => {
-      const currentProfile = profileRef.current;
-      return Boolean(
-        isNative &&
-        hasUserSurface &&
-        currentProfile &&
-        !currentProfile.is_premium &&
-        isAuthReady &&
-        !showSplash &&
-        !showOnboarding &&
-        !isSessionBlocked &&
-        !isOffline &&
-        isAdLoading === 'hidden' &&
-        currentView === 'HOME'
-      );
-    };
+    const syncBanner = (delayMs = 250) => {
+      if (Capacitor.isNativePlatform() && (session || isGuest)) {
+        const currentProfile = profileRef.current;
+        if (!currentProfile) return;
 
-    const syncBanner = (delayMs = 600) => {
-      if (!canShowBanner()) return;
+        if (currentProfile.is_premium) {
+          void AdMobService.removeBanner();
+        } else {
+          const adId = getAdId('BANNER');
+          const position = currentView === 'COACH' ? 'TOP' : 'BOTTOM';
 
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(() => {
-        if (cancelled || !canShowBanner()) return;
-        AdMobService.syncBanner(getAdId('BANNER'), 'BOTTOM')
-          .catch(e => console.warn('[AdMob] Banner sync failed:', e));
-      }, delayMs);
-    };
-
-    if (isNative && hasUserSurface) {
-      const currentProfile = profileRef.current;
-      if (currentProfile?.is_premium) {
-        void AdMobService.removeBanner();
-      } else if (!canShowBanner()) {
-        void AdMobService.hideBanner();
+          if (timer) clearTimeout(timer);
+          timer = setTimeout(() => {
+            if (cancelled) return;
+            AdMobService.syncBanner(adId, position)
+              .catch(e => console.warn('[AdMob] Banner sync failed:', e));
+          }, delayMs);
+        }
       }
-    }
+    };
 
-    syncBanner(600);
+    syncBanner(currentView === 'COACH' ? 350 : 0);
 
-    // Resume only re-syncs when the HOME placement is visible.
+    // Listen for App Resume to refresh ads
     const listenerRef = { current: null as any };
-    if (isNative) {
+    if (Capacitor.isNativePlatform()) {
       CapacitorApp.addListener('appStateChange', ({ isActive }) => {
-        if (isActive && canShowBanner()) {
-          syncBanner(900);
+        if (isActive) {
+          const currentProfile = profileRef.current;
+          // Guard: only refresh if not premium (includes guests)
+          if (currentProfile && !currentProfile.is_premium) {
+            syncBanner(150);
+          }
         }
       }).then(l => {
         if (cancelled) {
@@ -624,19 +610,7 @@ const AppContentInner: React.FC = () => {
       if (timer) clearTimeout(timer);
       if (listenerRef.current) listenerRef.current.remove();
     };
-  }, [
-    profile?.id,
-    profile?.is_premium,
-    session,
-    isGuest,
-    currentView,
-    isAuthReady,
-    showSplash,
-    showOnboarding,
-    isSessionBlocked,
-    isOffline,
-    isAdLoading
-  ]);
+  }, [profile?.is_premium, session, isGuest, currentView]);
 
   // Define handleUpgrade using REF to avoid stale closures
   const handleUpgrade = useCallback(async () => {
@@ -683,24 +657,26 @@ const AppContentInner: React.FC = () => {
     }
   }, [showToast, isGuest]);
 
-  // Full-screen ads are preloaded only near high-intent moments. This keeps the
-  // matched-request count close to actual impressions, which improves show rate.
+  // Interstitial ads are now pre-loaded strategically (see handleViewNavigation/handleGenerate)
+
+  // Conditional Pre-loading: Reward Video (Low Credits)
   useEffect(() => {
-    if (!Capacitor.isNativePlatform() || !profile || profile.is_premium) {
-      return;
+    if (Capacitor.isNativePlatform() && profile && !profile.is_premium) {
+      const credits = profile.credits || 0;
+      if (credits <= 2) {
+        const rewardId = getAdId('REWARD');
+        runAdTask('Reward video preload', AdMobService.prepareRewardVideo(rewardId));
+      }
     }
+  }, [profile?.credits, profile?.is_premium]);
 
-    const rewardEntryVisible = showOutOfCreditsModal || (profile.credits || 0) <= 0;
-    if (!rewardEntryVisible) {
-      return;
-    }
-
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() || !profile || profile.is_premium) return;
     const timer = setTimeout(() => {
-      runAdTask('Reward video intent preload', AdMobService.prepareRewardVideo(getAdId('REWARD')));
-    }, 250);
-
+      runAdTask('Warm interstitial preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
+    }, 1500);
     return () => clearTimeout(timer);
-  }, [showOutOfCreditsModal, profile?.credits, profile?.is_premium]);
+  }, [profile?.id, profile?.is_premium]);
 
   // Initialize Native Services
   useEffect(() => {
@@ -1525,18 +1501,16 @@ const AppContentInner: React.FC = () => {
       const isFirstAd = lastAdGen === 0;
       const targetGen = isFirstAd ? 3 : lastAdGen + 4;
 
+      // Eager preload: prepare the ad early enough for a reliable show path.
+      if ((isFirstAd && genCount === 1) || genCount === targetGen - 1) {
+        console.log(`[AdMob] Eagerly preloading interstitial (genCount: ${genCount}, targetGen: ${targetGen})`);
+        runAdTask('Generation-based interstitial preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
+      }
+
       const now = activeTimeMs.current;
       // For the first ad, skip the cooldown check (both `now` and `lastAdActiveTime` are 0 at startup,
       // so `0 - 0 >= COOLDOWN` is always false, blocking the ad from ever showing).
       const cooldownPassed = isFirstAd || (now - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS);
-
-      // Lead preload only one generation before an eligible show. Loading earlier
-      // raises matched requests without guaranteeing an impression.
-      if (genCount === targetGen - 1 && cooldownPassed) {
-        console.log(`[AdMob] Preloading next-generation interstitial (genCount: ${genCount}, targetGen: ${targetGen})`);
-        runAdTask('Generation-based interstitial preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
-      }
-
       if (genCount >= targetGen && cooldownPassed) {
         console.log(`[AdMob] Triggering deferred interstitial at gen ${genCount} (Target was ${targetGen}, isFirstAd: ${isFirstAd})...`);
 
@@ -1555,7 +1529,8 @@ const AppContentInner: React.FC = () => {
           lastAdActiveTime.current = now;
           localStorage.setItem('rizz_last_ad_gen_count', genCount.toString());
         } else {
-          console.log("[AdMob] Interstitial didn't show. Will retry just-in-time on the next eligible generation.");
+          console.log("[AdMob] Interstitial didn't show. Will retry on next generation.");
+          runAdTask('Retry interstitial preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
         }
       }
     }
@@ -1695,9 +1670,10 @@ const AppContentInner: React.FC = () => {
       } finally {
         setIsAdLoading('hidden'); // ALWAYS HIDE OVERLAY
         setAdCountdown(null);
-        // Restore the stable HOME banner only when that placement is actually visible.
-        if (currentView === 'HOME' && profileRef.current && !profileRef.current.is_premium) {
-          await AdMobService.syncBanner(getAdId('BANNER'), 'BOTTOM');
+        // Restore banner now that the reward ad session is fully over
+        if (profileRef.current && !profileRef.current.is_premium) {
+          const bannerPosition = currentView === 'COACH' ? 'TOP' : 'BOTTOM';
+          await AdMobService.syncBanner(getAdId('BANNER'), bannerPosition);
         }
       }
       return;

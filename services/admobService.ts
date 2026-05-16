@@ -224,14 +224,14 @@ export const AdMobService = {
 
     bannerListeners: [] as any[],
     bannerVisible: false,
+    bannerHidden: false,
     bannerRequestInFlight: false,
     bannerAdId: null as string | null,
     bannerPosition: null as 'TOP' | 'BOTTOM' | null,
-    bannerLastFailedAt: 0,
-    BANNER_RETRY_DELAY_MS: 30 * 1000,
 
     resetBannerState(clearConfig = true) {
         this.bannerVisible = false;
+        this.bannerHidden = false;
         this.bannerRequestInFlight = false;
         if (clearConfig) {
             this.bannerAdId = null;
@@ -243,11 +243,6 @@ export const AdMobService = {
         return this.bannerAdId === adId && this.bannerPosition === position;
     },
 
-    isBannerRetryCoolingDown() {
-        return this.bannerLastFailedAt > 0 &&
-            Date.now() - this.bannerLastFailedAt < this.BANNER_RETRY_DELAY_MS;
-    },
-
     async showBanner(adId: string, position: 'TOP' | 'BOTTOM' = 'BOTTOM') {
         if (!Capacitor.isNativePlatform()) return;
 
@@ -255,13 +250,13 @@ export const AdMobService = {
             const initialized = await this.ensureInitialized('Banner show');
             if (!initialized) return;
 
-            if (this.isSameBanner(adId, position) && (this.bannerVisible || this.bannerRequestInFlight)) {
-                console.log(`[AdMob] Banner already active for ${position}, skipping duplicate request`);
-                return;
+            if (this.isSameBanner(adId, position) && this.bannerHidden && !this.bannerRequestInFlight) {
+                const resumed = await this.resumeBanner();
+                if (resumed) return;
             }
 
-            if (this.isBannerRetryCoolingDown()) {
-                console.log('[AdMob] Banner load recently failed, delaying retry to avoid request churn');
+            if (this.isSameBanner(adId, position) && (this.bannerVisible || this.bannerRequestInFlight)) {
+                console.log(`[AdMob] Banner already active for ${position}, skipping duplicate request`);
                 return;
             }
 
@@ -270,23 +265,22 @@ export const AdMobService = {
             this.bannerAdId = adId;
             this.bannerPosition = position;
             this.bannerVisible = false;
+            this.bannerHidden = false;
             this.bannerRequestInFlight = true;
 
             this.bannerListeners.push(await AdMob.addListener(BannerAdPluginEvents.Loaded, () => {
                 console.log('[AdMob] Banner Loaded Successfully');
-                this.bannerLastFailedAt = 0;
-                this.bannerVisible = true;
+                this.bannerVisible = !this.bannerHidden;
                 this.bannerRequestInFlight = false;
             }));
             this.bannerListeners.push(await AdMob.addListener(BannerAdPluginEvents.AdImpression, () => {
                 console.log('[AdMob] Banner Impression Reported - Visibility confirmed!');
-                this.bannerLastFailedAt = 0;
                 this.bannerVisible = true;
+                this.bannerHidden = false;
                 this.bannerRequestInFlight = false;
             }));
             this.bannerListeners.push(await AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (info) => {
                 console.error('[AdMob] Banner Failed to Load:', info);
-                this.bannerLastFailedAt = Date.now();
                 this.resetBannerState(false);
             }));
 
@@ -313,6 +307,11 @@ export const AdMobService = {
             return;
         }
 
+        if (this.isSameBanner(adId, position) && this.bannerHidden) {
+            const resumed = await this.resumeBanner();
+            if (resumed) return;
+        }
+
         const needsReposition = this.bannerAdId !== null && !this.isSameBanner(adId, position);
         if (needsReposition) {
             await this.removeBanner();
@@ -328,11 +327,28 @@ export const AdMobService = {
 
         try {
             await AdMob.hideBanner();
-            this.cleanupListeners(this.bannerListeners);
-            this.bannerListeners = [];
-            this.resetBannerState(false);
+            this.bannerVisible = false;
+            this.bannerHidden = true;
+            this.bannerRequestInFlight = false;
         } catch (error) {
+            this.resetBannerState();
             console.error('AdMob Hide Banner Error:', error);
+        }
+    },
+
+    async resumeBanner(): Promise<boolean> {
+        if (!Capacitor.isNativePlatform()) return false;
+
+        try {
+            await AdMob.resumeBanner();
+            this.bannerVisible = true;
+            this.bannerHidden = false;
+            this.bannerRequestInFlight = false;
+            return true;
+        } catch (error) {
+            this.resetBannerState();
+            console.error('AdMob Resume Banner Error:', error);
+            return false;
         }
     },
 
