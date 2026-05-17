@@ -2197,11 +2197,11 @@ const AppContentInner: React.FC = () => {
 
               {/* Sticky Ad Container (WEB ONLY) - Hidden on Native to prevent overlap */}
               {!profile?.is_premium && !Capacitor.isNativePlatform() && (
-                <div className="fixed bottom-0 left-0 right-0 z-40 bg-black/90 backdrop-blur-md border-t border-white/10 pb-[env(safe-area-inset-bottom)] pt-2 animate-slide-up-fade">
-                  <div className="max-w-md mx-auto px-2">
+                <div className="fixed bottom-0 left-0 right-0 z-40 bg-black/90 backdrop-blur-md border-t border-white/10 pb-[env(safe-area-inset-bottom)] pt-1 animate-slide-up-fade">
+                  <div className="max-w-[320px] mx-auto px-0">
                     <AdSenseBanner
                       dataAdSlot={ADSENSE_SLOT_ID}
-                      className="!my-0 !min-h-[50px] !bg-transparent !border-none"
+                      className="!my-0 !h-[50px] !max-h-[50px] !bg-transparent !border-none"
                     />
                   </div>
                 </div>

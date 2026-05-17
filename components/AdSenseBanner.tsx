@@ -7,15 +7,19 @@ interface AdSenseBannerProps {
   className?: string;
   refreshInterval?: number;
   devMode?: boolean; // Added DEV_MODE optimization
+  width?: number;
+  height?: number;
 }
 
 const AdSenseBanner: React.FC<AdSenseBannerProps> = ({
   dataAdSlot,
-  format = "auto",
-  responsive = "true",
+  format,
+  responsive = "false",
   className,
   refreshInterval = 0,
-  devMode = false // Set to true locally to show placeholder without loading real ads
+  devMode = false, // Set to true locally to show placeholder without loading real ads
+  width = 320,
+  height = 50
 }) => {
   const adRef = useRef<HTMLModElement>(null);
   const isLoaded = useRef(false);
@@ -67,7 +71,10 @@ const AdSenseBanner: React.FC<AdSenseBannerProps> = ({
 
   if (devMode) {
     return (
-      <div className={`w-full overflow-hidden text-center flex items-center justify-center bg-white/5 rounded-lg border border-dashed border-white/20 ${className || 'my-4 min-h-[100px]'}`}>
+      <div
+        className={`w-full overflow-hidden text-center flex items-center justify-center bg-white/5 rounded-lg border border-dashed border-white/20 ${className || 'my-2'}`}
+        style={{ height }}
+      >
         <div className="text-xs text-white/40 uppercase tracking-widest p-4">
           Ad Space ({dataAdSlot})<br />
           <span className="opacity-50 text-[10px]">(DEV_MODE Active)</span>
@@ -76,11 +83,19 @@ const AdSenseBanner: React.FC<AdSenseBannerProps> = ({
     );
   }
 
+  const adStyle: React.CSSProperties = responsive === "true"
+    ? { display: 'block', width: '100%', height: '100%' }
+    : { display: 'inline-block', width, height, maxWidth: '100%' };
+
   return (
-    <div key={adKey} className={`w-full overflow-hidden text-center flex items-center justify-center bg-transparent ${className || 'my-4 min-h-[100px]'}`}>
+    <div
+      key={adKey}
+      className={`w-full overflow-hidden text-center flex items-center justify-center bg-transparent ${className || 'my-2'}`}
+      style={{ height }}
+    >
       <ins className="adsbygoogle relative z-10"
         ref={adRef}
-        style={{ display: 'block', width: '100%', height: '100%' }}
+        style={adStyle}
         data-ad-client="ca-pub-7381421031784616"
         data-ad-slot={dataAdSlot}
         data-ad-format={format}
