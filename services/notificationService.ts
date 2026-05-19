@@ -47,6 +47,56 @@ const RIZZ_TIPS = [
 ];
 
 export const NotificationService = {
+    splitNotificationLines(message: string, maxLineLength = 38) {
+        const normalizedMessage = message.replace(/\r\n/g, '\n').trim();
+        const explicitLines = normalizedMessage
+            .split('\n')
+            .map(line => line.trim())
+            .filter(Boolean);
+
+        if (explicitLines.length > 1) {
+            return explicitLines.slice(0, 5);
+        }
+
+        const words = normalizedMessage.split(/\s+/).filter(Boolean);
+        const wrappedLines: string[] = [];
+        let currentLine = '';
+
+        for (const word of words) {
+            const nextLine = currentLine ? `${currentLine} ${word}` : word;
+
+            if (nextLine.length <= maxLineLength || currentLine.length === 0) {
+                currentLine = nextLine;
+                continue;
+            }
+
+            wrappedLines.push(currentLine);
+            currentLine = word;
+
+            if (wrappedLines.length === 5) {
+                break;
+            }
+        }
+
+        if (currentLine && wrappedLines.length < 5) {
+            wrappedLines.push(currentLine);
+        }
+
+        return wrappedLines;
+    },
+
+    buildNotificationContent(message: string) {
+        const normalizedMessage = message.replace(/\r\n/g, '\n').trim();
+        const messageLines = this.splitNotificationLines(normalizedMessage);
+
+        return {
+            body: normalizedMessage,
+            largeBody: normalizedMessage,
+            inboxList: messageLines.length > 1 ? messageLines : undefined,
+            summaryText: 'Open Rizz Master',
+        };
+    },
+
     /**
      * Request permissions and initialize
      */
@@ -160,10 +210,14 @@ export const NotificationService = {
 
             for (let i = 1; i <= 7; i++) {
                 const tip = shuffledTips[(i - 1) % shuffledTips.length];
+                const content = this.buildNotificationContent(tip);
 
                 notifications.push({
                     title: "Rizz Master ⚡",
-                    body: tip,
+                    body: content.body,
+                    largeBody: content.largeBody,
+                    inboxList: content.inboxList,
+                    summaryText: content.summaryText,
                     id: 1000 + i, // Unique ID per day
                     schedule: {
                         at: this.getNextOccurrence(optimalHour, i),
