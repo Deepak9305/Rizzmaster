@@ -11,6 +11,7 @@ import Footer from './components/Footer';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
+import { Keyboard } from '@capacitor/keyboard';
 import { Dialog } from '@capacitor/dialog';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { AdMobService } from './services/admobService';
@@ -277,7 +278,9 @@ const AppContentInner: React.FC = () => {
   const [adCountdown, setAdCountdown] = useState<number | null>(null);
   const [isProfileLoadingHung, setIsProfileLoadingHung] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const lastOfflineStatusRef = useRef(false);
+  const keyboardVisibleRef = useRef(false);
 
   // Custom Personas State
   const [customPersonas, setCustomPersonas] = useState<CustomPersona[]>([]);
@@ -369,6 +372,41 @@ const AppContentInner: React.FC = () => {
   useEffect(() => {
     stateRef.current = { currentView, showPremiumModal, showSavedModal };
   }, [currentView, showPremiumModal, showSavedModal]);
+
+  useEffect(() => {
+    keyboardVisibleRef.current = isKeyboardVisible;
+  }, [isKeyboardVisible]);
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    let cancelled = false;
+    const listenerHandles: Array<{ remove: () => Promise<void> | void }> = [];
+    const updateKeyboardVisibility = (visible: boolean) => {
+      keyboardVisibleRef.current = visible;
+      setIsKeyboardVisible(prev => (prev === visible ? prev : visible));
+    };
+
+    void Promise.all([
+      Keyboard.addListener('keyboardWillShow', () => updateKeyboardVisibility(true)),
+      Keyboard.addListener('keyboardDidShow', () => updateKeyboardVisibility(true)),
+      Keyboard.addListener('keyboardWillHide', () => updateKeyboardVisibility(false)),
+      Keyboard.addListener('keyboardDidHide', () => updateKeyboardVisibility(false)),
+    ]).then((handles) => {
+      if (cancelled) {
+        handles.forEach(handle => void handle.remove());
+        return;
+      }
+      listenerHandles.push(...handles);
+    }).catch((error) => {
+      console.warn('[Keyboard] Failed to attach listeners:', error);
+    });
+
+    return () => {
+      cancelled = true;
+      listenerHandles.forEach(handle => void handle.remove());
+    };
+  }, []);
 
   // Handle Status Bar Visibility on Scroll
   useEffect(() => {
@@ -569,6 +607,8 @@ const AppContentInner: React.FC = () => {
 
         if (currentProfile.is_premium) {
           void AdMobService.removeBanner();
+        } else if (isKeyboardVisible) {
+          void AdMobService.hideBanner();
         } else {
           const adId = getAdId('BANNER');
           const position = currentView === 'COACH' ? 'TOP' : 'BOTTOM';
@@ -583,7 +623,7 @@ const AppContentInner: React.FC = () => {
       }
     };
 
-    syncBanner(currentView === 'COACH' ? 350 : 0);
+    syncBanner(currentView === 'COACH' && !isKeyboardVisible ? 350 : 0);
 
     // Listen for App Resume to refresh ads
     const listenerRef = { current: null as any };
@@ -610,7 +650,7 @@ const AppContentInner: React.FC = () => {
       if (timer) clearTimeout(timer);
       if (listenerRef.current) listenerRef.current.remove();
     };
-  }, [profile?.is_premium, session, isGuest, currentView]);
+  }, [profile?.is_premium, session, isGuest, currentView, isKeyboardVisible]);
 
   // Define handleUpgrade using REF to avoid stale closures
   const handleUpgrade = useCallback(async () => {
@@ -1671,9 +1711,11 @@ const AppContentInner: React.FC = () => {
         setIsAdLoading('hidden'); // ALWAYS HIDE OVERLAY
         setAdCountdown(null);
         // Restore banner now that the reward ad session is fully over
-        if (profileRef.current && !profileRef.current.is_premium) {
+        if (profileRef.current && !profileRef.current.is_premium && !keyboardVisibleRef.current) {
           const bannerPosition = currentView === 'COACH' ? 'TOP' : 'BOTTOM';
           await AdMobService.syncBanner(getAdId('BANNER'), bannerPosition);
+        } else if (keyboardVisibleRef.current) {
+          await AdMobService.hideBanner();
         }
       }
       return;
