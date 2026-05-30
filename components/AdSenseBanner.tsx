@@ -1,5 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 
+declare global {
+  interface Window {
+    adsbygoogle?: unknown[];
+  }
+}
+
 interface AdSenseBannerProps {
   dataAdSlot: string;
   format?: string;
@@ -10,6 +16,53 @@ interface AdSenseBannerProps {
   width?: number;
   height?: number;
 }
+
+const ADSENSE_SCRIPT_SRC = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7381421031784616';
+
+let adsenseScriptPromise: Promise<void> | null = null;
+
+const ensureAdSenseScript = (): Promise<void> => {
+  if (typeof document === 'undefined') return Promise.resolve();
+  if (window.adsbygoogle) return Promise.resolve();
+  if (adsenseScriptPromise) return adsenseScriptPromise;
+
+  adsenseScriptPromise = new Promise((resolve, reject) => {
+    const existingScript = document.querySelector<HTMLScriptElement>(`script[src="${ADSENSE_SCRIPT_SRC}"]`);
+    if (existingScript) {
+      if (existingScript.dataset.loaded === 'true' || window.adsbygoogle) {
+        resolve();
+        return;
+      }
+
+      existingScript.addEventListener('load', () => {
+        existingScript.dataset.loaded = 'true';
+        resolve();
+      }, { once: true });
+      existingScript.addEventListener('error', () => {
+        adsenseScriptPromise = null;
+        reject(new Error('Failed to load AdSense script.'));
+      }, { once: true });
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.async = true;
+    script.crossOrigin = 'anonymous';
+    script.src = ADSENSE_SCRIPT_SRC;
+    script.dataset.loaded = 'false';
+    script.addEventListener('load', () => {
+      script.dataset.loaded = 'true';
+      resolve();
+    }, { once: true });
+    script.addEventListener('error', () => {
+      adsenseScriptPromise = null;
+      reject(new Error('Failed to load AdSense script.'));
+    }, { once: true });
+    document.head.appendChild(script);
+  });
+
+  return adsenseScriptPromise;
+};
 
 const AdSenseBanner: React.FC<AdSenseBannerProps> = ({
   dataAdSlot,
@@ -24,6 +77,7 @@ const AdSenseBanner: React.FC<AdSenseBannerProps> = ({
   const adRef = useRef<HTMLModElement>(null);
   const isLoaded = useRef(false);
   const [adKey, setAdKey] = useState(0);
+  const [scriptReady, setScriptReady] = useState(false);
   const [pageVisible, setPageVisible] = useState(() => (
     typeof document === 'undefined' || document.visibilityState === 'visible'
   ));
@@ -37,6 +91,23 @@ const AdSenseBanner: React.FC<AdSenseBannerProps> = ({
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [devMode]);
+
+  useEffect(() => {
+    if (devMode || typeof document === 'undefined') return;
+
+    let cancelled = false;
+    void ensureAdSenseScript()
+      .then(() => {
+        if (!cancelled) setScriptReady(true);
+      })
+      .catch((err) => {
+        console.error('AdSense Script Error:', err);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [devMode]);
 
   useEffect(() => {
@@ -56,18 +127,18 @@ const AdSenseBanner: React.FC<AdSenseBannerProps> = ({
   useEffect(() => {
     if (devMode) return; // Do not try to push ads in dev mode
     if (!pageVisible) return;
+    if (!scriptReady) return;
 
     // Only push the ad once per mount to avoid multiple pushes to the same slot
     if (adRef.current && !isLoaded.current) {
       try {
-        // @ts-ignore
         (window.adsbygoogle = window.adsbygoogle || []).push({});
         isLoaded.current = true;
       } catch (err) {
         console.error("AdSense Error:", err);
       }
     }
-  }, [adKey, devMode, pageVisible]);
+  }, [adKey, devMode, pageVisible, scriptReady]);
 
   if (devMode) {
     return (

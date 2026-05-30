@@ -699,23 +699,71 @@ const AppContentInner: React.FC = () => {
 
   // Interstitial ads are now pre-loaded strategically (see handleViewNavigation/handleGenerate)
 
-  // Conditional Pre-loading: Reward Video (Low Credits)
+  // Keep rewarded ads warm for low-credit users; if the first preload fails,
+  // keep retrying while they remain eligible instead of waiting for credits to change.
   useEffect(() => {
-    if (Capacitor.isNativePlatform() && profile && !profile.is_premium) {
-      const credits = profile.credits || 0;
-      if (credits <= 2) {
-        const rewardId = getAdId('REWARD');
-        runAdTask('Reward video preload', AdMobService.prepareRewardVideo(rewardId));
+    if (!Capacitor.isNativePlatform() || !profile || profile.is_premium) return;
+
+    const credits = profile.credits || 0;
+    if (credits > 2) return;
+
+    const rewardId = getAdId('REWARD');
+    const preloadRewardVideo = () => {
+      runAdTask('Reward video preload', AdMobService.prepareRewardVideo(rewardId));
+    };
+
+    preloadRewardVideo();
+
+    const retryTimer = setInterval(preloadRewardVideo, 45000);
+    let cancelled = false;
+    let appStateListener: any = null;
+
+    void CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) preloadRewardVideo();
+    }).then(listener => {
+      if (cancelled) {
+        listener.remove();
+        return;
       }
-    }
-  }, [profile?.credits, profile?.is_premium]);
+      appStateListener = listener;
+    });
+
+    return () => {
+      cancelled = true;
+      clearInterval(retryTimer);
+      if (appStateListener) appStateListener.remove();
+    };
+  }, [profile?.id, profile?.credits, profile?.is_premium]);
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform() || !profile || profile.is_premium) return;
-    const timer = setTimeout(() => {
-      runAdTask('Warm interstitial preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
-    }, 1500);
-    return () => clearTimeout(timer);
+
+    const interstitialId = getAdId('INTERSTITIAL');
+    const preloadInterstitial = () => {
+      runAdTask('Warm interstitial preload', AdMobService.prepareInterstitial(interstitialId));
+    };
+
+    const timer = setTimeout(preloadInterstitial, 1500);
+    const retryTimer = setInterval(preloadInterstitial, 60000);
+    let cancelled = false;
+    let appStateListener: any = null;
+
+    void CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) preloadInterstitial();
+    }).then(listener => {
+      if (cancelled) {
+        listener.remove();
+        return;
+      }
+      appStateListener = listener;
+    });
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      clearInterval(retryTimer);
+      if (appStateListener) appStateListener.remove();
+    };
   }, [profile?.id, profile?.is_premium]);
 
   // Initialize Native Services
@@ -1190,6 +1238,8 @@ const AppContentInner: React.FC = () => {
   };
 
   const handleLogout = useCallback(async () => {
+    const currentProfile = profileRef.current;
+
     if (isGuest) {
       handleExitGuestMode();
       showToast("Successfully logged out 👋", 'success');
@@ -1201,6 +1251,11 @@ const AppContentInner: React.FC = () => {
       if (supabase) await supabase.auth.signOut();
 
       // Clear AI Session Data
+      if (currentProfile?.id) {
+        localStorage.removeItem(`rizz_coach_messages_v2_${currentProfile.id}`);
+        localStorage.removeItem(`rizz_coach_shadow_notes_${currentProfile.id}`);
+        localStorage.removeItem(`rizz_custom_personas_${currentProfile.id}`);
+      }
       localStorage.removeItem('rizz_coach_messages_v2');
       localStorage.removeItem('rizzmaster_guest_shadow_notes');
       localStorage.removeItem('rizz_coach_shadow_notes');

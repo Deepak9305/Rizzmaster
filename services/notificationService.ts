@@ -47,6 +47,21 @@ const RIZZ_TIPS = [
 ];
 
 export const NotificationService = {
+    parseUsageHistory(value: string | null) {
+        if (!value) return [] as number[];
+
+        try {
+            const parsed = JSON.parse(value);
+            if (!Array.isArray(parsed)) return [];
+
+            return parsed
+                .filter((hour): hour is number => Number.isInteger(hour) && hour >= 0 && hour <= 23)
+                .slice(-MAX_HISTORY_SAMPLES);
+        } catch {
+            return [];
+        }
+    },
+
     splitNotificationLines(message: string, maxLineLength = 38) {
         const normalizedMessage = message.replace(/\r\n/g, '\n').trim();
         const explicitLines = normalizedMessage
@@ -124,11 +139,7 @@ export const NotificationService = {
 
         try {
             const { value } = await Preferences.get({ key: USAGE_HISTORY_KEY });
-            let history: number[] = [];
-            if (value) {
-                const parsed = JSON.parse(value);
-                if (Array.isArray(parsed)) history = parsed;
-            }
+            let history = this.parseUsageHistory(value);
 
             const currentHour = new Date().getHours();
 
@@ -156,11 +167,7 @@ export const NotificationService = {
     async getOptimalHour(): Promise<number> {
         try {
             const { value } = await Preferences.get({ key: USAGE_HISTORY_KEY });
-            let history: number[] = [];
-            if (value) {
-                const parsed = JSON.parse(value);
-                if (Array.isArray(parsed)) history = parsed;
-            }
+            const history = this.parseUsageHistory(value);
 
             if (history.length < 3) return 19; // Default to 7 PM
 

@@ -18,6 +18,7 @@ type PrepareOptions = {
     loadedEvent: any;
     failedEvent: any;
     prepareAction: () => Promise<unknown>;
+    timeoutMs?: number;
 };
 
 export const AdMobService = {
@@ -48,10 +49,12 @@ export const AdMobService = {
     // Set to false before releasing to the Play Store.
     DEBUG_FORCE_GDPR: false,
     PREPARE_TIMEOUT_MS: 25000,
+    REWARDED_PREPARE_TIMEOUT_MS: 35000,
     INTERSTITIAL_STALE_AFTER_MS: 20 * 60 * 1000,
     REWARDED_STALE_AFTER_MS: 50 * 60 * 1000,
     POST_PREPARE_SHOW_DELAY_MS: 700,
     BANNER_RESHOW_DELAY_MS: 350,
+    REWARDED_SHOW_TIMEOUT_MS: 40000,
 
     removeListener(listener: any) {
         try {
@@ -168,7 +171,8 @@ export const AdMobService = {
     },
 
     async runPrepareWithTimeout(options: PrepareOptions): Promise<boolean> {
-        const { label, loadedEvent, failedEvent, prepareAction } = options;
+        const { label, loadedEvent, failedEvent, prepareAction, timeoutMs } = options;
+        const resolvedTimeoutMs = timeoutMs ?? this.PREPARE_TIMEOUT_MS;
 
         let loadedListener: any = null;
         let failedListener: any = null;
@@ -209,9 +213,9 @@ export const AdMobService = {
                 }
 
                 timeout = setTimeout(() => {
-                    console.warn(`[AdMob] ${label} prepare timed out after ${this.PREPARE_TIMEOUT_MS}ms`);
+                    console.warn(`[AdMob] ${label} prepare timed out after ${resolvedTimeoutMs}ms`);
                     settle(false);
-                }, this.PREPARE_TIMEOUT_MS);
+                }, resolvedTimeoutMs);
 
                 try {
                     await prepareAction();
@@ -548,6 +552,7 @@ export const AdMobService = {
                     loadedEvent: RewardInterstitialAdPluginEvents.Loaded,
                     failedEvent: RewardInterstitialAdPluginEvents.FailedToLoad,
                     prepareAction: () => AdMob.prepareRewardInterstitialAd({ adId, isTesting: false }),
+                    timeoutMs: this.REWARDED_PREPARE_TIMEOUT_MS,
                 });
                 this.rewardInterstitialReady = prepared;
                 this.rewardInterstitialPreparedAt = prepared ? Date.now() : 0;
@@ -598,7 +603,7 @@ export const AdMobService = {
                 const timeout = setTimeout(() => {
                     console.warn('[AdMob] Reward Interstitial show timeout');
                     cleanupAndResolve(false);
-                }, 30000);
+                }, this.REWARDED_SHOW_TIMEOUT_MS);
 
                 const cleanupAndResolve = (success: boolean) => {
                     if (resolved) return;
@@ -703,6 +708,7 @@ export const AdMobService = {
                     loadedEvent: RewardAdPluginEvents.Loaded,
                     failedEvent: RewardAdPluginEvents.FailedToLoad,
                     prepareAction: () => AdMob.prepareRewardVideoAd({ adId, isTesting: false }),
+                    timeoutMs: this.REWARDED_PREPARE_TIMEOUT_MS,
                 });
                 this.rewardVideoReady = prepared;
                 this.rewardVideoPreparedAt = prepared ? Date.now() : 0;
@@ -753,7 +759,7 @@ export const AdMobService = {
                 const timeout = setTimeout(() => {
                     console.warn('[AdMob] Reward video show timeout');
                     cleanupAndResolve(false);
-                }, 30000);
+                }, this.REWARDED_SHOW_TIMEOUT_MS);
 
                 const cleanupAndResolve = (success: boolean) => {
                     if (resolved) return;

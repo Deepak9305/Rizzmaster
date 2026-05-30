@@ -47,6 +47,39 @@ const INITIAL_MESSAGE: CoachMessage = {
     timestamp: new Date().toISOString()
 };
 
+const PHOTO_ATTACHMENT_NOTE = '[Photo attached]';
+
+const normalizeStoredCoachMessages = (raw: unknown): CoachMessage[] => {
+    if (!Array.isArray(raw)) return [INITIAL_MESSAGE];
+
+    const normalized = raw
+        .map((item): CoachMessage | null => {
+            if (!item || typeof item !== 'object') return null;
+
+            const msg = item as Partial<CoachMessage>;
+            if ((msg.role !== 'user' && msg.role !== 'assistant') || typeof msg.content !== 'string') {
+                return null;
+            }
+
+            const hadPersistedPhoto = msg.image === '[Photo]';
+            const hasInlinePhotoNote = msg.content.includes(PHOTO_ATTACHMENT_NOTE);
+            const normalizedContent = hadPersistedPhoto && !hasInlinePhotoNote
+                ? `${msg.content}\n${PHOTO_ATTACHMENT_NOTE}`
+                : msg.content;
+
+            return {
+                role: msg.role,
+                content: normalizedContent,
+                image: typeof msg.image === 'string' && msg.image.startsWith('data:image/') ? msg.image : null,
+                systemContext: typeof msg.systemContext === 'string' ? msg.systemContext : null,
+                timestamp: typeof msg.timestamp === 'string' ? msg.timestamp : new Date().toISOString(),
+            };
+        })
+        .filter((msg): msg is CoachMessage => msg !== null);
+
+    return normalized.length > 0 ? normalized : [INITIAL_MESSAGE];
+};
+
 // SVG icon components for each persona (no emojis)
 const WingmanIcon = () => (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
@@ -256,8 +289,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
         try {
             const stored = localStorage.getItem(COACH_STORAGE_KEY);
             if (stored) {
-                const parsed = JSON.parse(stored) as CoachMessage[];
-                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+                return normalizeStoredCoachMessages(JSON.parse(stored));
             }
         } catch { }
         return [INITIAL_MESSAGE];
@@ -299,7 +331,13 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
     // Persist coach history in localStorage whenever messages change (images stripped to save space)
     useEffect(() => {
         try {
-            const toStore = messages.slice(-MAX_STORED_MESSAGES).map(m => ({ ...m, image: m.image ? '[Photo]' : null }));
+            const toStore = messages.slice(-MAX_STORED_MESSAGES).map(m => ({
+                ...m,
+                content: m.image && !m.content.includes(PHOTO_ATTACHMENT_NOTE)
+                    ? `${m.content}\n${PHOTO_ATTACHMENT_NOTE}`
+                    : m.content,
+                image: null,
+            }));
             localStorage.setItem(COACH_STORAGE_KEY, JSON.stringify(toStore));
         } catch { } // Fail silently if quota is exceeded
     }, [messages, COACH_STORAGE_KEY]);
