@@ -28,26 +28,40 @@ const HARD_BLOCK_REGEX = /\b(nigger|nigga|negro|coon|faggot|fag|dyke|kike|chink|
 // 2. MINOR / AGE SAFETY (Underage detection)
 const MINOR_SAFETY_REGEX = /\b(jailbait|loli|shota|underage|preteen|hebephile|ephebophile|child porn|cp)\b|(\b(1[0-7]|[0-9])\s*(yo|years?\s*old|yrs?\s*old)\b)/i;
 
-// 3. NSFW CONTEXT (FOR ROASTING)
+// 3. EXPLICIT SEXUAL CONTEXT
+// Intentionally scoped to 18+ sexual language, anatomy, porn, fetish, and solicitation.
+// Mild flirting, cheeky tension, and ordinary profanity are allowed for the app's 16+ tone.
 const NSFW_WORDS_LIST = [
-  // Explicit sexual anatomy & acts
-  "sex", "boobs", "boobies", "boobees", "bobs", "vagene", "nudes", "nipple", "naked", "nude", "horny", "aroused", "boner", "erection", "erect", "hard-on", "dick", "cock", "pussy", "vagina", "penis", "tits", "areola", "orgasm", "shag", "fuck", "motherfucker", "gangbang", "bukkake", "creampie", "anal", "oral", "cum", "jizz", "semen", "sperm", "milf", "dilf", "gilf", "bussy", "nut", "suck", "lick", "eating out", "69", "doggystyle", "missionary", "cowgirl", "bdsm", "bondage", "dominatrix", "fetish", "kink", "squirt", "gushing", "deepthroat", "blowjob", "handjob", "rimjob", "fingering", "fisting", "pegging", "scissoring", "tribadism", "watersports", "scat", "golden shower", "hentai", "porn", "xxx", "adult movie", "onlyfans", "fansly", "send nudes", "clit", "vulva", "labia", "asshole", "butthole", "anus", "rectum", "booty", "butt", "ass", "twerk", "stripper", "hooker", "prostitute", "escort", "slut", "whore", "skank", "hoe", "bitch", "cunt", "twat", "wank", "masturbate", "dildo", "vibrator", "sex toy", "fleshlight", "strap-on", "camgirl", "sugardaddy", "sugarbaby", "simp", "incel", "cuck", "schlong", "dong", "knob", "bellend", "prick", "chode", "taint", "gooch", "perineum", "ballbag", "scrotum", "nutsack", "gonads", "foreskin", "smegma", "felching", "snowballing", "motorboat", "queef", "rusty trombone", "dirty sanchez", "alabama hot pocket", "cleveland steamer", "wanker", "tosser", "bugger", "sod", "slag", "tart", "strumpet", "harlot", "bimbo", "himbo", "yiff", "furry", "futa", "yaoi", "yuri", "ecchi", "bara", "erotic", "sensual", "genitalia", "pubes", "phallic", "yoni", "lingam", "coitus", "copulate", "fornicate", "sodomy", "buggery", "pederasty", "onanism", "autoerotic", "frottage", "voyeur", "exhibitionist", "nympho", "satyr", "glory hole", "blue waffle", "lemon party", "tubgirl", "goatse", "meatspin", "2 girls 1 cup", "rule 34", "paizuri", "ahegao", "netorare", "ntr",
+  "sex", "boobs", "boobies", "boobees", "bobs", "nudes", "naked", "nude", "nipple", "horny", "aroused", "boner", "erection", "erect", "hard-on", "dick", "cock", "pussy", "vagina", "penis", "tits", "areola",
+  "orgasm", "gangbang", "bukkake", "creampie", "anal", "oral", "cum", "jizz", "semen", "sperm", "milf", "dilf", "gilf", "bussy",
+  "eating out", "69", "doggystyle", "missionary", "cowgirl", "bdsm", "bondage", "dominatrix", "fetish", "kink", "squirt", "gushing",
+  "deepthroat", "blowjob", "handjob", "rimjob", "fingering", "fisting", "pegging", "scissoring", "tribadism", "watersports", "scat",
+  "golden shower", "hentai", "porn", "xxx", "adult movie", "onlyfans", "fansly", "send nudes", "clit", "vulva", "labia", "asshole",
+  "butthole", "anus", "rectum", "stripper", "hooker", "prostitute", "escort", "cunt", "twat", "wank", "masturbate", "dildo",
+  "vibrator", "sex toy", "fleshlight", "strap-on", "camgirl", "sugardaddy", "sugarbaby", "cuck", "schlong", "dong", "chode", "taint",
+  "gooch", "perineum", "ballbag", "scrotum", "nutsack", "gonads", "foreskin", "smegma", "felching", "snowballing", "motorboat", "queef",
+  "rusty trombone", "dirty sanchez", "alabama hot pocket", "cleveland steamer", "yiff", "futa", "ecchi", "bara", "erotic", "sensual", "genitalia", "pubes",
+  "phallic", "yoni", "lingam", "coitus", "copulate", "fornicate", "sodomy", "buggery", "onanism", "autoerotic", "frottage", "voyeur",
+  "exhibitionist", "nympho", "glory hole", "blue waffle", "lemon party", "tubgirl", "goatse", "meatspin", "2 girls 1 cup", "rule 34",
+  "paizuri", "ahegao", "netorare", "ntr",
   // Misspellings and leetspeak variations
-  "fuk", "fuh", "fvck", "dik", "dic", "puss", "pusi", "pusy", "biatch", "biyatch", "beeyotch", "azz", "secks", "segs",
-  "sh!t", "sh1t", "b!tch", "b1tch", "c0ck", "p0rn", "w0re", "wh0re", "sl0t", "5lut", "cumshot", "titties", "titty",
-  "muff", "beaver", "cameltoe", "mooseknuckle", "stiffie", "hardon",
-  "jerk off", "jack off", "fap", "schlick", "diddle", "rub one out", "choke the chicken", "spank the monkey",
-  "intercourse", "rail", "plow", "raw dog",
-  "bareback", "condom", "breast", "breasts", "finger", "abortion", "baby killer", "rapist", "molester", "groomer",
-  "pedophile", "pedo", "nonce", "toucher", "bad touch", "incest", "cougar",
-  "sugar daddy", "sugar baby", "sex worker", "call girl", "street walker",
-  "lot lizard", "pimp", "madam", "brothel", "whorehouse", "strip club", "gentlemans club", "lap dance", "private dance", "champagne room",
-  "sub", "domme", "mistress", "gimp", "leash", "gag", "flogger",
-  "spank", "strangle", "asphyxiate", "breathplay", "knifeplay", "bloodplay", "piss", "urine",
-  "enema", "douche", "rimming", "anilingus", "cunnilingus", "fellatio", "titjob", "footjob", "gag reflex",
-  "snowball", "felch", "sounding", "strap on", "pocket pussy", "vore", "guro", "snuff", "bestiality", "zoophilia",
-  "pubic", "groin", "crotch", "loins",
+  "fuk", "fvck", "dik", "dic", "puss", "pusi", "pusy", "secks", "segs", "c0ck", "p0rn", "cumshot", "titties", "titty",
+  "muff", "beaver", "cameltoe", "mooseknuckle", "stiffie", "hardon", "jerk off", "jack off", "fap", "schlick", "rub one out",
+  "choke the chicken", "spank the monkey", "intercourse", "raw dog", "bareback", "breast", "breasts", "rapist", "molester", "groomer",
+  "pedophile", "pedo", "nonce", "toucher", "bad touch", "incest", "sugar daddy", "sugar baby", "sex worker", "call girl",
+  "street walker", "lot lizard", "pimp", "madam", "brothel", "whorehouse", "strip club", "gentlemans club", "lap dance", "private dance",
+  "champagne room", "domme", "mistress", "gimp", "leash", "gag", "flogger", "strangle", "asphyxiate", "breathplay", "knifeplay",
+  "bloodplay", "enema", "rimming", "anilingus", "cunnilingus", "fellatio", "titjob", "footjob", "gag reflex", "snowball", "felch",
+  "sounding", "strap on", "pocket pussy", "vore", "guro", "snuff", "bestiality", "zoophilia", "pubic", "groin", "crotch", "loins",
 ];
+
+const SIXTEEN_PLUS_TONE_RULES = `
+16+ tone target:
+- Bold, witty, teasing, confident, and a little suggestive is allowed.
+- Mild profanity is fine when it sounds natural, not edgy for its own sake.
+- Flirty tension is good; explicit sexual content is not.
+- Never write porn language, sexting copy, graphic body-part focus, fetish content, or instructions for sexual acts.
+- Keep it emotionally smart, playful, and realistic enough to send in an actual chat.`;
 
 // Map characters to their regex pattern including leetspeak and repetitions
 const CHAR_MAP: Record<string, string> = {
@@ -179,17 +193,21 @@ CUSTOM PERSONA INSTRUCTIONS:
       : `User will provide you messages someone send to them you will give replies as the user so he can copy them and send to target. Vibe: ${vibe || "Playful"}.`;
 
     systemInstruction = `${basePrompt}
+${SIXTEEN_PLUS_TONE_RULES}
 
 TEASE: Playful teasing, show affection. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
  
 SMOOTH: Charismatic, smooth, improve bonding. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
  
-CHAOTIC: Awkward humor, relatable jokes ${length === 'short' ? '1-2 lines' : length === 'medium' ? '2-3 lines' : '3-4 sentences'}.
+CHAOTIC: Awkward humor, relatable jokes, bold but still sendable ${length === 'short' ? '1-2 lines' : length === 'medium' ? '2-3 lines' : '3-4 sentences'}.
 
 RULES:
 -Use easy to understand words.
 - Dont go out of context.
 - NO "Hey", "So", "Well", or generic bot-speak.
+- Sound older-teen / young-adult confident, not childish and not pornographic.
+- A little jealousy, tension, and cheeky challenge is okay. Explicit sexual acts or anatomy are not.
+- Prioritize lines a real person could actually send without sounding cringe or too sanitized.
 - loveScore: 0-100 (brutally honest rating of their game).
 - potentialStatus: 1-3 word label (e.g. "Sleeper Hit", "NPC Energy", "Wife Material").
 - analysis: 1 sharp, witty sentence reviewing their message.
@@ -328,7 +346,10 @@ CUSTOM PERSONA INSTRUCTIONS:
       : `You are a dating profile optimizer. Vibe: ${vibe || "Attractive"}.`;
 
     systemInstruction = `${basePrompt}
+${SIXTEEN_PLUS_TONE_RULES}
 Write a high-impact bio (${length === 'short' ? 'punchy and concise' : length === 'medium' ? 'balanced and engaging' : 'detailed and extensive'}). Do not use emojis unless they are essential for the vibe.
+Make it feel 16+: confident, attractive, a little cheeky, and socially sharp.
+Avoid anything explicit, horny, porn-coded, or overly try-hard.
 Return ONLY raw JSON: {"bio":"<optimized bio>","analysis":"<1 sentence why it works>"}
 CRITICAL: ${length === 'short'
         ? 'The bio must be punchy, catchy, and concise (1-2 lines, approx 15-20 words). Avoid being overly wordy.'
@@ -446,10 +467,13 @@ GOAL: Predictable entertainment and bold breakthroughs.`;
     }
 
     systemInstruction = `${personaBase}
+${SIXTEEN_PLUS_TONE_RULES}
 
 Tone & Style:
 - Casual, text-message style. No jargon. No bullet points, no numbered lists, no bold formatting.
 - Speak directly to them in a natural flow. Break it into maybe 2 short paragraphs max (3-5 sentences total).
+- Keep the energy bold and modern, but never explicit or porn-coded.
+- Advice can be flirty, teasing, jealous, confident, or slightly spicy as long as it stays sendable and non-graphic.
 
 YOUR CORE MISSION:
 1. Respond to what the user said first as your character. You are a versatile companion — you can talk about movies, work, life, or dating, but ALWAYS stay in your specific character.
