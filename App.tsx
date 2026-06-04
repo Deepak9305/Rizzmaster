@@ -700,7 +700,7 @@ const AppContentInner: React.FC = () => {
   // Interstitial ads are now pre-loaded strategically (see handleViewNavigation/handleGenerate)
 
   // Keep rewarded ads warm for low-credit users; if the first preload fails,
-  // keep retrying while they remain eligible instead of waiting for credits to change.
+  // retry with backoff instead of continuously matching requests that may never be shown.
   useEffect(() => {
     if (!Capacitor.isNativePlatform() || !profile || profile.is_premium) return;
 
@@ -708,18 +708,41 @@ const AppContentInner: React.FC = () => {
     if (credits > 2) return;
 
     const rewardId = getAdId('REWARD');
-    const preloadRewardVideo = () => {
-      runAdTask('Reward video preload', AdMobService.prepareRewardVideo(rewardId));
+    let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const clearRetry = () => {
+      if (retryTimer) {
+        clearTimeout(retryTimer);
+        retryTimer = null;
+      }
     };
 
-    preloadRewardVideo();
+    const queueRetry = () => {
+      clearRetry();
+      retryTimer = setTimeout(() => {
+        if (!cancelled) {
+          void preloadRewardVideo();
+        }
+      }, 45000);
+    };
 
-    const retryTimer = setInterval(preloadRewardVideo, 45000);
-    let cancelled = false;
+    const preloadRewardVideo = async () => {
+      clearRetry();
+      const prepared = await AdMobService.prepareRewardVideo(rewardId);
+      if (!prepared && !cancelled) {
+        queueRetry();
+      }
+    };
+
+    void preloadRewardVideo();
+
     let appStateListener: any = null;
 
     void CapacitorApp.addListener('appStateChange', ({ isActive }) => {
-      if (isActive) preloadRewardVideo();
+      if (isActive) {
+        void preloadRewardVideo();
+      }
     }).then(listener => {
       if (cancelled) {
         listener.remove();
@@ -730,7 +753,7 @@ const AppContentInner: React.FC = () => {
 
     return () => {
       cancelled = true;
-      clearInterval(retryTimer);
+      clearRetry();
       if (appStateListener) appStateListener.remove();
     };
   }, [profile?.id, profile?.credits, profile?.is_premium]);
@@ -743,13 +766,16 @@ const AppContentInner: React.FC = () => {
       runAdTask('Warm interstitial preload', AdMobService.prepareInterstitial(interstitialId));
     };
 
-    const timer = setTimeout(preloadInterstitial, 1500);
-    const retryTimer = setInterval(preloadInterstitial, 60000);
+    if (currentView !== 'COACH') return;
+
+    const timer = setTimeout(preloadInterstitial, 400);
     let cancelled = false;
     let appStateListener: any = null;
 
     void CapacitorApp.addListener('appStateChange', ({ isActive }) => {
-      if (isActive) preloadInterstitial();
+      if (isActive && stateRef.current.currentView === 'COACH') {
+        preloadInterstitial();
+      }
     }).then(listener => {
       if (cancelled) {
         listener.remove();
@@ -761,10 +787,9 @@ const AppContentInner: React.FC = () => {
     return () => {
       cancelled = true;
       clearTimeout(timer);
-      clearInterval(retryTimer);
       if (appStateListener) appStateListener.remove();
     };
-  }, [profile?.id, profile?.is_premium]);
+  }, [profile?.id, profile?.is_premium, currentView]);
 
   // Initialize Native Services
   useEffect(() => {
@@ -1719,11 +1744,7 @@ const AppContentInner: React.FC = () => {
           updateCredits((prevCredits) => prevCredits + REWARD_CREDITS);
           showToast(`+${REWARD_CREDITS} Credits Added! ⚡`, 'success');
 
-          // 2. Pre-load Chained Bonus Ad (+6)
-          const rewardInterId = getAdId('REWARD_INTERSTITIAL');
-          runAdTask('Reward interstitial preload', AdMobService.prepareRewardInterstitial(rewardInterId));
-
-          // 3. Chained Bonus Ad Sequence
+          // 2. Chained Bonus Ad Sequence
           // Wait briefly for first ad dismissal to settle
           await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -1739,8 +1760,15 @@ const AppContentInner: React.FC = () => {
             setIsAdLoading('reward'); // Show overlay for second ad prep
 
             const onBonusShow = () => setIsAdLoading('hidden');
+            const rewardInterId = getAdId('REWARD_INTERSTITIAL');
 
             try {
+              const prepared = await AdMobService.prepareRewardInterstitial(rewardInterId);
+              if (!prepared) {
+                showToast('Bonus ad failed to load. Please try again later.', 'error');
+                return;
+              }
+
               let bonusEarned = await AdMobService.showRewardInterstitial(rewardInterId, onBonusShow);
 
               if (bonusEarned) {

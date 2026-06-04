@@ -50,6 +50,9 @@ export const AdMobService = {
     DEBUG_FORCE_GDPR: false,
     PREPARE_TIMEOUT_MS: 25000,
     REWARDED_PREPARE_TIMEOUT_MS: 35000,
+    INTERSTITIAL_SHOW_TIMEOUT_MS: 30000,
+    INTERSTITIAL_POST_SHOW_TIMEOUT_MS: 45000,
+    REWARDED_POST_SHOW_TIMEOUT_MS: 90000,
     INTERSTITIAL_STALE_AFTER_MS: 20 * 60 * 1000,
     REWARDED_STALE_AFTER_MS: 50 * 60 * 1000,
     POST_PREPARE_SHOW_DELAY_MS: 700,
@@ -75,6 +78,7 @@ export const AdMobService = {
         this.interstitialPreparing = false;
         this.interstitialPromise = null;
         this.interstitialPreparedAt = 0;
+        this.lastInterstitialAdId = null;
     },
 
     hasFreshInterstitial(adId?: string) {
@@ -89,6 +93,7 @@ export const AdMobService = {
         this.rewardVideoPreparing = false;
         this.rewardVideoPromise = null;
         this.rewardVideoPreparedAt = 0;
+        this.lastRewardVideoAdId = null;
     },
 
     hasFreshRewardVideo(adId?: string) {
@@ -103,6 +108,7 @@ export const AdMobService = {
         this.rewardInterstitialPreparing = false;
         this.rewardInterstitialPromise = null;
         this.rewardInterstitialPreparedAt = 0;
+        this.lastRewardInterstitialAdId = null;
     },
 
     hasFreshRewardInterstitial(adId?: string) {
@@ -442,16 +448,16 @@ export const AdMobService = {
                 let failedListener: any = null;
                 let failedShowListener: any = null;
 
-                const timeout = setTimeout(() => {
+                let timeout: ReturnType<typeof setTimeout> | null = setTimeout(() => {
                     console.warn('AdMob Interstitial Timeout: Proceeding automatically.');
                     cleanupAndResolve(false);
-                }, 30000);
+                }, this.INTERSTITIAL_SHOW_TIMEOUT_MS);
 
                 const cleanupAndResolve = (success: boolean) => {
                     if (resolved) return;
                     resolved = true;
                     this.cleanupListeners([dismissListener, failedListener, failedShowListener, showedListener]);
-                    clearTimeout(timeout);
+                    if (timeout) clearTimeout(timeout);
                     this.interstitialReady = false;
                     this.interstitialPreparedAt = 0;
                     this.isInterstitialShowing = false;
@@ -462,8 +468,12 @@ export const AdMobService = {
                     try {
                         showedListener = await AdMob.addListener(InterstitialAdPluginEvents.Showed, () => {
                             showed = true;
-                            console.log('[AdMob] Interstitial showing, clearing timeout');
-                            clearTimeout(timeout);
+                            console.log('[AdMob] Interstitial showing, switching to dismissal watchdog');
+                            if (timeout) clearTimeout(timeout);
+                            timeout = setTimeout(() => {
+                                console.warn('[AdMob] Interstitial dismiss event never arrived after show; releasing state.');
+                                cleanupAndResolve(true);
+                            }, this.INTERSTITIAL_POST_SHOW_TIMEOUT_MS);
                             if (onShow) onShow();
                         });
 
@@ -600,7 +610,7 @@ export const AdMobService = {
                 let failedListener: any = null;
                 let failedShowListener: any = null;
 
-                const timeout = setTimeout(() => {
+                let timeout: ReturnType<typeof setTimeout> | null = setTimeout(() => {
                     console.warn('[AdMob] Reward Interstitial show timeout');
                     cleanupAndResolve(false);
                 }, this.REWARDED_SHOW_TIMEOUT_MS);
@@ -609,7 +619,7 @@ export const AdMobService = {
                     if (resolved) return;
                     resolved = true;
                     this.cleanupListeners([showedListener, rewardListener, dismissListener, failedListener, failedShowListener]);
-                    clearTimeout(timeout);
+                    if (timeout) clearTimeout(timeout);
                     this.rewardInterstitialReady = false;
                     this.rewardInterstitialPreparedAt = 0;
                     this.isRewardInterstitialShowing = false;
@@ -620,8 +630,12 @@ export const AdMobService = {
                 void (async () => {
                     try {
                         showedListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.Showed, () => {
-                            console.log('[AdMob] Reward Interstitial showing, clearing timeout');
-                            clearTimeout(timeout);
+                            console.log('[AdMob] Reward Interstitial showing, switching to dismissal watchdog');
+                            if (timeout) clearTimeout(timeout);
+                            timeout = setTimeout(() => {
+                                console.warn('[AdMob] Reward Interstitial dismiss event never arrived after show; releasing state.');
+                                cleanupAndResolve(earned);
+                            }, this.REWARDED_POST_SHOW_TIMEOUT_MS);
                             if (onShow) onShow();
                         });
 
@@ -756,7 +770,7 @@ export const AdMobService = {
                 let failedListener: any = null;
                 let failedShowListener: any = null;
 
-                const timeout = setTimeout(() => {
+                let timeout: ReturnType<typeof setTimeout> | null = setTimeout(() => {
                     console.warn('[AdMob] Reward video show timeout');
                     cleanupAndResolve(false);
                 }, this.REWARDED_SHOW_TIMEOUT_MS);
@@ -765,7 +779,7 @@ export const AdMobService = {
                     if (resolved) return;
                     resolved = true;
                     this.cleanupListeners([showedListener, rewardListener, dismissListener, failedListener, failedShowListener]);
-                    clearTimeout(timeout);
+                    if (timeout) clearTimeout(timeout);
                     this.rewardVideoReady = false;
                     this.rewardVideoPreparedAt = 0;
                     this.isRewardVideoShowing = false;
@@ -776,8 +790,12 @@ export const AdMobService = {
                 void (async () => {
                     try {
                         showedListener = await AdMob.addListener(RewardAdPluginEvents.Showed, () => {
-                            console.log('[AdMob] Reward video showing, clearing timeout');
-                            clearTimeout(timeout);
+                            console.log('[AdMob] Reward video showing, switching to dismissal watchdog');
+                            if (timeout) clearTimeout(timeout);
+                            timeout = setTimeout(() => {
+                                console.warn('[AdMob] Reward video dismiss event never arrived after show; releasing state.');
+                                cleanupAndResolve(earned);
+                            }, this.REWARDED_POST_SHOW_TIMEOUT_MS);
                             if (onShow) onShow();
                         });
 
