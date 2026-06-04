@@ -57,6 +57,8 @@ export const AdMobService = {
     REWARDED_STALE_AFTER_MS: 50 * 60 * 1000,
     POST_PREPARE_SHOW_DELAY_MS: 700,
     BANNER_RESHOW_DELAY_MS: 350,
+    TOP_BANNER_MARGIN_DP: 48,
+    BOTTOM_BANNER_MARGIN_DP: 60,
     REWARDED_SHOW_TIMEOUT_MS: 40000,
 
     removeListener(listener: any) {
@@ -298,7 +300,8 @@ export const AdMobService = {
                 adId,
                 adSize: BannerAdSize.BANNER,
                 position: position === 'TOP' ? BannerAdPosition.TOP_CENTER : BannerAdPosition.BOTTOM_CENTER,
-                margin: position === 'TOP' ? 0 : 60,
+                // Keep banners clear of the status bar/cutout on top placements.
+                margin: position === 'TOP' ? this.TOP_BANNER_MARGIN_DP : this.BOTTOM_BANNER_MARGIN_DP,
                 isTesting: false
             };
 
