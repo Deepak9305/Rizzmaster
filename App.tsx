@@ -27,7 +27,6 @@ const InfoPages = lazy(() => import('./components/InfoPages'));
 const RizzCoach = lazy(() => import('./components/RizzCoach'));
 const LoginPage = lazy(() => import('./components/LoginPage'));
 const OnboardingFlow = lazy(() => import('./components/OnboardingFlow'));
-const AdSenseBanner = lazy(() => import('./components/AdSenseBanner'));
 import ErrorBoundary from './components/ErrorBoundary';
 import NoInternetOverlay from './components/NoInternetOverlay';
 
@@ -36,15 +35,16 @@ const REWARD_CREDITS = 5;
 const REWARD_INTERSTITIAL_CREDITS = 6;
 const AD_DURATION = 10;
 const SIMULATE_REWARD_AD = false; // Real AdMob by default, timer only as fallback
+const REWARD_PRELOAD_THRESHOLD = 5;
+const REWARD_PRELOAD_RETRY_MS = 20000;
+const REWARD_REFRESH_INTERVAL_MS = 12 * 60 * 1000;
+const INTERSTITIAL_PRELOAD_RETRY_MS = 15000;
+const INTERSTITIAL_REFRESH_INTERVAL_MS = 8 * 60 * 1000;
 
 // --- AD CONFIGURATION ---
 const USE_TEST_ADS = false; // Set to true for testing with Google test ads
 
 const AD_IDS = {
-  BANNER: {
-    ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/6300978111' : 'ca-app-pub-7381421031784616/7234804095',
-    IOS: 'ca-app-pub-3940256099942544/2934735716' // Test ID
-  },
   INTERSTITIAL: {
     ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/1033173712' : 'ca-app-pub-7381421031784616/5183026259',
     IOS: 'ca-app-pub-3940256099942544/4411468910' // Test ID
@@ -77,9 +77,6 @@ const runAdTask = (label: string, task: Promise<boolean>) => {
     console.warn(`[AdMob] ${label} crashed unexpectedly:`, error);
   });
 };
-
-// Placeholder for Web AdSense
-const ADSENSE_SLOT_ID = '1234567890';
 
 type ViewState = 'HOME' | 'PRIVACY' | 'TERMS' | 'SUPPORT' | 'COACH';
 
@@ -592,66 +589,6 @@ const AppContentInner: React.FC = () => {
     setShowOnboarding(false);
   };
 
-  // Manage Native Banner Ads
-  useEffect(() => {
-    // `cancelled` guards against late async work resolving after this effect has torn down:
-    //   - removeBanner().then(...) calling showBanner with stale adId/position
-    //   - CapacitorApp.addListener resolving and registering a listener into a dead effect
-    //     (listenerRef is still null at cleanup time, so the listener leaks).
-    let cancelled = false;
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    const syncBanner = (delayMs = 250) => {
-      if (Capacitor.isNativePlatform() && (session || isGuest)) {
-        const currentProfile = profileRef.current;
-        if (!currentProfile) return;
-
-        if (currentProfile.is_premium) {
-          void AdMobService.removeBanner();
-        } else if (isKeyboardVisible) {
-          void AdMobService.hideBanner();
-        } else {
-          const adId = getAdId('BANNER');
-          const position = currentView === 'COACH' ? 'TOP' : 'BOTTOM';
-
-          if (timer) clearTimeout(timer);
-          timer = setTimeout(() => {
-            if (cancelled) return;
-            AdMobService.syncBanner(adId, position)
-              .catch(e => console.warn('[AdMob] Banner sync failed:', e));
-          }, delayMs);
-        }
-      }
-    };
-
-    syncBanner(currentView === 'COACH' && !isKeyboardVisible ? 350 : 0);
-
-    // Listen for App Resume to refresh ads
-    const listenerRef = { current: null as any };
-    if (Capacitor.isNativePlatform()) {
-      CapacitorApp.addListener('appStateChange', ({ isActive }) => {
-        if (isActive) {
-          const currentProfile = profileRef.current;
-          // Guard: only refresh if not premium (includes guests)
-          if (currentProfile && !currentProfile.is_premium) {
-            syncBanner(150);
-          }
-        }
-      }).then(l => {
-        if (cancelled) {
-          l.remove();
-          return;
-        }
-        listenerRef.current = l;
-      });
-    }
-
-    return () => {
-      cancelled = true;
-      if (timer) clearTimeout(timer);
-      if (listenerRef.current) listenerRef.current.remove();
-    };
-  }, [profile?.is_premium, session, isGuest, currentView, isKeyboardVisible]);
-
   // Define handleUpgrade using REF to avoid stale closures
   const handleUpgrade = useCallback(async () => {
     const currentProfile = profileRef.current;
@@ -660,11 +597,6 @@ const AppContentInner: React.FC = () => {
     const updatedProfile = { ...currentProfile, is_premium: true, premium_source: 'native' };
     setProfile(updatedProfile);
     profileRef.current = updatedProfile; // Sync ref immediately to avoid stale reads
-
-    // Hide Banner Immediately
-    if (Capacitor.isNativePlatform()) {
-      AdMobService.removeBanner();
-    }
 
     // Close modal via back navigation if open
     if (stateRef.current.showPremiumModal) {
@@ -699,49 +631,77 @@ const AppContentInner: React.FC = () => {
 
   // Interstitial ads are now pre-loaded strategically (see handleViewNavigation/handleGenerate)
 
-  // Keep rewarded ads warm for low-credit users; if the first preload fails,
-  // retry with backoff instead of continuously matching requests that may never be shown.
+  // Keep rewarded ads warm before the user taps "watch ad" so both the
+  // main reward and the follow-up bonus interstitial have time to match.
   useEffect(() => {
     if (!Capacitor.isNativePlatform() || !profile || profile.is_premium) return;
 
     const credits = profile.credits || 0;
-    if (credits > 2) return;
+    if (credits > REWARD_PRELOAD_THRESHOLD) return;
 
     const rewardId = getAdId('REWARD');
+    const rewardInterstitialId = getAdId('REWARD_INTERSTITIAL');
     let cancelled = false;
     let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let refreshTimer: ReturnType<typeof setTimeout> | null = null;
 
-    const clearRetry = () => {
+    const clearTimers = () => {
       if (retryTimer) {
         clearTimeout(retryTimer);
         retryTimer = null;
       }
-    };
-
-    const queueRetry = () => {
-      clearRetry();
-      retryTimer = setTimeout(() => {
-        if (!cancelled) {
-          void preloadRewardVideo();
-        }
-      }, 45000);
-    };
-
-    const preloadRewardVideo = async () => {
-      clearRetry();
-      const prepared = await AdMobService.prepareRewardVideo(rewardId);
-      if (!prepared && !cancelled) {
-        queueRetry();
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+        refreshTimer = null;
       }
     };
 
-    void preloadRewardVideo();
+    const queueRetry = () => {
+      clearTimers();
+      retryTimer = setTimeout(() => {
+        if (!cancelled) {
+          void warmRewardAds();
+        }
+      }, REWARD_PRELOAD_RETRY_MS);
+    };
+
+    const queueRefresh = () => {
+      clearTimers();
+      refreshTimer = setTimeout(() => {
+        if (!cancelled) {
+          void warmRewardAds();
+        }
+      }, REWARD_REFRESH_INTERVAL_MS);
+    };
+
+    const warmRewardAds = async () => {
+      clearTimers();
+      const [rewardPrepared, bonusPrepared] = await Promise.all([
+        AdMobService.prepareRewardVideo(rewardId),
+        AdMobService.prepareRewardInterstitial(rewardInterstitialId),
+      ]);
+
+      if (cancelled) return;
+
+      if (!rewardPrepared || !bonusPrepared) {
+        queueRetry();
+        return;
+      }
+
+      queueRefresh();
+    };
+
+    const initialDelay = setTimeout(() => {
+      if (!cancelled) {
+        void warmRewardAds();
+      }
+    }, 150);
 
     let appStateListener: any = null;
 
     void CapacitorApp.addListener('appStateChange', ({ isActive }) => {
       if (isActive) {
-        void preloadRewardVideo();
+        void warmRewardAds();
       }
     }).then(listener => {
       if (cancelled) {
@@ -753,7 +713,8 @@ const AppContentInner: React.FC = () => {
 
     return () => {
       cancelled = true;
-      clearRetry();
+      clearTimeout(initialDelay);
+      clearTimers();
       if (appStateListener) appStateListener.remove();
     };
   }, [profile?.id, profile?.credits, profile?.is_premium]);
@@ -762,19 +723,62 @@ const AppContentInner: React.FC = () => {
     if (!Capacitor.isNativePlatform() || !profile || profile.is_premium) return;
 
     const interstitialId = getAdId('INTERSTITIAL');
-    const preloadInterstitial = () => {
-      runAdTask('Warm interstitial preload', AdMobService.prepareInterstitial(interstitialId));
-    };
-
-    if (currentView !== 'COACH') return;
-
-    const timer = setTimeout(preloadInterstitial, 400);
     let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let refreshTimer: ReturnType<typeof setTimeout> | null = null;
     let appStateListener: any = null;
 
+    const clearTimers = () => {
+      if (retryTimer) {
+        clearTimeout(retryTimer);
+        retryTimer = null;
+      }
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+        refreshTimer = null;
+      }
+    };
+
+    const queueRetry = () => {
+      clearTimers();
+      retryTimer = setTimeout(() => {
+        if (!cancelled) {
+          void warmInterstitial();
+        }
+      }, INTERSTITIAL_PRELOAD_RETRY_MS);
+    };
+
+    const queueRefresh = () => {
+      clearTimers();
+      refreshTimer = setTimeout(() => {
+        if (!cancelled) {
+          void warmInterstitial();
+        }
+      }, INTERSTITIAL_REFRESH_INTERVAL_MS);
+    };
+
+    const warmInterstitial = async () => {
+      clearTimers();
+      const prepared = await AdMobService.prepareInterstitial(interstitialId);
+      if (cancelled) return;
+
+      if (!prepared) {
+        queueRetry();
+        return;
+      }
+
+      queueRefresh();
+    };
+
+    const initialDelay = setTimeout(() => {
+      if (!cancelled) {
+        void warmInterstitial();
+      }
+    }, currentView === 'COACH' ? 150 : 300);
+
     void CapacitorApp.addListener('appStateChange', ({ isActive }) => {
-      if (isActive && stateRef.current.currentView === 'COACH') {
-        preloadInterstitial();
+      if (isActive) {
+        void warmInterstitial();
       }
     }).then(listener => {
       if (cancelled) {
@@ -786,7 +790,8 @@ const AppContentInner: React.FC = () => {
 
     return () => {
       cancelled = true;
-      clearTimeout(timer);
+      clearTimeout(initialDelay);
+      clearTimers();
       if (appStateListener) appStateListener.remove();
     };
   }, [profile?.id, profile?.is_premium, currentView]);
@@ -1070,9 +1075,6 @@ const AppContentInner: React.FC = () => {
       } else {
         setProfile(null);
         setSavedItems([]);
-        if (Capacitor.isNativePlatform()) {
-          AdMobService.removeBanner();
-        }
       }
     });
 
@@ -1287,7 +1289,6 @@ const AppContentInner: React.FC = () => {
 
       if (Capacitor.isNativePlatform()) {
         try { await GoogleAuth.signOut(); } catch (error) { console.warn("Native Logout err", error); }
-        AdMobService.removeBanner(); // removeBanner fully destroys it; hideBanner only hides
         OneSignalService.logout();
       }
     } catch (err) {
@@ -1726,9 +1727,6 @@ const AppContentInner: React.FC = () => {
     if (Capacitor.isNativePlatform()) {
       setIsAdLoading('reward'); // SHOW OVERLAY
 
-      // Hide banner so it doesn't render under the full-screen reward ad
-      await AdMobService.hideBanner();
-
       try {
         const adUnitId = getAdId('REWARD');
         console.log("Showing Reward Ad:", adUnitId);
@@ -1741,8 +1739,11 @@ const AppContentInner: React.FC = () => {
         // If real ad fails, we do NOT simulate it. The user gets no reward.
         if (rewardEarned) {
           // 1. First Reward (+3)
+          const rewardInterId = getAdId('REWARD_INTERSTITIAL');
           updateCredits((prevCredits) => prevCredits + REWARD_CREDITS);
           showToast(`+${REWARD_CREDITS} Credits Added! ⚡`, 'success');
+
+          runAdTask('Post-reward bonus interstitial preload', AdMobService.prepareRewardInterstitial(rewardInterId));
 
           // 2. Chained Bonus Ad Sequence
           // Wait briefly for first ad dismissal to settle
@@ -1760,7 +1761,6 @@ const AppContentInner: React.FC = () => {
             setIsAdLoading('reward'); // Show overlay for second ad prep
 
             const onBonusShow = () => setIsAdLoading('hidden');
-            const rewardInterId = getAdId('REWARD_INTERSTITIAL');
 
             try {
               const prepared = await AdMobService.prepareRewardInterstitial(rewardInterId);
@@ -1793,13 +1793,6 @@ const AppContentInner: React.FC = () => {
       } finally {
         setIsAdLoading('hidden'); // ALWAYS HIDE OVERLAY
         setAdCountdown(null);
-        // Restore banner now that the reward ad session is fully over
-        if (profileRef.current && !profileRef.current.is_premium && !keyboardVisibleRef.current) {
-          const bannerPosition = currentView === 'COACH' ? 'TOP' : 'BOTTOM';
-          await AdMobService.syncBanner(getAdId('BANNER'), bannerPosition);
-        } else if (keyboardVisibleRef.current) {
-          await AdMobService.hideBanner();
-        }
       }
       return;
     }
@@ -2319,18 +2312,6 @@ const AppContentInner: React.FC = () => {
                   )}
                 </section>
               </div>
-
-              {/* Sticky Ad Container (WEB ONLY) - Hidden on Native to prevent overlap */}
-              {!profile?.is_premium && !Capacitor.isNativePlatform() && (
-                <div className="fixed bottom-0 left-0 right-0 z-40 bg-black/90 backdrop-blur-md border-t border-white/10 pb-[env(safe-area-inset-bottom)] pt-1 animate-slide-up-fade">
-                  <div className="max-w-[320px] mx-auto px-0">
-                    <AdSenseBanner
-                      dataAdSlot={ADSENSE_SLOT_ID}
-                      className="!my-0 !h-[50px] !max-h-[50px] !bg-transparent !border-none"
-                    />
-                  </div>
-                </div>
-              )}
 
               <Footer className="mt-2 md:mt-4" onNavigate={handleViewNavigation} />
             </div>

@@ -1,9 +1,5 @@
 import {
     AdMob,
-    BannerAdOptions,
-    BannerAdPosition,
-    BannerAdPluginEvents,
-    BannerAdSize,
     InterstitialAdPluginEvents,
     RewardAdPluginEvents,
     RewardInterstitialAdPluginEvents,
@@ -55,10 +51,8 @@ export const AdMobService = {
     REWARDED_POST_SHOW_TIMEOUT_MS: 90000,
     INTERSTITIAL_STALE_AFTER_MS: 20 * 60 * 1000,
     REWARDED_STALE_AFTER_MS: 50 * 60 * 1000,
-    POST_PREPARE_SHOW_DELAY_MS: 700,
-    BANNER_RESHOW_DELAY_MS: 350,
-    TOP_BANNER_MARGIN_DP: 48,
-    BOTTOM_BANNER_MARGIN_DP: 60,
+    POST_PREPARE_SHOW_DELAY_MS: 1200,
+    REWARDED_POST_PREPARE_SHOW_DELAY_MS: 1200,
     REWARDED_SHOW_TIMEOUT_MS: 40000,
 
     removeListener(listener: any) {
@@ -232,149 +226,6 @@ export const AdMobService = {
                 }
             })();
         });
-    },
-
-    bannerListeners: [] as any[],
-    bannerVisible: false,
-    bannerHidden: false,
-    bannerRequestInFlight: false,
-    bannerAdId: null as string | null,
-    bannerPosition: null as 'TOP' | 'BOTTOM' | null,
-
-    resetBannerState(clearConfig = true) {
-        this.bannerVisible = false;
-        this.bannerHidden = false;
-        this.bannerRequestInFlight = false;
-        if (clearConfig) {
-            this.bannerAdId = null;
-            this.bannerPosition = null;
-        }
-    },
-
-    isSameBanner(adId: string, position: 'TOP' | 'BOTTOM') {
-        return this.bannerAdId === adId && this.bannerPosition === position;
-    },
-
-    async showBanner(adId: string, position: 'TOP' | 'BOTTOM' = 'BOTTOM') {
-        if (!Capacitor.isNativePlatform()) return;
-
-        try {
-            const initialized = await this.ensureInitialized('Banner show');
-            if (!initialized) return;
-
-            if (this.isSameBanner(adId, position) && this.bannerHidden && !this.bannerRequestInFlight) {
-                const resumed = await this.resumeBanner();
-                if (resumed) return;
-            }
-
-            if (this.isSameBanner(adId, position) && (this.bannerVisible || this.bannerRequestInFlight)) {
-                console.log(`[AdMob] Banner already active for ${position}, skipping duplicate request`);
-                return;
-            }
-
-            this.cleanupListeners(this.bannerListeners);
-            this.bannerListeners = [];
-            this.bannerAdId = adId;
-            this.bannerPosition = position;
-            this.bannerVisible = false;
-            this.bannerHidden = false;
-            this.bannerRequestInFlight = true;
-
-            this.bannerListeners.push(await AdMob.addListener(BannerAdPluginEvents.Loaded, () => {
-                console.log('[AdMob] Banner Loaded Successfully');
-                this.bannerVisible = !this.bannerHidden;
-                this.bannerRequestInFlight = false;
-            }));
-            this.bannerListeners.push(await AdMob.addListener(BannerAdPluginEvents.AdImpression, () => {
-                console.log('[AdMob] Banner Impression Reported - Visibility confirmed!');
-                this.bannerVisible = true;
-                this.bannerHidden = false;
-                this.bannerRequestInFlight = false;
-            }));
-            this.bannerListeners.push(await AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (info) => {
-                console.error('[AdMob] Banner Failed to Load:', info);
-                this.resetBannerState(false);
-            }));
-
-            const options: BannerAdOptions = {
-                adId,
-                adSize: BannerAdSize.BANNER,
-                position: position === 'TOP' ? BannerAdPosition.TOP_CENTER : BannerAdPosition.BOTTOM_CENTER,
-                // Keep banners clear of the status bar/cutout on top placements.
-                margin: position === 'TOP' ? this.TOP_BANNER_MARGIN_DP : this.BOTTOM_BANNER_MARGIN_DP,
-                isTesting: false
-            };
-
-            await AdMob.showBanner(options);
-            console.log(`AdMob Banner request sent at ${position}`);
-        } catch (error) {
-            this.resetBannerState(false);
-            console.error('AdMob Show Banner Error:', error);
-        }
-    },
-
-    async syncBanner(adId: string, position: 'TOP' | 'BOTTOM' = 'BOTTOM') {
-        if (!Capacitor.isNativePlatform()) return;
-
-        if (this.isSameBanner(adId, position) && (this.bannerVisible || this.bannerRequestInFlight)) {
-            return;
-        }
-
-        if (this.isSameBanner(adId, position) && this.bannerHidden) {
-            const resumed = await this.resumeBanner();
-            if (resumed) return;
-        }
-
-        const needsReposition = this.bannerAdId !== null && !this.isSameBanner(adId, position);
-        if (needsReposition) {
-            await this.removeBanner();
-            await this.sleep(this.BANNER_RESHOW_DELAY_MS);
-        }
-
-        await this.showBanner(adId, position);
-    },
-
-    async hideBanner() {
-        if (!Capacitor.isNativePlatform()) return;
-        if (!this.bannerVisible && !this.bannerRequestInFlight) return;
-
-        try {
-            await AdMob.hideBanner();
-            this.bannerVisible = false;
-            this.bannerHidden = true;
-            this.bannerRequestInFlight = false;
-        } catch (error) {
-            this.resetBannerState();
-            console.error('AdMob Hide Banner Error:', error);
-        }
-    },
-
-    async resumeBanner(): Promise<boolean> {
-        if (!Capacitor.isNativePlatform()) return false;
-
-        try {
-            await AdMob.resumeBanner();
-            this.bannerVisible = true;
-            this.bannerHidden = false;
-            this.bannerRequestInFlight = false;
-            return true;
-        } catch (error) {
-            this.resetBannerState();
-            console.error('AdMob Resume Banner Error:', error);
-            return false;
-        }
-    },
-
-    async removeBanner() {
-        if (!Capacitor.isNativePlatform()) return;
-        try {
-            await AdMob.removeBanner();
-            this.cleanupListeners(this.bannerListeners);
-            this.bannerListeners = [];
-            this.resetBannerState();
-        } catch (error) {
-            console.error('AdMob Remove Banner Error:', error);
-        }
     },
 
     async prepareInterstitial(adId: string): Promise<boolean> {
@@ -671,7 +522,7 @@ export const AdMobService = {
                                 cleanupAndResolve(false);
                                 return;
                             }
-                            await new Promise(resolveDelay => setTimeout(resolveDelay, 800));
+                            await new Promise(resolveDelay => setTimeout(resolveDelay, this.REWARDED_POST_PREPARE_SHOW_DELAY_MS));
                         }
 
                         try {
@@ -831,7 +682,7 @@ export const AdMobService = {
                                 cleanupAndResolve(false);
                                 return;
                             }
-                            await new Promise(resolveDelay => setTimeout(resolveDelay, 800));
+                            await new Promise(resolveDelay => setTimeout(resolveDelay, this.REWARDED_POST_PREPARE_SHOW_DELAY_MS));
                         }
 
                         try {
