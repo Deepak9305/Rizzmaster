@@ -1490,14 +1490,13 @@ const AppContentInner: React.FC = () => {
       if (genCount >= targetGen && cooldownPassed) {
         console.log(`[AdMob] Triggering deferred interstitial at gen ${genCount} (Target was ${targetGen}, isFirstAd: ${isFirstAd})...`);
 
-        setIsAdLoading('interstitial'); // Show loading state while preparing ad
-        let adShown = false;
+        // No overlay here — the native interstitial has its own full-screen UI.
+        // Showing a web "Preparing Ad" layer on top is redundant and annoying.
         try {
-          adShown = await AdMobService.showInterstitial(getAdId('INTERSTITIAL'));
+          await AdMobService.showInterstitial(getAdId('INTERSTITIAL'));
         } catch (e) {
           console.warn("[AdMob] Deferred interstitial failed:", e);
         } finally {
-          setIsAdLoading('hidden');
           // Preload next ad immediately
           runAdTask('Post-show preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
         }
