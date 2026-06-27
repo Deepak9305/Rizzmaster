@@ -6,20 +6,20 @@ interface PremiumModalProps {
     onClose: () => void;
     onUpgrade: (plan: 'WEEKLY' | 'MONTHLY') => void;
     onRestore: () => void;
+    isGuest?: boolean;
 }
 
+// Only list features that are ACTUALLY gated behind premium
 const FEATURES = [
-    { icon: '⚡', label: 'Unlimited Daily Rizz', sub: 'No caps. Generate as much as you want.' },
-    { icon: '🧠', label: 'Rizz Coach – Unlimited Messages', sub: 'Full access to every coaching session.' },
-    { icon: '📸', label: 'Advanced Photo Analysis', sub: 'Read the screenshot, decode the vibe.' },
-    { icon: '🎭', label: 'All Expert Personas', sub: 'Roast Master, Chaotic & more unlocked.' },
-    { icon: '✍️', label: 'Custom AI Personas', sub: 'Build your own AI coaching style.' },
-    { icon: '📝', label: 'Long-Form Bio Mode', sub: 'Full dating profile rewrites.' },
-    { icon: '🚫', label: 'Zero Ads, Forever', sub: 'No interruptions, ever again.' },
-    { icon: '🔒', label: 'Saved Rizz Vault', sub: 'Keep your best lines saved forever.' },
+    { icon: '⚡', label: 'Unlimited Daily Generations', sub: 'Free users get 5/day. You get infinite.' },
+    { icon: '🧠', label: 'Rizz Coach – Unlimited Sessions', sub: 'Free users get 1 coach persona. You get all 3.' },
+    { icon: '🎭', label: 'All Pro Vibes Unlocked', sub: 'Access every expert style — Roast Master, Unhinged & more.' },
+    { icon: '🚫', label: 'Zero Ads', sub: 'No interstitial ads interrupting your flow.' },
+    { icon: '📸', label: 'Priority Photo Analysis', sub: 'Faster queue, deeper reads on screenshots.' },
+    { icon: '🔥', label: 'Early Access to New Features', sub: 'First to get everything we ship.' },
 ];
 
-const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onRestore }) => {
+const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onRestore, isGuest = false }) => {
     const [selectedPlan, setSelectedPlan] = useState<'WEEKLY' | 'MONTHLY'>('WEEKLY');
     const [prices, setPrices] = useState({ weekly: '$4.99', monthly: '$15.99' });
 
@@ -42,6 +42,11 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onResto
     }, []);
 
     const handleSubscribe = () => {
+        // Guests must sign up first — check before native platform
+        if (isGuest) {
+            onUpgrade(selectedPlan);
+            return;
+        }
         if (Capacitor.isNativePlatform()) {
             IAPService.purchase(selectedPlan);
         } else {

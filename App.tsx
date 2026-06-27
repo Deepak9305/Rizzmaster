@@ -1729,6 +1729,7 @@ const AppContentInner: React.FC = () => {
                     onClose={handleBackNavigation}
                     onUpgrade={handleUpgrade}
                     onRestore={handleRestorePurchases}
+                    isGuest={isGuest}
                   />
                 )}
                 <SavedModal
