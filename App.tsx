@@ -12,7 +12,6 @@ import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Keyboard } from '@capacitor/keyboard';
-import { Dialog } from '@capacitor/dialog';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { AdMobService } from './services/admobService';
 import { OneSignalService } from './services/oneSignalService';
@@ -31,13 +30,6 @@ import ErrorBoundary from './components/ErrorBoundary';
 import NoInternetOverlay from './components/NoInternetOverlay';
 
 const DAILY_CREDITS = 5;
-const REWARD_CREDITS = 5;
-const REWARD_INTERSTITIAL_CREDITS = 6;
-const AD_DURATION = 10;
-const SIMULATE_REWARD_AD = false; // Real AdMob by default, timer only as fallback
-const REWARD_PRELOAD_THRESHOLD = 5;
-const REWARD_PRELOAD_RETRY_MS = 20000;
-const REWARD_REFRESH_INTERVAL_MS = 12 * 60 * 1000;
 const INTERSTITIAL_PRELOAD_RETRY_MS = 15000;
 const INTERSTITIAL_REFRESH_INTERVAL_MS = 8 * 60 * 1000;
 
@@ -48,10 +40,6 @@ const AD_IDS = {
   INTERSTITIAL: {
     ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/1033173712' : 'ca-app-pub-7381421031784616/5183026259',
     IOS: 'ca-app-pub-3940256099942544/4411468910' // Test ID
-  },
-  REWARD_INTERSTITIAL: {
-    ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/6978759866' : 'ca-app-pub-7381421031784616/8079257109',
-    IOS: 'ca-app-pub-3940256099942544/6978759866' // Test ID
   },
   REWARD: {
     ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/5224354917' : 'ca-app-pub-7381421031784616/6580197977',
@@ -195,7 +183,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ isAppReady, onComplete }) =
   );
 };
 
-const AdLoadingOverlay: React.FC<{ mode: 'hidden' | 'interstitial' | 'reward', countdown?: number | null }> = ({ mode, countdown }) => {
+const AdLoadingOverlay: React.FC<{ mode: 'hidden' | 'interstitial' }> = ({ mode }) => {
   if (mode === 'hidden') return null;
 
   return (
@@ -211,13 +199,8 @@ const AdLoadingOverlay: React.FC<{ mode: 'hidden' | 'interstitial' | 'reward', c
         </div>
 
         <h3 className="text-xs font-medium tracking-[0.3em] text-white/60 uppercase text-center px-4">
-          {countdown !== null
-            ? `Syncing Reward: ${countdown}s`
-            : (mode === 'reward' ? 'Initializing Reward' : 'Preparing Ad')}
+          Preparing Ad
         </h3>
-        {countdown !== null && (
-          <p className="text-[9px] text-white/20 mt-2 tracking-widest uppercase">Optimizing for your network</p>
-        )}
       </div>
     </div>
   );
@@ -271,8 +254,7 @@ const AppContentInner: React.FC = () => {
   const [showSavedModal, setShowSavedModal] = useState(false);
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
   const [isSessionBlocked, setIsSessionBlocked] = useState(false);
-  const [isAdLoading, setIsAdLoading] = useState<'hidden' | 'interstitial' | 'reward'>('hidden');
-  const [adCountdown, setAdCountdown] = useState<number | null>(null);
+  const [isAdLoading, setIsAdLoading] = useState<'hidden' | 'interstitial'>('hidden');
   const [isProfileLoadingHung, setIsProfileLoadingHung] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
@@ -288,7 +270,6 @@ const AppContentInner: React.FC = () => {
 
   // Guest Mode State
   const [isGuest, setIsGuest] = useState(false);
-  const [showOutOfCreditsModal, setShowOutOfCreditsModal] = useState(false);
 
   const handleGuestEntry = useCallback(() => {
     setIsGuest(true);
@@ -630,94 +611,6 @@ const AppContentInner: React.FC = () => {
   }, [showToast, isGuest]);
 
   // Interstitial ads are now pre-loaded strategically (see handleViewNavigation/handleGenerate)
-
-  // Keep rewarded ads warm before the user taps "watch ad" so both the
-  // main reward and the follow-up bonus interstitial have time to match.
-  useEffect(() => {
-    if (!Capacitor.isNativePlatform() || !profile || profile.is_premium) return;
-
-    const credits = profile.credits || 0;
-    if (credits > REWARD_PRELOAD_THRESHOLD) return;
-
-    const rewardId = getAdId('REWARD');
-    const rewardInterstitialId = getAdId('REWARD_INTERSTITIAL');
-    let cancelled = false;
-    let retryTimer: ReturnType<typeof setTimeout> | null = null;
-    let refreshTimer: ReturnType<typeof setTimeout> | null = null;
-
-    const clearTimers = () => {
-      if (retryTimer) {
-        clearTimeout(retryTimer);
-        retryTimer = null;
-      }
-      if (refreshTimer) {
-        clearTimeout(refreshTimer);
-        refreshTimer = null;
-      }
-    };
-
-    const queueRetry = () => {
-      clearTimers();
-      retryTimer = setTimeout(() => {
-        if (!cancelled) {
-          void warmRewardAds();
-        }
-      }, REWARD_PRELOAD_RETRY_MS);
-    };
-
-    const queueRefresh = () => {
-      clearTimers();
-      refreshTimer = setTimeout(() => {
-        if (!cancelled) {
-          void warmRewardAds();
-        }
-      }, REWARD_REFRESH_INTERVAL_MS);
-    };
-
-    const warmRewardAds = async () => {
-      clearTimers();
-      const [rewardPrepared, bonusPrepared] = await Promise.all([
-        AdMobService.prepareRewardVideo(rewardId),
-        AdMobService.prepareRewardInterstitial(rewardInterstitialId),
-      ]);
-
-      if (cancelled) return;
-
-      if (!rewardPrepared || !bonusPrepared) {
-        queueRetry();
-        return;
-      }
-
-      queueRefresh();
-    };
-
-    const initialDelay = setTimeout(() => {
-      if (!cancelled) {
-        void warmRewardAds();
-      }
-    }, 150);
-
-    let appStateListener: any = null;
-
-    void CapacitorApp.addListener('appStateChange', ({ isActive }) => {
-      if (isActive) {
-        void warmRewardAds();
-      }
-    }).then(listener => {
-      if (cancelled) {
-        listener.remove();
-        return;
-      }
-      appStateListener = listener;
-    });
-
-    return () => {
-      cancelled = true;
-      clearTimeout(initialDelay);
-      clearTimers();
-      if (appStateListener) appStateListener.remove();
-    };
-  }, [profile?.id, profile?.credits, profile?.is_premium]);
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform() || !profile || profile.is_premium) return;
@@ -1597,7 +1490,7 @@ const AppContentInner: React.FC = () => {
     const cost = (mode === InputMode.CHAT && image) ? 2 : 1;
 
     if (!currentProfile.is_premium && (currentProfile.credits || 0) < cost) {
-      setShowOutOfCreditsModal(true);
+      handleOpenPremium();
       return;
     }
 
@@ -1702,103 +1595,6 @@ const AppContentInner: React.FC = () => {
     }
   }, [mode, inputText, image, selectedVibe, responseLength, showToast, handleOpenPremium, updateCredits, customPersonas, profile, isGuest]);
 
-  const runSimulatedAd = useCallback(async () => {
-    return new Promise<boolean>((resolve) => {
-      const DURATION = 15; // Increased to 15s to allow real ad adapters more time
-      setAdCountdown(DURATION);
-      setIsAdLoading('reward');
-
-      const interval = setInterval(() => {
-        setAdCountdown(prev => {
-          if (prev !== null && prev <= 1) {
-            clearInterval(interval);
-            setAdCountdown(null);
-            setIsAdLoading('hidden');
-            resolve(true);
-            return null;
-          }
-          return prev !== null ? prev - 1 : null;
-        });
-      }, 1000);
-    });
-  }, []);
-
-  const handleWatchAd = useCallback(async () => {
-    if (Capacitor.isNativePlatform()) {
-      setIsAdLoading('reward'); // SHOW OVERLAY
-
-      try {
-        const adUnitId = getAdId('REWARD');
-        console.log("Showing Reward Ad:", adUnitId);
-
-        // onShow: the ad is now visible — hide our loading overlay
-        const onShow = () => setIsAdLoading('hidden');
-
-        let rewardEarned = await AdMobService.showRewardVideo(adUnitId, onShow);
-
-        // If real ad fails, we do NOT simulate it. The user gets no reward.
-        if (rewardEarned) {
-          // 1. First Reward (+3)
-          const rewardInterId = getAdId('REWARD_INTERSTITIAL');
-          updateCredits((prevCredits) => prevCredits + REWARD_CREDITS);
-          showToast(`+${REWARD_CREDITS} Credits Added! ⚡`, 'success');
-
-          runAdTask('Post-reward bonus interstitial preload', AdMobService.prepareRewardInterstitial(rewardInterId));
-
-          // 2. Chained Bonus Ad Sequence
-          // Wait briefly for first ad dismissal to settle
-          await new Promise(resolve => setTimeout(resolve, 2000));
-
-          // Prompt the user with a native dialog
-          const { value } = await Dialog.confirm({
-            title: 'Bonus Reward! 🎁',
-            message: `Want +${REWARD_INTERSTITIAL_CREDITS} more credits? Watch one more short ad.`,
-            okButtonTitle: 'Watch Now',
-            cancelButtonTitle: 'No Thanks'
-          });
-
-          if (value) {
-            setIsAdLoading('reward'); // Show overlay for second ad prep
-
-            const onBonusShow = () => setIsAdLoading('hidden');
-
-            try {
-              const prepared = await AdMobService.prepareRewardInterstitial(rewardInterId);
-              if (!prepared) {
-                showToast('Bonus ad failed to load. Please try again later.', 'error');
-                return;
-              }
-
-              let bonusEarned = await AdMobService.showRewardInterstitial(rewardInterId, onBonusShow);
-
-              if (bonusEarned) {
-                updateCredits((prevCredits) => prevCredits + REWARD_INTERSTITIAL_CREDITS);
-                showToast(`+${REWARD_INTERSTITIAL_CREDITS} Bonus Credits! 🥷`, 'success');
-              } else {
-                showToast('Ad failed to load. Please try again later.', 'error');
-              }
-            } catch (e) {
-              console.warn("Chained bonus ad error:", e);
-              showToast('Bonus ad failed. Please try again later.', 'error');
-            } finally {
-              setIsAdLoading('hidden'); // Clear overlay for inner ad
-            }
-          }
-        } else {
-          showToast('Ad failed to load. Please try again later.', 'error');
-        }
-      } catch (e) {
-        console.warn("Native Ad Error:", e);
-        showToast('Ad failed to load. Please try again later.', 'error');
-      } finally {
-        setIsAdLoading('hidden'); // ALWAYS HIDE OVERLAY
-        setAdCountdown(null);
-      }
-      return;
-    }
-
-    showToast('Ads are only available on mobile devices.', 'info');
-  }, [showToast, updateCredits, currentView]);
 
   const isSaved = useCallback((content: string) => savedItems.some(item => item.content === content), [savedItems]);
   const clear = useCallback(() => {
@@ -1837,7 +1633,7 @@ const AppContentInner: React.FC = () => {
       )}
 
       {/* Optimized Ad Loading UI */}
-      <AdLoadingOverlay mode={isAdLoading} countdown={adCountdown} />
+      <AdLoadingOverlay mode={isAdLoading} />
 
       {/* No Internet Overlay */}
       <NoInternetOverlay
@@ -1907,7 +1703,6 @@ const AppContentInner: React.FC = () => {
                 credits={profile?.credits || 0}
                 onUpdateCredits={updateCredits}
                 isPremium={profile?.is_premium || false}
-                onWatchAd={handleWatchAd}
                 onGoPremium={() => { handleBackNavigation(); handleOpenPremium(); }}
                 shadowNotes={profile?.shadow_notes || ''}
                 onUpdateShadowNotes={updateShadowNotes}
@@ -2024,45 +1819,6 @@ const AppContentInner: React.FC = () => {
                 />
               </Suspense>
 
-              {/* Unified Out of Credits Modal */}
-              {showOutOfCreditsModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                  <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowOutOfCreditsModal(false)} />
-                  <div className="relative bg-[#111] rounded-3xl p-6 max-w-sm w-full border border-white/10 animate-scale-in text-center">
-                    <div className="w-14 h-14 mx-auto mb-3 bg-rose-500/10 rounded-full flex items-center justify-center text-2xl border border-rose-500/20">⚡</div>
-                    <h2 className="text-xl font-bold text-white mb-1">Out of Credits</h2>
-                    <p className="text-sm text-white/50 mb-6">You need more juice to keep going. Watch an ad or get the full experience.</p>
-                    <div className="flex flex-col gap-3">
-                      <button
-                        onClick={() => { setShowOutOfCreditsModal(false); handleWatchAd(); }}
-                        className="w-full py-3.5 bg-white/10 hover:bg-white/15 border border-white/10 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95"
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><rect x="2" y="5" width="20" height="14" rx="2" stroke="white" strokeWidth="1.8" /><path d="M8 10l8 4-8 4V10z" fill="white" /></svg>
-                        Watch Ad (+{REWARD_CREDITS} Credits)
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowOutOfCreditsModal(false);
-                          if (isGuest) {
-                            handleExitGuestMode();
-                          } else {
-                            handleOpenPremium();
-                          }
-                        }}
-                        className="w-full py-3.5 bg-gradient-to-r from-yellow-600 to-amber-500 text-black font-bold rounded-xl flex items-center justify-center gap-2 hover:brightness-110 transition-all active:scale-95"
-                      >
-                        <span>👑</span> {isGuest ? 'Sign Up for Unlimited' : 'Go Unlimited'}
-                      </button>
-                      <button
-                        onClick={() => setShowOutOfCreditsModal(false)}
-                        className="text-xs text-white/30 hover:text-white/60 py-2 transition-all"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
 
 
               <nav className="flex justify-between items-center mb-8 md:mb-12">
@@ -2243,15 +1999,10 @@ const AppContentInner: React.FC = () => {
                         profile?.is_premium ? "Get Rizz (VIP)" : `Get Rizz (${(mode === InputMode.CHAT && image) ? 2 : 1} ⚡)`
                       )}
                     </button>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-3">
-                      <button onClick={handleWatchAd} disabled={isAdLoading !== 'hidden'} className="bg-white/10 border border-white/10 py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base hover:bg-white/20 active:scale-[0.98] transition-all flex flex-col items-center justify-center">
-                        {isAdLoading !== 'hidden' ? <span className="text-white/50 text-xs">Loading...</span> : <><span className="text-xl mb-1">📺</span> <span>Watch Ad (+{REWARD_CREDITS})</span></>}
-                      </button>
-                      <button onClick={handleOpenPremium} className="bg-gradient-to-r from-yellow-500 to-amber-600 text-black py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base shadow-xl hover:brightness-110 active:scale-[0.98] transition-all flex flex-col items-center justify-center animate-pulse">
-                        <span className="text-xl mb-1">👑</span> <span>Go Unlimited</span>
-                      </button>
-                    </div>
+    ) : (
+                    <button onClick={handleOpenPremium} className="w-full bg-gradient-to-r from-yellow-500 to-amber-600 text-black py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base shadow-xl hover:brightness-110 active:scale-[0.98] transition-all flex flex-col items-center justify-center animate-pulse">
+                      Go Unlimited
+                    </button>
                   )}
                   {!profile?.is_premium && (
                     <p

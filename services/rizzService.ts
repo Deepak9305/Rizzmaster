@@ -1,24 +1,51 @@
-﻿import OpenAI from "openai";
 import { RizzResponse, BioResponse, ResponseLength } from "../types";
 import { resizeImage } from "./imageService";
 
-// --- CLIENT INITIALIZATION ---
-
-// Llama Client (Via OpenAI-compatible provider like Groq, OpenRouter, or DeepInfra)
-// Access environment variables securely
-// Uses Vite's import.meta.env first, then falls back to process.env (provided by define in vite.config)
-const apiKey = (import.meta as any).env?.VITE_GROQ_API_KEY || (import.meta as any).env?.VITE_LLAMA_API_KEY || process.env.GROQ_API_KEY || process.env.LLAMA_API_KEY || 'dummy-key';
-const baseURL = (import.meta as any).env?.VITE_LLAMA_BASE_URL || process.env.LLAMA_BASE_URL || 'https://api.groq.com/openai/v1';
-
-const llamaClient = new OpenAI({
-  apiKey: apiKey,
-  baseURL: baseURL,
-  dangerouslyAllowBrowser: true
-});
+const AI_ENDPOINT = '/api/ai';
 
 // Model Configuration
 const DEFAULT_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
 const RIZZ_TEXT_MODEL = 'llama-3.1-8b-instant';
+
+type AiMessageContent =
+  | string
+  | Array<
+    | { type: "text"; text: string }
+    | { type: "image_url"; image_url: { url: string } }
+  >;
+
+type AiMessage = {
+  role: "system" | "user" | "assistant";
+  content: AiMessageContent;
+};
+
+const callAiChatCompletion = async (payload: {
+  model: string;
+  messages: AiMessage[];
+  temperature: number;
+  max_tokens?: number;
+}): Promise<string> => {
+  const response = await fetch(AI_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(data?.error || `AI request failed with status ${response.status}.`);
+  }
+
+  const content = data?.content;
+  if (typeof content !== 'string' || !content.trim()) {
+    throw new Error('Empty response text from AI endpoint.');
+  }
+
+  return content;
+};
 
 // --- LOCAL PRE-FILTERS ---
 
@@ -252,14 +279,12 @@ CRITICAL: ${length === 'short'
     let attempts = 0;
     while (attempts < 3) {
       try {
-        const completion = await llamaClient.chat.completions.create({
+        const responseText = await callAiChatCompletion({
           model: DEFAULT_MODEL,
           messages: messages,
           temperature: 1.3,
           max_tokens: 1000
         });
-
-        const responseText = completion.choices[0]?.message?.content;
 
         if (responseText) {
           const rawData = JSON.parse(cleanJson(responseText));
@@ -361,7 +386,7 @@ CRITICAL: ${length === 'short'
   let attempts = 0;
   while (attempts < 3) {
     try {
-      const completion = await llamaClient.chat.completions.create({
+      const responseText = await callAiChatCompletion({
         model: DEFAULT_MODEL,
         messages: [
           { role: "system", content: systemInstruction },
@@ -369,8 +394,6 @@ CRITICAL: ${length === 'short'
         ],
         temperature: 0.85
       });
-
-      const responseText = completion.choices[0]?.message?.content;
 
       if (responseText) {
         try {
@@ -533,14 +556,12 @@ Carry over all existing intel and update it when new facts emerge.`;
   let attempts = 0;
   while (attempts < 3) {
     try {
-      const completion = await llamaClient.chat.completions.create({
+      const rawReply = await callAiChatCompletion({
         model: messages.some(m => m.image) ? DEFAULT_MODEL : RIZZ_TEXT_MODEL,
         messages: [{ role: 'system', content: systemInstruction }, ...rawMessages],
         temperature: 0.85,
         max_tokens: 650,
       });
-
-      const rawReply = completion.choices[0]?.message?.content?.trim();
       if (!rawReply) throw new Error('No coach response');
 
       // Strip the hidden intel dossier block before showing to user, handling potential formatting issues from the model

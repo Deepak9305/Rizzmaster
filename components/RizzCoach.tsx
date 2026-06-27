@@ -32,7 +32,6 @@ interface RizzCoachProps {
     credits: number;
     onUpdateCredits: (newAmountOrUpdater: number | ((prev: number) => number)) => void;
     isPremium: boolean;
-    onWatchAd?: () => void;
     onGoPremium?: () => void;
     shadowNotes: string;
     onUpdateShadowNotes: (notes: string) => void;
@@ -278,7 +277,7 @@ const AuroraBackground = React.memo(({ colors }: { colors: any }) => (
     </div>
 ));
 
-const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits, onUpdateCredits, isPremium, onWatchAd, onGoPremium, shadowNotes, onUpdateShadowNotes, customPersonas = [], onAddPersona, onEditPersona }) => {
+const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits, onUpdateCredits, isPremium, onGoPremium, shadowNotes, onUpdateShadowNotes, customPersonas = [], onAddPersona, onEditPersona }) => {
     const { showToast } = useToast();
 
     // Dynamically scoped keys to prevent cross-account pollution on shared devices
@@ -301,7 +300,6 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
     const [selectedVibe, setSelectedVibe] = useState<string | null>("Elite Wingman");
     const [showVibeDropdown, setShowVibeDropdown] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [showOutofCredits, setShowOutOfCredits] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -357,7 +355,8 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
 
         const cost = image ? 2 : 1;
         if (!isPremium && credits < cost) {
-            setShowOutOfCredits(true);
+            onClose();
+            setTimeout(() => onGoPremium && onGoPremium(), 300);
             return;
         }
 
@@ -402,7 +401,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
         } finally {
             setLoading(false);
         }
-    }, [image, loading, isPremium, credits, messages, shadowNotes, onUpdateCredits, onUpdateShadowNotes, showToast, selectedVibe, customPersonas]);
+    }, [image, loading, isPremium, credits, messages, shadowNotes, onUpdateCredits, onUpdateShadowNotes, showToast, selectedVibe, customPersonas, onClose, onGoPremium]);
 
     const handleImageUpload = useCallback(async () => {
         if (!Capacitor.isNativePlatform()) {
@@ -847,57 +846,6 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                     )}
                 </div>
 
-                {/* Out of Credits Modal */}
-                {
-                    showOutofCredits && (
-                        <div style={{
-                            position: 'absolute', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)'
-                        }}>
-                            <div style={{
-                                background: '#111', borderRadius: '24px', padding: '24px', width: '85%', maxWidth: '320px',
-                                border: '1px solid rgba(255,255,255,0.1)', textAlign: 'center',
-                                animation: 'coachMsgIn 0.3s cubic-bezier(0.16,1,0.3,1)'
-                            }}>
-                                <h3 style={{ color: 'white', fontSize: '20px', fontWeight: 900, marginBottom: '8px' }}>Out of Credits</h3>
-                                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', marginBottom: '24px', lineHeight: 1.5 }}>
-                                    You need more juice to keep the wingman active. Watch a quick ad or go Unlimited.
-                                </p>
-
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                    <button
-                                        onClick={() => { setShowOutOfCredits(false); onWatchAd?.(); }}
-                                        style={{
-                                            background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)',
-                                            color: 'white', fontWeight: 700, padding: '14px', borderRadius: '16px',
-                                            display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', gap: '8px',
-                                            cursor: 'pointer'
-                                        }}>
-                                        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><rect x="2" y="5" width="20" height="14" rx="2" stroke="white" strokeWidth="1.8" /><path d="M8 10l8 4-8 4V10z" fill="white" /></svg> Watch Ad (+5)
-                                    </button>
-                                    <button
-                                        onClick={() => { setShowOutOfCredits(false); onGoPremium?.(); }}
-                                        style={{
-                                            background: 'linear-gradient(to right, #d97706, #d97706)',
-                                            border: 'none', color: 'black', fontWeight: 900, padding: '14px', borderRadius: '16px',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                                            cursor: 'pointer', boxShadow: '0 4px 12px rgba(217,119,6,0.2)'
-                                        }}>
-                                        <CrownIcon /> Go Unlimited
-                                    </button>
-                                    <button
-                                        onClick={() => setShowOutOfCredits(false)}
-                                        style={{
-                                            background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)',
-                                            fontSize: '13px', padding: '8px', marginTop: '4px', cursor: 'pointer', fontWeight: 600
-                                        }}>
-                                        Cancel
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )
-                }
             </div >
         </>
     );
