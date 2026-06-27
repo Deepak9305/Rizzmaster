@@ -824,12 +824,6 @@ const AppContentInner: React.FC = () => {
     if (loading) return;
     if (view === currentView) return;
 
-    if (view === 'COACH' && isGuest) {
-      showToast("Please sign in to access Rizz Coach & premium features!", "info");
-      handleExitGuestMode();
-      return;
-    }
-
     if (currentView === 'COACH' && view === 'HOME') {
       // Bug 2 fix: await the ad so the overlay plays BEFORE the view transitions
       await showCoachTransitionAd();
