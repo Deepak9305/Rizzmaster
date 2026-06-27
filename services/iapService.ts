@@ -58,10 +58,10 @@ class IAPService {
     products: any[] = [];
 
     // Callbacks to update UI/DB
-    onSuccess: (() => void) | null = null;
+    onSuccess: ((purchaseData: any) => void) | null = null;
     onError: ((msg: string) => void) | null = null;
 
-    initialize(onSuccess: () => void, onError: (msg: string) => void) {
+    initialize(onSuccess: (purchaseData: any) => void, onError: (msg: string) => void) {
         this.onSuccess = onSuccess;
         this.onError = onError;
 
@@ -111,9 +111,20 @@ class IAPService {
         });
 
         store.when().verified((receipt: any) => {
-            console.log("IAP: Receipt verified. Granting premium...", receipt);
-            // Now safe to grant premium access
-            if (this.onSuccess) this.onSuccess();
+            console.log("IAP: Receipt verified. Passing to backend...", receipt);
+            
+            // Normalize the purchase data for the backend
+            const purchaseData = {
+                platform: Capacitor.getPlatform(),
+                productId: receipt.id || receipt.productId || '',
+                basePlanId: receipt.basePlanId || receipt.offerId || null,
+                purchaseToken: receipt.purchaseToken || receipt.transactionReceipt || '',
+                transactionId: receipt.transactionId || receipt.orderId || '',
+                rawReceipt: receipt
+            };
+
+            // Now safe to verify via backend
+            if (this.onSuccess) this.onSuccess(purchaseData);
             receipt.finish();
         });
 

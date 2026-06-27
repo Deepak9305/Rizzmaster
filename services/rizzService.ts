@@ -45,6 +45,9 @@ const callAiChatCompletion = async (payload: {
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
+    if (response.status === 401 || data?.error === 'LOGIN_REQUIRED') {
+      throw new Error('LOGIN_REQUIRED');
+    }
     throw new Error(data?.error || `AI request failed with status ${response.status}.`);
   }
 
@@ -326,6 +329,8 @@ CRITICAL: ${length === 'short'
           throw new Error("Empty response text from model.");
         }
       } catch (e: any) {
+        if (e.message === 'LOGIN_REQUIRED') throw e;
+        
         console.warn(`Attempt ${attempts + 1} failed:`, e?.message || e);
         attempts++;
         if (attempts >= 3) break;
@@ -338,6 +343,8 @@ CRITICAL: ${length === 'short'
 
   } catch (error: any) {
     console.error("Rizz Service Error:", error);
+    if (error.message === 'LOGIN_REQUIRED') throw error;
+    
     // Return a safe fallback object to prevent UI crashes
     return {
       tease: "Error generating rizz.",
@@ -418,6 +425,8 @@ CRITICAL: ${length === 'short'
       throw new Error("No response generated.");
 
     } catch (error: any) {
+      if (error.message === 'LOGIN_REQUIRED') throw error;
+      
       console.warn(`Bio Attempt ${attempts + 1} failed:`, error?.message || error);
       attempts++;
       if (attempts >= 3) {
@@ -589,6 +598,8 @@ Carry over all existing intel and update it when new facts emerge.`;
 
       return { reply: sanitizeText(cleanReply), updatedNotes };
     } catch (error: any) {
+      if (error.message === 'LOGIN_REQUIRED') throw error;
+      
       console.warn(`Coach Attempt ${attempts + 1} failed:`, error?.message || error);
       attempts++;
       if (attempts >= 3) {

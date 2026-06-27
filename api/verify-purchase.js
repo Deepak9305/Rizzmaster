@@ -44,32 +44,59 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
-    const { platform, productId, transactionId } = body || {};
+    const { platform, productId, transactionId, basePlanId, purchaseToken, rawReceipt } = body || {};
 
     if (!platform || !productId || !transactionId) {
-      return json(res, 400, { error: "Missing required purchase information (platform, productId, transactionId)." });
+      console.warn("[IAP API] Missing basic purchase data.");
+      return json(res, 400, { 
+        error: "Missing required purchase information (platform, productId, transactionId).",
+        code: "INVALID_PURCHASE_DATA"
+      });
     }
 
-    // TODO: [IAP-VERIFICATION] Connect Apple App Store / Google Play Billing APIs to verify receipt/transaction token with the stores.
-    // e.g., using 'node-apple-receipt-verify' or 'googleapis' before invoking the RPC database update.
-    //
-    // if (platform === 'ios') {
-    //   await verifyWithApple(transactionId);
-    // } else if (platform === 'android') {
-    //   await verifyWithGoogle(productId, transactionId);
-    // }
+    if (platform === 'android' && (!basePlanId || !purchaseToken)) {
+      console.warn("[IAP API] Missing Android-specific purchase data.");
+      return json(res, 400, {
+        error: "Missing Android purchase info (basePlanId, purchaseToken).",
+        code: "INVALID_PURCHASE_DATA"
+      });
+    }
+
+    const allowUnverified = process.env.ALLOW_UNVERIFIED_IAP === 'true';
+    let isValid = false;
+
+    // TODO: [IAP-VERIFICATION] Implement real Apple/Google verification here.
+    // If real verification is implemented, it should set isValid = true if successful.
+    if (platform === 'ios') {
+      // isValid = await verifyWithApple(transactionId, purchaseToken);
+    } else if (platform === 'android') {
+      // isValid = await verifyWithGoogle(productId, transactionId, purchaseToken);
+    }
+
+    if (!isValid && !allowUnverified) {
+      console.error("[IAP API] Real verification not implemented and ALLOW_UNVERIFIED_IAP is false.");
+      return json(res, 501, {
+        error: "Purchase verification failed. Cannot grant premium unverified.",
+        code: "PURCHASE_VERIFICATION_FAILED"
+      });
+    }
 
     // Call the admin_set_premium RPC using service role
     const { data: updatedProfile, error: rpcError } = await supabaseAdmin.rpc("admin_set_premium", {
       user_uuid: userId,
       platform_name: platform,
       product_identifier: productId,
-      transaction_identifier: transactionId
+      transaction_identifier: transactionId,
+      base_plan_identifier: basePlanId || null,
+      raw_payload: rawReceipt || {}
     });
 
     if (rpcError) {
-      console.error("RPC admin_set_premium error:", rpcError);
-      return json(res, 500, { error: "Failed to verify and apply premium status on backend." });
+      console.error("[IAP API] RPC admin_set_premium error:", rpcError);
+      return json(res, 500, { 
+        error: "Failed to verify and apply premium status on backend.",
+        code: "PREMIUM_SYNC_FAILED"
+      });
     }
 
     return json(res, 200, { 

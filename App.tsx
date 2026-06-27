@@ -726,13 +726,6 @@ const AppContentInner: React.FC = () => {
                 setProfile(prev => prev ? { ...prev, is_premium: false, premium_source: 'revoked' } : null);
                 showToast("Subscription verification failed. Access revoked.", 'error');
 
-                if (supabase) {
-                  const { data: revokedProfile } = await supabase.rpc('admin_revoke_premium', { user_uuid: refreshedProfile.id });
-                  if (revokedProfile) {
-                    setProfile(revokedProfile as UserProfile);
-                    profileRef.current = revokedProfile as UserProfile;
-                  }
-                }
               }
             }, 15000));
           } catch (e) {
@@ -1510,8 +1503,13 @@ const AppContentInner: React.FC = () => {
         setResult(res);
       }
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      if (error.message === 'LOGIN_REQUIRED') {
+         setLoginReason('premium');
+         handleExitGuestMode();
+         return;
+      }
       showToast('The wingman tripped! Try again.', 'error');
       if (!currentProfile.is_premium) updateCredits(creditsBefore);
     } finally {
@@ -1641,6 +1639,10 @@ const AppContentInner: React.FC = () => {
                 onUpdateCredits={updateCredits}
                 isPremium={profile?.is_premium || false}
                 onGoPremium={() => { handleBackNavigation(); handleOpenPremium(); }}
+                onLoginRequired={() => {
+                  setLoginReason('premium');
+                  handleExitGuestMode();
+                }}
                 shadowNotes={profile?.shadow_notes || ''}
                 onUpdateShadowNotes={updateShadowNotes}
                 customPersonas={customPersonas}
