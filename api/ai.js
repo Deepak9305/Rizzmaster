@@ -2,10 +2,8 @@ import OpenAI from "openai";
 
 const DEFAULT_BASE_URL = "https://api.groq.com/openai/v1";
 const ALLOWED_MODELS = new Set([
-  "llama-3.3-70b-versatile",
+  "meta-llama/llama-4-scout-17b-16e-instruct",
   "llama-3.1-8b-instant",
-  "llama-3.2-90b-vision-preview",
-  "llama-3.2-11b-vision-preview",
 ]);
 const MAX_MESSAGES = 8;
 const MAX_TEXT_LENGTH = 16000;
