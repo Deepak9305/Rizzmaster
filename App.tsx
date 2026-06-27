@@ -1456,7 +1456,8 @@ const AppContentInner: React.FC = () => {
 
     const cost = (mode === InputMode.CHAT && image) ? 2 : 1;
 
-    if (!currentProfile.is_premium && (currentProfile.credits || 0) < cost) {
+    // Guests are rate-limited server-side (5 req/min by IP) — skip client-side credit check for them
+    if (!isGuest && !currentProfile.is_premium && (currentProfile.credits || 0) < cost) {
       handleOpenPremium();
       return;
     }
@@ -1515,7 +1516,7 @@ const AppContentInner: React.FC = () => {
     const creditsBefore = currentProfile.credits || 0;
 
     try {
-      if (!currentProfile.is_premium) {
+      if (!isGuest && !currentProfile.is_premium) {
         updateCredits(creditsBefore - cost);
       }
 
@@ -1551,7 +1552,16 @@ const AppContentInner: React.FC = () => {
       if (!currentProfile.is_premium) updateCredits(creditsBefore);
     } finally {
       setLoading(false);
-      await syncProfile();
+      // Don't call syncProfile for guests — they have no Supabase session
+      if (!isGuest) {
+        await syncProfile();
+      } else {
+        // Persist updated guest credits to localStorage
+        const guestCredits = parseInt(localStorage.getItem('rizzmaster_guest_credits') || '5');
+        const newGuestCredits = Math.max(0, guestCredits - cost);
+        localStorage.setItem('rizzmaster_guest_credits', newGuestCredits.toString());
+        updateCredits(newGuestCredits);
+      }
     }
   }, [mode, inputText, image, selectedVibe, responseLength, showToast, handleOpenPremium, updateCredits, customPersonas, profile, isGuest, syncProfile, handleExitGuestMode]);
 
