@@ -583,7 +583,12 @@ const AppContentInner: React.FC = () => {
   // Define handleUpgrade using REF to avoid stale closures
   const handleUpgrade = useCallback(async () => {
     const currentProfile = profileRef.current;
-    if (!currentProfile || currentProfile.id === 'guest_user' || isGuest) return;
+    // If guest taps Upgrade, close the modal and send them to sign-in/sign-up
+    if (!currentProfile || currentProfile.id === 'guest_user' || isGuest) {
+      setShowPremiumModal(false);
+      handleExitGuestMode();
+      return;
+    }
 
     // TODO: Connect Apple App Store / Google Play Billing APIs on backend to verify receipt/transaction token
     try {
@@ -637,7 +642,7 @@ const AppContentInner: React.FC = () => {
       console.error("Failed to verify purchase:", err);
       showToast("Verification failed. Please try again or contact support.", "error");
     }
-  }, [showToast, isGuest]);
+  }, [showToast, isGuest, handleExitGuestMode]);
 
   // Interstitial ads are now preloaded strictly sequentially (startup -> show -> preload next)
 
@@ -812,14 +817,10 @@ const AppContentInner: React.FC = () => {
   }, [currentView, showCoachTransitionAd, loading]);
 
   const handleOpenPremium = useCallback(() => {
-    if (isGuest) {
-      showToast("Please sign in or create an account to go Unlimited!", "info");
-      handleExitGuestMode();
-      return;
-    }
+    // Guests see the premium modal first so they understand what they're getting
     window.history.pushState({ view: currentView, premium: true }, '');
     setShowPremiumModal(true);
-  }, [currentView, isGuest, showToast, handleExitGuestMode]);
+  }, [currentView]);
 
   const handleOpenSaved = useCallback(() => {
     window.history.pushState({ view: currentView, saved: true }, '');
