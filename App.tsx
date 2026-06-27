@@ -1438,11 +1438,6 @@ const AppContentInner: React.FC = () => {
       return;
     }
 
-    if (isGuest || currentProfile.id === 'guest_user') {
-      showToast("Please sign in to generate Rizz suggestions!", "info");
-      handleExitGuestMode();
-      return;
-    }
 
     const text = typeof textToProcess === 'string' ? textToProcess : inputText;
 
@@ -1506,11 +1501,10 @@ const AppContentInner: React.FC = () => {
           runAdTask('Post-show preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
         }
 
-        // Only move the counter if the ad successfully showed
-        if (adShown) {
-          lastAdActiveTime.current = now;
-          localStorage.setItem('rizz_last_ad_gen_count', genCount.toString());
-        }
+        // Update the counter and cooldown whether the ad showed or failed,
+        // so that ad loading failures do not block the user's generation flow on every subsequent tap.
+        lastAdActiveTime.current = now;
+        localStorage.setItem('rizz_last_ad_gen_count', genCount.toString());
       }
     }
     // --------------------------------------------------
