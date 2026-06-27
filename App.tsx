@@ -610,84 +610,7 @@ const AppContentInner: React.FC = () => {
     }
   }, [showToast, isGuest]);
 
-  // Interstitial ads are now pre-loaded strategically (see handleViewNavigation/handleGenerate)
-
-  useEffect(() => {
-    if (!Capacitor.isNativePlatform() || !profile || profile.is_premium) return;
-
-    const interstitialId = getAdId('INTERSTITIAL');
-    let cancelled = false;
-    let retryTimer: ReturnType<typeof setTimeout> | null = null;
-    let refreshTimer: ReturnType<typeof setTimeout> | null = null;
-    let appStateListener: any = null;
-
-    const clearTimers = () => {
-      if (retryTimer) {
-        clearTimeout(retryTimer);
-        retryTimer = null;
-      }
-      if (refreshTimer) {
-        clearTimeout(refreshTimer);
-        refreshTimer = null;
-      }
-    };
-
-    const queueRetry = () => {
-      clearTimers();
-      retryTimer = setTimeout(() => {
-        if (!cancelled) {
-          void warmInterstitial();
-        }
-      }, INTERSTITIAL_PRELOAD_RETRY_MS);
-    };
-
-    const queueRefresh = () => {
-      clearTimers();
-      refreshTimer = setTimeout(() => {
-        if (!cancelled) {
-          void warmInterstitial();
-        }
-      }, INTERSTITIAL_REFRESH_INTERVAL_MS);
-    };
-
-    const warmInterstitial = async () => {
-      clearTimers();
-      const prepared = await AdMobService.prepareInterstitial(interstitialId);
-      if (cancelled) return;
-
-      if (!prepared) {
-        queueRetry();
-        return;
-      }
-
-      queueRefresh();
-    };
-
-    const initialDelay = setTimeout(() => {
-      if (!cancelled) {
-        void warmInterstitial();
-      }
-    }, currentView === 'COACH' ? 150 : 300);
-
-    void CapacitorApp.addListener('appStateChange', ({ isActive }) => {
-      if (isActive) {
-        void warmInterstitial();
-      }
-    }).then(listener => {
-      if (cancelled) {
-        listener.remove();
-        return;
-      }
-      appStateListener = listener;
-    });
-
-    return () => {
-      cancelled = true;
-      clearTimeout(initialDelay);
-      clearTimers();
-      if (appStateListener) appStateListener.remove();
-    };
-  }, [profile?.id, profile?.is_premium, currentView]);
+  // Interstitial ads are now preloaded strictly sequentially (startup -> show -> preload next)
 
   // Initialize Native Services
   useEffect(() => {
@@ -707,7 +630,9 @@ const AppContentInner: React.FC = () => {
       });
 
       // AdMob
-      runAdTask('Initial AdMob init', AdMobService.initialize());
+      runAdTask('Initial AdMob init', AdMobService.initialize().then(() => {
+        return AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'));
+      }));
 
       // OneSignal Push Notifications
       OneSignalService.initialize();
@@ -858,6 +783,8 @@ const AppContentInner: React.FC = () => {
         } finally {
           setIsAdLoading('hidden'); // ALWAYS HIDE OVERLAY
           adTransitionInProgressRef.current = false;
+          // Preload next ad immediately
+          runAdTask('Post-show preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
         }
       } else {
         // Web fallback: Just clear the loading state
@@ -873,13 +800,6 @@ const AppContentInner: React.FC = () => {
     if (currentView === 'COACH' && view === 'HOME') {
       // Bug 2 fix: await the ad so the overlay plays BEFORE the view transitions
       await showCoachTransitionAd();
-      // Bug 5 fix: preload AFTER the ad cycle completes to avoid resetting a freshly-loaded ad
-      if (!profileRef.current?.is_premium && Capacitor.isNativePlatform()) {
-        runAdTask('Post-transition interstitial preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
-      }
-    } else if (view === 'COACH' && !profileRef.current?.is_premium && Capacitor.isNativePlatform()) {
-      // Strategic Preload: Pre-load when moving TO coach so it's ready for exit
-      runAdTask('Coach entry interstitial preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
     }
 
     window.history.pushState({ view }, '');
@@ -900,12 +820,7 @@ const AppContentInner: React.FC = () => {
 
     // Fire the transition ad in the background (non-blocking)
     if (currentView === 'COACH') {
-      // Bug 5 fix: preload only AFTER the ad cycle finishes to avoid racing with cleanupAndResolve
-      showCoachTransitionAd().finally(() => {
-        if (!profileRef.current?.is_premium && Capacitor.isNativePlatform()) {
-          runAdTask('Back-navigation interstitial preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
-        }
-      });
+      showCoachTransitionAd();
     }
   }, [currentView, showCoachTransitionAd]);
 
@@ -1515,12 +1430,6 @@ const AppContentInner: React.FC = () => {
       const isFirstAd = lastAdGen === 0;
       const targetGen = isFirstAd ? 3 : lastAdGen + 4;
 
-      // Eager preload: prepare the ad early enough for a reliable show path.
-      if ((isFirstAd && genCount === 1) || genCount === targetGen - 1) {
-        console.log(`[AdMob] Eagerly preloading interstitial (genCount: ${genCount}, targetGen: ${targetGen})`);
-        runAdTask('Generation-based interstitial preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
-      }
-
       const now = activeTimeMs.current;
       // For the first ad, skip the cooldown check (both `now` and `lastAdActiveTime` are 0 at startup,
       // so `0 - 0 >= COOLDOWN` is always false, blocking the ad from ever showing).
@@ -1536,15 +1445,14 @@ const AppContentInner: React.FC = () => {
           console.warn("[AdMob] Deferred interstitial failed:", e);
         } finally {
           setIsAdLoading('hidden');
+          // Preload next ad immediately
+          runAdTask('Post-show preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
         }
 
         // Only move the counter if the ad successfully showed
         if (adShown) {
           lastAdActiveTime.current = now;
           localStorage.setItem('rizz_last_ad_gen_count', genCount.toString());
-        } else {
-          console.log("[AdMob] Interstitial didn't show. Will retry on next generation.");
-          runAdTask('Retry interstitial preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
         }
       }
     }
