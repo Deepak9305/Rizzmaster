@@ -1956,7 +1956,7 @@ const AppContentInner: React.FC = () => {
                     </div>
                   )}
 
-                  {(isGuest || profile?.is_premium || (profile?.credits || 0) > 0) ? (
+                  {(profile?.is_premium || (profile?.credits || 0) > 0) ? (
                     <button
                       onClick={() => handleGenerate(textareaRef.current?.value || '')}
                       disabled={loading}
