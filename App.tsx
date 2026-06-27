@@ -592,6 +592,26 @@ const AppContentInner: React.FC = () => {
       return;
     }
 
+    const platform = Capacitor.getPlatform();
+    const products = IAPService.products;
+    const mainSub = products.find(p => p.state === 'owned' || p.state === 'approved' || p.state === 'verified');
+
+    // If IAP callback fired but there is no real owned product yet, skip silently.
+    // This prevents the error toast that appears on Google login when IAPService
+    // initialises and triggers the success callback before a purchase exists.
+    if (!mainSub) {
+      console.log('handleUpgrade: No owned IAP product found — skipping verification.');
+      return;
+    }
+
+    const productId = mainSub.id;
+    const transactionId = mainSub.transactionId || (mainSub as any)?.purchase?.transactionId;
+
+    if (!transactionId) {
+      console.warn('handleUpgrade: Owned product found but no transactionId — skipping.');
+      return;
+    }
+
     // TODO: Connect Apple App Store / Google Play Billing APIs on backend to verify receipt/transaction token
     try {
       let token = '';
@@ -601,12 +621,6 @@ const AppContentInner: React.FC = () => {
           token = session.access_token;
         }
       }
-
-      const platform = Capacitor.getPlatform();
-      const products = IAPService.products;
-      const mainSub = products.find(p => p.state === 'owned' || p.state === 'approved' || p.state === 'verified');
-      const productId = mainSub?.id || 'premium_manual';
-      const transactionId = mainSub?.transactionId || (mainSub as any)?.purchase?.transactionId || `manual_${Date.now()}`;
 
       const response = await fetch('/api/verify-purchase', {
         method: 'POST',
@@ -642,9 +656,10 @@ const AppContentInner: React.FC = () => {
       showToast(`Welcome to the Elite Club! 👑`, 'success');
     } catch (err) {
       console.error("Failed to verify purchase:", err);
-      showToast("Verification failed. Please try again or contact support.", "error");
+      showToast("Purchase verification failed. Please try again or contact support.", "error");
     }
   }, [showToast, isGuest, handleExitGuestMode]);
+
 
   // Interstitial ads are now preloaded strictly sequentially (startup -> show -> preload next)
 
