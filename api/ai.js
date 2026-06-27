@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { createClient } from '@supabase/supabase-js';
 
 const DEFAULT_BASE_URL = "https://api.groq.com/openai/v1";
 const ALLOWED_MODELS = new Set([
@@ -8,6 +9,15 @@ const ALLOWED_MODELS = new Set([
 const MAX_MESSAGES = 8;
 const MAX_TEXT_LENGTH = 16000;
 const MAX_IMAGE_URL_LENGTH = 6_000_000;
+
+// Basic in-memory rate limiting (IP/Token based) - NOTE: In Vercel serverless, this resets per-container. Use Upstash/Redis for real rate limiting.
+const rateLimitMap = new Map();
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 15;
+
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
 
 const json = (res, statusCode, payload) => {
   res.status(statusCode);
@@ -97,6 +107,47 @@ const normalizeRequest = (body) => {
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return json(res, 405, { error: "Method not allowed." });
+  }
+
+  // 1. Authentication
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return json(res, 401, { error: "Missing or invalid authorization header." });
+  }
+  const token = authHeader.split(" ")[1];
+
+  let userId = 'anonymous';
+  if (supabase) {
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user) {
+      // Fallback for custom APP_SECRET if Supabase auth fails (e.g., guest mode token)
+      if (token !== process.env.APP_SECRET) {
+        return json(res, 401, { error: "Unauthorized." });
+      }
+    } else {
+      userId = user.id;
+    }
+  } else {
+     if (token !== process.env.APP_SECRET) {
+        return json(res, 401, { error: "Unauthorized." });
+     }
+  }
+
+  // 2. Rate Limiting
+  const identifier = userId !== 'anonymous' ? userId : (req.headers['x-forwarded-for'] || 'unknown_ip');
+  const now = Date.now();
+  const userRate = rateLimitMap.get(identifier) || { count: 0, startTime: now };
+  
+  if (now - userRate.startTime > RATE_LIMIT_WINDOW) {
+    userRate.count = 1;
+    userRate.startTime = now;
+  } else {
+    userRate.count++;
+  }
+  rateLimitMap.set(identifier, userRate);
+
+  if (userRate.count > MAX_REQUESTS_PER_WINDOW) {
+    return json(res, 429, { error: "Too many requests. Please try again later." });
   }
 
   const apiKey = process.env.GROQ_API_KEY || process.env.LLAMA_API_KEY;

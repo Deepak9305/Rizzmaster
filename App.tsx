@@ -557,60 +557,78 @@ const AppContentInner: React.FC = () => {
   }, []);
   // --- END ACTIVE TIME TRACKING ---
 
+  const initializeNotifications = useCallback(() => {
+    // OneSignal Push Notifications
+    OneSignalService.initialize();
+    // Local Notifications & Usage Tracking
+    NotificationService.initialize();
+  }, []);
+
   // Check for Onboarding on Mount
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem('rizz_onboarding_completed');
     if (!hasSeenOnboarding) {
       setShowOnboarding(true);
+    } else {
+      initializeNotifications();
     }
-  }, []);
+  }, [initializeNotifications]);
 
   const handleOnboardingComplete = () => {
     localStorage.setItem('rizz_onboarding_completed', 'true');
     setShowOnboarding(false);
+    initializeNotifications();
   };
 
   // Define handleUpgrade using REF to avoid stale closures
-  // TODO: [SECURITY] In production, DO NOT trust the client to assert premium status.
-  // When the native IAP succeeds, the client should send the Apple/Google receipt token
-  // to a Supabase Edge Function. The function must verify the receipt with the app stores,
-  // and ONLY THEN update the user's `is_premium` status in the database.
   const handleUpgrade = useCallback(async () => {
     const currentProfile = profileRef.current;
     if (!currentProfile || currentProfile.id === 'guest_user' || isGuest) return;
 
-    const updatedProfile = { ...currentProfile, is_premium: true, premium_source: 'native' };
-    setProfile(updatedProfile);
-    profileRef.current = updatedProfile; // Sync ref immediately to avoid stale reads
+    // TODO: [SECURITY] In production, DO NOT trust the client to assert premium status.
+    // When the native IAP succeeds, the client should send the Apple/Google receipt token
+    // to a Supabase Edge Function (e.g., `/verify-purchase`). The function must verify the 
+    // receipt with the app stores, and ONLY THEN update the user's `is_premium` status in the database.
+    
+    try {
+      // --- MOCK EDGE FUNCTION CALL ---
+      // In a real scenario, you'd do:
+      // await supabase.functions.invoke('verify-purchase', { body: { receipt: '...' } });
+      
+      // We will optimistically update the UI to keep the flow working for now:
+      const updatedProfile = { ...currentProfile, is_premium: true, premium_source: 'native' };
+      setProfile(updatedProfile);
+      profileRef.current = updatedProfile;
 
-    // Close modal via back navigation if open
-    if (stateRef.current.showPremiumModal) {
-      window.history.back();
-    }
+      if (stateRef.current.showPremiumModal) {
+        window.history.back();
+      }
 
-    showToast(`Welcome to the Elite Club! 👑`, 'success');
+      showToast(`Welcome to the Elite Club! 👑`, 'success');
 
-    // 4. Update Database
-    if (supabase && currentProfile) {
-      // Profile Status
-      await supabase.from('profiles').update({
-        is_premium: true,
-        premium_source: 'native'
-      }).eq('id', currentProfile.id);
+      if (supabase) {
+        // We'll still do the direct update here until the Edge function is built, 
+        // but this logic should eventually live entirely on the backend.
+        await supabase.from('profiles').update({
+          is_premium: true,
+          premium_source: 'native'
+        }).eq('id', currentProfile.id);
 
-      // Detailed Subscription Entry
-      const platform = Capacitor.getPlatform();
-      const products = IAPService.products;
-      // Use standard CdvPurchase 'state' property correctly
-      const mainSub = products.find(p => p.state === 'owned' || p.state === 'approved' || p.state === 'verified');
+        const platform = Capacitor.getPlatform();
+        const products = IAPService.products;
+        const mainSub = products.find(p => p.state === 'owned' || p.state === 'approved' || p.state === 'verified');
 
-      await supabase.from('premium_subscriptions').upsert({
-        user_id: currentProfile.id,
-        platform: platform,
-        product_id: mainSub?.id || 'premium_manual',
-        transaction_id: mainSub?.transactionId || (mainSub as any)?.purchase?.transactionId || null,
-        is_active: true
-      }, { onConflict: 'user_id' });
+        await supabase.from('premium_subscriptions').upsert({
+          user_id: currentProfile.id,
+          platform: platform,
+          product_id: mainSub?.id || 'premium_manual',
+          transaction_id: mainSub?.transactionId || (mainSub as any)?.purchase?.transactionId || null,
+          is_active: true
+        }, { onConflict: 'user_id' });
+      }
+    } catch (err) {
+      console.error("Failed to verify purchase:", err);
+      showToast("Verification failed. Please try again or contact support.", "error");
     }
   }, [showToast, isGuest]);
 
@@ -637,12 +655,6 @@ const AppContentInner: React.FC = () => {
       runAdTask('Initial AdMob init', AdMobService.initialize().then(() => {
         return AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'));
       }));
-
-      // OneSignal Push Notifications
-      OneSignalService.initialize();
-
-      // Local Notifications & Usage Tracking
-      NotificationService.initialize();
 
       // In-App Purchases
       IAPService.initialize(
@@ -1056,7 +1068,7 @@ const AppContentInner: React.FC = () => {
         // --- DATA MIGRATION: Sync legacy local notes to Supabase ---
         if (!profileData.shadow_notes) {
           try {
-            const localNotes = localStorage.getItem('rizz_coach_shadow_notes');
+            const localNotes = localStorage.getItem(`rizz_coach_shadow_notes_${userId}`) || localStorage.getItem('rizz_coach_shadow_notes');
             if (localNotes && localNotes.trim()) {
               console.log("Migrating local shadow notes to cloud...");
               const { data: migratedProfile } = await supabase
@@ -1073,6 +1085,9 @@ const AppContentInner: React.FC = () => {
           } catch (err) {
             console.warn("Migration check failed:", err);
           }
+        } else {
+          // Keep local state in sync so the coach remembers vibes across offline sessions
+          localStorage.setItem(`rizz_coach_shadow_notes_${userId}`, profileData.shadow_notes);
         }
       }
 
@@ -1191,7 +1206,7 @@ const AppContentInner: React.FC = () => {
       showToast("Saved to your gems", 'success');
 
       if (!isGuestUser && supabase) {
-        await supabase.from('saved_items').insert([{ user_id: currentProfile.id, content, type }]);
+        await supabase.from('saved_items').insert([{ id: newItem.id, user_id: currentProfile.id, content, type, created_at: newItem.created_at }]);
       }
     }
   }, [savedItems, showToast]);
@@ -1278,8 +1293,19 @@ const AppContentInner: React.FC = () => {
     toggleSave(content, type);
   }, [toggleSave]);
 
-  const handleReport = useCallback(() => {
-    showToast('Report submitted. We will review this.', 'info');
+  const handleReport = useCallback(async (content?: string) => {
+    if (!profileRef.current) return;
+    try {
+      if (supabase && profileRef.current.id !== 'guest_user') {
+        await supabase.from('reports').insert([
+          { user_id: profileRef.current.id, content: content || 'General Report', type: 'content_report' }
+        ]);
+      }
+      showToast('Report submitted. We will review this.', 'info');
+    } catch (err) {
+      console.error("Report failed:", err);
+      showToast('Failed to send report.', 'error');
+    }
   }, [showToast]);
 
   const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1530,10 +1556,11 @@ const AppContentInner: React.FC = () => {
     if (!currentProfile) return;
 
     setProfile(prev => prev ? { ...prev, shadow_notes: newNotes } : null);
+    
+    // Always sync to local storage for offline persistence
+    localStorage.setItem(`rizz_coach_shadow_notes_${currentProfile.id}`, newNotes);
 
-    if (isGuest || currentProfile.id === 'guest_user') {
-      localStorage.setItem('rizzmaster_guest_shadow_notes', newNotes);
-    } else if (supabase) {
+    if (!isGuest && currentProfile.id !== 'guest_user' && supabase) {
       Promise.resolve(supabase.from('profiles')
         .update({ shadow_notes: newNotes })
         .eq('id', currentProfile.id))

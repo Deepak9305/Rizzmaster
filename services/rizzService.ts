@@ -1,5 +1,6 @@
 import { RizzResponse, BioResponse, ResponseLength } from "../types";
 import { resizeImage } from "./imageService";
+import { supabase } from "./supabaseClient";
 
 const AI_ENDPOINT = '/api/ai';
 
@@ -25,10 +26,19 @@ const callAiChatCompletion = async (payload: {
   temperature: number;
   max_tokens?: number;
 }): Promise<string> => {
+  let token = 'unauthenticated';
+  if (supabase) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      token = session.access_token;
+    }
+  }
+
   const response = await fetch(AI_ENDPOINT, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
     },
     body: JSON.stringify(payload),
   });

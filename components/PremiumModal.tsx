@@ -2,8 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import IAPService from '../services/iapService';
 import { Capacitor } from '@capacitor/core';
-import { NativeBridge } from '../services/nativeBridge';
-
 interface PremiumModalProps {
     onClose: () => void;
     onUpgrade: (plan: 'WEEKLY' | 'MONTHLY') => void;

@@ -28,7 +28,10 @@ For the reporting system to function, you must manually create a `reports` table
 
 Ensure Row Level Security (RLS) policies allow authenticated (and guest) inserts to this table, or simply allow all `INSERT` operations while restricting `SELECT` to admins.
 
-### 3. Build & Deployment
+### 3. Database Functions (RPC)
+For the account deletion feature to work correctly, you must execute the `public.delete_user()` function script found in `supabase_schema.sql` via the Supabase SQL Editor. This ensures that user data and authentication credentials are completely removed when a user deletes their account.
+
+### 4. Build & Deployment
 The project uses a localized Tailwind build process rather than a CDN.
 
 1. Install dependencies: `npm install`

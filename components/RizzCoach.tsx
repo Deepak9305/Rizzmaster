@@ -847,6 +847,14 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                             </button>
                         </div>
                     </div>
+                    
+                    <div style={{
+                        textAlign: 'center', marginTop: '10px', fontSize: '10px',
+                        color: 'rgba(255,255,255,0.4)', padding: '0 20px', lineHeight: 1.4
+                    }}>
+                        AI coach notes are stored securely to personalize advice. Clear chat anytime to reset.
+                    </div>
+
                     {!isPremium && credits <= 2 && credits > 0 && (
                         <p
                             onClick={() => showToast("Credits reset to 5 daily. Extra ad credits do not stack.", "info")}
