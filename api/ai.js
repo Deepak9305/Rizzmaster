@@ -129,7 +129,7 @@ export default async function handler(req, res) {
     return json(res, 500, { error: "Supabase integration not configured on the server." });
   }
 
-  const isGuest = (token === "unauthenticated" || (supabaseKey && token === supabaseKey));
+  const isGuest = (token === "unauthenticated");
   let user = null;
   let userId = "guest_user";
 

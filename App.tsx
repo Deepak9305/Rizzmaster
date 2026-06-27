@@ -927,6 +927,7 @@ const AppContentInner: React.FC = () => {
       clearTimeout(failSafeTimeout);
       subscription.unsubscribe();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Profile Loading Timeout: Prevent indefinite loading spinner
@@ -978,7 +979,7 @@ const AppContentInner: React.FC = () => {
     sessionChannelRef.current?.postMessage({ type: 'NEW_SESSION_STARTED' });
   }, []);
 
-  const loadUserData = async (userId: string, email?: string) => {
+  const loadUserData = useCallback(async (userId: string, email?: string) => {
     if (!supabase) return;
 
     try {
@@ -1071,7 +1072,7 @@ const AppContentInner: React.FC = () => {
     } catch (e) {
       console.error("Error loading user data", e);
     }
-  };
+  }, [showToast]);
 
   const handleLogout = useCallback(async () => {
     const currentProfile = profileRef.current;
@@ -1515,6 +1516,8 @@ const AppContentInner: React.FC = () => {
     const creditsBefore = currentProfile.credits || 0;
 
     try {
+      // Optimistic credit deduction for signed-in non-premium users only.
+      // Guests are rate-limited server-side and have their own localStorage tracking below.
       if (!isGuest && !currentProfile.is_premium) {
         updateCredits(creditsBefore - cost);
       }
@@ -1555,8 +1558,8 @@ const AppContentInner: React.FC = () => {
       if (!isGuest) {
         await syncProfile();
       } else {
-        // Persist updated guest credits to localStorage
-        const guestCredits = parseInt(localStorage.getItem('rizzmaster_guest_credits') || '5');
+        // Persist updated guest credits to localStorage (single deduction — not done above)
+        const guestCredits = parseInt(localStorage.getItem('rizzmaster_guest_credits') || String(DAILY_CREDITS));
         const newGuestCredits = Math.max(0, guestCredits - cost);
         localStorage.setItem('rizzmaster_guest_credits', newGuestCredits.toString());
         updateCredits(newGuestCredits);
@@ -1572,6 +1575,8 @@ const AppContentInner: React.FC = () => {
     setResult(null);
     setInputError(null);
     setSelectedVibe(null);
+    // Also imperatively clear the uncontrolled textarea
+    if (textareaRef.current) textareaRef.current.value = '';
   }, []);
 
   const updateShadowNotes = useCallback(async (newNotes: string) => {
@@ -1817,7 +1822,7 @@ const AppContentInner: React.FC = () => {
                       {profile?.is_premium ? '👑' : '⚡'}
                     </span>
                     <span className={`font-bold text-xs md:text-sm ${profile?.is_premium ? 'text-yellow-400' : 'text-white'}`}>
-                      {profile?.is_premium ? 'Unlimited' : `${profile?.credits} Credits`}
+                      {profile?.is_premium ? 'Unlimited' : `${profile?.credits ?? 0} Credits`}
                     </span>
                   </div>
                 </div>
@@ -1837,8 +1842,8 @@ const AppContentInner: React.FC = () => {
 
               {/* Main Mode Selection */}
               <div className="flex gap-3 mb-6 max-w-lg mx-auto w-full select-none">
-                <button onClick={() => { setMode(InputMode.CHAT); if (textareaRef.current) textareaRef.current.value = ''; setImage(null); setResult(null); }} className={`flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 ${mode === InputMode.CHAT ? 'rizz-gradient text-white shadow-lg shadow-rose-500/20 shadow-purple-500/20' : 'bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10'}`}>Chat Reply</button>
-                <button onClick={() => { setMode(InputMode.BIO); if (textareaRef.current) textareaRef.current.value = ''; setImage(null); setResult(null); }} className={`flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 ${mode === InputMode.BIO ? 'rizz-gradient text-white shadow-lg shadow-rose-500/20 shadow-purple-500/20' : 'bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10'}`}>Profile Bio</button>
+                <button onClick={() => { setMode(InputMode.CHAT); setInputText(''); if (textareaRef.current) textareaRef.current.value = ''; setImage(null); setResult(null); setInputError(null); }} className={`flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 ${mode === InputMode.CHAT ? 'rizz-gradient text-white shadow-lg shadow-rose-500/20 shadow-purple-500/20' : 'bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10'}`}>Chat Reply</button>
+                <button onClick={() => { setMode(InputMode.BIO); setInputText(''); if (textareaRef.current) textareaRef.current.value = ''; setImage(null); setResult(null); setInputError(null); }} className={`flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 ${mode === InputMode.BIO ? 'rizz-gradient text-white shadow-lg shadow-rose-500/20 shadow-purple-500/20' : 'bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10'}`}>Profile Bio</button>
                 <button onClick={() => { handleViewNavigation('COACH'); }} className="flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 flex items-center justify-center gap-1.5">Rizz AI</button>
               </div>
 
@@ -1951,7 +1956,7 @@ const AppContentInner: React.FC = () => {
                     </div>
                   )}
 
-                  {(profile?.is_premium || (profile?.credits || 0) > 0) ? (
+                  {(isGuest || profile?.is_premium || (profile?.credits || 0) > 0) ? (
                     <button
                       onClick={() => handleGenerate(textareaRef.current?.value || '')}
                       disabled={loading}

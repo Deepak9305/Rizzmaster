@@ -401,7 +401,8 @@ CRITICAL: ${length === 'short'
           { role: "system", content: systemInstruction },
           { role: "user", content: isUnsafe ? "Generate roast." : inputText }
         ],
-        temperature: 0.85
+        temperature: 0.85,
+        max_tokens: length === 'short' ? 400 : length === 'medium' ? 600 : 900
       });
 
       if (responseText) {
