@@ -6,9 +6,10 @@ import { Capacitor } from '@capacitor/core';
 
 interface LoginPageProps {
     onGuestEntry?: () => void;
+    reason?: 'premium';
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
     const [isEmailMode, setIsEmailMode] = useState(false);
     const [isSignUp, setIsSignUp] = useState(false);
     const [email, setEmail] = useState('');
@@ -212,11 +213,24 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry }) => {
                     </div>
 
                     <div className="glass md:bg-transparent md:backdrop-filter-none p-8 md:p-0 rounded-3xl md:rounded-none border border-white/10 md:border-none shadow-2xl md:shadow-none">
+                        {/* Premium redirect banner */}
+                        {reason === 'premium' && (
+                            <div className="mb-6 p-4 rounded-2xl bg-yellow-500/10 border border-yellow-500/25 flex items-start gap-3 animate-fade-in">
+                                <span className="text-xl flex-shrink-0">👑</span>
+                                <div>
+                                    <p className="text-yellow-300 font-bold text-sm leading-tight">Create an account to go Premium</p>
+                                    <p className="text-yellow-200/50 text-xs mt-0.5 leading-snug">Sign in or sign up below — it takes 30 seconds, then you can subscribe.</p>
+                                </div>
+                            </div>
+                        )}
+
                         <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 md:mb-3">
-                            {isSignUp ? 'Create Account' : 'Welcome Back'}
+                            {reason === 'premium' ? 'Sign in to Subscribe' : (isSignUp ? 'Create Account' : 'Welcome Back')}
                         </h2>
                         <p className="text-white/40 text-sm mb-8">
-                            {isSignUp ? 'Join Rizz Master today.' : 'Sign in to continue.'}
+                            {reason === 'premium'
+                                ? 'Log in or create a free account first.'
+                                : (isSignUp ? 'Join Rizz Master today.' : 'Sign in to continue.')}
                         </p>
 
                         {isEmailMode ? (

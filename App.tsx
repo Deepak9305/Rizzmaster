@@ -270,6 +270,7 @@ const AppContentInner: React.FC = () => {
 
   // Guest Mode State
   const [isGuest, setIsGuest] = useState(false);
+  const [loginReason, setLoginReason] = useState<'premium' | undefined>(undefined);
 
   const handleGuestEntry = useCallback(() => {
     setIsGuest(true);
@@ -586,6 +587,7 @@ const AppContentInner: React.FC = () => {
     // If guest taps Upgrade, close the modal and send them to sign-in/sign-up
     if (!currentProfile || currentProfile.id === 'guest_user' || isGuest) {
       setShowPremiumModal(false);
+      setLoginReason('premium');
       handleExitGuestMode();
       return;
     }
@@ -1581,7 +1583,7 @@ const AppContentInner: React.FC = () => {
             </div>
           </div>
         ) : (!session && !isGuest) ? (
-          <LoginPage onGuestEntry={handleGuestEntry} />
+          <LoginPage onGuestEntry={() => { setLoginReason(undefined); handleGuestEntry(); }} reason={loginReason} />
         ) : !profile ? (
           <div className="min-h-screen flex flex-col items-center justify-center text-white p-4 bg-black safe-top safe-bottom">
             <div className="absolute inset-0 bg-rose-900/5 blur-[100px] pointer-events-none" />
