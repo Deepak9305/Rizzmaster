@@ -4,6 +4,7 @@ import { generateCoachAdvice } from '../services/rizzService';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import { useToast } from '../context/ToastContext';
+import { supabase } from '../services/supabaseClient';
 
 // Inject keyframe styles once at module load — avoids re-comparing the CSS string on every keystroke
 if (typeof document !== 'undefined') {
@@ -179,7 +180,7 @@ const TypingIndicator = React.memo(({ icon, colors }: { icon?: React.ReactNode, 
     </div>
 ));
 
-interface MsgProps { msg: CoachMessage; onReport: () => void; icon?: React.ReactNode; colors?: any; }
+interface MsgProps { msg: CoachMessage; onReport: (content: string) => void; icon?: React.ReactNode; colors?: any; }
 const MessageBubble = React.memo(({ msg, onReport, icon, colors }: MsgProps) => {
     const isUser = msg.role === 'user';
     const [isHovered, setIsHovered] = useState(false);
@@ -224,7 +225,7 @@ const MessageBubble = React.memo(({ msg, onReport, icon, colors }: MsgProps) => 
 
                 {/* Report Action */}
                 <button
-                    onClick={(e) => { e.stopPropagation(); onReport(); }}
+                    onClick={(e) => { e.stopPropagation(); onReport(msg.content); }}
                     style={{
                         position: 'absolute',
                         bottom: '-4px',
@@ -305,9 +306,19 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
     const fileInputRef = useRef<HTMLInputElement>(null);
     const isFirstMount = useRef(true);
 
-    const handleReportMessage = useCallback(() => {
-        showToast("Report received! We'll review this. 🤝", 'success');
-    }, [showToast]);
+    const handleReportMessage = useCallback(async (content: string) => {
+        try {
+            if (supabase) {
+                await supabase.from('reports').insert([
+                    { user_id: userId, content, type: 'message_report' }
+                ]);
+            }
+        } catch (e) {
+            console.error("Failed to report message", e);
+        } finally {
+            showToast("Report received! We'll review this. 🤝", 'success');
+        }
+    }, [showToast, userId]);
 
     useEffect(() => {
         if (scrollRef.current) {

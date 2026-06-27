@@ -202,7 +202,7 @@ export const NotificationService = {
             // 1. Clear existing scheduled notifications to avoid duplicates
             const pending = await LocalNotifications.getPending();
             if (pending.notifications.length > 0) {
-                await LocalNotifications.cancel(pending);
+                await LocalNotifications.cancel({ notifications: pending.notifications.filter(n => n.id >= 1001 && n.id <= 1007) });
             }
 
             // 2. Get the optimal hour
@@ -263,3 +263,4 @@ export const NotificationService = {
         return date;
     }
 };
+

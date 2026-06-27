@@ -571,6 +571,10 @@ const AppContentInner: React.FC = () => {
   };
 
   // Define handleUpgrade using REF to avoid stale closures
+  // TODO: [SECURITY] In production, DO NOT trust the client to assert premium status.
+  // When the native IAP succeeds, the client should send the Apple/Google receipt token
+  // to a Supabase Edge Function. The function must verify the receipt with the app stores,
+  // and ONLY THEN update the user's `is_premium` status in the database.
   const handleUpgrade = useCallback(async () => {
     const currentProfile = profileRef.current;
     if (!currentProfile || currentProfile.id === 'guest_user' || isGuest) return;
@@ -795,6 +799,7 @@ const AppContentInner: React.FC = () => {
   }, [INTERSTITIAL_COOLDOWN_MS]);
 
   const handleViewNavigation = useCallback(async (view: ViewState) => {
+    if (loading) return;
     if (view === currentView) return;
 
     if (currentView === 'COACH' && view === 'HOME') {
@@ -804,9 +809,13 @@ const AppContentInner: React.FC = () => {
 
     window.history.pushState({ view }, '');
     setCurrentView(view);
-  }, [currentView, showCoachTransitionAd]); // Bug 1 fix: showCoachTransitionAd added to deps
+  }, [currentView, showCoachTransitionAd, loading]); // Bug 1 fix: showCoachTransitionAd added to deps
 
   const handleBackNavigation = useCallback(() => {
+    if (loading) {
+      window.history.pushState({ view: currentView }, '');
+      return;
+    }
     // Navigate back immediately — don't block on the ad
     const state = window.history.state;
     if (state && (state.view !== 'HOME' || state.saved || state.premium)) {
@@ -822,7 +831,7 @@ const AppContentInner: React.FC = () => {
     if (currentView === 'COACH') {
       showCoachTransitionAd();
     }
-  }, [currentView, showCoachTransitionAd]);
+  }, [currentView, showCoachTransitionAd, loading]);
 
   const handleOpenPremium = useCallback(() => {
     if (isGuest) {
@@ -1124,9 +1133,11 @@ const AppContentInner: React.FC = () => {
   const updateCredits = useCallback(async (newAmountOrUpdater: number | ((prev: number) => number)) => {
     setProfile(prev => {
       if (!prev) return null;
-      const newAmount = typeof newAmountOrUpdater === 'function'
+      let newAmount = typeof newAmountOrUpdater === 'function'
         ? newAmountOrUpdater(prev.credits || 0)
         : newAmountOrUpdater;
+      
+      newAmount = Math.max(0, newAmount);
 
       const updated = { ...prev, credits: newAmount };
 
@@ -1147,10 +1158,9 @@ const AppContentInner: React.FC = () => {
     if (Capacitor.isNativePlatform()) {
       IAPService.restore();
     } else {
-      // Dev fallback
-      setTimeout(() => handleUpgrade(), 1500);
+      showToast('Restore purchases is only available in the mobile app.', 'info');
     }
-  }, [handleUpgrade]);
+  }, [showToast]);
 
   const toggleSave = useCallback(async (content: string, type: 'tease' | 'smooth' | 'chaotic' | 'bio') => {
     const currentProfile = profileRef.current;
@@ -1381,6 +1391,8 @@ const AppContentInner: React.FC = () => {
   // Active Time tracking handles the grace period now (see useEffect above)
 
   const handleGenerate = useCallback(async (textToProcess?: string) => {
+    if (loading) return;
+    
     const currentProfile = profileRef.current || profile;
     if (!currentProfile) {
       console.error("handleGenerate: currentProfile is null.");

@@ -4,8 +4,8 @@ import { resizeImage } from "./imageService";
 const AI_ENDPOINT = '/api/ai';
 
 // Model Configuration
-const DEFAULT_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
-const RIZZ_TEXT_MODEL = 'llama-3.1-8b-instant';
+const DEFAULT_MODEL = 'llama-3.2-90b-vision-preview';
+const RIZZ_TEXT_MODEL = 'llama-3.3-70b-versatile';
 
 type AiMessageContent =
   | string

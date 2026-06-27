@@ -1,0 +1,47 @@
+
+> rizz-master@1.1.8 dev
+> vite --host localhost --port 4173
+
+Re-optimizing dependencies because lockfile has changed
+
+  [32m[1mVITE[22m v5.4.21[39m  [2mready in [0m[1m577[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m4173[22m/[39m
+[2m11:08:30 pm[22m [36m[1m[vite][22m[39m [32m✨ new dependencies optimized: [33mopenai[32m[39m
+[2m11:08:30 pm[22m [36m[1m[vite][22m[39m [32m✨ optimized dependencies changed. reloading[39m
+[2m11:14:28 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:14:28 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:14:34 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:15:40 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:16:13 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:16:16 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:17:00 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:17:22 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:17:44 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:18:16 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:18:21 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:23:34 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:23:35 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:23:39 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:23:44 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:23:52 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:24:22 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:24:27 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:24:31 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:25:18 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:25:26 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:25:45 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:26:47 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:27:46 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:28:58 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:35:40 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:35:40 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:35:47 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:35:54 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:36:08 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:36:15 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:36:48 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:41:35 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:41:35 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:43:09 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m
+[2m11:43:34 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/App.tsx[22m

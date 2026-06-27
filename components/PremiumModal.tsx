@@ -44,9 +44,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onResto
         if (Capacitor.isNativePlatform()) {
             IAPService.purchase(selectedPlan);
         } else {
-            // Fallback for web demo
-            console.log(`Simulating upgrade for ${selectedPlan}`);
-            setTimeout(() => onUpgrade(selectedPlan), 1000);
+            console.log('Purchases are only available in the native mobile app.');
         }
     };
 
