@@ -10,19 +10,18 @@ interface PremiumModalProps {
 
 const FEATURES = [
     { icon: '⚡', label: 'Unlimited Daily Rizz', sub: 'No caps. Generate as much as you want.' },
-    { icon: '🧠', label: 'Rizz Coach – Unlimited Messages', sub: 'Full access to every coach session.' },
+    { icon: '🧠', label: 'Rizz Coach – Unlimited Messages', sub: 'Full access to every coaching session.' },
     { icon: '📸', label: 'Advanced Photo Analysis', sub: 'Read the screenshot, decode the vibe.' },
     { icon: '🎭', label: 'All Expert Personas', sub: 'Roast Master, Chaotic & more unlocked.' },
     { icon: '✍️', label: 'Custom AI Personas', sub: 'Build your own AI coaching style.' },
     { icon: '📝', label: 'Long-Form Bio Mode', sub: 'Full dating profile rewrites.' },
     { icon: '🚫', label: 'Zero Ads, Forever', sub: 'No interruptions, ever again.' },
-    { icon: '🔒', label: 'Saved Rizz Vault', sub: 'Keep your best lines forever.' },
+    { icon: '🔒', label: 'Saved Rizz Vault', sub: 'Keep your best lines saved forever.' },
 ];
 
 const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onRestore }) => {
     const [selectedPlan, setSelectedPlan] = useState<'WEEKLY' | 'MONTHLY'>('WEEKLY');
     const [prices, setPrices] = useState({ weekly: '$4.99', monthly: '$15.99' });
-    const [pulse, setPulse] = useState(false);
 
     useEffect(() => {
         if (Capacitor.isNativePlatform()) {
@@ -40,15 +39,6 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onResto
             const timer = setTimeout(fetchPrices, 1500);
             return () => clearTimeout(timer);
         }
-    }, []);
-
-    // Pulse the CTA every 4s to draw attention
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setPulse(true);
-            setTimeout(() => setPulse(false), 600);
-        }, 4000);
-        return () => clearInterval(interval);
     }, []);
 
     const handleSubscribe = () => {
@@ -71,219 +61,113 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onResto
     const savings = computeSavings();
 
     return (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-            {/* Backdrop */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div
+                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
                 onClick={onClose}
-                style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
             />
 
-            {/* Sheet */}
-            <div style={{
-                position: 'relative', width: '100%', maxWidth: '480px',
-                background: 'linear-gradient(180deg, #0e0e0e 0%, #0a0a0a 100%)',
-                borderRadius: '28px 28px 0 0',
-                border: '1px solid rgba(255,215,0,0.15)',
-                borderBottom: 'none',
-                padding: '0 0 env(safe-area-inset-bottom)',
-                overflowY: 'auto',
-                maxHeight: '92dvh',
-                boxShadow: '0 -8px 60px rgba(255,180,0,0.12)',
-                animation: 'premiumSlideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1)',
-            }}>
-                <style>{`
-                    @keyframes premiumSlideUp {
-                        from { transform: translateY(100%); opacity: 0; }
-                        to { transform: translateY(0); opacity: 1; }
-                    }
-                    @keyframes goldShimmer {
-                        0% { background-position: -200% center; }
-                        100% { background-position: 200% center; }
-                    }
-                    @keyframes ctaPulse {
-                        0%, 100% { box-shadow: 0 0 20px rgba(255,180,0,0.35); }
-                        50% { box-shadow: 0 0 40px rgba(255,180,0,0.65); }
-                    }
-                    @keyframes starFloat {
-                        0%, 100% { transform: translateY(0px); }
-                        50% { transform: translateY(-4px); }
-                    }
-                `}</style>
-
+            <div className="relative bg-[#111] rounded-3xl p-6 md:p-8 max-w-sm w-full border border-yellow-500/30 overflow-hidden shadow-2xl shadow-yellow-500/10 animate-scale-in overflow-y-auto max-h-[90dvh]">
                 {/* Gold top bar */}
-                <div style={{ width: '100%', height: '3px', background: 'linear-gradient(90deg, transparent, #facc15, #fbbf24, #facc15, transparent)' }} />
-
-                {/* Drag handle */}
-                <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '10px' }}>
-                    <div style={{ width: '40px', height: '4px', borderRadius: '99px', background: 'rgba(255,255,255,0.15)' }} />
-                </div>
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-600" />
 
                 {/* Close */}
                 <button
                     onClick={onClose}
-                    style={{
-                        position: 'absolute', top: '16px', right: '16px', width: '30px', height: '30px',
-                        borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)',
-                        color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '14px',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}
-                >✕</button>
+                    className="absolute top-4 right-4 text-white/30 hover:text-white"
+                >
+                    ✕
+                </button>
 
-                <div style={{ padding: '4px 20px 24px' }}>
-
-                    {/* Hero */}
-                    <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-                        <div style={{
-                            fontSize: '52px', marginBottom: '6px',
-                            animation: 'starFloat 3s ease-in-out infinite',
-                            display: 'inline-block',
-                            filter: 'drop-shadow(0 0 16px rgba(250,204,21,0.6))',
-                        }}>👑</div>
-                        <h2 style={{
-                            fontSize: '22px', fontWeight: 900, color: 'white',
-                            letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: '6px'
-                        }}>
-                            Unlock <span style={{
-                                background: 'linear-gradient(90deg, #facc15, #fbbf24, #f59e0b, #facc15)',
-                                backgroundSize: '200% auto',
-                                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                                animation: 'goldShimmer 3s linear infinite',
-                            }}>God Mode</span>
-                        </h2>
-                        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.4 }}>
-                            Join <strong style={{ color: 'rgba(255,255,255,0.8)' }}>12,400+</strong> guys who leveled up their dating game this week.
-                        </p>
+                {/* Hero */}
+                <div className="text-center mb-5">
+                    <div className="w-14 h-14 mx-auto mb-3 bg-yellow-500/10 rounded-full flex items-center justify-center text-2xl border border-yellow-500/20 animate-pulse-glow">
+                        👑
                     </div>
+                    <h2 className="text-xl md:text-2xl font-bold text-white mb-1">Unlock God Mode</h2>
+                    <p className="text-xs text-white/40">Everything unlocked. No limits. No ads.</p>
+                </div>
 
-                    {/* Urgency Banner */}
-                    <div style={{
-                        background: 'linear-gradient(135deg, rgba(239,68,68,0.15), rgba(220,38,38,0.08))',
-                        border: '1px solid rgba(239,68,68,0.25)', borderRadius: '12px',
-                        padding: '8px 14px', marginBottom: '16px', textAlign: 'center',
-                    }}>
-                        <p style={{ fontSize: '12px', color: '#fca5a5', fontWeight: 700, margin: 0 }}>
-                            🔥 &nbsp;Special launch pricing — may increase at any time
-                        </p>
-                    </div>
+                {/* Urgency banner */}
+                <div className="bg-rose-500/10 border border-rose-500/25 rounded-xl px-3 py-2 mb-5 text-center">
+                    <p className="text-[11px] text-rose-300 font-semibold">
+                        🔥 &nbsp;Launch pricing — may increase anytime
+                    </p>
+                </div>
 
-                    {/* Plan selector */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
-                        {(['WEEKLY', 'MONTHLY'] as const).map(plan => {
-                            const isSelected = selectedPlan === plan;
-                            const price = plan === 'WEEKLY' ? prices.weekly : prices.monthly;
-                            const label = plan === 'WEEKLY' ? 'Weekly' : 'Monthly';
-                            const sub = plan === 'WEEKLY' ? 'Billed weekly' : 'Best value';
-                            return (
-                                <button
-                                    key={plan}
-                                    onClick={() => setSelectedPlan(plan)}
-                                    style={{
-                                        position: 'relative', padding: '14px 10px',
-                                        borderRadius: '16px', cursor: 'pointer',
-                                        border: isSelected ? '2px solid #facc15' : '2px solid rgba(255,255,255,0.08)',
-                                        background: isSelected ? 'rgba(250,204,21,0.1)' : 'rgba(255,255,255,0.03)',
-                                        transition: 'all 0.2s cubic-bezier(0.16,1,0.3,1)',
-                                        boxShadow: isSelected ? '0 0 20px rgba(250,204,21,0.2)' : 'none',
-                                        display: 'flex', flexDirection: 'column', alignItems: 'center',
-                                    }}
-                                >
-                                    {plan === 'MONTHLY' && savings && (
-                                        <div style={{
-                                            position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)',
-                                            background: 'linear-gradient(90deg, #ef4444, #dc2626)',
-                                            color: 'white', fontSize: '9px', fontWeight: 800,
-                                            padding: '2px 8px', borderRadius: '99px', whiteSpace: 'nowrap',
-                                            letterSpacing: '0.05em', textTransform: 'uppercase',
-                                        }}>
-                                            SAVE {savings}%
-                                        </div>
-                                    )}
-                                    <span style={{ fontSize: '11px', color: isSelected ? 'rgba(250,204,21,0.8)' : 'rgba(255,255,255,0.4)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>{label}</span>
-                                    <span style={{ fontSize: '22px', fontWeight: 900, color: isSelected ? '#facc15' : 'rgba(255,255,255,0.6)' }}>{price}</span>
-                                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>{sub}</span>
-                                </button>
-                            );
-                        })}
-                    </div>
-
-                    {/* Feature list */}
-                    <div style={{
-                        background: 'rgba(255,255,255,0.03)', borderRadius: '16px',
-                        border: '1px solid rgba(255,255,255,0.06)', padding: '12px',
-                        marginBottom: '18px', display: 'flex', flexDirection: 'column', gap: '10px'
-                    }}>
-                        {FEATURES.map((f, i) => (
-                            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <div style={{
-                                    width: '34px', height: '34px', borderRadius: '10px', flexShrink: 0,
-                                    background: 'rgba(250,204,21,0.08)', border: '1px solid rgba(250,204,21,0.15)',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px',
-                                }}>{f.icon}</div>
-                                <div>
-                                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'white', lineHeight: 1.2 }}>{f.label}</div>
-                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', marginTop: '1px' }}>{f.sub}</div>
-                                </div>
-                                <div style={{ marginLeft: 'auto', flexShrink: 0 }}>
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                        <path d="M20 6L9 17l-5-5" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                                    </svg>
-                                </div>
+                {/* Features */}
+                <ul className="space-y-3 mb-6">
+                    {FEATURES.map((f, i) => (
+                        <li key={i} className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-yellow-500/8 border border-yellow-500/15 flex items-center justify-center text-sm flex-shrink-0">
+                                {f.icon}
                             </div>
-                        ))}
-                    </div>
+                            <div className="flex-1 min-w-0">
+                                <div className="text-sm text-white/90 font-semibold leading-tight">{f.label}</div>
+                                <div className="text-[10px] text-white/35 leading-tight mt-0.5">{f.sub}</div>
+                            </div>
+                            <span className="text-green-500 text-sm flex-shrink-0">✓</span>
+                        </li>
+                    ))}
+                </ul>
 
-                    {/* CTA */}
+                {/* Plan selector */}
+                <div className="grid grid-cols-2 gap-3 mb-5">
+                    {(['WEEKLY', 'MONTHLY'] as const).map(plan => {
+                        const isSelected = selectedPlan === plan;
+                        const price = plan === 'WEEKLY' ? prices.weekly : prices.monthly;
+                        const label = plan === 'WEEKLY' ? 'Weekly' : 'Monthly';
+                        return (
+                            <button
+                                key={plan}
+                                onClick={() => setSelectedPlan(plan)}
+                                className={`p-3 rounded-xl border transition-all flex flex-col items-center justify-center text-center relative ${
+                                    isSelected
+                                        ? 'bg-yellow-500/10 border-yellow-500 text-white shadow-[0_0_15px_rgba(234,179,8,0.2)]'
+                                        : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/10'
+                                }`}
+                            >
+                                {plan === 'MONTHLY' && savings && (
+                                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-gradient-to-r from-rose-500 to-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shadow-lg">
+                                        SAVE {savings}%
+                                    </div>
+                                )}
+                                <span className="text-[10px] font-bold uppercase tracking-wider mb-1 opacity-70">{label}</span>
+                                <span className="text-lg font-black text-yellow-400">{price}</span>
+                                <span className="text-[9px] text-white/30 mt-0.5">
+                                    {plan === 'WEEKLY' ? 'billed weekly' : 'best value'}
+                                </span>
+                            </button>
+                        );
+                    })}
+                </div>
+
+                {/* CTA */}
+                <button
+                    onClick={handleSubscribe}
+                    className="w-full py-3 bg-gradient-to-r from-yellow-600 to-amber-500 text-black font-bold rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-lg flex flex-col items-center leading-tight mb-4 animate-shimmer bg-[length:200%_100%]"
+                >
+                    <span className="text-sm">
+                        {Capacitor.isNativePlatform() ? '🔓 Subscribe & Upgrade' : '🔓 Sign Up to Unlock'}
+                    </span>
+                    <span className="text-[10px] opacity-80 uppercase mt-0.5">
+                        {Capacitor.isNativePlatform()
+                            ? (selectedPlan === 'WEEKLY' ? `${prices.weekly} billed weekly` : `${prices.monthly} billed monthly`)
+                            : 'Free account required · Takes 30 seconds'}
+                    </span>
+                </button>
+
+                {/* Footer */}
+                <div className="flex flex-col gap-2 items-center">
                     <button
-                        onClick={handleSubscribe}
-                        style={{
-                            width: '100%', padding: '16px',
-                            background: 'linear-gradient(135deg, #facc15 0%, #f59e0b 50%, #facc15 100%)',
-                            backgroundSize: '200% auto',
-                            animation: `goldShimmer 3s linear infinite${pulse ? ', ctaPulse 0.6s ease' : ''}`,
-                            border: 'none', borderRadius: '16px', cursor: 'pointer',
-                            color: '#000', fontWeight: 900, fontSize: '15px',
-                            letterSpacing: '-0.01em',
-                            boxShadow: '0 4px 24px rgba(250,204,21,0.35)',
-                            transition: 'transform 0.15s, box-shadow 0.15s',
-                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
-                        }}
-                        onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.02)')}
-                        onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
+                        onClick={onRestore}
+                        className="text-xs text-white/40 hover:text-white/80 underline decoration-white/20 underline-offset-4"
                     >
-                        <span>🔓 {Capacitor.isNativePlatform() ? 'Unlock God Mode Now' : 'Sign Up to Unlock'}</span>
-                        <span style={{ fontSize: '11px', fontWeight: 600, opacity: 0.7 }}>
-                            {Capacitor.isNativePlatform()
-                                ? (selectedPlan === 'WEEKLY' ? `${prices.weekly}/week · Cancel anytime` : `${prices.monthly}/month · Cancel anytime`)
-                                : 'Free account required · Takes 30 seconds'}
-                        </span>
+                        Restore Purchases
                     </button>
-
-                    {/* Social proof + restore */}
-                    <div style={{ textAlign: 'center', marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <div style={{ display: 'flex' }}>
-                                {['#FF0080', '#7928CA', '#FF4D4D', '#0070F3', '#00DFD8'].map((c, i) => (
-                                    <div key={i} style={{
-                                        width: '20px', height: '20px', borderRadius: '50%',
-                                        background: c, border: '1.5px solid #0a0a0a',
-                                        marginLeft: i === 0 ? 0 : '-6px',
-                                    }} />
-                                ))}
-                            </div>
-                            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>
-                                ⭐ 4.8 · Loved by 12k+ users
-                            </span>
-                        </div>
-                        <button
-                            onClick={onRestore}
-                            style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
-                        >
-                            Restore Purchases
-                        </button>
-                        <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.15)', margin: 0 }}>
-                            Recurring subscription. Cancel anytime in App Store / Play Store.
-                        </p>
-                    </div>
+                    <p className="text-center text-[10px] text-white/20">
+                        Recurring billing. Cancel anytime in App Store / Play Store.
+                    </p>
                 </div>
             </div>
         </div>
