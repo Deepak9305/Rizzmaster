@@ -18,6 +18,8 @@ const MAX_REQUESTS_PER_WINDOW = 15;
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseAdmin = supabaseUrl && supabaseServiceKey ? createClient(supabaseUrl, supabaseServiceKey) : null;
 
 const json = (res, statusCode, payload) => {
   res.status(statusCode);
@@ -104,6 +106,14 @@ const normalizeRequest = (body) => {
   };
 };
 
+const hasImage = (messages) => {
+  if (!Array.isArray(messages)) return false;
+  return messages.some(msg => 
+    Array.isArray(msg.content) && 
+    msg.content.some(part => part && part.type === "image_url")
+  );
+};
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return json(res, 405, { error: "Method not allowed." });
@@ -116,25 +126,25 @@ export default async function handler(req, res) {
   }
   const token = authHeader.split(" ")[1];
 
-  let userId = 'anonymous';
-  if (supabase) {
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    if (error || !user) {
-      // Fallback for custom APP_SECRET if Supabase auth fails (e.g., guest mode token)
-      if (token !== process.env.APP_SECRET) {
-        return json(res, 401, { error: "Unauthorized." });
-      }
-    } else {
-      userId = user.id;
-    }
-  } else {
-     if (token !== process.env.APP_SECRET) {
-        return json(res, 401, { error: "Unauthorized." });
-     }
+  if (!supabase || !supabaseAdmin) {
+    return json(res, 500, { error: "Supabase integration not configured on the server." });
   }
 
+  let user;
+  try {
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data || !data.user) {
+      return json(res, 401, { error: "Unauthorized. Invalid token." });
+    }
+    user = data.user;
+  } catch (err) {
+    return json(res, 401, { error: "Unauthorized. Token verification failed." });
+  }
+
+  const userId = user.id;
+
   // 2. Rate Limiting
-  const identifier = userId !== 'anonymous' ? userId : (req.headers['x-forwarded-for'] || 'unknown_ip');
+  const identifier = userId;
   const now = Date.now();
   const userRate = rateLimitMap.get(identifier) || { count: 0, startTime: now };
   
@@ -155,10 +165,53 @@ export default async function handler(req, res) {
     return json(res, 500, { error: "AI provider key is not configured on the server." });
   }
 
+  let cost = 1;
+  let isPremium = false;
+  let creditsDeducted = false;
+
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
     const request = normalizeRequest(body);
 
+    // Determine cost: 1 for text-only, 2 if has image
+    const isImageRequest = hasImage(request.messages);
+    cost = isImageRequest ? 2 : 1;
+
+    // Check credits and premium status
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("credits, is_premium")
+      .eq("id", userId)
+      .single();
+
+    if (profileError || !profile) {
+      return json(res, 404, { error: "User profile not found." });
+    }
+
+    isPremium = !!profile.is_premium;
+
+    if (!isPremium) {
+      if (profile.credits < cost) {
+        return json(res, 403, { 
+          error: `Insufficient credits. Rizz AI text costs 1 credit, image costs 2 credits. You have ${profile.credits} credits.`, 
+          code: "INSUFFICIENT_CREDITS" 
+        });
+      }
+
+      // Deduct credits via admin RPC (bypassing client-write protection trigger)
+      const { error: deductError } = await supabaseAdmin.rpc("admin_modify_credits", {
+        user_uuid: userId,
+        amount_change: -cost
+      });
+
+      if (deductError) {
+        console.error("Deduct credits error:", deductError);
+        return json(res, 500, { error: "Failed to deduct credits." });
+      }
+      creditsDeducted = true;
+    }
+
+    // Call Groq / AI provider
     const client = new OpenAI({
       apiKey,
       baseURL: process.env.LLAMA_BASE_URL || DEFAULT_BASE_URL,
@@ -168,12 +221,21 @@ export default async function handler(req, res) {
     const content = completion.choices?.[0]?.message?.content?.trim();
 
     if (!content) {
-      return json(res, 502, { error: "AI provider returned an empty response." });
+      throw new Error("AI provider returned an empty response.");
     }
 
     return json(res, 200, { content });
   } catch (error) {
     console.error("AI endpoint error:", error);
+
+    // Refund credits if deducted
+    if (creditsDeducted && !isPremium) {
+      await supabaseAdmin.rpc("admin_modify_credits", {
+        user_uuid: userId,
+        amount_change: cost
+      }).catch(err => console.error("Refund credits failed:", err));
+    }
+
     const message = error instanceof Error ? error.message : "AI request failed.";
     const statusCode =
       message === "Invalid request body." ||

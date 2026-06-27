@@ -585,47 +585,54 @@ const AppContentInner: React.FC = () => {
     const currentProfile = profileRef.current;
     if (!currentProfile || currentProfile.id === 'guest_user' || isGuest) return;
 
-    // TODO: [SECURITY] In production, DO NOT trust the client to assert premium status.
-    // When the native IAP succeeds, the client should send the Apple/Google receipt token
-    // to a Supabase Edge Function (e.g., `/verify-purchase`). The function must verify the 
-    // receipt with the app stores, and ONLY THEN update the user's `is_premium` status in the database.
-    
+    // TODO: Connect Apple App Store / Google Play Billing APIs on backend to verify receipt/transaction token
     try {
-      // --- MOCK EDGE FUNCTION CALL ---
-      // In a real scenario, you'd do:
-      // await supabase.functions.invoke('verify-purchase', { body: { receipt: '...' } });
-      
-      // We will optimistically update the UI to keep the flow working for now:
-      const updatedProfile = { ...currentProfile, is_premium: true, premium_source: 'native' };
-      setProfile(updatedProfile);
-      profileRef.current = updatedProfile;
+      let token = '';
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          token = session.access_token;
+        }
+      }
+
+      const platform = Capacitor.getPlatform();
+      const products = IAPService.products;
+      const mainSub = products.find(p => p.state === 'owned' || p.state === 'approved' || p.state === 'verified');
+      const productId = mainSub?.id || 'premium_manual';
+      const transactionId = mainSub?.transactionId || (mainSub as any)?.purchase?.transactionId || `manual_${Date.now()}`;
+
+      const response = await fetch('/api/verify-purchase', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          platform,
+          productId,
+          transactionId
+        })
+      });
+
+      const resData = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(resData?.error || `Server returned status ${response.status}`);
+      }
+
+      if (resData && resData.profile) {
+        setProfile(resData.profile);
+        profileRef.current = resData.profile;
+      } else {
+        const updatedProfile = { ...currentProfile, is_premium: true, premium_source: 'native' };
+        setProfile(updatedProfile);
+        profileRef.current = updatedProfile;
+      }
 
       if (stateRef.current.showPremiumModal) {
         window.history.back();
       }
 
       showToast(`Welcome to the Elite Club! 👑`, 'success');
-
-      if (supabase) {
-        // We'll still do the direct update here until the Edge function is built, 
-        // but this logic should eventually live entirely on the backend.
-        await supabase.from('profiles').update({
-          is_premium: true,
-          premium_source: 'native'
-        }).eq('id', currentProfile.id);
-
-        const platform = Capacitor.getPlatform();
-        const products = IAPService.products;
-        const mainSub = products.find(p => p.state === 'owned' || p.state === 'approved' || p.state === 'verified');
-
-        await supabase.from('premium_subscriptions').upsert({
-          user_id: currentProfile.id,
-          platform: platform,
-          product_id: mainSub?.id || 'premium_manual',
-          transaction_id: mainSub?.transactionId || (mainSub as any)?.purchase?.transactionId || null,
-          is_active: true
-        }, { onConflict: 'user_id' });
-      }
     } catch (err) {
       console.error("Failed to verify purchase:", err);
       showToast("Verification failed. Please try again or contact support.", "error");
@@ -698,8 +705,11 @@ const AppContentInner: React.FC = () => {
                 showToast("Subscription verification failed. Access revoked.", 'error');
 
                 if (supabase) {
-                  await supabase.from('profiles').update({ is_premium: false, premium_source: 'revoked' }).eq('id', refreshedProfile.id);
-                  await supabase.from('premium_subscriptions').update({ is_active: false }).eq('user_id', refreshedProfile.id);
+                  const { data: revokedProfile } = await supabase.rpc('admin_revoke_premium', { user_uuid: refreshedProfile.id });
+                  if (revokedProfile) {
+                    setProfile(revokedProfile as UserProfile);
+                    profileRef.current = revokedProfile as UserProfile;
+                  }
                 }
               }
             }, 15000));
@@ -814,6 +824,12 @@ const AppContentInner: React.FC = () => {
     if (loading) return;
     if (view === currentView) return;
 
+    if (view === 'COACH' && isGuest) {
+      showToast("Please sign in to access Rizz Coach & premium features!", "info");
+      handleExitGuestMode();
+      return;
+    }
+
     if (currentView === 'COACH' && view === 'HOME') {
       // Bug 2 fix: await the ad so the overlay plays BEFORE the view transitions
       await showCoachTransitionAd();
@@ -821,7 +837,7 @@ const AppContentInner: React.FC = () => {
 
     window.history.pushState({ view }, '');
     setCurrentView(view);
-  }, [currentView, showCoachTransitionAd, loading]); // Bug 1 fix: showCoachTransitionAd added to deps
+  }, [currentView, showCoachTransitionAd, loading, isGuest, showToast, handleExitGuestMode]);
 
   const handleBackNavigation = useCallback(() => {
     if (loading) {
@@ -993,61 +1009,22 @@ const AppContentInner: React.FC = () => {
         }]).select().single();
         if (newProfile) profileData = newProfile;
       } else if (profileData) {
-        const today = new Date().toISOString().split('T')[0];
-
-        // --- DAILY CREDIT RESET ---
-        let updates: Record<string, any> = {};
-        if (profileData.last_daily_reset !== today) {
-          updates.credits = DAILY_CREDITS;
-          updates.last_daily_reset = today;
-        }
-
-        // --- STREAK LOGIC ---
-        const lastClaim = profileData.last_streak_claim;
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().split('T')[0];
-
-        if (lastClaim !== today) {
-          let newStreak = 1;
-          let bonusCredits = 0;
-          let streakMsg = '';
-
-          if (lastClaim === yesterdayStr) {
-            // Streak continues
-            newStreak = (profileData.streak_count || 0) + 1;
+        // Delegate daily credits reset and streak tracking to the backend RPC
+        try {
+          const { data: claimData, error: claimError } = await supabase.rpc('claim_daily_credits_and_streak');
+          if (claimError) {
+            console.error("Failed to claim daily credits and streak:", claimError);
+          } else if (claimData) {
+            if (claimData.profile) {
+              profileData = claimData.profile;
+            }
+            if (claimData.streak_msg && claimData.streak_msg.trim()) {
+              // Show the streak toast after a brief delay so splash is gone
+              setTimeout(() => showToast(claimData.streak_msg, 'success'), 1500);
+            }
           }
-          // else: streak broken, reset to 1
-
-          // Calculate bonus credits based on streak day
-          if (newStreak >= 8) {
-            bonusCredits = 3;
-            streakMsg = `🔥 Day ${newStreak} Streak! +${bonusCredits} Bonus Credits!`;
-          } else if (newStreak >= 5) {
-            bonusCredits = 2;
-            streakMsg = `🔥 Day ${newStreak} Streak! +${bonusCredits} Bonus Credits!`;
-          } else if (newStreak >= 2) {
-            bonusCredits = 1;
-            streakMsg = `🔥 Day ${newStreak} Streak! +${bonusCredits} Bonus Credit!`;
-          } else {
-            streakMsg = `Welcome back! 🔥 Day 1 – keep it up for bonus credits!`;
-          }
-
-          updates.streak_count = newStreak;
-          updates.last_streak_claim = today;
-          if (bonusCredits > 0 && !profileData.is_premium) {
-            updates.credits = (updates.credits ?? profileData.credits ?? 0) + bonusCredits;
-          }
-
-          // Show the streak toast after a brief delay so splash is gone
-          setTimeout(() => showToast(streakMsg, 'success'), 1500);
-        }
-
-        // Apply all DB updates in one call
-        if (Object.keys(updates).length > 0) {
-          const { data: updated } = await supabase
-            .from('profiles').update(updates).eq('id', userId).select().single();
-          if (updated) profileData = updated;
+        } catch (err) {
+          console.error("Daily claim error:", err);
         }
       }
 
@@ -1156,16 +1133,28 @@ const AppContentInner: React.FC = () => {
 
       const updated = { ...prev, credits: newAmount };
 
-      // Update Database or LocalStorage
+      // Update LocalStorage for guest if needed, but no direct DB updates
       if (prev.id === 'guest_user') {
         localStorage.setItem('rizzmaster_guest_credits', newAmount.toString());
-      } else if (supabase) {
-        supabase.from('profiles').update({ credits: newAmount }).eq('id', prev.id)
-          .then(({ error }) => { if (error) console.error("Credit Sync Error:", error); });
       }
 
       return updated;
     });
+  }, []);
+
+  const syncProfile = useCallback(async () => {
+    if (!supabase) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return;
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', session.user.id)
+      .single();
+    if (data && !error) {
+      setProfile(data as UserProfile);
+      profileRef.current = data as UserProfile;
+    }
   }, []);
 
   const handleRestorePurchases = useCallback(async () => {
@@ -1185,40 +1174,64 @@ const AppContentInner: React.FC = () => {
     const exists = savedItems.find(item => item.content === content);
 
     if (exists) {
+      const originalItems = [...savedItems];
       const newItems = savedItems.filter(item => item.id !== exists.id);
       setSavedItems(newItems);
       showToast("Removed from saved", 'info');
 
       if (!isGuestUser && supabase) {
-        await supabase.from('saved_items').delete().eq('id', exists.id);
+        const { error } = await supabase.from('saved_items').delete().eq('id', exists.id);
+        if (error) {
+          console.error("Delete saved item failed:", error);
+          setSavedItems(originalItems);
+          showToast("Failed to remove gem", "error");
+        }
       }
     } else {
+      const tempId = generateUUID();
       const newItem: SavedItem = {
-        id: generateUUID(),
+        id: tempId,
         user_id: currentProfile.id,
         content,
         type,
         created_at: new Date().toISOString()
       };
 
-      const newItems = [newItem, ...savedItems];
-      setSavedItems(newItems);
+      setSavedItems(prev => [newItem, ...prev]);
       showToast("Saved to your gems", 'success');
 
       if (!isGuestUser && supabase) {
-        await supabase.from('saved_items').insert([{ id: newItem.id, user_id: currentProfile.id, content, type, created_at: newItem.created_at }]);
+        const { data, error } = await supabase
+          .from('saved_items')
+          .insert([{ user_id: currentProfile.id, content, type }])
+          .select()
+          .single();
+
+        if (error || !data) {
+          console.error("Save item error:", error);
+          setSavedItems(prev => prev.filter(item => item.id !== tempId));
+          showToast("Failed to save gem", "error");
+        } else {
+          setSavedItems(prev => prev.map(item => item.id === tempId ? (data as SavedItem) : item));
+        }
       }
     }
   }, [savedItems, showToast]);
 
   const handleDeleteSaved = useCallback(async (id: string) => {
     const isGuestUser = profileRef.current?.id === 'guest_user';
+    const originalItems = [...savedItems];
     const newItems = savedItems.filter(item => item.id !== id);
     setSavedItems(newItems);
     showToast("Item deleted", 'info');
 
     if (!isGuestUser && supabase) {
-      await supabase.from('saved_items').delete().eq('id', id);
+      const { error } = await supabase.from('saved_items').delete().eq('id', id);
+      if (error) {
+        console.error("Delete saved item error:", error);
+        setSavedItems(originalItems);
+        showToast("Failed to delete gem", "error");
+      }
     }
   }, [savedItems, showToast]);
 
@@ -1425,6 +1438,12 @@ const AppContentInner: React.FC = () => {
       return;
     }
 
+    if (isGuest || currentProfile.id === 'guest_user') {
+      showToast("Please sign in to generate Rizz suggestions!", "info");
+      handleExitGuestMode();
+      return;
+    }
+
     const text = typeof textToProcess === 'string' ? textToProcess : inputText;
 
     // Fix uncontrolled component state mismatch by relying on the passed textToProcess string directly when available
@@ -1538,8 +1557,9 @@ const AppContentInner: React.FC = () => {
       if (!currentProfile.is_premium) updateCredits(creditsBefore);
     } finally {
       setLoading(false);
+      await syncProfile();
     }
-  }, [mode, inputText, image, selectedVibe, responseLength, showToast, handleOpenPremium, updateCredits, customPersonas, profile, isGuest]);
+  }, [mode, inputText, image, selectedVibe, responseLength, showToast, handleOpenPremium, updateCredits, customPersonas, profile, isGuest, syncProfile, handleExitGuestMode]);
 
 
   const isSaved = useCallback((content: string) => savedItems.some(item => item.content === content), [savedItems]);

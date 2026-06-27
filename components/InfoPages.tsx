@@ -22,7 +22,7 @@ const InfoPages: React.FC<InfoPagesProps> = ({ page, onBack, onDeleteAccount }) 
                 <h3 className="text-xl font-bold text-white mb-3">Summary</h3>
                 <p>We respect your privacy. This app collects only the minimal data necessary for operation, such as your email for login and your generated history.</p>
                 <br />
-                <p>User inputs are processed by third-party AI providers solely to generate your results. We do not sell your personal data.</p>
+                <p>User inputs and chat history are processed solely for the purpose of generating flirty responses and custom coach suggestions. Your data is handled securely and is never sold to third parties.</p>
                 <br />
                 <p className="text-sm text-white/50 italic">For the detailed Privacy Policy, please refer to the link provided on our App Store / Play Store listing.</p>
               </section>

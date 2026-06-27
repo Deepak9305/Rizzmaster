@@ -33,7 +33,7 @@ const LegalModals: React.FC<LegalModalProps> = ({ type, onClose }) => {
             <>
               <section>
                 <h3 className="text-white font-bold mb-2">Privacy Summary</h3>
-                <p>We respect your privacy. This app collects minimal data (e.g., email, credits) to operate the service. User inputs are processed by third-party AI providers for generation only. We do not sell your personal data.</p>
+                <p>We respect your privacy. This app collects minimal data (e.g., email, credits) to operate the service. User inputs and chat history are processed solely for the purpose of generating flirty responses and custom coach suggestions. Your data is handled securely and is never sold to third parties.</p>
                 <p className="mt-4 text-xs opacity-50">For full details, please check the Privacy Policy link on our App Store / Play Store listing.</p>
               </section>
               <section>
