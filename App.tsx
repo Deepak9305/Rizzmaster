@@ -581,8 +581,7 @@ const AppContentInner: React.FC = () => {
     initializeNotifications();
   };
 
-  // Define handleUpgrade using REF to avoid stale closures
-  const handleUpgrade = useCallback(async () => {
+  const handleUpgrade = useCallback(async (purchaseData?: any) => {
     const currentProfile = profileRef.current;
     // If guest taps Upgrade, close the modal and send them to sign-in/sign-up
     if (!currentProfile || currentProfile.id === 'guest_user' || isGuest) {
@@ -592,23 +591,41 @@ const AppContentInner: React.FC = () => {
       return;
     }
 
-    const platform = Capacitor.getPlatform();
-    const products = IAPService.products;
-    const mainSub = products.find(p => p.state === 'owned' || p.state === 'approved' || p.state === 'verified');
+    let platform = Capacitor.getPlatform();
+    let productId = '';
+    let transactionId = '';
+    let basePlanId = null;
+    let purchaseToken = '';
+    let rawReceipt = null;
 
-    // If IAP callback fired but there is no real owned product yet, skip silently.
-    // This prevents the error toast that appears on Google login when IAPService
-    // initialises and triggers the success callback before a purchase exists.
-    if (!mainSub) {
-      console.log('handleUpgrade: No owned IAP product found — skipping verification.');
-      return;
+    if (purchaseData && typeof purchaseData === 'object') {
+      platform = purchaseData.platform || platform;
+      productId = purchaseData.productId;
+      transactionId = purchaseData.transactionId || purchaseData.orderId;
+      basePlanId = purchaseData.basePlanId;
+      purchaseToken = purchaseData.purchaseToken;
+      rawReceipt = purchaseData.rawReceipt;
+    } else {
+      // Fallback to searching products (only if absolutely necessary)
+      const products = IAPService.products;
+      const mainSub = products.find(p => p.state === 'owned' || p.state === 'approved' || p.state === 'verified');
+
+      if (!mainSub) {
+        console.log('handleUpgrade: No owned IAP product found — skipping verification.');
+        return;
+      }
+      productId = mainSub.id;
+      transactionId = mainSub.transactionId || (mainSub as any)?.purchase?.transactionId;
     }
-
-    const productId = mainSub.id;
-    const transactionId = mainSub.transactionId || (mainSub as any)?.purchase?.transactionId;
 
     if (!transactionId) {
       console.warn('handleUpgrade: Owned product found but no transactionId — skipping.');
+      return;
+    }
+
+    if (platform === 'android' && (!productId || !purchaseToken)) {
+      console.warn('handleUpgrade: Missing required Android purchase fields (productId, purchaseToken).');
+      showToast("Purchase verification failed: Missing token. Please try again.", "error");
       return;
     }
 
@@ -631,7 +648,9 @@ const AppContentInner: React.FC = () => {
         body: JSON.stringify({
           platform,
           productId,
-          transactionId
+          transactionId,
+          basePlanId,
+          purchaseToken
         })
       });
 
@@ -687,9 +706,9 @@ const AppContentInner: React.FC = () => {
 
       // In-App Purchases
       IAPService.initialize(
-        () => {
+        (purchaseData) => {
           // On successful purchase/restore
-          handleUpgrade();
+          handleUpgrade(purchaseData);
         },
         (errorMessage) => {
           showToast(errorMessage, 'error');

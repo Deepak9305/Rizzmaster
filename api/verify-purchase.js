@@ -88,6 +88,7 @@ export default async function handler(req, res) {
       product_identifier: productId,
       transaction_identifier: transactionId,
       base_plan_identifier: basePlanId || null,
+      purchase_token_identifier: purchaseToken || null,
       raw_payload: rawReceipt || {}
     });
 
