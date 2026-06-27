@@ -1413,7 +1413,7 @@ const AppContentInner: React.FC = () => {
       return;
     }
 
-    // --- RECURRING INTERSTITIAL AD LOGIC ---
+    let shouldShowAd = false;
     if (!currentProfile.is_premium && Capacitor.isNativePlatform()) {
       const today = new Date().toDateString();
       const lastAdDate = localStorage.getItem('rizz_last_ad_date');
@@ -1430,37 +1430,34 @@ const AppContentInner: React.FC = () => {
       genCount += 1;
       localStorage.setItem('rizz_daily_gen_count', genCount.toString());
 
-      // Target: 3rd gen for first ad, then lastAdGen + 4 for subsequent ads
+      // Target: 3rd gen for first ad, then random between 3-5 for subsequent ads
       const isFirstAd = lastAdGen === 0;
-      const targetGen = isFirstAd ? 3 : lastAdGen + 4;
+      // Add slight randomness (3, 4, or 5) to prevent users from predicting exactly when the ad will hit
+      const nextAdOffset = Math.floor(Math.random() * 3) + 3; 
+      const targetGen = isFirstAd ? 3 : lastAdGen + nextAdOffset;
 
       const now = activeTimeMs.current;
-      // For the first ad, skip the cooldown check (both `now` and `lastAdActiveTime` are 0 at startup,
-      // so `0 - 0 >= COOLDOWN` is always false, blocking the ad from ever showing).
       const cooldownPassed = isFirstAd || (now - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS);
+      
       if (genCount >= targetGen && cooldownPassed) {
-        console.log(`[AdMob] Triggering deferred interstitial at gen ${genCount} (Target was ${targetGen}, isFirstAd: ${isFirstAd})...`);
-
-        // No overlay here — the native interstitial has its own full-screen UI.
-        // Showing a web "Preparing Ad" layer on top is redundant and annoying.
-        try {
-          await AdMobService.showInterstitial(getAdId('INTERSTITIAL'));
-        } catch (e) {
-          console.warn("[AdMob] Deferred interstitial failed:", e);
-        } finally {
-          // Preload next ad immediately
-          runAdTask('Post-show preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
-        }
-
-        // Update the counter and cooldown whether the ad showed or failed,
-        // so that ad loading failures do not block the user's generation flow on every subsequent tap.
+        shouldShowAd = true;
         lastAdActiveTime.current = now;
         localStorage.setItem('rizz_last_ad_gen_count', genCount.toString());
+        console.log(`[AdMob] Will trigger concurrent interstitial at gen ${genCount}...`);
       }
     }
     // --------------------------------------------------
 
     setLoading(true);
+
+    // Fire the ad concurrently so the API generation happens in the background while the user watches the ad!
+    if (shouldShowAd) {
+      AdMobService.showInterstitial(getAdId('INTERSTITIAL'))
+        .catch(e => console.warn("[AdMob] Deferred interstitial failed:", e))
+        .finally(() => {
+          runAdTask('Post-show preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
+        });
+    }
 
     // --- GENERATION START ---
     const creditsBefore = currentProfile.credits || 0;
