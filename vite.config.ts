@@ -10,6 +10,14 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    server: {
+      proxy: {
+        '/api': {
+          target: 'http://localhost:3000',
+          changeOrigin: true
+        }
+      }
+    },
     // CRITICAL for Capacitor: Use relative paths for assets
     base: './',
     define: {
