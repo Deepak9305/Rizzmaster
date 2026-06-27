@@ -735,7 +735,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                     {/* Quick-Tap Prompts */}
                     {messages.length === 1 && !loading && !image && (
                         <div style={{
-                            padding: '10px 16px 0', display: 'flex', gap: '8px', overflowX: 'auto',
+                            padding: '10px 16px 8px', display: 'flex', gap: '8px', overflowX: 'auto', maxWidth: '672px', margin: '0 auto',
                             WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none',
                             animation: 'coachEntrance 0.5s ease-out'
                         }}>
