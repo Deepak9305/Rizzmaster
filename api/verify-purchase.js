@@ -44,7 +44,7 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
-    const { platform, productId, transactionId, basePlanId, purchaseToken, rawReceipt } = body || {};
+    const { platform, productId, transactionId, orderId, basePlanId, purchaseToken, rawReceipt } = body || {};
 
     if (!platform || !productId || !transactionId) {
       console.warn("[IAP API] Missing basic purchase data.");
@@ -54,10 +54,10 @@ export default async function handler(req, res) {
       });
     }
 
-    if (platform === 'android' && (!basePlanId || !purchaseToken)) {
+    if (platform === 'android' && !purchaseToken) {
       console.warn("[IAP API] Missing Android-specific purchase data.");
       return json(res, 400, {
-        error: "Missing Android purchase info (basePlanId, purchaseToken).",
+        error: "Missing Android purchase info (purchaseToken).",
         code: "INVALID_PURCHASE_DATA"
       });
     }

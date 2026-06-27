@@ -594,6 +594,7 @@ const AppContentInner: React.FC = () => {
     let platform = Capacitor.getPlatform();
     let productId = '';
     let transactionId = '';
+    let orderId = '';
     let basePlanId = null;
     let purchaseToken = '';
     let rawReceipt = null;
@@ -602,6 +603,7 @@ const AppContentInner: React.FC = () => {
       platform = purchaseData.platform || platform;
       productId = purchaseData.productId;
       transactionId = purchaseData.transactionId || purchaseData.orderId;
+      orderId = purchaseData.orderId || '';
       basePlanId = purchaseData.basePlanId;
       purchaseToken = purchaseData.purchaseToken;
       rawReceipt = purchaseData.rawReceipt;
@@ -618,15 +620,20 @@ const AppContentInner: React.FC = () => {
       transactionId = mainSub.transactionId || (mainSub as any)?.purchase?.transactionId;
     }
 
-    if (!transactionId) {
-      console.warn('handleUpgrade: Owned product found but no transactionId — skipping.');
-      return;
-    }
-
-    if (platform === 'android' && (!productId || !purchaseToken)) {
-      console.warn('handleUpgrade: Missing required Android purchase fields (productId, purchaseToken).');
-      showToast("Purchase verification failed: Missing token. Please try again.", "error");
-      return;
+    if (platform === 'android') {
+      if (!productId || !purchaseToken) {
+        console.warn('handleUpgrade: Missing required Android purchase fields (productId, purchaseToken).');
+        showToast("Purchase verification failed: Missing token. Please try again.", "error");
+        return;
+      }
+      if (!transactionId) {
+        transactionId = orderId || purchaseToken;
+      }
+    } else {
+      if (!transactionId) {
+        console.warn('handleUpgrade: Owned product found but no transactionId — skipping.');
+        return;
+      }
     }
 
     // TODO: Connect Apple App Store / Google Play Billing APIs on backend to verify receipt/transaction token
@@ -649,8 +656,10 @@ const AppContentInner: React.FC = () => {
           platform,
           productId,
           transactionId,
+          orderId,
           basePlanId,
-          purchaseToken
+          purchaseToken,
+          rawReceipt
         })
       });
 
@@ -663,9 +672,10 @@ const AppContentInner: React.FC = () => {
         setProfile(resData.profile);
         profileRef.current = resData.profile;
       } else {
-        const updatedProfile = { ...currentProfile, is_premium: true, premium_source: 'native' };
-        setProfile(updatedProfile);
-        profileRef.current = updatedProfile;
+        const synced = await syncProfile();
+        if (!synced || !synced.is_premium) {
+          throw new Error("Purchase was verified, but premium status did not sync to your profile.");
+        }
       }
 
       if (stateRef.current.showPremiumModal) {
@@ -1121,9 +1131,9 @@ const AppContentInner: React.FC = () => {
   }, []);
 
   const syncProfile = useCallback(async () => {
-    if (!supabase) return;
+    if (!supabase) return null;
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return;
+    if (!session?.user) return null;
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -1132,7 +1142,9 @@ const AppContentInner: React.FC = () => {
     if (data && !error) {
       setProfile(data as UserProfile);
       profileRef.current = data as UserProfile;
+      return data as UserProfile;
     }
+    return null;
   }, []);
 
   const handleRestorePurchases = useCallback(async () => {

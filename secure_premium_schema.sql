@@ -148,6 +148,7 @@ CREATE OR REPLACE FUNCTION public.admin_set_premium(
   product_identifier text,
   transaction_identifier text,
   base_plan_identifier text DEFAULT NULL,
+  purchase_token_identifier text DEFAULT NULL,
   expires_at timestamptz DEFAULT NULL,
   raw_payload jsonb DEFAULT '{}'::jsonb
 )
@@ -164,10 +165,10 @@ BEGIN
   -- Insert into purchase_receipts securely
   -- Using ON CONFLICT DO NOTHING to prevent crashing if restoring an existing receipt
   INSERT INTO public.purchase_receipts (
-      user_id, platform, product_id, base_plan_id, transaction_id, raw_payload, status
+      user_id, platform, product_id, base_plan_id, transaction_id, purchase_token, raw_payload, status
   )
   VALUES (
-      user_uuid, platform_name, product_identifier, base_plan_identifier, transaction_identifier, raw_payload, 'verified'
+      user_uuid, platform_name, product_identifier, base_plan_identifier, transaction_identifier, purchase_token_identifier, raw_payload, 'verified'
   )
   ON CONFLICT DO NOTHING;
 

@@ -120,6 +120,7 @@ class IAPService {
                 basePlanId: receipt.basePlanId || receipt.offerId || null,
                 purchaseToken: receipt.purchaseToken || receipt.transactionReceipt || '',
                 transactionId: receipt.transactionId || receipt.orderId || '',
+                orderId: receipt.orderId || '',
                 rawReceipt: receipt
             };
 
