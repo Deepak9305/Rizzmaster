@@ -1457,8 +1457,8 @@ const AppContentInner: React.FC = () => {
 
     const cost = (mode === InputMode.CHAT && image) ? 2 : 1;
 
-    // Guests are rate-limited server-side (5 req/min by IP) — skip client-side credit check for them
-    if (!isGuest && !currentProfile.is_premium && (currentProfile.credits || 0) < cost) {
+    // Guests are rate-limited server-side (5 req/min by IP) but still adhere to client-side credit limits
+    if (!currentProfile.is_premium && (currentProfile.credits || 0) < cost) {
       handleOpenPremium();
       return;
     }
