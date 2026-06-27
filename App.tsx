@@ -1134,11 +1134,30 @@ const AppContentInner: React.FC = () => {
     if (!supabase) return null;
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return null;
-    const { data, error } = await supabase
+    
+    let { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', session.user.id)
       .single();
+
+    if (error && error.code === 'PGRST116') {
+      // Profile missing (e.g. newly signed up). Create it.
+      const { data: newData, error: insertError } = await supabase
+        .from('profiles')
+        .insert([{ 
+          id: session.user.id, 
+          email: session.user.email, 
+          credits: 5, 
+          is_premium: false 
+        }])
+        .select()
+        .single();
+      
+      data = newData;
+      error = insertError;
+    }
+
     if (data && !error) {
       setProfile(data as UserProfile);
       profileRef.current = data as UserProfile;
@@ -1502,9 +1521,8 @@ const AppContentInner: React.FC = () => {
     const creditsBefore = currentProfile.credits || 0;
 
     try {
-      // Optimistic credit deduction for signed-in non-premium users only.
-      // Guests are rate-limited server-side and have their own localStorage tracking below.
-      if (!isGuest && !currentProfile.is_premium) {
+      // Optimistic credit deduction for all non-premium users (including guests)
+      if (!currentProfile.is_premium) {
         updateCredits(creditsBefore - cost);
       }
 
@@ -1548,12 +1566,6 @@ const AppContentInner: React.FC = () => {
       // Don't call syncProfile for guests — they have no Supabase session
       if (!isGuest) {
         await syncProfile();
-      } else {
-        // Persist updated guest credits to localStorage (single deduction — not done above)
-        const guestCredits = parseInt(localStorage.getItem('rizzmaster_guest_credits') || String(DAILY_CREDITS));
-        const newGuestCredits = Math.max(0, guestCredits - cost);
-        localStorage.setItem('rizzmaster_guest_credits', newGuestCredits.toString());
-        updateCredits(newGuestCredits);
       }
     }
   }, [mode, inputText, image, selectedVibe, responseLength, showToast, handleOpenPremium, updateCredits, customPersonas, profile, isGuest, syncProfile, handleExitGuestMode]);

@@ -133,24 +133,19 @@ export default async function handler(req, res) {
   let user = null;
   let userId = "guest_user";
 
-  // Strict Guest Enforcement: Disable Guest AI completely to prevent abuse
-  if (isGuest) {
-    console.log("[AI API] Blocked guest generation attempt.");
-    return json(res, 401, { 
-      error: "Please sign in to use AI generation.",
-      code: "LOGIN_REQUIRED" 
-    });
-  }
-
+  // Allow guests to generate, relying on IP rate limit and frontend local credits
+  
   try {
     const { data, error } = await supabase.auth.getUser(token);
-    if (error || !data || !data.user) {
+    if (!isGuest && (error || !data || !data.user)) {
       return json(res, 401, { error: "Unauthorized. Invalid token." });
     }
-    user = data.user;
-    userId = user.id;
+    if (!isGuest) {
+      user = data.user;
+      userId = user.id;
+    }
   } catch (err) {
-    return json(res, 401, { error: "Unauthorized. Token verification failed." });
+    if (!isGuest) return json(res, 401, { error: "Unauthorized. Token verification failed." });
   }
 
   // 2. Rate Limiting
@@ -188,49 +183,53 @@ export default async function handler(req, res) {
     const isImageRequest = hasImage(request.messages);
     cost = isImageRequest ? 2 : 1;
 
-    // Check credits and premium status for signed-in users using Service Role
-    const { data: profile, error: profileError } = await supabaseAdmin
-      .from("profiles")
-      .select("credits, is_premium")
-      .eq("id", userId)
-      .single();
+    if (!isGuest) {
+      // Check credits and premium status for signed-in users using Service Role
+      const { data: profile, error: profileError } = await supabaseAdmin
+        .from("profiles")
+        .select("credits, is_premium")
+        .eq("id", userId)
+        .single();
 
-    if (profileError || !profile) {
-      console.error("[AI API] Profile not found for user:", userId);
-      return json(res, 404, { 
-        error: "User profile not found.",
-        code: "PROFILE_NOT_FOUND" 
-      });
-    }
-
-    isPremium = !!profile.is_premium;
-
-    if (!isPremium) {
-      if (profile.credits < cost) {
-        console.warn(`[AI API] Insufficient credits for user: ${userId}. Has: ${profile.credits}, Needs: ${cost}`);
-        return json(res, 403, { 
-          error: `Insufficient credits. Rizz AI text costs 1 credit, image costs 2 credits. You have ${profile.credits} credits.`, 
-          code: "INSUFFICIENT_CREDITS" 
+      if (profileError || !profile) {
+        console.error("[AI API] Profile not found for user:", userId);
+        return json(res, 404, { 
+          error: "User profile not found.",
+          code: "PROFILE_NOT_FOUND" 
         });
       }
 
-      // Deduct credits via admin RPC (bypassing client-write protection trigger)
-      const { error: deductError } = await supabaseAdmin.rpc("admin_modify_credits", {
-        user_uuid: userId,
-        amount_change: -cost
-      });
+      isPremium = !!profile.is_premium;
 
-      if (deductError) {
-        console.error(`[AI API] Failed to deduct credits for user: ${userId}. Error:`, deductError);
-        return json(res, 500, { 
-          error: "Failed to deduct credits.",
-          code: "CREDIT_DEDUCTION_FAILED"
+      if (!isPremium) {
+        if (profile.credits < cost) {
+          console.warn(`[AI API] Insufficient credits for user: ${userId}. Has: ${profile.credits}, Needs: ${cost}`);
+          return json(res, 403, { 
+            error: `Insufficient credits. Rizz AI text costs 1 credit, image costs 2 credits. You have ${profile.credits} credits.`, 
+            code: "INSUFFICIENT_CREDITS" 
+          });
+        }
+
+        // Deduct credits via admin RPC (bypassing client-write protection trigger)
+        const { error: deductError } = await supabaseAdmin.rpc("admin_modify_credits", {
+          user_uuid: userId,
+          amount_change: -cost
         });
+
+        if (deductError) {
+          console.error(`[AI API] Failed to deduct credits for user: ${userId}. Error:`, deductError);
+          return json(res, 500, { 
+            error: "Failed to deduct credits.",
+            code: "CREDIT_DEDUCTION_FAILED"
+          });
+        }
+        creditsDeducted = true;
+        console.log(`[AI API] Credits deducted: ${cost} for user: ${userId}.`);
+      } else {
+        console.log(`[AI API] Generation free for premium user: ${userId}.`);
       }
-      creditsDeducted = true;
-      console.log(`[AI API] Credits deducted: ${cost} for user: ${userId}.`);
     } else {
-      console.log(`[AI API] Generation free for premium user: ${userId}.`);
+      console.log(`[AI API] Guest generation allowed for IP: ${identifier}. Frontend will manage local credits.`);
     }
 
     // Call Groq / AI provider
