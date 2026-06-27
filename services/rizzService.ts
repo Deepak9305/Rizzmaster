@@ -6,7 +6,6 @@ const AI_ENDPOINT = '/api/ai';
 
 // Model Configuration
 const DEFAULT_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
-const RIZZ_TEXT_MODEL = 'llama-3.1-8b-instant';
 
 type AiMessageContent =
   | string
@@ -567,7 +566,7 @@ Carry over all existing intel and update it when new facts emerge.`;
   while (attempts < 3) {
     try {
       const rawReply = await callAiChatCompletion({
-        model: messages.some(m => m.image) ? DEFAULT_MODEL : RIZZ_TEXT_MODEL,
+        model: DEFAULT_MODEL,
         messages: [{ role: 'system', content: systemInstruction }, ...rawMessages],
         temperature: 0.85,
         max_tokens: 650,

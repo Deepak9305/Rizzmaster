@@ -4,7 +4,6 @@ import { createClient } from '@supabase/supabase-js';
 const DEFAULT_BASE_URL = "https://api.groq.com/openai/v1";
 const ALLOWED_MODELS = new Set([
   "meta-llama/llama-4-scout-17b-16e-instruct",
-  "llama-3.1-8b-instant",
 ]);
 const MAX_MESSAGES = 8;
 const MAX_TEXT_LENGTH = 16000;
