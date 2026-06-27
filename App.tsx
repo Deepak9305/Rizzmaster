@@ -781,57 +781,13 @@ const AppContentInner: React.FC = () => {
   }, []);
 
   // Navigation Wrappers
-  const showCoachTransitionAd = useCallback(async () => {
-    const isPremium = profileRef.current?.is_premium;
-    if (isPremium) return;
-
-    // Bug 3 fix: guard against double-fire when both handleViewNavigation and handleBackNavigation trigger
-    if (adTransitionInProgressRef.current) return;
-
-    const now = activeTimeMs.current;
-    if (now - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS) {
-      adTransitionInProgressRef.current = true;
-      setIsAdLoading('interstitial'); // SHOW OVERLAY
-
-      if (Capacitor.isNativePlatform()) {
-        const adId = getAdId('INTERSTITIAL');
-        try {
-          const showed = await AdMobService.showInterstitial(adId);
-
-          // Only update the cooldown timer if the ad actually showed successfully!
-          // If it failed (e.g. no fill, or transition error), we want to try again on the next view move.
-          if (showed) {
-            lastAdActiveTime.current = now;
-            console.log(`[AdMob] Success-based cooldown triggered at ${now}ms`);
-          }
-        } catch (e) {
-          console.warn("Transition ad error:", e);
-        } finally {
-          setIsAdLoading('hidden'); // ALWAYS HIDE OVERLAY
-          adTransitionInProgressRef.current = false;
-          // Preload next ad immediately
-          runAdTask('Post-show preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
-        }
-      } else {
-        // Web fallback: Just clear the loading state
-        setIsAdLoading('hidden');
-        adTransitionInProgressRef.current = false;
-      }
-    }
-  }, [INTERSTITIAL_COOLDOWN_MS]);
-
   const handleViewNavigation = useCallback(async (view: ViewState) => {
     if (loading) return;
     if (view === currentView) return;
 
-    if (currentView === 'COACH' && view === 'HOME') {
-      // Bug 2 fix: await the ad so the overlay plays BEFORE the view transitions
-      await showCoachTransitionAd();
-    }
-
     window.history.pushState({ view }, '');
     setCurrentView(view);
-  }, [currentView, showCoachTransitionAd, loading, isGuest, showToast, handleExitGuestMode]);
+  }, [currentView, loading, isGuest, showToast, handleExitGuestMode]);
 
   const handleBackNavigation = useCallback(() => {
     if (loading) {
