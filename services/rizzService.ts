@@ -48,6 +48,9 @@ const callAiChatCompletion = async (payload: {
     if (response.status === 401 || data?.error === 'LOGIN_REQUIRED') {
       throw new Error('LOGIN_REQUIRED');
     }
+    if (response.status === 403 || data?.code === 'INSUFFICIENT_CREDITS') {
+      throw new Error('INSUFFICIENT_CREDITS');
+    }
     throw new Error(data?.error || `AI request failed with status ${response.status}.`);
   }
 

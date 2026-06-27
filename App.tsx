@@ -274,6 +274,9 @@ const AppContentInner: React.FC = () => {
 
   const handleGuestEntry = useCallback(() => {
     setIsGuest(true);
+    if (supabase) {
+      supabase.auth.signOut().catch(() => {});
+    }
     const guestNotes = localStorage.getItem('rizzmaster_guest_shadow_notes') || 'Playing it cool as a guest. 😎';
 
     // --- GUEST CREDIT EXPLOIT FIX ---
@@ -1557,6 +1560,14 @@ const AppContentInner: React.FC = () => {
       if (error.message === 'LOGIN_REQUIRED') {
          setLoginReason('premium');
          handleExitGuestMode();
+         return;
+      }
+      if (error.message === 'INSUFFICIENT_CREDITS') {
+         if (!currentProfile.is_premium) updateCredits(creditsBefore);
+         handleOpenPremium();
+         if (!isGuest) {
+           syncProfile().catch(() => {});
+         }
          return;
       }
       showToast('The wingman tripped! Try again.', 'error');

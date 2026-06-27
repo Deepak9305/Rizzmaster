@@ -156,7 +156,10 @@ CREATE OR REPLACE FUNCTION public.admin_set_premium(
   user_uuid uuid,
   platform_name text,
   product_identifier text,
-  transaction_identifier text
+  transaction_identifier text,
+  base_plan_identifier text DEFAULT NULL,
+  purchase_token_identifier text DEFAULT NULL,
+  raw_payload jsonb DEFAULT '{}'::jsonb
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -192,8 +195,8 @@ BEGIN
 END;
 $$;
 
-REVOKE EXECUTE ON FUNCTION public.admin_set_premium(uuid, text, text, text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.admin_set_premium(uuid, text, text, text) TO service_role;
+REVOKE EXECUTE ON FUNCTION public.admin_set_premium(uuid, text, text, text, text, text, jsonb) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.admin_set_premium(uuid, text, text, text, text, text, jsonb) TO service_role;
 
 -- Secure daily reset and streak tracking RPC (authenticated users can invoke)
 CREATE OR REPLACE FUNCTION public.claim_daily_credits_and_streak()
