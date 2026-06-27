@@ -810,11 +810,8 @@ const AppContentInner: React.FC = () => {
       setShowSavedModal(false);
     }
 
-    // Fire the transition ad in the background (non-blocking)
-    if (currentView === 'COACH') {
-      showCoachTransitionAd();
-    }
-  }, [currentView, showCoachTransitionAd, loading]);
+
+  }, [currentView, loading]);
 
   const handleOpenPremium = useCallback(() => {
     // Guests see the premium modal first so they understand what they're getting
