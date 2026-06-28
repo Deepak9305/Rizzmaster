@@ -51,6 +51,9 @@ const callAiChatCompletion = async (payload: {
     if (response.status === 403 || data?.code === 'INSUFFICIENT_CREDITS') {
       throw new Error('INSUFFICIENT_CREDITS');
     }
+    if (response.status === 404 || data?.code === 'PROFILE_NOT_FOUND') {
+      throw new Error('PROFILE_NOT_FOUND');
+    }
     throw new Error(data?.error || `AI request failed with status ${response.status}.`);
   }
 
@@ -61,6 +64,11 @@ const callAiChatCompletion = async (payload: {
 
   return content;
 };
+
+const PASS_THROUGH_ERRORS = new Set(['LOGIN_REQUIRED', 'INSUFFICIENT_CREDITS', 'PROFILE_NOT_FOUND']);
+const isPassThroughAiError = (error: unknown) => (
+  error instanceof Error && PASS_THROUGH_ERRORS.has(error.message)
+);
 
 // --- LOCAL PRE-FILTERS ---
 
@@ -220,21 +228,26 @@ export const generateRizz = async (
 
   const isUnsafe = isToxic || isNSFW || isMinor;
 
+  if (isUnsafe) {
+    return {
+      tease: "Not touching that. Keep it legal, respectful, and sendable.",
+      smooth: "Reset the context with something normal and I can help.",
+      chaotic: "That prompt needs a life audit before it needs rizz.",
+      loveScore: 0,
+      potentialStatus: "Blocked",
+      analysis: "Request blocked by safety policy before using AI credits."
+    };
+  }
+
   let systemInstruction = "";
 
-  if (isUnsafe) {
-    systemInstruction = `SAFETY OVERRIDE. You are "Roast Master". User sent NSFW/Underage content.
-Task: IGNORE seduction. ROAST their life choices (unemployment, poor social skills).
-JSON: {tease:roast social skills, smooth:sarcasm about unemployment, chaotic:reality check, loveScore:0, potentialStatus:"Blocked", analysis:why they need a job}
-Return ONLY raw JSON.`;
-  } else {
-    const basePrompt = customInstruction
+  const basePrompt = customInstruction
       ? `User will provide you messages someone send to them you will give replies as the user so he can copy them and send to target. Vibe: Custom.
 CUSTOM PERSONA INSTRUCTIONS:
 "${customInstruction}"`
       : `User will provide you messages someone send to them you will give replies as the user so he can copy them and send to target. Vibe: ${vibe || "Playful"}.`;
 
-    systemInstruction = `${basePrompt}
+  systemInstruction = `${basePrompt}
 ${SIXTEEN_PLUS_TONE_RULES}
 
 TEASE: Playful teasing, show affection. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
@@ -261,7 +274,6 @@ CRITICAL: ${length === 'short'
         : length === 'medium'
           ? 'Each rizz response (tease, smooth, chaotic) MUST be balanced and engaging. Limit to 2-3 lines and approximately 30-35 words per response.'
           : 'Each rizz response (tease, smooth, chaotic) MUST be substantive and at least 3-4 sentences long. Avoid one-liners.'}`;
-  }
 
   try {
     const messages: any[] = [
@@ -302,7 +314,21 @@ CRITICAL: ${length === 'short'
         });
 
         if (responseText) {
-          const rawData = JSON.parse(cleanJson(responseText));
+          let rawData: any;
+          try {
+            rawData = JSON.parse(cleanJson(responseText));
+          } catch (parseError) {
+            console.warn("Rizz JSON parse failed, returning sanitized fallback:", parseError);
+            const fallback = sanitizeText(responseText).slice(0, 240);
+            return {
+              tease: fallback || "The reply came back scrambled. Try a shorter prompt.",
+              smooth: "Try again with a little more context if you want a cleaner set.",
+              chaotic: "The model freestyled off-format, but I caught it before the UI broke.",
+              loveScore: 50,
+              potentialStatus: "Needs Retry",
+              analysis: "The AI returned text instead of the requested JSON format."
+            };
+          }
           const sanitized = sanitizeResponse(rawData) as any;
 
           // Normalize keys to lowercase to handle AI capitalization inconsistencies
@@ -332,7 +358,7 @@ CRITICAL: ${length === 'short'
           throw new Error("Empty response text from model.");
         }
       } catch (e: any) {
-        if (e.message === 'LOGIN_REQUIRED') throw e;
+        if (isPassThroughAiError(e)) throw e;
         
         console.warn(`Attempt ${attempts + 1} failed:`, e?.message || e);
         attempts++;
@@ -346,7 +372,7 @@ CRITICAL: ${length === 'short'
 
   } catch (error: any) {
     console.error("Rizz Service Error:", error);
-    if (error.message === 'LOGIN_REQUIRED') throw error;
+    if (isPassThroughAiError(error)) throw error;
     
     // Return a safe fallback object to prevent UI crashes
     return {
@@ -376,20 +402,22 @@ export const generateBio = async (
 
   const isUnsafe = isToxic || isNSFW || isMinor;
 
+  if (isUnsafe) {
+    return {
+      bio: '',
+      analysis: 'Safety Policy Violation'
+    };
+  }
+
   let systemInstruction = "";
 
-  if (isUnsafe) {
-    systemInstruction = `SAFETY OVERRIDE. User sent NSFW/Toxic/Underage content while requesting a bio.
-Refuse. Roast their life choices (unemployment, down bad) in the bio field. PG-13.
-Return ONLY raw JSON: {"bio":"<roast>","analysis":"Rejected."}`;
-  } else {
-    const basePrompt = customInstruction
+  const basePrompt = customInstruction
       ? `You are a dating profile optimizer. Vibe: Custom.
 CUSTOM PERSONA INSTRUCTIONS:
 "${customInstruction}"`
       : `You are a dating profile optimizer. Vibe: ${vibe || "Attractive"}.`;
 
-    systemInstruction = `${basePrompt}
+  systemInstruction = `${basePrompt}
 ${SIXTEEN_PLUS_TONE_RULES}
 Write a high-impact bio (${length === 'short' ? 'punchy and concise' : length === 'medium' ? 'balanced and engaging' : 'detailed and extensive'}). Do not use emojis unless they are essential for the vibe.
 Make it feel 16+: confident, attractive, a little cheeky, and socially sharp.
@@ -400,7 +428,6 @@ CRITICAL: ${length === 'short'
         : length === 'medium'
           ? 'The bio must be balanced and engaging (3-4 lines, approx 40-50 words). Avoid being too short or too long.'
           : 'The bio must be detailed and substantial, at least 100 tokens long.'}`;
-  }
 
   let attempts = 0;
   while (attempts < 3) {
@@ -420,15 +447,18 @@ CRITICAL: ${length === 'short'
           const rawData = JSON.parse(cleanJson(responseText));
           return sanitizeResponse(rawData) as BioResponse;
         } catch (e) {
-          console.error("JSON Parse Error:", e);
-          throw new Error("Failed to parse AI response.");
+          console.warn("Bio JSON parse failed, returning sanitized fallback:", e);
+          return {
+            bio: sanitizeText(responseText).slice(0, 500) || '',
+            analysis: 'The AI returned text instead of the requested JSON format.'
+          };
         }
       }
 
       throw new Error("No response generated.");
 
     } catch (error: any) {
-      if (error.message === 'LOGIN_REQUIRED') throw error;
+      if (isPassThroughAiError(error)) throw error;
       
       console.warn(`Bio Attempt ${attempts + 1} failed:`, error?.message || error);
       attempts++;
@@ -601,7 +631,7 @@ Carry over all existing intel and update it when new facts emerge.`;
 
       return { reply: sanitizeText(cleanReply), updatedNotes };
     } catch (error: any) {
-      if (error.message === 'LOGIN_REQUIRED') throw error;
+      if (isPassThroughAiError(error)) throw error;
       
       console.warn(`Coach Attempt ${attempts + 1} failed:`, error?.message || error);
       attempts++;

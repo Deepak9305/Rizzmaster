@@ -60,6 +60,7 @@ class IAPService {
     // Callbacks to update UI/DB
     onSuccess: ((purchaseData: any) => void) | null = null;
     onError: ((msg: string) => void) | null = null;
+    pendingPlan: 'WEEKLY' | 'MONTHLY' | null = null;
 
     initialize(onSuccess: (purchaseData: any) => void, onError: (msg: string) => void) {
         this.onSuccess = onSuccess;
@@ -117,15 +118,18 @@ class IAPService {
             const purchaseData = {
                 platform: Capacitor.getPlatform(),
                 productId: receipt.id || receipt.productId || '',
+                plan: this.pendingPlan,
                 basePlanId: receipt.basePlanId || receipt.offerId || null,
                 purchaseToken: receipt.purchaseToken || receipt.transactionReceipt || '',
                 transactionId: receipt.transactionId || receipt.orderId || '',
                 orderId: receipt.orderId || '',
+                expiresAt: receipt.expiresAt || receipt.expiryDate || receipt.expirationDate || null,
                 rawReceipt: receipt
             };
 
             // Now safe to verify via backend
             if (this.onSuccess) this.onSuccess(purchaseData);
+            this.pendingPlan = null;
             receipt.finish();
         });
 
@@ -170,11 +174,13 @@ class IAPService {
 
         const productId = isIOS ? config.iosId : config.androidId;
         const basePlanId = isIOS ? null : config.androidBasePlanId;
+        this.pendingPlan = plan;
 
         console.log(`IAP: Attempting purchase for ${productId} (BasePlan: ${basePlanId || 'N/A'})`);
 
         if (!this.isInitialized) {
             console.warn("IAP: Store not initialized yet. Aborting purchase.");
+            this.pendingPlan = null;
             if (this.onError) {
                 this.onError("Store not ready. Please try again in a moment.");
             }
@@ -207,9 +213,11 @@ class IAPService {
                 }
             } catch (err: any) {
                 console.error("IAP: Order failed", err);
+                this.pendingPlan = null;
                 if (this.onError) this.onError(err.message || "Purchase failed");
             }
         } else {
+            this.pendingPlan = null;
             store.update();
             if (this.onError) {
                 this.onError("Product unavailable. Retrying connection...");

@@ -61,11 +61,14 @@ CREATE UNIQUE INDEX IF NOT EXISTS unique_purchase_token ON public.purchase_recei
 
 ALTER TABLE public.purchase_receipts ENABLE ROW LEVEL SECURITY;
 
+GRANT SELECT ON TABLE public.purchase_receipts TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.purchase_receipts TO service_role;
+
 -- Policies for purchase_receipts (Read-only for owner, No inserts from client)
 DROP POLICY IF EXISTS "Users can view own receipts" ON public.purchase_receipts;
 CREATE POLICY "Users can view own receipts" 
   ON public.purchase_receipts FOR SELECT 
-  USING ( auth.uid() = user_id );
+  USING ( (select auth.uid()) = user_id );
 
 
 -- ==============================================================================
@@ -116,7 +119,8 @@ BEGIN
   
   SELECT credits INTO current_credits
   FROM public.profiles
-  WHERE id = user_uuid;
+  WHERE id = user_uuid
+  FOR UPDATE;
   
   IF current_credits IS NULL THEN
     RAISE EXCEPTION 'User profile not found';
@@ -141,6 +145,8 @@ GRANT EXECUTE ON FUNCTION public.admin_modify_credits(uuid, integer) TO service_
 
 -- Update admin_set_premium
 DROP FUNCTION IF EXISTS public.admin_set_premium(uuid, text, text, text);
+DROP FUNCTION IF EXISTS public.admin_set_premium(uuid, text, text, text, text, text, jsonb);
+DROP FUNCTION IF EXISTS public.admin_set_premium(uuid, text, text, text, text, timestamptz, jsonb);
 
 CREATE OR REPLACE FUNCTION public.admin_set_premium(
   user_uuid uuid,
@@ -192,8 +198,8 @@ BEGIN
   RETURN to_jsonb(updated_profile);
 END;
 $$;
-REVOKE EXECUTE ON FUNCTION public.admin_set_premium(uuid, text, text, text, text, timestamptz, jsonb) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.admin_set_premium(uuid, text, text, text, text, timestamptz, jsonb) TO service_role;
+REVOKE EXECUTE ON FUNCTION public.admin_set_premium(uuid, text, text, text, text, text, timestamptz, jsonb) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.admin_set_premium(uuid, text, text, text, text, text, timestamptz, jsonb) TO service_role;
 
 
 -- Update admin_revoke_premium (Service Role Only!)
@@ -207,7 +213,7 @@ DECLARE
   updated_profile record;
 BEGIN
   -- Strict Service Role enforcement
-  IF auth.role() IS DISTINCT FROM 'service_role' THEN
+  IF COALESCE(auth.jwt() ->> 'role', '') <> 'service_role' THEN
     RAISE EXCEPTION 'Unauthorized: Only service_role can revoke premium';
   END IF;
 
@@ -232,5 +238,4 @@ BEGIN
 END;
 $$;
 REVOKE EXECUTE ON FUNCTION public.admin_revoke_premium(uuid) FROM PUBLIC;
--- REMOVED: GRANT EXECUTE ON FUNCTION public.admin_revoke_premium(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.admin_revoke_premium(uuid) TO service_role;

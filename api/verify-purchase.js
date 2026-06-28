@@ -1,16 +1,27 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
-const supabaseAdmin = supabaseUrl && supabaseServiceKey ? createClient(supabaseUrl, supabaseServiceKey) : null;
+import { supabase, supabaseAdmin } from './_supabase.js';
 
 const json = (res, statusCode, payload) => {
   res.status(statusCode);
   res.setHeader("Content-Type", "application/json");
   res.send(JSON.stringify(payload));
+};
+
+const SUPPORTED_PLATFORMS = new Set(["android", "ios"]);
+
+const parseJsonBody = (body) => {
+  if (typeof body === "string") {
+    try {
+      return JSON.parse(body);
+    } catch {
+      throw new Error("Invalid JSON body.");
+    }
+  }
+
+  if (!body || typeof body !== "object") {
+    throw new Error("Invalid request body.");
+  }
+
+  return body;
 };
 
 export default async function handler(req, res) {
@@ -43,10 +54,12 @@ export default async function handler(req, res) {
   const userId = user.id;
 
   try {
-    const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
-    const { platform, productId, transactionId, orderId, basePlanId, purchaseToken, rawReceipt } = body || {};
+    const body = parseJsonBody(req.body);
+    const normalizedPlatform =
+      typeof body.platform === "string" ? body.platform.trim().toLowerCase() : "";
+    const { productId, transactionId, orderId, plan, basePlanId, purchaseToken, rawReceipt, expiresAt } = body || {};
 
-    if (!platform || !productId || !transactionId) {
+    if (!normalizedPlatform || !productId || !transactionId) {
       console.warn("[IAP API] Missing basic purchase data.");
       return json(res, 400, { 
         error: "Missing required purchase information (platform, productId, transactionId).",
@@ -54,7 +67,14 @@ export default async function handler(req, res) {
       });
     }
 
-    if (platform === 'android' && !purchaseToken) {
+    if (!SUPPORTED_PLATFORMS.has(normalizedPlatform)) {
+      return json(res, 400, {
+        error: "Unsupported purchase platform.",
+        code: "INVALID_PURCHASE_PLATFORM"
+      });
+    }
+
+    if (normalizedPlatform === 'android' && !purchaseToken) {
       console.warn("[IAP API] Missing Android-specific purchase data.");
       return json(res, 400, {
         error: "Missing Android purchase info (purchaseToken).",
@@ -67,9 +87,9 @@ export default async function handler(req, res) {
 
     // TODO: [IAP-VERIFICATION] Implement real Apple/Google verification here.
     // If real verification is implemented, it should set isValid = true if successful.
-    if (platform === 'ios') {
+    if (normalizedPlatform === 'ios') {
       // isValid = await verifyWithApple(transactionId, purchaseToken);
-    } else if (platform === 'android') {
+    } else if (normalizedPlatform === 'android') {
       // isValid = await verifyWithGoogle(productId, transactionId, purchaseToken);
     }
 
@@ -84,12 +104,17 @@ export default async function handler(req, res) {
     // Call the admin_set_premium RPC using service role
     const { data: updatedProfile, error: rpcError } = await supabaseAdmin.rpc("admin_set_premium", {
       user_uuid: userId,
-      platform_name: platform,
+      platform_name: normalizedPlatform,
       product_identifier: productId,
       transaction_identifier: transactionId,
       base_plan_identifier: basePlanId || null,
       purchase_token_identifier: purchaseToken || null,
-      raw_payload: rawReceipt || {}
+      expires_at: expiresAt || null,
+      raw_payload: {
+        orderId: orderId || null,
+        plan: plan || null,
+        receipt: rawReceipt || {}
+      }
     });
 
     if (rpcError) {
@@ -106,6 +131,9 @@ export default async function handler(req, res) {
       profile: updatedProfile
     });
   } catch (error) {
+    if (error instanceof Error && (error.message === "Invalid JSON body." || error.message === "Invalid request body.")) {
+      return json(res, 400, { error: error.message });
+    }
     console.error("Verify purchase error:", error);
     return json(res, 500, { error: "Failed to process purchase verification." });
   }

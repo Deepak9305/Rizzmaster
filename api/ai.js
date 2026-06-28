@@ -1,9 +1,11 @@
 import OpenAI from "openai";
-import { createClient } from '@supabase/supabase-js';
+import { supabase, supabaseAdmin } from './_supabase.js';
 
 const DEFAULT_BASE_URL = "https://api.groq.com/openai/v1";
 const ALLOWED_MODELS = new Set([
   "meta-llama/llama-4-scout-17b-16e-instruct",
+  "llama-3.3-70b-versatile",
+  "llama-3.2-90b-vision-preview",
 ]);
 const MAX_MESSAGES = 8;
 const MAX_TEXT_LENGTH = 16000;
@@ -13,12 +15,6 @@ const MAX_IMAGE_URL_LENGTH = 6_000_000;
 const rateLimitMap = new Map();
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
 const MAX_REQUESTS_PER_WINDOW = 15;
-
-const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
-const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const supabaseAdmin = supabaseUrl && supabaseServiceKey ? createClient(supabaseUrl, supabaseServiceKey) : null;
 
 const json = (res, statusCode, payload) => {
   res.status(statusCode);
@@ -55,6 +51,46 @@ const isValidMessageContent = (content) => {
   }
 
   return Array.isArray(content) && content.length > 0 && content.every(isValidMessagePart);
+};
+
+const parseJsonBody = (body) => {
+  if (typeof body === "string") {
+    try {
+      return JSON.parse(body);
+    } catch {
+      throw new Error("Invalid JSON body.");
+    }
+  }
+
+  if (!isObject(body)) {
+    throw new Error("Invalid request body.");
+  }
+
+  return body;
+};
+
+const getRequestIdentifier = (req, fallback) => {
+  const forwardedFor = req.headers["x-forwarded-for"];
+  if (typeof forwardedFor === "string" && forwardedFor.trim()) {
+    return forwardedFor.split(",")[0].trim();
+  }
+
+  if (Array.isArray(forwardedFor) && forwardedFor.length > 0) {
+    const first = forwardedFor[0]?.trim();
+    if (first) {
+      return first;
+    }
+  }
+
+  return fallback;
+};
+
+const pruneRateLimitEntries = (now) => {
+  for (const [key, value] of rateLimitMap.entries()) {
+    if (now - value.startTime > RATE_LIMIT_WINDOW) {
+      rateLimitMap.delete(key);
+    }
+  }
 };
 
 const normalizeRequest = (body) => {
@@ -125,32 +161,33 @@ export default async function handler(req, res) {
   }
   const token = authHeader.split(" ")[1];
 
-  if (!supabase || !supabaseAdmin) {
-    return json(res, 500, { error: "Supabase integration not configured on the server." });
-  }
-
   const isGuest = (token === "unauthenticated");
   let user = null;
   let userId = "guest_user";
 
-  // Allow guests to generate, relying on IP rate limit and frontend local credits
-  
-  try {
-    const { data, error } = await supabase.auth.getUser(token);
-    if (!isGuest && (error || !data || !data.user)) {
-      return json(res, 401, { error: "Unauthorized. Invalid token." });
+  if (!isGuest) {
+    if (!supabase || !supabaseAdmin) {
+      return json(res, 500, { error: "Supabase integration not configured on the server." });
     }
-    if (!isGuest) {
+
+    try {
+      const { data, error } = await supabase.auth.getUser(token);
+      if (error || !data || !data.user) {
+        return json(res, 401, { error: "Unauthorized. Invalid token." });
+      }
       user = data.user;
       userId = user.id;
+    } catch (err) {
+      return json(res, 401, { error: "Unauthorized. Token verification failed." });
     }
-  } catch (err) {
-    if (!isGuest) return json(res, 401, { error: "Unauthorized. Token verification failed." });
   }
 
   // 2. Rate Limiting
-  const identifier = isGuest ? (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "guest_ip") : userId;
+  const identifier = isGuest
+    ? getRequestIdentifier(req, req.socket?.remoteAddress || "guest_ip")
+    : userId;
   const now = Date.now();
+  pruneRateLimitEntries(now);
   const userRate = rateLimitMap.get(identifier) || { count: 0, startTime: now };
   
   if (now - userRate.startTime > RATE_LIMIT_WINDOW) {
@@ -176,7 +213,7 @@ export default async function handler(req, res) {
   let creditsDeducted = false;
 
   try {
-    const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+    const body = parseJsonBody(req.body);
     const request = normalizeRequest(body);
 
     // Determine cost: 1 for text-only, 2 if has image
@@ -210,13 +247,21 @@ export default async function handler(req, res) {
           });
         }
 
-        // Deduct credits via admin RPC (bypassing client-write protection trigger)
+        // Deduct credits atomically in Postgres. The RPC raises if another request
+        // consumed the balance between the read above and this debit.
         const { error: deductError } = await supabaseAdmin.rpc("admin_modify_credits", {
           user_uuid: userId,
           amount_change: -cost
         });
 
         if (deductError) {
+          if (deductError.message?.toLowerCase().includes("insufficient credits")) {
+            return json(res, 403, {
+              error: `Insufficient credits. Rizz AI text costs 1 credit, image costs 2 credits. You have ${profile.credits} credits.`,
+              code: "INSUFFICIENT_CREDITS"
+            });
+          }
+
           console.error(`[AI API] Failed to deduct credits for user: ${userId}. Error:`, deductError);
           return json(res, 500, { 
             error: "Failed to deduct credits.",
@@ -250,7 +295,7 @@ export default async function handler(req, res) {
     console.error("AI endpoint error:", error);
 
     // Refund credits if deducted
-    if (creditsDeducted && !isPremium) {
+    if (creditsDeducted && !isPremium && supabaseAdmin) {
       await supabaseAdmin.rpc("admin_modify_credits", {
         user_uuid: userId,
         amount_change: cost
@@ -259,6 +304,7 @@ export default async function handler(req, res) {
 
     const message = error instanceof Error ? error.message : "AI request failed.";
     const statusCode =
+      message === "Invalid JSON body." ||
       message === "Invalid request body." ||
       message === "Unsupported model." ||
       message === "Invalid messages payload." ||

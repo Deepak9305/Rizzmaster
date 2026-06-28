@@ -6,7 +6,17 @@ create table public.profiles (
   credits integer default 5,
   is_premium boolean default false,
   last_daily_reset date default current_date,
-  shadow_notes text
+  shadow_notes text,
+  streak_count integer default 1,
+  last_streak_claim date,
+  premium_source text,
+  premium_platform text,
+  premium_product_id text,
+  premium_base_plan_id text,
+  premium_transaction_id text,
+  premium_expires_at timestamptz,
+  premium_verified_at timestamptz,
+  total_time_spent_ms bigint default 0
 );
 
 -- Create saved_items table
@@ -35,40 +45,50 @@ alter table public.profiles enable row level security;
 alter table public.saved_items enable row level security;
 alter table public.premium_subscriptions enable row level security;
 
+-- Explicit Data API grants. New Supabase projects may not expose public tables
+-- to anon/authenticated roles automatically.
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.profiles TO authenticated;
+GRANT SELECT, INSERT, DELETE ON TABLE public.saved_items TO authenticated;
+GRANT SELECT ON TABLE public.premium_subscriptions TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.profiles TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.saved_items TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.premium_subscriptions TO service_role;
+
 -- Policies for profiles
 create policy "Users can view own profile" 
   on public.profiles for select 
-  using ( auth.uid() = id );
+  using ( (select auth.uid()) = id );
 
 create policy "Users can insert own profile" 
   on public.profiles for insert 
-  with check ( auth.uid() = id );
+  with check ( (select auth.uid()) = id );
 
 create policy "Users can update own profile" 
   on public.profiles for update 
-  using ( auth.uid() = id );
+  using ( (select auth.uid()) = id )
+  with check ( (select auth.uid()) = id );
 
 create policy "Users can delete own profile" 
   on public.profiles for delete 
-  using ( auth.uid() = id );
+  using ( (select auth.uid()) = id );
 
 -- Policies for saved_items
 create policy "Users can view own saved items" 
   on public.saved_items for select 
-  using ( auth.uid() = user_id );
+  using ( (select auth.uid()) = user_id );
 
 create policy "Users can insert own saved items" 
   on public.saved_items for insert 
-  with check ( auth.uid() = user_id );
+  with check ( (select auth.uid()) = user_id );
 
 create policy "Users can delete own saved items" 
   on public.saved_items for delete 
-  using ( auth.uid() = user_id );
+  using ( (select auth.uid()) = user_id );
 
 -- Policies for premium_subscriptions
 create policy "Users can view own subscription" 
   on public.premium_subscriptions for select 
-  using ( auth.uid() = user_id );
+  using ( (select auth.uid()) = user_id );
 
 -- RPC Function for Complete Account Deletion
 -- Run this in your Supabase SQL Editor to fix the "function not found" error
@@ -105,7 +125,14 @@ BEGIN
   IF current_setting('app.bypass_profile_trigger', true) IS DISTINCT FROM 'true' THEN
     IF (OLD.credits IS DISTINCT FROM NEW.credits) OR
        (OLD.is_premium IS DISTINCT FROM NEW.is_premium) OR
-       (OLD.last_daily_reset IS DISTINCT FROM NEW.last_daily_reset) THEN
+       (OLD.last_daily_reset IS DISTINCT FROM NEW.last_daily_reset) OR
+       (OLD.premium_source IS DISTINCT FROM NEW.premium_source) OR
+       (OLD.premium_platform IS DISTINCT FROM NEW.premium_platform) OR
+       (OLD.premium_product_id IS DISTINCT FROM NEW.premium_product_id) OR
+       (OLD.premium_base_plan_id IS DISTINCT FROM NEW.premium_base_plan_id) OR
+       (OLD.premium_transaction_id IS DISTINCT FROM NEW.premium_transaction_id) OR
+       (OLD.premium_expires_at IS DISTINCT FROM NEW.premium_expires_at) OR
+       (OLD.premium_verified_at IS DISTINCT FROM NEW.premium_verified_at) THEN
       RAISE EXCEPTION 'Cannot update sensitive columns directly from client.';
     END IF;
   END IF;
@@ -128,23 +155,31 @@ SET search_path = public
 AS $$
 DECLARE
   current_credits integer;
+  new_credits integer;
 BEGIN
   -- Set config to bypass the trigger
   PERFORM set_config('app.bypass_profile_trigger', 'true', true);
   
   SELECT credits INTO current_credits
   FROM public.profiles
-  WHERE id = user_uuid;
+  WHERE id = user_uuid
+  FOR UPDATE;
   
   IF current_credits IS NULL THEN
     RAISE EXCEPTION 'User profile not found';
   END IF;
+
+  new_credits := current_credits + amount_change;
+
+  IF new_credits < 0 THEN
+    RAISE EXCEPTION 'Insufficient credits';
+  END IF;
   
   UPDATE public.profiles
-  SET credits = GREATEST(current_credits + amount_change, 0)
+  SET credits = new_credits
   WHERE id = user_uuid;
   
-  RETURN GREATEST(current_credits + amount_change, 0);
+  RETURN new_credits;
 END;
 $$;
 
@@ -152,6 +187,10 @@ REVOKE EXECUTE ON FUNCTION public.admin_modify_credits(uuid, integer) FROM PUBLI
 GRANT EXECUTE ON FUNCTION public.admin_modify_credits(uuid, integer) TO service_role;
 
 -- Secure RPC to upgrade to premium (service_role only)
+DROP FUNCTION IF EXISTS public.admin_set_premium(uuid, text, text, text);
+DROP FUNCTION IF EXISTS public.admin_set_premium(uuid, text, text, text, text, text, jsonb);
+DROP FUNCTION IF EXISTS public.admin_set_premium(uuid, text, text, text, text, timestamptz, jsonb);
+
 CREATE OR REPLACE FUNCTION public.admin_set_premium(
   user_uuid uuid,
   platform_name text,
@@ -159,6 +198,7 @@ CREATE OR REPLACE FUNCTION public.admin_set_premium(
   transaction_identifier text,
   base_plan_identifier text DEFAULT NULL,
   purchase_token_identifier text DEFAULT NULL,
+  expires_at timestamptz DEFAULT NULL,
   raw_payload jsonb DEFAULT '{}'::jsonb
 )
 RETURNS jsonb
@@ -173,7 +213,14 @@ BEGIN
   PERFORM set_config('app.bypass_profile_trigger', 'true', true);
 
   UPDATE public.profiles
-  SET is_premium = true
+  SET is_premium = true,
+      premium_source = 'native',
+      premium_platform = platform_name,
+      premium_product_id = product_identifier,
+      premium_base_plan_id = base_plan_identifier,
+      premium_transaction_id = transaction_identifier,
+      premium_expires_at = expires_at,
+      premium_verified_at = now()
   WHERE id = user_uuid;
 
   INSERT INTO public.premium_subscriptions (user_id, platform, product_id, transaction_id, is_active, purchase_date)
@@ -186,7 +233,7 @@ BEGIN
     is_active = true,
     purchase_date = now();
 
-  SELECT id, email, credits, is_premium, last_daily_reset, shadow_notes 
+  SELECT *
   INTO updated_profile 
   FROM public.profiles 
   WHERE id = user_uuid;
@@ -195,8 +242,8 @@ BEGIN
 END;
 $$;
 
-REVOKE EXECUTE ON FUNCTION public.admin_set_premium(uuid, text, text, text, text, text, jsonb) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.admin_set_premium(uuid, text, text, text, text, text, jsonb) TO service_role;
+REVOKE EXECUTE ON FUNCTION public.admin_set_premium(uuid, text, text, text, text, text, timestamptz, jsonb) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.admin_set_premium(uuid, text, text, text, text, text, timestamptz, jsonb) TO service_role;
 
 -- Secure daily reset and streak tracking RPC (authenticated users can invoke)
 CREATE OR REPLACE FUNCTION public.claim_daily_credits_and_streak()
@@ -311,16 +358,19 @@ CREATE TABLE IF NOT EXISTS public.reports (
 
 ALTER TABLE public.reports ENABLE ROW LEVEL SECURITY;
 
+GRANT INSERT ON TABLE public.reports TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.reports TO service_role;
+
 -- Allow authenticated and anonymous users to insert reports
 CREATE POLICY "Allow authenticated inserts" 
   ON public.reports FOR INSERT 
   TO authenticated
-  WITH CHECK (true);
+  WITH CHECK (user_id = (select auth.uid()));
 
 CREATE POLICY "Allow anonymous inserts" 
   ON public.reports FOR INSERT 
   TO anon
-  WITH CHECK (true);
+  WITH CHECK (user_id IS NULL);
 
 -- Secure RPC to revoke premium status (used by client during exploit re-verification check)
 CREATE OR REPLACE FUNCTION public.admin_revoke_premium(user_uuid uuid)
@@ -332,9 +382,8 @@ AS $$
 DECLARE
   updated_profile record;
 BEGIN
-  -- Prevent users from revoking other users' premium status
-  IF auth.uid() IS DISTINCT FROM user_uuid AND auth.role() IS DISTINCT FROM 'service_role' THEN
-    RAISE EXCEPTION 'Unauthorized';
+  IF COALESCE(auth.jwt() ->> 'role', '') <> 'service_role' THEN
+    RAISE EXCEPTION 'Unauthorized: Only service_role can revoke premium';
   END IF;
 
   -- Set config to bypass the trigger
@@ -359,7 +408,4 @@ END;
 $$;
 
 REVOKE EXECUTE ON FUNCTION public.admin_revoke_premium(uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.admin_revoke_premium(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.admin_revoke_premium(uuid) TO service_role;
-
-

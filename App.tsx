@@ -108,6 +108,34 @@ const generateUUID = () => {
   return Date.now().toString(36) + Math.random().toString(36).substring(2);
 };
 
+const getTodayDateString = () => new Date().toISOString().split('T')[0];
+
+const createDefaultProfile = (userId: string, email?: string | null) => {
+  const today = getTodayDateString();
+  return {
+    id: userId,
+    email: email || null,
+    credits: DAILY_CREDITS,
+    is_premium: false,
+    last_daily_reset: today,
+    shadow_notes: '',
+    streak_count: 1,
+    last_streak_claim: today,
+    total_time_spent_ms: 0,
+  };
+};
+
+const isMissingRowError = (error: any) => error?.code === 'PGRST116';
+const isMissingOptionalSchemaError = (error: any) => (
+  error?.code === '42P01' ||
+  error?.code === 'PGRST205' ||
+  error?.message?.toLowerCase?.().includes('could not find the table')
+);
+
+const getErrorMessage = (error: unknown, fallback: string) => (
+  error instanceof Error ? error.message : fallback
+);
+
 interface SplashScreenProps {
   isAppReady: boolean;
   onComplete: () => void;
@@ -601,6 +629,7 @@ const AppContentInner: React.FC = () => {
     let basePlanId = null;
     let purchaseToken = '';
     let rawReceipt = null;
+    let plan = null;
 
     if (purchaseData && typeof purchaseData === 'object') {
       platform = purchaseData.platform || platform;
@@ -610,6 +639,7 @@ const AppContentInner: React.FC = () => {
       basePlanId = purchaseData.basePlanId;
       purchaseToken = purchaseData.purchaseToken;
       rawReceipt = purchaseData.rawReceipt;
+      plan = purchaseData.plan || null;
     } else {
       // Fallback to searching products (only if absolutely necessary)
       const products = IAPService.products;
@@ -660,15 +690,18 @@ const AppContentInner: React.FC = () => {
           productId,
           transactionId,
           orderId,
+          plan,
           basePlanId,
           purchaseToken,
-          rawReceipt
+          rawReceipt,
+          expiresAt: purchaseData?.expiresAt || purchaseData?.expirationDate || null
         })
       });
 
       const resData = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(resData?.error || `Server returned status ${response.status}`);
+        const code = resData?.code ? ` (${resData.code})` : '';
+        throw new Error(`${resData?.error || `Server returned status ${response.status}`}${code}`);
       }
 
       if (resData && resData.profile) {
@@ -688,7 +721,7 @@ const AppContentInner: React.FC = () => {
       showToast(`Welcome to the Elite Club! 👑`, 'success');
     } catch (err) {
       console.error("Failed to verify purchase:", err);
-      showToast("Purchase verification failed. Please try again or contact support.", "error");
+      showToast(getErrorMessage(err, "Purchase verification failed. Please try again or contact support."), "error");
     }
   }, [showToast, isGuest, handleExitGuestMode]);
 
@@ -884,7 +917,7 @@ const AppContentInner: React.FC = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) {
-        loadUserData(session.user.id, session.user.email)
+        loadUserDataSafe(session.user.id, session.user.email)
           .catch(e => console.error("Session Load Auth Err:", e))
           .finally(() => {
             clearTimeout(failSafeTimeout);
@@ -904,7 +937,11 @@ const AppContentInner: React.FC = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
-        loadUserData(session.user.id, session.user.email);
+        loadUserDataSafe(session.user.id, session.user.email)
+          .catch((e) => {
+            console.error("Auth State Load Error:", e);
+            setIsProfileLoadingHung(true);
+          });
         // NOTE: App Open Ad is triggered by the useEffect watching [session, profile, isAuthReady]
         // after the profile has actually loaded, not here where profile is not yet available.
       } else {
@@ -964,6 +1001,45 @@ const AppContentInner: React.FC = () => {
 
 
 
+  const createProfile = useCallback(async (userId: string, email?: string | null) => {
+    if (!supabase) return { data: null, error: new Error('Supabase is not configured.') as any };
+
+    const fullProfile = createDefaultProfile(userId, email);
+    let result = await supabase
+      .from('profiles')
+      .insert([fullProfile])
+      .select()
+      .single();
+
+    const insertError = result.error;
+    const columnMismatch = insertError && (
+      insertError.code === '42703' ||
+      insertError.code === 'PGRST204' ||
+      insertError.message?.toLowerCase().includes('column')
+    );
+
+    if (columnMismatch) {
+      console.warn('[Profile] Full profile insert failed, retrying with legacy-safe columns:', insertError.message);
+      const legacyProfile = {
+        id: fullProfile.id,
+        email: fullProfile.email,
+        credits: fullProfile.credits,
+        is_premium: fullProfile.is_premium,
+        last_daily_reset: fullProfile.last_daily_reset,
+        shadow_notes: fullProfile.shadow_notes,
+      };
+
+      result = await supabase
+        .from('profiles')
+        .insert([legacyProfile])
+        .select()
+        .single();
+    }
+
+    return result;
+  }, []);
+
+
   const handleReclaimSession = useCallback(() => {
     setIsSessionBlocked(false);
     sessionChannelRef.current?.postMessage({ type: 'NEW_SESSION_STARTED' });
@@ -971,6 +1047,7 @@ const AppContentInner: React.FC = () => {
 
   const loadUserData = useCallback(async (userId: string, email?: string) => {
     if (!supabase) return;
+    setIsProfileLoadingHung(false);
 
     try {
       const profilePromise = supabase.from('profiles').select('*').eq('id', userId).single();
@@ -981,23 +1058,16 @@ const AppContentInner: React.FC = () => {
       let profileData = profileResult.data;
       const savedData = savedResult.data;
 
-      if (savedData) {
+      if (savedResult.error) {
+        console.warn('[Profile] Saved items load failed:', savedResult.error.message);
+        setSavedItems([]);
+      } else if (savedData) {
         setSavedItems(savedData as SavedItem[]);
       }
 
-      if (profileResult.error?.code === 'PGRST116') {
+      if (isMissingRowError(profileResult.error)) {
         // New user — create their profile
-        const { data: newProfile } = await supabase.from('profiles').insert([{
-          id: userId,
-          email: email,
-          credits: DAILY_CREDITS,
-          is_premium: false,
-          last_daily_reset: new Date().toISOString().split('T')[0],
-          shadow_notes: '',
-          streak_count: 1,
-          last_streak_claim: new Date().toISOString().split('T')[0],
-          total_time_spent_ms: 0,
-        }]).select().single();
+        const { data: newProfile } = await createProfile(userId, email);
         if (newProfile) profileData = newProfile;
       } else if (profileData) {
         // Delegate daily credits reset and streak tracking to the backend RPC
@@ -1063,6 +1133,104 @@ const AppContentInner: React.FC = () => {
       console.error("Error loading user data", e);
     }
   }, [showToast]);
+
+  async function loadUserDataSafe(userId: string, email?: string) {
+    if (!supabase) return;
+    setIsProfileLoadingHung(false);
+
+    try {
+      const [profileResult, savedResult] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', userId).single(),
+        supabase.from('saved_items').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
+      ]);
+
+      if (savedResult.error) {
+        console.warn('[Profile] Saved items load failed:', savedResult.error.message);
+        setSavedItems([]);
+      } else {
+        setSavedItems((savedResult.data || []) as SavedItem[]);
+      }
+
+      let profileData = profileResult.data;
+
+      if (isMissingRowError(profileResult.error)) {
+        const { data: newProfile, error: createError } = await createProfile(userId, email);
+        if (createError) {
+          console.error("Failed to create user profile:", createError);
+          showToast("Could not create your profile. Check Supabase table grants/RLS.", "error");
+          setIsProfileLoadingHung(true);
+          return;
+        }
+        profileData = newProfile;
+      } else if (profileResult.error) {
+        console.error("Failed to load user profile:", profileResult.error);
+        showToast("Could not load your profile. Please try again.", "error");
+        setIsProfileLoadingHung(true);
+        return;
+      } else if (profileData) {
+        try {
+          const { data: claimData, error: claimError } = await supabase.rpc('claim_daily_credits_and_streak');
+          if (claimError) {
+            console.error("Failed to claim daily credits and streak:", claimError);
+          } else if (claimData) {
+            if (claimData.profile) {
+              profileData = claimData.profile;
+            }
+            if (claimData.streak_msg && claimData.streak_msg.trim()) {
+              setTimeout(() => showToast(claimData.streak_msg, 'success'), 1500);
+            }
+          }
+        } catch (err) {
+          console.error("Daily claim error:", err);
+        }
+      }
+
+      if (!profileData) {
+        setIsProfileLoadingHung(true);
+        return;
+      }
+
+      setProfile(profileData as UserProfile);
+      profileRef.current = profileData as UserProfile;
+
+      Promise.resolve(supabase.from('user_activity_log').insert([{ user_id: userId }]))
+        .then(({ error }) => {
+          if (error && error.code !== '23505' && !isMissingOptionalSchemaError(error)) {
+            console.warn('[Analytics] Activity log insert failed:', error.message);
+          }
+        })
+        .catch((e: unknown) => console.warn('[Analytics] Activity log insert error:', e));
+
+      if (!profileData.shadow_notes) {
+        try {
+          const localNotes = localStorage.getItem(`rizz_coach_shadow_notes_${userId}`) || localStorage.getItem('rizz_coach_shadow_notes');
+          if (localNotes && localNotes.trim()) {
+            const { data: migratedProfile, error: migrateError } = await supabase
+              .from('profiles')
+              .update({ shadow_notes: localNotes })
+              .eq('id', userId)
+              .select()
+              .single();
+
+            if (migrateError) {
+              console.warn("Migration check failed:", migrateError.message);
+            } else if (migratedProfile) {
+              setProfile(migratedProfile as UserProfile);
+              profileRef.current = migratedProfile as UserProfile;
+            }
+          }
+        } catch (err) {
+          console.warn("Migration check failed:", err);
+        }
+      } else {
+        localStorage.setItem(`rizz_coach_shadow_notes_${userId}`, profileData.shadow_notes);
+      }
+    } catch (e) {
+      console.error("Error loading user data", e);
+      showToast("Could not load your account data. Please try again.", "error");
+      setIsProfileLoadingHung(true);
+    }
+  }
 
   const handleLogout = useCallback(async () => {
     const currentProfile = profileRef.current;
@@ -1144,21 +1312,14 @@ const AppContentInner: React.FC = () => {
       .eq('id', session.user.id)
       .single();
 
-    if (error && error.code === 'PGRST116') {
+    if (isMissingRowError(error)) {
       // Profile missing (e.g. newly signed up). Create it.
-      const { data: newData, error: insertError } = await supabase
-        .from('profiles')
-        .insert([{ 
-          id: session.user.id, 
-          email: session.user.email, 
-          credits: 5, 
-          is_premium: false 
-        }])
-        .select()
-        .single();
+      const { data: newData, error: insertError } = await createProfile(session.user.id, session.user.email);
       
       data = newData;
       error = insertError;
+    } else if (error) {
+      console.warn('[Profile] Sync failed:', error.message);
     }
 
     if (data && !error) {
@@ -1167,7 +1328,7 @@ const AppContentInner: React.FC = () => {
       return data as UserProfile;
     }
     return null;
-  }, []);
+  }, [createProfile]);
 
   const handleRestorePurchases = useCallback(async () => {
     if (!profileRef.current) return;
@@ -1322,9 +1483,12 @@ const AppContentInner: React.FC = () => {
     if (!profileRef.current) return;
     try {
       if (supabase && profileRef.current.id !== 'guest_user') {
-        await supabase.from('reports').insert([
+        const { error } = await supabase.from('reports').insert([
           { user_id: profileRef.current.id, content: content || 'General Report', type: 'content_report' }
         ]);
+        if (error) {
+          throw error;
+        }
       }
       showToast('Report submitted. We will review this.', 'info');
     } catch (err) {
@@ -1568,6 +1732,14 @@ const AppContentInner: React.FC = () => {
          if (!isGuest) {
            syncProfile().catch(() => {});
          }
+         return;
+      }
+      if (error.message === 'PROFILE_NOT_FOUND') {
+         if (!currentProfile.is_premium) updateCredits(creditsBefore);
+         if (!isGuest) {
+           await syncProfile();
+         }
+         showToast('Profile repaired. Try again.', 'info');
          return;
       }
       showToast('The wingman tripped! Try again.', 'error');
