@@ -116,6 +116,37 @@ const generateUUID = () => {
 };
 
 const getTodayDateString = () => new Date().toISOString().split('T')[0];
+const getTodayStorageDate = () => new Date().toDateString();
+
+const getUserCreditStorageKeys = (userId: string) => ({
+  credits: `rizzmaster_user_credits_${userId}`,
+  reset: `rizzmaster_user_last_reset_${userId}`,
+});
+
+const normalizeDailyCreditProfile = (profile: UserProfile): UserProfile => {
+  if (typeof localStorage === 'undefined' || profile.id === 'guest_user' || profile.is_premium) {
+    return profile;
+  }
+
+  const today = getTodayStorageDate();
+  const keys = getUserCreditStorageKeys(profile.id);
+  const savedReset = localStorage.getItem(keys.reset);
+  const savedCredits = localStorage.getItem(keys.credits);
+  const parsedCredits = savedCredits !== null ? parseInt(savedCredits, 10) : NaN;
+
+  const credits = savedReset === today && Number.isFinite(parsedCredits)
+    ? parsedCredits
+    : Math.max(profile.credits || 0, DAILY_CREDITS);
+
+  localStorage.setItem(keys.reset, today);
+  localStorage.setItem(keys.credits, Math.max(0, credits).toString());
+
+  return {
+    ...profile,
+    credits: Math.max(0, credits),
+    last_daily_reset: getTodayDateString(),
+  };
+};
 
 const createDefaultProfile = (userId: string, email?: string | null) => {
   const today = getTodayDateString();
@@ -1133,7 +1164,9 @@ const AppContentInner: React.FC = () => {
       }
 
       if (profileData) {
+        profileData = normalizeDailyCreditProfile(profileData as UserProfile);
         setProfile(profileData as UserProfile);
+        profileRef.current = profileData as UserProfile;
 
         // --- DAU ACTIVITY LOG (silent, fire-and-forget) ---
         // The PRIMARY KEY prevents duplicate inserts for the same user on the same day.
@@ -1160,7 +1193,9 @@ const AppContentInner: React.FC = () => {
                 .single();
 
               if (migratedProfile) {
-                setProfile(migratedProfile as UserProfile);
+                const normalizedProfile = normalizeDailyCreditProfile(migratedProfile as UserProfile);
+                setProfile(normalizedProfile);
+                profileRef.current = normalizedProfile;
               }
             }
           } catch (err) {
@@ -1237,6 +1272,7 @@ const AppContentInner: React.FC = () => {
         return;
       }
 
+      profileData = normalizeDailyCreditProfile(profileData as UserProfile);
       setProfile(profileData as UserProfile);
       profileRef.current = profileData as UserProfile;
 
@@ -1262,8 +1298,9 @@ const AppContentInner: React.FC = () => {
             if (migrateError) {
               console.warn("Migration check failed:", migrateError.message);
             } else if (migratedProfile) {
-              setProfile(migratedProfile as UserProfile);
-              profileRef.current = migratedProfile as UserProfile;
+              const normalizedProfile = normalizeDailyCreditProfile(migratedProfile as UserProfile);
+              setProfile(normalizedProfile);
+              profileRef.current = normalizedProfile;
             }
           }
         } catch (err) {
@@ -1363,6 +1400,10 @@ const AppContentInner: React.FC = () => {
 
     if (baseProfile.id === 'guest_user') {
       localStorage.setItem('rizzmaster_guest_credits', newAmount.toString());
+    } else if (!baseProfile.is_premium) {
+      const keys = getUserCreditStorageKeys(baseProfile.id);
+      localStorage.setItem(keys.reset, getTodayStorageDate());
+      localStorage.setItem(keys.credits, newAmount.toString());
     }
 
     setProfile(updated);
@@ -1390,9 +1431,10 @@ const AppContentInner: React.FC = () => {
     }
 
     if (data && !error) {
-      setProfile(data as UserProfile);
-      profileRef.current = data as UserProfile;
-      return data as UserProfile;
+      const normalizedProfile = normalizeDailyCreditProfile(data as UserProfile);
+      setProfile(normalizedProfile);
+      profileRef.current = normalizedProfile;
+      return normalizedProfile;
     }
     return null;
   }, [createProfile]);
@@ -1754,7 +1796,7 @@ const AppContentInner: React.FC = () => {
     // --- GENERATION START ---
     const shouldManageLocalCredits = !currentProfile.is_premium;
     const shouldSyncSignedInProfile = !isGuest && currentProfile.id !== 'guest_user';
-    let skipFinalProfileSync = false;
+    let skipFinalProfileSync = shouldManageLocalCredits;
     let creditsAdjustedOptimistically = false;
     const refundOptimisticCredits = () => {
       if (!shouldManageLocalCredits || !creditsAdjustedOptimistically) return;
@@ -1793,7 +1835,7 @@ const AppContentInner: React.FC = () => {
         setResult(res);
       } else {
         creditsAdjustedOptimistically = false;
-        skipFinalProfileSync = (res as any).__skipProfileSync === true;
+        skipFinalProfileSync = shouldManageLocalCredits || (res as any).__skipProfileSync === true;
         setResult(res);
       }
 

@@ -31,6 +31,7 @@ type AiCompletionResult = {
 };
 
 const SIGNED_IN_BACKEND_FALLBACK_CODES = new Set([
+  INSUFFICIENT_CREDITS_ERROR,
   PROFILE_NOT_FOUND_ERROR,
   SUPABASE_BACKEND_UNAVAILABLE_ERROR,
   PROFILE_BOOTSTRAP_FAILED_ERROR,
@@ -40,7 +41,6 @@ const SIGNED_IN_BACKEND_FALLBACK_CODES = new Set([
 const shouldRetryAsGuest = (response: Response, data: any, token: string) => (
   token !== 'unauthenticated' &&
   response.status !== 401 &&
-  response.status !== 403 &&
   SIGNED_IN_BACKEND_FALLBACK_CODES.has(data?.code)
 );
 
