@@ -326,11 +326,12 @@ const AppContentInner: React.FC = () => {
     const todayStr = new Date().toDateString();
 
     if (lastReset === todayStr) {
-      // Same day, load existing credits
       const savedCredits = localStorage.getItem('rizzmaster_guest_credits');
-      if (savedCredits !== null && !isNaN(parseInt(savedCredits))) {
-        guestCredits = parseInt(savedCredits);
-      }
+      const parsedCredits = savedCredits !== null ? parseInt(savedCredits, 10) : NaN;
+      guestCredits = Number.isFinite(parsedCredits)
+        ? Math.max(parsedCredits, DAILY_CREDITS)
+        : DAILY_CREDITS;
+      localStorage.setItem('rizzmaster_guest_credits', guestCredits.toString());
     } else {
       // New day (or first time), reset to DAILY_CREDITS and store new date
       localStorage.setItem('rizzmaster_guest_last_reset', todayStr);
@@ -1348,24 +1349,23 @@ const AppContentInner: React.FC = () => {
 
 
   const updateCredits = useCallback((newAmountOrUpdater: number | ((prev: number) => number)) => {
-    setProfile(prev => {
-      if (!prev) return null;
-      let newAmount = typeof newAmountOrUpdater === 'function'
-        ? newAmountOrUpdater(prev.credits || 0)
-        : newAmountOrUpdater;
-      
-      newAmount = Math.max(0, newAmount);
+    const baseProfile = profileRef.current;
+    if (!baseProfile) return;
 
-      const updated = { ...prev, credits: newAmount };
-      profileRef.current = updated;
+    let newAmount = typeof newAmountOrUpdater === 'function'
+      ? newAmountOrUpdater(baseProfile.credits || 0)
+      : newAmountOrUpdater;
 
-      // Update LocalStorage for guest if needed, but no direct DB updates
-      if (prev.id === 'guest_user') {
-        localStorage.setItem('rizzmaster_guest_credits', newAmount.toString());
-      }
+    newAmount = Math.max(0, newAmount);
 
-      return updated;
-    });
+    const updated = { ...baseProfile, credits: newAmount };
+    profileRef.current = updated;
+
+    if (baseProfile.id === 'guest_user') {
+      localStorage.setItem('rizzmaster_guest_credits', newAmount.toString());
+    }
+
+    setProfile(updated);
   }, []);
 
   const syncProfile = useCallback(async () => {
@@ -1754,6 +1754,7 @@ const AppContentInner: React.FC = () => {
     // --- GENERATION START ---
     const shouldManageLocalCredits = !currentProfile.is_premium;
     const shouldSyncSignedInProfile = !isGuest && currentProfile.id !== 'guest_user';
+    let skipFinalProfileSync = false;
     let creditsAdjustedOptimistically = false;
     const refundOptimisticCredits = () => {
       if (!shouldManageLocalCredits || !creditsAdjustedOptimistically) return;
@@ -1792,6 +1793,7 @@ const AppContentInner: React.FC = () => {
         setResult(res);
       } else {
         creditsAdjustedOptimistically = false;
+        skipFinalProfileSync = (res as any).__skipProfileSync === true;
         setResult(res);
       }
 
@@ -1848,7 +1850,7 @@ const AppContentInner: React.FC = () => {
     } finally {
       setLoading(false);
       // Don't call syncProfile for guests — they have no Supabase session
-      if (shouldSyncSignedInProfile) {
+      if (shouldSyncSignedInProfile && !skipFinalProfileSync) {
         await syncProfile().catch(() => null);
       }
     }

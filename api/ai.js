@@ -149,6 +149,7 @@ const PROFILE_NOT_FOUND_CODE = "PROFILE_NOT_FOUND";
 const INSUFFICIENT_CREDITS_CODE = "INSUFFICIENT_CREDITS";
 const SUPABASE_BACKEND_UNAVAILABLE_CODE = "SUPABASE_BACKEND_UNAVAILABLE";
 const PROFILE_BOOTSTRAP_FAILED_CODE = "PROFILE_BOOTSTRAP_FAILED";
+const CREDIT_DEDUCTION_FAILED_CODE = "CREDIT_DEDUCTION_FAILED";
 
 const isAuthTokenError = (error) => {
   const status = error?.status ?? error?.code;
@@ -243,6 +244,77 @@ const ensureUserProfile = async (user) => {
   }
 
   return { profile: null, created: false, error: insertResult.error };
+};
+
+const isInsufficientCreditsError = (error) => (
+  error?.message?.toLowerCase().includes("insufficient credits")
+);
+
+const isRpcLookupError = (error) => {
+  const message = error?.message?.toLowerCase() || "";
+  return (
+    error?.code === "42883" ||
+    error?.code === "PGRST202" ||
+    error?.code === "PGRST204" ||
+    (message.includes("function") && (message.includes("not found") || message.includes("schema cache"))) ||
+    (message.includes("could not find") && message.includes("admin_modify_credits"))
+  );
+};
+
+const updateCreditsDirectly = async (userId, amountChange) => {
+  const { data: currentProfile, error: readError } = await supabaseAdmin
+    .from("profiles")
+    .select("credits")
+    .eq("id", userId)
+    .single();
+
+  if (readError || !currentProfile) {
+    return { error: readError || new Error("User profile not found") };
+  }
+
+  const nextCredits = (currentProfile.credits || 0) + amountChange;
+  if (nextCredits < 0) {
+    return { error: new Error("Insufficient credits") };
+  }
+
+  const { error: updateError } = await supabaseAdmin
+    .from("profiles")
+    .update({ credits: nextCredits })
+    .eq("id", userId);
+
+  return { error: updateError, credits: nextCredits };
+};
+
+const modifyCredits = async (userId, amountChange) => {
+  const rpcAttempts = [
+    { user_uuid: userId, amount_change: amountChange },
+    { p_user_id: userId, p_amount: amountChange },
+    { user_id: userId, amount: amountChange },
+  ];
+
+  let lastLookupError = null;
+
+  for (const params of rpcAttempts) {
+    const { data, error } = await supabaseAdmin.rpc("admin_modify_credits", params);
+
+    if (!error) {
+      return { credits: data, usedFallback: false };
+    }
+
+    if (isInsufficientCreditsError(error)) {
+      return { error };
+    }
+
+    if (!isRpcLookupError(error)) {
+      return { error };
+    }
+
+    lastLookupError = error;
+  }
+
+  console.warn("[AI API] admin_modify_credits RPC unavailable; trying direct service-role credit update.", lastLookupError);
+  const directResult = await updateCreditsDirectly(userId, amountChange);
+  return { ...directResult, usedFallback: true };
 };
 
 const hasImage = (messages) => {
@@ -380,13 +452,10 @@ export default async function handler(req, res) {
 
         // Deduct credits atomically in Postgres. The RPC raises if another request
         // consumed the balance between the read above and this debit.
-        const { error: deductError } = await supabaseAdmin.rpc("admin_modify_credits", {
-          user_uuid: userId,
-          amount_change: -cost
-        });
+        const { error: deductError } = await modifyCredits(userId, -cost);
 
         if (deductError) {
-          if (deductError.message?.toLowerCase().includes("insufficient credits")) {
+          if (isInsufficientCreditsError(deductError)) {
             return json(res, 403, {
               error: `Insufficient credits. Rizz AI text costs 1 credit, image costs 2 credits. You have ${profile.credits} credits.`,
               code: INSUFFICIENT_CREDITS_CODE,
@@ -396,7 +465,7 @@ export default async function handler(req, res) {
           console.error(`[AI API] Failed to deduct credits for user: ${userId}. Error:`, deductError);
           return json(res, 500, { 
             error: "Failed to deduct credits.",
-            code: "CREDIT_DEDUCTION_FAILED"
+            code: CREDIT_DEDUCTION_FAILED_CODE
           });
         }
         creditsDeducted = true;
@@ -427,10 +496,10 @@ export default async function handler(req, res) {
 
     // Refund credits if deducted
     if (creditsDeducted && !isPremium && supabaseAdmin) {
-      await supabaseAdmin.rpc("admin_modify_credits", {
-        user_uuid: userId,
-        amount_change: cost
-      }).catch(err => console.error("Refund credits failed:", err));
+      const refundResult = await modifyCredits(userId, cost).catch(error => ({ error }));
+      if (refundResult.error) {
+        console.error("Refund credits failed:", refundResult.error);
+      }
     }
 
     const message = error instanceof Error ? error.message : "AI request failed.";

@@ -8,6 +8,7 @@ const INSUFFICIENT_CREDITS_ERROR = 'INSUFFICIENT_CREDITS';
 const PROFILE_NOT_FOUND_ERROR = 'PROFILE_NOT_FOUND';
 const SUPABASE_BACKEND_UNAVAILABLE_ERROR = 'SUPABASE_BACKEND_UNAVAILABLE';
 const PROFILE_BOOTSTRAP_FAILED_ERROR = 'PROFILE_BOOTSTRAP_FAILED';
+const CREDIT_DEDUCTION_FAILED_ERROR = 'CREDIT_DEDUCTION_FAILED';
 
 // Model Configuration
 const DEFAULT_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
@@ -22,6 +23,30 @@ type AiMessageContent =
 type AiMessage = {
   role: "system" | "user" | "assistant";
   content: AiMessageContent;
+};
+
+type AiCompletionResult = {
+  content: string;
+  usedBackendFallback: boolean;
+};
+
+const SIGNED_IN_BACKEND_FALLBACK_CODES = new Set([
+  PROFILE_NOT_FOUND_ERROR,
+  SUPABASE_BACKEND_UNAVAILABLE_ERROR,
+  PROFILE_BOOTSTRAP_FAILED_ERROR,
+  CREDIT_DEDUCTION_FAILED_ERROR,
+]);
+
+const shouldRetryAsGuest = (response: Response, data: any, token: string) => (
+  token !== 'unauthenticated' &&
+  response.status !== 401 &&
+  response.status !== 403 &&
+  SIGNED_IN_BACKEND_FALLBACK_CODES.has(data?.code)
+);
+
+const withBackendFallbackHint = <T extends object>(value: T, usedBackendFallback: boolean): T => {
+  if (!usedBackendFallback) return value;
+  return { ...value, __skipProfileSync: true } as T;
 };
 
 const getAuthToken = async () => {
@@ -57,9 +82,10 @@ const callAiChatCompletion = async (payload: {
   messages: AiMessage[];
   temperature: number;
   max_tokens?: number;
-}): Promise<string> => {
+}): Promise<AiCompletionResult> => {
   let token = await getAuthToken();
   let { response, data } = await requestAiCompletion(payload, token);
+  let usedBackendFallback = false;
 
   if ((response.status === 401 || data?.code === LOGIN_REQUIRED_ERROR || data?.error === LOGIN_REQUIRED_ERROR) && supabase && token !== 'unauthenticated') {
     const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
@@ -69,6 +95,12 @@ const callAiChatCompletion = async (payload: {
       token = refreshedToken;
       ({ response, data } = await requestAiCompletion(payload, token));
     }
+  }
+
+  if (!response.ok && shouldRetryAsGuest(response, data, token)) {
+    console.warn(`Signed-in AI backend failed with ${data?.code}; retrying through guest-safe generation path.`);
+    ({ response, data } = await requestAiCompletion(payload, 'unauthenticated'));
+    usedBackendFallback = response.ok;
   }
 
   if (!response.ok) {
@@ -87,6 +119,9 @@ const callAiChatCompletion = async (payload: {
     if (data?.code === PROFILE_BOOTSTRAP_FAILED_ERROR) {
       throw new Error(PROFILE_BOOTSTRAP_FAILED_ERROR);
     }
+    if (data?.code === CREDIT_DEDUCTION_FAILED_ERROR) {
+      throw new Error(CREDIT_DEDUCTION_FAILED_ERROR);
+    }
     throw new Error(data?.error || `AI request failed with status ${response.status}.`);
   }
 
@@ -95,7 +130,7 @@ const callAiChatCompletion = async (payload: {
     throw new Error('Empty response text from AI endpoint.');
   }
 
-  return content;
+  return { content, usedBackendFallback };
 };
 
 const PASS_THROUGH_ERRORS = new Set([
@@ -104,6 +139,7 @@ const PASS_THROUGH_ERRORS = new Set([
   PROFILE_NOT_FOUND_ERROR,
   SUPABASE_BACKEND_UNAVAILABLE_ERROR,
   PROFILE_BOOTSTRAP_FAILED_ERROR,
+  CREDIT_DEDUCTION_FAILED_ERROR,
 ]);
 const isPassThroughAiError = (error: unknown) => (
   error instanceof Error && PASS_THROUGH_ERRORS.has(error.message)
@@ -345,12 +381,13 @@ CRITICAL: ${length === 'short'
     let attempts = 0;
     while (attempts < 3) {
       try {
-        const responseText = await callAiChatCompletion({
+        const completion = await callAiChatCompletion({
           model: DEFAULT_MODEL,
           messages: messages,
           temperature: 1.3,
           max_tokens: 1000
         });
+        const responseText = completion.content;
 
         if (responseText) {
           let rawData: any;
@@ -359,14 +396,14 @@ CRITICAL: ${length === 'short'
           } catch (parseError) {
             console.warn("Rizz JSON parse failed, returning sanitized fallback:", parseError);
             const fallback = sanitizeText(responseText).slice(0, 240);
-            return {
+            return withBackendFallbackHint({
               tease: fallback || "The reply came back scrambled. Try a shorter prompt.",
               smooth: "Try again with a little more context if you want a cleaner set.",
               chaotic: "The model freestyled off-format, but I caught it before the UI broke.",
               loveScore: 50,
               potentialStatus: "Needs Retry",
               analysis: "The AI returned text instead of the requested JSON format."
-            };
+            }, completion.usedBackendFallback);
           }
           const sanitized = sanitizeResponse(rawData) as any;
 
@@ -392,7 +429,7 @@ CRITICAL: ${length === 'short'
             analysis: normalizedData.analysis || "No analysis available."
           };
 
-          return finalResponse;
+          return withBackendFallbackHint(finalResponse, completion.usedBackendFallback);
         } else {
           throw new Error("Empty response text from model.");
         }
@@ -471,7 +508,7 @@ CRITICAL: ${length === 'short'
   let attempts = 0;
   while (attempts < 3) {
     try {
-      const responseText = await callAiChatCompletion({
+      const completion = await callAiChatCompletion({
         model: DEFAULT_MODEL,
         messages: [
           { role: "system", content: systemInstruction },
@@ -480,17 +517,18 @@ CRITICAL: ${length === 'short'
         temperature: 0.85,
         max_tokens: length === 'short' ? 400 : length === 'medium' ? 600 : 900
       });
+      const responseText = completion.content;
 
       if (responseText) {
         try {
           const rawData = JSON.parse(cleanJson(responseText));
-          return sanitizeResponse(rawData) as BioResponse;
+          return withBackendFallbackHint(sanitizeResponse(rawData) as BioResponse, completion.usedBackendFallback);
         } catch (e) {
           console.warn("Bio JSON parse failed, returning sanitized fallback:", e);
-          return {
+          return withBackendFallbackHint({
             bio: sanitizeText(responseText).slice(0, 500) || '',
             analysis: 'The AI returned text instead of the requested JSON format.'
-          };
+          }, completion.usedBackendFallback);
         }
       }
 
@@ -647,12 +685,13 @@ Carry over all existing intel and update it when new facts emerge.`;
   let attempts = 0;
   while (attempts < 3) {
     try {
-      const rawReply = await callAiChatCompletion({
+      const completion = await callAiChatCompletion({
         model: DEFAULT_MODEL,
         messages: [{ role: 'system', content: systemInstruction }, ...rawMessages],
         temperature: 0.85,
         max_tokens: 650,
       });
+      const rawReply = completion.content;
       if (!rawReply) throw new Error('No coach response');
 
       // Strip the hidden intel dossier block before showing to user, handling potential formatting issues from the model
