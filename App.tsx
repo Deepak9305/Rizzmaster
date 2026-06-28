@@ -1896,7 +1896,7 @@ const AppContentInner: React.FC = () => {
         await syncProfile().catch(() => null);
       }
     }
-  }, [mode, inputText, image, selectedVibe, responseLength, showToast, handleOpenPremium, updateCredits, customPersonas, profile, isGuest, syncProfile]);
+  }, [mode, inputText, image, selectedVibe, responseLength, showToast, handleOpenPremium, updateCredits, customPersonas, profile, isGuest, syncProfile, loading]);
 
 
   const isSaved = useCallback((content: string) => savedItems.some(item => item.content === content), [savedItems]);
