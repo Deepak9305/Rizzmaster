@@ -3,6 +3,11 @@ import { resizeImage } from "./imageService";
 import { supabase } from "./supabaseClient";
 
 const AI_ENDPOINT = '/api/ai';
+const LOGIN_REQUIRED_ERROR = 'LOGIN_REQUIRED';
+const INSUFFICIENT_CREDITS_ERROR = 'INSUFFICIENT_CREDITS';
+const PROFILE_NOT_FOUND_ERROR = 'PROFILE_NOT_FOUND';
+const SUPABASE_BACKEND_UNAVAILABLE_ERROR = 'SUPABASE_BACKEND_UNAVAILABLE';
+const PROFILE_BOOTSTRAP_FAILED_ERROR = 'PROFILE_BOOTSTRAP_FAILED';
 
 // Model Configuration
 const DEFAULT_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
@@ -56,7 +61,7 @@ const callAiChatCompletion = async (payload: {
   let token = await getAuthToken();
   let { response, data } = await requestAiCompletion(payload, token);
 
-  if ((response.status === 401 || data?.error === 'LOGIN_REQUIRED') && supabase && token !== 'unauthenticated') {
+  if ((response.status === 401 || data?.code === LOGIN_REQUIRED_ERROR || data?.error === LOGIN_REQUIRED_ERROR) && supabase && token !== 'unauthenticated') {
     const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
     const refreshedToken = refreshData.session?.access_token;
 
@@ -67,14 +72,20 @@ const callAiChatCompletion = async (payload: {
   }
 
   if (!response.ok) {
-    if (response.status === 401 || data?.error === 'LOGIN_REQUIRED') {
-      throw new Error('LOGIN_REQUIRED');
+    if (response.status === 401 || data?.code === LOGIN_REQUIRED_ERROR || data?.error === LOGIN_REQUIRED_ERROR) {
+      throw new Error(LOGIN_REQUIRED_ERROR);
     }
-    if (response.status === 403 || data?.code === 'INSUFFICIENT_CREDITS') {
-      throw new Error('INSUFFICIENT_CREDITS');
+    if (response.status === 403 || data?.code === INSUFFICIENT_CREDITS_ERROR) {
+      throw new Error(INSUFFICIENT_CREDITS_ERROR);
     }
-    if (response.status === 404 || data?.code === 'PROFILE_NOT_FOUND') {
-      throw new Error('PROFILE_NOT_FOUND');
+    if (response.status === 404 || data?.code === PROFILE_NOT_FOUND_ERROR) {
+      throw new Error(PROFILE_NOT_FOUND_ERROR);
+    }
+    if (data?.code === SUPABASE_BACKEND_UNAVAILABLE_ERROR) {
+      throw new Error(SUPABASE_BACKEND_UNAVAILABLE_ERROR);
+    }
+    if (data?.code === PROFILE_BOOTSTRAP_FAILED_ERROR) {
+      throw new Error(PROFILE_BOOTSTRAP_FAILED_ERROR);
     }
     throw new Error(data?.error || `AI request failed with status ${response.status}.`);
   }
@@ -87,7 +98,13 @@ const callAiChatCompletion = async (payload: {
   return content;
 };
 
-const PASS_THROUGH_ERRORS = new Set(['LOGIN_REQUIRED', 'INSUFFICIENT_CREDITS', 'PROFILE_NOT_FOUND']);
+const PASS_THROUGH_ERRORS = new Set([
+  LOGIN_REQUIRED_ERROR,
+  INSUFFICIENT_CREDITS_ERROR,
+  PROFILE_NOT_FOUND_ERROR,
+  SUPABASE_BACKEND_UNAVAILABLE_ERROR,
+  PROFILE_BOOTSTRAP_FAILED_ERROR,
+]);
 const isPassThroughAiError = (error: unknown) => (
   error instanceof Error && PASS_THROUGH_ERRORS.has(error.message)
 );

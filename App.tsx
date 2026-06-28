@@ -1347,7 +1347,7 @@ const AppContentInner: React.FC = () => {
 
 
 
-  const updateCredits = useCallback(async (newAmountOrUpdater: number | ((prev: number) => number)) => {
+  const updateCredits = useCallback((newAmountOrUpdater: number | ((prev: number) => number)) => {
     setProfile(prev => {
       if (!prev) return null;
       let newAmount = typeof newAmountOrUpdater === 'function'
@@ -1357,6 +1357,7 @@ const AppContentInner: React.FC = () => {
       newAmount = Math.max(0, newAmount);
 
       const updated = { ...prev, credits: newAmount };
+      profileRef.current = updated;
 
       // Update LocalStorage for guest if needed, but no direct DB updates
       if (prev.id === 'guest_user') {
@@ -1751,12 +1752,20 @@ const AppContentInner: React.FC = () => {
     }
 
     // --- GENERATION START ---
-    const creditsBefore = currentProfile.credits || 0;
+    const shouldManageLocalCredits = !currentProfile.is_premium;
+    const shouldSyncSignedInProfile = !isGuest && currentProfile.id !== 'guest_user';
+    let creditsAdjustedOptimistically = false;
+    const refundOptimisticCredits = () => {
+      if (!shouldManageLocalCredits || !creditsAdjustedOptimistically) return;
+      updateCredits(prevCredits => prevCredits + cost);
+      creditsAdjustedOptimistically = false;
+    };
 
     try {
       // Optimistic credit deduction for all non-premium users (including guests)
-      if (!currentProfile.is_premium) {
-        updateCredits(creditsBefore - cost);
+      if (shouldManageLocalCredits) {
+        updateCredits(prevCredits => prevCredits - cost);
+        creditsAdjustedOptimistically = true;
       }
 
       const customInstruction = selectedVibe?.startsWith('custom:') ? customPersonas.find(p => p.id === selectedVibe.split(':')[1])?.instruction : undefined;
@@ -1769,7 +1778,7 @@ const AppContentInner: React.FC = () => {
       }
 
       if ('potentialStatus' in res && (res.potentialStatus === 'Error' || res.potentialStatus === 'Blocked')) {
-        if (!currentProfile.is_premium) updateCredits(creditsBefore);
+        refundOptimisticCredits();
 
         if (res.potentialStatus === 'Blocked') {
           showToast('Request blocked by Safety Policy.', 'error');
@@ -1778,10 +1787,11 @@ const AppContentInner: React.FC = () => {
         }
         setResult(res);
       } else if ('analysis' in res && (res.analysis === 'System Error' || res.analysis === 'Safety Policy Violation')) {
-        if (!currentProfile.is_premium) updateCredits(creditsBefore);
+        refundOptimisticCredits();
         showToast(res.analysis, 'error');
         setResult(res);
       } else {
+        creditsAdjustedOptimistically = false;
         setResult(res);
       }
 
@@ -1789,45 +1799,60 @@ const AppContentInner: React.FC = () => {
       console.error(error);
       if (error.message === 'LOGIN_REQUIRED') {
          setLoginReason(undefined);
-         if (currentProfile.id === 'guest_user' || isGuest) {
-           handleExitGuestMode();
-         } else if (supabase) {
+         refundOptimisticCredits();
+         if (shouldSyncSignedInProfile && supabase) {
            await supabase.auth.signOut().catch((signOutError) => {
              console.warn('Forced sign-out after auth failure failed:', signOutError);
            });
            setSession(null);
            setProfile(null);
            setSavedItems([]);
+           profileRef.current = null;
+           showToast('Your session expired. Please sign in again.', 'info');
+         } else {
+           showToast('Authentication failed for this request. Please try again.', 'error');
          }
-         showToast('Your session expired. Please sign in again.', 'info');
          return;
       }
       if (error.message === 'INSUFFICIENT_CREDITS') {
-         if (!currentProfile.is_premium) updateCredits(creditsBefore);
+         refundOptimisticCredits();
          handleOpenPremium();
-         if (!isGuest) {
+         if (shouldSyncSignedInProfile) {
            syncProfile().catch(() => {});
          }
          return;
       }
       if (error.message === 'PROFILE_NOT_FOUND') {
-         if (!currentProfile.is_premium) updateCredits(creditsBefore);
-         if (!isGuest) {
-           await syncProfile();
+         refundOptimisticCredits();
+         if (shouldSyncSignedInProfile) {
+           await syncProfile().catch(() => null);
          }
          showToast('Profile repaired. Try again.', 'info');
          return;
       }
+      if (error.message === 'PROFILE_BOOTSTRAP_FAILED') {
+         refundOptimisticCredits();
+         if (shouldSyncSignedInProfile) {
+           await syncProfile().catch(() => null);
+         }
+         showToast('We could not prepare your account for generation. Please retry in a moment.', 'error');
+         return;
+      }
+      if (error.message === 'SUPABASE_BACKEND_UNAVAILABLE') {
+         refundOptimisticCredits();
+         showToast('Signed-in generation is temporarily unavailable on the server. Please retry shortly.', 'error');
+         return;
+      }
       showToast('The wingman tripped! Try again.', 'error');
-      if (!currentProfile.is_premium) updateCredits(creditsBefore);
+      refundOptimisticCredits();
     } finally {
       setLoading(false);
       // Don't call syncProfile for guests — they have no Supabase session
-      if (!isGuest) {
-        await syncProfile();
+      if (shouldSyncSignedInProfile) {
+        await syncProfile().catch(() => null);
       }
     }
-  }, [mode, inputText, image, selectedVibe, responseLength, showToast, handleOpenPremium, updateCredits, customPersonas, profile, isGuest, syncProfile, handleExitGuestMode]);
+  }, [mode, inputText, image, selectedVibe, responseLength, showToast, handleOpenPremium, updateCredits, customPersonas, profile, isGuest, syncProfile]);
 
 
   const isSaved = useCallback((content: string) => savedItems.some(item => item.content === content), [savedItems]);

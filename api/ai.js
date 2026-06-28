@@ -144,6 +144,25 @@ const normalizeRequest = (body) => {
 
 const getTodayDateString = () => new Date().toISOString().split("T")[0];
 
+const LOGIN_REQUIRED_CODE = "LOGIN_REQUIRED";
+const PROFILE_NOT_FOUND_CODE = "PROFILE_NOT_FOUND";
+const INSUFFICIENT_CREDITS_CODE = "INSUFFICIENT_CREDITS";
+const SUPABASE_BACKEND_UNAVAILABLE_CODE = "SUPABASE_BACKEND_UNAVAILABLE";
+const PROFILE_BOOTSTRAP_FAILED_CODE = "PROFILE_BOOTSTRAP_FAILED";
+
+const isAuthTokenError = (error) => {
+  const status = error?.status ?? error?.code;
+  const message = `${error?.message || ""} ${error?.name || ""}`.toLowerCase();
+  return (
+    status === 401 ||
+    status === 403 ||
+    message.includes("jwt") ||
+    message.includes("token") ||
+    message.includes("unauthorized") ||
+    message.includes("auth session missing")
+  );
+};
+
 const buildDefaultProfile = (user) => {
   const today = getTodayDateString();
   return {
@@ -242,7 +261,10 @@ export default async function handler(req, res) {
   // 1. Authentication
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return json(res, 401, { error: "Missing or invalid authorization header." });
+    return json(res, 401, {
+      error: "Missing or invalid authorization header.",
+      code: LOGIN_REQUIRED_CODE,
+    });
   }
   const token = authHeader.split(" ")[1];
 
@@ -252,18 +274,36 @@ export default async function handler(req, res) {
 
   if (!isGuest) {
     if (!supabase || !supabaseAdmin) {
-      return json(res, 500, { error: "Supabase integration not configured on the server." });
+      return json(res, 503, {
+        error: "Supabase integration is unavailable on the server for signed-in generation.",
+        code: SUPABASE_BACKEND_UNAVAILABLE_CODE,
+      });
     }
 
     try {
       const { data, error } = await supabase.auth.getUser(token);
       if (error || !data || !data.user) {
-        return json(res, 401, { error: "Unauthorized. Invalid token." });
+        if (isAuthTokenError(error) || (!error && !data?.user)) {
+          return json(res, 401, {
+            error: "Unauthorized. Invalid or expired session.",
+            code: LOGIN_REQUIRED_CODE,
+          });
+        }
+
+        console.error("[AI API] Supabase auth lookup failed:", error);
+        return json(res, 503, {
+          error: "Signed-in generation is temporarily unavailable because the auth backend could not be reached.",
+          code: SUPABASE_BACKEND_UNAVAILABLE_CODE,
+        });
       }
       user = data.user;
       userId = user.id;
     } catch (err) {
-      return json(res, 401, { error: "Unauthorized. Token verification failed." });
+      console.error("[AI API] Token verification request failed:", err);
+      return json(res, 503, {
+        error: "Signed-in generation is temporarily unavailable because the auth backend could not be reached.",
+        code: SUPABASE_BACKEND_UNAVAILABLE_CODE,
+      });
     }
   }
 
@@ -310,9 +350,16 @@ export default async function handler(req, res) {
 
       if (profileError || !profile) {
         console.error("[AI API] Profile lookup/create failed for user:", userId, profileError);
-        return json(res, 404, { 
-          error: "User profile not found.",
-          code: "PROFILE_NOT_FOUND" 
+        if (profileError?.code === "PGRST116") {
+          return json(res, 404, {
+            error: "User profile not found.",
+            code: PROFILE_NOT_FOUND_CODE,
+          });
+        }
+
+        return json(res, 500, {
+          error: "We could not prepare your profile for signed-in generation.",
+          code: PROFILE_BOOTSTRAP_FAILED_CODE,
         });
       }
 
@@ -327,7 +374,7 @@ export default async function handler(req, res) {
           console.warn(`[AI API] Insufficient credits for user: ${userId}. Has: ${profile.credits}, Needs: ${cost}`);
           return json(res, 403, { 
             error: `Insufficient credits. Rizz AI text costs 1 credit, image costs 2 credits. You have ${profile.credits} credits.`, 
-            code: "INSUFFICIENT_CREDITS" 
+            code: INSUFFICIENT_CREDITS_CODE,
           });
         }
 
@@ -342,7 +389,7 @@ export default async function handler(req, res) {
           if (deductError.message?.toLowerCase().includes("insufficient credits")) {
             return json(res, 403, {
               error: `Insufficient credits. Rizz AI text costs 1 credit, image costs 2 credits. You have ${profile.credits} credits.`,
-              code: "INSUFFICIENT_CREDITS"
+              code: INSUFFICIENT_CREDITS_CODE,
             });
           }
 
