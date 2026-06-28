@@ -259,6 +259,7 @@ const AppContentInner: React.FC = () => {
 
   // Refs
   const profileRef = useRef<UserProfile | null>(null);
+  const isGuestRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const sessionChannelRef = useRef<BroadcastChannel | null>(null);
@@ -309,6 +310,7 @@ const AppContentInner: React.FC = () => {
   const [loginReason, setLoginReason] = useState<'premium' | undefined>(undefined);
 
   const handleGuestEntry = useCallback(() => {
+    isGuestRef.current = true;
     setIsGuest(true);
     setIsSessionBlocked(false);
     setIsProfileLoadingHung(false);
@@ -348,6 +350,7 @@ const AppContentInner: React.FC = () => {
   }, [showToast]);
 
   const handleExitGuestMode = useCallback(() => {
+    isGuestRef.current = false;
     setIsGuest(false);
     setIsSessionBlocked(false);
     setIsProfileLoadingHung(false);
@@ -365,6 +368,10 @@ const AppContentInner: React.FC = () => {
     // Legacy generic cleanup
     localStorage.removeItem('rizz_coach_messages_v2');
   }, []);
+
+  useEffect(() => {
+    isGuestRef.current = isGuest;
+  }, [isGuest]);
 
   useEffect(() => {
     if (profile?.id) {
@@ -977,6 +984,9 @@ const AppContentInner: React.FC = () => {
         // NOTE: App Open Ad is triggered by the useEffect watching [session, profile, isAuthReady]
         // after the profile has actually loaded, not here where profile is not yet available.
       } else {
+        if (isGuestRef.current) {
+          return;
+        }
         setProfile(null);
         setSavedItems([]);
       }
@@ -1778,8 +1788,18 @@ const AppContentInner: React.FC = () => {
     } catch (error: any) {
       console.error(error);
       if (error.message === 'LOGIN_REQUIRED') {
-         setLoginReason('premium');
-         handleExitGuestMode();
+         setLoginReason(undefined);
+         if (currentProfile.id === 'guest_user' || isGuest) {
+           handleExitGuestMode();
+         } else if (supabase) {
+           await supabase.auth.signOut().catch((signOutError) => {
+             console.warn('Forced sign-out after auth failure failed:', signOutError);
+           });
+           setSession(null);
+           setProfile(null);
+           setSavedItems([]);
+         }
+         showToast('Your session expired. Please sign in again.', 'info');
          return;
       }
       if (error.message === 'INSUFFICIENT_CREDITS') {

@@ -19,20 +19,21 @@ type AiMessage = {
   content: AiMessageContent;
 };
 
-const callAiChatCompletion = async (payload: {
+const getAuthToken = async () => {
+  if (!supabase) {
+    return 'unauthenticated';
+  }
+
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.access_token || 'unauthenticated';
+};
+
+const requestAiCompletion = async (payload: {
   model: string;
   messages: AiMessage[];
   temperature: number;
   max_tokens?: number;
-}): Promise<string> => {
-  let token = 'unauthenticated';
-  if (supabase) {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.access_token) {
-      token = session.access_token;
-    }
-  }
-
+}, token: string) => {
   const response = await fetch(AI_ENDPOINT, {
     method: 'POST',
     headers: {
@@ -43,6 +44,27 @@ const callAiChatCompletion = async (payload: {
   });
 
   const data = await response.json().catch(() => null);
+  return { response, data };
+};
+
+const callAiChatCompletion = async (payload: {
+  model: string;
+  messages: AiMessage[];
+  temperature: number;
+  max_tokens?: number;
+}): Promise<string> => {
+  let token = await getAuthToken();
+  let { response, data } = await requestAiCompletion(payload, token);
+
+  if ((response.status === 401 || data?.error === 'LOGIN_REQUIRED') && supabase && token !== 'unauthenticated') {
+    const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+    const refreshedToken = refreshData.session?.access_token;
+
+    if (!refreshError && refreshedToken) {
+      token = refreshedToken;
+      ({ response, data } = await requestAiCompletion(payload, token));
+    }
+  }
 
   if (!response.ok) {
     if (response.status === 401 || data?.error === 'LOGIN_REQUIRED') {
