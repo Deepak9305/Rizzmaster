@@ -360,7 +360,7 @@ const AppContentInner: React.FC = () => {
       const savedCredits = localStorage.getItem('rizzmaster_guest_credits');
       const parsedCredits = savedCredits !== null ? parseInt(savedCredits, 10) : NaN;
       guestCredits = Number.isFinite(parsedCredits)
-        ? Math.max(parsedCredits, DAILY_CREDITS)
+        ? Math.max(parsedCredits, 0)
         : DAILY_CREDITS;
       localStorage.setItem('rizzmaster_guest_credits', guestCredits.toString());
     } else {
