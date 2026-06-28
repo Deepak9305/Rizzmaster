@@ -10,6 +10,7 @@ const ALLOWED_MODELS = new Set([
 const MAX_MESSAGES = 8;
 const MAX_TEXT_LENGTH = 16000;
 const MAX_IMAGE_URL_LENGTH = 6_000_000;
+const DEFAULT_FREE_CREDITS = 5;
 
 // Basic in-memory rate limiting (IP/Token based) - NOTE: In Vercel serverless, this resets per-container. Use Upstash/Redis for real rate limiting.
 const rateLimitMap = new Map();
@@ -141,6 +142,90 @@ const normalizeRequest = (body) => {
   };
 };
 
+const getTodayDateString = () => new Date().toISOString().split("T")[0];
+
+const buildDefaultProfile = (user) => {
+  const today = getTodayDateString();
+  return {
+    id: user.id,
+    email: user.email || null,
+    credits: DEFAULT_FREE_CREDITS,
+    is_premium: false,
+    last_daily_reset: today,
+    shadow_notes: "",
+    streak_count: 1,
+    last_streak_claim: today,
+    total_time_spent_ms: 0,
+  };
+};
+
+const ensureUserProfile = async (user) => {
+  let { data: profile, error } = await supabaseAdmin
+    .from("profiles")
+    .select("credits, is_premium")
+    .eq("id", user.id)
+    .single();
+
+  if (!error && profile) {
+    return { profile, created: false };
+  }
+
+  const missingRow = error?.code === "PGRST116";
+  if (!missingRow) {
+    return { profile: null, created: false, error };
+  }
+
+  const defaultProfile = buildDefaultProfile(user);
+  const legacyProfile = {
+    id: defaultProfile.id,
+    email: defaultProfile.email,
+    credits: defaultProfile.credits,
+    is_premium: defaultProfile.is_premium,
+    last_daily_reset: defaultProfile.last_daily_reset,
+    shadow_notes: defaultProfile.shadow_notes,
+  };
+
+  let insertResult = await supabaseAdmin
+    .from("profiles")
+    .insert([defaultProfile])
+    .select("credits, is_premium")
+    .single();
+
+  const columnMismatch = insertResult.error && (
+    insertResult.error.code === "42703" ||
+    insertResult.error.code === "PGRST204" ||
+    insertResult.error.message?.toLowerCase().includes("column")
+  );
+
+  if (columnMismatch) {
+    insertResult = await supabaseAdmin
+      .from("profiles")
+      .insert([legacyProfile])
+      .select("credits, is_premium")
+      .single();
+  }
+
+  if (!insertResult.error && insertResult.data) {
+    return { profile: insertResult.data, created: true };
+  }
+
+  if (insertResult.error?.code === "23505") {
+    const retryResult = await supabaseAdmin
+      .from("profiles")
+      .select("credits, is_premium")
+      .eq("id", user.id)
+      .single();
+
+    if (!retryResult.error && retryResult.data) {
+      return { profile: retryResult.data, created: false };
+    }
+
+    return { profile: null, created: false, error: retryResult.error };
+  }
+
+  return { profile: null, created: false, error: insertResult.error };
+};
+
 const hasImage = (messages) => {
   if (!Array.isArray(messages)) return false;
   return messages.some(msg => 
@@ -221,19 +306,18 @@ export default async function handler(req, res) {
     cost = isImageRequest ? 2 : 1;
 
     if (!isGuest) {
-      // Check credits and premium status for signed-in users using Service Role
-      const { data: profile, error: profileError } = await supabaseAdmin
-        .from("profiles")
-        .select("credits, is_premium")
-        .eq("id", userId)
-        .single();
+      const { profile, created, error: profileError } = await ensureUserProfile(user);
 
       if (profileError || !profile) {
-        console.error("[AI API] Profile not found for user:", userId);
+        console.error("[AI API] Profile lookup/create failed for user:", userId, profileError);
         return json(res, 404, { 
           error: "User profile not found.",
           code: "PROFILE_NOT_FOUND" 
         });
+      }
+
+      if (created) {
+        console.log(`[AI API] Created missing profile for signed-in user: ${userId}.`);
       }
 
       isPremium = !!profile.is_premium;
