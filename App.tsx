@@ -18,6 +18,7 @@ import { OneSignalService } from './services/oneSignalService';
 import IAPService from './services/iapService';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Network } from '@capacitor/network';
+import { runtimeConfig } from './services/runtimeConfig';
 
 // Lazy Load Heavy Components / Modals
 const PremiumModal = lazy(() => import('./components/PremiumModal'));
@@ -63,6 +64,12 @@ const runAdTask = (label: string, task: Promise<boolean>) => {
     }
   }).catch((error) => {
     console.warn(`[AdMob] ${label} crashed unexpectedly:`, error);
+  });
+};
+
+const runStartupTask = (label: string, task: Promise<unknown>) => {
+  void task.catch((error) => {
+    console.warn(`[Startup] ${label} failed:`, error);
   });
 };
 
@@ -284,6 +291,7 @@ const AppContentInner: React.FC = () => {
   const [isSessionBlocked, setIsSessionBlocked] = useState(false);
   const [isAdLoading, setIsAdLoading] = useState<'hidden' | 'interstitial'>('hidden');
   const [isProfileLoadingHung, setIsProfileLoadingHung] = useState(false);
+  const [profileLoadError, setProfileLoadError] = useState<string | null>(null);
   const [isOffline, setIsOffline] = useState(false);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const lastOfflineStatusRef = useRef(false);
@@ -302,6 +310,9 @@ const AppContentInner: React.FC = () => {
 
   const handleGuestEntry = useCallback(() => {
     setIsGuest(true);
+    setIsSessionBlocked(false);
+    setIsProfileLoadingHung(false);
+    setProfileLoadError(null);
     if (supabase) {
       supabase.auth.signOut().catch(() => {});
     }
@@ -338,6 +349,9 @@ const AppContentInner: React.FC = () => {
 
   const handleExitGuestMode = useCallback(() => {
     setIsGuest(false);
+    setIsSessionBlocked(false);
+    setIsProfileLoadingHung(false);
+    setProfileLoadError(null);
     setProfile(null);
     setSession(null);
     setCurrentView('HOME');
@@ -591,9 +605,9 @@ const AppContentInner: React.FC = () => {
 
   const initializeNotifications = useCallback(() => {
     // OneSignal Push Notifications
-    OneSignalService.initialize();
+    runStartupTask('OneSignal initialization', Promise.resolve(OneSignalService.initialize()));
     // Local Notifications & Usage Tracking
-    NotificationService.initialize();
+    runStartupTask('Local notifications initialization', Promise.resolve(NotificationService.initialize()));
   }, []);
 
   // Check for Onboarding on Mount
@@ -738,12 +752,19 @@ const AppContentInner: React.FC = () => {
     // Defer heavy native plugin initialization so the initial React render is fully unblocked
     timerIds.push(setTimeout(() => {
       // Google Auth
-      const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
-      GoogleAuth.initialize({
-        clientId: clientId || 'YOUR_WEB_CLIENT_ID_PLACEHOLDER',
-        scopes: ['profile', 'email'],
-        grantOfflineAccess: false,
-      });
+      if (runtimeConfig.googleClientId) {
+        try {
+          GoogleAuth.initialize({
+            clientId: runtimeConfig.googleClientId,
+            scopes: ['profile', 'email'],
+            grantOfflineAccess: false,
+          });
+        } catch (error) {
+          console.warn('[Startup] GoogleAuth initialization failed:', error);
+        }
+      } else {
+        console.warn('[Startup] GoogleAuth initialization skipped because VITE_GOOGLE_CLIENT_ID is missing.');
+      }
 
       // AdMob
       runAdTask('Initial AdMob init', AdMobService.initialize().then(() => {
@@ -751,15 +772,19 @@ const AppContentInner: React.FC = () => {
       }));
 
       // In-App Purchases
-      IAPService.initialize(
-        (purchaseData) => {
-          // On successful purchase/restore
-          handleUpgrade(purchaseData);
-        },
-        (errorMessage) => {
-          showToast(errorMessage, 'error');
-        }
-      );
+      try {
+        IAPService.initialize(
+          (purchaseData) => {
+            // On successful purchase/restore
+            handleUpgrade(purchaseData);
+          },
+          (errorMessage) => {
+            showToast(errorMessage, 'error');
+          }
+        );
+      } catch (error) {
+        console.warn('[Startup] IAP initialization failed:', error);
+      }
     }, 1000)); // Deferred by 1 second to prioritize frame rendering initial paint
 
     // --- SILENT RE-VERIFICATION FOR "WEB-BUY" EXPLOITERS ---
@@ -901,6 +926,7 @@ const AppContentInner: React.FC = () => {
 
   useEffect(() => {
     if (!supabase) {
+      setProfileLoadError(null);
       setIsAuthReady(true);
       return;
     }
@@ -916,6 +942,9 @@ const AppContentInner: React.FC = () => {
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      setIsSessionBlocked(false);
+      setProfileLoadError(null);
+      setIsProfileLoadingHung(false);
       if (session) {
         loadUserDataSafe(session.user.id, session.user.email)
           .catch(e => console.error("Session Load Auth Err:", e))
@@ -936,6 +965,9 @@ const AppContentInner: React.FC = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      setIsSessionBlocked(false);
+      setProfileLoadError(null);
+      setIsProfileLoadingHung(false);
       if (session) {
         loadUserDataSafe(session.user.id, session.user.email)
           .catch((e) => {
@@ -1137,6 +1169,7 @@ const AppContentInner: React.FC = () => {
   async function loadUserDataSafe(userId: string, email?: string) {
     if (!supabase) return;
     setIsProfileLoadingHung(false);
+    setProfileLoadError(null);
 
     try {
       const [profileResult, savedResult] = await Promise.all([
@@ -1158,6 +1191,7 @@ const AppContentInner: React.FC = () => {
         if (createError) {
           console.error("Failed to create user profile:", createError);
           showToast("Could not create your profile. Check Supabase table grants/RLS.", "error");
+          setProfileLoadError("We couldn't create your account profile yet. Please try again.");
           setIsProfileLoadingHung(true);
           return;
         }
@@ -1165,6 +1199,7 @@ const AppContentInner: React.FC = () => {
       } else if (profileResult.error) {
         console.error("Failed to load user profile:", profileResult.error);
         showToast("Could not load your profile. Please try again.", "error");
+        setProfileLoadError("We couldn't load your account profile. Retry in a moment.");
         setIsProfileLoadingHung(true);
         return;
       } else if (profileData) {
@@ -1186,6 +1221,7 @@ const AppContentInner: React.FC = () => {
       }
 
       if (!profileData) {
+        setProfileLoadError("Your session is active, but your profile data did not load.");
         setIsProfileLoadingHung(true);
         return;
       }
@@ -1228,9 +1264,26 @@ const AppContentInner: React.FC = () => {
     } catch (e) {
       console.error("Error loading user data", e);
       showToast("Could not load your account data. Please try again.", "error");
+      setProfileLoadError("We couldn't finish loading your account data.");
       setIsProfileLoadingHung(true);
     }
   }
+
+  const retryProfileLoad = useCallback(() => {
+    if (!session?.user?.id) {
+      window.location.reload();
+      return;
+    }
+
+    setIsProfileLoadingHung(false);
+    setProfileLoadError(null);
+    loadUserDataSafe(session.user.id, session.user.email)
+      .catch((error) => {
+        console.error("Retry profile load failed:", error);
+        setProfileLoadError("Retry failed. Please try again.");
+        setIsProfileLoadingHung(true);
+      });
+  }, [session]);
 
   const handleLogout = useCallback(async () => {
     const currentProfile = profileRef.current;
@@ -1265,6 +1318,9 @@ const AppContentInner: React.FC = () => {
       setSession(null);
       setProfile(null);
       setSavedItems([]);
+      setIsSessionBlocked(false);
+      setIsProfileLoadingHung(false);
+      setProfileLoadError(null);
       setResult(null);
       setInputText('');
       setImage(null);
@@ -1832,15 +1888,17 @@ const AppContentInner: React.FC = () => {
                 <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center text-3xl mb-6 mx-auto border border-white/10">
                   🔌
                 </div>
-                <h2 className="text-xl font-bold text-white mb-3">Connection is weak</h2>
+                <h2 className="text-xl font-bold text-white mb-3">
+                  {profileLoadError ? 'Profile load failed' : 'Connection is weak'}
+                </h2>
                 <p className="text-sm text-white/50 mb-8">
-                  Taking longer than usual to fetch your profile.
+                  {profileLoadError || 'Taking longer than usual to fetch your profile.'}
                 </p>
                 <button
-                  onClick={() => window.location.reload()}
+                  onClick={retryProfileLoad}
                   className="w-full py-3.5 rizz-gradient rounded-xl font-bold text-white active:scale-95 transition-all"
                 >
-                  Try Again
+                  Retry
                 </button>
               </div>
             ) : (

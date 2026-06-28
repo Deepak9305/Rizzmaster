@@ -1,11 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
+import { Capacitor } from '@capacitor/core';
+import { runtimeConfig } from './runtimeConfig';
 
-// Access environment variables securely
-// Supports both VITE_ standard (modern) and REACT_APP_ legacy (if defined in vite.config)
-const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
-const supabaseKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY;
-
-// Export supabase instance
-export const supabase = (supabaseUrl && supabaseKey)
-  ? createClient(supabaseUrl, supabaseKey)
+export const supabase = (runtimeConfig.supabaseUrl && runtimeConfig.supabaseAnonKey)
+  ? createClient(runtimeConfig.supabaseUrl, runtimeConfig.supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: !Capacitor.isNativePlatform(),
+      },
+    })
   : null;

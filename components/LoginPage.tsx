@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '../services/supabaseClient';
+import { getAuthUnavailableMessage, runtimeConfig } from '../services/runtimeConfig';
 import LegalModals from './LegalModals';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { Capacitor } from '@capacitor/core';
@@ -9,6 +10,39 @@ interface LoginPageProps {
     reason?: 'premium';
 }
 
+const normalizeAuthError = (error: unknown, context: 'google' | 'email') => {
+    const rawMessage = error instanceof Error ? error.message : String(error || '');
+    const message = rawMessage.toLowerCase();
+
+    if (message.includes('invalid login credentials')) {
+        return 'Incorrect email or password.';
+    }
+    if (message.includes('email not confirmed')) {
+        return 'Confirm your email before signing in.';
+    }
+    if (message.includes('user already registered')) {
+        return 'This email already has an account. Sign in instead.';
+    }
+    if (message.includes('signup requires a valid password')) {
+        return 'Use a stronger password with at least 6 characters.';
+    }
+    if (message.includes('network') || message.includes('fetch')) {
+        return 'Authentication service is unreachable right now. Check your connection and try again.';
+    }
+    if (message.includes('popup') || message.includes('redirect')) {
+        return 'Google sign-in could not start. Allow the redirect and try again.';
+    }
+    if (message.includes('audience')) {
+        return 'Google client mismatch. Update the web client ID in both Supabase and Capacitor.';
+    }
+
+    if (context === 'google' && !rawMessage.trim()) {
+        return 'Google sign-in failed before the session could be created.';
+    }
+
+    return rawMessage || 'Authentication failed. Please try again.';
+};
+
 const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
     const [isEmailMode, setIsEmailMode] = useState(false);
     const [isSignUp, setIsSignUp] = useState(false);
@@ -17,28 +51,31 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [message, setMessage] = useState<string | null>(null);
+    const authUnavailableMessage = getAuthUnavailableMessage();
+    const isAuthAvailable = runtimeConfig.authAvailable;
+    const isNativePlatform = Capacitor.isNativePlatform();
+    const isGoogleLoginConfigured = isNativePlatform ? Boolean(runtimeConfig.googleClientId) : isAuthAvailable;
 
     // State for Legal Modals
     const [activeLegalModal, setActiveLegalModal] = useState<'privacy' | 'terms' | null>(null);
 
     const handleGoogleLogin = async () => {
         if (loading) return; // Prevent double-tap
-        if (!supabase) {
-            alert("Authentication service is currently unavailable.");
+        if (!supabase || !isAuthAvailable) {
+            setError(authUnavailableMessage || 'Authentication service is currently unavailable.');
             return;
         }
 
         setLoading(true);
         setError(null);
+        setMessage(null);
         try {
-            if (Capacitor.isNativePlatform()) {
+            if (isNativePlatform) {
                 // --- NATIVE AUTH (Android/iOS) ---
                 console.log("Starting Native Google Sign-In");
 
-                // Check for Client ID Config
-                const webClientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
-                if (!webClientId) {
-                    alert("Config Error: VITE_GOOGLE_CLIENT_ID is missing. Google Login cannot proceed.");
+                if (!runtimeConfig.googleClientId) {
+                    setError('Google sign-in is unavailable because VITE_GOOGLE_CLIENT_ID is missing.');
                     return;
                 }
 
@@ -48,12 +85,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
                     console.log("Google Plugin Success:", googleUser);
                 } catch (pluginError: any) {
                     console.error("Google Plugin Error:", pluginError);
-                    // Detect common SHA-1 Mismatch error (Code 10)
                     const errStr = JSON.stringify(pluginError);
                     if (errStr.includes('10') || (pluginError.code && pluginError.code === '10')) {
-                        alert("Google Sign-In Failed (Error 10).\n\nThis is a SHA-1 FINGERPRINT MISMATCH.\n\nYou are likely running a Debug build but registered the Release SHA-1.\n\nFix: Add your DEBUG Keystore SHA-1 to Google Cloud Console.");
+                        setError('Google Sign-In failed with Android code 10. Add the correct debug/release SHA-1 fingerprint in Google Cloud Console.');
                     } else {
-                        alert(`Google Sign-In Failed: ${pluginError.message || errStr}`);
+                        setError(normalizeAuthError(pluginError, 'google'));
                     }
                     return;
                 }
@@ -66,22 +102,17 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
 
                     if (supabaseError) {
                         console.error("Supabase Auth Error:", supabaseError);
-                        // Detect Audience Mismatch (Wrong Client ID)
-                        if (supabaseError.message.includes("audience")) {
-                            alert("Login Failed: AUDIENCE MISMATCH.\n\nThe ID Token was issued for the wrong Client ID.\nEnsure 'serverClientId' in capacitor.config.json matches your Supabase Web Client ID.");
-                        } else {
-                            alert(`Supabase Login Failed: ${supabaseError.message}`);
-                        }
+                        setError(normalizeAuthError(supabaseError, 'google'));
                         throw supabaseError;
                     }
-                    // Success - auth state listener in App.tsx will handle the rest
+                    setMessage('Signed in. Loading your profile...');
                     return;
                 } else {
                     throw new Error("No ID token returned from Google. Ensure 'serverClientId' is configured.");
                 }
             } else {
                 // --- STANDARD WEB AUTH ---
-                const redirectUrl = (import.meta as any).env?.VITE_AUTH_REDIRECT_URL || window.location.origin;
+                const redirectUrl = runtimeConfig.webAuthRedirectUrl || window.location.origin;
 
                 const { error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
@@ -95,13 +126,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
                 });
 
                 if (error) throw error;
+                setMessage('Redirecting to Google...');
             }
         } catch (err: any) {
             console.error("General Login Error:", err);
-            // Only alert if we haven't already alerted above
-            if (!Capacitor.isNativePlatform()) {
-                const errorMessage = err.message || (err as any).msg || JSON.stringify(err);
-                alert(`Login failed: ${errorMessage}`);
+            if (!isNativePlatform) {
+                setError(normalizeAuthError(err, 'google'));
             }
         } finally {
             setLoading(false);
@@ -110,8 +140,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
 
     const handleEmailAuth = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!supabase) {
-            alert("Authentication service is currently unavailable.");
+        if (!supabase || !isAuthAvailable) {
+            setError(authUnavailableMessage || "Authentication service is currently unavailable.");
             return;
         }
 
@@ -133,9 +163,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
                     password,
                 });
                 if (signInError) throw signInError;
+                setMessage('Signed in. Loading your profile...');
             }
         } catch (err: any) {
-            setError(err.message || "An error occurred");
+            setError(normalizeAuthError(err, 'email'));
         } finally {
             setLoading(false);
         }
@@ -224,6 +255,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
                                 : (isSignUp ? 'Join Rizz Master today.' : 'Sign in to continue.')}
                         </p>
 
+                        {authUnavailableMessage && (
+                            <div className="p-3 mb-5 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-100 text-sm">
+                                {authUnavailableMessage}
+                            </div>
+                        )}
+
                         {isEmailMode ? (
                             <form onSubmit={handleEmailAuth} className="space-y-5 text-left animate-fade-in">
                                 <button
@@ -251,6 +288,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
                                     <input
                                         type="email"
                                         required
+                                        disabled={!isAuthAvailable || loading}
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         className="w-full bg-white/5 border-b border-white/20 focus:border-rose-500 rounded-t-lg px-4 py-3 text-white focus:outline-none focus:bg-white/10 transition-all placeholder:text-white/20"
@@ -263,6 +301,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
                                     <input
                                         type="password"
                                         required
+                                        disabled={!isAuthAvailable || loading}
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         className="w-full bg-white/5 border-b border-white/20 focus:border-rose-500 rounded-t-lg px-4 py-3 text-white focus:outline-none focus:bg-white/10 transition-all placeholder:text-white/20"
@@ -273,7 +312,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
 
                                 <button
                                     type="submit"
-                                    disabled={loading}
+                                    disabled={loading || !isAuthAvailable}
                                     className="w-full py-4 bg-white text-black rounded-xl font-bold hover:bg-gray-200 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed mt-4"
                                 >
                                     {loading ? 'Processing...' : (isSignUp ? 'Create Account' : 'Sign In')}
@@ -296,7 +335,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
                             <div className="space-y-4">
                                 <button
                                     onClick={handleGoogleLogin}
-                                    disabled={loading}
+                                    disabled={loading || !isGoogleLoginConfigured}
                                     className="w-full py-4 bg-white text-black rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-gray-100 transition-all active:scale-[0.98] group disabled:opacity-60 disabled:cursor-not-allowed"
                                 >
                                     {loading ? (
@@ -319,6 +358,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
 
                                 <button
                                     onClick={() => setIsEmailMode(true)}
+                                    disabled={!isAuthAvailable}
                                     className="w-full py-4 bg-transparent border border-white/10 text-white rounded-xl font-bold hover:bg-white/5 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
                                 >
                                     <svg className="w-5 h-5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>

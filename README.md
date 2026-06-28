@@ -12,6 +12,7 @@ You must provide the following environment variables during your production buil
 - `VITE_GOOGLE_CLIENT_ID`: Your Google OAuth Client ID for authentication.
 - `VITE_SUPABASE_URL`: Your Supabase project URL.
 - `VITE_SUPABASE_ANON_KEY`: Your Supabase anon key.
+- `VITE_AUTH_REDIRECT_URL`: The exact hosted web URL Supabase should return to after Google login.
 - `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase server-only service role key for API routes. Never expose this with a `VITE_` prefix.
 - `GROQ_API_KEY`: Your Groq API key for accessing Llama models.
 
@@ -39,10 +40,11 @@ The project uses a localized Tailwind build process rather than a CDN.
 
 1. Install dependencies: `npm install`
 2. Build for production: `npm run build`
-3. Sync Capacitor: `npx cap sync`
-4. Deploy native builds via Android Studio or Xcode.
+3. Sync Capacitor Android assets: `npx cap sync android`
+4. Verify the native shell still loads bundled assets: `npm run verify:native-config`
+5. Deploy native builds via Android Studio.
 
-*Note: The `capacitor.config.json` has been updated to remove the remote `server.url` so the app builds using local assets for native deployment.*
+*Note: The `capacitor.config.json` intentionally omits a remote `server.url` so Android loads bundled assets. If `npm run verify:native-config` fails, a remote launch URL has been reintroduced and must be removed unless `CAPACITOR_ALLOW_REMOTE_SERVER=true` is intentional.*
 
 ### 4. Security Enhancements
 - **Double-Spend Guards:** The credit system uses backend RPC checks with row locking so concurrent requests cannot spend below zero.
