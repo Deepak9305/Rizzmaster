@@ -139,6 +139,9 @@ CREATE TABLE IF NOT EXISTS public.purchase_receipts (
   created_at timestamptz default now()
 );
 
+CREATE INDEX IF NOT EXISTS idx_purchase_receipts_user_id
+  ON public.purchase_receipts (user_id);
+
 CREATE TABLE IF NOT EXISTS public.premium_subscriptions (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references public.profiles(id) on delete cascade not null,
@@ -148,6 +151,9 @@ CREATE TABLE IF NOT EXISTS public.premium_subscriptions (
   purchase_date timestamp with time zone default now(),
   is_active boolean default true
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS unique_user_subscription
+  ON public.premium_subscriptions (user_id);
 
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.premium_subscriptions ENABLE ROW LEVEL SECURITY;
@@ -439,5 +445,16 @@ BEGIN
     REVOKE EXECUTE ON FUNCTION public.delete_user() FROM PUBLIC;
     REVOKE EXECUTE ON FUNCTION public.delete_user() FROM authenticated;
     GRANT EXECUTE ON FUNCTION public.delete_user() TO service_role;
+  END IF;
+  IF to_regclass('public.deleted_users_stats') IS NOT NULL THEN
+    EXECUTE 'REVOKE ALL ON TABLE public.deleted_users_stats FROM PUBLIC';
+    EXECUTE 'REVOKE ALL ON TABLE public.deleted_users_stats FROM anon';
+    EXECUTE 'REVOKE ALL ON TABLE public.deleted_users_stats FROM authenticated';
+    EXECUTE 'GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.deleted_users_stats TO service_role';
+    EXECUTE 'DROP POLICY IF EXISTS "Service role can manage deleted users stats" ON public.deleted_users_stats';
+    EXECUTE '' ||
+      'CREATE POLICY "Service role can manage deleted users stats" ' ||
+      'ON public.deleted_users_stats FOR ALL TO service_role ' ||
+      'USING (true) WITH CHECK (true)';
   END IF;
 END $$;

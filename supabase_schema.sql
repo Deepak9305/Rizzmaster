@@ -124,6 +124,9 @@ create table if not exists public.saved_items (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+create index if not exists idx_saved_items_user_id
+  on public.saved_items (user_id);
+
 -- Create premium_subscriptions table
 create table if not exists public.premium_subscriptions (
   id uuid default gen_random_uuid() primary key,
@@ -544,6 +547,9 @@ CREATE TABLE IF NOT EXISTS public.reports (
   created_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
+CREATE INDEX IF NOT EXISTS idx_reports_user_id
+  ON public.reports (user_id);
+
 DO $$
 BEGIN
   IF EXISTS (
@@ -574,7 +580,10 @@ DROP POLICY IF EXISTS "Allow authenticated inserts" ON public.reports;
 CREATE POLICY "Allow authenticated inserts" 
   ON public.reports FOR INSERT 
   TO authenticated
-  WITH CHECK (user_id = (select auth.uid()));
+  WITH CHECK (
+    coalesce((select (auth.jwt() ->> 'is_anonymous')::boolean), false) = false
+    AND user_id = (select auth.uid())
+  );
 
 DROP POLICY IF EXISTS "Allow anonymous inserts" ON public.reports;
 CREATE POLICY "Allow anonymous inserts" 
@@ -619,3 +628,18 @@ $$;
 
 REVOKE EXECUTE ON FUNCTION public.admin_revoke_premium(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.admin_revoke_premium(uuid) TO service_role;
+
+DO $$
+BEGIN
+  IF to_regclass('public.deleted_users_stats') IS NOT NULL THEN
+    EXECUTE 'REVOKE ALL ON TABLE public.deleted_users_stats FROM PUBLIC';
+    EXECUTE 'REVOKE ALL ON TABLE public.deleted_users_stats FROM anon';
+    EXECUTE 'REVOKE ALL ON TABLE public.deleted_users_stats FROM authenticated';
+    EXECUTE 'GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.deleted_users_stats TO service_role';
+    EXECUTE 'DROP POLICY IF EXISTS "Service role can manage deleted users stats" ON public.deleted_users_stats';
+    EXECUTE '' ||
+      'CREATE POLICY "Service role can manage deleted users stats" ' ||
+      'ON public.deleted_users_stats FOR ALL TO service_role ' ||
+      'USING (true) WITH CHECK (true)';
+  END IF;
+END $$;
