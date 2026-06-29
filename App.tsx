@@ -116,35 +116,25 @@ const generateUUID = () => {
 };
 
 const getTodayDateString = () => new Date().toISOString().split('T')[0];
-const getTodayStorageDate = () => new Date().toDateString();
 
-const getUserCreditStorageKeys = (userId: string) => ({
-  credits: `rizzmaster_user_credits_${userId}`,
-  reset: `rizzmaster_user_last_reset_${userId}`,
-});
-
-const normalizeDailyCreditProfile = (profile: UserProfile): UserProfile => {
-  if (typeof localStorage === 'undefined' || profile.id === 'guest_user' || profile.is_premium) {
-    return profile;
+const clearSignedInCreditShadow = (userId?: string | null) => {
+  if (!userId || typeof localStorage === 'undefined' || userId === 'guest_user') {
+    return;
   }
 
-  const today = getTodayStorageDate();
-  const keys = getUserCreditStorageKeys(profile.id);
-  const savedReset = localStorage.getItem(keys.reset);
-  const savedCredits = localStorage.getItem(keys.credits);
-  const parsedCredits = savedCredits !== null ? parseInt(savedCredits, 10) : NaN;
+  localStorage.removeItem(`rizzmaster_user_credits_${userId}`);
+  localStorage.removeItem(`rizzmaster_user_last_reset_${userId}`);
+};
 
-  const credits = savedReset === today && Number.isFinite(parsedCredits)
-    ? parsedCredits
-    : Math.max(profile.credits || 0, DAILY_CREDITS);
-
-  localStorage.setItem(keys.reset, today);
-  localStorage.setItem(keys.credits, Math.max(0, credits).toString());
+const normalizeDailyCreditProfile = (profile: UserProfile): UserProfile => {
+  if (profile.id !== 'guest_user') {
+    clearSignedInCreditShadow(profile.id);
+  }
 
   return {
     ...profile,
-    credits: Math.max(0, credits),
-    last_daily_reset: getTodayDateString(),
+    credits: Math.max(0, profile.credits || 0),
+    last_daily_reset: profile.last_daily_reset || getTodayDateString(),
   };
 };
 
@@ -1416,6 +1406,7 @@ const AppContentInner: React.FC = () => {
 
       // Clear AI Session Data
       if (currentProfile?.id) {
+        clearSignedInCreditShadow(currentProfile.id);
         localStorage.removeItem(`rizz_coach_messages_v2_${currentProfile.id}`);
         localStorage.removeItem(`rizz_coach_shadow_notes_${currentProfile.id}`);
         localStorage.removeItem(`rizz_custom_personas_${currentProfile.id}`);
@@ -1468,10 +1459,6 @@ const AppContentInner: React.FC = () => {
 
     if (baseProfile.id === 'guest_user') {
       localStorage.setItem('rizzmaster_guest_credits', newAmount.toString());
-    } else if (!baseProfile.is_premium) {
-      const keys = getUserCreditStorageKeys(baseProfile.id);
-      localStorage.setItem(keys.reset, getTodayStorageDate());
-      localStorage.setItem(keys.credits, newAmount.toString());
     }
 
     setProfile(updated);
@@ -1632,6 +1619,7 @@ const AppContentInner: React.FC = () => {
       // Clear AI Session Data
       localStorage.removeItem(`rizz_coach_messages_v2_${currentProfile.id}`);
       localStorage.removeItem(`rizz_coach_shadow_notes_${currentProfile.id}`);
+      clearSignedInCreditShadow(currentProfile.id);
       localStorage.removeItem('rizzmaster_guest_shadow_notes');
 
       // Cleanup any dangling legacy global data
