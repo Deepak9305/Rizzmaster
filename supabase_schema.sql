@@ -69,6 +69,27 @@ BEGIN
   END IF;
 END $$;
 
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'profiles'
+      AND column_name = 'last_daily_reset'
+      AND data_type <> 'date'
+  ) THEN
+    ALTER TABLE public.profiles ALTER COLUMN last_daily_reset DROP DEFAULT;
+    ALTER TABLE public.profiles
+      ALTER COLUMN last_daily_reset TYPE date
+      USING CASE
+        WHEN last_daily_reset IS NULL OR btrim(last_daily_reset::text) = '' THEN current_date
+        ELSE last_daily_reset::text::date
+      END;
+    ALTER TABLE public.profiles ALTER COLUMN last_daily_reset SET DEFAULT current_date;
+  END IF;
+END $$;
+
 -- Backfill profiles for Auth users whose public profile row was deleted or never created.
 INSERT INTO public.profiles (
   id,
@@ -209,6 +230,9 @@ grant execute on function public.delete_user() to authenticated;
 grant execute on function public.delete_user() to service_role;
 
 -- Protect profile sensitive columns trigger
+DROP TRIGGER IF EXISTS trg_protect_profile_billing_fields ON public.profiles;
+DROP FUNCTION IF EXISTS public.protect_profile_billing_fields();
+
 CREATE OR REPLACE FUNCTION public.protect_profile_sensitive_columns()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -491,6 +515,26 @@ CREATE TABLE IF NOT EXISTS public.reports (
   type text NOT NULL,
   created_at timestamp with time zone DEFAULT now() NOT NULL
 );
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'reports'
+      AND column_name = 'user_id'
+      AND data_type <> 'uuid'
+  ) THEN
+    ALTER TABLE public.reports DROP CONSTRAINT IF EXISTS reports_user_id_fkey;
+    ALTER TABLE public.reports
+      ALTER COLUMN user_id TYPE uuid
+      USING NULLIF(btrim(user_id::text), '')::uuid;
+    ALTER TABLE public.reports
+      ADD CONSTRAINT reports_user_id_fkey
+      FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE SET NULL;
+  END IF;
+END $$;
 
 ALTER TABLE public.reports ENABLE ROW LEVEL SECURITY;
 

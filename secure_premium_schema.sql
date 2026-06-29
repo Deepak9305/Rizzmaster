@@ -74,6 +74,27 @@ BEGIN
     END IF;
 END $$;
 
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'profiles'
+          AND column_name = 'last_daily_reset'
+          AND data_type <> 'date'
+    ) THEN
+        ALTER TABLE public.profiles ALTER COLUMN last_daily_reset DROP DEFAULT;
+        ALTER TABLE public.profiles
+            ALTER COLUMN last_daily_reset TYPE date
+            USING CASE
+                WHEN last_daily_reset IS NULL OR btrim(last_daily_reset::text) = '' THEN current_date
+                ELSE last_daily_reset::text::date
+            END;
+        ALTER TABLE public.profiles ALTER COLUMN last_daily_reset SET DEFAULT current_date;
+    END IF;
+END $$;
+
 -- Backfill profiles for Auth users whose public profile row was deleted or never created.
 INSERT INTO public.profiles (
   id,
@@ -186,6 +207,9 @@ CREATE POLICY "Users can view own receipts"
 -- ==============================================================================
 -- 3. Profile Trigger Protection Updates
 -- ==============================================================================
+
+DROP TRIGGER IF EXISTS trg_protect_profile_billing_fields ON public.profiles;
+DROP FUNCTION IF EXISTS public.protect_profile_billing_fields();
 
 CREATE OR REPLACE FUNCTION public.protect_profile_sensitive_columns()
 RETURNS trigger
