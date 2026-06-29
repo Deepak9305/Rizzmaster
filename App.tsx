@@ -174,6 +174,31 @@ const getErrorMessage = (error: unknown, fallback: string) => (
   error instanceof Error ? error.message : fallback
 );
 
+const fetchServerProfile = async (method: 'GET' | 'POST' = 'GET') => {
+  if (!supabase) {
+    throw new Error('Supabase is not configured.');
+  }
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error('LOGIN_REQUIRED');
+  }
+
+  const response = await fetch('/api/profile', {
+    method,
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+    },
+  });
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(data?.code || data?.error || `Profile API failed with status ${response.status}`);
+  }
+
+  return data as { profile: UserProfile; savedItems?: SavedItem[]; created?: boolean };
+};
+
 interface SplashScreenProps {
   isAppReady: boolean;
   onComplete: () => void;
@@ -1110,6 +1135,15 @@ const AppContentInner: React.FC = () => {
         .single();
     }
 
+    if (result.error) {
+      try {
+        const repaired = await fetchServerProfile('POST');
+        return { data: repaired.profile, error: null };
+      } catch (fallbackError) {
+        console.warn('[Profile] Server profile repair failed:', fallbackError);
+      }
+    }
+
     return result;
   }, []);
 
@@ -1236,18 +1270,27 @@ const AppContentInner: React.FC = () => {
         const { data: newProfile, error: createError } = await createProfile(userId, email);
         if (createError) {
           console.error("Failed to create user profile:", createError);
-          showToast("Could not create your profile. Check Supabase table grants/RLS.", "error");
+          showToast("Could not create your profile. Please try again.", "error");
           setProfileLoadError("We couldn't create your account profile yet. Please try again.");
           setIsProfileLoadingHung(true);
           return;
         }
         profileData = newProfile;
       } else if (profileResult.error) {
-        console.error("Failed to load user profile:", profileResult.error);
-        showToast("Could not load your profile. Please try again.", "error");
-        setProfileLoadError("We couldn't load your account profile. Retry in a moment.");
-        setIsProfileLoadingHung(true);
-        return;
+        console.warn("Browser profile load failed, trying server repair:", profileResult.error);
+        try {
+          const repaired = await fetchServerProfile('POST');
+          profileData = repaired.profile;
+          if (Array.isArray(repaired.savedItems)) {
+            setSavedItems(repaired.savedItems as SavedItem[]);
+          }
+        } catch (repairError) {
+          console.error("Failed to load user profile:", profileResult.error, repairError);
+          showToast("Could not load your profile. Please try again.", "error");
+          setProfileLoadError("We couldn't load your account profile. Retry in a moment.");
+          setIsProfileLoadingHung(true);
+          return;
+        }
       } else if (profileData) {
         try {
           const { data: claimData, error: claimError } = await supabase.rpc('claim_daily_credits_and_streak');
@@ -1428,6 +1471,13 @@ const AppContentInner: React.FC = () => {
       error = insertError;
     } else if (error) {
       console.warn('[Profile] Sync failed:', error.message);
+      try {
+        const repaired = await fetchServerProfile('POST');
+        data = repaired.profile;
+        error = null;
+      } catch (repairError) {
+        console.warn('[Profile] Server sync repair failed:', repairError);
+      }
     }
 
     if (data && !error) {

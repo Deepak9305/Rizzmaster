@@ -1,3 +1,4 @@
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- Create profiles table
 create table if not exists public.profiles (
@@ -68,6 +69,31 @@ BEGIN
   END IF;
 END $$;
 
+-- Backfill profiles for Auth users whose public profile row was deleted or never created.
+INSERT INTO public.profiles (
+  id,
+  email,
+  credits,
+  is_premium,
+  last_daily_reset,
+  shadow_notes,
+  streak_count,
+  last_streak_claim,
+  total_time_spent_ms
+)
+SELECT
+  u.id,
+  u.email,
+  5,
+  false,
+  current_date,
+  '',
+  1,
+  current_date,
+  0
+FROM auth.users u
+ON CONFLICT (id) DO NOTHING;
+
 -- Create saved_items table
 create table if not exists public.saved_items (
   id uuid default gen_random_uuid() primary key,
@@ -94,6 +120,8 @@ alter table public.profiles enable row level security;
 alter table public.saved_items enable row level security;
 alter table public.premium_subscriptions enable row level security;
 
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+
 -- Explicit Data API grants. New Supabase projects may not expose public tables
 -- to anon/authenticated roles automatically.
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.profiles TO authenticated;
@@ -107,44 +135,52 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.premium_subscriptions TO se
 drop policy if exists "Users can view own profile" on public.profiles;
 create policy "Users can view own profile" 
   on public.profiles for select 
+  to authenticated
   using ( (select auth.uid()) = id );
 
 drop policy if exists "Users can insert own profile" on public.profiles;
 create policy "Users can insert own profile" 
   on public.profiles for insert 
+  to authenticated
   with check ( (select auth.uid()) = id );
 
 drop policy if exists "Users can update own profile" on public.profiles;
 create policy "Users can update own profile" 
   on public.profiles for update 
+  to authenticated
   using ( (select auth.uid()) = id )
   with check ( (select auth.uid()) = id );
 
 drop policy if exists "Users can delete own profile" on public.profiles;
 create policy "Users can delete own profile" 
   on public.profiles for delete 
+  to authenticated
   using ( (select auth.uid()) = id );
 
 -- Policies for saved_items
 drop policy if exists "Users can view own saved items" on public.saved_items;
 create policy "Users can view own saved items" 
   on public.saved_items for select 
+  to authenticated
   using ( (select auth.uid()) = user_id );
 
 drop policy if exists "Users can insert own saved items" on public.saved_items;
 create policy "Users can insert own saved items" 
   on public.saved_items for insert 
+  to authenticated
   with check ( (select auth.uid()) = user_id );
 
 drop policy if exists "Users can delete own saved items" on public.saved_items;
 create policy "Users can delete own saved items" 
   on public.saved_items for delete 
+  to authenticated
   using ( (select auth.uid()) = user_id );
 
 -- Policies for premium_subscriptions
 drop policy if exists "Users can view own subscription" on public.premium_subscriptions;
 create policy "Users can view own subscription" 
   on public.premium_subscriptions for select 
+  to authenticated
   using ( (select auth.uid()) = user_id );
 
 -- RPC Function for Complete Account Deletion

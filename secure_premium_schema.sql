@@ -3,6 +3,8 @@
 -- 1. Profiles Table Expansion
 -- ==============================================================================
 
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TABLE IF NOT EXISTS public.profiles (
   id uuid references auth.users not null primary key,
   email text,
@@ -72,6 +74,31 @@ BEGIN
     END IF;
 END $$;
 
+-- Backfill profiles for Auth users whose public profile row was deleted or never created.
+INSERT INTO public.profiles (
+  id,
+  email,
+  credits,
+  is_premium,
+  last_daily_reset,
+  shadow_notes,
+  streak_count,
+  last_streak_claim,
+  total_time_spent_ms
+)
+SELECT
+  u.id,
+  u.email,
+  5,
+  false,
+  current_date,
+  '',
+  1,
+  current_date,
+  0
+FROM auth.users u
+ON CONFLICT (id) DO NOTHING;
+
 
 -- ==============================================================================
 -- 2. Purchase Receipts Table
@@ -103,6 +130,8 @@ CREATE TABLE IF NOT EXISTS public.premium_subscriptions (
 
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.premium_subscriptions ENABLE ROW LEVEL SECURITY;
+
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.profiles TO authenticated;
 GRANT SELECT ON TABLE public.premium_subscriptions TO authenticated;

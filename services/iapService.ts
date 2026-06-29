@@ -36,6 +36,25 @@ const getCdvPurchase = () => {
  */
 const getProductType = () => getCdvPurchase().ProductType.PAID_SUBSCRIPTION;
 
+const readReceiptPath = (source: any, path: Array<string | number>) => {
+    let current = source;
+    for (const key of path) {
+        if (current == null) return '';
+        current = current[key];
+    }
+    return typeof current === 'string' || typeof current === 'number'
+        ? String(current).trim()
+        : '';
+};
+
+const firstReceiptValue = (source: any, paths: Array<Array<string | number>>) => {
+    for (const path of paths) {
+        const value = readReceiptPath(source, path);
+        if (value) return value;
+    }
+    return '';
+};
+
 export const IAP_CONFIG = {
     WEEKLY: {
         alias: 'weekly_sub',
@@ -113,17 +132,62 @@ class IAPService {
 
         store.when().verified((receipt: any) => {
             console.log("IAP: Receipt verified. Passing to backend...", receipt);
-            
+
+            const purchaseToken = firstReceiptValue(receipt, [
+                ['purchaseToken'],
+                ['transactionReceipt'],
+                ['nativePurchase', 'purchaseToken'],
+                ['nativePurchase', 'token'],
+                ['transaction', 'purchaseToken'],
+                ['transaction', 'transactionReceipt'],
+                ['transactions', 0, 'purchaseToken'],
+                ['transactions', 0, 'transactionReceipt'],
+                ['transactions', 0, 'nativePurchase', 'purchaseToken'],
+                ['transactions', 0, 'nativePurchase', 'token'],
+                ['payload', 'purchaseToken'],
+                ['payload', 'token'],
+            ]);
+            const transactionId = firstReceiptValue(receipt, [
+                ['transactionId'],
+                ['orderId'],
+                ['transaction', 'transactionId'],
+                ['transaction', 'orderId'],
+                ['transactions', 0, 'transactionId'],
+                ['transactions', 0, 'orderId'],
+                ['nativePurchase', 'orderId'],
+                ['payload', 'orderId'],
+            ]);
+            const productId = firstReceiptValue(receipt, [
+                ['id'],
+                ['productId'],
+                ['transaction', 'products', 0, 'id'],
+                ['transactions', 0, 'products', 0, 'id'],
+                ['transactions', 0, 'productId'],
+            ]);
+            const basePlanId = firstReceiptValue(receipt, [
+                ['basePlanId'],
+                ['offerId'],
+                ['transaction', 'offerId'],
+                ['transactions', 0, 'offerId'],
+            ]) || null;
+            const expiresAt = firstReceiptValue(receipt, [
+                ['expiresAt'],
+                ['expiryDate'],
+                ['expirationDate'],
+                ['transaction', 'expiresAt'],
+                ['transactions', 0, 'expiresAt'],
+            ]) || null;
+
             // Normalize the purchase data for the backend
             const purchaseData = {
                 platform: Capacitor.getPlatform(),
-                productId: receipt.id || receipt.productId || '',
+                productId,
                 plan: this.pendingPlan,
-                basePlanId: receipt.basePlanId || receipt.offerId || null,
-                purchaseToken: receipt.purchaseToken || receipt.transactionReceipt || '',
-                transactionId: receipt.transactionId || receipt.orderId || '',
-                orderId: receipt.orderId || '',
-                expiresAt: receipt.expiresAt || receipt.expiryDate || receipt.expirationDate || null,
+                basePlanId,
+                purchaseToken,
+                transactionId,
+                orderId: firstReceiptValue(receipt, [['orderId'], ['transaction', 'orderId'], ['transactions', 0, 'orderId']]),
+                expiresAt,
                 rawReceipt: receipt
             };
 

@@ -29,6 +29,7 @@ loadEnvFile('.env.development.local');
 
 const routes = {
   '/api/ai': () => import('./api/ai.js'),
+  '/api/profile': () => import('./api/profile.js'),
   '/api/verify-purchase': () => import('./api/verify-purchase.js'),
 };
 
