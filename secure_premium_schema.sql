@@ -163,26 +163,41 @@ DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
 CREATE POLICY "Users can view own profile"
   ON public.profiles FOR SELECT
   TO authenticated
-  USING ((select auth.uid()) = id);
+  USING (
+    coalesce((select (auth.jwt() ->> 'is_anonymous')::boolean), false) = false
+    AND (select auth.uid()) = id
+  );
 
 DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
 CREATE POLICY "Users can insert own profile"
   ON public.profiles FOR INSERT
   TO authenticated
-  WITH CHECK ((select auth.uid()) = id);
+  WITH CHECK (
+    coalesce((select (auth.jwt() ->> 'is_anonymous')::boolean), false) = false
+    AND (select auth.uid()) = id
+  );
 
 DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 CREATE POLICY "Users can update own profile"
   ON public.profiles FOR UPDATE
   TO authenticated
-  USING ((select auth.uid()) = id)
-  WITH CHECK ((select auth.uid()) = id);
+  USING (
+    coalesce((select (auth.jwt() ->> 'is_anonymous')::boolean), false) = false
+    AND (select auth.uid()) = id
+  )
+  WITH CHECK (
+    coalesce((select (auth.jwt() ->> 'is_anonymous')::boolean), false) = false
+    AND (select auth.uid()) = id
+  );
 
 DROP POLICY IF EXISTS "Users can view own subscription" ON public.premium_subscriptions;
 CREATE POLICY "Users can view own subscription"
   ON public.premium_subscriptions FOR SELECT
   TO authenticated
-  USING ((select auth.uid()) = user_id);
+  USING (
+    coalesce((select (auth.jwt() ->> 'is_anonymous')::boolean), false) = false
+    AND (select auth.uid()) = user_id
+  );
 
 -- Unique constraints to prevent replay attacks
 -- Drop existing constraints if re-running
@@ -201,7 +216,11 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.purchase_receipts TO servic
 DROP POLICY IF EXISTS "Users can view own receipts" ON public.purchase_receipts;
 CREATE POLICY "Users can view own receipts" 
   ON public.purchase_receipts FOR SELECT 
-  USING ( (select auth.uid()) = user_id );
+  TO authenticated
+  USING (
+    coalesce((select (auth.jwt() ->> 'is_anonymous')::boolean), false) = false
+    AND (select auth.uid()) = user_id
+  );
 
 
 -- ==============================================================================
@@ -415,5 +434,10 @@ BEGIN
   IF to_regprocedure('public.claim_daily_credits_and_streak()') IS NOT NULL THEN
     REVOKE EXECUTE ON FUNCTION public.claim_daily_credits_and_streak() FROM PUBLIC;
     GRANT EXECUTE ON FUNCTION public.claim_daily_credits_and_streak() TO authenticated;
+  END IF;
+  IF to_regprocedure('public.delete_user()') IS NOT NULL THEN
+    REVOKE EXECUTE ON FUNCTION public.delete_user() FROM PUBLIC;
+    REVOKE EXECUTE ON FUNCTION public.delete_user() FROM authenticated;
+    GRANT EXECUTE ON FUNCTION public.delete_user() TO service_role;
   END IF;
 END $$;

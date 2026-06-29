@@ -1598,22 +1598,24 @@ const AppContentInner: React.FC = () => {
     setLoading(true);
 
     try {
-      // 1. Try to fully delete the user (Auth + Data) via RPC
-      // This requires the 'delete_user' function to be set up in Supabase
-      const { error: rpcError } = await supabase.rpc('delete_user');
-
-      if (rpcError) {
-        console.error("RPC Error:", rpcError);
-        // PGRST202 or code 42883 = Function not found
-        if (rpcError.code === '42883' || rpcError.message?.includes('does not exist')) {
-          alert("CRITICAL ERROR: The database function 'delete_user' is missing.\n\nYou must run the SQL script in your Supabase SQL Editor to enable account deletion.");
-          setLoading(false);
-          return;
-        }
-        throw new Error(rpcError.message);
+      const { data: { session: activeSession } } = await supabase.auth.getSession();
+      if (!activeSession?.access_token) {
+        throw new Error('Your session expired. Please sign in again.');
       }
 
-      // 2. Sign Out & Cleanup (Only if RPC succeeded)
+      const response = await fetch('/api/delete-account', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${activeSession.access_token}`,
+        },
+      });
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Failed to delete account.');
+      }
+
+      // 2. Sign Out & Cleanup (Only if server delete succeeded)
       await supabase.auth.signOut();
 
       // Clear AI Session Data

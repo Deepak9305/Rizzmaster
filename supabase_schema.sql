@@ -157,52 +157,79 @@ drop policy if exists "Users can view own profile" on public.profiles;
 create policy "Users can view own profile" 
   on public.profiles for select 
   to authenticated
-  using ( (select auth.uid()) = id );
+  using (
+    coalesce((select (auth.jwt() ->> 'is_anonymous')::boolean), false) = false
+    and (select auth.uid()) = id
+  );
 
 drop policy if exists "Users can insert own profile" on public.profiles;
 create policy "Users can insert own profile" 
   on public.profiles for insert 
   to authenticated
-  with check ( (select auth.uid()) = id );
+  with check (
+    coalesce((select (auth.jwt() ->> 'is_anonymous')::boolean), false) = false
+    and (select auth.uid()) = id
+  );
 
 drop policy if exists "Users can update own profile" on public.profiles;
 create policy "Users can update own profile" 
   on public.profiles for update 
   to authenticated
-  using ( (select auth.uid()) = id )
-  with check ( (select auth.uid()) = id );
+  using (
+    coalesce((select (auth.jwt() ->> 'is_anonymous')::boolean), false) = false
+    and (select auth.uid()) = id
+  )
+  with check (
+    coalesce((select (auth.jwt() ->> 'is_anonymous')::boolean), false) = false
+    and (select auth.uid()) = id
+  );
 
 drop policy if exists "Users can delete own profile" on public.profiles;
 create policy "Users can delete own profile" 
   on public.profiles for delete 
   to authenticated
-  using ( (select auth.uid()) = id );
+  using (
+    coalesce((select (auth.jwt() ->> 'is_anonymous')::boolean), false) = false
+    and (select auth.uid()) = id
+  );
 
 -- Policies for saved_items
 drop policy if exists "Users can view own saved items" on public.saved_items;
 create policy "Users can view own saved items" 
   on public.saved_items for select 
   to authenticated
-  using ( (select auth.uid()) = user_id );
+  using (
+    coalesce((select (auth.jwt() ->> 'is_anonymous')::boolean), false) = false
+    and (select auth.uid()) = user_id
+  );
 
 drop policy if exists "Users can insert own saved items" on public.saved_items;
 create policy "Users can insert own saved items" 
   on public.saved_items for insert 
   to authenticated
-  with check ( (select auth.uid()) = user_id );
+  with check (
+    coalesce((select (auth.jwt() ->> 'is_anonymous')::boolean), false) = false
+    and (select auth.uid()) = user_id
+  );
 
 drop policy if exists "Users can delete own saved items" on public.saved_items;
 create policy "Users can delete own saved items" 
   on public.saved_items for delete 
   to authenticated
-  using ( (select auth.uid()) = user_id );
+  using (
+    coalesce((select (auth.jwt() ->> 'is_anonymous')::boolean), false) = false
+    and (select auth.uid()) = user_id
+  );
 
 -- Policies for premium_subscriptions
 drop policy if exists "Users can view own subscription" on public.premium_subscriptions;
 create policy "Users can view own subscription" 
   on public.premium_subscriptions for select 
   to authenticated
-  using ( (select auth.uid()) = user_id );
+  using (
+    coalesce((select (auth.jwt() ->> 'is_anonymous')::boolean), false) = false
+    and (select auth.uid()) = user_id
+  );
 
 -- RPC Function for Complete Account Deletion
 -- Run this in your Supabase SQL Editor to fix the "function not found" error
@@ -225,8 +252,6 @@ end;
 $$;
 
 revoke execute on function public.delete_user() from public;
--- Grant execute permission to authenticated users
-grant execute on function public.delete_user() to authenticated;
 grant execute on function public.delete_user() to service_role;
 
 -- Protect profile sensitive columns trigger
@@ -385,7 +410,7 @@ GRANT EXECUTE ON FUNCTION public.admin_set_premium(uuid, text, text, text, text,
 CREATE OR REPLACE FUNCTION public.claim_daily_credits_and_streak()
 RETURNS jsonb
 LANGUAGE plpgsql
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path = public
 AS $$
 DECLARE
@@ -505,7 +530,10 @@ DROP POLICY IF EXISTS "Users can insert own activity" ON public.user_activity_lo
 CREATE POLICY "Users can insert own activity"
   ON public.user_activity_log FOR INSERT
   TO authenticated
-  WITH CHECK ((select auth.uid()) = user_id);
+  WITH CHECK (
+    coalesce((select (auth.jwt() ->> 'is_anonymous')::boolean), false) = false
+    and (select auth.uid()) = user_id
+  );
 
 -- Create public.reports table
 CREATE TABLE IF NOT EXISTS public.reports (
