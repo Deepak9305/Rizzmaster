@@ -31,6 +31,22 @@ const normalizeProfileForApi = (profile) => ({
   is_premium: profile?.is_premium === true,
 });
 
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const readExistingProfile = async (supabaseAdmin, userId) => {
+  const result = await supabaseAdmin
+    .from("profiles")
+    .select("credits, is_premium")
+    .eq("id", userId)
+    .single();
+
+  if (!result.error && result.data) {
+    return { profile: normalizeProfileForApi(result.data), created: false };
+  }
+
+  return { profile: null, created: false, error: result.error };
+};
+
 export const ensureUserProfile = async (supabaseAdmin, user) => {
   let { data: profile, error } = await supabaseAdmin
     .from("profiles")
@@ -57,37 +73,41 @@ export const ensureUserProfile = async (supabaseAdmin, user) => {
     shadow_notes: defaultProfile.shadow_notes,
   };
 
-  let insertResult = await supabaseAdmin
-    .from("profiles")
-    .insert([defaultProfile])
-    .select("credits, is_premium")
-    .single();
-
-  if (isProfileColumnMismatch(insertResult.error)) {
-    insertResult = await supabaseAdmin
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    let insertResult = await supabaseAdmin
       .from("profiles")
-      .insert([legacyProfile])
+      .insert([defaultProfile])
       .select("credits, is_premium")
       .single();
-  }
 
-  if (!insertResult.error && insertResult.data) {
-    return { profile: normalizeProfileForApi(insertResult.data), created: true };
-  }
-
-  if (insertResult.error?.code === "23505") {
-    const retryResult = await supabaseAdmin
-      .from("profiles")
-      .select("credits, is_premium")
-      .eq("id", user.id)
-      .single();
-
-    if (!retryResult.error && retryResult.data) {
-      return { profile: normalizeProfileForApi(retryResult.data), created: false };
+    if (isProfileColumnMismatch(insertResult.error)) {
+      insertResult = await supabaseAdmin
+        .from("profiles")
+        .insert([legacyProfile])
+        .select("credits, is_premium")
+        .single();
     }
 
-    return { profile: null, created: false, error: retryResult.error };
+    if (!insertResult.error && insertResult.data) {
+      return { profile: normalizeProfileForApi(insertResult.data), created: true };
+    }
+
+    if (insertResult.error?.code === "23505") {
+      return readExistingProfile(supabaseAdmin, user.id);
+    }
+
+    if (insertResult.error?.code === "23503") {
+      await wait(250 * (attempt + 1));
+      const existingProfile = await readExistingProfile(supabaseAdmin, user.id);
+      if (existingProfile.profile) {
+        return existingProfile;
+      }
+      error = insertResult.error;
+      continue;
+    }
+
+    return { profile: null, created: false, error: insertResult.error };
   }
 
-  return { profile: null, created: false, error: insertResult.error };
+  return { profile: null, created: false, error };
 };

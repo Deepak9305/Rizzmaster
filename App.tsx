@@ -174,20 +174,25 @@ const getErrorMessage = (error: unknown, fallback: string) => (
   error instanceof Error ? error.message : fallback
 );
 
-const fetchServerProfile = async (method: 'GET' | 'POST' = 'GET') => {
+const fetchServerProfile = async (method: 'GET' | 'POST' = 'GET', accessToken?: string | null) => {
   if (!supabase) {
     throw new Error('Supabase is not configured.');
   }
 
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.access_token) {
+  let token = accessToken || null;
+  if (!token) {
+    const { data: { session } } = await supabase.auth.getSession();
+    token = session?.access_token || null;
+  }
+
+  if (!token) {
     throw new Error('LOGIN_REQUIRED');
   }
 
   const response = await fetch('/api/profile', {
     method,
     headers: {
-      'Authorization': `Bearer ${session.access_token}`,
+      'Authorization': `Bearer ${token}`,
     },
   });
   const data = await response.json().catch(() => null);
@@ -1010,7 +1015,7 @@ const AppContentInner: React.FC = () => {
       setProfileLoadError(null);
       setIsProfileLoadingHung(false);
       if (session) {
-        loadUserDataSafe(session.user.id, session.user.email)
+        loadUserDataSafe(session.user.id, session.user.email, session.access_token)
           .catch(e => console.error("Session Load Auth Err:", e))
           .finally(() => {
             clearTimeout(failSafeTimeout);
@@ -1033,7 +1038,7 @@ const AppContentInner: React.FC = () => {
       setProfileLoadError(null);
       setIsProfileLoadingHung(false);
       if (session) {
-        loadUserDataSafe(session.user.id, session.user.email)
+        loadUserDataSafe(session.user.id, session.user.email, session.access_token)
           .catch((e) => {
             console.error("Auth State Load Error:", e);
             setIsProfileLoadingHung(true);
@@ -1100,7 +1105,7 @@ const AppContentInner: React.FC = () => {
 
 
 
-  const createProfile = useCallback(async (userId: string, email?: string | null) => {
+  const createProfile = useCallback(async (userId: string, email?: string | null, accessToken?: string | null) => {
     if (!supabase) return { data: null, error: new Error('Supabase is not configured.') as any };
 
     const fullProfile = createDefaultProfile(userId, email);
@@ -1137,7 +1142,7 @@ const AppContentInner: React.FC = () => {
 
     if (result.error) {
       try {
-        const repaired = await fetchServerProfile('POST');
+        const repaired = await fetchServerProfile('POST', accessToken);
         return { data: repaired.profile, error: null };
       } catch (fallbackError) {
         console.warn('[Profile] Server profile repair failed:', fallbackError);
@@ -1246,7 +1251,7 @@ const AppContentInner: React.FC = () => {
     }
   }, [showToast]);
 
-  async function loadUserDataSafe(userId: string, email?: string) {
+  async function loadUserDataSafe(userId: string, email?: string, accessToken?: string | null) {
     if (!supabase) return;
     setIsProfileLoadingHung(false);
     setProfileLoadError(null);
@@ -1267,7 +1272,7 @@ const AppContentInner: React.FC = () => {
       let profileData = profileResult.data;
 
       if (isMissingRowError(profileResult.error)) {
-        const { data: newProfile, error: createError } = await createProfile(userId, email);
+        const { data: newProfile, error: createError } = await createProfile(userId, email, accessToken);
         if (createError) {
           console.error("Failed to create user profile:", createError);
           showToast("Could not create your profile. Please try again.", "error");
@@ -1279,7 +1284,7 @@ const AppContentInner: React.FC = () => {
       } else if (profileResult.error) {
         console.warn("Browser profile load failed, trying server repair:", profileResult.error);
         try {
-          const repaired = await fetchServerProfile('POST');
+          const repaired = await fetchServerProfile('POST', accessToken);
           profileData = repaired.profile;
           if (Array.isArray(repaired.savedItems)) {
             setSavedItems(repaired.savedItems as SavedItem[]);
@@ -1368,7 +1373,7 @@ const AppContentInner: React.FC = () => {
 
     setIsProfileLoadingHung(false);
     setProfileLoadError(null);
-    loadUserDataSafe(session.user.id, session.user.email)
+    loadUserDataSafe(session.user.id, session.user.email, session.access_token)
       .catch((error) => {
         console.error("Retry profile load failed:", error);
         setProfileLoadError("Retry failed. Please try again.");
@@ -1465,14 +1470,14 @@ const AppContentInner: React.FC = () => {
 
     if (isMissingRowError(error)) {
       // Profile missing (e.g. newly signed up). Create it.
-      const { data: newData, error: insertError } = await createProfile(session.user.id, session.user.email);
+      const { data: newData, error: insertError } = await createProfile(session.user.id, session.user.email, session.access_token);
       
       data = newData;
       error = insertError;
     } else if (error) {
       console.warn('[Profile] Sync failed:', error.message);
       try {
-        const repaired = await fetchServerProfile('POST');
+        const repaired = await fetchServerProfile('POST', session.access_token);
         data = repaired.profile;
         error = null;
       } catch (repairError) {
