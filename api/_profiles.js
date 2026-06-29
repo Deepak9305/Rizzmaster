@@ -73,7 +73,9 @@ export const ensureUserProfile = async (supabaseAdmin, user) => {
     shadow_notes: defaultProfile.shadow_notes,
   };
 
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  const maxAttempts = 6;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     let insertResult = await supabaseAdmin
       .from("profiles")
       .insert([defaultProfile])
@@ -97,7 +99,7 @@ export const ensureUserProfile = async (supabaseAdmin, user) => {
     }
 
     if (insertResult.error?.code === "23503") {
-      await wait(250 * (attempt + 1));
+      await wait(400 * (attempt + 1));
       const existingProfile = await readExistingProfile(supabaseAdmin, user.id);
       if (existingProfile.profile) {
         return existingProfile;

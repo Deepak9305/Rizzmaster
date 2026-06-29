@@ -174,6 +174,8 @@ const getErrorMessage = (error: unknown, fallback: string) => (
   error instanceof Error ? error.message : fallback
 );
 
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const fetchServerProfile = async (method: 'GET' | 'POST' = 'GET', accessToken?: string | null) => {
   if (!supabase) {
     throw new Error('Supabase is not configured.');
@@ -189,19 +191,37 @@ const fetchServerProfile = async (method: 'GET' | 'POST' = 'GET', accessToken?: 
     throw new Error('LOGIN_REQUIRED');
   }
 
-  const response = await fetch('/api/profile', {
-    method,
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-  const data = await response.json().catch(() => null);
+  const maxAttempts = method === 'POST' ? 4 : 1;
 
-  if (!response.ok) {
-    throw new Error(data?.code || data?.error || `Profile API failed with status ${response.status}`);
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const response = await fetch('/api/profile', {
+      method,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    const data = await response.json().catch(() => null);
+
+    if (response.ok) {
+      return data as { profile: UserProfile; savedItems?: SavedItem[]; created?: boolean };
+    }
+
+    const errorCode = data?.code || data?.error || `Profile API failed with status ${response.status}`;
+    const canRetry = (
+      method === 'POST' &&
+      errorCode === 'PROFILE_BOOTSTRAP_FAILED' &&
+      attempt < maxAttempts - 1
+    );
+
+    if (canRetry) {
+      await wait(500 * (attempt + 1));
+      continue;
+    }
+
+    throw new Error(errorCode);
   }
 
-  return data as { profile: UserProfile; savedItems?: SavedItem[]; created?: boolean };
+  throw new Error('PROFILE_BOOTSTRAP_FAILED');
 };
 
 interface SplashScreenProps {
