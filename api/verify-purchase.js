@@ -1,4 +1,5 @@
 import { supabase, supabaseAdmin } from './_supabase.js';
+import { ensureUserProfile } from './_profiles.js';
 
 const json = (res, statusCode, payload) => {
   res.status(statusCode);
@@ -7,6 +8,40 @@ const json = (res, statusCode, payload) => {
 };
 
 const SUPPORTED_PLATFORMS = new Set(["android", "ios"]);
+const LOGIN_REQUIRED_CODE = "LOGIN_REQUIRED";
+const SUPABASE_BACKEND_UNAVAILABLE_CODE = "SUPABASE_BACKEND_UNAVAILABLE";
+const PROFILE_BOOTSTRAP_FAILED_CODE = "PROFILE_BOOTSTRAP_FAILED";
+
+const readString = (value) => {
+  if (typeof value === "string") {
+    return value.trim();
+  }
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+  return "";
+};
+
+const readNullableString = (value) => {
+  const normalized = readString(value);
+  return normalized || null;
+};
+
+const normalizeOptionalTimestamp = (value) => {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  const date = typeof value === "number" || typeof value === "string"
+    ? new Date(value)
+    : null;
+
+  if (!date || Number.isNaN(date.getTime())) {
+    throw new Error("Invalid expiration timestamp.");
+  }
+
+  return date.toISOString();
+};
 
 const parseJsonBody = (body) => {
   if (typeof body === "string") {
@@ -32,32 +67,60 @@ export default async function handler(req, res) {
   // 1. Authentication
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return json(res, 401, { error: "Missing or invalid authorization header." });
+    return json(res, 401, {
+      error: "Missing or invalid authorization header.",
+      code: LOGIN_REQUIRED_CODE
+    });
   }
   const token = authHeader.split(" ")[1];
 
   if (!supabase || !supabaseAdmin) {
-    return json(res, 500, { error: "Supabase integration not configured on the server." });
+    return json(res, 503, {
+      error: "Supabase integration not configured on the server.",
+      code: SUPABASE_BACKEND_UNAVAILABLE_CODE
+    });
   }
 
   let user;
   try {
     const { data, error } = await supabase.auth.getUser(token);
     if (error || !data || !data.user) {
-      return json(res, 401, { error: "Unauthorized. Invalid token." });
+      return json(res, 401, {
+        error: "Unauthorized. Invalid token.",
+        code: LOGIN_REQUIRED_CODE
+      });
     }
     user = data.user;
   } catch (err) {
-    return json(res, 401, { error: "Unauthorized. Token verification failed." });
+    console.error("[IAP API] Token verification request failed:", err);
+    return json(res, 503, {
+      error: "Token verification failed because the auth backend could not be reached.",
+      code: SUPABASE_BACKEND_UNAVAILABLE_CODE
+    });
   }
 
   const userId = user.id;
 
   try {
+    const { error: profileError } = await ensureUserProfile(supabaseAdmin, user);
+    if (profileError) {
+      console.error("[IAP API] Failed to prepare profile before premium sync:", profileError);
+      return json(res, 500, {
+        error: "Could not prepare your profile for premium verification.",
+        code: PROFILE_BOOTSTRAP_FAILED_CODE
+      });
+    }
+
     const body = parseJsonBody(req.body);
-    const normalizedPlatform =
-      typeof body.platform === "string" ? body.platform.trim().toLowerCase() : "";
-    const { productId, transactionId, orderId, plan, basePlanId, purchaseToken, rawReceipt, expiresAt } = body || {};
+    const normalizedPlatform = readString(body.platform).toLowerCase();
+    const productId = readString(body.productId);
+    const transactionId = readString(body.transactionId);
+    const orderId = readNullableString(body.orderId);
+    const plan = readNullableString(body.plan);
+    const basePlanId = readNullableString(body.basePlanId);
+    const purchaseToken = readNullableString(body.purchaseToken);
+    const rawReceipt = body.rawReceipt && typeof body.rawReceipt === "object" ? body.rawReceipt : {};
+    const expiresAt = normalizeOptionalTimestamp(body.expiresAt);
 
     if (!normalizedPlatform || !productId || !transactionId) {
       console.warn("[IAP API] Missing basic purchase data.");
@@ -107,13 +170,13 @@ export default async function handler(req, res) {
       platform_name: normalizedPlatform,
       product_identifier: productId,
       transaction_identifier: transactionId,
-      base_plan_identifier: basePlanId || null,
-      purchase_token_identifier: purchaseToken || null,
-      expires_at: expiresAt || null,
+      base_plan_identifier: basePlanId,
+      purchase_token_identifier: purchaseToken,
+      expires_at: expiresAt,
       raw_payload: {
-        orderId: orderId || null,
-        plan: plan || null,
-        receipt: rawReceipt || {}
+        orderId,
+        plan,
+        receipt: rawReceipt
       }
     });
 
@@ -131,8 +194,18 @@ export default async function handler(req, res) {
       profile: updatedProfile
     });
   } catch (error) {
-    if (error instanceof Error && (error.message === "Invalid JSON body." || error.message === "Invalid request body.")) {
-      return json(res, 400, { error: error.message });
+    if (
+      error instanceof Error &&
+      (
+        error.message === "Invalid JSON body." ||
+        error.message === "Invalid request body." ||
+        error.message === "Invalid expiration timestamp."
+      )
+    ) {
+      return json(res, 400, {
+        error: error.message,
+        code: "INVALID_PURCHASE_DATA"
+      });
     }
     console.error("Verify purchase error:", error);
     return json(res, 500, { error: "Failed to process purchase verification." });

@@ -1796,7 +1796,7 @@ const AppContentInner: React.FC = () => {
     // --- GENERATION START ---
     const shouldManageLocalCredits = !currentProfile.is_premium;
     const shouldSyncSignedInProfile = !isGuest && currentProfile.id !== 'guest_user';
-    let skipFinalProfileSync = shouldManageLocalCredits;
+    let skipFinalProfileSync = !shouldSyncSignedInProfile;
     let creditsAdjustedOptimistically = false;
     const refundOptimisticCredits = () => {
       if (!shouldManageLocalCredits || !creditsAdjustedOptimistically) return;
@@ -1835,7 +1835,7 @@ const AppContentInner: React.FC = () => {
         setResult(res);
       } else {
         creditsAdjustedOptimistically = false;
-        skipFinalProfileSync = shouldManageLocalCredits || (res as any).__skipProfileSync === true;
+        skipFinalProfileSync = !shouldSyncSignedInProfile;
         setResult(res);
       }
 

@@ -410,6 +410,20 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                 if (onLoginRequired) onLoginRequired();
                 return;
             }
+            if (err.message === 'INSUFFICIENT_CREDITS') {
+                onClose();
+                setTimeout(() => onGoPremium && onGoPremium(), 300);
+                return;
+            }
+            if (
+                err.message === 'PROFILE_NOT_FOUND' ||
+                err.message === 'PROFILE_BOOTSTRAP_FAILED' ||
+                err.message === 'SUPABASE_BACKEND_UNAVAILABLE' ||
+                err.message === 'CREDIT_DEDUCTION_FAILED'
+            ) {
+                showToast('Account sync is temporarily unavailable. Try again in a moment.', 'error');
+                return;
+            }
             setMessages(prev => [...prev, {
                 role: 'assistant', content: "Got a connection issue. Try again in a second. 🔁",
                 timestamp: new Date().toISOString()
@@ -417,7 +431,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
         } finally {
             setLoading(false);
         }
-    }, [image, loading, isPremium, credits, messages, shadowNotes, onUpdateCredits, onUpdateShadowNotes, showToast, selectedVibe, customPersonas, onClose, onGoPremium]);
+    }, [image, loading, isPremium, credits, messages, shadowNotes, onUpdateCredits, onUpdateShadowNotes, showToast, selectedVibe, customPersonas, onClose, onGoPremium, onLoginRequired]);
 
     const handleImageUpload = useCallback(async () => {
         if (!Capacitor.isNativePlatform()) {

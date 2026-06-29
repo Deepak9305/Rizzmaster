@@ -3,9 +3,37 @@
 -- 1. Profiles Table Expansion
 -- ==============================================================================
 
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id uuid references auth.users not null primary key,
+  email text,
+  credits integer default 5,
+  is_premium boolean default false,
+  last_daily_reset date default current_date,
+  shadow_notes text,
+  streak_count integer default 1,
+  last_streak_claim date,
+  premium_source text,
+  premium_platform text,
+  premium_product_id text,
+  premium_base_plan_id text,
+  premium_transaction_id text,
+  premium_expires_at timestamptz,
+  premium_verified_at timestamptz,
+  total_time_spent_ms bigint default 0
+);
+
 -- Safely add new columns to profiles table if they don't exist
 DO $$
 BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'email') THEN
+        ALTER TABLE public.profiles ADD COLUMN email text;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'credits') THEN
+        ALTER TABLE public.profiles ADD COLUMN credits integer default 5;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'is_premium') THEN
+        ALTER TABLE public.profiles ADD COLUMN is_premium boolean default false;
+    END IF;
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'premium_source') THEN
         ALTER TABLE public.profiles ADD COLUMN premium_source text;
     END IF;
@@ -30,6 +58,18 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'total_time_spent_ms') THEN
         ALTER TABLE public.profiles ADD COLUMN total_time_spent_ms bigint default 0;
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'last_daily_reset') THEN
+        ALTER TABLE public.profiles ADD COLUMN last_daily_reset date default current_date;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'shadow_notes') THEN
+        ALTER TABLE public.profiles ADD COLUMN shadow_notes text;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'streak_count') THEN
+        ALTER TABLE public.profiles ADD COLUMN streak_count integer default 1;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'last_streak_claim') THEN
+        ALTER TABLE public.profiles ADD COLUMN last_streak_claim date;
+    END IF;
 END $$;
 
 
@@ -50,6 +90,49 @@ CREATE TABLE IF NOT EXISTS public.purchase_receipts (
   verified_at timestamptz default now(),
   created_at timestamptz default now()
 );
+
+CREATE TABLE IF NOT EXISTS public.premium_subscriptions (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  platform text not null,
+  product_id text not null,
+  transaction_id text,
+  purchase_date timestamp with time zone default now(),
+  is_active boolean default true
+);
+
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.premium_subscriptions ENABLE ROW LEVEL SECURITY;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.profiles TO authenticated;
+GRANT SELECT ON TABLE public.premium_subscriptions TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.profiles TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.premium_subscriptions TO service_role;
+
+DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
+CREATE POLICY "Users can view own profile"
+  ON public.profiles FOR SELECT
+  TO authenticated
+  USING ((select auth.uid()) = id);
+
+DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
+CREATE POLICY "Users can insert own profile"
+  ON public.profiles FOR INSERT
+  TO authenticated
+  WITH CHECK ((select auth.uid()) = id);
+
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
+CREATE POLICY "Users can update own profile"
+  ON public.profiles FOR UPDATE
+  TO authenticated
+  USING ((select auth.uid()) = id)
+  WITH CHECK ((select auth.uid()) = id);
+
+DROP POLICY IF EXISTS "Users can view own subscription" ON public.premium_subscriptions;
+CREATE POLICY "Users can view own subscription"
+  ON public.premium_subscriptions FOR SELECT
+  TO authenticated
+  USING ((select auth.uid()) = user_id);
 
 -- Unique constraints to prevent replay attacks
 -- Drop existing constraints if re-running
@@ -79,6 +162,7 @@ CREATE OR REPLACE FUNCTION public.protect_profile_sensitive_columns()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 BEGIN
   IF current_setting('app.bypass_profile_trigger', true) IS DISTINCT FROM 'true' THEN
@@ -99,6 +183,14 @@ BEGIN
 END;
 $$;
 
+REVOKE EXECUTE ON FUNCTION public.protect_profile_sensitive_columns() FROM PUBLIC;
+
+DROP TRIGGER IF EXISTS trg_protect_profile_sensitive_columns ON public.profiles;
+CREATE TRIGGER trg_protect_profile_sensitive_columns
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW
+  EXECUTE FUNCTION public.protect_profile_sensitive_columns();
+
 
 -- ==============================================================================
 -- 4. Secure RPC Updates
@@ -115,14 +207,18 @@ DECLARE
   current_credits integer;
   new_credits integer;
 BEGIN
+  IF COALESCE(auth.jwt() ->> 'role', '') <> 'service_role' THEN
+    RAISE EXCEPTION 'Unauthorized: Only service_role can modify credits';
+  END IF;
+
   PERFORM set_config('app.bypass_profile_trigger', 'true', true);
   
-  SELECT credits INTO current_credits
+  SELECT COALESCE(credits, 0) INTO current_credits
   FROM public.profiles
   WHERE id = user_uuid
   FOR UPDATE;
   
-  IF current_credits IS NULL THEN
+  IF NOT FOUND THEN
     RAISE EXCEPTION 'User profile not found';
   END IF;
 
@@ -166,7 +262,15 @@ AS $$
 DECLARE
   updated_profile record;
 BEGIN
+  IF COALESCE(auth.jwt() ->> 'role', '') <> 'service_role' THEN
+    RAISE EXCEPTION 'Unauthorized: Only service_role can set premium';
+  END IF;
+
   PERFORM set_config('app.bypass_profile_trigger', 'true', true);
+
+  IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = user_uuid) THEN
+    RAISE EXCEPTION 'User profile not found';
+  END IF;
 
   -- Insert into purchase_receipts securely
   -- Using ON CONFLICT DO NOTHING to prevent crashing if restoring an existing receipt
@@ -190,6 +294,19 @@ BEGIN
     premium_expires_at = expires_at,
     premium_verified_at = now()
   WHERE id = user_uuid;
+
+  UPDATE public.premium_subscriptions
+  SET platform = platform_name,
+      product_id = product_identifier,
+      transaction_id = transaction_identifier,
+      is_active = true,
+      purchase_date = now()
+  WHERE user_id = user_uuid;
+
+  IF NOT FOUND THEN
+    INSERT INTO public.premium_subscriptions (user_id, platform, product_id, transaction_id, is_active, purchase_date)
+    VALUES (user_uuid, platform_name, product_identifier, transaction_identifier, true, now());
+  END IF;
 
   SELECT * INTO updated_profile 
   FROM public.profiles 
@@ -239,3 +356,11 @@ END;
 $$;
 REVOKE EXECUTE ON FUNCTION public.admin_revoke_premium(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.admin_revoke_premium(uuid) TO service_role;
+
+DO $$
+BEGIN
+  IF to_regprocedure('public.claim_daily_credits_and_streak()') IS NOT NULL THEN
+    REVOKE EXECUTE ON FUNCTION public.claim_daily_credits_and_streak() FROM PUBLIC;
+    GRANT EXECUTE ON FUNCTION public.claim_daily_credits_and_streak() TO authenticated;
+  END IF;
+END $$;

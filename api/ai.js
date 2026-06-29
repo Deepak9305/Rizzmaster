@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { supabase, supabaseAdmin } from './_supabase.js';
+import { ensureUserProfile } from './_profiles.js';
 
 const DEFAULT_BASE_URL = "https://api.groq.com/openai/v1";
 const ALLOWED_MODELS = new Set([
@@ -10,7 +11,13 @@ const ALLOWED_MODELS = new Set([
 const MAX_MESSAGES = 8;
 const MAX_TEXT_LENGTH = 16000;
 const MAX_IMAGE_URL_LENGTH = 6_000_000;
-const DEFAULT_FREE_CREDITS = 5;
+const AI_PROVIDER_TIMEOUT_MS = (() => {
+  const parsed = Number.parseInt(process.env.AI_PROVIDER_TIMEOUT_MS || "", 10);
+  if (Number.isFinite(parsed) && parsed >= 5_000) {
+    return parsed;
+  }
+  return 25_000;
+})();
 
 // Basic in-memory rate limiting (IP/Token based) - NOTE: In Vercel serverless, this resets per-container. Use Upstash/Redis for real rate limiting.
 const rateLimitMap = new Map();
@@ -142,8 +149,6 @@ const normalizeRequest = (body) => {
   };
 };
 
-const getTodayDateString = () => new Date().toISOString().split("T")[0];
-
 const LOGIN_REQUIRED_CODE = "LOGIN_REQUIRED";
 const PROFILE_NOT_FOUND_CODE = "PROFILE_NOT_FOUND";
 const INSUFFICIENT_CREDITS_CODE = "INSUFFICIENT_CREDITS";
@@ -164,88 +169,6 @@ const isAuthTokenError = (error) => {
   );
 };
 
-const buildDefaultProfile = (user) => {
-  const today = getTodayDateString();
-  return {
-    id: user.id,
-    email: user.email || null,
-    credits: DEFAULT_FREE_CREDITS,
-    is_premium: false,
-    last_daily_reset: today,
-    shadow_notes: "",
-    streak_count: 1,
-    last_streak_claim: today,
-    total_time_spent_ms: 0,
-  };
-};
-
-const ensureUserProfile = async (user) => {
-  let { data: profile, error } = await supabaseAdmin
-    .from("profiles")
-    .select("credits, is_premium")
-    .eq("id", user.id)
-    .single();
-
-  if (!error && profile) {
-    return { profile, created: false };
-  }
-
-  const missingRow = error?.code === "PGRST116";
-  if (!missingRow) {
-    return { profile: null, created: false, error };
-  }
-
-  const defaultProfile = buildDefaultProfile(user);
-  const legacyProfile = {
-    id: defaultProfile.id,
-    email: defaultProfile.email,
-    credits: defaultProfile.credits,
-    is_premium: defaultProfile.is_premium,
-    last_daily_reset: defaultProfile.last_daily_reset,
-    shadow_notes: defaultProfile.shadow_notes,
-  };
-
-  let insertResult = await supabaseAdmin
-    .from("profiles")
-    .insert([defaultProfile])
-    .select("credits, is_premium")
-    .single();
-
-  const columnMismatch = insertResult.error && (
-    insertResult.error.code === "42703" ||
-    insertResult.error.code === "PGRST204" ||
-    insertResult.error.message?.toLowerCase().includes("column")
-  );
-
-  if (columnMismatch) {
-    insertResult = await supabaseAdmin
-      .from("profiles")
-      .insert([legacyProfile])
-      .select("credits, is_premium")
-      .single();
-  }
-
-  if (!insertResult.error && insertResult.data) {
-    return { profile: insertResult.data, created: true };
-  }
-
-  if (insertResult.error?.code === "23505") {
-    const retryResult = await supabaseAdmin
-      .from("profiles")
-      .select("credits, is_premium")
-      .eq("id", user.id)
-      .single();
-
-    if (!retryResult.error && retryResult.data) {
-      return { profile: retryResult.data, created: false };
-    }
-
-    return { profile: null, created: false, error: retryResult.error };
-  }
-
-  return { profile: null, created: false, error: insertResult.error };
-};
-
 const isInsufficientCreditsError = (error) => (
   error?.message?.toLowerCase().includes("insufficient credits")
 );
@@ -262,27 +185,47 @@ const isRpcLookupError = (error) => {
 };
 
 const updateCreditsDirectly = async (userId, amountChange) => {
-  const { data: currentProfile, error: readError } = await supabaseAdmin
-    .from("profiles")
-    .select("credits")
-    .eq("id", userId)
-    .single();
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const { data: currentProfile, error: readError } = await supabaseAdmin
+      .from("profiles")
+      .select("credits")
+      .eq("id", userId)
+      .single();
 
-  if (readError || !currentProfile) {
-    return { error: readError || new Error("User profile not found") };
+    if (readError || !currentProfile) {
+      return { error: readError || new Error("User profile not found") };
+    }
+
+    const hasNullCredits = currentProfile.credits === null || currentProfile.credits === undefined;
+    const currentCredits = Number.isFinite(currentProfile.credits) ? currentProfile.credits : 0;
+    const nextCredits = currentCredits + amountChange;
+    if (nextCredits < 0) {
+      return { error: new Error("Insufficient credits") };
+    }
+
+    let updateQuery = supabaseAdmin
+      .from("profiles")
+      .update({ credits: nextCredits })
+      .eq("id", userId);
+
+    updateQuery = hasNullCredits
+      ? updateQuery.is("credits", null)
+      : updateQuery.eq("credits", currentCredits);
+
+    const { data: updatedProfile, error: updateError } = await updateQuery
+      .select("credits")
+      .maybeSingle();
+
+    if (!updateError && updatedProfile) {
+      return { error: null, credits: updatedProfile.credits };
+    }
+
+    if (updateError) {
+      return { error: updateError };
+    }
   }
 
-  const nextCredits = (currentProfile.credits || 0) + amountChange;
-  if (nextCredits < 0) {
-    return { error: new Error("Insufficient credits") };
-  }
-
-  const { error: updateError } = await supabaseAdmin
-    .from("profiles")
-    .update({ credits: nextCredits })
-    .eq("id", userId);
-
-  return { error: updateError, credits: nextCredits };
+  return { error: new Error("Concurrent credit update conflict") };
 };
 
 const modifyCredits = async (userId, amountChange) => {
@@ -323,6 +266,22 @@ const hasImage = (messages) => {
     Array.isArray(msg.content) && 
     msg.content.some(part => part && part.type === "image_url")
   );
+};
+
+const withProviderTimeout = async (promise, timeoutMs) => {
+  let timer = null;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error("AI provider timed out.")), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer) {
+      clearTimeout(timer);
+    }
+  }
 };
 
 export default async function handler(req, res) {
@@ -418,7 +377,7 @@ export default async function handler(req, res) {
     cost = isImageRequest ? 2 : 1;
 
     if (!isGuest) {
-      const { profile, created, error: profileError } = await ensureUserProfile(user);
+      const { profile, created, error: profileError } = await ensureUserProfile(supabaseAdmin, user);
 
       if (profileError || !profile) {
         console.error("[AI API] Profile lookup/create failed for user:", userId, profileError);
@@ -483,7 +442,10 @@ export default async function handler(req, res) {
       baseURL: process.env.LLAMA_BASE_URL || DEFAULT_BASE_URL,
     });
 
-    const completion = await client.chat.completions.create(request);
+    const completion = await withProviderTimeout(
+      client.chat.completions.create(request),
+      AI_PROVIDER_TIMEOUT_MS
+    );
     const content = completion.choices?.[0]?.message?.content?.trim();
 
     if (!content) {

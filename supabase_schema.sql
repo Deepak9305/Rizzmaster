@@ -1,6 +1,6 @@
 
 -- Create profiles table
-create table public.profiles (
+create table if not exists public.profiles (
   id uuid references auth.users not null primary key,
   email text,
   credits integer default 5,
@@ -19,8 +19,57 @@ create table public.profiles (
   total_time_spent_ms bigint default 0
 );
 
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'email') THEN
+    ALTER TABLE public.profiles ADD COLUMN email text;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'credits') THEN
+    ALTER TABLE public.profiles ADD COLUMN credits integer default 5;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'is_premium') THEN
+    ALTER TABLE public.profiles ADD COLUMN is_premium boolean default false;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'last_daily_reset') THEN
+    ALTER TABLE public.profiles ADD COLUMN last_daily_reset date default current_date;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'shadow_notes') THEN
+    ALTER TABLE public.profiles ADD COLUMN shadow_notes text;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'streak_count') THEN
+    ALTER TABLE public.profiles ADD COLUMN streak_count integer default 1;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'last_streak_claim') THEN
+    ALTER TABLE public.profiles ADD COLUMN last_streak_claim date;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'premium_source') THEN
+    ALTER TABLE public.profiles ADD COLUMN premium_source text;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'premium_platform') THEN
+    ALTER TABLE public.profiles ADD COLUMN premium_platform text;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'premium_product_id') THEN
+    ALTER TABLE public.profiles ADD COLUMN premium_product_id text;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'premium_base_plan_id') THEN
+    ALTER TABLE public.profiles ADD COLUMN premium_base_plan_id text;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'premium_transaction_id') THEN
+    ALTER TABLE public.profiles ADD COLUMN premium_transaction_id text;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'premium_expires_at') THEN
+    ALTER TABLE public.profiles ADD COLUMN premium_expires_at timestamptz;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'premium_verified_at') THEN
+    ALTER TABLE public.profiles ADD COLUMN premium_verified_at timestamptz;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'total_time_spent_ms') THEN
+    ALTER TABLE public.profiles ADD COLUMN total_time_spent_ms bigint default 0;
+  END IF;
+END $$;
+
 -- Create saved_items table
-create table public.saved_items (
+create table if not exists public.saved_items (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references public.profiles(id) on delete cascade not null,
   content text not null,
@@ -29,7 +78,7 @@ create table public.saved_items (
 );
 
 -- Create premium_subscriptions table
-create table public.premium_subscriptions (
+create table if not exists public.premium_subscriptions (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references public.profiles(id) on delete cascade not null,
   platform text not null, -- 'android' or 'ios'
@@ -55,37 +104,45 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.saved_items TO service_role
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.premium_subscriptions TO service_role;
 
 -- Policies for profiles
+drop policy if exists "Users can view own profile" on public.profiles;
 create policy "Users can view own profile" 
   on public.profiles for select 
   using ( (select auth.uid()) = id );
 
+drop policy if exists "Users can insert own profile" on public.profiles;
 create policy "Users can insert own profile" 
   on public.profiles for insert 
   with check ( (select auth.uid()) = id );
 
+drop policy if exists "Users can update own profile" on public.profiles;
 create policy "Users can update own profile" 
   on public.profiles for update 
   using ( (select auth.uid()) = id )
   with check ( (select auth.uid()) = id );
 
+drop policy if exists "Users can delete own profile" on public.profiles;
 create policy "Users can delete own profile" 
   on public.profiles for delete 
   using ( (select auth.uid()) = id );
 
 -- Policies for saved_items
+drop policy if exists "Users can view own saved items" on public.saved_items;
 create policy "Users can view own saved items" 
   on public.saved_items for select 
   using ( (select auth.uid()) = user_id );
 
+drop policy if exists "Users can insert own saved items" on public.saved_items;
 create policy "Users can insert own saved items" 
   on public.saved_items for insert 
   with check ( (select auth.uid()) = user_id );
 
+drop policy if exists "Users can delete own saved items" on public.saved_items;
 create policy "Users can delete own saved items" 
   on public.saved_items for delete 
   using ( (select auth.uid()) = user_id );
 
 -- Policies for premium_subscriptions
+drop policy if exists "Users can view own subscription" on public.premium_subscriptions;
 create policy "Users can view own subscription" 
   on public.premium_subscriptions for select 
   using ( (select auth.uid()) = user_id );
@@ -110,6 +167,7 @@ begin
 end;
 $$;
 
+revoke execute on function public.delete_user() from public;
 -- Grant execute permission to authenticated users
 grant execute on function public.delete_user() to authenticated;
 grant execute on function public.delete_user() to service_role;
@@ -119,6 +177,7 @@ CREATE OR REPLACE FUNCTION public.protect_profile_sensitive_columns()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 BEGIN
   -- If not bypassed by setting app.bypass_profile_trigger = 'true'
@@ -146,6 +205,8 @@ CREATE TRIGGER trg_protect_profile_sensitive_columns
   FOR EACH ROW
   EXECUTE FUNCTION public.protect_profile_sensitive_columns();
 
+REVOKE EXECUTE ON FUNCTION public.protect_profile_sensitive_columns() FROM PUBLIC;
+
 -- Secure RPC to modify credits (service_role only)
 CREATE OR REPLACE FUNCTION public.admin_modify_credits(user_uuid uuid, amount_change integer)
 RETURNS integer
@@ -157,15 +218,19 @@ DECLARE
   current_credits integer;
   new_credits integer;
 BEGIN
+  IF COALESCE(auth.jwt() ->> 'role', '') <> 'service_role' THEN
+    RAISE EXCEPTION 'Unauthorized: Only service_role can modify credits';
+  END IF;
+
   -- Set config to bypass the trigger
   PERFORM set_config('app.bypass_profile_trigger', 'true', true);
   
-  SELECT credits INTO current_credits
+  SELECT COALESCE(credits, 0) INTO current_credits
   FROM public.profiles
   WHERE id = user_uuid
   FOR UPDATE;
   
-  IF current_credits IS NULL THEN
+  IF NOT FOUND THEN
     RAISE EXCEPTION 'User profile not found';
   END IF;
 
@@ -209,6 +274,10 @@ AS $$
 DECLARE
   updated_profile record;
 BEGIN
+  IF COALESCE(auth.jwt() ->> 'role', '') <> 'service_role' THEN
+    RAISE EXCEPTION 'Unauthorized: Only service_role can set premium';
+  END IF;
+
   -- Set config to bypass the trigger
   PERFORM set_config('app.bypass_profile_trigger', 'true', true);
 
@@ -223,15 +292,22 @@ BEGIN
       premium_verified_at = now()
   WHERE id = user_uuid;
 
-  INSERT INTO public.premium_subscriptions (user_id, platform, product_id, transaction_id, is_active, purchase_date)
-  VALUES (user_uuid, platform_name, product_identifier, transaction_identifier, true, now())
-  ON CONFLICT (user_id) 
-  DO UPDATE SET 
-    platform = EXCLUDED.platform,
-    product_id = EXCLUDED.product_id,
-    transaction_id = EXCLUDED.transaction_id,
-    is_active = true,
-    purchase_date = now();
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'User profile not found';
+  END IF;
+
+  UPDATE public.premium_subscriptions
+  SET platform = platform_name,
+      product_id = product_identifier,
+      transaction_id = transaction_identifier,
+      is_active = true,
+      purchase_date = now()
+  WHERE user_id = user_uuid;
+
+  IF NOT FOUND THEN
+    INSERT INTO public.premium_subscriptions (user_id, platform, product_id, transaction_id, is_active, purchase_date)
+    VALUES (user_uuid, platform_name, product_identifier, transaction_identifier, true, now());
+  END IF;
 
   SELECT *
   INTO updated_profile 
@@ -347,6 +423,30 @@ BEGIN
 END;
 $$;
 
+REVOKE EXECUTE ON FUNCTION public.claim_daily_credits_and_streak() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.claim_daily_credits_and_streak() TO authenticated;
+
+-- Optional analytics table used by the app for one insert per active user/day.
+-- Core profile loading tolerates this table being absent, but keeping it in the
+-- schema prevents noisy backend errors on fresh projects.
+CREATE TABLE IF NOT EXISTS public.user_activity_log (
+  user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  activity_date date DEFAULT current_date NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  PRIMARY KEY (user_id, activity_date)
+);
+
+ALTER TABLE public.user_activity_log ENABLE ROW LEVEL SECURITY;
+
+GRANT INSERT ON TABLE public.user_activity_log TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.user_activity_log TO service_role;
+
+DROP POLICY IF EXISTS "Users can insert own activity" ON public.user_activity_log;
+CREATE POLICY "Users can insert own activity"
+  ON public.user_activity_log FOR INSERT
+  TO authenticated
+  WITH CHECK ((select auth.uid()) = user_id);
+
 -- Create public.reports table
 CREATE TABLE IF NOT EXISTS public.reports (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -362,11 +462,13 @@ GRANT INSERT ON TABLE public.reports TO anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.reports TO service_role;
 
 -- Allow authenticated and anonymous users to insert reports
+DROP POLICY IF EXISTS "Allow authenticated inserts" ON public.reports;
 CREATE POLICY "Allow authenticated inserts" 
   ON public.reports FOR INSERT 
   TO authenticated
   WITH CHECK (user_id = (select auth.uid()));
 
+DROP POLICY IF EXISTS "Allow anonymous inserts" ON public.reports;
 CREATE POLICY "Allow anonymous inserts" 
   ON public.reports FOR INSERT 
   TO anon
