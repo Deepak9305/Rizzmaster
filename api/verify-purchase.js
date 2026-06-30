@@ -1,5 +1,6 @@
 import { supabase, supabaseAdmin } from './_supabase.js';
 import { ensureUserProfile } from './_profiles.js';
+import { PurchaseVerificationError, verifyStorePurchase } from './_iap.js';
 
 const json = (res, statusCode, payload) => {
   res.status(statusCode);
@@ -11,6 +12,9 @@ const SUPPORTED_PLATFORMS = new Set(["android", "ios"]);
 const LOGIN_REQUIRED_CODE = "LOGIN_REQUIRED";
 const SUPABASE_BACKEND_UNAVAILABLE_CODE = "SUPABASE_BACKEND_UNAVAILABLE";
 const PROFILE_BOOTSTRAP_FAILED_CODE = "PROFILE_BOOTSTRAP_FAILED";
+const PURCHASE_VERIFICATION_FAILED_CODE = "PURCHASE_VERIFICATION_FAILED";
+const PURCHASE_VERIFICATION_UNAVAILABLE_CODE = "PURCHASE_VERIFICATION_UNAVAILABLE";
+const PURCHASE_VERIFICATION_BACKEND_ERROR_CODE = "PURCHASE_VERIFICATION_BACKEND_ERROR";
 
 const readString = (value) => {
   if (typeof value === "string") {
@@ -146,23 +150,47 @@ export default async function handler(req, res) {
     }
 
     const allowUnverified = process.env.ALLOW_UNVERIFIED_IAP === 'true';
-    let isValid = false;
+    let verificationResult;
 
-    // TODO: [IAP-VERIFICATION] Implement real Apple/Google verification here.
-    // If real verification is implemented, it should set isValid = true if successful.
-    if (normalizedPlatform === 'ios') {
-      // isValid = await verifyWithApple(transactionId, purchaseToken);
-    } else if (normalizedPlatform === 'android') {
-      // isValid = await verifyWithGoogle(productId, transactionId, purchaseToken);
-    }
-
-    if (!isValid && !allowUnverified) {
-      console.error("[IAP API] Real verification not implemented and ALLOW_UNVERIFIED_IAP is false.");
-      return json(res, 501, {
-        error: "Purchase verification failed. Cannot grant premium unverified.",
-        code: "PURCHASE_VERIFICATION_FAILED"
+    try {
+      verificationResult = await verifyStorePurchase({
+        platform: normalizedPlatform,
+        productId,
+        basePlanId,
+        purchaseToken,
+        transactionId,
+        rawReceipt,
       });
+    } catch (error) {
+      if (!allowUnverified) {
+        if (error instanceof PurchaseVerificationError) {
+          return json(res, error.statusCode, {
+            error: error.message,
+            code: error.code,
+          });
+        }
+
+        console.error("[IAP API] Unexpected purchase verification error:", error);
+        return json(res, 502, {
+          error: "Purchase verification failed because the store backend could not be reached.",
+          code: PURCHASE_VERIFICATION_BACKEND_ERROR_CODE,
+        });
+      }
+
+      console.warn("[IAP API] ALLOW_UNVERIFIED_IAP override enabled. Granting premium without store proof.", error);
+      verificationResult = {
+        expiresAt: expiresAt || null,
+        orderId,
+        verificationPayload: {
+          mode: "unverified_override",
+          reason: error instanceof Error ? error.message : "Unknown verification failure",
+        },
+        verificationProvider: "unverified_override",
+      };
     }
+
+    const verifiedExpiresAt = verificationResult?.expiresAt || expiresAt || null;
+    const verifiedOrderId = verificationResult?.orderId || orderId || null;
 
     // Call the admin_set_premium RPC using service role
     const { data: updatedProfile, error: rpcError } = await supabaseAdmin.rpc("admin_set_premium", {
@@ -172,11 +200,13 @@ export default async function handler(req, res) {
       transaction_identifier: transactionId,
       base_plan_identifier: basePlanId,
       purchase_token_identifier: purchaseToken,
-      expires_at: expiresAt,
+      expires_at: verifiedExpiresAt,
       raw_payload: {
-        orderId,
+        orderId: verifiedOrderId,
         plan,
-        receipt: rawReceipt
+        receipt: rawReceipt,
+        verification_provider: verificationResult?.verificationProvider || null,
+        verification: verificationResult?.verificationPayload || null,
       }
     });
 
@@ -205,6 +235,12 @@ export default async function handler(req, res) {
       return json(res, 400, {
         error: error.message,
         code: "INVALID_PURCHASE_DATA"
+      });
+    }
+    if (error instanceof PurchaseVerificationError) {
+      return json(res, error.statusCode, {
+        error: error.message,
+        code: error.code,
       });
     }
     console.error("Verify purchase error:", error);

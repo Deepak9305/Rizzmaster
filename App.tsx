@@ -650,10 +650,7 @@ const AppContentInner: React.FC = () => {
         if (sessionTimeMs > 0) {
           const currentProfile = profileRef.current;
           if (supabase && currentProfile && currentProfile.id !== 'guest_user') {
-            const newTotal = (currentProfile.total_time_spent_ms || 0) + sessionTimeMs;
-            supabase.from('profiles')
-              .update({ total_time_spent_ms: newTotal })
-              .eq('id', currentProfile.id)
+            supabase.rpc('increment_total_time_spent', { input_ms: sessionTimeMs })
               .then(({ error }) => {
                 if (error) console.warn('[Analytics] Time flush failed:', error.message);
                 else console.log(`[Analytics] Flushed ${Math.round(sessionTimeMs / 1000)}s of session time.`);
@@ -892,8 +889,37 @@ const AppContentInner: React.FC = () => {
               // If source is STILL unverified, it means no store receipt was found during restore
               if (refreshedProfile?.is_premium && refreshedProfile.premium_source === 'unverified') {
                 console.warn("IAP: Re-verification failed (No Store Receipt). Revoking premium.");
-                setProfile(prev => prev ? { ...prev, is_premium: false, premium_source: 'revoked' } : null);
-                showToast("Subscription verification failed. Access revoked.", 'error');
+                try {
+                  let token = '';
+                  if (supabase) {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    token = session?.access_token || '';
+                  }
+
+                  const response = await fetch('/api/revoke-premium', {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${token}`,
+                    },
+                  });
+                  const payload = await response.json().catch(() => null);
+
+                  if (!response.ok) {
+                    throw new Error(payload?.error || 'Failed to revoke premium.');
+                  }
+
+                  if (payload?.profile) {
+                    setProfile(payload.profile);
+                    profileRef.current = payload.profile;
+                  } else {
+                    await syncProfile().catch(() => null);
+                  }
+
+                  showToast("Subscription verification failed. Access revoked.", 'error');
+                } catch (revokeError) {
+                  console.error("IAP: Premium revoke failed after silent restore check", revokeError);
+                  showToast("Subscription verification failed, but backend revocation did not complete. Please retry.", 'error');
+                }
 
               }
             }, 15000));
@@ -1218,11 +1244,13 @@ const AppContentInner: React.FC = () => {
         profileRef.current = profileData as UserProfile;
 
         // --- DAU ACTIVITY LOG (silent, fire-and-forget) ---
-        // The PRIMARY KEY prevents duplicate inserts for the same user on the same day.
         Promise.resolve(supabase.from('user_activity_log')
-          .insert([{ user_id: userId }]))
+          .upsert(
+            [{ user_id: userId, activity_date: new Date().toISOString().slice(0, 10) }],
+            { onConflict: 'user_id,activity_date', ignoreDuplicates: true }
+          ))
           .then(({ error }) => {
-            if (error && error.code !== '23505') { // 23505 = unique violation (expected)
+            if (error) {
               console.warn('[Analytics] Activity log insert failed:', error.message);
             }
           })
@@ -1334,9 +1362,12 @@ const AppContentInner: React.FC = () => {
       setProfile(profileData as UserProfile);
       profileRef.current = profileData as UserProfile;
 
-      Promise.resolve(supabase.from('user_activity_log').insert([{ user_id: userId }]))
+      Promise.resolve(supabase.from('user_activity_log').upsert(
+        [{ user_id: userId, activity_date: new Date().toISOString().slice(0, 10) }],
+        { onConflict: 'user_id,activity_date', ignoreDuplicates: true }
+      ))
         .then(({ error }) => {
-          if (error && error.code !== '23505' && !isMissingOptionalSchemaError(error)) {
+          if (error && !isMissingOptionalSchemaError(error)) {
             console.warn('[Analytics] Activity log insert failed:', error.message);
           }
         })
@@ -1656,13 +1687,18 @@ const AppContentInner: React.FC = () => {
   const handleReport = useCallback(async (content?: string) => {
     if (!profileRef.current) return;
     try {
-      if (supabase && profileRef.current.id !== 'guest_user') {
-        const { error } = await supabase.from('reports').insert([
-          { user_id: profileRef.current.id, content: content || 'General Report', type: 'content_report' }
-        ]);
-        if (error) {
-          throw error;
+      if (!supabase) {
+        throw new Error('Supabase is unavailable.');
+      }
+      const { error } = await supabase.from('reports').insert([
+        {
+          user_id: profileRef.current.id === 'guest_user' ? null : profileRef.current.id,
+          content: content || 'General Report',
+          type: 'content_report'
         }
+      ]);
+      if (error) {
+        throw error;
       }
       showToast('Report submitted. We will review this.', 'info');
     } catch (err) {

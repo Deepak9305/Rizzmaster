@@ -514,6 +514,36 @@ $$;
 REVOKE EXECUTE ON FUNCTION public.claim_daily_credits_and_streak() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.claim_daily_credits_and_streak() TO authenticated;
 
+CREATE OR REPLACE FUNCTION public.increment_total_time_spent(input_ms bigint)
+RETURNS bigint
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public
+AS $$
+DECLARE
+  new_total bigint;
+BEGIN
+  IF input_ms IS NULL OR input_ms <= 0 THEN
+    RAISE EXCEPTION 'input_ms must be greater than zero';
+  END IF;
+
+  UPDATE public.profiles
+  SET total_time_spent_ms = COALESCE(total_time_spent_ms, 0) + input_ms
+  WHERE id = (select auth.uid())
+    AND coalesce((select (auth.jwt() ->> 'is_anonymous')::boolean), false) = false
+  RETURNING total_time_spent_ms INTO new_total;
+
+  IF new_total IS NULL THEN
+    RAISE EXCEPTION 'Profile not found';
+  END IF;
+
+  RETURN new_total;
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.increment_total_time_spent(bigint) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.increment_total_time_spent(bigint) TO authenticated;
+
 -- Optional analytics table used by the app for one insert per active user/day.
 -- Core profile loading tolerates this table being absent, but keeping it in the
 -- schema prevents noisy backend errors on fresh projects.

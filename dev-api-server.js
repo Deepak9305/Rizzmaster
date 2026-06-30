@@ -31,6 +31,7 @@ const routes = {
   '/api/ai': () => import('./api/ai.js'),
   '/api/delete-account': () => import('./api/delete-account.js'),
   '/api/profile': () => import('./api/profile.js'),
+  '/api/revoke-premium': () => import('./api/revoke-premium.js'),
   '/api/verify-purchase': () => import('./api/verify-purchase.js'),
 };
 

@@ -309,15 +309,19 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
 
     const handleReportMessage = useCallback(async (content: string) => {
         try {
-            if (supabase) {
-                await supabase.from('reports').insert([
-                    { user_id: userId, content, type: 'message_report' }
-                ]);
+            if (!supabase) {
+                throw new Error('Supabase is unavailable.');
             }
+            const { error } = await supabase.from('reports').insert([
+                { user_id: userId === 'guest_user' ? null : userId, content, type: 'message_report' }
+            ]);
+            if (error) {
+                throw error;
+            }
+            showToast("Report received! We'll review this.", 'success');
         } catch (e) {
             console.error("Failed to report message", e);
-        } finally {
-            showToast("Report received! We'll review this. 🤝", 'success');
+            showToast("Failed to send report.", 'error');
         }
     }, [showToast, userId]);
 
