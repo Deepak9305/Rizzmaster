@@ -55,6 +55,87 @@ const firstReceiptValue = (source: any, paths: Array<Array<string | number>>) =>
     return '';
 };
 
+const tryParseJson = (value: any) => {
+    if (typeof value !== 'string') return value;
+    const trimmed = value.trim();
+    if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) return value;
+
+    try {
+        return JSON.parse(trimmed);
+    } catch {
+        return value;
+    }
+};
+
+const findDeepReceiptValue = (
+    source: any,
+    keys: string[],
+    depth = 0
+): string => {
+    if (!source || depth > 8) return '';
+
+    const parsedSource = tryParseJson(source);
+
+    if (typeof parsedSource === 'string' || typeof parsedSource === 'number') {
+        return '';
+    }
+
+    if (Array.isArray(parsedSource)) {
+        for (const item of parsedSource) {
+            const found = findDeepReceiptValue(item, keys, depth + 1);
+            if (found) return found;
+        }
+        return '';
+    }
+
+    if (typeof parsedSource === 'object') {
+        for (const key of keys) {
+            const value = parsedSource[key];
+            if (typeof value === 'string' || typeof value === 'number') {
+                const parsedValue = tryParseJson(value);
+
+                if (parsedValue !== value) {
+                    const nested = findDeepReceiptValue(parsedValue, keys, depth + 1);
+                    if (nested) return nested;
+                }
+
+                return String(value).trim();
+            }
+        }
+
+        for (const value of Object.values(parsedSource)) {
+            const found = findDeepReceiptValue(value, keys, depth + 1);
+            if (found) return found;
+        }
+    }
+
+    return '';
+};
+
+const getGooglePurchaseToken = (receipt: any, fallback?: any) => {
+    return (
+        firstReceiptValue(receipt, [
+            ['purchaseToken'],
+            ['purchase_token'],
+            ['nativePurchase', 'purchaseToken'],
+            ['nativePurchase', 'token'],
+            ['transaction', 'purchaseToken'],
+            ['transaction', 'transactionReceipt'],
+            ['transactions', 0, 'purchaseToken'],
+            ['transactions', 0, 'transactionReceipt'],
+            ['transactions', 0, 'nativePurchase', 'purchaseToken'],
+            ['transactions', 0, 'nativePurchase', 'token'],
+            ['payload', 'purchaseToken'],
+            ['payload', 'purchase_token'],
+            ['payload', 'token'],
+            ['transactionReceipt'],
+        ]) ||
+        findDeepReceiptValue(receipt, ['purchaseToken', 'purchase_token']) ||
+        findDeepReceiptValue(fallback, ['purchaseToken', 'purchase_token']) ||
+        ''
+    );
+};
+
 export const IAP_CONFIG = {
     WEEKLY: {
         alias: 'weekly_sub',
@@ -80,6 +161,7 @@ class IAPService {
     onSuccess: ((purchaseData: any) => void) | null = null;
     onError: ((msg: string) => void) | null = null;
     pendingPlan: 'WEEKLY' | 'MONTHLY' | null = null;
+    lastApprovedTransaction: any = null;
 
     initialize(onSuccess: (purchaseData: any) => void, onError: (msg: string) => void) {
         this.onSuccess = onSuccess;
@@ -127,26 +209,14 @@ class IAPService {
         // Firing on 'approved' would grant premium before Google/Apple confirms payment.
         store.when().approved((transaction: any) => {
             console.log("IAP: Transaction approved. Verifying with server...", transaction);
+            this.lastApprovedTransaction = transaction;
             transaction.verify();
         });
 
         store.when().verified((receipt: any) => {
             console.log("IAP: Receipt verified. Passing to backend...", receipt);
 
-            const purchaseToken = firstReceiptValue(receipt, [
-                ['purchaseToken'],
-                ['transactionReceipt'],
-                ['nativePurchase', 'purchaseToken'],
-                ['nativePurchase', 'token'],
-                ['transaction', 'purchaseToken'],
-                ['transaction', 'transactionReceipt'],
-                ['transactions', 0, 'purchaseToken'],
-                ['transactions', 0, 'transactionReceipt'],
-                ['transactions', 0, 'nativePurchase', 'purchaseToken'],
-                ['transactions', 0, 'nativePurchase', 'token'],
-                ['payload', 'purchaseToken'],
-                ['payload', 'token'],
-            ]);
+            const purchaseToken = getGooglePurchaseToken(receipt, this.lastApprovedTransaction);
             const transactionId = firstReceiptValue(receipt, [
                 ['transactionId'],
                 ['orderId'],
@@ -183,12 +253,23 @@ class IAPService {
                     : this.pendingPlan === 'MONTHLY'
                         ? IAP_CONFIG.MONTHLY
                         : null;
-            const expectedProductId = Capacitor.getPlatform() === 'android' && pendingConfig
-                ? pendingConfig.androidId
+            const isAndroid = Capacitor.getPlatform() === 'android';
+            const isIOS = Capacitor.getPlatform() === 'ios';
+            const expectedProductId = pendingConfig
+                ? (isIOS ? pendingConfig.iosId : pendingConfig.androidId)
                 : productId;
-            const expectedBasePlanId = Capacitor.getPlatform() === 'android' && pendingConfig
+            const expectedBasePlanId = pendingConfig && isAndroid
                 ? pendingConfig.androidBasePlanId
                 : basePlanId;
+
+            console.log("IAP: Purchase token extraction result", {
+                hasPurchaseToken: Boolean(purchaseToken),
+                productId,
+                basePlanId,
+                plan: this.pendingPlan,
+                receiptKeys: receipt ? Object.keys(receipt) : [],
+                approvedKeys: this.lastApprovedTransaction ? Object.keys(this.lastApprovedTransaction) : [],
+            });
 
             // Normalize the purchase data for the backend
             const purchaseData = {
@@ -206,6 +287,7 @@ class IAPService {
             // Now safe to verify via backend
             if (this.onSuccess) this.onSuccess(purchaseData);
             this.pendingPlan = null;
+            this.lastApprovedTransaction = null;
             receipt.finish();
         });
 
