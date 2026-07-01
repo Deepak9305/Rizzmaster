@@ -191,6 +191,7 @@ export default async function handler(req, res) {
 
     const verifiedExpiresAt = verificationResult?.expiresAt || expiresAt || null;
     const verifiedOrderId = verificationResult?.orderId || orderId || null;
+    const verifiedBasePlanId = verificationResult?.verifiedBasePlanId || basePlanId || null;
 
     // Call the admin_set_premium RPC using service role
     const { data: updatedProfile, error: rpcError } = await supabaseAdmin.rpc("admin_set_premium", {
@@ -198,12 +199,13 @@ export default async function handler(req, res) {
       platform_name: normalizedPlatform,
       product_identifier: productId,
       transaction_identifier: transactionId,
-      base_plan_identifier: basePlanId,
+      base_plan_identifier: verifiedBasePlanId,
       purchase_token_identifier: purchaseToken,
       expires_at: verifiedExpiresAt,
       raw_payload: {
         orderId: verifiedOrderId,
         plan,
+        client_base_plan_id: basePlanId,
         receipt: rawReceipt,
         verification_provider: verificationResult?.verificationProvider || null,
         verification: verificationResult?.verificationPayload || null,

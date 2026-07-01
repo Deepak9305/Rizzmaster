@@ -177,13 +177,25 @@ class IAPService {
                 ['transaction', 'expiresAt'],
                 ['transactions', 0, 'expiresAt'],
             ]) || null;
+            const pendingConfig =
+                this.pendingPlan === 'WEEKLY'
+                    ? IAP_CONFIG.WEEKLY
+                    : this.pendingPlan === 'MONTHLY'
+                        ? IAP_CONFIG.MONTHLY
+                        : null;
+            const expectedProductId = Capacitor.getPlatform() === 'android' && pendingConfig
+                ? pendingConfig.androidId
+                : productId;
+            const expectedBasePlanId = Capacitor.getPlatform() === 'android' && pendingConfig
+                ? pendingConfig.androidBasePlanId
+                : basePlanId;
 
             // Normalize the purchase data for the backend
             const purchaseData = {
                 platform: Capacitor.getPlatform(),
-                productId,
+                productId: expectedProductId,
                 plan: this.pendingPlan,
-                basePlanId,
+                basePlanId: expectedBasePlanId,
                 purchaseToken,
                 transactionId,
                 orderId: firstReceiptValue(receipt, [['orderId'], ['transaction', 'orderId'], ['transactions', 0, 'orderId']]),

@@ -283,9 +283,7 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken }
   const lineItems = Array.isArray(payload.lineItems) ? payload.lineItems : [];
   const matchingLineItem = lineItems.find((item) => {
     const itemProductId = typeof item?.productId === "string" ? item.productId.trim() : "";
-    if (itemProductId !== productId) return false;
-    if (!basePlanId) return true;
-    return readGoogleBasePlanId(item) === basePlanId;
+    return itemProductId === productId;
   });
 
   if (!matchingLineItem) {
@@ -294,6 +292,16 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken }
       "PURCHASE_VERIFICATION_FAILED",
       400
     );
+  }
+
+  const verifiedBasePlanId = readGoogleBasePlanId(matchingLineItem);
+
+  if (basePlanId && verifiedBasePlanId && basePlanId !== verifiedBasePlanId) {
+    console.warn("[IAP] Client basePlanId mismatch. Using Google verified base plan.", {
+      clientBasePlanId: basePlanId,
+      verifiedBasePlanId,
+      productId,
+    });
   }
 
   const expiresAt = coerceIsoTimestamp(matchingLineItem.expiryTime);
@@ -318,7 +326,11 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken }
   return {
     expiresAt,
     orderId: typeof payload.latestOrderId === "string" ? payload.latestOrderId.trim() : null,
-    verificationPayload: payload,
+    verifiedBasePlanId: verifiedBasePlanId || null,
+    verificationPayload: {
+      ...payload,
+      verifiedBasePlanId,
+    },
     verificationProvider: "google_play",
   };
 };
