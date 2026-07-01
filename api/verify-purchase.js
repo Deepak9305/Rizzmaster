@@ -15,6 +15,7 @@ const PROFILE_BOOTSTRAP_FAILED_CODE = "PROFILE_BOOTSTRAP_FAILED";
 const PURCHASE_VERIFICATION_FAILED_CODE = "PURCHASE_VERIFICATION_FAILED";
 const PURCHASE_VERIFICATION_UNAVAILABLE_CODE = "PURCHASE_VERIFICATION_UNAVAILABLE";
 const PURCHASE_VERIFICATION_BACKEND_ERROR_CODE = "PURCHASE_VERIFICATION_BACKEND_ERROR";
+const PURCHASE_ALREADY_LINKED_CODE = "PURCHASE_ALREADY_LINKED";
 
 const readString = (value) => {
   if (typeof value === "string") {
@@ -214,6 +215,12 @@ export default async function handler(req, res) {
 
     if (rpcError) {
       console.error("[IAP API] RPC admin_set_premium error:", rpcError);
+      if (rpcError.message?.includes("already linked to another account")) {
+        return json(res, 409, {
+          error: "This subscription is already linked to another Rizzmaster account. Please log in with that account or contact support.",
+          code: PURCHASE_ALREADY_LINKED_CODE,
+        });
+      }
       return json(res, 500, { 
         error: "Failed to verify and apply premium status on backend.",
         code: "PREMIUM_SYNC_FAILED"

@@ -790,6 +790,9 @@ const AppContentInner: React.FC = () => {
 
       const resData = await response.json().catch(() => null);
       if (!response.ok) {
+        if (resData?.code === 'PURCHASE_ALREADY_LINKED') {
+          throw new Error('This subscription is already linked to another Rizzmaster account. Please log in with that account or contact support.');
+        }
         const code = resData?.code ? ` (${resData.code})` : '';
         throw new Error(`${resData?.error || `Server returned status ${response.status}`}${code}`);
       }

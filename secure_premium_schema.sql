@@ -339,6 +339,7 @@ SET search_path = public
 AS $$
 DECLARE
   updated_profile record;
+  existing_owner uuid;
 BEGIN
   IF COALESCE(auth.jwt() ->> 'role', '') <> 'service_role' THEN
     RAISE EXCEPTION 'Unauthorized: Only service_role can set premium';
@@ -350,8 +351,26 @@ BEGIN
     RAISE EXCEPTION 'User profile not found';
   END IF;
 
-  -- Insert into purchase_receipts securely
-  -- Using ON CONFLICT DO NOTHING to prevent crashing if restoring an existing receipt
+  SELECT pr.user_id
+  INTO existing_owner
+  FROM public.purchase_receipts pr
+  WHERE pr.platform = platform_name
+    AND (
+      (
+        purchase_token_identifier IS NOT NULL
+        AND pr.purchase_token = purchase_token_identifier
+      )
+      OR (
+        transaction_identifier IS NOT NULL
+        AND pr.transaction_id = transaction_identifier
+      )
+    )
+  LIMIT 1;
+
+  IF existing_owner IS NOT NULL AND existing_owner <> user_uuid THEN
+    RAISE EXCEPTION 'This purchase is already linked to another account';
+  END IF;
+
   INSERT INTO public.purchase_receipts (
       user_id, platform, product_id, base_plan_id, transaction_id, purchase_token, raw_payload, status
   )

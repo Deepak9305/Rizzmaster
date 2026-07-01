@@ -361,6 +361,7 @@ SET search_path = public
 AS $$
 DECLARE
   updated_profile record;
+  existing_owner uuid;
 BEGIN
   IF COALESCE(auth.jwt() ->> 'role', '') <> 'service_role' THEN
     RAISE EXCEPTION 'Unauthorized: Only service_role can set premium';
@@ -368,6 +369,38 @@ BEGIN
 
   -- Set config to bypass the trigger
   PERFORM set_config('app.bypass_profile_trigger', 'true', true);
+
+  IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = user_uuid) THEN
+    RAISE EXCEPTION 'User profile not found';
+  END IF;
+
+  SELECT pr.user_id
+  INTO existing_owner
+  FROM public.purchase_receipts pr
+  WHERE pr.platform = platform_name
+    AND (
+      (
+        purchase_token_identifier IS NOT NULL
+        AND pr.purchase_token = purchase_token_identifier
+      )
+      OR (
+        transaction_identifier IS NOT NULL
+        AND pr.transaction_id = transaction_identifier
+      )
+    )
+  LIMIT 1;
+
+  IF existing_owner IS NOT NULL AND existing_owner <> user_uuid THEN
+    RAISE EXCEPTION 'This purchase is already linked to another account';
+  END IF;
+
+  INSERT INTO public.purchase_receipts (
+      user_id, platform, product_id, base_plan_id, transaction_id, purchase_token, raw_payload, status
+  )
+  VALUES (
+      user_uuid, platform_name, product_identifier, base_plan_identifier, transaction_identifier, purchase_token_identifier, raw_payload, 'verified'
+  )
+  ON CONFLICT DO NOTHING;
 
   UPDATE public.profiles
   SET is_premium = true,
@@ -379,10 +412,6 @@ BEGIN
       premium_expires_at = expires_at,
       premium_verified_at = now()
   WHERE id = user_uuid;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'User profile not found';
-  END IF;
 
   UPDATE public.premium_subscriptions
   SET platform = platform_name,
