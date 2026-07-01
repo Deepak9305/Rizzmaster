@@ -331,6 +331,7 @@ const AppContentInner: React.FC = () => {
   // Refs
   const profileRef = useRef<UserProfile | null>(null);
   const isGuestRef = useRef(false);
+  const authUserIdRef = useRef<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const sessionChannelRef = useRef<BroadcastChannel | null>(null);
@@ -1049,11 +1050,17 @@ const AppContentInner: React.FC = () => {
     }, 10000);
 
     supabase.auth.getSession().then(({ data: { session } }) => {
+      authUserIdRef.current = session?.user?.id || null;
       setSession(session);
       setIsSessionBlocked(false);
       setProfileLoadError(null);
       setIsProfileLoadingHung(false);
       if (session) {
+        if (profileRef.current?.id && profileRef.current.id !== session.user.id) {
+          profileRef.current = null;
+          setProfile(null);
+          setSavedItems([]);
+        }
         loadUserDataSafe(session.user.id, session.user.email, session.access_token)
           .catch(e => console.error("Session Load Auth Err:", e))
           .finally(() => {
@@ -1072,11 +1079,17 @@ const AppContentInner: React.FC = () => {
 
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      authUserIdRef.current = session?.user?.id || null;
       setSession(session);
       setIsSessionBlocked(false);
       setProfileLoadError(null);
       setIsProfileLoadingHung(false);
       if (session) {
+        if (profileRef.current?.id && profileRef.current.id !== session.user.id) {
+          profileRef.current = null;
+          setProfile(null);
+          setSavedItems([]);
+        }
         loadUserDataSafe(session.user.id, session.user.email, session.access_token)
           .catch((e) => {
             console.error("Auth State Load Error:", e);
@@ -1361,6 +1374,10 @@ const AppContentInner: React.FC = () => {
         return;
       }
 
+      if (authUserIdRef.current !== userId) {
+        return;
+      }
+
       profileData = normalizeDailyCreditProfile(profileData as UserProfile);
       setProfile(profileData as UserProfile);
       profileRef.current = profileData as UserProfile;
@@ -1390,6 +1407,9 @@ const AppContentInner: React.FC = () => {
             if (migrateError) {
               console.warn("Migration check failed:", migrateError.message);
             } else if (migratedProfile) {
+              if (authUserIdRef.current !== userId) {
+                return;
+              }
               const normalizedProfile = normalizeDailyCreditProfile(migratedProfile as UserProfile);
               setProfile(normalizedProfile);
               profileRef.current = normalizedProfile;
