@@ -1246,8 +1246,8 @@ const AppContentInner: React.FC = () => {
         // --- DAU ACTIVITY LOG (silent, fire-and-forget) ---
         Promise.resolve(supabase.from('user_activity_log')
           .upsert(
-            [{ user_id: userId, activity_date: new Date().toISOString().slice(0, 10) }],
-            { onConflict: 'user_id,activity_date', ignoreDuplicates: true }
+            [{ user_id: userId, active_date: new Date().toISOString().slice(0, 10) }],
+            { onConflict: 'user_id,active_date', ignoreDuplicates: true }
           ))
           .then(({ error }) => {
             if (error) {
@@ -1363,8 +1363,8 @@ const AppContentInner: React.FC = () => {
       profileRef.current = profileData as UserProfile;
 
       Promise.resolve(supabase.from('user_activity_log').upsert(
-        [{ user_id: userId, activity_date: new Date().toISOString().slice(0, 10) }],
-        { onConflict: 'user_id,activity_date', ignoreDuplicates: true }
+        [{ user_id: userId, active_date: new Date().toISOString().slice(0, 10) }],
+        { onConflict: 'user_id,active_date', ignoreDuplicates: true }
       ))
         .then(({ error }) => {
           if (error && !isMissingOptionalSchemaError(error)) {

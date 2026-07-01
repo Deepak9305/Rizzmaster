@@ -549,9 +549,9 @@ GRANT EXECUTE ON FUNCTION public.increment_total_time_spent(bigint) TO authentic
 -- schema prevents noisy backend errors on fresh projects.
 CREATE TABLE IF NOT EXISTS public.user_activity_log (
   user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
-  activity_date date DEFAULT current_date NOT NULL,
+  active_date date DEFAULT current_date NOT NULL,
   created_at timestamp with time zone DEFAULT now() NOT NULL,
-  PRIMARY KEY (user_id, activity_date)
+  PRIMARY KEY (user_id, active_date)
 );
 
 ALTER TABLE public.user_activity_log ENABLE ROW LEVEL SECURITY;
