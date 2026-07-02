@@ -9,6 +9,14 @@ const ALLOWED_MODELS = new Set([
   "llama-3.3-70b-versatile",
   "llama-3.2-90b-vision-preview",
 ]);
+const TEXT_MODEL_FALLBACKS = [
+  "llama-3.3-70b-versatile",
+  "meta-llama/llama-4-scout-17b-16e-instruct",
+];
+const VISION_MODEL_FALLBACKS = [
+  "llama-3.2-90b-vision-preview",
+  "meta-llama/llama-4-scout-17b-16e-instruct",
+];
 const MAX_MESSAGES = 8;
 const MAX_TEXT_LENGTH = 16000;
 const MAX_IMAGE_URL_LENGTH = 6_000_000;
@@ -285,6 +293,19 @@ const withProviderTimeout = async (promise, timeoutMs) => {
   }
 };
 
+const getModelFallbackChain = (requestedModel, isImageRequest) => {
+  const chain = [
+    requestedModel,
+    ...(isImageRequest ? VISION_MODEL_FALLBACKS : TEXT_MODEL_FALLBACKS),
+  ];
+
+  return chain.filter((model, index) => (
+    typeof model === "string" &&
+    ALLOWED_MODELS.has(model) &&
+    chain.indexOf(model) === index
+  ));
+};
+
 export default async function handler(req, res) {
   if (applyCors(req, res)) return;
 
@@ -300,7 +321,14 @@ export default async function handler(req, res) {
       code: LOGIN_REQUIRED_CODE,
     });
   }
-  const token = authHeader.split(" ")[1];
+  const token = authHeader.slice("Bearer ".length).trim();
+
+  if (!token) {
+    return json(res, 401, {
+      error: "Empty authorization token.",
+      code: LOGIN_REQUIRED_CODE,
+    });
+  }
 
   const isGuest = (token === "unauthenticated");
   let user = null;
@@ -445,14 +473,38 @@ export default async function handler(req, res) {
       baseURL: process.env.LLAMA_BASE_URL || DEFAULT_BASE_URL,
     });
 
-    const completion = await withProviderTimeout(
-      client.chat.completions.create(request),
-      AI_PROVIDER_TIMEOUT_MS
-    );
-    const content = completion.choices?.[0]?.message?.content?.trim();
+    const candidateModels = getModelFallbackChain(request.model, isImageRequest);
+    let completion = null;
+    let content = "";
+    let lastProviderError = null;
+
+    for (const candidateModel of candidateModels) {
+      try {
+        completion = await withProviderTimeout(
+          client.chat.completions.create({
+            ...request,
+            model: candidateModel,
+          }),
+          AI_PROVIDER_TIMEOUT_MS
+        );
+        content = completion.choices?.[0]?.message?.content?.trim() || "";
+
+        if (content) {
+          if (candidateModel !== request.model) {
+            console.warn(`[AI API] Provider fallback used. Requested ${request.model}, served with ${candidateModel}.`);
+          }
+          break;
+        }
+
+        lastProviderError = new Error(`AI provider returned an empty response for model ${candidateModel}.`);
+      } catch (providerError) {
+        lastProviderError = providerError;
+        console.warn(`[AI API] Model attempt failed for ${candidateModel}:`, providerError?.message || providerError);
+      }
+    }
 
     if (!content) {
-      throw new Error("AI provider returned an empty response.");
+      throw lastProviderError || new Error("AI provider returned an empty response.");
     }
 
     return json(res, 200, { content });

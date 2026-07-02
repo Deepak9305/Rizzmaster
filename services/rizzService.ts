@@ -12,7 +12,12 @@ const PROFILE_BOOTSTRAP_FAILED_ERROR = 'PROFILE_BOOTSTRAP_FAILED';
 const CREDIT_DEDUCTION_FAILED_ERROR = 'CREDIT_DEDUCTION_FAILED';
 
 // Model Configuration
-const DEFAULT_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
+const TEXT_MODEL = 'llama-3.3-70b-versatile';
+const VISION_MODEL = 'llama-3.2-90b-vision-preview';
+
+const getPreferredModel = (hasImage: boolean) => (
+  hasImage ? VISION_MODEL : TEXT_MODEL
+);
 
 type AiMessageContent =
   | string
@@ -356,7 +361,7 @@ CRITICAL: ${length === 'short'
     while (attempts < 3) {
       try {
         const completion = await callAiChatCompletion({
-          model: DEFAULT_MODEL,
+          model: getPreferredModel(Boolean(image)),
           messages: messages,
           temperature: 1.3,
           max_tokens: 1000
@@ -483,7 +488,7 @@ CRITICAL: ${length === 'short'
   while (attempts < 3) {
     try {
       const completion = await callAiChatCompletion({
-        model: DEFAULT_MODEL,
+        model: getPreferredModel(false),
         messages: [
           { role: "system", content: systemInstruction },
           { role: "user", content: isUnsafe ? "Generate roast." : inputText }
@@ -660,7 +665,7 @@ Carry over all existing intel and update it when new facts emerge.`;
   while (attempts < 3) {
     try {
       const completion = await callAiChatCompletion({
-        model: DEFAULT_MODEL,
+        model: getPreferredModel(recentMessages.some(message => Boolean(message.image))),
         messages: [{ role: 'system', content: systemInstruction }, ...rawMessages],
         temperature: 0.85,
         max_tokens: 650,
