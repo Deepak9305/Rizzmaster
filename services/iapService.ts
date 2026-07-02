@@ -227,7 +227,12 @@ class IAPService {
         // IMPORTANT: onSuccess fires on 'verified' (after receipt auth), not 'approved'.
         // Firing on 'approved' would grant premium before Google/Apple confirms payment.
         store.when().approved((transaction: any) => {
-            console.log("IAP: Transaction approved. Verifying with server...", transaction);
+            logIapJson("IAP: Transaction approved. Verifying with server...", {
+                transactionKeys: transaction ? Object.keys(transaction) : [],
+                pendingPlan: this.pendingPlan,
+                activeIntent: this.activeIntent,
+                ownerUserId: this.currentUserId,
+            });
             this.lastApprovedTransaction = transaction;
             transaction.verify();
         });
@@ -325,7 +330,12 @@ class IAPService {
                     await receipt.finish();
                 }
             } catch (error) {
-                console.error("IAP: Backend verification callback failed", error);
+                logIapJson("IAP: Backend verification callback failed", {
+                    message: error instanceof Error ? error.message : String(error),
+                    pendingPlan: this.pendingPlan,
+                    activeIntent: this.activeIntent,
+                    ownerUserId,
+                });
                 this.onError?.(getIapErrorMessage(error, "Purchase verification failed"));
             } finally {
                 this.pendingPlan = null;
@@ -335,7 +345,11 @@ class IAPService {
         });
 
         store.when().finished((transaction: any) => {
-            console.log("IAP: Transaction finished", transaction);
+            logIapJson("IAP: Transaction finished", {
+                transactionKeys: transaction ? Object.keys(transaction) : [],
+                pendingPlan: this.pendingPlan,
+                activeIntent: this.activeIntent,
+            });
         });
 
         store.when().productUpdated((product: any) => {
@@ -435,7 +449,14 @@ class IAPService {
                     }
                 }
             } catch (err: any) {
-                console.error("IAP: Order failed", err);
+                logIapJson("IAP: Order failed", {
+                    code: err?.code,
+                    message: err?.message,
+                    name: err?.name,
+                    pendingPlan: this.pendingPlan,
+                    activeIntent: this.activeIntent,
+                    ownerUserId: normalizedOwnerUserId,
+                });
                 this.pendingPlan = null;
                 this.activeIntent = null;
                 if (this.onError) this.onError(getIapErrorMessage(err));
@@ -461,7 +482,13 @@ class IAPService {
             await CdvPurchase.store.restore();
             await CdvPurchase.store.update();
         } catch (e) {
-            console.error("IAP: Restore failed", e);
+            logIapJson("IAP: Restore failed", {
+                code: (e as any)?.code,
+                message: (e as any)?.message,
+                name: (e as any)?.name,
+                activeIntent: this.activeIntent,
+                ownerUserId: this.currentUserId,
+            });
             this.activeIntent = null;
         }
     }

@@ -760,15 +760,43 @@ const AppContentInner: React.FC = () => {
       }
     }
 
-    // TODO: Connect Apple App Store / Google Play Billing APIs on backend to verify receipt/transaction token
     try {
-      let token = '';
-      if (supabase) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.access_token) {
-          token = session.access_token;
-        }
+      if (!supabase) {
+        showToast("Login system is not ready. Please restart the app.", "error");
+        return false;
       }
+
+      const { data: { session: activeSession } } = await supabase.auth.getSession();
+
+      console.log(`IAP verification auth check ${JSON.stringify({
+        hasSupabaseClient: Boolean(supabase),
+        profileId: currentProfile?.id,
+        profileEmail: currentProfile?.email,
+        hasSession: Boolean(activeSession),
+        sessionUserId: activeSession?.user?.id || null,
+        sessionEmail: activeSession?.user?.email || null,
+        hasAccessToken: Boolean(activeSession?.access_token),
+        platform,
+        productId,
+        hasPurchaseToken: Boolean(purchaseToken),
+      })}`);
+
+      if (!activeSession?.access_token || !activeSession?.user?.id) {
+        console.warn("IAP: No valid Supabase session during purchase verification.");
+        showToast("Please sign in again before restoring or buying premium.", "error");
+        return false;
+      }
+
+      if (currentProfile.id !== activeSession.user.id) {
+        console.warn(`IAP: Profile/session mismatch during purchase verification ${JSON.stringify({
+          profileId: currentProfile.id,
+          sessionUserId: activeSession.user.id,
+        })}`);
+        showToast("Account mismatch. Please sign out, sign back in, and retry.", "error");
+        return false;
+      }
+
+      const token = activeSession.access_token;
 
       const response = await fetch(getApiUrl('/api/verify-purchase'), {
         method: 'POST',
@@ -861,10 +889,7 @@ const AppContentInner: React.FC = () => {
       // In-App Purchases
       try {
         IAPService.initialize(
-          (purchaseData) => {
-            // On successful purchase/restore
-            handleUpgrade(purchaseData);
-          },
+          (purchaseData) => handleUpgrade(purchaseData),
           (errorMessage) => {
             showToast(errorMessage, 'error');
           }

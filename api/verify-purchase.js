@@ -17,6 +17,7 @@ const PURCHASE_VERIFICATION_FAILED_CODE = "PURCHASE_VERIFICATION_FAILED";
 const PURCHASE_VERIFICATION_UNAVAILABLE_CODE = "PURCHASE_VERIFICATION_UNAVAILABLE";
 const PURCHASE_VERIFICATION_BACKEND_ERROR_CODE = "PURCHASE_VERIFICATION_BACKEND_ERROR";
 const PURCHASE_ALREADY_LINKED_CODE = "PURCHASE_ALREADY_LINKED";
+const PURCHASE_ACCOUNT_MISMATCH_CODE = "PURCHASE_ACCOUNT_MISMATCH";
 
 const readString = (value) => {
   if (typeof value === "string") {
@@ -75,12 +76,21 @@ export default async function handler(req, res) {
   // 1. Authentication
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    console.warn("[IAP API] Missing authorization header.");
     return json(res, 401, {
       error: "Missing or invalid authorization header.",
       code: LOGIN_REQUIRED_CODE
     });
   }
-  const token = authHeader.split(" ")[1];
+  const token = authHeader.slice("Bearer ".length).trim();
+
+  if (!token) {
+    console.warn("[IAP API] Empty bearer token.");
+    return json(res, 401, {
+      error: "Empty authorization token.",
+      code: LOGIN_REQUIRED_CODE
+    });
+  }
 
   if (!supabase || !supabaseAdmin) {
     return json(res, 503, {
@@ -93,6 +103,9 @@ export default async function handler(req, res) {
   try {
     const { data, error } = await supabase.auth.getUser(token);
     if (error || !data || !data.user) {
+      console.warn("[IAP API] Invalid Supabase token.", {
+        message: error?.message || null,
+      });
       return json(res, 401, {
         error: "Unauthorized. Invalid token.",
         code: LOGIN_REQUIRED_CODE
@@ -144,6 +157,21 @@ export default async function handler(req, res) {
       return json(res, 400, {
         error: "Unsupported purchase platform.",
         code: "INVALID_PURCHASE_PLATFORM"
+      });
+    }
+
+    if (ownerUserId && ownerUserId !== userId) {
+      console.warn("[IAP API] Purchase owner mismatch blocked.", {
+        authenticatedUserId: userId,
+        clientOwnerUserId: ownerUserId,
+        platform: normalizedPlatform,
+        productId,
+        intent,
+      });
+
+      return json(res, 409, {
+        error: "This purchase was started for a different Rizzmaster account. Please sign out, sign back in, and retry from the correct account.",
+        code: PURCHASE_ACCOUNT_MISMATCH_CODE,
       });
     }
 
