@@ -54,6 +54,8 @@ const normalizeUrl = (value?: string) => {
   return value.replace(/\/+$/, '');
 };
 
+const DEFAULT_API_BASE_URL = 'https://rizzmaster.online';
+
 const originFromUrl = (value?: string) => {
   if (!value) return undefined;
   try {
@@ -61,6 +63,15 @@ const originFromUrl = (value?: string) => {
   } catch {
     return undefined;
   }
+};
+
+const isSafeDerivedApiOrigin = (value?: string) => {
+  if (!value) return false;
+
+  return (
+    /^https?:\/\/localhost(?::\d+)?$/i.test(value) ||
+    value === DEFAULT_API_BASE_URL
+  );
 };
 
 const supabaseUrlEnv = resolveEnv(['VITE_SUPABASE_URL', 'REACT_APP_SUPABASE_URL', 'SUPABASE_URL']);
@@ -73,10 +84,11 @@ const supabaseUrl = normalizeUrl(supabaseUrlEnv.value);
 const supabaseAnonKey = supabaseAnonKeyEnv.value;
 const googleClientId = googleClientIdEnv.value;
 const webAuthRedirectUrl = normalizeUrl(webAuthRedirectUrlEnv.value);
+const derivedApiOrigin = originFromUrl(webAuthRedirectUrl);
 const apiBaseUrl = normalizeUrl(
   apiBaseUrlEnv.value ||
-  originFromUrl(webAuthRedirectUrl) ||
-  'https://rizzmaster.online'
+  (isSafeDerivedApiOrigin(derivedApiOrigin) ? derivedApiOrigin : undefined) ||
+  DEFAULT_API_BASE_URL
 );
 
 export const runtimeConfig: FrontendRuntimeConfig = {
@@ -99,7 +111,9 @@ export const runtimeConfigDiagnostics = {
   hasAuthRedirectUrl: Boolean(webAuthRedirectUrl),
   authRedirectUrlSource: webAuthRedirectUrlEnv.source || 'missing',
   hasApiBaseUrl: Boolean(apiBaseUrl),
-  apiBaseUrlSource: apiBaseUrlEnv.source || (originFromUrl(webAuthRedirectUrl) ? 'VITE_AUTH_REDIRECT_URL origin' : 'native-default'),
+  apiBaseUrlSource:
+    apiBaseUrlEnv.source ||
+    (isSafeDerivedApiOrigin(derivedApiOrigin) ? 'VITE_AUTH_REDIRECT_URL origin' : 'native-default'),
 };
 
 export const runtimeConfigDebugMessage = (
