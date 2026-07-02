@@ -25,7 +25,7 @@ const AI_PROVIDER_TIMEOUT_MS = (() => {
   if (Number.isFinite(parsed) && parsed >= 5_000) {
     return parsed;
   }
-  return 25_000;
+  return 40_000;
 })();
 
 // Basic in-memory rate limiting (IP/Token based) - NOTE: In Vercel serverless, this resets per-container. Use Upstash/Redis for real rate limiting.
