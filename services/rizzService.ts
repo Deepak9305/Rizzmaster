@@ -1,8 +1,9 @@
 import { RizzResponse, BioResponse, ResponseLength } from "../types";
 import { resizeImage } from "./imageService";
+import { getApiUrl } from "./runtimeConfig";
 import { supabase } from "./supabaseClient";
 
-const AI_ENDPOINT = '/api/ai';
+const AI_ENDPOINT = getApiUrl('/api/ai');
 const LOGIN_REQUIRED_ERROR = 'LOGIN_REQUIRED';
 const INSUFFICIENT_CREDITS_ERROR = 'INSUFFICIENT_CREDITS';
 const PROFILE_NOT_FOUND_ERROR = 'PROFILE_NOT_FOUND';

@@ -1,4 +1,5 @@
 import { supabase, supabaseAdmin } from "./_supabase.js";
+import { applyCors } from "./_cors.js";
 
 const LOGIN_REQUIRED_CODE = "LOGIN_REQUIRED";
 const SUPABASE_BACKEND_UNAVAILABLE_CODE = "SUPABASE_BACKEND_UNAVAILABLE";
@@ -19,6 +20,8 @@ const getBearerToken = (req) => {
 };
 
 export default async function handler(req, res) {
+  if (applyCors(req, res)) return;
+
   if (req.method !== "POST") {
     return json(res, 405, { error: "Method not allowed." });
   }

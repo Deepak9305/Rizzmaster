@@ -136,6 +136,22 @@ const getGooglePurchaseToken = (receipt: any, fallback?: any) => {
     );
 };
 
+const logIapJson = (message: string, data: Record<string, any>) => {
+    try {
+        console.log(`${message} ${JSON.stringify(data)}`);
+    } catch {
+        console.log(message);
+    }
+};
+
+const getIapErrorMessage = (error: any, fallback = "Purchase failed") => {
+    if (typeof error === 'string' && error.trim()) return error.trim();
+    if (typeof error?.message === 'string' && error.message.trim()) return error.message.trim();
+    if (typeof error?.code === 'string' && error.code.trim()) return `${fallback} (${error.code.trim()})`;
+    if (typeof error?.code === 'number') return `${fallback} (${error.code})`;
+    return fallback;
+};
+
 export const IAP_CONFIG = {
     WEEKLY: {
         alias: 'weekly_sub',
@@ -158,12 +174,14 @@ class IAPService {
     products: any[] = [];
 
     // Callbacks to update UI/DB
-    onSuccess: ((purchaseData: any) => void) | null = null;
+    onSuccess: ((purchaseData: any) => boolean | void | Promise<boolean | void>) | null = null;
     onError: ((msg: string) => void) | null = null;
     pendingPlan: 'WEEKLY' | 'MONTHLY' | null = null;
     lastApprovedTransaction: any = null;
+    activeIntent: 'purchase' | 'restore' | null = null;
+    currentUserId: string | null = null;
 
-    initialize(onSuccess: (purchaseData: any) => void, onError: (msg: string) => void) {
+    initialize(onSuccess: (purchaseData: any) => boolean | void | Promise<boolean | void>, onError: (msg: string) => void) {
         this.onSuccess = onSuccess;
         this.onError = onError;
 
@@ -178,6 +196,7 @@ class IAPService {
         if (!CdvPurchase) return; // Safety check
 
         const { store, Platform } = CdvPurchase;
+        store.applicationUsername = () => this.currentUserId || undefined;
 
         // 1. Prepare Registration List
         const productsToRegister: any[] = [];
@@ -213,8 +232,13 @@ class IAPService {
             transaction.verify();
         });
 
-        store.when().verified((receipt: any) => {
-            console.log("IAP: Receipt verified. Passing to backend...", receipt);
+        store.when().verified(async (receipt: any) => {
+            logIapJson("IAP: Receipt verified. Passing to backend.", {
+                receiptKeys: receipt ? Object.keys(receipt) : [],
+                pendingPlan: this.pendingPlan,
+                activeIntent: this.activeIntent,
+                ownerUserId: this.currentUserId,
+            });
 
             const purchaseToken = getGooglePurchaseToken(receipt, this.lastApprovedTransaction);
             const transactionId = firstReceiptValue(receipt, [
@@ -261,12 +285,16 @@ class IAPService {
             const expectedBasePlanId = pendingConfig && isAndroid
                 ? pendingConfig.androidBasePlanId
                 : basePlanId;
+            const intent = this.pendingPlan ? 'purchase' : (this.activeIntent || 'restore');
+            const ownerUserId = this.currentUserId || null;
 
-            console.log("IAP: Purchase token extraction result", {
+            logIapJson("IAP: Purchase token extraction result", {
                 hasPurchaseToken: Boolean(purchaseToken),
-                productId,
-                basePlanId,
+                productId: expectedProductId || productId,
+                basePlanId: expectedBasePlanId || basePlanId,
                 plan: this.pendingPlan,
+                intent,
+                ownerUserId,
                 receiptKeys: receipt ? Object.keys(receipt) : [],
                 approvedKeys: this.lastApprovedTransaction ? Object.keys(this.lastApprovedTransaction) : [],
             });
@@ -276,6 +304,8 @@ class IAPService {
                 platform: Capacitor.getPlatform(),
                 productId: expectedProductId,
                 plan: this.pendingPlan,
+                intent,
+                ownerUserId,
                 basePlanId: expectedBasePlanId,
                 purchaseToken,
                 transactionId,
@@ -284,11 +314,24 @@ class IAPService {
                 rawReceipt: receipt
             };
 
-            // Now safe to verify via backend
-            if (this.onSuccess) this.onSuccess(purchaseData);
-            this.pendingPlan = null;
-            this.lastApprovedTransaction = null;
-            receipt.finish();
+            try {
+                const verified = this.onSuccess ? await this.onSuccess(purchaseData) : false;
+                if (verified === false) {
+                    console.warn("IAP: Backend verification did not complete; leaving receipt unfinished for retry.");
+                    return;
+                }
+
+                if (typeof receipt.finish === 'function') {
+                    await receipt.finish();
+                }
+            } catch (error) {
+                console.error("IAP: Backend verification callback failed", error);
+                this.onError?.(getIapErrorMessage(error, "Purchase verification failed"));
+            } finally {
+                this.pendingPlan = null;
+                this.activeIntent = null;
+                this.lastApprovedTransaction = null;
+            }
         });
 
         store.when().finished((transaction: any) => {
@@ -305,9 +348,15 @@ class IAPService {
         });
 
         store.error((error: any) => {
-            console.error('IAP Error:', error);
+            logIapJson('IAP Error:', {
+                code: error?.code,
+                message: error?.message,
+                platform: Capacitor.getPlatform(),
+                pendingPlan: this.pendingPlan,
+                activeIntent: this.activeIntent,
+            });
             if (error && error.code !== CdvPurchase.ErrorCode.PAYMENT_CANCELLED) {
-                if (this.onError) this.onError(`Store Error: ${error.message}`);
+                if (this.onError) this.onError(`Store Error: ${getIapErrorMessage(error)}`);
             }
         });
 
@@ -319,9 +368,16 @@ class IAPService {
         });
     }
 
-    async purchase(plan: 'WEEKLY' | 'MONTHLY') {
+    async purchase(plan: 'WEEKLY' | 'MONTHLY', ownerUserId?: string | null) {
         if (!Capacitor.isNativePlatform()) {
             console.warn("IAP: Cannot purchase on web.");
+            return;
+        }
+
+        const normalizedOwnerUserId = typeof ownerUserId === 'string' ? ownerUserId.trim() : '';
+        if (!normalizedOwnerUserId) {
+            console.warn("IAP: Cannot purchase without a logged-in app account owner.");
+            this.onError?.("Please sign in again before subscribing.");
             return;
         }
 
@@ -333,12 +389,21 @@ class IAPService {
         const productId = isIOS ? config.iosId : config.androidId;
         const basePlanId = isIOS ? null : config.androidBasePlanId;
         this.pendingPlan = plan;
+        this.activeIntent = 'purchase';
+        this.currentUserId = normalizedOwnerUserId;
+        const orderData = { applicationUsername: normalizedOwnerUserId };
 
-        console.log(`IAP: Attempting purchase for ${productId} (BasePlan: ${basePlanId || 'N/A'})`);
+        logIapJson("IAP: Attempting purchase", {
+            productId,
+            basePlanId: basePlanId || null,
+            plan,
+            ownerUserId: normalizedOwnerUserId,
+        });
 
         if (!this.isInitialized) {
             console.warn("IAP: Store not initialized yet. Aborting purchase.");
             this.pendingPlan = null;
+            this.activeIntent = null;
             if (this.onError) {
                 this.onError("Store not ready. Please try again in a moment.");
             }
@@ -351,31 +416,33 @@ class IAPService {
             try {
                 if (basePlanId) {
                     if (!product.offers || product.offers.length === 0) {
-                        await store.order(productId);
+                        await store.order(productId, orderData);
                         return;
                     }
 
                     const offer = product.offers.find((o: any) => o.id === basePlanId || o.id.includes(basePlanId));
                     if (offer) {
-                        await offer.order();
+                        await offer.order(orderData);
                     } else {
-                        await store.order(productId);
+                        await store.order(productId, orderData);
                     }
                 } else {
                     const offer = product.getOffer();
                     if (offer) {
-                        await offer.order();
+                        await offer.order(orderData);
                     } else {
-                        await store.order(productId);
+                        await store.order(productId, orderData);
                     }
                 }
             } catch (err: any) {
                 console.error("IAP: Order failed", err);
                 this.pendingPlan = null;
-                if (this.onError) this.onError(err.message || "Purchase failed");
+                this.activeIntent = null;
+                if (this.onError) this.onError(getIapErrorMessage(err));
             }
         } else {
             this.pendingPlan = null;
+            this.activeIntent = null;
             store.update();
             if (this.onError) {
                 this.onError("Product unavailable. Retrying connection...");
@@ -383,14 +450,19 @@ class IAPService {
         }
     }
 
-    async restore() {
+    async restore(ownerUserId?: string | null) {
         if (!Capacitor.isNativePlatform()) return;
         const CdvPurchase = getCdvPurchase();
         try {
+            this.activeIntent = 'restore';
+            this.currentUserId = typeof ownerUserId === 'string' && ownerUserId.trim()
+                ? ownerUserId.trim()
+                : this.currentUserId;
             await CdvPurchase.store.restore();
             await CdvPurchase.store.update();
         } catch (e) {
             console.error("IAP: Restore failed", e);
+            this.activeIntent = null;
         }
     }
 

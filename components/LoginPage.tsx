@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../services/supabaseClient';
-import { getAuthUnavailableMessage, runtimeConfig } from '../services/runtimeConfig';
+import { getAuthUnavailableMessage, getRuntimeConfigDebugMessage, runtimeConfig } from '../services/runtimeConfig';
 import LegalModals from './LegalModals';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { Capacitor } from '@capacitor/core';
@@ -52,6 +52,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
     const [error, setError] = useState<string | null>(null);
     const [message, setMessage] = useState<string | null>(null);
     const authUnavailableMessage = getAuthUnavailableMessage();
+    const authDebugMessage = getRuntimeConfigDebugMessage();
     const isAuthAvailable = runtimeConfig.authAvailable;
     const isNativePlatform = Capacitor.isNativePlatform();
     const isGoogleLoginConfigured = isNativePlatform ? Boolean(runtimeConfig.googleClientId) : isAuthAvailable;
@@ -257,7 +258,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
 
                         {authUnavailableMessage && (
                             <div className="p-3 mb-5 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-100 text-sm">
-                                {authUnavailableMessage}
+                                <div>{authUnavailableMessage}</div>
+                                <div className="mt-2 text-[11px] leading-5 text-amber-200/80 break-all">
+                                    {authDebugMessage}
+                                </div>
                             </div>
                         )}
 

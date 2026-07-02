@@ -7,6 +7,7 @@ interface PremiumModalProps {
     onUpgrade: (plan: 'WEEKLY' | 'MONTHLY') => void;
     onRestore: () => void;
     isGuest?: boolean;
+    userId?: string | null;
 }
 
 // Only list features that are ACTUALLY gated behind premium
@@ -19,7 +20,7 @@ const FEATURES = [
     { icon: '🔥', label: 'Early Access to New Features', sub: 'First to get everything we ship.' },
 ];
 
-const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onRestore, isGuest = false }) => {
+const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onRestore, isGuest = false, userId = null }) => {
     const [selectedPlan, setSelectedPlan] = useState<'WEEKLY' | 'MONTHLY'>('WEEKLY');
     const [prices, setPrices] = useState({ weekly: '$4.99', monthly: '$15.99' });
 
@@ -48,7 +49,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onResto
             return;
         }
         if (Capacitor.isNativePlatform()) {
-            IAPService.purchase(selectedPlan);
+            IAPService.purchase(selectedPlan, userId);
         } else {
             onUpgrade(selectedPlan);
         }

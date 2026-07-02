@@ -135,6 +135,16 @@ const assertFutureExpiry = (expiresAt) => {
   }
 };
 
+const googlePlayAccountHashForUser = (userId) => {
+  if (typeof userId !== "string" || !userId.trim()) return "";
+  return crypto.createHash("md5").update(userId.trim()).digest("hex");
+};
+
+const readGoogleExternalAccountId = (payload) => {
+  const value = payload?.externalAccountIdentifiers?.obfuscatedExternalAccountId;
+  return typeof value === "string" ? value.trim() : "";
+};
+
 const getGooglePlayConfig = () => {
   const rawServiceAccountJson = readEnv("GOOGLE_PLAY_SERVICE_ACCOUNT_JSON");
   let clientEmail = "";
@@ -246,7 +256,7 @@ const readGoogleBasePlanId = (lineItem) => {
   return nested;
 };
 
-const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken }) => {
+const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, appUserId }) => {
   const { packageName } = getGooglePlayConfig();
   const accessToken = await fetchGoogleAccessToken();
 
@@ -277,6 +287,21 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken }
         ? "PURCHASE_VERIFICATION_UNAVAILABLE"
         : "PURCHASE_VERIFICATION_BACKEND_ERROR",
       response.status === 401 || response.status === 403 ? 503 : 502
+    );
+  }
+
+  const verifiedExternalAccountId = readGoogleExternalAccountId(payload);
+  const expectedExternalAccountId = googlePlayAccountHashForUser(appUserId);
+
+  if (
+    verifiedExternalAccountId &&
+    expectedExternalAccountId &&
+    verifiedExternalAccountId.toLowerCase() !== expectedExternalAccountId.toLowerCase()
+  ) {
+    throw new PurchaseVerificationError(
+      "Google Play verified this purchase for a different Rizzmaster account.",
+      "PURCHASE_ACCOUNT_MISMATCH",
+      409
     );
   }
 
@@ -327,9 +352,11 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken }
     expiresAt,
     orderId: typeof payload.latestOrderId === "string" ? payload.latestOrderId.trim() : null,
     verifiedBasePlanId: verifiedBasePlanId || null,
+    verifiedExternalAccountId: verifiedExternalAccountId || null,
     verificationPayload: {
       ...payload,
       verifiedBasePlanId,
+      verifiedExternalAccountId: verifiedExternalAccountId || null,
     },
     verificationProvider: "google_play",
   };
@@ -466,9 +493,10 @@ export const verifyStorePurchase = async ({
   purchaseToken,
   transactionId,
   rawReceipt,
+  appUserId,
 }) => {
   if (platform === "android") {
-    return verifyGooglePlayPurchase({ productId, basePlanId, purchaseToken });
+    return verifyGooglePlayPurchase({ productId, basePlanId, purchaseToken, appUserId });
   }
 
   if (platform === "ios") {

@@ -340,6 +340,7 @@ AS $$
 DECLARE
   updated_profile record;
   existing_owner uuid;
+  inserted_owner uuid;
 BEGIN
   IF COALESCE(auth.jwt() ->> 'role', '') <> 'service_role' THEN
     RAISE EXCEPTION 'Unauthorized: Only service_role can set premium';
@@ -351,33 +352,40 @@ BEGIN
     RAISE EXCEPTION 'User profile not found';
   END IF;
 
-  SELECT pr.user_id
-  INTO existing_owner
-  FROM public.purchase_receipts pr
-  WHERE pr.platform = platform_name
-    AND (
-      (
-        purchase_token_identifier IS NOT NULL
-        AND pr.purchase_token = purchase_token_identifier
-      )
-      OR (
-        transaction_identifier IS NOT NULL
-        AND pr.transaction_id = transaction_identifier
-      )
-    )
-  LIMIT 1;
-
-  IF existing_owner IS NOT NULL AND existing_owner <> user_uuid THEN
-    RAISE EXCEPTION 'This purchase is already linked to another account';
-  END IF;
-
   INSERT INTO public.purchase_receipts (
       user_id, platform, product_id, base_plan_id, transaction_id, purchase_token, raw_payload, status
   )
   VALUES (
       user_uuid, platform_name, product_identifier, base_plan_identifier, transaction_identifier, purchase_token_identifier, raw_payload, 'verified'
   )
-  ON CONFLICT DO NOTHING;
+  ON CONFLICT DO NOTHING
+  RETURNING user_id INTO inserted_owner;
+
+  IF inserted_owner IS NULL THEN
+    SELECT pr.user_id
+    INTO existing_owner
+    FROM public.purchase_receipts pr
+    WHERE pr.platform = platform_name
+      AND (
+        (
+          purchase_token_identifier IS NOT NULL
+          AND pr.purchase_token = purchase_token_identifier
+        )
+        OR (
+          transaction_identifier IS NOT NULL
+          AND pr.transaction_id = transaction_identifier
+        )
+      )
+    LIMIT 1;
+
+    IF existing_owner IS NULL THEN
+      RAISE EXCEPTION 'Purchase receipt conflict could not be resolved';
+    END IF;
+
+    IF existing_owner <> user_uuid THEN
+      RAISE EXCEPTION 'This purchase is already linked to another account';
+    END IF;
+  END IF;
 
   -- Update profiles with the backend source of truth
   UPDATE public.profiles
@@ -481,6 +489,7 @@ BEGIN
 END;
 $$;
 REVOKE EXECUTE ON FUNCTION public.increment_total_time_spent(bigint) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.increment_total_time_spent(bigint) FROM anon;
 GRANT EXECUTE ON FUNCTION public.increment_total_time_spent(bigint) TO authenticated;
 
 DO $$

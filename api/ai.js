@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { supabase, supabaseAdmin } from './_supabase.js';
 import { ensureUserProfile } from './_profiles.js';
+import { applyCors } from './_cors.js';
 
 const DEFAULT_BASE_URL = "https://api.groq.com/openai/v1";
 const ALLOWED_MODELS = new Set([
@@ -285,6 +286,8 @@ const withProviderTimeout = async (promise, timeoutMs) => {
 };
 
 export default async function handler(req, res) {
+  if (applyCors(req, res)) return;
+
   if (req.method !== "POST") {
     return json(res, 405, { error: "Method not allowed." });
   }

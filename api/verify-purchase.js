@@ -1,6 +1,7 @@
 import { supabase, supabaseAdmin } from './_supabase.js';
 import { ensureUserProfile } from './_profiles.js';
 import { PurchaseVerificationError, verifyStorePurchase } from './_iap.js';
+import { applyCors } from './_cors.js';
 
 const json = (res, statusCode, payload) => {
   res.status(statusCode);
@@ -65,6 +66,8 @@ const parseJsonBody = (body) => {
 };
 
 export default async function handler(req, res) {
+  if (applyCors(req, res)) return;
+
   if (req.method !== "POST") {
     return json(res, 405, { error: "Method not allowed." });
   }
@@ -122,6 +125,8 @@ export default async function handler(req, res) {
     const transactionId = readString(body.transactionId);
     const orderId = readNullableString(body.orderId);
     const plan = readNullableString(body.plan);
+    const intent = readString(body.intent) === "restore" ? "restore" : "purchase";
+    const ownerUserId = readNullableString(body.ownerUserId);
     const basePlanId = readNullableString(body.basePlanId);
     const purchaseToken = readNullableString(body.purchaseToken);
     const rawReceipt = body.rawReceipt && typeof body.rawReceipt === "object" ? body.rawReceipt : {};
@@ -150,6 +155,18 @@ export default async function handler(req, res) {
       });
     }
 
+    console.log("[IAP API] Verifying purchase", {
+      userId,
+      platform: normalizedPlatform,
+      productId,
+      basePlanId,
+      plan,
+      intent,
+      hasPurchaseToken: Boolean(purchaseToken),
+      hasTransactionId: Boolean(transactionId),
+      hasOrderId: Boolean(orderId),
+    });
+
     const allowUnverified = process.env.ALLOW_UNVERIFIED_IAP === 'true';
     let verificationResult;
 
@@ -161,6 +178,7 @@ export default async function handler(req, res) {
         purchaseToken,
         transactionId,
         rawReceipt,
+        appUserId: userId,
       });
     } catch (error) {
       if (!allowUnverified) {
@@ -206,6 +224,8 @@ export default async function handler(req, res) {
       raw_payload: {
         orderId: verifiedOrderId,
         plan,
+        intent,
+        client_owner_user_id: ownerUserId,
         client_base_plan_id: basePlanId,
         receipt: rawReceipt,
         verification_provider: verificationResult?.verificationProvider || null,

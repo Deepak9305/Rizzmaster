@@ -18,7 +18,7 @@ import { OneSignalService } from './services/oneSignalService';
 import IAPService from './services/iapService';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Network } from '@capacitor/network';
-import { runtimeConfig } from './services/runtimeConfig';
+import { getApiUrl, runtimeConfig } from './services/runtimeConfig';
 
 // Lazy Load Heavy Components / Modals
 const PremiumModal = lazy(() => import('./components/PremiumModal'));
@@ -184,7 +184,7 @@ const fetchServerProfile = async (method: 'GET' | 'POST' = 'GET', accessToken?: 
   const maxAttempts = method === 'POST' ? 4 : 1;
 
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-    const response = await fetch('/api/profile', {
+    const response = await fetch(getApiUrl('/api/profile'), {
       method,
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -703,14 +703,14 @@ const AppContentInner: React.FC = () => {
     initializeNotifications();
   };
 
-  const handleUpgrade = useCallback(async (purchaseData?: any) => {
+  const handleUpgrade = useCallback(async (purchaseData?: any): Promise<boolean> => {
     const currentProfile = profileRef.current;
     // If guest taps Upgrade, close the modal and send them to sign-in/sign-up
     if (!currentProfile || currentProfile.id === 'guest_user' || isGuest) {
       setShowPremiumModal(false);
       setLoginReason('premium');
       handleExitGuestMode();
-      return;
+      return false;
     }
 
     let platform = Capacitor.getPlatform();
@@ -738,7 +738,7 @@ const AppContentInner: React.FC = () => {
 
       if (!mainSub) {
         console.log('handleUpgrade: No owned IAP product found — skipping verification.');
-        return;
+        return false;
       }
       productId = mainSub.id;
       transactionId = mainSub.transactionId || (mainSub as any)?.purchase?.transactionId;
@@ -748,7 +748,7 @@ const AppContentInner: React.FC = () => {
       if (!productId || !purchaseToken) {
         console.warn('handleUpgrade: Missing required Android purchase fields (productId, purchaseToken).');
         showToast("Purchase verification failed: Missing token. Please try again.", "error");
-        return;
+        return false;
       }
       if (!transactionId) {
         transactionId = orderId || purchaseToken;
@@ -756,7 +756,7 @@ const AppContentInner: React.FC = () => {
     } else {
       if (!transactionId) {
         console.warn('handleUpgrade: Owned product found but no transactionId — skipping.');
-        return;
+        return false;
       }
     }
 
@@ -770,7 +770,7 @@ const AppContentInner: React.FC = () => {
         }
       }
 
-      const response = await fetch('/api/verify-purchase', {
+      const response = await fetch(getApiUrl('/api/verify-purchase'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -782,6 +782,8 @@ const AppContentInner: React.FC = () => {
           transactionId,
           orderId,
           plan,
+          intent: purchaseData?.intent || 'purchase',
+          ownerUserId: currentProfile.id,
           basePlanId,
           purchaseToken,
           rawReceipt,
@@ -793,6 +795,9 @@ const AppContentInner: React.FC = () => {
       if (!response.ok) {
         if (resData?.code === 'PURCHASE_ALREADY_LINKED') {
           throw new Error('This subscription is already linked to another Rizzmaster account. Please log in with that account or contact support.');
+        }
+        if (resData?.code === 'PURCHASE_ACCOUNT_MISMATCH') {
+          throw new Error('This purchase was started for a different Rizzmaster account. Please retry while signed into this account.');
         }
         const code = resData?.code ? ` (${resData.code})` : '';
         throw new Error(`${resData?.error || `Server returned status ${response.status}`}${code}`);
@@ -813,9 +818,11 @@ const AppContentInner: React.FC = () => {
       }
 
       showToast(`Welcome to the Elite Club! 👑`, 'success');
+      return true;
     } catch (err) {
       console.error("Failed to verify purchase:", err);
       showToast(getErrorMessage(err, "Purchase verification failed. Please try again or contact support."), "error");
+      return false;
     }
   }, [showToast, isGuest, handleExitGuestMode]);
 
@@ -884,7 +891,7 @@ const AppContentInner: React.FC = () => {
         if (currentProfile.is_premium && currentProfile.premium_source === 'unverified') {
           console.log("IAP: User is premium but 'unverified'. Starting silent restore check...");
           try {
-            await IAPService.restore();
+            await IAPService.restore(currentProfile.id);
 
             // Wait 15s for store status to update
             timerIds.push(setTimeout(async () => {
@@ -900,7 +907,7 @@ const AppContentInner: React.FC = () => {
                     token = session?.access_token || '';
                   }
 
-                  const response = await fetch('/api/revoke-premium', {
+                  const response = await fetch(getApiUrl('/api/revoke-premium'), {
                     method: 'POST',
                     headers: {
                       'Authorization': `Bearer ${token}`,
@@ -1558,7 +1565,7 @@ const AppContentInner: React.FC = () => {
   const handleRestorePurchases = useCallback(async () => {
     if (!profileRef.current) return;
     if (Capacitor.isNativePlatform()) {
-      IAPService.restore();
+      IAPService.restore(profileRef.current.id);
     } else {
       showToast('Restore purchases is only available in the mobile app.', 'info');
     }
@@ -1657,7 +1664,7 @@ const AppContentInner: React.FC = () => {
         throw new Error('Your session expired. Please sign in again.');
       }
 
-      const response = await fetch('/api/delete-account', {
+      const response = await fetch(getApiUrl('/api/delete-account'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${activeSession.access_token}`,
@@ -2246,6 +2253,7 @@ const AppContentInner: React.FC = () => {
                     onUpgrade={handleUpgrade}
                     onRestore={handleRestorePurchases}
                     isGuest={isGuest}
+                    userId={profile?.id || null}
                   />
                 )}
                 <SavedModal

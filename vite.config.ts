@@ -21,9 +21,26 @@ export default defineConfig(({ mode }) => {
     // CRITICAL for Capacitor: Use relative paths for assets
     base: './',
     define: {
+      __APP_RUNTIME_ENV__: JSON.stringify({
+        VITE_SUPABASE_URL: env.VITE_SUPABASE_URL || '',
+        VITE_SUPABASE_ANON_KEY: env.VITE_SUPABASE_ANON_KEY || '',
+        VITE_GOOGLE_CLIENT_ID: env.VITE_GOOGLE_CLIENT_ID || '',
+        VITE_AUTH_REDIRECT_URL: env.VITE_AUTH_REDIRECT_URL || '',
+        REACT_APP_SUPABASE_URL: env.REACT_APP_SUPABASE_URL || env.SUPABASE_URL || env.VITE_SUPABASE_URL || '',
+        REACT_APP_SUPABASE_ANON_KEY: env.REACT_APP_SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY || '',
+        SUPABASE_URL: env.SUPABASE_URL || env.VITE_SUPABASE_URL || env.REACT_APP_SUPABASE_URL || '',
+        SUPABASE_ANON_KEY: env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY || env.REACT_APP_SUPABASE_ANON_KEY || '',
+        GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID || env.VITE_GOOGLE_CLIENT_ID || '',
+        AUTH_REDIRECT_URL: env.AUTH_REDIRECT_URL || env.VITE_AUTH_REDIRECT_URL || '',
+      }),
+      // Expose local and Vercel-style public auth vars to the client bundle used by Capacitor.
+      'process.env.SUPABASE_URL': JSON.stringify(env.SUPABASE_URL || env.VITE_SUPABASE_URL || env.REACT_APP_SUPABASE_URL || ''),
+      'process.env.SUPABASE_ANON_KEY': JSON.stringify(env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY || env.REACT_APP_SUPABASE_ANON_KEY || ''),
+      'process.env.GOOGLE_CLIENT_ID': JSON.stringify(env.GOOGLE_CLIENT_ID || env.VITE_GOOGLE_CLIENT_ID || ''),
+      'process.env.AUTH_REDIRECT_URL': JSON.stringify(env.AUTH_REDIRECT_URL || env.VITE_AUTH_REDIRECT_URL || ''),
       // Keep legacy Supabase aliases available in the client bundle.
-      'process.env.REACT_APP_SUPABASE_URL': JSON.stringify(env.REACT_APP_SUPABASE_URL || ''),
-      'process.env.REACT_APP_SUPABASE_ANON_KEY': JSON.stringify(env.REACT_APP_SUPABASE_ANON_KEY || ''),
+      'process.env.REACT_APP_SUPABASE_URL': JSON.stringify(env.REACT_APP_SUPABASE_URL || env.SUPABASE_URL || env.VITE_SUPABASE_URL || ''),
+      'process.env.REACT_APP_SUPABASE_ANON_KEY': JSON.stringify(env.REACT_APP_SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY || ''),
     },
     build: {
       chunkSizeWarningLimit: 1000,
