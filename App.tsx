@@ -19,6 +19,8 @@ import IAPService from './services/iapService';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Network } from '@capacitor/network';
 import { getApiUrl, runtimeConfig } from './services/runtimeConfig';
+import ForceUpdateGate from './components/ForceUpdateGate';
+import { loadUpdateGateConfig, type UpdateGateConfig } from './services/updateGateService';
 
 // Lazy Load Heavy Components / Modals
 const PremiumModal = lazy(() => import('./components/PremiumModal'));
@@ -327,6 +329,7 @@ const AppContentInner: React.FC = () => {
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
+  const [updateGateConfig, setUpdateGateConfig] = useState<UpdateGateConfig | null>(null);
 
   // Refs
   const profileRef = useRef<UserProfile | null>(null);
@@ -380,6 +383,24 @@ const AppContentInner: React.FC = () => {
   // Guest Mode State
   const [isGuest, setIsGuest] = useState(false);
   const [loginReason, setLoginReason] = useState<'premium' | undefined>(undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    loadUpdateGateConfig()
+      .then((config) => {
+        if (!cancelled) {
+          setUpdateGateConfig(config);
+        }
+      })
+      .catch((error) => {
+        console.warn('[UpdateGate] Failed to load update gate config:', error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleGuestEntry = useCallback(() => {
     isGuestRef.current = true;
@@ -1242,7 +1263,7 @@ const AppContentInner: React.FC = () => {
     sessionChannelRef.current?.postMessage({ type: 'NEW_SESSION_STARTED' });
   }, []);
 
-  const loadUserData = useCallback(async (userId: string, email?: string) => {
+  const loadUserData = useCallback(async (userId: string, email?: string | null) => {
     if (!supabase) return;
     setIsProfileLoadingHung(false);
 
@@ -1337,7 +1358,7 @@ const AppContentInner: React.FC = () => {
     }
   }, [showToast]);
 
-  async function loadUserDataSafe(userId: string, email?: string, accessToken?: string | null) {
+  async function loadUserDataSafe(userId: string, email?: string | null, accessToken?: string | null) {
     if (!supabase) return;
     setIsProfileLoadingHung(false);
     setProfileLoadError(null);
@@ -2083,6 +2104,10 @@ const AppContentInner: React.FC = () => {
         .catch((e: unknown) => console.warn('[ShadowNotes] Sync error:', e));
     }
   }, [isGuest]);
+
+  if (updateGateConfig?.blocked) {
+    return <ForceUpdateGate config={updateGateConfig} />;
+  }
 
   return (
     <div className="relative min-h-screen bg-black overflow-x-hidden">

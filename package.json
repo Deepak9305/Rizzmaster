@@ -6,9 +6,12 @@
     "dev": "node dev-server.js",
     "dev:vite": "vite",
     "dev:api": "node dev-api-server.js",
+    "start:cloud-run": "node cloud-run-server.js",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "verify:native-config": "node scripts/verify-native-config.js"
+    "verify:native-config": "node scripts/verify-native-config.js",
+    "db:export-supabase": "node scripts/export-supabase-data.mjs",
+    "db:import-cloudsql": "node scripts/import-cloudsql-data.mjs"
   },
   "dependencies": {
     "@capacitor-community/admob": "^8.0.0",
@@ -30,8 +33,11 @@
     "@google/genai": "*",
     "@supabase/supabase-js": "^2.39.8",
     "cordova-plugin-purchase": "^13.0.0",
+    "firebase": "^11.10.0",
+    "firebase-admin": "^13.0.2",
     "onesignal-cordova-plugin": "^5.3.3",
     "openai": "^4.28.0",
+    "pg": "^8.13.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

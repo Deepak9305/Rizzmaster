@@ -12,8 +12,8 @@ const PROFILE_BOOTSTRAP_FAILED_ERROR = 'PROFILE_BOOTSTRAP_FAILED';
 const CREDIT_DEDUCTION_FAILED_ERROR = 'CREDIT_DEDUCTION_FAILED';
 
 // Model Configuration
-const TEXT_MODEL = 'llama-3.3-70b-versatile';
-const VISION_MODEL = 'llama-3.2-90b-vision-preview';
+const TEXT_MODEL = 'openai/gpt-oss-120b';
+const VISION_MODEL = 'gemini-2.5-flash-lite';
 
 const getPreferredModel = (hasImage: boolean) => (
   hasImage ? VISION_MODEL : TEXT_MODEL

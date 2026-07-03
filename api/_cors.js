@@ -7,6 +7,8 @@ const ALLOWED_ORIGIN_PATTERNS = [
   /^https:\/\/www\.rizzmaster\.online$/,
   /^https:\/\/rizzmaster\.vercel\.app$/,
   /^https:\/\/[a-z0-9-]+\.vercel\.app$/,
+  /^https:\/\/[a-z0-9-]+-uc\.a\.run\.app$/,
+  /^https:\/\/[a-z0-9-]+\.run\.app$/,
 ];
 
 export const applyCors = (req, res) => {

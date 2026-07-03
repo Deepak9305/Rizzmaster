@@ -1,0 +1,11 @@
+node_modules
+dist
+android
+.git
+.vercel
+*.log
+*.png
+build_output.txt
+build_utf8.txt
+tsc_error.log
+tsc_utf8.log

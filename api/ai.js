@@ -1,21 +1,29 @@
 import OpenAI from "openai";
+import {
+  GoogleGenAI,
+  createModelContent,
+  createPartFromBase64,
+  createPartFromText,
+  createUserContent,
+} from "@google/genai";
 import { supabase, supabaseAdmin } from './_supabase.js';
 import { ensureUserProfile } from './_profiles.js';
 import { applyCors } from './_cors.js';
 
 const DEFAULT_BASE_URL = "https://api.groq.com/openai/v1";
 const ALLOWED_MODELS = new Set([
+  "openai/gpt-oss-120b",
+  "gemini-2.5-flash-lite",
+  // Allow older clients during staged rollout; backend remaps them below.
   "meta-llama/llama-4-scout-17b-16e-instruct",
   "llama-3.3-70b-versatile",
   "llama-3.2-90b-vision-preview",
 ]);
 const TEXT_MODEL_FALLBACKS = [
-  "llama-3.3-70b-versatile",
-  "meta-llama/llama-4-scout-17b-16e-instruct",
+  "openai/gpt-oss-120b",
 ];
 const VISION_MODEL_FALLBACKS = [
-  "llama-3.2-90b-vision-preview",
-  "meta-llama/llama-4-scout-17b-16e-instruct",
+  "gemini-2.5-flash-lite",
 ];
 const MAX_MESSAGES = 8;
 const MAX_TEXT_LENGTH = 16000;
@@ -293,9 +301,14 @@ const withProviderTimeout = async (promise, timeoutMs) => {
   }
 };
 
+const GEMINI_VISION_MODEL = "gemini-2.5-flash-lite";
+const GROQ_TEXT_MODEL = "openai/gpt-oss-120b";
+
 const getModelFallbackChain = (requestedModel, isImageRequest) => {
+  const canonicalModel = isImageRequest ? GEMINI_VISION_MODEL : GROQ_TEXT_MODEL;
   const chain = [
     requestedModel,
+    canonicalModel,
     ...(isImageRequest ? VISION_MODEL_FALLBACKS : TEXT_MODEL_FALLBACKS),
   ];
 
@@ -303,8 +316,80 @@ const getModelFallbackChain = (requestedModel, isImageRequest) => {
     typeof model === "string" &&
     ALLOWED_MODELS.has(model) &&
     chain.indexOf(model) === index
-  ));
+  )).map((model) => {
+    if (isImageRequest) {
+      return model === "gemini-2.5-flash-lite" ? model : GEMINI_VISION_MODEL;
+    }
+    return model === "openai/gpt-oss-120b" ? model : GROQ_TEXT_MODEL;
+  }).filter((model, index, array) => array.indexOf(model) === index);
 };
+
+const getMimeTypeFromDataUrl = (value) => {
+  if (typeof value !== "string") return null;
+  const match = value.match(/^data:([^;,]+);base64,/i);
+  return match?.[1] || null;
+};
+
+const getBase64PayloadFromDataUrl = (value) => {
+  if (typeof value !== "string") return null;
+  const match = value.match(/^data:[^;,]+;base64,(.+)$/i);
+  return match?.[1] || null;
+};
+
+const extractSystemInstruction = (messages) => {
+  const parts = [];
+  for (const message of messages || []) {
+    if (message?.role !== "system") continue;
+    if (typeof message.content === "string") {
+      parts.push(message.content.trim());
+      continue;
+    }
+    if (Array.isArray(message.content)) {
+      const text = message.content
+        .filter((part) => part?.type === "text" && typeof part.text === "string")
+        .map((part) => part.text.trim())
+        .filter(Boolean)
+        .join("\n");
+      if (text) {
+        parts.push(text);
+      }
+    }
+  }
+  return parts.join("\n\n").trim() || null;
+};
+
+const toGeminiPart = (part) => {
+  if (part?.type === "text" && typeof part.text === "string") {
+    return createPartFromText(part.text);
+  }
+
+  if (part?.type === "image_url" && typeof part?.image_url?.url === "string") {
+    const mimeType = getMimeTypeFromDataUrl(part.image_url.url) || "image/jpeg";
+    const base64Data = getBase64PayloadFromDataUrl(part.image_url.url);
+    if (!base64Data) {
+      throw new Error("Unsupported image payload for Gemini provider.");
+    }
+    return createPartFromBase64(base64Data, mimeType);
+  }
+
+  throw new Error("Unsupported Gemini message part.");
+};
+
+const toGeminiContents = (messages) => (
+  (messages || [])
+    .filter((message) => message?.role !== "system")
+    .map((message) => {
+      const contentParts = typeof message.content === "string"
+        ? message.content
+        : message.content.map(toGeminiPart);
+
+      if (message.role === "assistant") {
+        return createModelContent(contentParts);
+      }
+
+      return createUserContent(contentParts);
+    })
+);
 
 export default async function handler(req, res) {
   if (applyCors(req, res)) return;
@@ -390,11 +475,6 @@ export default async function handler(req, res) {
     return json(res, 429, { error: "Too many requests. Please try again later." });
   }
 
-  const apiKey = process.env.GROQ_API_KEY || process.env.LLAMA_API_KEY;
-  if (!apiKey) {
-    return json(res, 500, { error: "AI provider key is not configured on the server." });
-  }
-
   let cost = 1;
   let isPremium = false;
   let creditsDeducted = false;
@@ -467,27 +547,54 @@ export default async function handler(req, res) {
       console.log(`[AI API] Guest generation allowed for IP: ${identifier}. Frontend will manage local credits.`);
     }
 
-    // Call Groq / AI provider
-    const client = new OpenAI({
-      apiKey,
-      baseURL: process.env.LLAMA_BASE_URL || DEFAULT_BASE_URL,
-    });
-
     const candidateModels = getModelFallbackChain(request.model, isImageRequest);
     let completion = null;
     let content = "";
     let lastProviderError = null;
+    const systemInstruction = extractSystemInstruction(request.messages);
 
     for (const candidateModel of candidateModels) {
       try {
-        completion = await withProviderTimeout(
-          client.chat.completions.create({
-            ...request,
-            model: candidateModel,
-          }),
-          AI_PROVIDER_TIMEOUT_MS
-        );
-        content = completion.choices?.[0]?.message?.content?.trim() || "";
+        if (isImageRequest) {
+          const geminiApiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+          if (!geminiApiKey) {
+            throw new Error("Gemini API key is not configured on the server.");
+          }
+
+          const gemini = new GoogleGenAI({ apiKey: geminiApiKey });
+          completion = await withProviderTimeout(
+            gemini.models.generateContent({
+              model: candidateModel,
+              contents: toGeminiContents(request.messages),
+              config: {
+                temperature: request.temperature,
+                maxOutputTokens: request.max_tokens,
+                ...(systemInstruction ? { systemInstruction } : {}),
+              },
+            }),
+            AI_PROVIDER_TIMEOUT_MS
+          );
+          content = completion.text?.trim() || "";
+        } else {
+          const groqApiKey = process.env.GROQ_API_KEY || process.env.LLAMA_API_KEY;
+          if (!groqApiKey) {
+            throw new Error("Groq API key is not configured on the server.");
+          }
+
+          const client = new OpenAI({
+            apiKey: groqApiKey,
+            baseURL: process.env.LLAMA_BASE_URL || DEFAULT_BASE_URL,
+          });
+
+          completion = await withProviderTimeout(
+            client.chat.completions.create({
+              ...request,
+              model: candidateModel,
+            }),
+            AI_PROVIDER_TIMEOUT_MS
+          );
+          content = completion.choices?.[0]?.message?.content?.trim() || "";
+        }
 
         if (content) {
           if (candidateModel !== request.model) {

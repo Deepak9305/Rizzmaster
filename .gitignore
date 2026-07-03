@@ -15,3 +15,5 @@ pnpm-debug.log*
 
 .vercel
 .env*
+migration/
+.tmp-rizz-*.png

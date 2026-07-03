@@ -1,0 +1,13 @@
+export const routes = {
+  '/api/ai': () => import('./ai.js'),
+  '/api/profile': () => import('./profile.js'),
+  '/api/profile/claim-daily': () => import('./profile-claim-daily.js'),
+  '/api/saved-items': () => import('./saved-items.js'),
+  '/api/reports': () => import('./reports.js'),
+  '/api/activity': () => import('./activity.js'),
+  '/api/activity/time': () => import('./activity-time.js'),
+  '/api/runtime-config': () => import('./runtime-config.js'),
+  '/api/delete-account': () => import('./delete-account.js'),
+  '/api/revoke-premium': () => import('./revoke-premium.js'),
+  '/api/verify-purchase': () => import('./verify-purchase.js'),
+};
