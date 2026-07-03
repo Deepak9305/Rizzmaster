@@ -69,4 +69,11 @@ dependencies {
     implementation 'com.google.ads.mediation:facebook:6.18.0.0'
 }
 
+def googleServicesJson = file('google-services.json')
+if (googleServicesJson.exists()) {
+    // Enable Firebase Android wiring only when the native config file is present.
+    apply plugin: 'com.google.gms.google-services'
+    apply plugin: 'com.google.firebase.crashlytics'
+}
+
 apply from: 'capacitor.build.gradle'

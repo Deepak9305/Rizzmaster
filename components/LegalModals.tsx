@@ -1,4 +1,5 @@
 import React from 'react';
+import { LEGAL_LINKS } from '../services/legalLinks';
 
 interface LegalModalProps {
   type: 'privacy' | 'terms';
@@ -33,8 +34,8 @@ const LegalModals: React.FC<LegalModalProps> = ({ type, onClose }) => {
             <>
               <section>
                 <h3 className="text-white font-bold mb-2">Privacy Summary</h3>
-                <p>We respect your privacy. This app collects minimal data (e.g., email, credits) to operate the service. User inputs and chat history are processed solely for the purpose of generating flirty responses and custom coach suggestions. Your data is handled securely and is never sold to third parties.</p>
-                <p className="mt-4 text-xs opacity-50">For full details, please check the Privacy Policy link on our App Store / Play Store listing.</p>
+                <p>We respect your privacy. This app collects the minimum data needed to operate the service, including login email, profile data, saved items, and generated content history. User inputs and chat history are processed only to generate responses and suggestions.</p>
+                <p className="mt-4 text-xs opacity-50">Full policy: <a href={LEGAL_LINKS.privacy} target="_blank" rel="noreferrer" className="underline underline-offset-4 text-white/70">{LEGAL_LINKS.privacy}</a></p>
               </section>
               <section>
                 <h3 className="text-white font-bold mb-2">Account Deletion</h3>
@@ -43,14 +44,14 @@ const LegalModals: React.FC<LegalModalProps> = ({ type, onClose }) => {
             </>
           ) : (
             <>
-               <section>
+              <section>
                 <h3 className="text-white font-bold mb-2">Terms Overview</h3>
                 <p>Rizz Master is for entertainment purposes only. AI-generated advice may be inaccurate or inappropriate; please use your own judgment.</p>
               </section>
               <section>
                 <h3 className="text-white font-bold mb-2">User Conduct</h3>
                 <p>You agree not to use this service to generate harmful, illegal, or harassing content. We reserve the right to ban users who violate this policy.</p>
-                <p className="mt-4 text-xs opacity-50">For full terms, please check the Terms of Service link on our App Store / Play Store listing.</p>
+                <p className="mt-4 text-xs opacity-50">Full terms: <a href={LEGAL_LINKS.terms} target="_blank" rel="noreferrer" className="underline underline-offset-4 text-white/70">{LEGAL_LINKS.terms}</a></p>
               </section>
             </>
           )}
