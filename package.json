@@ -33,8 +33,6 @@
     "@google/genai": "*",
     "@supabase/supabase-js": "^2.39.8",
     "cordova-plugin-purchase": "^13.0.0",
-    "firebase": "^11.10.0",
-    "firebase-admin": "^13.0.2",
     "onesignal-cordova-plugin": "^5.3.3",
     "openai": "^4.28.0",
     "pg": "^8.13.1",

@@ -1,7 +1,5 @@
 import { applyCors } from './_cors.js';
-import { getRequestAuth } from './_firebase.js';
-import { incrementTotalTimeSpent } from './_profiles.js';
-import { isDatabaseConfigured } from './_db.js';
+import { createRequestSupabaseClient, getAuthenticatedUser, getBearerToken, supabase } from './_supabase.js';
 
 const LOGIN_REQUIRED_CODE = 'LOGIN_REQUIRED';
 const SUPABASE_BACKEND_UNAVAILABLE_CODE = 'SUPABASE_BACKEND_UNAVAILABLE';
@@ -26,37 +24,51 @@ export default async function handler(req, res) {
     return json(res, 405, { error: 'Method not allowed.' });
   }
 
-  if (!isDatabaseConfigured) {
+  if (!supabase) {
     return json(res, 503, {
-      error: 'Database is not configured on the server.',
+      error: 'Supabase integration not configured on the server.',
       code: SUPABASE_BACKEND_UNAVAILABLE_CODE,
     });
   }
 
-  let auth;
-  try {
-    auth = await getRequestAuth(req);
-  } catch (error) {
+  const token = getBearerToken(req);
+  if (!token) {
+    return json(res, 401, {
+      error: 'Missing or invalid authorization header.',
+      code: LOGIN_REQUIRED_CODE,
+    });
+  }
+
+  const { user, error } = await getAuthenticatedUser(token);
+  if (error || !user) {
     return json(res, 401, {
       error: 'Unauthorized. Invalid or expired session.',
       code: LOGIN_REQUIRED_CODE,
     });
   }
 
-  if (!auth.user || auth.isGuest) {
-    return json(res, 401, {
-      error: 'Time tracking requires an authenticated account.',
-      code: LOGIN_REQUIRED_CODE,
+  const requestClient = createRequestSupabaseClient(token);
+  if (!requestClient) {
+    return json(res, 503, {
+      error: 'Supabase integration not configured on the server.',
+      code: SUPABASE_BACKEND_UNAVAILABLE_CODE,
     });
   }
 
-  try {
-    const body = parseBody(req.body);
-    const inputMs = Number(body.inputMs);
-    const totalTimeSpentMs = await incrementTotalTimeSpent(auth.user.id, inputMs);
-    return json(res, 200, { totalTimeSpentMs });
-  } catch (error) {
-    console.error('[Activity Time API] Request failed:', error);
-    return json(res, 500, { error: error?.message || 'Time tracking failed.' });
+  const body = parseBody(req.body);
+  const inputMs = Number(body.inputMs);
+  if (!Number.isFinite(inputMs) || inputMs <= 0) {
+    return json(res, 400, { error: 'A positive inputMs value is required.' });
   }
+
+  const { data, error: rpcError } = await requestClient.rpc('increment_total_time_spent', {
+    input_ms: Math.floor(inputMs),
+  });
+
+  if (rpcError) {
+    console.error('[Activity Time API] Request failed:', rpcError);
+    return json(res, 500, { error: rpcError.message || 'Time tracking failed.' });
+  }
+
+  return json(res, 200, { userId: user.id, totalTimeSpentMs: data ?? null });
 }

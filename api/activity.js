@@ -1,7 +1,5 @@
 import { applyCors } from './_cors.js';
-import { getRequestAuth } from './_firebase.js';
-import { isDatabaseConfigured } from './_db.js';
-import { recordUserActivity } from './_profiles.js';
+import { createRequestSupabaseClient, getAuthenticatedUser, getBearerToken, supabase } from './_supabase.js';
 
 const LOGIN_REQUIRED_CODE = 'LOGIN_REQUIRED';
 const SUPABASE_BACKEND_UNAVAILABLE_CODE = 'SUPABASE_BACKEND_UNAVAILABLE';
@@ -21,37 +19,51 @@ export default async function handler(req, res) {
     return json(res, 405, { error: 'Method not allowed.' });
   }
 
-  if (!isDatabaseConfigured) {
+  if (!supabase) {
     return json(res, 503, {
-      error: 'Database is not configured on the server.',
+      error: 'Supabase integration not configured on the server.',
       code: SUPABASE_BACKEND_UNAVAILABLE_CODE,
     });
   }
 
-  let auth;
-  try {
-    auth = await getRequestAuth(req);
-  } catch (error) {
+  const token = getBearerToken(req);
+  if (!token) {
+    return json(res, 401, {
+      error: 'Missing or invalid authorization header.',
+      code: LOGIN_REQUIRED_CODE,
+    });
+  }
+
+  const { user, error } = await getAuthenticatedUser(token);
+  if (error || !user) {
     return json(res, 401, {
       error: 'Unauthorized. Invalid or expired session.',
       code: LOGIN_REQUIRED_CODE,
     });
   }
 
-  if (!auth.user || auth.isGuest) {
-    return json(res, 401, {
-      error: 'Activity tracking requires an authenticated account.',
-      code: LOGIN_REQUIRED_CODE,
+  const requestClient = createRequestSupabaseClient(token);
+  if (!requestClient) {
+    return json(res, 503, {
+      error: 'Supabase integration not configured on the server.',
+      code: SUPABASE_BACKEND_UNAVAILABLE_CODE,
     });
   }
 
   const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+  const activeDate = readString(body.activeDate) || new Date().toISOString().slice(0, 10);
 
-  try {
-    await recordUserActivity(auth.user.id, readString(body.activeDate) || undefined);
-    return json(res, 200, { success: true });
-  } catch (error) {
-    console.error('[Activity API] Request failed:', error);
+  const { error: upsertError } = await requestClient
+    .from('user_activity_log')
+    .upsert(
+      [{ user_id: user.id, active_date: activeDate }],
+      { onConflict: 'user_id,active_date', ignoreDuplicates: true }
+    );
+
+  if (upsertError) {
+    console.error('[Activity API] Request failed:', upsertError);
     return json(res, 500, { error: 'Activity tracking failed.' });
   }
+
+  return json(res, 200, { success: true });
 }

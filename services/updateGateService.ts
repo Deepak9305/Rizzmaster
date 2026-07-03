@@ -1,9 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
-import { getRemoteConfig, fetchAndActivate, getValue, isSupported } from 'firebase/remote-config';
-import { firebaseApp } from './firebaseClient';
-import { requestBackend } from './backendApi';
-import { runtimeConfig } from './runtimeConfig';
+import { getApiUrl } from './runtimeConfig';
 
 export type UpdateGateConfig = {
   forceUpdateEnabled: boolean;
@@ -13,7 +10,7 @@ export type UpdateGateConfig = {
   updateMessage: string;
   currentVersion: string;
   blocked: boolean;
-  source: 'firebase-remote-config' | 'backend-fallback';
+  source: 'backend';
 };
 
 const normalizeBoolean = (value: unknown) => {
@@ -57,37 +54,11 @@ export const getCurrentAppVersion = async () => {
   return __APP_VERSION__;
 };
 
-const fetchFromFirebaseRemoteConfig = async () => {
-  if (!firebaseApp || !runtimeConfig.remoteConfigAvailable || !(await isSupported())) {
-    return null;
-  }
-
-  const remoteConfig = getRemoteConfig(firebaseApp);
-  remoteConfig.settings.minimumFetchIntervalMillis = 60_000;
-  remoteConfig.defaultConfig = {
-    force_update_enabled: 'false',
-    min_supported_version: '0.0.0',
-    latest_version: '',
-    update_url: '',
-    update_message: 'A newer Rizz Master build is required to continue.',
-  };
-
-  await fetchAndActivate(remoteConfig);
-
-  return {
-    force_update_enabled: getValue(remoteConfig, 'force_update_enabled').asString(),
-    min_supported_version: getValue(remoteConfig, 'min_supported_version').asString(),
-    latest_version: getValue(remoteConfig, 'latest_version').asString(),
-    update_url: getValue(remoteConfig, 'update_url').asString(),
-    update_message: getValue(remoteConfig, 'update_message').asString(),
-  };
-};
-
-const fetchFromBackendFallback = async () => {
-  const { response, data } = await requestBackend('/api/runtime-config', {
+const fetchFromBackend = async () => {
+  const response = await fetch(getApiUrl('/api/runtime-config'), {
     method: 'GET',
-    requireAuth: false,
   });
+  const data = await response.json().catch(() => null);
 
   if (!response.ok || !data) {
     throw new Error('Failed to fetch runtime config.');
@@ -98,22 +69,7 @@ const fetchFromBackendFallback = async () => {
 
 export const loadUpdateGateConfig = async (): Promise<UpdateGateConfig> => {
   const currentVersion = await getCurrentAppVersion();
-
-  let source: UpdateGateConfig['source'] = 'backend-fallback';
-  let rawConfig = null;
-
-  try {
-    rawConfig = await fetchFromFirebaseRemoteConfig();
-    if (rawConfig) {
-      source = 'firebase-remote-config';
-    }
-  } catch (error) {
-    console.warn('[UpdateGate] Firebase Remote Config fetch failed, falling back to backend:', error);
-  }
-
-  if (!rawConfig) {
-    rawConfig = await fetchFromBackendFallback();
-  }
+  const rawConfig = await fetchFromBackend();
 
   const forceUpdateEnabled = normalizeBoolean(rawConfig.force_update_enabled);
   const minSupportedVersion = rawConfig.min_supported_version || '0.0.0';
@@ -130,6 +86,6 @@ export const loadUpdateGateConfig = async (): Promise<UpdateGateConfig> => {
     updateMessage,
     currentVersion,
     blocked,
-    source,
+    source: 'backend',
   };
 };
