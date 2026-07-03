@@ -488,9 +488,13 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
   }
 
   const lineItems = Array.isArray(payload.lineItems) ? payload.lineItems : [];
+  const lineItemProductIds = [...new Set(lineItems.map((item) => (
+    typeof item?.productId === "string" ? item.productId.trim() : ""
+  )).filter(Boolean))];
+  const normalizedProductId = lineItemProductIds.length === 1 ? lineItemProductIds[0] : productId;
   const matchingLineItem = lineItems.find((item) => {
     const itemProductId = typeof item?.productId === "string" ? item.productId.trim() : "";
-    return itemProductId === productId;
+    return itemProductId === normalizedProductId;
   });
 
   if (!matchingLineItem) {
@@ -502,15 +506,23 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
       verificationErrorCode: "GOOGLE_PLAY_PRODUCT_MISMATCH",
       verificationStatusCode: 400,
       safeErrorMessage: "Google Play verified a different subscription than the one requested.",
-      googleLineItemProductIds: lineItems.map((item) => (
-        typeof item?.productId === "string" ? item.productId.trim() : null
-      )).filter(Boolean),
+      googleLineItemProductIds: lineItemProductIds,
     });
     throw new PurchaseVerificationError(
       "Google Play verified a different subscription than the one requested.",
       "GOOGLE_PLAY_PRODUCT_MISMATCH",
       400
     );
+  }
+
+  if (normalizedProductId !== productId) {
+    logIap("warn", "Client productId normalized from Google line item.", {
+      platform: "android",
+      clientProductId: productId,
+      normalizedProductId,
+      basePlanId: basePlanId || null,
+      ...diagnostics,
+    });
   }
 
   const verifiedBasePlanId = readGoogleBasePlanId(matchingLineItem);

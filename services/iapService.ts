@@ -137,6 +137,10 @@ const getGooglePurchaseToken = (receipt: any, fallback?: any) => {
     );
 };
 
+const getAndroidSubscriptionProductId = () => {
+    return IAP_CONFIG.WEEKLY.androidId || IAP_CONFIG.MONTHLY.androidId || '';
+};
+
 const logIapJson = (message: string, data: Record<string, any>) => {
     try {
         console.log(`${message} ${JSON.stringify(data)}`);
@@ -285,9 +289,10 @@ class IAPService {
                         : null;
             const isAndroid = Capacitor.getPlatform() === 'android';
             const isIOS = Capacitor.getPlatform() === 'ios';
+            const configuredAndroidProductId = isAndroid ? getAndroidSubscriptionProductId() : '';
             const expectedProductId = pendingConfig
                 ? (isIOS ? pendingConfig.iosId : pendingConfig.androidId)
-                : productId;
+                : (isAndroid && configuredAndroidProductId ? configuredAndroidProductId : productId);
             const expectedBasePlanId = pendingConfig && isAndroid
                 ? pendingConfig.androidBasePlanId
                 : basePlanId;
