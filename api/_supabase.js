@@ -262,6 +262,26 @@ const createCompatClient = (isAdmin) => ({
             const user = await verifyFirebaseToken(token);
             return { data: { user }, error: null };
           } catch (error) {
+            if (legacySupabaseClient) {
+              try {
+                const { data, error: legacyError } = await legacySupabaseClient.auth.getUser(token);
+                if (!legacyError && data?.user) {
+                  return { data, error: null };
+                }
+
+                if (legacyError) {
+                  return { data: null, error: buildUnauthorizedError(legacyError.message || 'Invalid token.') };
+                }
+              } catch (legacyLookupError) {
+                return {
+                  data: null,
+                  error: buildUnauthorizedError(
+                    legacyLookupError?.message || error?.message || 'Invalid token.'
+                  ),
+                };
+              }
+            }
+
             return { data: null, error: buildUnauthorizedError(error?.message || 'Invalid token.') };
           }
         },
@@ -299,10 +319,18 @@ const createLegacyServerClient = (url, key) => createClient(url, key, {
   },
 });
 
+const legacySupabaseClient = (supabaseUrl && supabaseAnonKey)
+  ? createLegacyServerClient(supabaseUrl, supabaseAnonKey)
+  : null;
+
+const legacySupabaseAdminClient = (supabaseUrl && supabaseServiceKey)
+  ? createLegacyServerClient(supabaseUrl, supabaseServiceKey)
+  : null;
+
 export const supabase = isDatabaseConfigured
   ? createCompatClient(false)
-  : (supabaseUrl && supabaseAnonKey ? createLegacyServerClient(supabaseUrl, supabaseAnonKey) : null);
+  : legacySupabaseClient;
 
 export const supabaseAdmin = isDatabaseConfigured
   ? createCompatClient(true)
-  : (supabaseUrl && supabaseServiceKey ? createLegacyServerClient(supabaseUrl, supabaseServiceKey) : null);
+  : legacySupabaseAdminClient;
