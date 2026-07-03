@@ -7,7 +7,7 @@ import {
     AdmobConsentDebugGeography,
     AdmobConsentStatus
 } from '@capacitor-community/admob';
-import { Capacitor } from '@capacitor/core';
+import { canUseNativeAdMob } from './nativeCapabilities';
 
 type PrepareOptions = {
     label: string;
@@ -115,7 +115,7 @@ export const AdMobService = {
     },
 
     async initialize(): Promise<boolean> {
-        if (!Capacitor.isNativePlatform()) return false;
+        if (!canUseNativeAdMob()) return false;
         if (this.initialized) return true;
         if (this.initPromise) return this.initPromise;
 
@@ -229,7 +229,7 @@ export const AdMobService = {
     },
 
     async prepareInterstitial(adId: string): Promise<boolean> {
-        if (!Capacitor.isNativePlatform()) return false;
+        if (!canUseNativeAdMob()) return false;
 
         const initialized = await this.ensureInitialized('Interstitial prepare');
         if (!initialized) {
@@ -280,7 +280,7 @@ export const AdMobService = {
     },
 
     async showInterstitial(adId: string, onShow?: () => void): Promise<boolean> {
-        if (!Capacitor.isNativePlatform()) return false;
+        if (!canUseNativeAdMob()) return false;
         if (this.isInterstitialShowing) return false;
         this.isInterstitialShowing = true;
 
@@ -388,7 +388,7 @@ export const AdMobService = {
     },
 
     async prepareRewardInterstitial(adId: string): Promise<boolean> {
-        if (!Capacitor.isNativePlatform()) return false;
+        if (!canUseNativeAdMob()) return false;
 
         const initialized = await this.ensureInitialized('Reward interstitial prepare');
         if (!initialized) {
@@ -442,7 +442,7 @@ export const AdMobService = {
     },
 
     async showRewardInterstitial(adId: string, onShow?: () => void): Promise<boolean> {
-        if (!Capacitor.isNativePlatform()) return false;
+        if (!canUseNativeAdMob()) return false;
         if (this.isRewardInterstitialShowing) return false;
         this.isRewardInterstitialShowing = true;
 
@@ -548,7 +548,7 @@ export const AdMobService = {
     },
 
     async prepareRewardVideo(adId: string): Promise<boolean> {
-        if (!Capacitor.isNativePlatform()) return false;
+        if (!canUseNativeAdMob()) return false;
 
         const initialized = await this.ensureInitialized('Reward video prepare');
         if (!initialized) {
@@ -602,7 +602,7 @@ export const AdMobService = {
     },
 
     async showRewardVideo(adId: string, onShow?: () => void): Promise<boolean> {
-        if (!Capacitor.isNativePlatform()) return false;
+        if (!canUseNativeAdMob()) return false;
         if (this.isRewardVideoShowing) return false;
         this.isRewardVideoShowing = true;
 

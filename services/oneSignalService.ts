@@ -1,5 +1,5 @@
 import OneSignal from 'onesignal-cordova-plugin';
-import { Capacitor } from '@capacitor/core';
+import { canUseNativeOneSignal } from './nativeCapabilities';
 
 // This is where you would put your OneSignal App ID
 // You can find this in OneSignal Dashboard -> Settings -> App Settings
@@ -9,7 +9,7 @@ export const OneSignalService = {
     initialized: false,
 
     async initialize() {
-        if (!Capacitor.isNativePlatform()) return;
+        if (!canUseNativeOneSignal()) return;
         if (this.initialized) return;
         this.initialized = true;
 
@@ -35,7 +35,7 @@ export const OneSignalService = {
     // Link a specific user ID for targeted notifications 
     // (e.g. sending a specific tip to one person)
     setExternalId(userId: string) {
-        if (!Capacitor.isNativePlatform()) return;
+        if (!canUseNativeOneSignal()) return;
 
         console.log('OneSignal: Setting External ID:', userId);
         OneSignal.login(userId);
@@ -43,7 +43,7 @@ export const OneSignalService = {
 
     // Remove the link when they log out
     logout() {
-        if (!Capacitor.isNativePlatform()) return;
+        if (!canUseNativeOneSignal()) return;
         OneSignal.logout();
     }
 };

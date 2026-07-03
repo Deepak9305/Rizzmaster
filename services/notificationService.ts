@@ -1,6 +1,6 @@
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Preferences } from '@capacitor/preferences';
-import { Capacitor } from '@capacitor/core';
+import { canUseNativeNotifications } from './nativeCapabilities';
 
 const USAGE_HISTORY_KEY = 'rizz_app_usage_history';
 const MAX_HISTORY_SAMPLES = 14; // Last 14 opens
@@ -116,7 +116,7 @@ export const NotificationService = {
      * Request permissions and initialize
      */
     async initialize() {
-        if (!Capacitor.isNativePlatform()) return;
+        if (!canUseNativeNotifications()) return;
 
         const permission = await LocalNotifications.checkPermissions();
         if (permission.display !== 'granted') {
@@ -135,7 +135,7 @@ export const NotificationService = {
      * Records the current hour of usage to learn patterns
      */
     async recordUsage() {
-        if (!Capacitor.isNativePlatform()) return;
+        if (!canUseNativeNotifications()) return;
 
         try {
             const { value } = await Preferences.get({ key: USAGE_HISTORY_KEY });
@@ -196,7 +196,7 @@ export const NotificationService = {
      * Schedules random notifications for the next 7 days at the optimal hour
      */
     async schedulePersonalizedNotifications() {
-        if (!Capacitor.isNativePlatform()) return;
+        if (!canUseNativeNotifications()) return;
 
         try {
             // 1. Clear existing scheduled notifications to avoid duplicates
@@ -263,4 +263,3 @@ export const NotificationService = {
         return date;
     }
 };
-

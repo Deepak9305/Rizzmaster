@@ -187,6 +187,10 @@ export const getApiUrl = (path: string) => {
     return normalizedPath;
   }
 
+  if (typeof window !== 'undefined' && window.location.origin === apiBaseUrl) {
+    return normalizedPath;
+  }
+
   return `${apiBaseUrl}${normalizedPath}`;
 };
 

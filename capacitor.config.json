@@ -3,6 +3,10 @@
   "appName": "RizzMaster",
   "webDir": "dist",
   "server": {
+    "url": "https://rizzmaster.online",
+    "allowNavigation": [
+      "rizzmaster.online"
+    ],
     "cleartext": false,
     "androidScheme": "https"
   },

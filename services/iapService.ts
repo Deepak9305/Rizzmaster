@@ -1,5 +1,6 @@
 import 'cordova-plugin-purchase';
 import { Capacitor } from '@capacitor/core';
+import { canUseNativeIap } from './nativeCapabilities';
 
 // Helper to safely get the CdvPurchase object (Native or Mock)
 const getCdvPurchase = () => {
@@ -185,7 +186,7 @@ class IAPService {
         this.onSuccess = onSuccess;
         this.onError = onError;
 
-        if (!Capacitor.isNativePlatform()) {
+        if (!canUseNativeIap()) {
             console.log("IAP: Not native platform, skipping initialization.");
             return;
         }
@@ -383,7 +384,7 @@ class IAPService {
     }
 
     async purchase(plan: 'WEEKLY' | 'MONTHLY', ownerUserId?: string | null) {
-        if (!Capacitor.isNativePlatform()) {
+        if (!canUseNativeIap()) {
             console.warn("IAP: Cannot purchase on web.");
             return;
         }
@@ -472,7 +473,7 @@ class IAPService {
     }
 
     async restore(ownerUserId?: string | null) {
-        if (!Capacitor.isNativePlatform()) return;
+        if (!canUseNativeIap()) return;
         const CdvPurchase = getCdvPurchase();
         try {
             this.activeIntent = 'restore';
@@ -494,7 +495,7 @@ class IAPService {
     }
 
     getPrice(plan: 'WEEKLY' | 'MONTHLY'): string | null {
-        if (!Capacitor.isNativePlatform()) return null;
+        if (!canUseNativeIap()) return null;
 
         const isIOS = Capacitor.getPlatform() === 'ios';
         const config = plan === 'WEEKLY' ? IAP_CONFIG.WEEKLY : IAP_CONFIG.MONTHLY;

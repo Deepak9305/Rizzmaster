@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { CoachMessage, CustomPersona } from '../types';
 import { generateCoachAdvice } from '../services/rizzService';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { canUseNativeCamera } from '../services/nativeCapabilities';
 import { Capacitor } from '@capacitor/core';
 import { useToast } from '../context/ToastContext';
 import { supabase } from '../services/supabaseClient';
@@ -438,7 +439,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
     }, [image, loading, isPremium, credits, messages, shadowNotes, onUpdateCredits, onUpdateShadowNotes, showToast, selectedVibe, customPersonas, onClose, onGoPremium, onLoginRequired]);
 
     const handleImageUpload = useCallback(async () => {
-        if (!Capacitor.isNativePlatform()) {
+        if (!canUseNativeCamera()) {
             fileInputRef.current?.click();
             return;
         }

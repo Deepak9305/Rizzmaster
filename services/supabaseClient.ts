@@ -331,6 +331,10 @@ const legacySupabaseClient = (runtimeConfig.supabaseUrl && runtimeConfig.supabas
     })
   : null;
 
-export const supabase = runtimeConfig.firebaseAuthAvailable
+const useFirebaseCompatAuth =
+  runtimeConfig.firebaseAuthAvailable &&
+  runtimeConfig.apiBaseUrl !== 'https://rizzmaster.online';
+
+export const supabase = useFirebaseCompatAuth
   ? firebaseCompatClient
   : legacySupabaseClient;

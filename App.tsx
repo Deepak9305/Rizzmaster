@@ -19,6 +19,17 @@ import IAPService from './services/iapService';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Network } from '@capacitor/network';
 import { getApiUrl, runtimeConfig } from './services/runtimeConfig';
+import {
+  canUseNativeAdMob,
+  canUseNativeAppEvents,
+  canUseNativeCamera,
+  canUseNativeGoogleAuth,
+  canUseNativeIap,
+  canUseNativeKeyboard,
+  canUseNativeNetwork,
+  canUseNativeOneSignal,
+  canUseNativeStatusBar,
+} from './services/nativeCapabilities';
 import ForceUpdateGate from './components/ForceUpdateGate';
 import { loadUpdateGateConfig, type UpdateGateConfig } from './services/updateGateService';
 
@@ -503,7 +514,7 @@ const AppContentInner: React.FC = () => {
   }, [isKeyboardVisible]);
 
   useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
+    if (!canUseNativeKeyboard()) return;
 
     let cancelled = false;
     const listenerHandles: Array<{ remove: () => Promise<void> | void }> = [];
@@ -535,7 +546,7 @@ const AppContentInner: React.FC = () => {
 
   // Handle Status Bar Visibility on Scroll
   useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
+    if (!canUseNativeStatusBar()) return;
 
     let isStatusBarVisible = false; // Track local state to prevent spamming bridge
 
@@ -573,6 +584,10 @@ const AppContentInner: React.FC = () => {
   // Network Connectivity Monitoring
   useEffect(() => {
     // Initial State
+    if (!canUseNativeNetwork()) {
+      return;
+    }
+
     Network.getStatus().then(status => {
       const isCurrentlyOffline = !status.connected;
       setIsOffline(isCurrentlyOffline);
@@ -607,7 +622,7 @@ const AppContentInner: React.FC = () => {
     profileRef.current = profile;
 
     // Link OneSignal External ID when profile is loaded
-    if (Capacitor.isNativePlatform() && profile?.id) {
+    if (canUseNativeOneSignal() && profile?.id) {
       OneSignalService.setExternalId(profile.id);
     }
   }, [profile]);
@@ -625,7 +640,7 @@ const AppContentInner: React.FC = () => {
 
   // Track Active Time (Foreground)
   useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
+    if (!canUseNativeAppEvents()) return;
 
     // Start tracking active time immediately
     const interval = setInterval(() => {
@@ -880,7 +895,7 @@ const AppContentInner: React.FC = () => {
 
   // Initialize Native Services
   useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
+    if (!canUseNativeAppEvents()) return;
 
     const timerIds: ReturnType<typeof setTimeout>[] = [];
     let isMounted = true;
@@ -888,7 +903,7 @@ const AppContentInner: React.FC = () => {
     // Defer heavy native plugin initialization so the initial React render is fully unblocked
     timerIds.push(setTimeout(() => {
       // Google Auth
-      if (runtimeConfig.googleClientId) {
+      if (canUseNativeGoogleAuth() && runtimeConfig.googleClientId) {
         try {
           GoogleAuth.initialize({
             clientId: runtimeConfig.googleClientId,
@@ -898,14 +913,16 @@ const AppContentInner: React.FC = () => {
         } catch (error) {
           console.warn('[Startup] GoogleAuth initialization failed:', error);
         }
-      } else {
+      } else if (!runtimeConfig.googleClientId) {
         console.warn('[Startup] GoogleAuth initialization skipped because VITE_GOOGLE_CLIENT_ID is missing.');
       }
 
       // AdMob
-      runAdTask('Initial AdMob init', AdMobService.initialize().then(() => {
-        return AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'));
-      }));
+      if (canUseNativeAdMob()) {
+        runAdTask('Initial AdMob init', AdMobService.initialize().then(() => {
+          return AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'));
+        }));
+      }
 
       // In-App Purchases
       try {
@@ -1014,7 +1031,7 @@ const AppContentInner: React.FC = () => {
 
   // Native Back Button Handler
   useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
+    if (!canUseNativeAppEvents()) return;
 
     let backButtonListener: any;
 
@@ -1522,8 +1539,10 @@ const AppContentInner: React.FC = () => {
       localStorage.removeItem('rizzmaster_guest_shadow_notes');
       localStorage.removeItem('rizz_coach_shadow_notes');
 
-      if (Capacitor.isNativePlatform()) {
+      if (canUseNativeGoogleAuth()) {
         try { await GoogleAuth.signOut(); } catch (error) { console.warn("Native Logout err", error); }
+      }
+      if (canUseNativeOneSignal()) {
         OneSignalService.logout();
       }
     } catch (err) {
@@ -1610,7 +1629,7 @@ const AppContentInner: React.FC = () => {
 
   const handleRestorePurchases = useCallback(async () => {
     if (!profileRef.current) return;
-    if (Capacitor.isNativePlatform()) {
+    if (canUseNativeIap()) {
       IAPService.restore(profileRef.current.id);
     } else {
       showToast('Restore purchases is only available in the mobile app.', 'info');
@@ -1806,7 +1825,7 @@ const AppContentInner: React.FC = () => {
 
 
   const handleCameraCapture = useCallback(async () => {
-    if (!Capacitor.isNativePlatform()) {
+    if (!canUseNativeCamera()) {
       fileInputRef.current?.click();
       return;
     }
@@ -1842,7 +1861,7 @@ const AppContentInner: React.FC = () => {
   }, [inputError, showToast]);
 
   const handleGalleryCapture = useCallback(async () => {
-    if (!Capacitor.isNativePlatform()) {
+    if (!canUseNativeCamera()) {
       fileInputRef.current?.click();
       return;
     }
@@ -1925,7 +1944,7 @@ const AppContentInner: React.FC = () => {
     }
 
     let shouldShowAd = false;
-    if (!currentProfile.is_premium && Capacitor.isNativePlatform()) {
+    if (!currentProfile.is_premium && canUseNativeAdMob()) {
       const today = new Date().toDateString();
       const lastAdDate = localStorage.getItem('rizz_last_ad_date');
       let genCount = parseInt(localStorage.getItem('rizz_daily_gen_count') || '0');

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { getAuthUnavailableMessage, getRuntimeConfigDebugMessage, runtimeConfig } from '../services/runtimeConfig';
+import { canUseNativeGoogleAuth } from '../services/nativeCapabilities';
 import LegalModals from './LegalModals';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
-import { Capacitor } from '@capacitor/core';
 
 interface LoginPageProps {
     onGuestEntry?: () => void;
@@ -54,8 +54,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
     const authUnavailableMessage = getAuthUnavailableMessage();
     const authDebugMessage = getRuntimeConfigDebugMessage();
     const isAuthAvailable = runtimeConfig.authAvailable;
-    const isNativePlatform = Capacitor.isNativePlatform();
-    const isGoogleLoginConfigured = isNativePlatform ? Boolean(runtimeConfig.googleClientId) : isAuthAvailable;
+    const canUseNativeGoogleLogin = canUseNativeGoogleAuth();
+    const isGoogleLoginConfigured = canUseNativeGoogleLogin ? Boolean(runtimeConfig.googleClientId) : isAuthAvailable;
 
     // State for Legal Modals
     const [activeLegalModal, setActiveLegalModal] = useState<'privacy' | 'terms' | null>(null);
@@ -71,7 +71,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
         setError(null);
         setMessage(null);
         try {
-            if (isNativePlatform) {
+            if (canUseNativeGoogleLogin) {
                 // --- NATIVE AUTH (Android/iOS) ---
                 console.log("Starting Native Google Sign-In");
 
@@ -131,7 +131,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
             }
         } catch (err: any) {
             console.error("General Login Error:", err);
-            if (!isNativePlatform) {
+            if (!canUseNativeGoogleLogin) {
                 setError(normalizeAuthError(err, 'google'));
             }
         } finally {

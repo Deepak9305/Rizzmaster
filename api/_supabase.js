@@ -327,10 +327,84 @@ const legacySupabaseAdminClient = (supabaseUrl && supabaseServiceKey)
   ? createLegacyServerClient(supabaseUrl, supabaseServiceKey)
   : null;
 
+const createLegacyAuthBridge = (client) => {
+  if (!client) {
+    return null;
+  }
+
+  return {
+    from: (...args) => client.from(...args),
+    rpc: (...args) => client.rpc(...args),
+    auth: {
+      ...client.auth,
+      async getUser(token) {
+        try {
+          const user = await verifyFirebaseToken(token);
+          return { data: { user }, error: null };
+        } catch (firebaseError) {
+          try {
+            const { data, error } = await client.auth.getUser(token);
+            if (error || !data?.user) {
+              return {
+                data: null,
+                error: buildUnauthorizedError(
+                  error?.message || firebaseError?.message || 'Invalid token.'
+                ),
+              };
+            }
+
+            return { data, error: null };
+          } catch (legacyLookupError) {
+            return {
+              data: null,
+              error: buildUnauthorizedError(
+                legacyLookupError?.message || firebaseError?.message || 'Invalid token.'
+              ),
+            };
+          }
+        }
+      },
+    },
+  };
+};
+
+const createLegacyAdminBridge = (client) => {
+  if (!client) {
+    return null;
+  }
+
+  return {
+    from: (...args) => client.from(...args),
+    rpc: (...args) => client.rpc(...args),
+    auth: {
+      ...client.auth,
+      admin: {
+        ...client.auth?.admin,
+        async deleteUser(userId, shouldSoftDelete = true) {
+          try {
+            await firebaseAuthAdmin.deleteUser(userId);
+            return { error: null };
+          } catch (firebaseError) {
+            try {
+              return await client.auth.admin.deleteUser(userId, shouldSoftDelete);
+            } catch (legacyError) {
+              return {
+                error: buildError(
+                  legacyError?.message || firebaseError?.message || 'Failed to delete auth user.'
+                ),
+              };
+            }
+          }
+        },
+      },
+    },
+  };
+};
+
 export const supabase = isDatabaseConfigured
   ? createCompatClient(false)
-  : legacySupabaseClient;
+  : createLegacyAuthBridge(legacySupabaseClient);
 
 export const supabaseAdmin = isDatabaseConfigured
   ? createCompatClient(true)
-  : legacySupabaseAdminClient;
+  : createLegacyAdminBridge(legacySupabaseAdminClient);

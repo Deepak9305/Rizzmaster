@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import IAPService from '../services/iapService';
-import { Capacitor } from '@capacitor/core';
+import { canUseNativeIap } from '../services/nativeCapabilities';
 
 interface PremiumModalProps {
     onClose: () => void;
@@ -23,9 +23,10 @@ const FEATURES = [
 const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onRestore, isGuest = false, userId = null }) => {
     const [selectedPlan, setSelectedPlan] = useState<'WEEKLY' | 'MONTHLY'>('WEEKLY');
     const [prices, setPrices] = useState({ weekly: '$4.99', monthly: '$15.99' });
+    const hasNativePurchases = canUseNativeIap();
 
     useEffect(() => {
-        if (Capacitor.isNativePlatform()) {
+        if (hasNativePurchases) {
             const fetchPrices = () => {
                 const weeklyPrice = IAPService.getPrice('WEEKLY');
                 const monthlyPrice = IAPService.getPrice('MONTHLY');
@@ -40,7 +41,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onResto
             const timer = setTimeout(fetchPrices, 1500);
             return () => clearTimeout(timer);
         }
-    }, []);
+    }, [hasNativePurchases]);
 
     const handleSubscribe = () => {
         // Guests must sign up first — check before native platform
@@ -48,7 +49,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onResto
             onUpgrade(selectedPlan);
             return;
         }
-        if (Capacitor.isNativePlatform()) {
+        if (hasNativePurchases) {
             IAPService.purchase(selectedPlan, userId);
         } else {
             onUpgrade(selectedPlan);
@@ -154,10 +155,10 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onResto
                     className="w-full py-3 bg-gradient-to-r from-yellow-600 to-amber-500 text-black font-bold rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-lg flex flex-col items-center leading-tight mb-4 animate-shimmer bg-[length:200%_100%]"
                 >
                     <span className="text-sm">
-                        {Capacitor.isNativePlatform() ? '🔓 Subscribe & Upgrade' : '🔓 Sign Up to Unlock'}
+                        {hasNativePurchases ? '🔓 Subscribe & Upgrade' : '🔓 Sign Up to Unlock'}
                     </span>
                     <span className="text-[10px] opacity-80 uppercase mt-0.5">
-                        {Capacitor.isNativePlatform()
+                        {hasNativePurchases
                             ? (selectedPlan === 'WEEKLY' ? `${prices.weekly} billed weekly` : `${prices.monthly} billed monthly`)
                             : 'Free account required · Takes 30 seconds'}
                     </span>

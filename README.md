@@ -41,10 +41,10 @@ The project uses a localized Tailwind build process rather than a CDN.
 1. Install dependencies: `npm install`
 2. Build for production: `npm run build`
 3. Sync Capacitor Android assets: `npx cap sync android`
-4. Verify the native shell still loads bundled assets: `npm run verify:native-config`
+4. Verify the native shell matches the declared Capacitor launch mode: `npm run verify:native-config`
 5. Deploy native builds via Android Studio.
 
-*Note: The `capacitor.config.json` intentionally omits a remote `server.url` so Android loads bundled assets. If `npm run verify:native-config` fails, a remote launch URL has been reintroduced and must be removed unless `CAPACITOR_ALLOW_REMOTE_SERVER=true` is intentional.*
+*Note: `npm run verify:native-config` compares the generated Android `server_url` against `capacitor.config.json`. In the current wrapper setup, Android is expected to load `https://rizzmaster.online` directly.*
 
 ### 4. Security Enhancements
 - **Double-Spend Guards:** The credit system uses backend RPC checks with row locking so concurrent requests cannot spend below zero.
