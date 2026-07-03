@@ -242,15 +242,6 @@ const assertFutureExpiry = (expiresAt) => {
   }
 };
 
-const googlePlayAccountIdsForUser = (userId) => {
-  if (typeof userId !== "string" || !userId.trim()) return new Set();
-
-  const raw = userId.trim().toLowerCase();
-  const md5 = crypto.createHash("md5").update(userId.trim()).digest("hex").toLowerCase();
-
-  return new Set([raw, md5]);
-};
-
 const readGoogleExternalAccountId = (payload) => {
   const value = payload?.externalAccountIdentifiers?.obfuscatedExternalAccountId;
   return typeof value === "string" ? value.trim() : "";
@@ -462,30 +453,6 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
   }
 
   const verifiedExternalAccountId = readGoogleExternalAccountId(payload);
-  const expectedExternalAccountIds = googlePlayAccountIdsForUser(appUserId);
-  const normalizedVerifiedExternalAccountId = verifiedExternalAccountId.toLowerCase();
-
-  if (
-    verifiedExternalAccountId &&
-    expectedExternalAccountIds.size > 0 &&
-    !expectedExternalAccountIds.has(normalizedVerifiedExternalAccountId)
-  ) {
-    logIap("warn", "Google Play account mismatch", {
-      platform: "android",
-      productId,
-      basePlanId: basePlanId || null,
-      ...diagnostics,
-      verificationErrorCode: "PURCHASE_ACCOUNT_MISMATCH",
-      verificationStatusCode: 409,
-      safeErrorMessage: "Google Play verified this purchase for a different Rizzmaster account.",
-      googleHasExternalAccountId: true,
-    });
-    throw new PurchaseVerificationError(
-      "Google Play verified this purchase for a different Rizzmaster account.",
-      "PURCHASE_ACCOUNT_MISMATCH",
-      409
-    );
-  }
 
   const lineItems = Array.isArray(payload.lineItems) ? payload.lineItems : [];
   const lineItemProductIds = [...new Set(lineItems.map((item) => (

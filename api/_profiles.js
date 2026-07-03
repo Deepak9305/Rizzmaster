@@ -704,44 +704,59 @@ export const setPremium = async ({
   expiresAt,
   rawPayload,
 }) => withTransaction(async (client) => {
-  if (purchaseTokenIdentifier) {
-    const conflict = await client.query(
+  const priorOwnerIds = new Set();
+
+  if (purchaseTokenIdentifier || transactionIdentifier) {
+    const priorOwners = await client.query(
       `
-        SELECT user_id
+        SELECT DISTINCT user_id
         FROM premium_subscriptions
-        WHERE purchase_token_identifier = $1
-          AND user_id <> $2
-        LIMIT 1
+        WHERE user_id <> $1
+          AND (
+            ($2::text IS NOT NULL AND purchase_token_identifier = $2)
+            OR ($3::text IS NOT NULL AND transaction_id = $3)
+          )
       `,
-      [purchaseTokenIdentifier, userId]
+      [userId, purchaseTokenIdentifier || null, transactionIdentifier || null]
     );
-    if (conflict.rows[0]) {
-      throw new AppDataError(
-        'This subscription is already linked to another Rizzmaster account. Please log in with that account or contact support.',
-        'PURCHASE_ALREADY_LINKED',
-        409
-      );
+
+    for (const row of priorOwners.rows) {
+      if (row?.user_id) {
+        priorOwnerIds.add(row.user_id);
+      }
     }
   }
 
-  if (transactionIdentifier) {
-    const conflict = await client.query(
+  if (priorOwnerIds.size > 0) {
+    await client.query(
       `
-        SELECT user_id
-        FROM premium_subscriptions
-        WHERE transaction_id = $1
-          AND user_id <> $2
-        LIMIT 1
+        UPDATE premium_subscriptions
+        SET is_active = FALSE,
+            updated_at = NOW()
+        WHERE user_id = ANY($1::uuid[])
+          AND (
+            ($2::text IS NOT NULL AND purchase_token_identifier = $2)
+            OR ($3::text IS NOT NULL AND transaction_id = $3)
+          )
       `,
-      [transactionIdentifier, userId]
+      [[...priorOwnerIds], purchaseTokenIdentifier || null, transactionIdentifier || null]
     );
-    if (conflict.rows[0]) {
-      throw new AppDataError(
-        'This subscription is already linked to another Rizzmaster account. Please log in with that account or contact support.',
-        'PURCHASE_ALREADY_LINKED',
-        409
-      );
-    }
+
+    await client.query(
+      `
+        UPDATE profiles
+        SET is_premium = FALSE,
+            premium_source = 'transferred',
+            premium_platform = NULL,
+            premium_product_id = NULL,
+            premium_base_plan_id = NULL,
+            premium_transaction_id = NULL,
+            premium_expires_at = NULL,
+            updated_at = NOW()
+        WHERE id = ANY($1::uuid[])
+      `,
+      [[...priorOwnerIds]]
+    );
   }
 
   const profileResult = await client.query(
