@@ -26,11 +26,63 @@ const readEnv = (...keys) => {
   return "";
 };
 
+const logIap = (level, message, metadata = {}) => {
+  const entry = {
+    level,
+    scope: "iap",
+    message,
+    ...metadata,
+  };
+  const serialized = JSON.stringify(entry);
+
+  if (level === "error") {
+    console.error(serialized);
+    return;
+  }
+
+  if (level === "warn") {
+    console.warn(serialized);
+    return;
+  }
+
+  console.info(serialized);
+};
+
 const toSafeErrorMessage = (error) => {
   if (error instanceof Error && typeof error.message === "string" && error.message.trim()) {
     return error.message.trim();
   }
   return "Unknown verification error.";
+};
+
+const toSafeStack = (error) => {
+  if (!(error instanceof Error) || typeof error.stack !== "string") {
+    return null;
+  }
+
+  return error.stack
+    .split("\n")
+    .slice(0, 5)
+    .join("\n");
+};
+
+const getGoogleApiErrorDetails = (payload) => {
+  const nestedError = payload?.error && typeof payload.error === "object" ? payload.error : null;
+  const topLevelError = typeof payload?.error === "string" ? payload.error : null;
+  const safeMessage = typeof nestedError?.message === "string"
+    ? nestedError.message.trim()
+    : typeof payload?.error_description === "string"
+      ? payload.error_description.trim()
+      : null;
+  const safeStatus = typeof nestedError?.status === "string" ? nestedError.status.trim() : null;
+  const safeCode = Number.isFinite(nestedError?.code) ? nestedError.code : null;
+
+  return {
+    googleApiError: topLevelError,
+    googleApiErrorCode: safeCode,
+    googleApiErrorStatus: safeStatus,
+    googleApiErrorMessage: safeMessage,
+  };
 };
 
 const buildGooglePlayDiagnostics = ({
@@ -215,7 +267,7 @@ const getGooglePlayConfig = () => {
       clientEmail = typeof parsed.client_email === "string" ? parsed.client_email.trim() : "";
       privateKey = typeof parsed.private_key === "string" ? parsed.private_key.trim() : "";
     } catch {
-      console.error("[IAP] Google Play configuration error", {
+      logIap("error", "Google Play configuration error", {
         ...getGooglePlayDiagnostics(),
         verificationErrorCode: "GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_INVALID",
         verificationStatusCode: 503,
@@ -235,7 +287,7 @@ const getGooglePlayConfig = () => {
   const packageName = readEnv("GOOGLE_PLAY_PACKAGE_NAME", "ANDROID_PACKAGE_NAME") || DEFAULT_APP_ID;
 
   if (!clientEmail || !privateKey || !packageName) {
-    console.error("[IAP] Google Play configuration error", {
+    logIap("error", "Google Play configuration error", {
       ...getGooglePlayDiagnostics(),
       verificationErrorCode: "GOOGLE_PLAY_CONFIG_MISSING",
       verificationStatusCode: 503,
@@ -309,11 +361,13 @@ const fetchGoogleAccessToken = async () => {
   const payload = await parseJsonResponse(response);
   if (!response.ok || !payload?.access_token) {
     const safeErrorMessage = `Google Play auth failed${payload?.error ? `: ${payload.error}` : "."}`;
-    console.error("[IAP] Google Play auth failure", {
+    logIap("error", "Google Play auth failure", {
       ...diagnostics,
       verificationErrorCode: "GOOGLE_PLAY_AUTH_FAILED",
       verificationStatusCode: response.status === 400 || response.status === 401 ? 503 : 502,
       safeErrorMessage,
+      googleAuthHttpStatus: response.status,
+      ...getGoogleApiErrorDetails(payload),
     });
     throw new PurchaseVerificationError(
       safeErrorMessage,
@@ -338,7 +392,7 @@ const readGoogleBasePlanId = (lineItem) => {
 const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, appUserId }) => {
   const { packageName } = getGooglePlayConfig();
   const diagnostics = getGooglePlayDiagnostics();
-  console.info("[IAP] Google Play verification start", {
+  logIap("info", "Google Play verification start", {
     platform: "android",
     productId,
     basePlanId: basePlanId || null,
@@ -359,7 +413,7 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
   const payload = await parseJsonResponse(response);
 
   if (response.status === 404) {
-    console.warn("[IAP] Google Play verification failure", {
+    logIap("warn", "Google Play verification failure", {
       platform: "android",
       productId,
       basePlanId: basePlanId || null,
@@ -367,6 +421,8 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
       verificationErrorCode: "GOOGLE_PLAY_TOKEN_NOT_FOUND",
       verificationStatusCode: 400,
       safeErrorMessage: "Google Play did not recognize this purchase token.",
+      googleApiHttpStatus: response.status,
+      ...getGoogleApiErrorDetails(payload),
     });
     throw new PurchaseVerificationError(
       "Google Play did not recognize this purchase token.",
@@ -387,7 +443,7 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
       : response.status === 401
         ? "Google Play verification authentication failed."
         : "Google Play verification request failed.";
-    console.error("[IAP] Google Play verification request failure", {
+    logIap("error", "Google Play verification request failure", {
       platform: "android",
       productId,
       basePlanId: basePlanId || null,
@@ -395,6 +451,8 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
       verificationErrorCode,
       verificationStatusCode,
       safeErrorMessage,
+      googleApiHttpStatus: response.status,
+      ...getGoogleApiErrorDetails(payload),
     });
     throw new PurchaseVerificationError(
       safeErrorMessage,
@@ -412,6 +470,16 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
     expectedExternalAccountIds.size > 0 &&
     !expectedExternalAccountIds.has(normalizedVerifiedExternalAccountId)
   ) {
+    logIap("warn", "Google Play account mismatch", {
+      platform: "android",
+      productId,
+      basePlanId: basePlanId || null,
+      ...diagnostics,
+      verificationErrorCode: "PURCHASE_ACCOUNT_MISMATCH",
+      verificationStatusCode: 409,
+      safeErrorMessage: "Google Play verified this purchase for a different Rizzmaster account.",
+      googleHasExternalAccountId: true,
+    });
     throw new PurchaseVerificationError(
       "Google Play verified this purchase for a different Rizzmaster account.",
       "PURCHASE_ACCOUNT_MISMATCH",
@@ -426,7 +494,7 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
   });
 
   if (!matchingLineItem) {
-    console.warn("[IAP] Google Play verification failure", {
+    logIap("warn", "Google Play verification failure", {
       platform: "android",
       productId,
       basePlanId: basePlanId || null,
@@ -434,6 +502,9 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
       verificationErrorCode: "GOOGLE_PLAY_PRODUCT_MISMATCH",
       verificationStatusCode: 400,
       safeErrorMessage: "Google Play verified a different subscription than the one requested.",
+      googleLineItemProductIds: lineItems.map((item) => (
+        typeof item?.productId === "string" ? item.productId.trim() : null
+      )).filter(Boolean),
     });
     throw new PurchaseVerificationError(
       "Google Play verified a different subscription than the one requested.",
@@ -445,7 +516,7 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
   const verifiedBasePlanId = readGoogleBasePlanId(matchingLineItem);
 
   if (basePlanId && verifiedBasePlanId && basePlanId !== verifiedBasePlanId) {
-    console.warn("[IAP] Client basePlanId mismatch. Using Google verified base plan.", {
+    logIap("warn", "Client basePlanId mismatch. Using Google verified base plan.", {
       clientBasePlanId: basePlanId,
       verifiedBasePlanId,
       productId,
@@ -456,7 +527,7 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
   try {
     assertFutureExpiry(expiresAt);
   } catch (error) {
-    console.warn("[IAP] Google Play verification failure", {
+    logIap("warn", "Google Play verification failure", {
       platform: "android",
       productId,
       basePlanId: basePlanId || null,
@@ -464,6 +535,7 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
       verificationErrorCode: "GOOGLE_PLAY_EXPIRED",
       verificationStatusCode: 400,
       safeErrorMessage: toSafeErrorMessage(error),
+      googleSubscriptionState: typeof payload.subscriptionState === "string" ? payload.subscriptionState : null,
     });
     throw new PurchaseVerificationError(
       "The verified subscription is expired.",
@@ -481,7 +553,7 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
   ]);
 
   if (blockedStates.has(state)) {
-    console.warn("[IAP] Google Play verification failure", {
+    logIap("warn", "Google Play verification failure", {
       platform: "android",
       productId,
       basePlanId: basePlanId || null,
@@ -489,6 +561,7 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
       verificationErrorCode: "GOOGLE_PLAY_EXPIRED",
       verificationStatusCode: 400,
       safeErrorMessage: `Google Play reported the subscription state as ${state}.`,
+      googleSubscriptionState: state,
     });
     throw new PurchaseVerificationError(
       `Google Play reported the subscription state as ${state}.`,
@@ -497,11 +570,14 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
     );
   }
 
-  console.info("[IAP] Google Play verification success", {
+  logIap("info", "Google Play verification success", {
     platform: "android",
     productId,
     basePlanId: verifiedBasePlanId || basePlanId || null,
     ...diagnostics,
+    googleSubscriptionState: state || null,
+    googleHasExternalAccountId: Boolean(verifiedExternalAccountId),
+    hasExpiryTime: Boolean(expiresAt),
   });
 
   return {
@@ -652,7 +728,7 @@ export const verifyStorePurchase = async ({
   appUserId,
 }) => {
   const diagnostics = platform === "android" ? getGooglePlayDiagnostics() : null;
-  console.info("[IAP] verifyStorePurchase invoked", {
+  logIap("info", "verifyStorePurchase invoked", {
     platform,
     productId,
     basePlanId: basePlanId || null,
@@ -663,7 +739,7 @@ export const verifyStorePurchase = async ({
     try {
       return await verifyGooglePlayPurchase({ productId, basePlanId, purchaseToken, appUserId });
     } catch (error) {
-      console.error("[IAP] verifyStorePurchase failed", {
+      logIap("error", "verifyStorePurchase failed", {
         platform,
         productId,
         basePlanId: basePlanId || null,
@@ -671,6 +747,7 @@ export const verifyStorePurchase = async ({
         verificationErrorCode: error?.code || "UNKNOWN_VERIFICATION_ERROR",
         verificationStatusCode: error?.statusCode || 500,
         safeErrorMessage: toSafeErrorMessage(error),
+        safeStack: toSafeStack(error),
       });
       throw error;
     }

@@ -19,6 +19,34 @@ const PURCHASE_VERIFICATION_BACKEND_ERROR_CODE = "PURCHASE_VERIFICATION_BACKEND_
 const PURCHASE_ALREADY_LINKED_CODE = "PURCHASE_ALREADY_LINKED";
 const PURCHASE_ACCOUNT_MISMATCH_CODE = "PURCHASE_ACCOUNT_MISMATCH";
 
+const getRequestId = (req) => {
+  const value = req?.headers?.["x-vercel-id"];
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+};
+
+const logIapApi = (level, message, metadata = {}) => {
+  const entry = {
+    level,
+    scope: "iap-api",
+    route: "/api/verify-purchase",
+    message,
+    ...metadata,
+  };
+  const serialized = JSON.stringify(entry);
+
+  if (level === "error") {
+    console.error(serialized);
+    return;
+  }
+
+  if (level === "warn") {
+    console.warn(serialized);
+    return;
+  }
+
+  console.info(serialized);
+};
+
 const readString = (value) => {
   if (typeof value === "string") {
     return value.trim();
@@ -82,6 +110,9 @@ const toSafeErrorLog = (error) => ({
 export default async function handler(req, res) {
   if (applyCors(req, res)) return;
 
+  const requestId = getRequestId(req);
+  const startedAt = Date.now();
+
   if (req.method !== "POST") {
     return json(res, 405, { error: "Method not allowed." });
   }
@@ -89,7 +120,7 @@ export default async function handler(req, res) {
   // 1. Authentication
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    console.warn("[IAP API] Missing authorization header.");
+    logIapApi("warn", "Missing authorization header.", { requestId });
     return json(res, 401, {
       error: "Missing or invalid authorization header.",
       code: LOGIN_REQUIRED_CODE
@@ -98,7 +129,7 @@ export default async function handler(req, res) {
   const token = authHeader.slice("Bearer ".length).trim();
 
   if (!token) {
-    console.warn("[IAP API] Empty bearer token.");
+    logIapApi("warn", "Empty bearer token.", { requestId });
     return json(res, 401, {
       error: "Empty authorization token.",
       code: LOGIN_REQUIRED_CODE
@@ -116,7 +147,8 @@ export default async function handler(req, res) {
   try {
     const { data, error } = await supabase.auth.getUser(token);
     if (error || !data || !data.user) {
-      console.warn("[IAP API] Invalid Supabase token.", {
+      logIapApi("warn", "Invalid Supabase token.", {
+        requestId,
         message: error?.message || null,
       });
       return json(res, 401, {
@@ -126,7 +158,10 @@ export default async function handler(req, res) {
     }
     user = data.user;
   } catch (err) {
-    console.error("[IAP API] Token verification request failed:", err);
+    logIapApi("error", "Token verification request failed.", {
+      requestId,
+      safeErrorMessage: err instanceof Error ? err.message : "Unknown auth backend error.",
+    });
     return json(res, 503, {
       error: "Token verification failed because the auth backend could not be reached.",
       code: SUPABASE_BACKEND_UNAVAILABLE_CODE
@@ -138,7 +173,11 @@ export default async function handler(req, res) {
   try {
     const { error: profileError } = await ensureUserProfile(supabaseAdmin, user);
     if (profileError) {
-      console.error("[IAP API] Failed to prepare profile before premium sync:", profileError);
+      logIapApi("error", "Failed to prepare profile before premium sync.", {
+        requestId,
+        userId,
+        safeErrorMessage: profileError.message || "Unknown profile bootstrap error.",
+      });
       return json(res, 500, {
         error: "Could not prepare your profile for premium verification.",
         code: PROFILE_BOOTSTRAP_FAILED_CODE
@@ -159,7 +198,7 @@ export default async function handler(req, res) {
     const expiresAt = normalizeOptionalTimestamp(body.expiresAt);
 
     if (!normalizedPlatform || !productId || !transactionId) {
-      console.warn("[IAP API] Missing basic purchase data.");
+      logIapApi("warn", "Missing basic purchase data.", { requestId, userId });
       return json(res, 400, { 
         error: "Missing required purchase information (platform, productId, transactionId).",
         code: "INVALID_PURCHASE_DATA"
@@ -174,7 +213,8 @@ export default async function handler(req, res) {
     }
 
     if (ownerUserId && ownerUserId !== userId) {
-      console.warn("[IAP API] Purchase owner mismatch blocked.", {
+      logIapApi("warn", "Purchase owner mismatch blocked.", {
+        requestId,
         authenticatedUserId: userId,
         clientOwnerUserId: ownerUserId,
         platform: normalizedPlatform,
@@ -189,14 +229,26 @@ export default async function handler(req, res) {
     }
 
     if (normalizedPlatform === 'android' && !purchaseToken) {
-      console.warn("[IAP API] Missing Android-specific purchase data.");
+      logIapApi("warn", "Missing Android-specific purchase data.", {
+        requestId,
+        userId,
+        platform: normalizedPlatform,
+        productId,
+      });
       return json(res, 400, {
         error: "Missing Android purchase info (purchaseToken).",
         code: "INVALID_PURCHASE_DATA"
       });
     }
 
-    console.log("[IAP API] Verifying purchase", {
+    logIapApi("info", "Verifying purchase.", {
+      requestId,
+      userId,
+      intent,
+      plan,
+      hasPurchaseToken: Boolean(purchaseToken),
+      hasTransactionId: Boolean(transactionId),
+      hasOrderId: Boolean(orderId),
       ...buildSafeVerificationLog({
         platform: normalizedPlatform,
         productId,
@@ -217,21 +269,27 @@ export default async function handler(req, res) {
         rawReceipt,
         appUserId: userId,
       });
-      console.info("[IAP API] verifyStorePurchase succeeded", {
+      logIapApi("info", "verifyStorePurchase succeeded.", {
+        requestId,
+        userId,
         ...buildSafeVerificationLog({
           platform: normalizedPlatform,
           productId,
           basePlanId,
         }),
+        durationMs: Date.now() - startedAt,
       });
     } catch (error) {
-      console.error("[IAP API] verifyStorePurchase failed", {
+      logIapApi("error", "verifyStorePurchase failed.", {
+        requestId,
+        userId,
         ...buildSafeVerificationLog({
           platform: normalizedPlatform,
           productId,
           basePlanId,
         }),
         ...toSafeErrorLog(error),
+        durationMs: Date.now() - startedAt,
       });
       if (!allowUnverified) {
         if (error instanceof PurchaseVerificationError) {
@@ -241,14 +299,23 @@ export default async function handler(req, res) {
           });
         }
 
-        console.error("[IAP API] Unexpected purchase verification error:", error);
+        logIapApi("error", "Unexpected purchase verification error.", {
+          requestId,
+          userId,
+          safeErrorMessage: error instanceof Error ? error.message : "Unknown purchase verification error.",
+          durationMs: Date.now() - startedAt,
+        });
         return json(res, 502, {
           error: "Purchase verification failed because the store backend could not be reached.",
           code: PURCHASE_VERIFICATION_BACKEND_ERROR_CODE,
         });
       }
 
-      console.warn("[IAP API] ALLOW_UNVERIFIED_IAP override enabled. Granting premium without store proof.", error);
+      logIapApi("warn", "ALLOW_UNVERIFIED_IAP override enabled. Granting premium without store proof.", {
+        requestId,
+        userId,
+        safeErrorMessage: error instanceof Error ? error.message : "Unknown verification failure",
+      });
       verificationResult = {
         expiresAt: expiresAt || null,
         orderId,
@@ -286,7 +353,15 @@ export default async function handler(req, res) {
     });
 
     if (rpcError) {
-      console.error("[IAP API] RPC admin_set_premium error:", rpcError);
+      logIapApi("error", "RPC admin_set_premium error.", {
+        requestId,
+        userId,
+        platform: normalizedPlatform,
+        productId,
+        basePlanId: verifiedBasePlanId,
+        safeErrorMessage: rpcError.message || "Unknown premium sync error.",
+        durationMs: Date.now() - startedAt,
+      });
       if (rpcError.message?.includes("already linked to another account")) {
         return json(res, 409, {
           error: "This subscription is already linked to another Rizzmaster account. Please log in with that account or contact support.",
@@ -299,6 +374,14 @@ export default async function handler(req, res) {
       });
     }
 
+    logIapApi("info", "Premium verification applied successfully.", {
+      requestId,
+      userId,
+      platform: normalizedPlatform,
+      productId,
+      basePlanId: verifiedBasePlanId,
+      durationMs: Date.now() - startedAt,
+    });
     return json(res, 200, { 
       success: true, 
       message: "Premium subscription verified and applied successfully.",
@@ -324,7 +407,11 @@ export default async function handler(req, res) {
         code: error.code,
       });
     }
-    console.error("Verify purchase error:", error);
+    logIapApi("error", "Verify purchase request failed.", {
+      requestId,
+      safeErrorMessage: error instanceof Error ? error.message : "Unknown verify purchase error.",
+      durationMs: Date.now() - startedAt,
+    });
     return json(res, 500, { error: "Failed to process purchase verification." });
   }
 }
