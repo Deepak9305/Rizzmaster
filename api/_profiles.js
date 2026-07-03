@@ -1,4 +1,4 @@
-import { pool, withTransaction } from './_db.js';
+import { isDatabaseConfigured, pool, withTransaction } from './_db.js';
 
 const DEFAULT_FREE_CREDITS = 5;
 
@@ -61,12 +61,84 @@ const loadProfileByEmail = async (client, email, lockRow = false) => {
   return result.rows[0] || null;
 };
 
+const isSupabaseLikeClient = (value) => typeof value?.from === 'function';
+
+const loadLegacyProfileById = async (client, userId) => {
+  const { data, error } = await client
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .limit(1);
+
+  if (error) {
+    throw new AppDataError(error.message || 'Failed to load profile', 'PROFILE_BOOTSTRAP_FAILED', 500);
+  }
+
+  return Array.isArray(data) ? (data[0] || null) : (data || null);
+};
+
+const ensureLegacyUserProfile = async (client, user) => {
+  let profile = await loadLegacyProfileById(client, user.id);
+
+  if (profile) {
+    if (user.email && user.email !== profile.email) {
+      const { data: updated, error: updateError } = await client
+        .from('profiles')
+        .update({ email: user.email })
+        .eq('id', user.id)
+        .select('*')
+        .maybeSingle();
+
+      if (updateError) {
+        throw new AppDataError(
+          updateError.message || 'Failed to update profile email',
+          'PROFILE_BOOTSTRAP_FAILED',
+          500
+        );
+      }
+
+      profile = updated || profile;
+    }
+
+    return { profile: normalizeProfileForApi(profile), created: false, migrated: false };
+  }
+
+  const defaults = buildDefaultProfile(user);
+  const { data: inserted, error: insertError } = await client
+    .from('profiles')
+    .insert(defaults)
+    .select('*')
+    .maybeSingle();
+
+  if (insertError) {
+    const existingProfile = await loadLegacyProfileById(client, user.id);
+    if (existingProfile) {
+      return { profile: normalizeProfileForApi(existingProfile), created: false, migrated: false };
+    }
+
+    throw new AppDataError(
+      insertError.message || 'Failed to create profile',
+      'PROFILE_BOOTSTRAP_FAILED',
+      500
+    );
+  }
+
+  return { profile: normalizeProfileForApi(inserted), created: true, migrated: false };
+};
+
 export const ensureUserProfile = async (maybeUserOrClient, maybeUser = null) => {
   const user = maybeUser && maybeUser.id ? maybeUser : maybeUserOrClient;
   const clientArg = maybeUser && maybeUser.id && maybeUserOrClient?.query ? maybeUserOrClient : null;
+  const legacyClientArg = !isDatabaseConfigured && maybeUser && maybeUser.id && isSupabaseLikeClient(maybeUserOrClient)
+    ? maybeUserOrClient
+    : null;
 
   if (!user?.id) {
     throw new AppDataError('User id is required to ensure profile', 'PROFILE_BOOTSTRAP_FAILED', 500);
+  }
+
+  if (legacyClientArg) {
+    return ensureLegacyUserProfile(legacyClientArg, user);
   }
 
   const work = async (client) => {

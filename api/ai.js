@@ -303,6 +303,7 @@ const withProviderTimeout = async (promise, timeoutMs) => {
 
 const GEMINI_VISION_MODEL = "gemini-2.5-flash-lite";
 const GROQ_TEXT_MODEL = "openai/gpt-oss-120b";
+const GROQ_TEXT_MIN_TOKENS = 120;
 
 const getModelFallbackChain = (requestedModel, isImageRequest) => {
   const canonicalModel = isImageRequest ? GEMINI_VISION_MODEL : GROQ_TEXT_MODEL;
@@ -590,6 +591,12 @@ export default async function handler(req, res) {
             client.chat.completions.create({
               ...request,
               model: candidateModel,
+              ...(candidateModel === GROQ_TEXT_MODEL
+                ? {
+                    max_tokens: Math.max(request.max_tokens || GROQ_TEXT_MIN_TOKENS, GROQ_TEXT_MIN_TOKENS),
+                    reasoning_effort: "low",
+                  }
+                : {}),
             }),
             AI_PROVIDER_TIMEOUT_MS
           );

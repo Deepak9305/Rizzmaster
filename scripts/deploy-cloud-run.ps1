@@ -24,6 +24,8 @@ $secrets = @(
 )
 
 $optionalSecrets = @(
+  @{ Secret = "groq-api-key"; Env = "GROQ_API_KEY" },
+  @{ Secret = "gemini-api-key"; Env = "GEMINI_API_KEY" },
   @{ Secret = "openai-api-key"; Env = "OPENAI_API_KEY" },
   @{ Secret = "google-play-service-account-json"; Env = "GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" },
   @{ Secret = "apple-app-store-issuer-id"; Env = "APPLE_APP_STORE_ISSUER_ID" },
