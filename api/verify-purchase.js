@@ -1,6 +1,6 @@
 import { supabase, supabaseAdmin } from './_supabase.js';
 import { ensureUserProfile } from './_profiles.js';
-import { PurchaseVerificationError, verifyStorePurchase } from './_iap.js';
+import { getGooglePlayDiagnostics, PurchaseVerificationError, verifyStorePurchase } from './_iap.js';
 import { applyCors } from './_cors.js';
 
 const json = (res, statusCode, payload) => {
@@ -65,6 +65,19 @@ const parseJsonBody = (body) => {
 
   return body;
 };
+
+const buildSafeVerificationLog = ({ platform, productId, basePlanId }) => ({
+  platform,
+  productId,
+  basePlanId: basePlanId || null,
+  ...(platform === "android" ? getGooglePlayDiagnostics() : {}),
+});
+
+const toSafeErrorLog = (error) => ({
+  verificationErrorCode: error?.code || "UNKNOWN_VERIFICATION_ERROR",
+  verificationStatusCode: error?.statusCode || 500,
+  safeErrorMessage: error instanceof Error && error.message ? error.message : "Unknown verification error.",
+});
 
 export default async function handler(req, res) {
   if (applyCors(req, res)) return;
@@ -184,15 +197,11 @@ export default async function handler(req, res) {
     }
 
     console.log("[IAP API] Verifying purchase", {
-      userId,
-      platform: normalizedPlatform,
-      productId,
-      basePlanId,
-      plan,
-      intent,
-      hasPurchaseToken: Boolean(purchaseToken),
-      hasTransactionId: Boolean(transactionId),
-      hasOrderId: Boolean(orderId),
+      ...buildSafeVerificationLog({
+        platform: normalizedPlatform,
+        productId,
+        basePlanId,
+      }),
     });
 
     const allowUnverified = process.env.ALLOW_UNVERIFIED_IAP === 'true';
@@ -208,7 +217,22 @@ export default async function handler(req, res) {
         rawReceipt,
         appUserId: userId,
       });
+      console.info("[IAP API] verifyStorePurchase succeeded", {
+        ...buildSafeVerificationLog({
+          platform: normalizedPlatform,
+          productId,
+          basePlanId,
+        }),
+      });
     } catch (error) {
+      console.error("[IAP API] verifyStorePurchase failed", {
+        ...buildSafeVerificationLog({
+          platform: normalizedPlatform,
+          productId,
+          basePlanId,
+        }),
+        ...toSafeErrorLog(error),
+      });
       if (!allowUnverified) {
         if (error instanceof PurchaseVerificationError) {
           return json(res, error.statusCode, {

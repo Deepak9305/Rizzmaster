@@ -26,6 +26,61 @@ const readEnv = (...keys) => {
   return "";
 };
 
+const toSafeErrorMessage = (error) => {
+  if (error instanceof Error && typeof error.message === "string" && error.message.trim()) {
+    return error.message.trim();
+  }
+  return "Unknown verification error.";
+};
+
+const buildGooglePlayDiagnostics = ({
+  hasGooglePlayServiceAccountJson,
+  hasGooglePlayClientEmail,
+  hasGooglePlayPrivateKey,
+  googlePlayPackageName,
+}) => ({
+  hasGooglePlayServiceAccountJson,
+  hasGooglePlayClientEmail,
+  hasGooglePlayPrivateKey,
+  googlePlayPackageName,
+});
+
+export const getGooglePlayDiagnostics = () => {
+  const rawServiceAccountJson = readEnv("GOOGLE_PLAY_SERVICE_ACCOUNT_JSON");
+  const fallbackClientEmail = readEnv("GOOGLE_PLAY_SERVICE_ACCOUNT_EMAIL", "GOOGLE_PLAY_CLIENT_EMAIL");
+  const fallbackPrivateKey = readEnv("GOOGLE_PLAY_SERVICE_ACCOUNT_PRIVATE_KEY", "GOOGLE_PLAY_PRIVATE_KEY");
+  const packageName = readEnv("GOOGLE_PLAY_PACKAGE_NAME", "ANDROID_PACKAGE_NAME") || DEFAULT_APP_ID;
+
+  if (!rawServiceAccountJson) {
+    return buildGooglePlayDiagnostics({
+      hasGooglePlayServiceAccountJson: false,
+      hasGooglePlayClientEmail: Boolean(fallbackClientEmail),
+      hasGooglePlayPrivateKey: Boolean(fallbackPrivateKey),
+      googlePlayPackageName: packageName,
+    });
+  }
+
+  try {
+    const parsed = JSON.parse(rawServiceAccountJson);
+    const parsedClientEmail = typeof parsed.client_email === "string" ? parsed.client_email.trim() : "";
+    const parsedPrivateKey = typeof parsed.private_key === "string" ? parsed.private_key.trim() : "";
+
+    return buildGooglePlayDiagnostics({
+      hasGooglePlayServiceAccountJson: true,
+      hasGooglePlayClientEmail: Boolean(parsedClientEmail || fallbackClientEmail),
+      hasGooglePlayPrivateKey: Boolean(parsedPrivateKey || fallbackPrivateKey),
+      googlePlayPackageName: packageName,
+    });
+  } catch {
+    return buildGooglePlayDiagnostics({
+      hasGooglePlayServiceAccountJson: true,
+      hasGooglePlayClientEmail: false,
+      hasGooglePlayPrivateKey: false,
+      googlePlayPackageName: packageName,
+    });
+  }
+};
+
 const normalizeMultilineSecret = (value) => value.replace(/\\n/g, "\n").trim();
 
 const base64UrlEncode = (value) => {
@@ -160,9 +215,15 @@ const getGooglePlayConfig = () => {
       clientEmail = typeof parsed.client_email === "string" ? parsed.client_email.trim() : "";
       privateKey = typeof parsed.private_key === "string" ? parsed.private_key.trim() : "";
     } catch {
+      console.error("[IAP] Google Play configuration error", {
+        ...getGooglePlayDiagnostics(),
+        verificationErrorCode: "GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_INVALID",
+        verificationStatusCode: 503,
+        safeErrorMessage: "GOOGLE_PLAY_SERVICE_ACCOUNT_JSON is not valid JSON.",
+      });
       throw new PurchaseVerificationError(
         "GOOGLE_PLAY_SERVICE_ACCOUNT_JSON is not valid JSON.",
-        "PURCHASE_VERIFICATION_UNAVAILABLE",
+        "GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_INVALID",
         503
       );
     }
@@ -174,9 +235,15 @@ const getGooglePlayConfig = () => {
   const packageName = readEnv("GOOGLE_PLAY_PACKAGE_NAME", "ANDROID_PACKAGE_NAME") || DEFAULT_APP_ID;
 
   if (!clientEmail || !privateKey || !packageName) {
+    console.error("[IAP] Google Play configuration error", {
+      ...getGooglePlayDiagnostics(),
+      verificationErrorCode: "GOOGLE_PLAY_CONFIG_MISSING",
+      verificationStatusCode: 503,
+      safeErrorMessage: "Google Play purchase verification is not configured on the server.",
+    });
     throw new PurchaseVerificationError(
       "Google Play purchase verification is not configured on the server.",
-      "PURCHASE_VERIFICATION_UNAVAILABLE",
+      "GOOGLE_PLAY_CONFIG_MISSING",
       503
     );
   }
@@ -214,6 +281,7 @@ const getAppleConfig = () => {
 
 const fetchGoogleAccessToken = async () => {
   const { clientEmail, privateKey } = getGooglePlayConfig();
+  const diagnostics = getGooglePlayDiagnostics();
   const issuedAt = Math.floor(Date.now() / 1000);
   const jwt = signRs256Jwt(
     { alg: "RS256", typ: "JWT" },
@@ -240,9 +308,16 @@ const fetchGoogleAccessToken = async () => {
 
   const payload = await parseJsonResponse(response);
   if (!response.ok || !payload?.access_token) {
+    const safeErrorMessage = `Google Play auth failed${payload?.error ? `: ${payload.error}` : "."}`;
+    console.error("[IAP] Google Play auth failure", {
+      ...diagnostics,
+      verificationErrorCode: "GOOGLE_PLAY_AUTH_FAILED",
+      verificationStatusCode: response.status === 400 || response.status === 401 ? 503 : 502,
+      safeErrorMessage,
+    });
     throw new PurchaseVerificationError(
-      `Google Play auth failed${payload?.error ? `: ${payload.error}` : "."}`,
-      "PURCHASE_VERIFICATION_BACKEND_ERROR",
+      safeErrorMessage,
+      "GOOGLE_PLAY_AUTH_FAILED",
       response.status === 400 || response.status === 401 ? 503 : 502
     );
   }
@@ -262,6 +337,13 @@ const readGoogleBasePlanId = (lineItem) => {
 
 const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, appUserId }) => {
   const { packageName } = getGooglePlayConfig();
+  const diagnostics = getGooglePlayDiagnostics();
+  console.info("[IAP] Google Play verification start", {
+    platform: "android",
+    productId,
+    basePlanId: basePlanId || null,
+    ...diagnostics,
+  });
   const accessToken = await fetchGoogleAccessToken();
 
   const response = await fetch(
@@ -277,20 +359,47 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
   const payload = await parseJsonResponse(response);
 
   if (response.status === 404) {
+    console.warn("[IAP] Google Play verification failure", {
+      platform: "android",
+      productId,
+      basePlanId: basePlanId || null,
+      ...diagnostics,
+      verificationErrorCode: "GOOGLE_PLAY_TOKEN_NOT_FOUND",
+      verificationStatusCode: 400,
+      safeErrorMessage: "Google Play did not recognize this purchase token.",
+    });
     throw new PurchaseVerificationError(
       "Google Play did not recognize this purchase token.",
-      "PURCHASE_VERIFICATION_FAILED",
+      "GOOGLE_PLAY_TOKEN_NOT_FOUND",
       400
     );
   }
 
   if (!response.ok || !payload) {
+    const verificationErrorCode = response.status === 403
+      ? "GOOGLE_PLAY_PERMISSION_DENIED"
+      : response.status === 401
+        ? "GOOGLE_PLAY_AUTH_FAILED"
+        : "PURCHASE_VERIFICATION_BACKEND_ERROR";
+    const verificationStatusCode = response.status === 401 || response.status === 403 ? 503 : 502;
+    const safeErrorMessage = response.status === 403
+      ? "Google Play verification permission denied."
+      : response.status === 401
+        ? "Google Play verification authentication failed."
+        : "Google Play verification request failed.";
+    console.error("[IAP] Google Play verification request failure", {
+      platform: "android",
+      productId,
+      basePlanId: basePlanId || null,
+      ...diagnostics,
+      verificationErrorCode,
+      verificationStatusCode,
+      safeErrorMessage,
+    });
     throw new PurchaseVerificationError(
-      "Google Play verification request failed.",
-      response.status === 401 || response.status === 403
-        ? "PURCHASE_VERIFICATION_UNAVAILABLE"
-        : "PURCHASE_VERIFICATION_BACKEND_ERROR",
-      response.status === 401 || response.status === 403 ? 503 : 502
+      safeErrorMessage,
+      verificationErrorCode,
+      verificationStatusCode
     );
   }
 
@@ -317,9 +426,18 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
   });
 
   if (!matchingLineItem) {
+    console.warn("[IAP] Google Play verification failure", {
+      platform: "android",
+      productId,
+      basePlanId: basePlanId || null,
+      ...diagnostics,
+      verificationErrorCode: "GOOGLE_PLAY_PRODUCT_MISMATCH",
+      verificationStatusCode: 400,
+      safeErrorMessage: "Google Play verified a different subscription than the one requested.",
+    });
     throw new PurchaseVerificationError(
       "Google Play verified a different subscription than the one requested.",
-      "PURCHASE_VERIFICATION_FAILED",
+      "GOOGLE_PLAY_PRODUCT_MISMATCH",
       400
     );
   }
@@ -335,7 +453,24 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
   }
 
   const expiresAt = coerceIsoTimestamp(matchingLineItem.expiryTime);
-  assertFutureExpiry(expiresAt);
+  try {
+    assertFutureExpiry(expiresAt);
+  } catch (error) {
+    console.warn("[IAP] Google Play verification failure", {
+      platform: "android",
+      productId,
+      basePlanId: basePlanId || null,
+      ...diagnostics,
+      verificationErrorCode: "GOOGLE_PLAY_EXPIRED",
+      verificationStatusCode: 400,
+      safeErrorMessage: toSafeErrorMessage(error),
+    });
+    throw new PurchaseVerificationError(
+      "The verified subscription is expired.",
+      "GOOGLE_PLAY_EXPIRED",
+      400
+    );
+  }
 
   const state = typeof payload.subscriptionState === "string" ? payload.subscriptionState : "";
   const blockedStates = new Set([
@@ -346,12 +481,28 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
   ]);
 
   if (blockedStates.has(state)) {
+    console.warn("[IAP] Google Play verification failure", {
+      platform: "android",
+      productId,
+      basePlanId: basePlanId || null,
+      ...diagnostics,
+      verificationErrorCode: "GOOGLE_PLAY_EXPIRED",
+      verificationStatusCode: 400,
+      safeErrorMessage: `Google Play reported the subscription state as ${state}.`,
+    });
     throw new PurchaseVerificationError(
       `Google Play reported the subscription state as ${state}.`,
-      "PURCHASE_VERIFICATION_FAILED",
+      "GOOGLE_PLAY_EXPIRED",
       400
     );
   }
+
+  console.info("[IAP] Google Play verification success", {
+    platform: "android",
+    productId,
+    basePlanId: verifiedBasePlanId || basePlanId || null,
+    ...diagnostics,
+  });
 
   return {
     expiresAt,
@@ -500,8 +651,29 @@ export const verifyStorePurchase = async ({
   rawReceipt,
   appUserId,
 }) => {
+  const diagnostics = platform === "android" ? getGooglePlayDiagnostics() : null;
+  console.info("[IAP] verifyStorePurchase invoked", {
+    platform,
+    productId,
+    basePlanId: basePlanId || null,
+    ...(diagnostics || {}),
+  });
+
   if (platform === "android") {
-    return verifyGooglePlayPurchase({ productId, basePlanId, purchaseToken, appUserId });
+    try {
+      return await verifyGooglePlayPurchase({ productId, basePlanId, purchaseToken, appUserId });
+    } catch (error) {
+      console.error("[IAP] verifyStorePurchase failed", {
+        platform,
+        productId,
+        basePlanId: basePlanId || null,
+        ...(diagnostics || {}),
+        verificationErrorCode: error?.code || "UNKNOWN_VERIFICATION_ERROR",
+        verificationStatusCode: error?.statusCode || 500,
+        safeErrorMessage: toSafeErrorMessage(error),
+      });
+      throw error;
+    }
   }
 
   if (platform === "ios") {
