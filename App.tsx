@@ -1278,49 +1278,13 @@ const AppContentInner: React.FC = () => {
 
   const createProfile = useCallback(async (userId: string, email?: string | null, accessToken?: string | null) => {
     if (!supabase) return { data: null, error: new Error('Supabase is not configured.') as any };
-
-    const fullProfile = createDefaultProfile(userId, email);
-    let result = await supabase
-      .from('profiles')
-      .insert([fullProfile])
-      .select()
-      .single();
-
-    const insertError = result.error;
-    const columnMismatch = insertError && (
-      insertError.code === '42703' ||
-      insertError.code === 'PGRST204' ||
-      insertError.message?.toLowerCase().includes('column')
-    );
-
-    if (columnMismatch) {
-      console.warn('[Profile] Full profile insert failed, retrying with legacy-safe columns:', insertError.message);
-      const legacyProfile = {
-        id: fullProfile.id,
-        email: fullProfile.email,
-        credits: fullProfile.credits,
-        is_premium: fullProfile.is_premium,
-        last_daily_reset: fullProfile.last_daily_reset,
-        shadow_notes: fullProfile.shadow_notes,
-      };
-
-      result = await supabase
-        .from('profiles')
-        .insert([legacyProfile])
-        .select()
-        .single();
+    try {
+      const repaired = await fetchServerProfile('POST', accessToken);
+      return { data: repaired.profile, error: null };
+    } catch (error) {
+      console.warn('[Profile] Server profile creation failed:', error);
+      return { data: null, error: error as any };
     }
-
-    if (result.error) {
-      try {
-        const repaired = await fetchServerProfile('POST', accessToken);
-        return { data: repaired.profile, error: null };
-      } catch (fallbackError) {
-        console.warn('[Profile] Server profile repair failed:', fallbackError);
-      }
-    }
-
-    return result;
   }, []);
 
 
