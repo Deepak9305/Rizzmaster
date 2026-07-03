@@ -704,61 +704,6 @@ export const setPremium = async ({
   expiresAt,
   rawPayload,
 }) => withTransaction(async (client) => {
-  const priorOwnerIds = new Set();
-
-  if (purchaseTokenIdentifier || transactionIdentifier) {
-    const priorOwners = await client.query(
-      `
-        SELECT DISTINCT user_id
-        FROM premium_subscriptions
-        WHERE user_id <> $1
-          AND (
-            ($2::text IS NOT NULL AND purchase_token_identifier = $2)
-            OR ($3::text IS NOT NULL AND transaction_id = $3)
-          )
-      `,
-      [userId, purchaseTokenIdentifier || null, transactionIdentifier || null]
-    );
-
-    for (const row of priorOwners.rows) {
-      if (row?.user_id) {
-        priorOwnerIds.add(row.user_id);
-      }
-    }
-  }
-
-  if (priorOwnerIds.size > 0) {
-    await client.query(
-      `
-        UPDATE premium_subscriptions
-        SET is_active = FALSE,
-            updated_at = NOW()
-        WHERE user_id = ANY($1::uuid[])
-          AND (
-            ($2::text IS NOT NULL AND purchase_token_identifier = $2)
-            OR ($3::text IS NOT NULL AND transaction_id = $3)
-          )
-      `,
-      [[...priorOwnerIds], purchaseTokenIdentifier || null, transactionIdentifier || null]
-    );
-
-    await client.query(
-      `
-        UPDATE profiles
-        SET is_premium = FALSE,
-            premium_source = 'transferred',
-            premium_platform = NULL,
-            premium_product_id = NULL,
-            premium_base_plan_id = NULL,
-            premium_transaction_id = NULL,
-            premium_expires_at = NULL,
-            updated_at = NOW()
-        WHERE id = ANY($1::uuid[])
-      `,
-      [[...priorOwnerIds]]
-    );
-  }
-
   const profileResult = await client.query(
     `
       UPDATE profiles
