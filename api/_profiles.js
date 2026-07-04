@@ -704,46 +704,6 @@ export const setPremium = async ({
   expiresAt,
   rawPayload,
 }) => withTransaction(async (client) => {
-  if (purchaseTokenIdentifier) {
-    const conflict = await client.query(
-      `
-        SELECT user_id
-        FROM premium_subscriptions
-        WHERE purchase_token_identifier = $1
-          AND user_id <> $2
-        LIMIT 1
-      `,
-      [purchaseTokenIdentifier, userId]
-    );
-    if (conflict.rows[0]) {
-      throw new AppDataError(
-        'This subscription is already linked to another Rizzmaster account. Please log in with that account or contact support.',
-        'PURCHASE_ALREADY_LINKED',
-        409
-      );
-    }
-  }
-
-  if (transactionIdentifier) {
-    const conflict = await client.query(
-      `
-        SELECT user_id
-        FROM premium_subscriptions
-        WHERE transaction_id = $1
-          AND user_id <> $2
-        LIMIT 1
-      `,
-      [transactionIdentifier, userId]
-    );
-    if (conflict.rows[0]) {
-      throw new AppDataError(
-        'This subscription is already linked to another Rizzmaster account. Please log in with that account or contact support.',
-        'PURCHASE_ALREADY_LINKED',
-        409
-      );
-    }
-  }
-
   const profileResult = await client.query(
     `
       UPDATE profiles
