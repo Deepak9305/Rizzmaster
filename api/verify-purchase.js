@@ -17,6 +17,8 @@ const PURCHASE_VERIFICATION_FAILED_CODE = "PURCHASE_VERIFICATION_FAILED";
 const PURCHASE_VERIFICATION_UNAVAILABLE_CODE = "PURCHASE_VERIFICATION_UNAVAILABLE";
 const PURCHASE_VERIFICATION_BACKEND_ERROR_CODE = "PURCHASE_VERIFICATION_BACKEND_ERROR";
 const PURCHASE_ACCOUNT_MISMATCH_CODE = "PURCHASE_ACCOUNT_MISMATCH";
+const PURCHASE_ALREADY_LINKED_CODE = "PURCHASE_ALREADY_LINKED";
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const getRequestId = (req) => {
   const value = req?.headers?.["x-vercel-id"];
@@ -60,6 +62,8 @@ const readNullableString = (value) => {
   const normalized = readString(value);
   return normalized || null;
 };
+
+const looksLikeUuid = (value) => typeof value === "string" && UUID_PATTERN.test(value.trim());
 
 const normalizeOptionalTimestamp = (value) => {
   if (value === null || value === undefined || value === "") {
@@ -329,6 +333,35 @@ export default async function handler(req, res) {
     const verifiedExpiresAt = verificationResult?.expiresAt || expiresAt || null;
     const verifiedOrderId = verificationResult?.orderId || orderId || null;
     const verifiedBasePlanId = verificationResult?.verifiedBasePlanId || basePlanId || null;
+    const verifiedExternalAccountId = readNullableString(verificationResult?.verifiedExternalAccountId);
+
+    if (verifiedExternalAccountId && verifiedExternalAccountId !== userId) {
+      if (looksLikeUuid(verifiedExternalAccountId)) {
+        logIapApi("warn", "Google Play external account mismatch blocked.", {
+          requestId,
+          userId,
+          platform: normalizedPlatform,
+          productId,
+          basePlanId: verifiedBasePlanId,
+          hasVerifiedExternalAccountId: true,
+          verifiedExternalAccountIdFormat: "uuid",
+        });
+        return json(res, 409, {
+          error: "This purchase belongs to a different Rizzmaster account. Please sign in with that account and try again.",
+          code: PURCHASE_ACCOUNT_MISMATCH_CODE,
+        });
+      }
+
+      logIapApi("warn", "Google Play returned an obfuscated external account id that does not match the signed-in user.", {
+        requestId,
+        userId,
+        platform: normalizedPlatform,
+        productId,
+        basePlanId: verifiedBasePlanId,
+        hasVerifiedExternalAccountId: true,
+        verifiedExternalAccountIdFormat: "non_uuid",
+      });
+    }
 
     // Call the admin_set_premium RPC using service role
     const { data: updatedProfile, error: rpcError } = await supabaseAdmin.rpc("admin_set_premium", {
@@ -352,6 +385,7 @@ export default async function handler(req, res) {
     });
 
     if (rpcError) {
+      const normalizedRpcMessage = readString(rpcError.message).toLowerCase();
       logIapApi("error", "RPC admin_set_premium error.", {
         requestId,
         userId,
@@ -361,6 +395,12 @@ export default async function handler(req, res) {
         safeErrorMessage: rpcError.message || "Unknown premium sync error.",
         durationMs: Date.now() - startedAt,
       });
+      if (normalizedRpcMessage.includes("already linked to another account")) {
+        return json(res, 409, {
+          error: "This subscription is already linked to another Rizzmaster account. Please log in with the account used during purchase, or contact support.",
+          code: PURCHASE_ALREADY_LINKED_CODE,
+        });
+      }
       return json(res, 500, { 
         error: "Failed to verify and apply premium status on backend.",
         code: "PREMIUM_SYNC_FAILED"

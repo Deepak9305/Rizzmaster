@@ -910,6 +910,9 @@ const AppContentInner: React.FC = () => {
         if (resData?.code === 'PURCHASE_ACCOUNT_MISMATCH') {
           throw new Error('This purchase was started for a different Rizzmaster account. Please retry while signed into this account.');
         }
+        if (resData?.code === 'PURCHASE_ALREADY_LINKED') {
+          throw new Error('This Play Store subscription is already linked to another Rizzmaster account. Log in with that account or contact support.');
+        }
         const code = resData?.code ? ` (${resData.code})` : '';
         throw new Error(`${resData?.error || `Server returned status ${response.status}`}${code}`);
       }
@@ -1281,26 +1284,28 @@ const AppContentInner: React.FC = () => {
     setIsProfileLoadingHung(false);
 
     try {
-      const profilePromise = supabase.from('profiles').select('*').eq('id', userId).single();
-      const savedPromise = supabase.from('saved_items').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+      const repaired = await fetchServerProfile('POST');
+      let profileData = repaired.profile;
 
-      const [profileResult, savedResult] = await Promise.all([profilePromise, savedPromise]);
+      if (Array.isArray(repaired.savedItems)) {
+        setSavedItems(repaired.savedItems as SavedItem[]);
+      } else {
+        const { data: savedData, error: savedError } = await supabase
+          .from('saved_items')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
 
-      let profileData = profileResult.data;
-      const savedData = savedResult.data;
-
-      if (savedResult.error) {
-        console.warn('[Profile] Saved items load failed:', savedResult.error.message);
-        setSavedItems([]);
-      } else if (savedData) {
-        setSavedItems(savedData as SavedItem[]);
+        if (savedError) {
+          console.warn('[Profile] Saved items load failed:', savedError.message);
+          setSavedItems([]);
+        } else if (savedData) {
+          setSavedItems(savedData as SavedItem[]);
+        }
       }
 
-      if (isMissingRowError(profileResult.error)) {
+      if (profileData) {
         // New user — create their profile
-        const { data: newProfile } = await createProfile(userId, email);
-        if (newProfile) profileData = newProfile;
-      } else if (profileData) {
         // Delegate daily credits reset and streak tracking to the backend RPC
         try {
           const { data: claimData, error: claimError } = await supabase.rpc('claim_daily_credits_and_streak');
@@ -1377,46 +1382,27 @@ const AppContentInner: React.FC = () => {
     setProfileLoadError(null);
 
     try {
-      const [profileResult, savedResult] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', userId).single(),
-        supabase.from('saved_items').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
-      ]);
+      const repaired = await fetchServerProfile('POST', accessToken);
+      let profileData = repaired.profile;
 
-      if (savedResult.error) {
-        console.warn('[Profile] Saved items load failed:', savedResult.error.message);
-        setSavedItems([]);
+      if (Array.isArray(repaired.savedItems)) {
+        setSavedItems(repaired.savedItems as SavedItem[]);
       } else {
-        setSavedItems((savedResult.data || []) as SavedItem[]);
+        const { data: savedData, error: savedError } = await supabase
+          .from('saved_items')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+
+        if (savedError) {
+          console.warn('[Profile] Saved items load failed:', savedError.message);
+          setSavedItems([]);
+        } else {
+          setSavedItems((savedData || []) as SavedItem[]);
+        }
       }
 
-      let profileData = profileResult.data;
-
-      if (isMissingRowError(profileResult.error)) {
-        const { data: newProfile, error: createError } = await createProfile(userId, email, accessToken);
-        if (createError) {
-          console.error("Failed to create user profile:", createError);
-          showToast("Could not create your profile. Please try again.", "error");
-          setProfileLoadError("We couldn't create your account profile yet. Please try again.");
-          setIsProfileLoadingHung(true);
-          return;
-        }
-        profileData = newProfile;
-      } else if (profileResult.error) {
-        console.warn("Browser profile load failed, trying server repair:", profileResult.error);
-        try {
-          const repaired = await fetchServerProfile('POST', accessToken);
-          profileData = repaired.profile;
-          if (Array.isArray(repaired.savedItems)) {
-            setSavedItems(repaired.savedItems as SavedItem[]);
-          }
-        } catch (repairError) {
-          console.error("Failed to load user profile:", profileResult.error, repairError);
-          showToast("Could not load your profile. Please try again.", "error");
-          setProfileLoadError("We couldn't load your account profile. Retry in a moment.");
-          setIsProfileLoadingHung(true);
-          return;
-        }
-      } else if (profileData) {
+      if (profileData) {
         try {
           const { data: claimData, error: claimError } = await supabase.rpc('claim_daily_credits_and_streak');
           if (claimError) {
@@ -1591,37 +1577,20 @@ const AppContentInner: React.FC = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return null;
     
-    let { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .single();
-
-    if (isMissingRowError(error)) {
-      // Profile missing (e.g. newly signed up). Create it.
-      const { data: newData, error: insertError } = await createProfile(session.user.id, session.user.email, session.access_token);
-      
-      data = newData;
-      error = insertError;
-    } else if (error) {
-      console.warn('[Profile] Sync failed:', error.message);
-      try {
-        const repaired = await fetchServerProfile('POST', session.access_token);
-        data = repaired.profile;
-        error = null;
-      } catch (repairError) {
-        console.warn('[Profile] Server sync repair failed:', repairError);
-      }
-    }
-
-    if (data && !error) {
-      const normalizedProfile = normalizeDailyCreditProfile(data as UserProfile);
+    try {
+      const repaired = await fetchServerProfile('POST', session.access_token);
+      const normalizedProfile = normalizeDailyCreditProfile(repaired.profile as UserProfile);
       setProfile(normalizedProfile);
       profileRef.current = normalizedProfile;
+      if (Array.isArray(repaired.savedItems)) {
+        setSavedItems(repaired.savedItems as SavedItem[]);
+      }
       return normalizedProfile;
+    } catch (repairError) {
+      console.warn('[Profile] Server sync repair failed:', repairError);
     }
     return null;
-  }, [createProfile]);
+  }, []);
 
   const handleRestorePurchases = useCallback(async () => {
     if (!profileRef.current) return;
