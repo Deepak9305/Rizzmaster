@@ -1,7 +1,5 @@
 import { applyCors } from './_cors.js';
-import { getRequestAuth } from './_firebase.js';
-import { createReport } from './_profiles.js';
-import { isDatabaseConfigured } from './_db.js';
+import { getAuthenticatedUser, getBearerToken, supabase, supabaseAdmin } from './_supabase.js';
 
 const LOGIN_REQUIRED_CODE = 'LOGIN_REQUIRED';
 const SUPABASE_BACKEND_UNAVAILABLE_CODE = 'SUPABASE_BACKEND_UNAVAILABLE';
@@ -26,9 +24,9 @@ export default async function handler(req, res) {
     return json(res, 405, { error: 'Method not allowed.' });
   }
 
-  if (!isDatabaseConfigured) {
+  if (!supabase || !supabaseAdmin) {
     return json(res, 503, {
-      error: 'Database is not configured on the server.',
+      error: 'Supabase integration not configured on the server.',
       code: SUPABASE_BACKEND_UNAVAILABLE_CODE,
     });
   }
@@ -38,32 +36,37 @@ export default async function handler(req, res) {
 
   let authUserId = null;
   if (requestedUserId !== null) {
-    try {
-      const auth = await getRequestAuth(req);
-      if (!auth.user || auth.isGuest) {
-        return json(res, 401, {
-          error: 'Unauthorized. Invalid or expired session.',
-          code: LOGIN_REQUIRED_CODE,
-        });
-      }
-      authUserId = auth.user.id;
-    } catch (error) {
+    const token = getBearerToken(req);
+    if (!token) {
+      return json(res, 401, {
+        error: 'Missing or invalid authorization header.',
+        code: LOGIN_REQUIRED_CODE,
+      });
+    }
+
+    const { user, error } = await getAuthenticatedUser(token);
+    if (error || !user) {
       return json(res, 401, {
         error: 'Unauthorized. Invalid or expired session.',
         code: LOGIN_REQUIRED_CODE,
       });
     }
+
+    authUserId = user.id;
   }
 
-  try {
-    await createReport(
-      authUserId,
-      readString(body.content, 'General Report'),
-      readString(body.type, 'content_report')
-    );
-    return json(res, 200, { success: true });
-  } catch (error) {
-    console.error('[Reports API] Request failed:', error);
+  const { error: insertError } = await supabaseAdmin
+    .from('reports')
+    .insert({
+      user_id: authUserId,
+      content: readString(body.content, 'General Report'),
+      type: readString(body.type, 'content_report'),
+    });
+
+  if (insertError) {
+    console.error('[Reports API] Request failed:', insertError);
     return json(res, 500, { error: 'Report request failed.' });
   }
+
+  return json(res, 200, { success: true });
 }

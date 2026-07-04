@@ -453,7 +453,6 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
   }
 
   const verifiedExternalAccountId = readGoogleExternalAccountId(payload);
-
   const lineItems = Array.isArray(payload.lineItems) ? payload.lineItems : [];
   const lineItemProductIds = [...new Set(lineItems.map((item) => (
     typeof item?.productId === "string" ? item.productId.trim() : ""

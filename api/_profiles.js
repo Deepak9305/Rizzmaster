@@ -729,42 +729,74 @@ export const setPremium = async ({
     ]
   );
 
-  await client.query(
+  const serializedPayload = JSON.stringify(rawPayload || {});
+  const existingSubscriptionResult = await client.query(
     `
-      INSERT INTO premium_subscriptions (
-        user_id,
-        platform,
-        product_id,
-        base_plan_id,
-        transaction_id,
-        purchase_token_identifier,
-        is_active,
-        purchase_date,
-        expires_at,
-        raw_payload
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, TRUE, NOW(), $7, $8::jsonb)
-      ON CONFLICT (user_id, platform, product_id)
-      DO UPDATE SET
-        base_plan_id = EXCLUDED.base_plan_id,
-        transaction_id = EXCLUDED.transaction_id,
-        purchase_token_identifier = EXCLUDED.purchase_token_identifier,
-        is_active = TRUE,
-        expires_at = EXCLUDED.expires_at,
-        raw_payload = EXCLUDED.raw_payload,
-        updated_at = NOW()
+      SELECT id
+      FROM premium_subscriptions
+      WHERE user_id = $1
+      ORDER BY updated_at DESC NULLS LAST, purchase_date DESC NULLS LAST, created_at DESC NULLS LAST
+      LIMIT 1
     `,
-    [
-      userId,
-      platformName,
-      productIdentifier,
-      basePlanIdentifier,
-      transactionIdentifier,
-      purchaseTokenIdentifier,
-      expiresAt,
-      JSON.stringify(rawPayload || {}),
-    ]
+    [userId]
   );
+
+  if (existingSubscriptionResult.rows[0]?.id) {
+    await client.query(
+      `
+        UPDATE premium_subscriptions
+        SET platform = $2,
+            product_id = $3,
+            base_plan_id = $4,
+            transaction_id = $5,
+            purchase_token_identifier = $6,
+            is_active = TRUE,
+            purchase_date = NOW(),
+            expires_at = $7,
+            raw_payload = $8::jsonb,
+            updated_at = NOW()
+        WHERE id = $1
+      `,
+      [
+        existingSubscriptionResult.rows[0].id,
+        platformName,
+        productIdentifier,
+        basePlanIdentifier,
+        transactionIdentifier,
+        purchaseTokenIdentifier,
+        expiresAt,
+        serializedPayload,
+      ]
+    );
+  } else {
+    await client.query(
+      `
+        INSERT INTO premium_subscriptions (
+          user_id,
+          platform,
+          product_id,
+          base_plan_id,
+          transaction_id,
+          purchase_token_identifier,
+          is_active,
+          purchase_date,
+          expires_at,
+          raw_payload
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, TRUE, NOW(), $7, $8::jsonb)
+      `,
+      [
+        userId,
+        platformName,
+        productIdentifier,
+        basePlanIdentifier,
+        transactionIdentifier,
+        purchaseTokenIdentifier,
+        expiresAt,
+        serializedPayload,
+      ]
+    );
+  }
 
   return normalizeProfileForApi(profileResult.rows[0]);
 });

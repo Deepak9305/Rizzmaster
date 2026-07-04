@@ -19,6 +19,17 @@ const getBearerToken = (req) => {
   return token || null;
 };
 
+const deleteUserOwnedRows = async (table, column, userId) => {
+  const { error } = await supabaseAdmin
+    .from(table)
+    .delete()
+    .eq(column, userId);
+
+  if (error) {
+    throw error;
+  }
+};
+
 export default async function handler(req, res) {
   if (applyCors(req, res)) return;
 
@@ -60,23 +71,17 @@ export default async function handler(req, res) {
   }
 
   try {
+    await deleteUserOwnedRows('saved_items', 'user_id', user.id);
+    await deleteUserOwnedRows('user_activity_log', 'user_id', user.id);
+    await deleteUserOwnedRows('reports', 'user_id', user.id);
+    await deleteUserOwnedRows('purchase_receipts', 'user_id', user.id);
+    await deleteUserOwnedRows('premium_subscriptions', 'user_id', user.id);
+    await deleteUserOwnedRows('profiles', 'id', user.id);
+
     const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id, true);
     if (authDeleteError) {
       console.error("[Delete Account API] Failed to delete auth user:", authDeleteError);
       return json(res, 500, { error: "Failed to delete auth user." });
-    }
-
-    const { error: profileDeleteError } = await supabaseAdmin
-      .from("profiles")
-      .delete()
-      .eq("id", user.id);
-
-    if (profileDeleteError) {
-      console.error("[Delete Account API] Profile cleanup failed after auth soft delete:", profileDeleteError);
-      return json(res, 200, {
-        success: true,
-        cleanupWarning: "Account access was removed, but profile cleanup needs retry.",
-      });
     }
 
     return json(res, 200, { success: true });

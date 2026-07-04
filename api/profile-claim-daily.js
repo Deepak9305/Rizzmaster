@@ -1,7 +1,5 @@
 import { applyCors } from './_cors.js';
-import { getRequestAuth } from './_firebase.js';
-import { claimDailyCreditsAndStreak } from './_profiles.js';
-import { isDatabaseConfigured } from './_db.js';
+import { createRequestSupabaseClient, getAuthenticatedUser, getBearerToken, supabase } from './_supabase.js';
 
 const LOGIN_REQUIRED_CODE = 'LOGIN_REQUIRED';
 const SUPABASE_BACKEND_UNAVAILABLE_CODE = 'SUPABASE_BACKEND_UNAVAILABLE';
@@ -19,35 +17,42 @@ export default async function handler(req, res) {
     return json(res, 405, { error: 'Method not allowed.' });
   }
 
-  if (!isDatabaseConfigured) {
+  if (!supabase) {
     return json(res, 503, {
-      error: 'Database is not configured on the server.',
+      error: 'Supabase integration not configured on the server.',
       code: SUPABASE_BACKEND_UNAVAILABLE_CODE,
     });
   }
 
-  let auth;
-  try {
-    auth = await getRequestAuth(req);
-  } catch (error) {
+  const token = getBearerToken(req);
+  if (!token) {
+    return json(res, 401, {
+      error: 'Missing or invalid authorization header.',
+      code: LOGIN_REQUIRED_CODE,
+    });
+  }
+
+  const { user, error } = await getAuthenticatedUser(token);
+  if (error || !user) {
     return json(res, 401, {
       error: 'Unauthorized. Invalid or expired session.',
       code: LOGIN_REQUIRED_CODE,
     });
   }
 
-  if (!auth.user || auth.isGuest) {
-    return json(res, 401, {
-      error: 'Daily claim requires an authenticated account.',
-      code: LOGIN_REQUIRED_CODE,
+  const requestClient = createRequestSupabaseClient(token);
+  if (!requestClient) {
+    return json(res, 503, {
+      error: 'Supabase integration not configured on the server.',
+      code: SUPABASE_BACKEND_UNAVAILABLE_CODE,
     });
   }
 
-  try {
-    const result = await claimDailyCreditsAndStreak(auth.user.id);
-    return json(res, 200, result);
-  } catch (error) {
-    console.error('[Profile Claim API] Request failed:', error);
-    return json(res, 500, { error: error?.message || 'Daily claim failed.' });
+  const { data, error: rpcError } = await requestClient.rpc('claim_daily_credits_and_streak');
+  if (rpcError) {
+    console.error('[Profile Claim API] Request failed:', rpcError);
+    return json(res, 500, { error: rpcError.message || 'Daily claim failed.' });
   }
+
+  return json(res, 200, data || { userId: user.id, updated: false });
 }

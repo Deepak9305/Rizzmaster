@@ -6,6 +6,7 @@ export const routes = {
   '/api/reports': () => import('./reports.js'),
   '/api/activity': () => import('./activity.js'),
   '/api/activity/time': () => import('./activity-time.js'),
+  '/api/activity-time': () => import('./activity-time.js'),
   '/api/runtime-config': () => import('./runtime-config.js'),
   '/api/delete-account': () => import('./delete-account.js'),
   '/api/revoke-premium': () => import('./revoke-premium.js'),

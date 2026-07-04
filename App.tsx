@@ -88,6 +88,48 @@ const runStartupTask = (label: string, task: Promise<unknown>) => {
 
 type ViewState = 'HOME' | 'PRIVACY' | 'TERMS' | 'SUPPORT' | 'COACH';
 
+const PUBLIC_VIEW_PATHS: Record<Exclude<ViewState, 'HOME' | 'COACH'>, string> = {
+  PRIVACY: '/privacy',
+  TERMS: '/terms',
+  SUPPORT: '/support',
+};
+
+const normalizePathname = (pathname: string) => {
+  const trimmed = pathname.replace(/\/+$/, '');
+  return trimmed || '/';
+};
+
+const getViewFromLocation = (): ViewState => {
+  if (typeof window === 'undefined') {
+    return 'HOME';
+  }
+
+  const path = normalizePathname(window.location.pathname).toLowerCase();
+
+  switch (path) {
+    case '/privacy':
+    case '/privacy-policy':
+      return 'PRIVACY';
+    case '/terms':
+    case '/terms-of-service':
+      return 'TERMS';
+    case '/support':
+      return 'SUPPORT';
+    case '/coach':
+      return 'COACH';
+    default:
+      return 'HOME';
+  }
+};
+
+const getPathForView = (view: ViewState) => {
+  if (view in PUBLIC_VIEW_PATHS) {
+    return PUBLIC_VIEW_PATHS[view as Exclude<ViewState, 'HOME' | 'COACH'>];
+  }
+
+  return view === 'COACH' ? '/coach' : '/';
+};
+
 const LOADING_MESSAGES = [
   "Analyzing context...",
   "Reading between the lines...",
@@ -357,7 +399,7 @@ const AppContentInner: React.FC = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   // App State
-  const [currentView, setCurrentView] = useState<ViewState>('HOME');
+  const [currentView, setCurrentView] = useState<ViewState>(() => getViewFromLocation());
   const [mode, setMode] = useState<InputMode>(InputMode.CHAT);
   const [inputText, setInputText] = useState('');
   const [image, setImage] = useState<string | null>(null);
@@ -508,6 +550,11 @@ const AppContentInner: React.FC = () => {
   useEffect(() => {
     stateRef.current = { currentView, showPremiumModal, showSavedModal };
   }, [currentView, showPremiumModal, showSavedModal]);
+
+  const isPublicInfoView =
+    currentView === 'PRIVACY' ||
+    currentView === 'TERMS' ||
+    currentView === 'SUPPORT';
 
   useEffect(() => {
     keyboardVisibleRef.current = isKeyboardVisible;
@@ -1013,13 +1060,14 @@ const AppContentInner: React.FC = () => {
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
       const state = event.state || {};
-      setCurrentView(state.view || 'HOME');
+      setCurrentView(state.view || getViewFromLocation());
       setShowPremiumModal(!!state.premium);
       setShowSavedModal(!!state.saved);
     };
 
     if (!window.history.state) {
-      window.history.replaceState({ view: 'HOME' }, '');
+      const initialView = getViewFromLocation();
+      window.history.replaceState({ view: initialView }, '', getPathForView(initialView));
     }
 
     window.addEventListener('popstate', handlePopState);
@@ -1066,7 +1114,7 @@ const AppContentInner: React.FC = () => {
     if (loading) return;
     if (view === currentView) return;
 
-    window.history.pushState({ view }, '');
+    window.history.pushState({ view }, '', getPathForView(view));
     setCurrentView(view);
   }, [currentView, loading, isGuest, showToast, handleExitGuestMode]);
 
@@ -1084,6 +1132,7 @@ const AppContentInner: React.FC = () => {
       setCurrentView('HOME');
       setShowPremiumModal(false);
       setShowSavedModal(false);
+      window.history.replaceState({ view: 'HOME' }, '', '/');
     }
 
 
@@ -1226,49 +1275,13 @@ const AppContentInner: React.FC = () => {
 
   const createProfile = useCallback(async (userId: string, email?: string | null, accessToken?: string | null) => {
     if (!supabase) return { data: null, error: new Error('Supabase is not configured.') as any };
-
-    const fullProfile = createDefaultProfile(userId, email);
-    let result = await supabase
-      .from('profiles')
-      .insert([fullProfile])
-      .select()
-      .single();
-
-    const insertError = result.error;
-    const columnMismatch = insertError && (
-      insertError.code === '42703' ||
-      insertError.code === 'PGRST204' ||
-      insertError.message?.toLowerCase().includes('column')
-    );
-
-    if (columnMismatch) {
-      console.warn('[Profile] Full profile insert failed, retrying with legacy-safe columns:', insertError.message);
-      const legacyProfile = {
-        id: fullProfile.id,
-        email: fullProfile.email,
-        credits: fullProfile.credits,
-        is_premium: fullProfile.is_premium,
-        last_daily_reset: fullProfile.last_daily_reset,
-        shadow_notes: fullProfile.shadow_notes,
-      };
-
-      result = await supabase
-        .from('profiles')
-        .insert([legacyProfile])
-        .select()
-        .single();
+    try {
+      const repaired = await fetchServerProfile('POST', accessToken);
+      return { data: repaired.profile, error: null };
+    } catch (error) {
+      console.warn('[Profile] Server profile creation failed:', error);
+      return { data: null, error: error as any };
     }
-
-    if (result.error) {
-      try {
-        const repaired = await fetchServerProfile('POST', accessToken);
-        return { data: repaired.profile, error: null };
-      } catch (fallbackError) {
-        console.warn('[Profile] Server profile repair failed:', fallbackError);
-      }
-    }
-
-    return result;
   }, []);
 
 
@@ -1864,15 +1877,7 @@ const AppContentInner: React.FC = () => {
     }
 
     try {
-      const permissions = await Camera.checkPermissions();
-      if (permissions.photos !== 'granted') {
-        const request = await Camera.requestPermissions({ permissions: ['photos'] });
-        if (request.photos !== 'granted') {
-          showToast('Image/Storage permission is required to select photos.', 'error');
-          return;
-        }
-      }
-
+      // Use the system photo picker where available so we do not request broad storage access.
       const photo = await Camera.getPhoto({
         quality: 90,
         allowEditing: false,
@@ -2149,12 +2154,22 @@ const AppContentInner: React.FC = () => {
       />
 
       {/* Onboarding Flow: Shows after Splash if not completed */}
-      {!showSplash && showOnboarding && (
+      {!showSplash && showOnboarding && !isPublicInfoView && (
         <OnboardingFlow onComplete={handleOnboardingComplete} />
       )}
 
       <div className={showSplash ? 'pointer-events-none' : ''}>
-        {isSessionBlocked ? (
+        {isPublicInfoView ? (
+          <div className="safe-top safe-bottom">
+            <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white">Loading...</div>}>
+              <InfoPages
+                page={currentView}
+                onBack={handleBackNavigation}
+                onDeleteAccount={handleDeleteAccount}
+              />
+            </Suspense>
+          </div>
+        ) : isSessionBlocked ? (
           <div className="min-h-[100dvh] flex flex-col items-center justify-center p-4 relative overflow-hidden bg-black safe-top safe-bottom">
             <div className="glass max-w-md w-full p-8 rounded-3xl border border-white/10 text-center relative z-10 shadow-2xl">
               <h1 className="text-2xl font-bold mb-4 text-white">Session Paused</h1>
@@ -2296,17 +2311,6 @@ const AppContentInner: React.FC = () => {
               )}
             </Suspense>
           </div>
-        )
-          : currentView !== 'HOME' ? (
-            <div className="safe-top safe-bottom">
-              <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white">Loading...</div>}>
-                <InfoPages
-                  page={currentView}
-                  onBack={handleBackNavigation}
-                  onDeleteAccount={handleDeleteAccount}
-                />
-              </Suspense>
-            </div>
           ) : (
             <div className={`max-w-4xl mx-auto px-4 py-6 md:py-12 pb-0 relative min-h-[100dvh] flex flex-col safe-top ${currentView === 'HOME' ? 'animate-fade-in' : 'animate-view-zoom-out'}`}>
 
