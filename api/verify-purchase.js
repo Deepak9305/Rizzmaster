@@ -332,14 +332,14 @@ export default async function handler(req, res) {
 
     // Call the admin_set_premium RPC using service role
     const { data: updatedProfile, error: rpcError } = await supabaseAdmin.rpc("admin_set_premium", {
-      user_uuid: userId,
-      platform_name: normalizedPlatform,
-      product_identifier: productId,
-      transaction_identifier: transactionId,
-      base_plan_identifier: verifiedBasePlanId,
-      purchase_token_identifier: purchaseToken,
-      expires_at: verifiedExpiresAt,
-      raw_payload: {
+      p_user_uuid: userId,
+      p_platform_name: normalizedPlatform,
+      p_product_identifier: productId,
+      p_transaction_identifier: transactionId,
+      p_base_plan_identifier: verifiedBasePlanId,
+      p_purchase_token_identifier: purchaseToken,
+      p_expires_at: verifiedExpiresAt,
+      p_raw_payload: {
         orderId: verifiedOrderId,
         plan,
         intent,
