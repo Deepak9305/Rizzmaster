@@ -100,6 +100,8 @@ const logPremiumNormalization = ({
   verificationResultCode,
   updatedExpiryPresent,
   revoked,
+  noPurchaseToken,
+  noRawReceipt,
 }) => {
   console.info('[Premium] normalization result', {
     userId,
@@ -107,6 +109,8 @@ const logPremiumNormalization = ({
     verificationResultCode,
     updatedExpiryPresent,
     revoked,
+    noPurchaseToken,
+    noRawReceipt,
   });
 };
 
@@ -213,24 +217,6 @@ const loadLegacyPremiumSubscriptions = async (client, userId) => {
   return Array.isArray(data) ? data : [];
 };
 
-const loadAllLegacyPremiumSubscriptions = async (client, userId) => {
-  const { data, error } = await client
-    .from('premium_subscriptions')
-    .select('*')
-    .eq('user_id', userId)
-    .limit(10);
-
-  if (error) {
-    throw new AppDataError(
-      error.message || 'Failed to load premium subscriptions',
-      'PROFILE_BOOTSTRAP_FAILED',
-      500
-    );
-  }
-
-  return Array.isArray(data) ? data : [];
-};
-
 const loadLatestLegacyPurchaseReceipt = async (client, userId) => {
   const { data, error } = await client
     .from('purchase_receipts')
@@ -294,103 +280,59 @@ const deactivateLegacyPremiumSubscriptionsByUserId = async (client, userId) => {
   }
 };
 
-const isMissingLegacySubscriptionColumnError = (error) => {
-  const message = error?.message || '';
-  return typeof message === 'string' && (
-    message.includes("Could not find the '") ||
-    message.includes('schema cache') ||
-    message.includes('column') && message.includes('does not exist')
-  );
-};
+const normalizeLegacyRpcProfile = (value) => (
+  value && typeof value === 'object' && !Array.isArray(value)
+    ? value
+    : null
+);
 
-const upsertLegacyPremiumSubscriptionRecord = async (client, values) => {
-  const existing = await loadAllLegacyPremiumSubscriptions(client, values.userId);
-  const latest = existing
-    .slice()
-    .sort((left, right) => {
-      const leftUpdated = new Date(left.updated_at || left.purchase_date || 0).getTime();
-      const rightUpdated = new Date(right.updated_at || right.purchase_date || 0).getTime();
-      return rightUpdated - leftUpdated;
-    })[0];
+const setLegacyProfilePremium = async (client, profile, values) => {
+  const {
+    platform,
+    productId,
+    basePlanId,
+    transactionId,
+    purchaseTokenIdentifier,
+    expiresAt,
+    rawPayload,
+  } = values;
 
-  const baseUpdate = {
-    platform: values.platform,
-    product_id: values.productId,
-    transaction_id: values.transactionId,
-    is_active: true,
-    purchase_date: new Date().toISOString(),
-  };
-  const extendedUpdate = {
-    ...baseUpdate,
-    base_plan_id: values.basePlanId || null,
-    purchase_token_identifier: values.purchaseTokenIdentifier || null,
-    expires_at: values.expiresAt || null,
-    raw_payload: values.rawPayload || {},
-    updated_at: new Date().toISOString(),
-  };
-
-  if (latest?.id) {
-    let { error } = await client
-      .from('premium_subscriptions')
-      .update(extendedUpdate)
-      .eq('id', latest.id);
-
-    if (error && isMissingLegacySubscriptionColumnError(error)) {
-      ({ error } = await client
-        .from('premium_subscriptions')
-        .update(baseUpdate)
-        .eq('id', latest.id));
-    }
-
-    if (error) {
-      throw new AppDataError(
-        error.message || 'Failed to update premium subscription',
-        'PROFILE_BOOTSTRAP_FAILED',
-        500
-      );
-    }
-
-    return;
-  }
-
-  let { error } = await client
-    .from('premium_subscriptions')
-    .insert({
-      user_id: values.userId,
-      ...extendedUpdate,
-    });
-
-  if (error && isMissingLegacySubscriptionColumnError(error)) {
-    ({ error } = await client
-      .from('premium_subscriptions')
-      .insert({
-        user_id: values.userId,
-        ...baseUpdate,
-      }));
-  }
+  const { data, error } = await client.rpc('admin_set_premium', {
+    p_user_uuid: profile.id,
+    p_platform_name: platform || 'android',
+    p_product_identifier: productId || profile.premium_product_id || 'premium',
+    p_transaction_identifier: transactionId || profile.premium_transaction_id || null,
+    p_base_plan_identifier: basePlanId || profile.premium_base_plan_id || null,
+    p_purchase_token_identifier: purchaseTokenIdentifier || null,
+    p_expires_at: expiresAt || profile.premium_expires_at || null,
+    p_raw_payload: rawPayload || {},
+  });
 
   if (error) {
     throw new AppDataError(
-      error.message || 'Failed to create premium subscription',
+      error.message || 'Failed to update verified premium profile',
       'PROFILE_BOOTSTRAP_FAILED',
       500
     );
   }
+
+  return normalizeLegacyRpcProfile(data) || {
+    ...profile,
+    is_premium: true,
+    premium_source: 'native',
+    premium_platform: platform || profile.premium_platform || 'android',
+    premium_product_id: productId || profile.premium_product_id || 'premium',
+    premium_base_plan_id: basePlanId || profile.premium_base_plan_id || null,
+    premium_transaction_id: transactionId || profile.premium_transaction_id || null,
+    premium_expires_at: expiresAt || profile.premium_expires_at || null,
+    premium_verified_at: new Date().toISOString(),
+  };
 };
 
 const revokeLegacyProfilePremium = async (client, profile, premiumSource = 'revoked') => {
-  await deactivateLegacyPremiumSubscriptionsByUserId(client, profile.id);
-
-  const { data: updated, error } = await client
-    .from('profiles')
-    .update({
-      is_premium: false,
-      premium_source: premiumSource,
-      premium_expires_at: null,
-    })
-    .eq('id', profile.id)
-    .select('*')
-    .maybeSingle();
+  const { data: updated, error } = await client.rpc('admin_revoke_premium', {
+    user_uuid: profile.id,
+  });
 
   if (error) {
     throw new AppDataError(
@@ -400,7 +342,12 @@ const revokeLegacyProfilePremium = async (client, profile, premiumSource = 'revo
     );
   }
 
-  return updated || { ...profile, is_premium: false, premium_source: premiumSource, premium_expires_at: null };
+  return normalizeLegacyRpcProfile(updated) || {
+    ...profile,
+    is_premium: false,
+    premium_source: premiumSource,
+    premium_expires_at: null,
+  };
 };
 
 const verifyLegacySubscriptionWithGooglePlay = async (profile, subscription) => {
@@ -429,56 +376,15 @@ const verifyLegacySubscriptionWithGooglePlay = async (profile, subscription) => 
 };
 
 const syncLegacyProfilePremiumFromVerification = async (client, profile, receipt, verificationResult) => {
-  const nextExpiry = verificationResult?.expiresAt || profile.premium_expires_at || null;
-  const nextBasePlanId = verificationResult?.verifiedBasePlanId || receipt?.base_plan_id || profile.premium_base_plan_id || null;
-  const nextTransactionId = receipt?.transaction_id || profile.premium_transaction_id || null;
-  const nextProductId = receipt?.product_id || profile.premium_product_id || null;
-
-  const { data: updated, error } = await client
-    .from('profiles')
-    .update({
-      is_premium: true,
-      premium_source: 'native',
-      premium_platform: 'android',
-      premium_product_id: nextProductId,
-      premium_base_plan_id: nextBasePlanId,
-      premium_transaction_id: nextTransactionId,
-      premium_expires_at: nextExpiry,
-      premium_verified_at: new Date().toISOString(),
-    })
-    .eq('id', profile.id)
-    .select('*')
-    .maybeSingle();
-
-  if (error) {
-    throw new AppDataError(
-      error.message || 'Failed to update verified premium profile',
-      'PROFILE_BOOTSTRAP_FAILED',
-      500
-    );
-  }
-
-  await upsertLegacyPremiumSubscriptionRecord(client, {
-    userId: profile.id,
+  return setLegacyProfilePremium(client, profile, {
     platform: 'android',
-    productId: nextProductId,
-    basePlanId: nextBasePlanId,
-    transactionId: nextTransactionId,
+    productId: receipt?.product_id || profile.premium_product_id || 'premium',
+    basePlanId: verificationResult?.verifiedBasePlanId || receipt?.base_plan_id || profile.premium_base_plan_id || null,
+    transactionId: receipt?.transaction_id || profile.premium_transaction_id || null,
     purchaseTokenIdentifier: receipt?.purchase_token || null,
-    expiresAt: nextExpiry,
+    expiresAt: verificationResult?.expiresAt || profile.premium_expires_at || null,
     rawPayload: receipt?.raw_payload || {},
   });
-
-  return updated || {
-    ...profile,
-    is_premium: true,
-    premium_source: 'native',
-    premium_platform: 'android',
-    premium_product_id: nextProductId,
-    premium_base_plan_id: nextBasePlanId,
-    premium_transaction_id: nextTransactionId,
-    premium_expires_at: nextExpiry,
-  };
 };
 
 const normalizeExpiredLegacyPremium = async (client, profile) => {
@@ -498,12 +404,15 @@ const normalizeExpiredLegacyPremium = async (client, profile) => {
       verificationResultCode: 'NO_RECEIPT_TOKEN',
       updatedExpiryPresent: false,
       revoked: true,
+      noPurchaseToken: true,
+      noRawReceipt: !latestReceipt?.raw_payload,
     });
     return revokedProfile;
   }
 
+  let verificationResult;
   try {
-    const verificationResult = await verifyStorePurchase({
+    verificationResult = await verifyStorePurchase({
       platform: 'android',
       productId: latestReceipt.product_id || profile.premium_product_id || 'premium',
       basePlanId: latestReceipt.base_plan_id || profile.premium_base_plan_id || null,
@@ -512,22 +421,6 @@ const normalizeExpiredLegacyPremium = async (client, profile) => {
       rawReceipt: latestReceipt.raw_payload || {},
       appUserId: profile.id,
     });
-
-    const updatedProfile = await syncLegacyProfilePremiumFromVerification(
-      client,
-      profile,
-      latestReceipt,
-      verificationResult
-    );
-
-    logPremiumNormalization({
-      userId: profile.id,
-      hadExpiredPremium,
-      verificationResultCode: 'GOOGLE_PLAY_RENEWED',
-      updatedExpiryPresent: Boolean(updatedProfile?.premium_expires_at),
-      revoked: false,
-    });
-    return updatedProfile;
   } catch (error) {
     const verificationResultCode = error instanceof PurchaseVerificationError
       ? error.code
@@ -545,6 +438,8 @@ const normalizeExpiredLegacyPremium = async (client, profile) => {
         verificationResultCode,
         updatedExpiryPresent: false,
         revoked: true,
+        noPurchaseToken: false,
+        noRawReceipt: !latestReceipt?.raw_payload,
       });
       return revokedProfile;
     }
@@ -555,8 +450,50 @@ const normalizeExpiredLegacyPremium = async (client, profile) => {
       verificationResultCode,
       updatedExpiryPresent: false,
       revoked: false,
+      noPurchaseToken: false,
+      noRawReceipt: !latestReceipt?.raw_payload,
     });
     return profile;
+  }
+
+  try {
+    const updatedProfile = await syncLegacyProfilePremiumFromVerification(
+      client,
+      profile,
+      latestReceipt,
+      verificationResult
+    );
+
+    logPremiumNormalization({
+      userId: profile.id,
+      hadExpiredPremium,
+      verificationResultCode: 'GOOGLE_PLAY_RENEWED',
+      updatedExpiryPresent: Boolean(updatedProfile?.premium_expires_at),
+      revoked: false,
+      noPurchaseToken: false,
+      noRawReceipt: !latestReceipt?.raw_payload,
+    });
+    return updatedProfile;
+  } catch (error) {
+    console.error('[Premium] expired premium sync failed after Google verification', {
+      userId: profile.id,
+      verificationResultCode: 'GOOGLE_PLAY_RENEWED',
+      updatedExpiryPresent: Boolean(verificationResult?.expiresAt),
+      revoked: false,
+      noPurchaseToken: false,
+      noRawReceipt: !latestReceipt?.raw_payload,
+      message: error instanceof Error ? error.message : String(error),
+    });
+
+    if (error instanceof AppDataError) {
+      throw error;
+    }
+
+    throw new AppDataError(
+      'Failed to sync verified premium profile',
+      'PROFILE_BOOTSTRAP_FAILED',
+      500
+    );
   }
 };
 
@@ -602,31 +539,15 @@ const reconcileLegacyProfilePremium = async (client, profile) => {
     return profile;
   }
 
-  const { data: updated, error: updateError } = await client
-    .from('profiles')
-    .update({
-      is_premium: true,
-      premium_source: profile.premium_source || 'native',
-      premium_platform: activeSubscription.platform || profile.premium_platform || null,
-      premium_product_id: activeSubscription.product_id || profile.premium_product_id || null,
-      premium_base_plan_id: activeSubscription.base_plan_id || profile.premium_base_plan_id || null,
-      premium_transaction_id: activeSubscription.transaction_id || profile.premium_transaction_id || null,
-      premium_expires_at: activeSubscription.expires_at || profile.premium_expires_at || null,
-      premium_verified_at: profile.premium_verified_at || new Date().toISOString(),
-    })
-    .eq('id', profile.id)
-    .select('*')
-    .maybeSingle();
-
-  if (updateError) {
-    throw new AppDataError(
-      updateError.message || 'Failed to reconcile premium profile',
-      'PROFILE_BOOTSTRAP_FAILED',
-      500
-    );
-  }
-
-  return updated || profile;
+  return setLegacyProfilePremium(client, profile, {
+    platform: activeSubscription.platform || profile.premium_platform || 'android',
+    productId: activeSubscription.product_id || profile.premium_product_id || 'premium',
+    basePlanId: activeSubscription.base_plan_id || profile.premium_base_plan_id || null,
+    transactionId: activeSubscription.transaction_id || profile.premium_transaction_id || null,
+    purchaseTokenIdentifier: activeSubscription.purchase_token_identifier || null,
+    expiresAt: activeSubscription.expires_at || profile.premium_expires_at || null,
+    rawPayload: activeSubscription.raw_payload || {},
+  });
 };
 
 const ensureLegacyUserProfile = async (client, user) => {
