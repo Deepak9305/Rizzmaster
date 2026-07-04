@@ -294,6 +294,15 @@ const deactivateLegacyPremiumSubscriptionsByUserId = async (client, userId) => {
   }
 };
 
+const isMissingLegacySubscriptionColumnError = (error) => {
+  const message = error?.message || '';
+  return typeof message === 'string' && (
+    message.includes("Could not find the '") ||
+    message.includes('schema cache') ||
+    message.includes('column') && message.includes('does not exist')
+  );
+};
+
 const upsertLegacyPremiumSubscriptionRecord = async (client, values) => {
   const existing = await loadAllLegacyPremiumSubscriptions(client, values.userId);
   const latest = existing
@@ -311,12 +320,27 @@ const upsertLegacyPremiumSubscriptionRecord = async (client, values) => {
     is_active: true,
     purchase_date: new Date().toISOString(),
   };
+  const extendedUpdate = {
+    ...baseUpdate,
+    base_plan_id: values.basePlanId || null,
+    purchase_token_identifier: values.purchaseTokenIdentifier || null,
+    expires_at: values.expiresAt || null,
+    raw_payload: values.rawPayload || {},
+    updated_at: new Date().toISOString(),
+  };
 
   if (latest?.id) {
-    const { error } = await client
+    let { error } = await client
       .from('premium_subscriptions')
-      .update(baseUpdate)
+      .update(extendedUpdate)
       .eq('id', latest.id);
+
+    if (error && isMissingLegacySubscriptionColumnError(error)) {
+      ({ error } = await client
+        .from('premium_subscriptions')
+        .update(baseUpdate)
+        .eq('id', latest.id));
+    }
 
     if (error) {
       throw new AppDataError(
@@ -329,12 +353,21 @@ const upsertLegacyPremiumSubscriptionRecord = async (client, values) => {
     return;
   }
 
-  const { error } = await client
+  let { error } = await client
     .from('premium_subscriptions')
     .insert({
       user_id: values.userId,
-      ...baseUpdate,
+      ...extendedUpdate,
     });
+
+  if (error && isMissingLegacySubscriptionColumnError(error)) {
+    ({ error } = await client
+      .from('premium_subscriptions')
+      .insert({
+        user_id: values.userId,
+        ...baseUpdate,
+      }));
+  }
 
   if (error) {
     throw new AppDataError(
@@ -429,7 +462,11 @@ const syncLegacyProfilePremiumFromVerification = async (client, profile, receipt
     userId: profile.id,
     platform: 'android',
     productId: nextProductId,
+    basePlanId: nextBasePlanId,
     transactionId: nextTransactionId,
+    purchaseTokenIdentifier: receipt?.purchase_token || null,
+    expiresAt: nextExpiry,
+    rawPayload: receipt?.raw_payload || {},
   });
 
   return updated || {
