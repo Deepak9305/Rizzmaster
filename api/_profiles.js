@@ -1,4 +1,4 @@
-import { isDatabaseConfigured, pool, withTransaction } from './_db.js';
+import { isDatabaseConfigured, pool, useCloudSqlCompat, withTransaction } from './_db.js';
 import { PurchaseVerificationError, verifyStorePurchase } from './_iap.js';
 
 const DEFAULT_FREE_CREDITS = 5;
@@ -143,6 +143,21 @@ const reconcileProfilePremium = async (client, profile) => {
 };
 
 const isSupabaseLikeClient = (value) => typeof value?.from === 'function';
+const loggedProfilePaths = new Set();
+
+const logProfilePath = (path) => {
+  const key = `${path}:${useCloudSqlCompat}:${isDatabaseConfigured}`;
+  if (loggedProfilePaths.has(key)) {
+    return;
+  }
+
+  loggedProfilePaths.add(key);
+  console.info('[Profiles] ensureUserProfile path selected.', {
+    path,
+    cloudSqlCompatEnabled: useCloudSqlCompat,
+    rawDatabaseConfigured: isDatabaseConfigured,
+  });
+};
 
 const loadLegacyProfileById = async (client, userId) => {
   const { data, error } = await client
@@ -374,6 +389,7 @@ export const ensureUserProfile = async (maybeUserOrClient, maybeUser = null) => 
   }
 
   if (legacyClientArg) {
+    logProfilePath('supabase-client');
     return ensureLegacyUserProfile(legacyClientArg, user);
   }
 
@@ -457,9 +473,11 @@ export const ensureUserProfile = async (maybeUserOrClient, maybeUser = null) => 
   };
 
   if (clientArg) {
+    logProfilePath('raw-pg-client');
     return work(clientArg);
   }
 
+  logProfilePath('raw-pg-transaction');
   return withTransaction(work);
 };
 

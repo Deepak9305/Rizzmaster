@@ -17,6 +17,8 @@ const normalizeInt = (value, fallback) => {
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
+export const useCloudSqlCompat = process.env.USE_CLOUDSQL_COMPAT === 'true';
+
 const databaseUrl = readEnv('DATABASE_URL');
 const dbUser = readEnv('PGUSER', 'DB_USER');
 const dbPassword = readEnv('PGPASSWORD', 'DB_PASSWORD');
@@ -49,9 +51,17 @@ const poolConfig = databaseUrl
       ssl: ssl || undefined,
     };
 
-export const isDatabaseConfigured = Boolean(
+const hasRawDatabaseConfig = Boolean(
   databaseUrl || (dbUser && dbPassword && dbName && dbHost)
 );
+
+if (hasRawDatabaseConfig && !useCloudSqlCompat) {
+  console.info('[DB] Raw pg / Cloud SQL compatibility envs detected but ignored because USE_CLOUDSQL_COMPAT is not enabled.');
+} else if (useCloudSqlCompat && hasRawDatabaseConfig) {
+  console.info('[DB] Raw pg / Cloud SQL compatibility path enabled.');
+}
+
+export const isDatabaseConfigured = useCloudSqlCompat && hasRawDatabaseConfig;
 
 export const pool = isDatabaseConfigured
   ? new Pool(poolConfig)
@@ -59,7 +69,11 @@ export const pool = isDatabaseConfigured
 
 export const withTransaction = async (work) => {
   if (!pool) {
-    throw new Error('Database is not configured.');
+    throw new Error(
+      useCloudSqlCompat
+        ? 'Database is not configured.'
+        : 'Raw pg / Cloud SQL compatibility path is disabled. Set USE_CLOUDSQL_COMPAT=true to enable it.'
+    );
   }
 
   const client = await pool.connect();

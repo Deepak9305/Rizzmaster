@@ -46,6 +46,9 @@ import NoInternetOverlay from './components/NoInternetOverlay';
 const DAILY_CREDITS = 5;
 const INTERSTITIAL_PRELOAD_RETRY_MS = 15000;
 const INTERSTITIAL_REFRESH_INTERVAL_MS = 8 * 60 * 1000;
+const SILENT_PREMIUM_RESTORE_WAIT_MS = 45000;
+const SILENT_PREMIUM_RESTORE_RETRY_MS = 60000;
+const SILENT_PREMIUM_RESTORE_MAX_ATTEMPTS = 2;
 
 // --- AD CONFIGURATION ---
 const USE_TEST_ADS = false; // Set to true for testing with Google test ads
@@ -981,9 +984,11 @@ const AppContentInner: React.FC = () => {
       }
     }, 1000)); // Deferred by 1 second to prioritize frame rendering initial paint
 
-    // --- SILENT RE-VERIFICATION FOR "WEB-BUY" EXPLOITERS ---
-    // If user is premium but 'unverified', they likely used the web loophole.
-    // We force a Restore to confirm they have a real Store receipt.
+    const silentPremiumRestoreAttemptsRef = { current: 0 };
+
+    // --- SILENT PREMIUM RE-CHECK ---
+    // If a premium user is still marked unverified, attempt a background restore
+    // without revoking access unless the backend later returns an explicit store failure.
     timerIds.push(setTimeout(async () => {
       // Wait for profile to settle if it hasn't yet (avoid false revocations)
       const checkVerification = async () => {
@@ -996,54 +1001,35 @@ const AppContentInner: React.FC = () => {
         }
 
         if (currentProfile.is_premium && currentProfile.premium_source === 'unverified') {
-          console.log("IAP: User is premium but 'unverified'. Starting silent restore check...");
+          const attempt = silentPremiumRestoreAttemptsRef.current + 1;
+          silentPremiumRestoreAttemptsRef.current = attempt;
+          console.log(`IAP: User is premium but 'unverified'. Starting silent restore check (attempt ${attempt}/${SILENT_PREMIUM_RESTORE_MAX_ATTEMPTS})...`);
           try {
             await IAPService.restore(currentProfile.id);
 
-            // Wait 15s for store status to update
+            // Give store verification more time to settle before deciding it was inconclusive.
             timerIds.push(setTimeout(async () => {
               if (!isMounted) return;
               const refreshedProfile = profileRef.current;
-              // If source is STILL unverified, it means no store receipt was found during restore
               if (refreshedProfile?.is_premium && refreshedProfile.premium_source === 'unverified') {
-                console.warn("IAP: Re-verification failed (No Store Receipt). Revoking premium.");
-                try {
-                  let token = '';
-                  if (supabase) {
-                    const { data: { session } } = await supabase.auth.getSession();
-                    token = session?.access_token || '';
-                  }
-
-                  const response = await fetch(getApiUrl('/api/revoke-premium'), {
-                    method: 'POST',
-                    headers: {
-                      'Authorization': `Bearer ${token}`,
-                    },
-                  });
-                  const payload = await response.json().catch(() => null);
-
-                  if (!response.ok) {
-                    throw new Error(payload?.error || 'Failed to revoke premium.');
-                  }
-
-                  if (payload?.profile) {
-                    setProfile(payload.profile);
-                    profileRef.current = payload.profile;
-                  } else {
-                    await syncProfile().catch(() => null);
-                  }
-
-                  showToast("Subscription verification failed. Access revoked.", 'error');
-                } catch (revokeError) {
-                  console.error("IAP: Premium revoke failed after silent restore check", revokeError);
-                  showToast("Subscription verification failed, but backend revocation did not complete. Please retry.", 'error');
+                if (attempt < SILENT_PREMIUM_RESTORE_MAX_ATTEMPTS) {
+                  console.warn('IAP: Silent restore was inconclusive. Retrying later without revoking premium.');
+                  timerIds.push(setTimeout(checkVerification, SILENT_PREMIUM_RESTORE_RETRY_MS));
+                  return;
                 }
-
+                console.warn('IAP: Silent restore remained inconclusive after retries. Keeping premium until backend returns an explicit invalid, expired, or revoked store verification.');
+              } else if (!refreshedProfile?.is_premium || refreshedProfile.premium_source !== 'unverified') {
+                silentPremiumRestoreAttemptsRef.current = 0;
               }
-            }, 15000));
+            }, SILENT_PREMIUM_RESTORE_WAIT_MS));
           } catch (e) {
             console.error("IAP: Re-verification process error", e);
+            if (attempt < SILENT_PREMIUM_RESTORE_MAX_ATTEMPTS && isMounted) {
+              timerIds.push(setTimeout(checkVerification, SILENT_PREMIUM_RESTORE_RETRY_MS));
+            }
           }
+        } else {
+          silentPremiumRestoreAttemptsRef.current = 0;
         }
       };
 
