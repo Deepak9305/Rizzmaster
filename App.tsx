@@ -1901,6 +1901,7 @@ const AppContentInner: React.FC = () => {
     }
 
     let shouldShowAd = false;
+    let adGenerationToRecord: number | null = null;
     if (!currentProfile.is_premium && canUseNativeAdMob()) {
       const today = new Date().toDateString();
       const lastAdDate = localStorage.getItem('rizz_last_ad_date');
@@ -1928,8 +1929,7 @@ const AppContentInner: React.FC = () => {
       
       if (genCount >= targetGen && cooldownPassed) {
         shouldShowAd = true;
-        lastAdActiveTime.current = now;
-        localStorage.setItem('rizz_last_ad_gen_count', genCount.toString());
+        adGenerationToRecord = genCount;
         console.log(`[AdMob] Will trigger concurrent interstitial at gen ${genCount}...`);
       }
     }
@@ -1939,7 +1939,20 @@ const AppContentInner: React.FC = () => {
 
     // Fire the ad concurrently so the API generation happens in the background while the user watches the ad!
     if (shouldShowAd) {
-      AdMobService.showInterstitial(getAdId('INTERSTITIAL'))
+      let accountedForShownInterstitial = false;
+      const recordShownInterstitial = () => {
+        if (accountedForShownInterstitial || adGenerationToRecord === null) return;
+        accountedForShownInterstitial = true;
+        lastAdActiveTime.current = activeTimeMs.current;
+        localStorage.setItem('rizz_last_ad_gen_count', adGenerationToRecord.toString());
+      };
+
+      AdMobService.showInterstitial(getAdId('INTERSTITIAL'), recordShownInterstitial)
+        .then((shown) => {
+          if (shown) {
+            recordShownInterstitial();
+          }
+        })
         .catch(e => console.warn("[AdMob] Deferred interstitial failed:", e))
         .finally(() => {
           runAdTask('Post-show preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
