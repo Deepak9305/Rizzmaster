@@ -17,6 +17,21 @@ type PrepareOptions = {
     timeoutMs?: number;
 };
 
+export type InterstitialShowReason =
+    | 'shown'
+    | 'not_initialized'
+    | 'already_showing'
+    | 'not_ready'
+    | 'failed_to_show'
+    | 'timeout_before_show'
+    | 'timeout_after_show'
+    | 'plugin_error';
+
+export type InterstitialShowResult = {
+    shown: boolean;
+    reason: InterstitialShowReason;
+};
+
 export const AdMobService = {
     initialized: false,
     interstitialReady: false,
@@ -279,43 +294,49 @@ export const AdMobService = {
         return this.interstitialPromise;
     },
 
-    async showInterstitial(adId: string, onShow?: () => void): Promise<boolean> {
-        if (!canUseNativeAdMob()) return false;
-        if (this.isInterstitialShowing) return false;
+    async showInterstitial(adId: string, onShow?: () => void): Promise<InterstitialShowResult> {
+        if (!canUseNativeAdMob()) {
+            return { shown: false, reason: 'plugin_error' };
+        }
+        if (this.isInterstitialShowing) {
+            return { shown: false, reason: 'already_showing' };
+        }
         this.isInterstitialShowing = true;
 
         const initialized = await this.ensureInitialized('Interstitial show');
         if (!initialized) {
             this.isInterstitialShowing = false;
             this.invalidateInterstitial();
-            return false;
+            return { shown: false, reason: 'not_initialized' };
         }
         console.log(`[AdMob] Attempting to show interstitial: ${adId}`);
 
         try {
-            return await new Promise<boolean>((resolve) => {
+            return await new Promise<InterstitialShowResult>((resolve) => {
                 let resolved = false;
                 let showed = false;
                 let preparedJustInTime = false;
                 let showedListener: any = null;
                 let dismissListener: any = null;
-                let failedListener: any = null;
                 let failedShowListener: any = null;
 
                 let timeout: ReturnType<typeof setTimeout> | null = setTimeout(() => {
                     console.warn('AdMob Interstitial Timeout: Proceeding automatically.');
-                    cleanupAndResolve(false);
+                    cleanupAndResolve({
+                        shown: showed,
+                        reason: showed ? 'timeout_after_show' : 'timeout_before_show',
+                    });
                 }, this.INTERSTITIAL_SHOW_TIMEOUT_MS);
 
-                const cleanupAndResolve = (success: boolean) => {
+                const cleanupAndResolve = (result: InterstitialShowResult) => {
                     if (resolved) return;
                     resolved = true;
-                    this.cleanupListeners([dismissListener, failedListener, failedShowListener, showedListener]);
+                    this.cleanupListeners([dismissListener, failedShowListener, showedListener]);
                     if (timeout) clearTimeout(timeout);
                     this.interstitialReady = false;
                     this.interstitialPreparedAt = 0;
                     this.isInterstitialShowing = false;
-                    resolve(success);
+                    resolve(result);
                 };
 
                 void (async () => {
@@ -326,24 +347,29 @@ export const AdMobService = {
                             if (timeout) clearTimeout(timeout);
                             timeout = setTimeout(() => {
                                 console.warn('[AdMob] Interstitial dismiss event never arrived after show; releasing state.');
-                                cleanupAndResolve(true);
+                                cleanupAndResolve({ shown: true, reason: 'timeout_after_show' });
                             }, this.INTERSTITIAL_POST_SHOW_TIMEOUT_MS);
-                            if (onShow) onShow();
+                            if (onShow) {
+                                try {
+                                    onShow();
+                                } catch (error) {
+                                    console.warn('[AdMob] Interstitial onShow callback failed:', error);
+                                }
+                            }
                         });
 
                         dismissListener = await AdMob.addListener(InterstitialAdPluginEvents.Dismissed, () => {
-                            cleanupAndResolve(showed);
-                        });
-
-                        failedListener = await AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, () => {
-                            cleanupAndResolve(false);
+                            cleanupAndResolve({
+                                shown: showed,
+                                reason: showed ? 'shown' : 'plugin_error',
+                            });
                         });
 
                         failedShowListener = await AdMob.addListener(InterstitialAdPluginEvents.FailedToShow, (info) => {
                             console.error('[AdMob] Interstitial Failed to Show:', info);
                             this.interstitialReady = false;
                             this.interstitialPreparedAt = 0;
-                            cleanupAndResolve(false);
+                            cleanupAndResolve({ shown: false, reason: 'failed_to_show' });
                         });
 
                         if (!this.hasFreshInterstitial(adId)) {
@@ -352,7 +378,7 @@ export const AdMobService = {
                             const prepared = await this.prepareInterstitial(adId);
                             if (!prepared || !this.hasFreshInterstitial(adId)) {
                                 console.error('[AdMob] JIT Prepare failed: Ad not ready after preparation.');
-                                cleanupAndResolve(false);
+                                cleanupAndResolve({ shown: false, reason: 'not_ready' });
                                 return;
                             }
                         }
@@ -369,13 +395,21 @@ export const AdMobService = {
                             console.error('AdMob showInterstitial threw:', error);
                             this.interstitialReady = false;
                             this.interstitialPreparedAt = 0;
-                            cleanupAndResolve(false);
+                            const message = error instanceof Error ? error.message : String(error);
+                            const isNotReadyError =
+                                message.includes('No Interstitial can be shown') ||
+                                message.includes("Ad wasn't ready") ||
+                                message.includes('not prepared');
+                            cleanupAndResolve({
+                                shown: false,
+                                reason: isNotReadyError ? 'not_ready' : 'plugin_error',
+                            });
                         }
                     } catch (error) {
                         console.error('[AdMob] Interstitial executor error:', error);
                         this.interstitialReady = false;
                         this.interstitialPreparedAt = 0;
-                        cleanupAndResolve(false);
+                        cleanupAndResolve({ shown: false, reason: 'plugin_error' });
                     }
                 })();
             });
@@ -383,7 +417,7 @@ export const AdMobService = {
             console.error('AdMob Interstitial Error', error);
             this.isInterstitialShowing = false;
             this.invalidateInterstitial();
-            return false;
+            return { shown: false, reason: 'plugin_error' };
         }
     },
 

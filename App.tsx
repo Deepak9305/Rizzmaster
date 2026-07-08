@@ -1947,16 +1947,38 @@ const AppContentInner: React.FC = () => {
         localStorage.setItem('rizz_last_ad_gen_count', adGenerationToRecord.toString());
       };
 
-      AdMobService.showInterstitial(getAdId('INTERSTITIAL'), recordShownInterstitial)
-        .then((shown) => {
-          if (shown) {
-            recordShownInterstitial();
-          }
-        })
+      const isForeground = backgroundTimestamp.current === null;
+      const isVisible = typeof document === 'undefined' || document.visibilityState === 'visible';
+      const hasUiConflict = showOnboarding || showPremiumModal || showSavedModal;
+
+      if (!isForeground || !isVisible || hasUiConflict || adTransitionInProgressRef.current) {
+        console.warn('[AdMob] Skipping interstitial because the app is not in a stable foreground state.', {
+          isForeground,
+          visibilityState: typeof document === 'undefined' ? 'unavailable' : document.visibilityState,
+          hasUiConflict,
+          adTransitionInProgress: adTransitionInProgressRef.current,
+        });
+      } else {
+        adTransitionInProgressRef.current = true;
+
+        AdMobService.showInterstitial(getAdId('INTERSTITIAL'), recordShownInterstitial)
+          .then((result) => {
+            if (result.shown) {
+              recordShownInterstitial();
+              return;
+            }
+
+            console.warn('[AdMob] Interstitial did not reach the user.', {
+              reason: result.reason,
+              generation: adGenerationToRecord,
+            });
+          })
         .catch(e => console.warn("[AdMob] Deferred interstitial failed:", e))
         .finally(() => {
+          adTransitionInProgressRef.current = false;
           runAdTask('Post-show preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
         });
+      }
     }
 
     // --- GENERATION START ---
@@ -2062,7 +2084,7 @@ const AppContentInner: React.FC = () => {
         await syncProfile().catch(() => null);
       }
     }
-  }, [mode, inputText, image, selectedVibe, responseLength, showToast, handleOpenPremium, updateCredits, customPersonas, profile, isGuest, syncProfile, loading]);
+  }, [mode, inputText, image, selectedVibe, responseLength, showToast, handleOpenPremium, updateCredits, customPersonas, profile, isGuest, syncProfile, loading, showOnboarding, showPremiumModal, showSavedModal]);
 
 
   const isSaved = useCallback((content: string) => savedItems.some(item => item.content === content), [savedItems]);
