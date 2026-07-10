@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { getAuthUnavailableMessage, getRuntimeConfigDebugMessage, runtimeConfig } from '../services/runtimeConfig';
 import { canUseNativeGoogleAuth } from '../services/nativeCapabilities';
@@ -51,6 +51,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [message, setMessage] = useState<string | null>(null);
+    const [showPremiumLoginWarning, setShowPremiumLoginWarning] = useState(reason === 'premium');
     const authUnavailableMessage = getAuthUnavailableMessage();
     const authDebugMessage = getRuntimeConfigDebugMessage();
     const isAuthAvailable = runtimeConfig.authAvailable;
@@ -59,6 +60,20 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
 
     // State for Legal Modals
     const [activeLegalModal, setActiveLegalModal] = useState<'privacy' | 'terms' | null>(null);
+
+    useEffect(() => {
+        if (reason !== 'premium') {
+            setShowPremiumLoginWarning(false);
+            return;
+        }
+
+        setShowPremiumLoginWarning(true);
+        const timeoutId = window.setTimeout(() => {
+            setShowPremiumLoginWarning(false);
+        }, 3000);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [reason]);
 
     const handleGoogleLogin = async () => {
         if (loading) return; // Prevent double-tap
@@ -255,6 +270,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
                                 ? 'Log in or create a free account first.'
                                 : (isSignUp ? 'Join Rizz Master today.' : 'Sign in to continue.')}
                         </p>
+
+                        {showPremiumLoginWarning && (
+                            <div className="p-3 mb-5 bg-amber-500/10 border border-amber-400/25 rounded-lg text-amber-100 text-sm animate-fade-in">
+                                To buy premium, please log in with your email first.
+                            </div>
+                        )}
 
                         {authUnavailableMessage && (
                             <div className="p-3 mb-5 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-100 text-sm">
