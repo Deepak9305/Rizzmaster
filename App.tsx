@@ -2086,17 +2086,6 @@ const AppContentInner: React.FC = () => {
     }
   }, [mode, inputText, image, selectedVibe, responseLength, showToast, handleOpenPremium, updateCredits, customPersonas, profile, isGuest, syncProfile, loading, showOnboarding, showPremiumModal, showSavedModal]);
 
-  const handleShareText = useCallback(async (text: string, title: string) => {
-    const shared = await NativeBridge.shareText(text, title);
-    if (shared) {
-      showToast('Shared successfully!', 'success');
-      return;
-    }
-
-    showToast('Share canceled or unavailable.', 'info');
-  }, [showToast]);
-
-
   const isSaved = useCallback((content: string) => savedItems.some(item => item.content === content), [savedItems]);
   const clear = useCallback(() => {
     setInputText('');
@@ -2567,17 +2556,13 @@ const AppContentInner: React.FC = () => {
                         <span className="text-2xl">📝</span>
                         <h3 className="text-xs md:text-sm font-semibold uppercase tracking-widest text-white/60">Bio Result</h3>
                         <div className="ml-auto flex gap-2">
-                          <button onClick={() => handleShareText(result.bio, 'Rizz Master Bio')} className="p-2 rounded-full hover:bg-white/10 transition-all text-white/50 hover:text-white"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C9.886 12.59 11.315 12 12.75 12c1.435 0 2.864.59 4.066 1.342m-8.132 0a3 3 0 11-4.368-4.104 3 3 0 014.368 4.104zm8.132 0a3 3 0 104.368-4.104 3 3 0 00-4.368 4.104zM12 5.25a3 3 0 110 6 3 3 0 010-6z" /></svg></button>
                           <button onClick={() => { NativeBridge.copyToClipboard(result.bio); showToast('Bio copied!', 'success'); }} className="p-2 rounded-full hover:bg-white/10 transition-all text-white/50 hover:text-white"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg></button>
                           <button onClick={() => toggleSave(result.bio, 'bio')} className={`p-2 rounded-full hover:bg-white/10 transition-all ${isSaved(result.bio) ? 'text-rose-500' : 'text-white/50 hover:text-rose-400'}`}><svg className="w-5 h-5" fill={isSaved(result.bio) ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg></button>
                         </div>
                       </div>
                       <p className="text-lg md:text-xl leading-relaxed font-medium mb-6 md:mb-8 text-white">{result.bio}</p>
                       <div className="p-4 bg-white/5 rounded-2xl border border-white/5 mb-4"><h4 className="text-[10px] uppercase font-bold text-rose-400 mb-1">Why it works</h4><p className="text-xs md:text-sm text-white/60">{result.analysis}</p></div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <button onClick={() => handleShareText(result.bio, 'Rizz Master Bio')} className="w-full py-3 border border-white/20 rounded-xl hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2"><span>📤</span> Share Bio</button>
-                        <button onClick={() => { NativeBridge.copyToClipboard(result.bio); showToast('Bio copied!', 'success'); }} className="w-full py-3 border border-white/20 rounded-xl hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2"><span>📋</span> Copy Bio</button>
-                      </div>
+                      <button onClick={() => { NativeBridge.copyToClipboard(result.bio); showToast('Bio copied!', 'success'); }} className="w-full py-3 border border-white/20 rounded-xl hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2"><span>📋</span> Copy Bio</button>
                     </div>
                   )}
                 </section>
