@@ -35,6 +35,16 @@ const RizzCard: React.FC<RizzCardProps> = memo(({
     }
   };
 
+  const handleShare = async () => {
+    const shared = await NativeBridge.shareText(content, `Rizz Master ${label}`);
+    if (shared) {
+      showToast('Shared successfully!', 'success');
+      return;
+    }
+
+    showToast('Share canceled or unavailable.', 'info');
+  };
+
   return (
     <div
       className="glass rounded-2xl p-4 md:p-5 border border-white/5 hover:border-white/20 transition-all duration-300 group opacity-0 animate-fade-in-up active:scale-[0.99]"
@@ -48,6 +58,13 @@ const RizzCard: React.FC<RizzCardProps> = memo(({
           </span>
         </div>
         <div className="flex gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={handleShare}
+            className="p-1.5 rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition-colors active:scale-95"
+            title="Share"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C9.886 12.59 11.315 12 12.75 12c1.435 0 2.864.59 4.066 1.342m-8.132 0a3 3 0 11-4.368-4.104 3 3 0 014.368 4.104zm8.132 0a3 3 0 104.368-4.104 3 3 0 00-4.368 4.104zM12 5.25a3 3 0 110 6 3 3 0 010-6z" /></svg>
+          </button>
           <button
             onClick={handleCopy}
             className="p-1.5 rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition-colors active:scale-95"

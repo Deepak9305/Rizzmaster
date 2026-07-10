@@ -51,5 +51,26 @@ export const NativeBridge = {
       console.error('Clipboard failed completely', err);
       return false;
     }
+  },
+
+  /**
+   * Share text wrapper
+   */
+  shareText: async (text: string, title = 'Rizz Master'): Promise<boolean> => {
+    try {
+      if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+        await navigator.share({ title, text });
+        return true;
+      }
+
+      return await NativeBridge.copyToClipboard(text);
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        return false;
+      }
+
+      console.error('Share failed completely', err);
+      return false;
+    }
   }
 };
