@@ -392,6 +392,93 @@ const toGeminiContents = (messages) => (
     })
 );
 
+const extractTextFromContent = (content) => {
+  if (typeof content === "string") {
+    return content.trim();
+  }
+
+  if (!Array.isArray(content)) {
+    return "";
+  }
+
+  return content
+    .filter((part) => part?.type === "text" && typeof part.text === "string")
+    .map((part) => part.text.trim())
+    .filter(Boolean)
+    .join("\n");
+};
+
+const buildImageAnalysisInstruction = (messageText) => [
+  "You are preparing visual context for a separate text-generation model in a dating/social assistant app.",
+  "Analyze the attached image together with any user text.",
+  "Return plain text only.",
+  "Keep it compact and factual.",
+  "Include:",
+  "- who is visible and approximate presentation",
+  "- expressions, pose, styling, and setting",
+  "- notable social/dating cues",
+  "- likely vibe or subtext",
+  "- uncertainty when relevant",
+  "Do not write pickup lines, replies, JSON, markdown, or policy commentary.",
+  messageText ? `User text for context:\n${messageText}` : "No extra user text was provided.",
+].join("\n");
+
+const analyzeImageMessageWithGemini = async (gemini, message) => {
+  const textContext = extractTextFromContent(message.content);
+  const contentParts = Array.isArray(message.content)
+    ? message.content.map(toGeminiPart)
+    : [createPartFromText(String(message.content || ""))];
+
+  const completion = await withProviderTimeout(
+    gemini.models.generateContent({
+      model: GEMINI_VISION_MODEL,
+      contents: [createUserContent(contentParts)],
+      config: {
+        temperature: 0.2,
+        maxOutputTokens: 350,
+        systemInstruction: buildImageAnalysisInstruction(textContext),
+      },
+    }),
+    AI_PROVIDER_TIMEOUT_MS
+  );
+
+  const analysis = completion.text?.trim();
+  if (!analysis) {
+    throw new Error("Gemini image analysis returned an empty response.");
+  }
+
+  return analysis;
+};
+
+const buildTextOnlyMessagesFromImageRequest = async (gemini, messages) => {
+  const transformed = [];
+
+  for (const message of messages || []) {
+    if (!Array.isArray(message?.content) || !message.content.some((part) => part?.type === "image_url")) {
+      transformed.push({
+        role: message.role,
+        content: typeof message.content === "string" ? message.content : extractTextFromContent(message.content),
+      });
+      continue;
+    }
+
+    const textContext = extractTextFromContent(message.content);
+    const imageAnalysis = await analyzeImageMessageWithGemini(gemini, message);
+    const mergedText = [
+      textContext,
+      "[Image analysis]",
+      imageAnalysis,
+    ].filter(Boolean).join("\n\n");
+
+    transformed.push({
+      role: message.role,
+      content: mergedText,
+    });
+  }
+
+  return transformed;
+};
+
 export default async function handler(req, res) {
   if (applyCors(req, res)) return;
 
@@ -554,29 +641,52 @@ export default async function handler(req, res) {
     let lastProviderError = null;
     const systemInstruction = extractSystemInstruction(request.messages);
 
-    for (const candidateModel of candidateModels) {
+    if (isImageRequest) {
       try {
-        if (isImageRequest) {
-          const geminiApiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-          if (!geminiApiKey) {
-            throw new Error("Gemini API key is not configured on the server.");
-          }
+        const geminiApiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+        if (!geminiApiKey) {
+          throw new Error("Gemini API key is not configured on the server.");
+        }
 
-          const gemini = new GoogleGenAI({ apiKey: geminiApiKey });
-          completion = await withProviderTimeout(
-            gemini.models.generateContent({
-              model: candidateModel,
-              contents: toGeminiContents(request.messages),
-              config: {
-                temperature: request.temperature,
-                maxOutputTokens: request.max_tokens,
-                ...(systemInstruction ? { systemInstruction } : {}),
-              },
-            }),
-            AI_PROVIDER_TIMEOUT_MS
-          );
-          content = completion.text?.trim() || "";
-        } else {
+        const groqApiKey = process.env.GROQ_API_KEY || process.env.LLAMA_API_KEY;
+        if (!groqApiKey) {
+          throw new Error("Groq API key is not configured on the server.");
+        }
+
+        const gemini = new GoogleGenAI({ apiKey: geminiApiKey });
+        const textOnlyMessages = await buildTextOnlyMessagesFromImageRequest(gemini, request.messages);
+        const hybridRequest = {
+          ...request,
+          model: GROQ_TEXT_MODEL,
+          messages: textOnlyMessages,
+        };
+
+        const client = new OpenAI({
+          apiKey: groqApiKey,
+          baseURL: process.env.LLAMA_BASE_URL || DEFAULT_BASE_URL,
+        });
+
+        completion = await withProviderTimeout(
+          client.chat.completions.create({
+            ...hybridRequest,
+            model: GROQ_TEXT_MODEL,
+            max_tokens: Math.max(hybridRequest.max_tokens || GROQ_TEXT_MIN_TOKENS, GROQ_TEXT_MIN_TOKENS),
+            reasoning_effort: "low",
+          }),
+          AI_PROVIDER_TIMEOUT_MS
+        );
+        content = completion.choices?.[0]?.message?.content?.trim() || "";
+
+        if (!content) {
+          throw new Error(`AI provider returned an empty response for model ${GROQ_TEXT_MODEL}.`);
+        }
+      } catch (providerError) {
+        lastProviderError = providerError;
+        console.warn(`[AI API] Hybrid image pipeline failed:`, providerError?.message || providerError);
+      }
+    } else {
+      for (const candidateModel of candidateModels) {
+        try {
           const groqApiKey = process.env.GROQ_API_KEY || process.env.LLAMA_API_KEY;
           if (!groqApiKey) {
             throw new Error("Groq API key is not configured on the server.");
@@ -601,19 +711,19 @@ export default async function handler(req, res) {
             AI_PROVIDER_TIMEOUT_MS
           );
           content = completion.choices?.[0]?.message?.content?.trim() || "";
-        }
 
-        if (content) {
-          if (candidateModel !== request.model) {
-            console.warn(`[AI API] Provider fallback used. Requested ${request.model}, served with ${candidateModel}.`);
+          if (content) {
+            if (candidateModel !== request.model) {
+              console.warn(`[AI API] Provider fallback used. Requested ${request.model}, served with ${candidateModel}.`);
+            }
+            break;
           }
-          break;
-        }
 
-        lastProviderError = new Error(`AI provider returned an empty response for model ${candidateModel}.`);
-      } catch (providerError) {
-        lastProviderError = providerError;
-        console.warn(`[AI API] Model attempt failed for ${candidateModel}:`, providerError?.message || providerError);
+          lastProviderError = new Error(`AI provider returned an empty response for model ${candidateModel}.`);
+        } catch (providerError) {
+          lastProviderError = providerError;
+          console.warn(`[AI API] Model attempt failed for ${candidateModel}:`, providerError?.message || providerError);
+        }
       }
     }
 
