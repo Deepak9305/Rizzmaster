@@ -363,6 +363,30 @@ body {
   animation: marketingFloat 7s ease-in-out infinite;
 }
 
+.marketing-floating-chip {
+  animation: chipFloat 6s ease-in-out infinite;
+}
+
+@keyframes chipFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.marketing-site :is(a, button):focus-visible {
+  outline: 2px solid #f9a8d4;
+  outline-offset: 4px;
+  box-shadow: 0 0 0 5px rgba(244, 114, 182, 0.18);
+}
+
+.marketing-sticky-cta {
+  animation: stickyCtaIn 280ms ease-out both;
+}
+
+@keyframes stickyCtaIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @keyframes marketingFloat {
   0%, 100% { transform: translateY(0) rotate(1deg); }
   50% { transform: translateY(-10px) rotate(-1deg); }
@@ -383,10 +407,12 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .marketing-phone,
-  .marketing-card,
-  .marketing-cta-primary {
-    animation: none;
-    transition: none;
+  .marketing-site *,
+  .marketing-site *::before,
+  .marketing-site *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }
