@@ -1,4 +1,4 @@
-export const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=YOUR_APP_PACKAGE_NAME';
+export const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=app.vercel.rizzmaster&pcampaignid=web_share';
 
 export interface BlogSection {
   heading: string;
