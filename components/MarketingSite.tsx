@@ -176,33 +176,16 @@ const BlogCard: React.FC<{ post: BlogPost; navigate: (path: string) => void; fea
   </article>
 );
 
-const PhoneMockup: React.FC = () => (
-  <div className="relative mx-auto w-full max-w-[360px]">
-    <div className="absolute -inset-6 rounded-[3rem] bg-pink-500/20 blur-3xl" />
-    <div className="marketing-phone relative mx-auto overflow-hidden rounded-[2.5rem] border border-white/15 bg-[#0c0a10] p-3 shadow-[0_30px_100px_rgba(0,0,0,0.6)]">
-      <div className="rounded-[2rem] border border-white/10 bg-gradient-to-b from-[#1b1120] to-[#09090d] px-4 pb-6 pt-3">
-        <div className="mx-auto mb-5 h-1 w-20 rounded-full bg-white/20" />
-        <div className="flex items-center justify-between text-[10px] text-white/40">
-          <span>9:41</span><span>RIZZ MASTER</span><span>▮▮▮</span>
-        </div>
-        <div className="mt-8">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-pink-300/70">Your reply, upgraded</p>
-          <h3 className="mt-2 text-2xl font-black leading-tight text-white">Pick your<br /><span className="text-pink-300">energy.</span></h3>
-        </div>
-        <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.05] p-4">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-white/35">The message</p>
-          <p className="mt-2 text-sm leading-6 text-white/80">“haha yeah maybe”</p>
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {['Flirty', 'Funny', 'Confident'].map((tone, index) => <span key={tone} className={`rounded-full border px-3 py-1.5 text-[10px] font-bold ${index === 0 ? 'border-pink-400/50 bg-pink-500/20 text-pink-100' : 'border-white/10 bg-white/[0.04] text-white/45'}`}>{tone}</span>)}
-        </div>
-        <div className="mt-5 rounded-2xl border border-pink-300/20 bg-gradient-to-br from-pink-500/15 to-purple-500/10 p-4 shadow-[0_0_30px_rgba(236,72,153,0.1)]">
-          <div className="flex items-center justify-between"><span className="text-[10px] font-bold uppercase tracking-widest text-pink-200/70">Smooth</span><span className="text-xs text-pink-200">♥</span></div>
-          <p className="mt-3 text-sm font-medium leading-6 text-white">“That sounds like a yes wearing a tiny disguise. What are you thinking?”</p>
-        </div>
-        <div className="mt-5 h-11 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 text-center text-xs font-bold leading-[2.75rem] text-white shadow-[0_12px_30px_rgba(236,72,153,0.25)]">Get better replies</div>
-      </div>
-    </div>
+const HeroPoster: React.FC = () => (
+  <div className="relative mx-auto w-full max-w-[390px]">
+    <div className="absolute -inset-8 rounded-[4rem] bg-pink-500/20 blur-3xl" />
+    <img
+      src="/rizzmaster-hero-poster.png"
+      alt="Rizz Master app poster showing smart replies, custom vibes, and AI-powered dating tools"
+      className="marketing-phone relative mx-auto block w-full rounded-[2rem] border border-pink-300/25 shadow-[0_30px_100px_rgba(0,0,0,0.65)]"
+      loading="eager"
+      decoding="async"
+    />
   </div>
 );
 
@@ -228,7 +211,7 @@ const HomePage: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) 
               <span className="flex items-center gap-2"><span className="text-pink-300">✦</span> Android app</span>
             </div>
           </div>
-          <PhoneMockup />
+          <HeroPoster />
         </div>
         <div className="marketing-container relative grid grid-cols-2 gap-3 pb-10 sm:grid-cols-4 md:pb-16">
           {['Replies', 'Openers', 'Dating bios', 'Pickup lines'].map((label, index) => <div key={label} className="rounded-2xl border border-white/[0.08] bg-white/[0.035] px-4 py-4 text-center text-xs font-semibold text-white/45 backdrop-blur-sm"><span className="mb-1 block text-lg text-pink-300/80">{['↗', '✦', '⌁', '♡'][index]}</span>{label}</div>)}
@@ -248,7 +231,7 @@ const HomePage: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) 
       </section>
 
       <section id="features" className="marketing-section marketing-container scroll-mt-8">
-        <SectionHeading eyebrow="More than a one-liner" title="A better way to find your next move" description="Everything you need to say what you mean with a little more confidence." />
+        <SectionHeading eyebrow="More than a one-liner" title="A better way to find your next move" description="From one perfect reply to a full conversation coach, Rizz Master gives you the right kind of help for the moment." />
         <div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[
             ['✦', 'AI reply generator', 'Paste the message, choose the vibe, and get thoughtful options in seconds.'],
@@ -256,7 +239,10 @@ const HomePage: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) 
             ['♡', 'Pickup line generator', 'Start with playful openers that make the next message easier.'],
             ['◌', 'Your tone, your choice', 'Go flirty, funny, wholesome, confident, savage, or romantic.'],
             ['▢', 'Save your favorites', 'Keep the replies that feel right so your best ideas are always close.'],
-            ['∞', 'Daily free credits', 'Get useful help every day, with premium modes when you want more range.']
+            ['∞', 'Daily free credits', 'Get useful help every day, with premium modes when you want more range.'],
+            ['◎', 'AI Chat Coach', 'Talk through the whole situation with Rizz AI. Share the context or a screenshot, get the vibe decoded, and find your next move.'],
+            ['✧', 'Custom personas', 'Create your own advisors with custom instructions—a playful wingman, a direct friend, or the exact voice you need.'],
+            ['♛', 'Premium coaching modes', 'Unlock deeper coaching, more tone range, and extra persona space when you want your personal dating assistant to go further.']
           ].map(([icon, title, copy]) => <div key={title} className="marketing-card group p-7"><span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-pink-300/15 bg-pink-300/[0.07] text-xl text-pink-200 transition-transform group-hover:scale-110">{icon}</span><h3 className="mt-6 text-lg font-bold text-white">{title}</h3><p className="mt-3 text-sm leading-6 text-white/48">{copy}</p></div>)}
         </div>
       </section>
