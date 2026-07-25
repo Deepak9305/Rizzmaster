@@ -353,6 +353,12 @@ body {
   transform: translateY(-3px);
 }
 
+.marketing-trust-band {
+  border: 1px solid rgba(244, 114, 182, 0.14);
+  background: linear-gradient(110deg, rgba(236, 72, 153, 0.09), rgba(255, 255, 255, 0.025) 52%, rgba(124, 58, 237, 0.08));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 18px 60px rgba(0, 0, 0, 0.15);
+}
+
 .marketing-phone {
   animation: marketingFloat 7s ease-in-out infinite;
 }

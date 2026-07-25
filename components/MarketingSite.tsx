@@ -154,8 +154,8 @@ const MarketingFooter: React.FC<{ navigate: (path: string) => void }> = ({ navig
   </footer>
 );
 
-const SectionHeading: React.FC<{ eyebrow: string; title: string; description?: string }> = ({ eyebrow, title, description }) => (
-  <div className="mx-auto max-w-2xl text-center">
+const SectionHeading: React.FC<{ eyebrow: string; title: string; description?: string; align?: 'center' | 'left' }> = ({ eyebrow, title, description, align = 'center' }) => (
+  <div className={`${align === 'center' ? 'mx-auto text-center' : 'text-left'} max-w-2xl`}>
     <p className="mb-3 text-xs font-bold uppercase tracking-[0.28em] text-pink-300/80">{eyebrow}</p>
     <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl md:text-5xl">{title}</h2>
     {description && <p className="mt-5 text-base leading-7 text-white/55">{description}</p>}
@@ -282,12 +282,21 @@ const HomePage: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) 
         </div>
       </section>
 
-      <section className="marketing-section marketing-container">
-        <div className="mx-auto max-w-3xl text-center"><div className="mb-5 flex justify-center gap-1 text-pink-300"><span>✦</span><span>✦</span><span>✦</span></div><h2 className="text-2xl font-bold text-white md:text-3xl">Designed for faster, better, more confident replies.</h2><p className="mt-4 text-white/45">No fake numbers. No pressure to perform. Just a little help for the moments you want to show up well.</p></div>
+      <section className="marketing-container py-8 md:py-12">
+        <div className="marketing-trust-band mx-auto flex max-w-4xl flex-col gap-5 rounded-3xl px-6 py-6 md:flex-row md:items-center md:justify-between md:px-8">
+          <div className="flex items-start gap-4">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-pink-300/20 bg-pink-300/[0.08] text-pink-200">✦</span>
+            <div>
+              <h2 className="text-lg font-bold leading-snug text-white md:text-xl">Designed for faster, better, more confident replies.</h2>
+              <p className="mt-1.5 text-sm text-pink-100/45">Built for people who overthink every text.</p>
+            </div>
+          </div>
+          <p className="max-w-sm text-sm leading-6 text-white/45 md:text-right">No fake numbers. No pressure to perform. Just a little help for the moments you want to show up well.</p>
+        </div>
       </section>
 
-      <section className="marketing-section marketing-container pb-24 md:pb-32">
-        <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between"><SectionHeading eyebrow="From the blog" title="A little help for your next text" description="Practical advice for openers, dry replies, profiles, and the moments you replay before hitting send." /><button onClick={() => navigate('/blog')} className="self-center whitespace-nowrap text-sm font-bold text-pink-200 transition-colors hover:text-white md:self-end">View all tips →</button></div>
+      <section className="marketing-container pb-24 pt-8 md:pb-32 md:pt-12">
+        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between"><SectionHeading align="left" eyebrow="From the blog" title="A little help for your next text" description="Practical advice for openers, dry replies, profiles, and the moments you replay before hitting send." /><button onClick={() => navigate('/blog')} className="self-start whitespace-nowrap text-sm font-bold text-pink-200 transition-colors hover:text-white md:self-end">View all tips →</button></div>
         <div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-3">{BLOG_POSTS.slice(0, 6).map((post) => <BlogCard key={post.slug} post={post} navigate={navigate} />)}</div>
       </section>
 
