@@ -150,15 +150,22 @@ const MarketingNav: React.FC<{ navigate: (path: string) => void }> = ({ navigate
       </button>
 
       <nav className="hidden items-center gap-7 text-sm text-white/55 md:flex" aria-label="Marketing navigation">
-        <button onClick={() => navigate('/#features')} className="transition-colors hover:text-white">Features</button>
-        <button onClick={() => navigate('/#how-it-works')} className="transition-colors hover:text-white">How it works</button>
-        <button onClick={() => navigate('/blog')} className="transition-colors hover:text-white">Blog</button>
+        <a href="/#features" onClick={(event) => { event.preventDefault(); navigate('/#features'); }} className="transition-colors hover:text-white">Features</a>
+        <a href="/#how-it-works" onClick={(event) => { event.preventDefault(); navigate('/#how-it-works'); }} className="transition-colors hover:text-white">How it works</a>
+        <a href="/blog" onClick={(event) => { event.preventDefault(); navigate('/blog'); }} className="transition-colors hover:text-white">Blog</a>
       </nav>
 
       <PlayStoreButton compact supportText="Free Android app" />
     </div>
   </header>
 );
+
+const OFFICIAL_LEGAL_LINKS = [
+  { label: 'Google Play Terms', href: 'https://play.google.com/intl/en_us/about/play-terms/index.html' },
+  { label: 'Google Play User Data policy', href: 'https://support.google.com/googleplay/android-developer/answer/10144311?hl=en' },
+  { label: 'Google Play Data safety', href: 'https://support.google.com/googleplay/android-developer/answer/10787469?hl=en' },
+  { label: 'Google Play refunds', href: 'https://support.google.com/googleplay/answer/2479637' }
+] as const;
 
 const MarketingFooter: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) => (
   <footer className="border-t border-white/[0.08] bg-black/50">
@@ -168,10 +175,13 @@ const MarketingFooter: React.FC<{ navigate: (path: string) => void }> = ({ navig
         <p className="mt-2 text-xs text-white/35">Built for people who overthink every text.</p>
       </div>
       <div className="flex flex-wrap gap-x-6 gap-y-3 text-xs font-semibold text-white/45">
-        <button onClick={() => navigate('/blog')} className="transition-colors hover:text-white">Blog</button>
-        <button onClick={() => navigate('/privacy')} className="transition-colors hover:text-white">Privacy</button>
-        <button onClick={() => navigate('/terms')} className="transition-colors hover:text-white">Terms</button>
-        <button onClick={() => navigate('/support')} className="transition-colors hover:text-white">Support</button>
+        <a href="/blog" onClick={(event) => { event.preventDefault(); navigate('/blog'); }} className="transition-colors hover:text-white">Blog</a>
+        <a href="/privacy" onClick={(event) => { event.preventDefault(); navigate('/privacy'); }} className="transition-colors hover:text-white">Privacy</a>
+        <a href="/terms" onClick={(event) => { event.preventDefault(); navigate('/terms'); }} className="transition-colors hover:text-white">Terms</a>
+        <a href="/support" onClick={(event) => { event.preventDefault(); navigate('/support'); }} className="transition-colors hover:text-white">Support</a>
+      </div>
+      <div className="flex max-w-md flex-wrap gap-x-4 gap-y-2 text-[11px] font-medium text-white/30">
+        {OFFICIAL_LEGAL_LINKS.map((link) => <a key={link.href} href={link.href} target="_blank" rel="noreferrer" className="transition-colors hover:text-white/70">{link.label}</a>)}
       </div>
       <p className="text-xs text-white/25">© {new Date().getFullYear()} Rizz Master</p>
     </div>
@@ -195,9 +205,9 @@ const BlogCard: React.FC<{ post: BlogPost; navigate: (path: string) => void; fea
     </div>
     <h3 className={`font-bold leading-tight text-white transition-colors group-hover:text-pink-200 ${featured ? 'text-2xl md:text-3xl' : 'text-xl'}`}>{post.title}</h3>
     <p className="mt-4 flex-1 text-sm leading-6 text-white/50">{post.excerpt}</p>
-    <button onClick={() => navigate(`/blog/${post.slug}`)} className="mt-7 inline-flex items-center gap-2 self-start rounded-full border border-pink-300/15 bg-pink-300/[0.06] px-3 py-2 text-sm font-bold text-pink-200 transition-all group-hover:gap-3">
+    <a href={`/blog/${post.slug}`} onClick={(event) => { event.preventDefault(); navigate(`/blog/${post.slug}`); }} className="mt-7 inline-flex items-center gap-2 self-start rounded-full border border-pink-300/15 bg-pink-300/[0.06] px-3 py-2 text-sm font-bold text-pink-200 transition-all group-hover:gap-3">
       Read the guide <span>→</span>
-    </button>
+    </a>
   </article>
 );
 
@@ -336,7 +346,7 @@ const HomePage: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) 
             <p className="mt-7 max-w-xl text-lg leading-8 text-white/58 md:text-xl">Rizz Master helps you create flirty replies, dating bios, openers, and conversation starters in seconds.</p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <PlayStoreButton />
-              <button onClick={() => navigate('/blog')} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3.5 text-sm font-bold text-white/75 transition-all hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.08] hover:text-white">Read texting tips <span>→</span></button>
+              <a href="/blog" onClick={(event) => { event.preventDefault(); navigate('/blog'); }} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3.5 text-sm font-bold text-white/75 transition-all hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.08] hover:text-white">Read texting tips <span>→</span></a>
             </div>
             <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-white/35">
               <span className="flex items-center gap-2"><span className="text-pink-300">✦</span> Daily free credits</span>
@@ -420,7 +430,7 @@ const HomePage: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) 
       </section>
 
       <section className="marketing-container pb-24 pt-8 md:pb-32 md:pt-12">
-        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between"><SectionHeading align="left" eyebrow="From the blog" title="A little help for your next text" description="Practical advice for openers, dry replies, profiles, and the moments you replay before hitting send." /><button onClick={() => navigate('/blog')} className="self-start whitespace-nowrap text-sm font-bold text-pink-200 transition-colors hover:text-white md:self-end">View all tips →</button></div>
+        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between"><SectionHeading align="left" eyebrow="From the blog" title="A little help for your next text" description="Practical advice for openers, dry replies, profiles, and the moments you replay before hitting send." /><a href="/blog" onClick={(event) => { event.preventDefault(); navigate('/blog'); }} className="self-start whitespace-nowrap text-sm font-bold text-pink-200 transition-colors hover:text-white md:self-end">View all tips →</a></div>
         <div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-3">{BLOG_POSTS.slice(0, 6).map((post) => <BlogCard key={post.slug} post={post} navigate={navigate} />)}</div>
       </section>
 
@@ -506,12 +516,54 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
   );
 };
 
+const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'reply-to-dry-texts': [
+    { slug: 'reply-when-she-says-haha', label: 'How to reply when she says haha' },
+    { slug: 'best-tinder-openers-for-guys', label: 'Better Tinder openers' },
+    { slug: 'what-to-text-after-a-first-date', label: 'What to text after a first date' }
+  ],
+  'best-tinder-openers-for-guys': [
+    { slug: 'funny-pickup-lines-that-work', label: 'Funny pickup lines that work' },
+    { slug: 'best-dating-app-bio-ideas-for-guys', label: 'Dating app bio ideas' },
+    { slug: 'reply-to-dry-texts', label: 'How to reply to dry texts' }
+  ],
+  'reply-when-she-says-haha': [
+    { slug: 'reply-to-dry-texts', label: 'How to handle a dry text' },
+    { slug: 'funny-pickup-lines-that-work', label: 'Funny conversation starters' },
+    { slug: 'what-to-text-after-a-first-date', label: 'Post-date texting advice' }
+  ],
+  'funny-pickup-lines-that-work': [
+    { slug: 'best-tinder-openers-for-guys', label: 'Best Tinder openers' },
+    { slug: 'reply-when-she-says-haha', label: 'What to say after a laugh' },
+    { slug: 'best-dating-app-bio-ideas-for-guys', label: 'Write a better dating bio' }
+  ],
+  'best-dating-app-bio-ideas-for-guys': [
+    { slug: 'best-tinder-openers-for-guys', label: 'Openers that start conversations' },
+    { slug: 'funny-pickup-lines-that-work', label: 'Playful pickup lines' },
+    { slug: 'what-to-text-after-a-first-date', label: 'What to text after a date' }
+  ],
+  'what-to-text-after-a-first-date': [
+    { slug: 'reply-to-dry-texts', label: 'Reply to a short message' },
+    { slug: 'reply-when-she-says-haha', label: 'Keep a playful chat moving' },
+    { slug: 'best-dating-app-bio-ideas-for-guys', label: 'Refresh your dating profile' }
+  ]
+};
+
+const ArticleInternalLinks: React.FC<{ post: BlogPost; navigate: (path: string) => void }> = ({ post, navigate }) => (
+  <nav aria-label="Related dating guides" className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 md:p-6">
+    <p className="text-xs font-black uppercase tracking-[0.2em] text-pink-200/75">Continue reading</p>
+    <div className="mt-4 flex flex-wrap gap-2.5">
+      {(ARTICLE_INTERNAL_LINKS[post.slug] || []).map((link) => <a key={link.slug} href={`/blog/${link.slug}`} onClick={(event) => { event.preventDefault(); navigate(`/blog/${link.slug}`); }} className="rounded-full border border-white/10 bg-black/20 px-3.5 py-2 text-xs font-bold text-white/65 transition-colors hover:border-pink-300/30 hover:text-pink-100">{link.label} <span aria-hidden="true">→</span></a>)}
+    </div>
+  </nav>
+);
+
 const ArticlePage: React.FC<{ post: BlogPost; navigate: (path: string) => void }> = ({ post, navigate }) => {
   const middleIndex = Math.ceil(post.sections.length / 2);
 
   return <>
     <main className="marketing-container marketing-page-padding">
-      <button onClick={() => navigate('/blog')} className="mb-10 inline-flex items-center gap-2 text-sm font-bold text-white/45 transition-colors hover:text-white">← Back to the blog</button>
+      <a href="/blog" onClick={(event) => { event.preventDefault(); navigate('/blog'); }} className="mb-10 inline-flex items-center gap-2 text-sm font-bold text-white/45 transition-colors hover:text-white">← Back to the blog</a>
       <article className="mx-auto max-w-3xl">
         <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-white/35"><span className="text-pink-300/80">{post.category}</span><span>•</span><span>{post.readingTime}</span><span>•</span><time dateTime={post.date}>{new Date(`${post.date}T12:00:00`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</time></div>
         <h1 className="mt-6 text-4xl font-black leading-[1.05] tracking-[-0.04em] text-white md:text-6xl">{post.title}</h1>
@@ -520,6 +572,7 @@ const ArticlePage: React.FC<{ post: BlogPost; navigate: (path: string) => void }
           <ArticleQuickAnswer post={post} />
           <ArticleExampleBox examples={ARTICLE_EXAMPLES[post.slug]} />
           <ArticleDoDont post={post} />
+          <ArticleInternalLinks post={post} navigate={navigate} />
         </div>
         <div className="mt-12 space-y-12">
           {post.sections.map((section, index) => <React.Fragment key={section.heading}>
@@ -543,7 +596,6 @@ const LegalPage: React.FC<{ kind: 'privacy' | 'terms' | 'support'; navigate: (pa
     terms: { eyebrow: 'Use it thoughtfully', title: 'Terms of Service', intro: 'Rizz Master is an AI dating assistant for entertainment and communication support—not a substitute for your judgment.', sections: [['Using the service', 'You are responsible for the messages you send and the way you use AI-generated suggestions. Content may be imperfect, so review it before sharing.'], ['Respectful conduct', 'Do not use the service to create harmful, illegal, abusive, or harassing content. Access may be limited when the service is misused.'], ['Purchases', 'Premium features and subscriptions are managed through the Google Play Store.']], link: LEGAL_LINKS.terms },
     support: { eyebrow: 'We are here to help', title: 'Support Center', intro: 'Questions about credits, subscriptions, account access, or a feature idea? Send us a note and we will help you find the next step.', sections: [['Contact support', 'Email rizzmasterhelpteam@gmail.com for bugs, billing questions, account deletion requests, or general help.'], ['Credits and Premium', 'Free credits reset daily. Premium access and subscription cancellation are managed through Google Play.'], ['Account deletion', 'Email support from the address connected to your account and include “Delete my account” in the subject.']], link: LEGAL_LINKS.supportEmail },
   }[kind];
-
   return <>
     <main className="marketing-container marketing-page-padding"><button onClick={() => navigate('/')} className="mb-10 inline-flex items-center gap-2 text-sm font-bold text-white/45 transition-colors hover:text-white">← Back home</button><div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.28em] text-pink-300/80">{content.eyebrow}</p><h1 className="mt-5 text-5xl font-black tracking-[-0.04em] text-white md:text-7xl">{content.title}</h1><p className="mt-6 text-lg leading-8 text-white/55">{content.intro}</p></div><div className="mt-12 max-w-3xl space-y-5">{content.sections.map(([heading, copy]) => <section key={heading} className="marketing-card p-6 md:p-8"><h2 className="text-xl font-bold text-white">{heading}</h2><p className="mt-3 text-sm leading-7 text-white/55">{copy}</p></section>)}</div><a href={content.link} target={kind === 'support' ? undefined : '_blank'} rel={kind === 'support' ? undefined : 'noreferrer'} className="mt-8 inline-flex rounded-2xl border border-white/15 bg-white/[0.05] px-5 py-3.5 text-sm font-bold text-white transition-colors hover:bg-white/10">{kind === 'support' ? 'Email support' : 'Read the full policy →'}</a></main><MarketingFooter navigate={navigate} />
   </>;
