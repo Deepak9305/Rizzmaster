@@ -5,6 +5,14 @@
       "destination": "/api/$1"
     },
     {
+      "source": "/blog/assets/(.*)",
+      "destination": "/assets/$1"
+    },
+    {
+      "source": "/blog/logo.png",
+      "destination": "/logo.png"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
