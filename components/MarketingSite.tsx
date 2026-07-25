@@ -59,9 +59,11 @@ const updateSeo = (route: MarketingRoute) => {
           : route.kind === 'support'
             ? 'Get help with Rizz Master, subscriptions, credits, account deletion, and feature requests.'
             : 'Rizz Master helps you create flirty replies, dating bios, openers, and conversation starters in seconds.');
+  const keywords = post?.keywords.join(', ') || 'dating advice, texting advice, dating app openers, dating bios, AI dating assistant';
 
   document.title = title;
   setMeta('description', description);
+  setMeta('keywords', keywords);
   setMeta('og:title', title, true);
   setMeta('og:description', description, true);
   setMeta('og:type', post ? 'article' : 'website', true);
@@ -78,6 +80,9 @@ const updateSeo = (route: MarketingRoute) => {
     headline: post.title,
     description: post.description,
     datePublished: post.date,
+    dateModified: post.updatedAt,
+    keywords: post.keywords.join(', '),
+    articleSection: post.category,
     author: { '@type': 'Organization', name: 'Rizz Master' },
     publisher: { '@type': 'Organization', name: 'Rizz Master' },
     mainEntityOfPage: `${LEGAL_LINKS.baseUrl}/blog/${post.slug}`
@@ -340,9 +345,6 @@ const HomePage: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) 
             </div>
           </div>
           <HeroPoster />
-        </div>
-        <div className="marketing-container relative grid grid-cols-2 gap-3 pb-10 sm:grid-cols-4 md:pb-16">
-          {['Replies', 'Openers', 'Dating bios', 'Pickup lines'].map((label, index) => <div key={label} className="rounded-2xl border border-white/[0.08] bg-white/[0.035] px-4 py-4 text-center text-xs font-semibold text-white/45 backdrop-blur-sm"><span className="mb-1 block text-lg text-pink-300/80">{['↗', '✦', '⌁', '♡'][index]}</span>{label}</div>)}
         </div>
       </section>
 
