@@ -95,23 +95,42 @@ const updateSeo = (route: MarketingRoute) => {
   document.head.appendChild(schema);
 };
 
-const Icon: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
-  <span aria-hidden="true" className={`inline-flex items-center justify-center ${className}`}>{children}</span>
-);
-
-const PlayStoreButton: React.FC<{ variant?: 'primary' | 'secondary'; children?: React.ReactNode }> = ({ variant = 'primary', children = 'Download on Google Play' }) => (
+const PlayStoreButton: React.FC<{
+  variant?: 'primary' | 'secondary';
+  label?: string;
+  supportText?: string;
+  compact?: boolean;
+  className?: string;
+}> = ({
+  variant = 'primary',
+  label = 'Get it on Google Play',
+  supportText = 'Free daily credits · Android app',
+  compact = false,
+  className = ''
+}) => (
   <a
     href={PLAY_STORE_URL}
     target="_blank"
     rel="noreferrer"
-    className={`group inline-flex items-center justify-center gap-3 rounded-2xl px-5 py-3.5 text-sm font-bold transition-all duration-300 active:scale-[0.98] ${variant === 'primary'
+    aria-label={label}
+    className={`group inline-flex items-center justify-center gap-3 rounded-2xl px-4 py-3 transition-all duration-300 active:scale-[0.98] ${compact ? 'min-w-[158px]' : 'min-w-[214px]'} ${variant === 'primary'
       ? 'marketing-cta-primary text-white shadow-[0_16px_50px_rgba(236,72,153,0.24)] hover:-translate-y-0.5 hover:shadow-[0_20px_60px_rgba(236,72,153,0.34)]'
       : 'border border-white/15 bg-white/[0.06] text-white/80 hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/10 hover:text-white'
-      }`}
+      } ${className}`}
   >
-    <Icon className="text-xl">▶</Icon>
-    <span>{children}</span>
-    <span className="text-white/50 transition-transform group-hover:translate-x-1">→</span>
+    <span className={`flex shrink-0 items-center justify-center rounded-xl border border-white/20 bg-black/15 ${compact ? 'h-8 w-8' : 'h-10 w-10'}`} aria-hidden="true">
+      <svg viewBox="0 0 24 24" className={compact ? 'h-5 w-5' : 'h-6 w-6'} fill="none">
+        <path d="M3.5 3.7 13.1 12 3.5 20.3V3.7Z" fill="#4ADE80" />
+        <path d="m13.1 12 2.6-2.25 3.55 2.04c.74.43.74 1.5 0 1.93l-3.55 2.04L13.1 12Z" fill="#FACC15" />
+        <path d="m3.5 3.7 12.2 6.05L13.1 12 3.5 3.7Z" fill="#F472B6" />
+        <path d="m3.5 20.3 12.2-6.05L13.1 12l-9.6 8.3Z" fill="#C084FC" />
+      </svg>
+    </span>
+    <span className="min-w-0 text-left">
+      <span className={`block truncate font-black leading-tight ${compact ? 'text-xs' : 'text-sm'}`}>{label}</span>
+      {supportText && <span className={`mt-1 block truncate font-medium leading-tight text-white/60 ${compact ? 'text-[9px]' : 'text-[10px]'}`}>{supportText}</span>}
+    </span>
+    <span className="text-white/60 transition-transform group-hover:translate-x-1" aria-hidden="true">→</span>
   </a>
 );
 
@@ -131,7 +150,7 @@ const MarketingNav: React.FC<{ navigate: (path: string) => void }> = ({ navigate
         <button onClick={() => navigate('/blog')} className="transition-colors hover:text-white">Blog</button>
       </nav>
 
-      <PlayStoreButton />
+      <PlayStoreButton compact supportText="Free Android app" />
     </div>
   </header>
 );
@@ -163,22 +182,79 @@ const SectionHeading: React.FC<{ eyebrow: string; title: string; description?: s
 );
 
 const BlogCard: React.FC<{ post: BlogPost; navigate: (path: string) => void; featured?: boolean }> = ({ post, navigate, featured = false }) => (
-  <article className={`marketing-card group flex h-full flex-col p-6 ${featured ? 'md:p-8' : ''}`}>
-    <div className="mb-7 flex items-center justify-between text-[11px] font-bold uppercase tracking-[0.18em] text-white/35">
-      <span className="text-pink-300/80">{post.category}</span>
+  <article className={`marketing-card group relative flex h-full flex-col overflow-hidden p-6 ${featured ? 'md:col-span-2 md:p-8' : ''}`}>
+    <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-pink-400/80 via-fuchsia-400/45 to-purple-400/80 opacity-70" />
+    <div className="mb-7 flex items-center justify-between gap-4 text-[11px] font-bold uppercase tracking-[0.18em] text-white/35">
+      <span className="rounded-full border border-pink-300/15 bg-pink-300/[0.07] px-2.5 py-1 text-pink-200/85">{post.category}</span>
       <span>{post.readingTime}</span>
     </div>
     <h3 className={`font-bold leading-tight text-white transition-colors group-hover:text-pink-200 ${featured ? 'text-2xl md:text-3xl' : 'text-xl'}`}>{post.title}</h3>
     <p className="mt-4 flex-1 text-sm leading-6 text-white/50">{post.excerpt}</p>
-    <button onClick={() => navigate(`/blog/${post.slug}`)} className="mt-7 inline-flex items-center gap-2 self-start text-sm font-bold text-pink-200 transition-all group-hover:gap-3">
+    <button onClick={() => navigate(`/blog/${post.slug}`)} className="mt-7 inline-flex items-center gap-2 self-start rounded-full border border-pink-300/15 bg-pink-300/[0.06] px-3 py-2 text-sm font-bold text-pink-200 transition-all group-hover:gap-3">
       Read the guide <span>→</span>
     </button>
   </article>
 );
 
+type MessageExample = {
+  before: string;
+  after: string;
+  context: string;
+};
+
+const MESSAGE_EXAMPLES: MessageExample[] = [
+  {
+    before: 'haha',
+    after: "Careful, if you keep laughing like that, I'll start thinking I'm charming.",
+    context: 'When the chat gives you almost nothing to work with.'
+  },
+  {
+    before: 'what are you doing?',
+    after: "Trying to look busy, but clearly getting distracted by you.",
+    context: 'A playful answer that keeps the door open.'
+  },
+  {
+    before: 'tell me about yourself',
+    after: "I'm the kind of person who says one coffee and somehow turns it into a whole personality.",
+    context: 'A profile answer with an easy hook for the next message.'
+  }
+];
+
+const FEATURE_HIGHLIGHTS = [
+  { icon: '✦', title: 'AI Reply Generator', copy: 'Paste the message, choose the vibe, and get thoughtful options that sound ready to send.', accent: 'from-pink-500/20 to-purple-500/10' },
+  { icon: '◉', title: 'AI Chat Coach', copy: 'Talk through the whole situation with Rizz AI. Share the context or a screenshot, get the vibe decoded, and find your next move.', accent: 'from-purple-500/20 to-fuchsia-500/10' },
+  { icon: '⌁', title: 'Dating Bio Generator', copy: 'Turn your interests, energy, and sense of humor into a profile that sounds like you.', accent: 'from-fuchsia-500/20 to-pink-500/10' }
+];
+
+const SECONDARY_FEATURES = ['Pickup lines', 'Tone selection', 'Custom personas', 'Save favorites', 'Daily free credits', 'Premium modes'];
+
+const USE_CASES = [
+  ['Tinder replies', 'Turn dry matches into actual conversations.'],
+  ['Bumble openers', "Start with something better than 'hey'."],
+  ['Instagram DMs', 'Reply without sounding forced.'],
+  ['Dating bios', 'Sound confident without sounding fake.'],
+  ['First-date follow-ups', 'Keep the energy alive after meeting.'],
+  ['What should I text back?', 'Get unstuck when your mind goes blank.']
+];
+
+const FloatingHeroChip: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <span className="marketing-floating-chip inline-flex items-center gap-2 rounded-full border border-white/15 bg-[#110b16]/90 px-3 py-2 text-[11px] font-bold text-white/80 shadow-[0_14px_34px_rgba(0,0,0,0.3)] backdrop-blur-xl">
+    <span className="h-1.5 w-1.5 rounded-full bg-pink-300 shadow-[0_0_10px_rgba(244,114,182,0.95)]" />
+    {children}
+  </span>
+);
+
 const HeroPoster: React.FC = () => (
-  <div className="relative mx-auto w-full max-w-[390px]">
+  <div className="relative mx-auto w-full max-w-[390px] sm:px-8">
     <div className="absolute -inset-8 rounded-[4rem] bg-pink-500/20 blur-3xl" />
+    <div className="pointer-events-none absolute -left-8 top-12 z-10 hidden sm:block"><FloatingHeroChip>Flirty</FloatingHeroChip></div>
+    <div className="pointer-events-none absolute -right-8 top-28 z-10 hidden sm:block"><FloatingHeroChip>Funny</FloatingHeroChip></div>
+    <div className="pointer-events-none absolute -left-12 bottom-32 z-10 hidden sm:block"><FloatingHeroChip>Screenshot analysis</FloatingHeroChip></div>
+    <div className="pointer-events-none absolute -right-8 bottom-20 z-10 hidden sm:block"><FloatingHeroChip>Send-ready replies</FloatingHeroChip></div>
+    <div className="pointer-events-none absolute -bottom-3 left-0 z-10 hidden max-w-[220px] rounded-2xl border border-pink-300/15 bg-[#110b16]/95 p-3 text-xs leading-5 text-white/70 shadow-[0_18px_45px_rgba(0,0,0,0.4)] backdrop-blur-xl sm:block">
+      <p><span className="font-bold text-pink-200">Her:</span> haha</p>
+      <p><span className="font-bold text-purple-200">You:</span> Don't laugh too much, I'm trying to look mysterious here.</p>
+    </div>
     <img
       src="/rizzmaster-hero-poster.png"
       alt="Rizz Master app poster showing smart replies, custom vibes, and AI-powered dating tools"
@@ -188,6 +264,58 @@ const HeroPoster: React.FC = () => (
     />
   </div>
 );
+
+const MessageExampleCard: React.FC<MessageExample> = ({ before, after, context }) => (
+  <article className="marketing-card group relative overflow-hidden p-5 sm:p-6">
+    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-pink-300/60 to-transparent" />
+    <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/35">{context}</p>
+    <div className="mt-6 space-y-3">
+      <div className="flex items-start gap-3">
+        <span className="mt-1 shrink-0 text-[10px] font-black uppercase tracking-[0.16em] text-white/35">Before</span>
+        <div className="rounded-2xl rounded-tl-sm border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-white/60">{before}</div>
+      </div>
+      <div className="flex items-start gap-3">
+        <span className="mt-1 shrink-0 text-[10px] font-black uppercase tracking-[0.16em] text-pink-200/75">After</span>
+        <div className="rounded-2xl rounded-tl-sm border border-pink-300/20 bg-gradient-to-br from-pink-500/15 to-purple-500/10 px-4 py-3 text-sm leading-6 text-white">{after}</div>
+      </div>
+    </div>
+  </article>
+);
+
+const FeatureHighlightCard: React.FC<{ icon: string; title: string; copy: string; accent: string }> = ({ icon, title, copy, accent }) => (
+  <article className={`marketing-card group relative overflow-hidden bg-gradient-to-br ${accent} p-6 md:p-7`}>
+    <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-pink-300/10 blur-3xl" />
+    <span className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-pink-300/20 bg-black/20 text-xl text-pink-100 transition-transform group-hover:scale-110">{icon}</span>
+    <h3 className="relative mt-7 text-xl font-black text-white">{title}</h3>
+    <p className="relative mt-3 text-sm leading-6 text-white/60">{copy}</p>
+    <span className="relative mt-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-pink-200/75">Built for the moment <span aria-hidden="true">→</span></span>
+  </article>
+);
+
+const StickyMobileCta: React.FC = () => {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const updateVisibility = () => setVisible(window.scrollY > Math.min(window.innerHeight * 0.72, 520));
+    updateVisibility();
+    window.addEventListener('scroll', updateVisibility, { passive: true });
+    return () => window.removeEventListener('scroll', updateVisibility);
+  }, []);
+
+  if (!visible) return null;
+
+  return (
+    <div className="marketing-sticky-cta fixed inset-x-3 bottom-3 z-40 md:hidden">
+      <a href={PLAY_STORE_URL} target="_blank" rel="noreferrer" className="marketing-cta-primary flex items-center justify-between gap-4 rounded-2xl border border-pink-200/20 px-4 py-3 text-white shadow-[0_14px_40px_rgba(236,72,153,0.35)]" aria-label="Download Rizz Master from Google Play">
+        <span className="flex min-w-0 items-center gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-black/20 text-lg" aria-hidden="true">↓</span>
+          <span className="min-w-0 text-left"><span className="block truncate text-sm font-black">Download Rizz Master</span><span className="mt-0.5 block text-[10px] font-medium text-white/65">Free daily credits · Android app</span></span>
+        </span>
+        <span className="shrink-0 text-sm font-black" aria-hidden="true">→</span>
+      </a>
+    </div>
+  );
+};
 
 const HomePage: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) => (
   <>
@@ -230,9 +358,16 @@ const HomePage: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) 
         </div>
       </section>
 
+      <section className="marketing-section marketing-container">
+        <SectionHeading eyebrow="See the difference in seconds" title="Less staring. More send-ready." description="A small nudge can turn a flat prompt into a reply that sounds like you and gives the conversation somewhere to go." />
+        <div className="mt-12 grid gap-4 lg:grid-cols-3">{MESSAGE_EXAMPLES.map((example) => <MessageExampleCard key={example.before} {...example} />)}</div>
+      </section>
+
       <section id="features" className="marketing-section marketing-container scroll-mt-8">
         <SectionHeading eyebrow="More than a one-liner" title="A better way to find your next move" description="From one perfect reply to a full conversation coach, Rizz Master gives you the right kind of help for the moment." />
-        <div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12 grid gap-4 lg:grid-cols-3">{FEATURE_HIGHLIGHTS.map((feature) => <FeatureHighlightCard key={feature.title} {...feature} />)}</div>
+        <div className="mt-5 flex flex-wrap gap-3">{SECONDARY_FEATURES.map((feature) => <span key={feature} className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-4 py-2.5 text-sm font-semibold text-white/65"><span className="h-1.5 w-1.5 rounded-full bg-pink-300/80" />{feature}</span>)}</div>
+        <div className="hidden">
           {[
             ['✦', 'AI reply generator', 'Paste the message, choose the vibe, and get thoughtful options in seconds.'],
             ['⌁', 'Dating bio generator', 'Turn your interests, energy, and sense of humor into a profile that sounds like you.'],
@@ -262,7 +397,8 @@ const HomePage: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) 
       <section className="marketing-section marketing-container">
         <div className="grid gap-8 rounded-[2rem] border border-white/[0.08] bg-gradient-to-br from-pink-500/[0.08] via-white/[0.02] to-purple-500/[0.07] p-6 md:grid-cols-[0.85fr_1.15fr] md:p-10">
           <div><p className="text-xs font-bold uppercase tracking-[0.25em] text-pink-300/80">Built for real moments</p><h2 className="mt-4 text-3xl font-black tracking-tight text-white md:text-4xl">Your conversation does not need to be perfect.</h2><p className="mt-5 max-w-md text-sm leading-7 text-white/50">It just needs a little momentum. Use Rizz Master when you want a second opinion that is quick, personal, and actually fun to send.</p></div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2">{USE_CASES.map(([useCase, copy], index) => <div key={useCase} className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4"><div className="flex items-center gap-3 text-sm font-semibold text-white/80"><span className="text-xs font-black text-pink-300/80">0{index + 1}</span>{useCase}</div><p className="mt-2 pl-7 text-xs leading-5 text-white/45">{copy}</p></div>)}</div>
+          <div className="hidden">
             {['Tinder replies', 'Bumble openers', 'Instagram DM replies', 'Dating app bios', 'First-date follow-ups', '“What should I text back?”'].map((useCase, index) => <div key={useCase} className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-sm font-semibold text-white/70"><span className="mr-3 text-pink-300/80">{['↗', '✦', '◎', '⌁', '♡', '?'][index]}</span>{useCase}</div>)}
           </div>
         </div>
@@ -290,6 +426,7 @@ const HomePage: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) 
         <div className="marketing-container relative py-20 text-center md:py-28"><div className="absolute left-1/2 top-1/2 h-60 w-60 -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink-500/20 blur-[100px]" /><div className="relative"><p className="text-xs font-bold uppercase tracking-[0.25em] text-pink-300/80">Your next message is closer than you think</p><h2 className="mx-auto mt-5 max-w-2xl text-4xl font-black tracking-tight text-white md:text-6xl">Stop staring at the typing box.</h2><p className="mx-auto mt-5 max-w-lg text-base text-white/50">Get better replies with Rizz Master.</p><div className="mt-8"><PlayStoreButton /></div></div></div>
       </section>
     </main>
+    <StickyMobileCta />
     <MarketingFooter navigate={navigate} />
   </>
 );
@@ -304,6 +441,69 @@ const BlogIndexPage: React.FC<{ navigate: (path: string) => void }> = ({ navigat
   </>
 );
 
+const ARTICLE_EXAMPLES: Record<string, string[]> = {
+  'reply-to-dry-texts': ['That was the diplomatic answer. What is the honest version?', 'I am choosing to believe you are saving the good story for later.'],
+  'best-tinder-openers-for-guys': ['Important question: was that hike worth the view or the snack break?', 'You seem like you have a strong coffee order. What am I judging?'],
+  'reply-when-she-says-haha': ['I will accept that laugh, but I am keeping score.', 'Okay, your turn - make me laugh.'],
+  'funny-pickup-lines-that-work': ['I had a clever opener ready, but your profile distracted me. What is your best recommendation around here?'],
+  'best-dating-app-bio-ideas-for-guys': ['Ideal Sunday: long walk, new coffee shop, and pretending I will meal prep.'],
+  'what-to-text-after-a-first-date': ['I had a great time tonight - your story about the failed cooking class still has me laughing.']
+};
+
+const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
+  'reply-to-dry-texts': { do: 'Offer one specific hook, then give the conversation room.', doNot: 'Stack questions or send three follow-ups to force momentum.' },
+  'best-tinder-openers-for-guys': { do: 'Notice one real detail and ask a question with a point of view.', doNot: 'Lead with a generic compliment or an interview question.' },
+  'reply-when-she-says-haha': { do: 'Stay playful and pivot toward a topic with personality.', doNot: 'Ask whether the joke was funny or chase validation.' },
+  'funny-pickup-lines-that-work': { do: 'Use the line as a soft launch into a real conversation.', doNot: 'Treat the opener like a performance that needs a sequel.' },
+  'best-dating-app-bio-ideas-for-guys': { do: 'Share specific details that make the next message obvious.', doNot: 'Fill the bio with broad labels, rules, or complaints.' },
+  'what-to-text-after-a-first-date': { do: 'Be timely, specific, and clear about enjoying the date.', doNot: 'Wait for a perfect paragraph or edit your personality away.' }
+};
+
+const ArticleQuickAnswer: React.FC<{ post: BlogPost }> = ({ post }) => (
+  <aside className="relative overflow-hidden rounded-3xl border border-pink-300/20 bg-gradient-to-br from-pink-500/12 via-white/[0.03] to-purple-500/10 p-6 md:p-7">
+    <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-pink-400/15 blur-3xl" />
+    <p className="relative text-xs font-black uppercase tracking-[0.2em] text-pink-200/80">Quick answer</p>
+    <p className="relative mt-3 text-base leading-7 text-white/75">{post.excerpt}</p>
+  </aside>
+);
+
+const ArticleExampleBox: React.FC<{ examples?: string[] }> = ({ examples }) => {
+  if (!examples?.length) return null;
+
+  return (
+    <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5 md:p-6">
+      <p className="text-xs font-black uppercase tracking-[0.2em] text-pink-200/75">Try a reply like this</p>
+      <div className="mt-4 space-y-3">
+        {examples.map((example) => <div key={example} className="rounded-2xl rounded-tl-sm border border-pink-300/15 bg-pink-300/[0.06] px-4 py-3 text-sm leading-6 text-white/80">{example}</div>)}
+      </div>
+    </div>
+  );
+};
+
+const ArticleDoDont: React.FC<{ post: BlogPost }> = ({ post }) => {
+  const tips = ARTICLE_DO_DONT[post.slug];
+  if (!tips) return null;
+
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      <div className="rounded-2xl border border-emerald-300/15 bg-emerald-300/[0.05] p-5"><p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-200/80">Do</p><p className="mt-3 text-sm leading-6 text-white/70">{tips.do}</p></div>
+      <div className="rounded-2xl border border-rose-300/15 bg-rose-300/[0.05] p-5"><p className="text-xs font-black uppercase tracking-[0.2em] text-rose-200/80">Don't</p><p className="mt-3 text-sm leading-6 text-white/70">{tips.doNot}</p></div>
+    </div>
+  );
+};
+
+const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void }> = ({ post, navigate }) => {
+  const relatedPosts = BLOG_POSTS.filter((candidate) => candidate.slug !== post.slug).slice(0, 3);
+
+  return (
+    <section className="mt-20 border-t border-white/10 pt-12">
+      <p className="text-xs font-black uppercase tracking-[0.2em] text-pink-200/75">Keep reading</p>
+      <h2 className="mt-3 text-2xl font-black text-white md:text-3xl">More help for your next text</h2>
+      <div className="mt-7 grid gap-4 md:grid-cols-3">{relatedPosts.map((related) => <BlogCard key={related.slug} post={related} navigate={navigate} />)}</div>
+    </section>
+  );
+};
+
 const ArticlePage: React.FC<{ post: BlogPost; navigate: (path: string) => void }> = ({ post, navigate }) => {
   const middleIndex = Math.ceil(post.sections.length / 2);
 
@@ -314,6 +514,11 @@ const ArticlePage: React.FC<{ post: BlogPost; navigate: (path: string) => void }
         <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-white/35"><span className="text-pink-300/80">{post.category}</span><span>•</span><span>{post.readingTime}</span><span>•</span><time dateTime={post.date}>{new Date(`${post.date}T12:00:00`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</time></div>
         <h1 className="mt-6 text-4xl font-black leading-[1.05] tracking-[-0.04em] text-white md:text-6xl">{post.title}</h1>
         <p className="mt-7 text-lg leading-8 text-white/55">{post.description}</p>
+        <div className="mt-10 space-y-5">
+          <ArticleQuickAnswer post={post} />
+          <ArticleExampleBox examples={ARTICLE_EXAMPLES[post.slug]} />
+          <ArticleDoDont post={post} />
+        </div>
         <div className="mt-12 space-y-12">
           {post.sections.map((section, index) => <React.Fragment key={section.heading}>
             {index === middleIndex && <ArticleCta navigate={navigate} compact />}
@@ -321,6 +526,7 @@ const ArticlePage: React.FC<{ post: BlogPost; navigate: (path: string) => void }
           </React.Fragment>)}
         </div>
         <ArticleCta navigate={navigate} />
+        <RelatedPosts post={post} navigate={navigate} />
       </article>
     </main>
     <MarketingFooter navigate={navigate} />
