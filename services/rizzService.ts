@@ -490,7 +490,7 @@ CRITICAL: ${length === 'short'
           { role: "system", content: systemInstruction },
           { role: "user", content: isUnsafe ? "Generate roast." : inputText }
         ],
-        temperature: 0.85,
+        temperature: 1.15,
         max_tokens: length === 'short' ? 400 : length === 'medium' ? 600 : 900
       });
       const responseText = completion.content;
@@ -664,7 +664,7 @@ Carry over all existing intel and update it when new facts emerge.`;
       const completion = await callAiChatCompletion({
         model: getPreferredModel(recentMessages.some(message => Boolean(message.image))),
         messages: [{ role: 'system', content: systemInstruction }, ...rawMessages],
-        temperature: 0.85,
+        temperature: 1.05,
         max_tokens: 650,
       });
       const rawReply = completion.content;
