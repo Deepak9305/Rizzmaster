@@ -605,7 +605,7 @@ const LegalPage: React.FC<{ kind: 'privacy' | 'terms' | 'support'; navigate: (pa
 
 const NotFoundPage: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) => <main className="marketing-container marketing-page-padding"><p className="text-xs font-bold uppercase tracking-[0.28em] text-pink-300/80">404</p><h1 className="mt-5 text-5xl font-black text-white">That page ghosted you.</h1><p className="mt-5 text-white/55">Let’s get you back to the good part.</p><button onClick={() => navigate(MARKETING_HOME_PATH)} className="marketing-cta-primary mt-8 rounded-2xl px-5 py-3.5 text-sm font-bold text-white">Back home →</button></main>;
 
-const MarketingSite: React.FC = () => {
+const MarketingSite: React.FC<{ onNavigateToPath?: (path: string) => void }> = ({ onNavigateToPath }) => {
   const [pathname, setPathname] = useState(() => typeof window === 'undefined' ? '/' : window.location.pathname);
   const route = useMemo(() => getRoute(pathname), [pathname]);
 
@@ -621,6 +621,11 @@ const MarketingSite: React.FC = () => {
   }, [route]);
 
   const navigate = (path: string) => {
+    if (onNavigateToPath) {
+      onNavigateToPath(path);
+      return;
+    }
+
     const [pathnamePart, hash] = path.split('#');
     const nextPath = pathnamePart || '/';
     window.history.pushState({}, '', `${nextPath}${hash ? `#${hash}` : ''}`);

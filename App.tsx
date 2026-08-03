@@ -1118,10 +1118,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   }, [currentView, loading, isGuest, showToast, handleExitGuestMode]);
 
   const handleBackNavigation = useCallback(() => {
-    if (loading) {
-      window.history.pushState({ view: currentView }, '');
-      return;
-    }
+    if (loading) return;
     // Navigate back immediately — don't block on the ad
     const state = window.history.state;
     if (state && (state.view !== 'HOME' || state.saved || state.premium)) {
@@ -1138,10 +1135,11 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   }, [currentView, loading]);
 
   const handleOpenPremium = useCallback(() => {
+    if (showPremiumModal) return;
     // Guests see the premium modal first so they understand what they're getting
     window.history.pushState({ view: currentView, premium: true }, '');
     setShowPremiumModal(true);
-  }, [currentView]);
+  }, [currentView, showPremiumModal]);
 
   const handleCreditsExhausted = useCallback(() => {
     if (IS_WEB_PLATFORM) {
@@ -1153,9 +1151,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   }, [handleOpenPremium]);
 
   const handleOpenSaved = useCallback(() => {
+    if (showSavedModal) return;
     window.history.pushState({ view: currentView, saved: true }, '');
     setShowSavedModal(true);
-  }, [currentView]);
+  }, [currentView, showSavedModal]);
 
   useEffect(() => {
     if (!supabase) {
@@ -2176,7 +2175,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       )}
       {IS_WEB_PLATFORM && <PlayStorePromptModal isOpen={showPlayStorePrompt} onClose={() => setShowPlayStorePrompt(false)} />}
       {IS_WEB_PLATFORM && onNavigateToPath && !profile && !showSplash && (
-        <button onClick={() => setShowWebMenu(true)} aria-label="Open navigation menu" className="fixed left-4 top-4 z-[150] flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-black/60 text-white/75 shadow-lg backdrop-blur transition-colors hover:bg-white/10 hover:text-white">
+        <button onClick={() => setShowWebMenu(true)} aria-label="Open navigation menu" aria-haspopup="dialog" aria-expanded={showWebMenu} aria-controls="rizzmaster-web-navigation" className="fixed left-4 top-4 z-[150] flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-black/60 text-white/75 shadow-lg backdrop-blur transition-colors hover:bg-white/10 hover:text-white">
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" /></svg>
         </button>
       )}
@@ -2369,7 +2368,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
               <nav className="flex justify-between items-center mb-8 md:mb-12">
                 <div className="flex items-center gap-2">
                   {IS_WEB_PLATFORM && onNavigateToPath && (
-                    <button onClick={() => setShowWebMenu(true)} aria-label="Open navigation menu" className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/70 transition-colors hover:bg-white/10 hover:text-white">
+                    <button onClick={() => setShowWebMenu(true)} aria-label="Open navigation menu" aria-haspopup="dialog" aria-expanded={showWebMenu} aria-controls="rizzmaster-web-navigation" className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/70 transition-colors hover:bg-white/10 hover:text-white">
                       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" /></svg>
                     </button>
                   )}

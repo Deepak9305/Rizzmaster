@@ -21,18 +21,52 @@ const WebAppMenu: React.FC<WebAppMenuProps> = ({
   onLogout,
 }) => {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!isOpen) return;
 
+    previouslyFocusedRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     closeButtonRef.current?.focus();
+
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onCloseRef.current();
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+      const menu = document.getElementById('rizzmaster-web-navigation');
+      if (!menu) return;
+      const focusable = Array.from(menu.querySelectorAll<HTMLElement>('button, a[href], input, textarea, select, [tabindex]:not([tabindex="-1"])')).filter((element) => !element.hasAttribute('disabled'));
+      if (!focusable.length) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+      window.requestAnimationFrame(() => previouslyFocusedRef.current?.focus());
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -58,14 +92,15 @@ const WebAppMenu: React.FC<WebAppMenuProps> = ({
         onClick={onClose}
       />
       <aside
+        id="rizzmaster-web-navigation"
         role="dialog"
         aria-modal="true"
-        aria-label="Rizz Master navigation"
+        aria-labelledby="rizzmaster-web-navigation-title"
         className="absolute inset-y-0 left-0 flex w-[min(22rem,88vw)] flex-col border-r border-white/10 bg-[#0b080d] p-5 shadow-2xl animate-slide-in-right-view"
       >
         <div className="flex items-center justify-between border-b border-white/10 pb-5">
           <div>
-            <p className="text-lg font-black tracking-tight text-white">Rizz <span className="text-pink-300">Master</span></p>
+            <p id="rizzmaster-web-navigation-title" className="text-lg font-black tracking-tight text-white">Rizz <span className="text-pink-300">Master</span></p>
             <p className="mt-1 text-xs text-white/45">Your web wingman</p>
           </div>
           <button
@@ -75,7 +110,7 @@ const WebAppMenu: React.FC<WebAppMenuProps> = ({
             className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-lg text-white/70 transition-colors hover:bg-white/10 hover:text-white"
             aria-label="Close navigation menu"
           >
-            x
+             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path strokeLinecap="round" d="m6 6 12 12M18 6 6 18" /></svg>
           </button>
         </div>
 
