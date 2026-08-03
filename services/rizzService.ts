@@ -341,7 +341,34 @@ CRITICAL: ${length === 'short'
 
       messages.push({
         role: "user",
-        content€m≠¢Gß≤⁄Óù∆≠y–         rawData = JSON.parse(cleanJson(responseText));
+        content: [
+          { type: "text", text: finalInput },
+          { type: "image_url", image_url: { url: cleanOptimized } }
+        ]
+      });
+    } else {
+      messages.push({
+        role: "user",
+        content: finalInput
+      });
+    }
+
+    // Retry logic for robustness
+    let attempts = 0;
+    while (attempts < 3) {
+      try {
+        const completion = await callAiChatCompletion({
+          model: getPreferredModel(Boolean(image)),
+          messages: messages,
+          temperature: 1.3,
+          max_tokens: 1000
+        });
+        const responseText = completion.content;
+
+        if (responseText) {
+          let rawData: any;
+          try {
+            rawData = JSON.parse(cleanJson(responseText));
           } catch (parseError) {
             console.warn("Rizz JSON parse failed, returning sanitized fallback:", parseError);
             const fallback = sanitizeText(responseText).slice(0, 240);

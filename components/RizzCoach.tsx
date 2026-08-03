@@ -274,4 +274,624 @@ const AuroraBackground = React.memo(({ colors }: { colors: any }) => (
         <div style={{
             position: 'absolute', width: '60%', height: '60%', bottom: '10%', right: '-10%', borderRadius: '50%',
             background: `radial-gradient(circle, ${colors.secondary}14 0%, transparent 70%)`,
-            filter: 'blur(45px)', animation: 'coachAuroÔO6∂âûÀk∫wµÁqï‡ú∞Åô±ï·•…ïç—•Ω∏ËÄùçΩ±’µ∏ú∞ÅùÖ¿ËÄú—¡‡ú∞ÅÈ%πëï‡ËÄƒ¿¿∞Å›•ë—†ËÄú»»¡¡‡ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅâΩ·M°ÖëΩ‹ËÄú¿Ä·¡‡ÄÃ…¡‡Å…ùâÑ†¿∞¿∞¿∞¿∏‘§ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÖπ•µÖ—•Ω∏ËÄùçΩÖç°5Õù%∏Ä¿∏…ÃÅç’â•åµâïÈ•ï»†¿∏ƒÿ∞ƒ∞¿∏Ã∞ƒ§ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ›•±±°ÖπùîËÄù—…ÖπÕôΩ…¥∞ÅΩ¡Öç•—‰ú(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÌ=!}Y%	LπµÖ¿†°Ÿ•âî§ÄÙ¯Ä†(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒâ’——Ω∏(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ≠ï‰ıÌŸ•âîπ±Öâï±Ù(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅΩπ±•ç¨ıÏ†§ÄÙ¯ÅÏ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ°Öπë±ïY•âï±•ç¨°ÏÅ±Öâï∞ËÅŸ•âîπ±Öâï∞∞Å•ÕA…ºËÅŸ•âîπ•ÕA…ºÅÙ§Ï(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ•òÄ†ÖŸ•âîπ•ÕA…ºÅÒÅ•ÕA…ïµ•’¥§ÅÕï—M°Ω›Y•âï…Ω¡ëΩ›∏°ôÖ±Õî§Ï(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅıÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÕ—Â±îıÌÏ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅë•Õ¡±Ö‰ËÄùô±ï‡ú∞ÅÖ±•ùπ%—ïµÃËÄùçïπ—ï»ú∞Å©’Õ—•ôÂΩπ—ïπ–ËÄùÕ¡Öçîµâï—›ïï∏ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ—ï·—±•ù∏ËÄù±ïô–ú∞Å¡Öëë•πúËÄúƒ¡¡‡Äƒ…¡‡ú∞ÅâÖç≠ù…Ω’πêËÅÕï±ïç—ïëY•âîÄÙÙÙÅŸ•âîπ±Öâï∞Ä¸Äù…ùâÑ†»‘‘∞¿∞ƒ»‡∞¿∏ƒ‘§úÄËÄù—…ÖπÕ¡Ö…ïπ–ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅâΩ…ëï»ËÄùπΩπîú∞ÅâΩ…ëï…IÖë•’ÃËÄúƒ¡¡‡ú∞ÅçΩ±Ω»ËÅÕï±ïç—ïëY•âîÄÙÙÙÅŸ•âîπ±Öâï∞Ä¸Äúç¿¿‡¿úÄËÄù…ùâÑ†»‘‘∞»‘‘∞»‘‘∞¿∏‡§ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅôΩπ—M•ÈîËÄúƒ—¡‡ú∞ÅôΩπ—]ï•ù°–ËÅÕï±ïç—ïëY•âîÄÙÙÙÅŸ•âîπ±Öâï∞Ä¸Ä‹¿¿ÄËÄ‘¿¿∞Åç’…ÕΩ»ËÄù¡Ω•π—ï»ú(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅıÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒÕ¡Ö∏ÅÕ—Â±îıÌÏÅë•Õ¡±Ö‰ËÄùô±ï‡ú∞ÅÖ±•ùπ%—ïµÃËÄùçïπ—ï»ú∞ÅùÖ¿ËÄú·¡‡úÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒÕ¡Ö∏ÅÕ—Â±îıÌÏÅë•Õ¡±Ö‰ËÄùô±ï‡ú∞ÅÖ±•ùπ%—ïµÃËÄùçïπ—ï»ú∞Å©’Õ—•ôÂΩπ—ïπ–ËÄùçïπ—ï»ú∞Å›•ë—†ËÄú»¡¡‡ú∞Å°ï•ù°–ËÄú»¡¡‡ú∞ÅâΩ…ëï…IÖë•’ÃËÄúŸ¡‡ú∞ÅâÖç≠ù…Ω’πêËÄù…ùâÑ†»‘‘∞»‘‘∞»‘‘∞¿∏¿‡§úÅıÙ˘ÌŸ•âîπ•çΩπÙΩÕ¡Ö∏¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÌŸ•âîπ±Öâï±Ù(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩÕ¡Ö∏¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÌŸ•âîπ•ÕA…ºÄòòÄÖ•ÕA…ïµ•’¥ÄòòÄÒ1Ωç≠%çΩ∏Äº˘Ù(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÌŸ•âîπ•ÕA…ºÄòòÅ•ÕA…ïµ•’¥ÄòòÅÕï±ïç—ïëY•âîÄÑÙÙÅŸ•âîπ±Öâï∞ÄòòÄÒ…Ω›π%çΩ∏Äº˘Ù(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩâ’——Ω∏¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ§•Ù(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÌç’Õ—ΩµAï…ÕΩπÖÃπµÖ¿†°¡ï…ÕΩπÑ§ÄÙ¯Ä†(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒâ’——Ω∏(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ≠ï‰ıÌÅç’Õ—Ω¥ËëÌ¡ï…ÕΩπÑπ•ëıÅÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅΩπ±•ç¨ıÏ†§ÄÙ¯ÅÏ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ°Öπë±ïY•âï±•ç¨°ÏÅ±Öâï∞ËÅÅç’Õ—Ω¥ËëÌ¡ï…ÕΩπÑπ•ëıÄ∞Å•ÕA…ºËÅôÖ±ÕîÅÙ§Ï(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÕï—M°Ω›Y•âï…Ω¡ëΩ›∏°ôÖ±Õî§Ï(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅıÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÕ—Â±îıÌÏ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅë•Õ¡±Ö‰ËÄùô±ï‡ú∞ÅÖ±•ùπ%—ïµÃËÄùçïπ—ï»ú∞Å©’Õ—•ôÂΩπ—ïπ–ËÄùÕ¡Öçîµâï—›ïï∏ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ—ï·—±•ù∏ËÄù±ïô–ú∞Å¡Öëë•πúËÄúƒ¡¡‡Äƒ…¡‡ú∞ÅâÖç≠ù…Ω’πêËÅÕï±ïç—ïëY•âîÄÙÙÙÅÅç’Õ—Ω¥ËëÌ¡ï…ÕΩπÑπ•ëıÄÄ¸Äù…ùâÑ†»‘‘∞¿∞ƒ»‡∞¿∏ƒ‘§úÄËÄù—…ÖπÕ¡Ö…ïπ–ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅâΩ…ëï»ËÄùπΩπîú∞ÅâΩ…ëï…IÖë•’ÃËÄúƒ¡¡‡ú∞ÅçΩ±Ω»ËÅÕï±ïç—ïëY•âîÄÙÙÙÅÅç’Õ—Ω¥ËëÌ¡ï…ÕΩπÑπ•ëıÄÄ¸Äúç¿¿‡¿úÄËÄù…ùâÑ†»‘‘∞»‘‘∞»‘‘∞¿∏‡§ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅôΩπ—M•ÈîËÄúƒ—¡‡ú∞ÅôΩπ—]ï•ù°–ËÅÕï±ïç—ïëY•âîÄÙÙÙÅÅç’Õ—Ω¥ËëÌ¡ï…ÕΩπÑπ•ëıÄÄ¸Ä‹¿¿ÄËÄ‘¿¿∞Åç’…ÕΩ»ËÄù¡Ω•π—ï»ú(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅıÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒÕ¡Ö∏ÅÕ—Â±îıÌÏÅë•Õ¡±Ö‰ËÄùô±ï‡ú∞ÅÖ±•ùπ%—ïµÃËÄùçïπ—ï»ú∞ÅùÖ¿ËÄú·¡‡úÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒÕ¡Ö∏ÅÕ—Â±îıÌÏÅë•Õ¡±Ö‰ËÄùô±ï‡ú∞ÅÖ±•ùπ%—ïµÃËÄùçïπ—ï»ú∞Å©’Õ—•ôÂΩπ—ïπ–ËÄùçïπ—ï»ú∞Å›•ë—†ËÄú»¡¡‡ú∞Å°ï•ù°–ËÄú»¡¡‡ú∞ÅâΩ…ëï…IÖë•’ÃËÄúŸ¡‡ú∞ÅâÖç≠ù…Ω’πêËÄù…ùâÑ†»‘‘∞»‘‘∞»‘‘∞¿∏¿‡§úÅıÙ˚¬~FêΩÕ¡Ö∏¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÌ¡ï…ÕΩπÑππÖµïÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩÕ¡Ö∏¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒÕ¡Ö∏ÅΩπ±•ç¨ıÏ°î§ÄÙ¯ÅÏÅîπÕ—Ω¡A…Ω¡ÖùÖ—•Ω∏†§ÏÅΩπë•—Aï…ÕΩπÑ°¡ï…ÕΩπÑ§ÏÅÕï—M°Ω›Y•âï…Ω¡ëΩ›∏°ôÖ±Õî§ÏÅıÙÅÕ—Â±îıÌÏÅΩ¡Öç•—‰ËÄ¿∏‘∞Å¡Öëë•πúËÄú—¡‡úÅıÙ˚är?æ‚<ΩÕ¡Ö∏¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩâ’——Ω∏¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ§•Ù(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒâ’——Ω∏(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅΩπ±•ç¨ıÏ†§ÄÙ¯ÅÏÅΩπëëAï…ÕΩπÑ†§ÏÅÕï—M°Ω›Y•âï…Ω¡ëΩ›∏°ôÖ±Õî§ÏÅıÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÕ—Â±îıÌÏ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅë•Õ¡±Ö‰ËÄùô±ï‡ú∞ÅÖ±•ùπ%—ïµÃËÄùçïπ—ï»ú∞ÅùÖ¿ËÄú·¡‡ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ—ï·—±•ù∏ËÄù±ïô–ú∞Å¡Öëë•πúËÄúƒ¡¡‡Äƒ…¡‡ú∞ÅâÖç≠ù…Ω’πêËÄù—…ÖπÕ¡Ö…ïπ–ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅâΩ…ëï»ËÄú≈¡‡ÅëÖÕ°ïêÅ…ùâÑ†»‘‘∞»‘‘∞»‘‘∞¿∏ƒ§ú∞ÅâΩ…ëï…IÖë•’ÃËÄúƒ¡¡‡ú∞ÅçΩ±Ω»ËÄù…ùâÑ†»‘‘∞»‘‘∞»‘‘∞¿∏‘§ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅôΩπ—M•ÈîËÄúƒÕ¡‡ú∞ÅôΩπ—]ï•ù°–ËÄÿ¿¿∞Åç’…ÕΩ»ËÄù¡Ω•π—ï»ú∞ÅµÖ…ù•πQΩ¿ËÄú—¡‡ú(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅıÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒÕ¡Ö∏¯¨ÅAï…ÕΩπÑΩÕ¡Ö∏¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÏ†Ö•ÕA…ïµ•’¥ÄòòÅç’Õ—ΩµAï…ÕΩπÖÃπ±ïπù—†ÄÙÙÙÄ¿§ÄòòÄÒÕ¡Ö∏ÅÕ—Â±îıÌÏÅôΩπ—M•ÈîËÄúƒ¡¡‡ú∞ÅçΩ±Ω»ËÄúçôÖçåƒ‘úÅıÙ¯°…ïî§ΩÕ¡Ö∏˘Ù(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÏ†Ö•ÕA…ïµ•’¥ÄòòÅç’Õ—ΩµAï…ÕΩπÖÃπ±ïπù—†Ä¯ÙÄƒ§ÄòòÄÒÕ¡Ö∏ÅÕ—Â±îıÌÏÅôΩπ—M•ÈîËÄúƒ¡¡‡úÅıÙ˚¬~RHΩÕ¡Ö∏˘Ù(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩâ’——Ω∏¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ•Ù((ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÏº®Å	Öç≠ë…Ω¿Å°Öπë±ï»Å—ºÅç±ΩÕîÅë…Ω¡ëΩ›∏Ä®ΩÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÌÕ°Ω›Y•âï…Ω¡ëΩ›∏ÄòòÄ†(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅΩπ±•ç¨ıÏ†§ÄÙ¯ÅÕï—M°Ω›Y•âï…Ω¡ëΩ›∏°ôÖ±Õî•ÙÅÕ—Â±îıÌÏÅ¡ΩÕ•—•Ω∏ËÄùÖâÕΩ±’—îú∞Å•πÕï–ËÄ¿∞ÅÈ%πëï‡ËÄ‰¿ÅıÙÄº¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ•Ù((ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÏº®Å5ïÕÕÖùïÃÄ®ΩÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅ…ïòıÌÕç…Ω±±IïôÙÅÕ—Â±îıÌÏ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅô±ï‡ËÄƒ∞ÅΩŸï…ô±Ω›dËÄùÖ’—ºú∞Å¡ΩÕ•—•Ω∏ËÄù…ï±Ö—•Ÿîú∞ÅÈ%πëï‡ËÄƒ¿∞Å¡Öëë•πúËÄú≈…ï¥Äƒ∏»’…ï¥Ä¿ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÖπ•µÖ—•Ω∏ËÄùçΩÖç°M—Öùùï…%∏Ä¿∏’ÃÅç’â•åµâïÈ•ï»†¿∏ƒÿ∞Äƒ∞Ä¿∏Ã∞Äƒ§Ä¿∏≈ÃÅâΩ—†ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ›•±±°ÖπùîËÄù—…ÖπÕôΩ…¥∞ÅΩ¡Öç•—‰ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅë•Õ¡±Ö‰ËÄùô±ï‡ú∞Åô±ï·•…ïç—•Ω∏ËÄùçΩ±’µ∏ú∞ÅùÖ¿ËÄú¿∏‡‹’…ï¥ú∞ÅµÖ·]•ë—†ËÄúÿ‹…¡‡ú∞ÅµÖ…ù•∏ËÄú¿ÅÖ’—ºú∞Å¡Öëë•πù	Ω——Ω¥ËÄú¿∏’…ï¥úÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÌµïÕÕÖùïÃπµÖ¿†°µÕú∞Å§§ÄÙ¯Ä†(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒ5ïÕÕÖùï	’ââ±î(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ≠ï‰ıÌ•Ù(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅµÕúıÌµÕùÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅΩπIï¡Ω…–ıÌ°Öπë±ïIï¡Ω…—5ïÕÕÖùïÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ•çΩ∏ıÌç’……ïπ—Q°ïµîπ•çΩπÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅçΩ±Ω…ÃıÌç’……ïπ—Q°ïµîπçΩ±Ω…ÕÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄº¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ§•Ù(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÌ±ΩÖë•πúÄòòÄÒQÂ¡•πù%πë•çÖ—Ω»Å•çΩ∏ıÌç’……ïπ—Q°ïµîπ•çΩπÙÅçΩ±Ω…ÃıÌç’……ïπ—Q°ïµîπçΩ±Ω…ÕÙÄº˘Ù(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩë•ÿ¯((ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÏº®Å%π¡’–ÅΩπ—Ö•πï»Å]…Ö¡¡ï»Ä®ΩÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅô±ï·M°…•π¨ËÄ¿∞Å¡ΩÕ•—•Ω∏ËÄù…ï±Ö—•Ÿîú∞ÅÈ%πëï‡ËÄƒ¿∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ¡Öëë•πúËÄú¿Ä¿Åïπÿ°ÕÖôîµÖ…ïÑµ•πÕï–µâΩ——Ω¥§ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅâΩ…ëï…QΩ¿ËÄú≈¡‡ÅÕΩ±•êÅ…ùâÑ†»‘‘∞»‘‘∞»‘‘∞¿∏¿ÿ§ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÖπ•µÖ—•Ω∏ËÄùçΩÖç°M—Öùùï…%∏Ä¿∏’ÃÅç’â•åµâïÈ•ï»†¿∏ƒÿ∞Äƒ∞Ä¿∏Ã∞Äƒ§Ä¿∏…ÃÅâΩ—†ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ›•±±°ÖπùîËÄù—…ÖπÕôΩ…¥∞ÅΩ¡Öç•—‰ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅıÙ¯((ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÏº®ÅE’•ç¨µQÖ¿ÅA…Ωµ¡—ÃÄ®ΩÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÌµïÕÕÖùïÃπ±ïπù—†ÄÙÙÙÄƒÄòòÄÖ±ΩÖë•πúÄòòÄÖ•µÖùîÄòòÄ†(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ¡Öëë•πúËÄúƒ¡¡‡ÄƒŸ¡‡Ä·¡‡ú∞Åë•Õ¡±Ö‰ËÄùô±ï‡ú∞ÅùÖ¿ËÄú·¡‡ú∞ÅΩŸï…ô±Ω›`ËÄùÖ’—ºú∞ÅµÖ·]•ë—†ËÄúÿ‹…¡‡ú∞ÅµÖ…ù•∏ËÄú¿ÅÖ’—ºú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ]ïâ≠•—=Ÿï…ô±Ω›Mç…Ω±±•πúËÄù—Ω’ç†ú∞ÅÕç…Ω±±âÖ…]•ë—†ËÄùπΩπîú∞ÅµÕ=Ÿï…ô±Ω›M—Â±îËÄùπΩπîú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÖπ•µÖ—•Ω∏ËÄùçΩÖç°π—…ÖπçîÄ¿∏’ÃÅïÖÕîµΩ’–ú(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÌl(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÏÅ—ï·–ËÄâM°îÅ±ïô–ÅµîÅΩ∏Å…ïÖêÉ¬~N‘à∞Å•çΩ∏ËÄã¬~N‘àÅÙ∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÏÅ—ï·–ËÄâM°îùÃÅùΩ•πúÅçΩ±êÉ¬~ñÿà∞Å•çΩ∏ËÄã¬~ñÿàÅÙ∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÏÅ—ï·–ËÄâ!ï±¿ÅµîÅÖÕ¨Å°ï»ÅΩ’–É¬~6‹à∞Å•çΩ∏ËÄã¬~6‹àÅÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅtπµÖ¿†°¡…Ωµ¡–∞Å§§ÄÙ¯Ä†(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒâ’——Ω∏(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ≠ï‰ıÌ•Ù(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅΩπ±•ç¨ıÏ†§ÄÙ¯ÅÏ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ•òÄ°—ï·—Ö…ïÖIïòπç’……ïπ–§ÅÏ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ—ï·—Ö…ïÖIïòπç’……ïπ–πŸÖ±’îÄÙÅ¡…Ωµ¡–π—ï·–Ï(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ—ï·—Ö…ïÖIïòπç’……ïπ–πÕ—Â±îπ°ï•ù°–ÄÙÄùÖ’—ºúÏ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ—ï·—Ö…ïÖIïòπç’……ïπ–πÕ—Â±îπ°ï•ù°–ÄÙÅ5Ö—†πµ•∏°—ï·—Ö…ïÖIïòπç’……ïπ–πÕç…Ω±±!ï•ù°–∞Äƒ»‡§Ä¨Äù¡‡úÏ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ—ï·—Ö…ïÖIïòπç’……ïπ–πôΩç’Ã†§Ï(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÕï—!ÖÕΩπ—ïπ–°—…’î§Ï(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅıÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÕ—Â±îıÌÏ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ›°•—ïM¡ÖçîËÄùπΩ›…Ö¿ú∞Å¡Öëë•πúËÄúƒ¡¡‡ÄƒŸ¡‡ú∞ÅâÖç≠ù…Ω’πêËÄù…ùâÑ†»‘‘∞»‘‘∞»‘‘∞¿∏¿‘§ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅâΩ…ëï»ËÄú≈¡‡ÅÕΩ±•êÅ…ùâÑ†»‘‘∞»‘‘∞»‘‘∞¿∏ƒ§ú∞ÅâΩ…ëï…IÖë•’ÃËÄú»—¡‡ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅçΩ±Ω»ËÄù…ùâÑ†»‘‘∞»‘‘∞»‘‘∞¿∏‰§ú∞ÅôΩπ—M•ÈîËÄúƒÃ∏’¡‡ú∞ÅôΩπ—]ï•ù°–ËÄÿ¿¿∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅç’…ÕΩ»ËÄù¡Ω•π—ï»ú∞Å—…ÖπÕ•—•Ω∏ËÄùÖ±∞Ä¿∏…Ãú∞Åô±ï·M°…•π¨ËÄ¿(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅıÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÌ¡…Ωµ¡–π—ï·—Ù(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩâ’——Ω∏¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ§•Ù(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ•Ù((ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÏº®Å%µÖùîÅA…ïŸ•ï‹Å…ïÑÄ®ΩÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÌ•µÖùîÄòòÄ†(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅ¡Öëë•πúËÄúƒ…¡‡Ä»¡¡‡Ä¿ú∞Åë•Õ¡±Ö‰ËÄùô±ï‡úÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅ¡ΩÕ•—•Ω∏ËÄù…ï±Ö—•Ÿîú∞Åë•Õ¡±Ö‰ËÄù•π±•πîµâ±Ωç¨úÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒ•µúÅÕ…åıÌ•µÖùïÙÅÖ±–ÙâU¡±ΩÖêÅ¡…ïŸ•ï‹àÅÕ—Â±îıÌÏÅ°ï•ù°–ËÄú‹¡¡‡ú∞ÅâΩ…ëï…IÖë•’ÃËÄúƒ…¡‡ú∞ÅâΩ…ëï»ËÄú≈¡‡ÅÕΩ±•êÅ…ùâÑ†»‘‘∞»‘‘∞»‘‘∞¿∏»§ú∞ÅΩâ©ïç—•–ËÄùçΩŸï»úÅıÙÄº¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒâ’——Ω∏(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅΩπ±•ç¨ıÏ†§ÄÙ¯ÅÕï—%µÖùî°π’±∞•Ù(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÕ—Â±îıÌÏ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ¡ΩÕ•—•Ω∏ËÄùÖâÕΩ±’—îú∞Å—Ω¿ËÄú¥·¡‡ú∞Å…•ù°–ËÄú¥·¡‡ú∞Å›•ë—†ËÄú»—¡‡ú∞Å°ï•ù°–ËÄú»—¡‡ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅâÖç≠ù…Ω’πêËÄù…ùâÑ†¿∞¿∞¿∞¿∏‡§ú∞ÅâΩ…ëï»ËÄú≈¡‡ÅÕΩ±•êÅ…ùâÑ†»‘‘∞»‘‘∞»‘‘∞¿∏»§ú∞Å¡Öëë•πúËÄ¿∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅâΩ…ëï…IÖë•’ÃËÄú‘¿îú∞ÅçΩ±Ω»ËÄù›°•—îú∞ÅôΩπ—M•ÈîËÄúƒ…¡‡ú∞Åë•Õ¡±Ö‰ËÄùô±ï‡ú∞ÅÖ±•ùπ%—ïµÃËÄùçïπ—ï»ú∞Å©’Õ—•ôÂΩπ—ïπ–ËÄùçïπ—ï»ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅç’…ÕΩ»ËÄù¡Ω•π—ï»ú(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅıÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ˚ärTΩâ’——Ω∏¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ•Ù((ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÏº®Å%π¡’–Å…ïÑÄ®ΩÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏÅ¡Öëë•πúËÄú¡¡‡ÄƒŸ¡‡ÄŸ¡‡úÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒë•ÿÅÕ—Â±îıÌÏ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅë•Õ¡±Ö‰ËÄùô±ï‡ú∞ÅÖ±•ùπ%—ïµÃËÄùô±ï‡µïπêú∞ÅùÖ¿ËÄú·¡‡ú∞ÅµÖ·]•ë—†ËÄúÿ‹…¡‡ú∞ÅµÖ…ù•∏ËÄú¿ÅÖ’—ºú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅâΩ…ëï…IÖë•’ÃËÄúƒ∏»’…ï¥ú∞Å¡Öëë•πúËÄú·¡‡Ä·¡‡Ä·¡‡ÄƒŸ¡‡ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅâÖç≠ù…Ω’πêËÄù…ùâÑ†»‘‘∞»‘‘∞»‘‘∞¿∏¿‘§ú∞ÅâΩ…ëï»ËÄú≈¡‡ÅÕΩ±•êÅ…ùâÑ†»‘‘∞»‘‘∞»‘‘∞¿∏ƒ§ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅıÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒâ’——Ω∏(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅΩπ±•ç¨ıÌ°Öπë±ï%µÖùïU¡±ΩÖëÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÕ—Â±îıÌÏ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅô±ï·M°…•π¨ËÄ¿∞Å›•ë—†ËÄúÃ·¡‡ú∞Å°ï•ù°–ËÄúÃ·¡‡ú∞Åë•Õ¡±Ö‰ËÄùô±ï‡ú∞ÅÖ±•ùπ%—ïµÃËÄùçïπ—ï»ú∞Å©’Õ—•ôÂΩπ—ïπ–ËÄùçïπ—ï»ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅâÖç≠ù…Ω’πêËÄù…ùâÑ†»‘‘∞»‘‘∞»‘‘∞¿∏¿Ã§ú∞ÅâΩ…ëï»ËÄú≈¡‡ÅÕΩ±•êÅ…ùâÑ†»‘‘∞»‘‘∞»‘‘∞¿∏¿‡§ú∞ÅçΩ±Ω»ËÄù…ùâÑ†»‘‘∞»‘‘∞»‘‘∞¿∏ÿ§ú∞Åç’…ÕΩ»ËÄù¡Ω•π—ï»ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅâΩ…ëï…IÖë•’ÃËÄúƒ¡¡‡ú∞Å—…ÖπÕ•—•Ω∏ËÄùÖ±∞Ä¿∏…Ãú∞Å¡Öëë•πúËÄú¿ú(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅıÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅΩπ5Ω’Õïπ—ï»ıÌîÄÙ¯Åîπç’……ïπ—QÖ…ùï–πÕ—Â±îπçΩ±Ω»ÄÙÄúçôôòùÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅΩπ5Ω’Õï1ïÖŸîıÌîÄÙ¯Åîπç’……ïπ—QÖ…ùï–πÕ—Â±îπçΩ±Ω»ÄÙÄù…ùâÑ†»‘‘∞»‘‘∞»‘‘∞¿∏ÿ§ùÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒÕŸúÅ·µ±πÃÙâ°——¿ËºΩ››‹π‹ÃπΩ…úº»¿¿¿ΩÕŸúàÅ›•ë—†Ùà»¿àÅ°ï•ù°–Ùà»¿àÅô•±∞ÙâπΩπîàÅŸ•ï›	Ω‡Ùà¿Ä¿Ä»–Ä»–àÅÕ—…Ω≠îÙâç’……ïπ—Ω±Ω»àÅÕ—…Ω≠ï]•ë—†ıÏ…Ù¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒ¡Ö—†ÅÕ—…Ω≠ï1•πïçÖ¿Ùâ…Ω’πêàÅÕ—…Ω≠ï1•πï©Ω•∏Ùâ…Ω’πêàÅêÙâ4»∏»‘Äƒ‘∏‹’∞‘∏ƒ‘‰¥‘∏ƒ‘ÂÑ»∏»‘Ä»∏»‘Ä¿Ä¿ƒÃ∏ƒ‡»Ä¡∞‘∏ƒ‘‰Ä‘∏ƒ‘Â¥¥ƒ∏‘¥ƒ∏’∞ƒ∏–¿‰¥ƒ∏–¿ÂÑ»∏»‘Ä»∏»‘Ä¿Ä¿ƒÃ∏ƒ‡»Ä¡∞»∏‰¿‰Ä»∏‰¿Â¥¥ƒ‡ÄÃ∏‹’†ƒÿ∏’Ñƒ∏‘Äƒ∏‘Ä¿Ä¿¿ƒ∏‘¥ƒ∏’XŸÑƒ∏‘Äƒ∏‘Ä¿Ä¿¿¥ƒ∏‘¥ƒ∏’ Ã∏‹’ƒ∏‘Äƒ∏‘Ä¿Ä¿¿»∏»‘ÄŸÿƒ…Ñƒ∏‘Äƒ∏‘Ä¿Ä¿¿ƒ∏‘Äƒ∏’È¥ƒ¿∏‘¥ƒƒ∏»’†∏¿¿·ÿ∏¿¿·†¥∏¿¿·X‡∏»’È¥∏Ã‹‘Ä¡Ñ∏Ã‹‘∏Ã‹‘Ä¿Äƒƒ¥∏‹‘Ä¿Ä∏Ã‹‘∏Ã‹‘Ä¿Ä¿ƒ∏‹‘Ä¡ËàÄº¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩÕŸú¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩâ’——Ω∏¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒ•π¡’–Å—Â¡îÙâô•±îàÅ…ïòıÌô•±ï%π¡’—IïôÙÅΩπ°ÖπùîıÌ°Öπë±ï•±ï%π¡’—ÙÅÖççï¡–Ùâ•µÖùîº®àÅÕ—Â±îıÌÏÅë•Õ¡±Ö‰ËÄùπΩπîúÅıÙÄº¯((ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒ—ï·—Ö…ïÑ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ…ïòıÌ—ï·—Ö…ïÖIïôÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅëïôÖ’±—YÖ±’îÙàà(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅΩπ°ÖπùîıÌ°Öπë±ï%π¡’—°ÖπùïÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅΩπ-ïÂΩ›∏ıÌ°Öπë±ï-ïÂΩ›πÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ¡±Öçï°Ω±ëï»ıÌ•µÖùîÄ¸ÄâëêÅçΩπ—ï·–∏∏∏àÄËÄâ]°Ö–ùÃÅ—°îÅÕ•—’Ö—•Ω∏¸âÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ…Ω›ÃıÏ≈Ù(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅë•ÕÖâ±ïêıÌ±ΩÖë•πùÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÕ—Â±îıÌÏ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅô±ï‡ËÄƒ∞ÅâÖç≠ù…Ω’πêËÄù—…ÖπÕ¡Ö…ïπ–ú∞ÅâΩ…ëï»ËÄùπΩπîú∞ÅΩ’—±•πîËÄùπΩπîú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅçΩ±Ω»ËÄù›°•—îú∞ÅôΩπ—M•ÈîËÄúƒ’¡‡ú∞Å±•πï!ï•ù°–ËÄƒ∏ÿ∞Å…ïÕ•ÈîËÄùπΩπîú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅôΩπ—Öµ•±‰ËÄù•π°ï…•–ú∞Åµ•π!ï•ù°–ËÄú»—¡‡ú∞ÅµÖ·!ï•ù°–ËÄúƒ»·¡‡ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅΩ¡Öç•—‰ËÅ±ΩÖë•πúÄ¸Ä¿∏–ÄËÄƒ∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅıÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄº¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒâ’——Ω∏ÅΩπ±•ç¨ıÌ°Öπë±ïMïπëÙÅë•ÕÖâ±ïêıÏÖçÖπMïπëÙÅÖ…•Ñµ±Öâï∞ÙâMïπêà(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÕ—Â±îıÌÏ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅô±ï·M°…•π¨ËÄ¿∞Å›•ë—†ËÄú–¡¡‡ú∞Å°ï•ù°–ËÄú–¡¡‡ú∞ÅâΩ…ëï…IÖë•’ÃËÄú‘¿îú∞ÅâΩ…ëï»ËÄùπΩπîú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅë•Õ¡±Ö‰ËÄùô±ï‡ú∞ÅÖ±•ùπ%—ïµÃËÄùçïπ—ï»ú∞Å©’Õ—•ôÂΩπ—ïπ–ËÄùçïπ—ï»ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅç’…ÕΩ»ËÅçÖπMïπêÄ¸Äù¡Ω•π—ï»úÄËÄùπΩ–µÖ±±Ω›ïêú∞ÅΩ¡Öç•—‰ËÅçÖπMïπêÄ¸ÄƒÄËÄ¿∏–∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ—…ÖπÕ•—•Ω∏ËÄùÖ±∞Ä¿∏ÕÃÅç’â•åµâïÈ•ï»†¿∏ƒ‹‘∞Ä¿∏‡‡‘∞Ä¿∏Ã»∞Äƒ∏»‹‘§ú∞Å¡Öëë•πù1ïô–ËÄú…¡‡ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅ—…ÖπÕôΩ…¥ËÅçÖπMïπêÄ¸ÄùÕçÖ±î†ƒ§úÄËÄùÕçÖ±î†¿∏‰§ú∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ∏∏∏°çÖπMïπê(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¸ÅÏ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅâÖç≠ù…Ω’πêËÅÅ±•πïÖ»µù…Öë•ïπ–†ƒÃ’ëïú∞ÄëÌç’……ïπ—Q°ïµîπçΩ±Ω…Ãπ¡…•µÖ…ÂÙ∞ÄëÌç’……ïπ—Q°ïµîπçΩ±Ω…ÃπÕïçΩπëÖ…ÂÙ•Ä∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅâΩ·M°ÖëΩ‹ËÅÄ¿Ä—¡‡ÄƒŸ¡‡ÄëÌç’……ïπ—Q°ïµîπçΩ±Ω…Ãπù±Ω›ıÄ∞(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÖπ•µÖ—•Ω∏ËÄùçΩÖç°A’±ÕïI•πúÄ…ÃÅ•πô•π•—îú(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄËÅÏÅâÖç≠ù…Ω’πêËÄù…ùâÑ†»‘‘∞»‘‘∞»‘‘∞¿∏ƒ§úÅÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ§(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅıÙ(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒÕŸúÅ·µ±πÃÙâ°——¿ËºΩ››‹π‹ÃπΩ…úº»¿¿¿ΩÕŸúàÅ›•ë—†Ùàƒ‡àÅ°ï•ù°–Ùàƒ‡àÅŸ•ï›	Ω‡Ùà¿Ä¿Ä»–Ä»–àÅô•±∞Ùâ›°•—îà¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÒ¡Ö—†ÅêÙâ4Ã∏–‹‡Ä»∏–¿’Ñ∏‹‘∏‹‘Ä¿Ä¿¿¥∏‰»ÿ∏‰—∞»∏–Ã»Ä‹∏‰¿’ ƒÃ∏’Ñ∏‹‘∏‹‘Ä¿Ä¿ƒ¿Äƒ∏’ –∏‰‡—∞¥»∏–Ã»Ä‹∏‰¿’Ñ∏‹‘∏‹‘Ä¿Ä¿¿∏‰»ÿ∏‰–Äÿ¿∏‘ƒ‰Äÿ¿∏‘ƒ‰Ä¿Ä¿¿ƒ‡∏––‘¥‡∏‰‡ÿ∏‹‘∏‹‘Ä¿Ä¿¿¿¥ƒ∏»ƒ·ÿ¿∏‘ƒ‹Äÿ¿∏‘ƒ‹Ä¿Ä¿¿Ã∏–‹‡Ä»∏–¿’ËàÄº¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩÕŸú¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩâ’——Ω∏¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄΩë•ÿ¯((ÄÄÄÄÄÄÄÄÄÄÄÄΩë•ÿÄ¯(ÄÄÄÄÄÄÄÄº¯(ÄÄÄÄ§Ï)ÙÏ()ï·¡Ω…–ÅëïôÖ’±–ÅI•ÈÈΩÖç†Ï(
+            filter: 'blur(45px)', animation: 'coachAurora 22s ease-in-out 5s infinite reverse',
+            willChange: 'transform', transition: 'background 1.5s ease-in-out',
+            transform: 'translateZ(0)',
+            backfaceVisibility: 'hidden'
+        }} />
+    </div>
+));
+
+const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits, onUpdateCredits, isPremium, onGoPremium, onCreditsExhausted, onOpenWebMenu, onLoginRequired, shadowNotes, onUpdateShadowNotes, customPersonas = [], onAddPersona, onEditPersona }) => {
+    const { showToast } = useToast();
+
+    // Dynamically scoped keys to prevent cross-account pollution on shared devices
+    const COACH_STORAGE_KEY = `rizz_coach_messages_v2_${userId}`;
+    const SHADOW_NOTES_KEY = `rizz_coach_shadow_notes_${userId}`;
+
+    const [messages, setMessages] = useState<CoachMessage[]>(() => {
+        try {
+            const stored = localStorage.getItem(COACH_STORAGE_KEY);
+            if (stored) {
+                return normalizeStoredCoachMessages(JSON.parse(stored));
+            }
+        } catch { }
+        return [INITIAL_MESSAGE];
+    });
+    // messages are already initialized from local storage in useState below
+    // Uncontrolled textarea: only track empty vs non-empty to avoid re-rendering on every keystroke
+    const [hasContent, setHasContent] = useState(false);
+    const [image, setImage] = useState<string | null>(null);
+    const [selectedVibe, setSelectedVibe] = useState<string | null>("Elite Wingman");
+    const [showVibeDropdown, setShowVibeDropdown] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const isFirstMount = useRef(true);
+
+    const handleReportMessage = useCallback(async (content: string) => {
+        try {
+            if (!supabase) {
+                throw new Error('Supabase is unavailable.');
+            }
+            const { error } = await supabase.from('reports').insert([
+                { user_id: userId === 'guest_user' ? null : userId, content, type: 'message_report' }
+            ]);
+            if (error) {
+                throw error;
+            }
+            showToast("Report received! We'll review this.", 'success');
+        } catch (e) {
+            console.error("Failed to report message", e);
+            showToast("Failed to send report.", 'error');
+        }
+    }, [showToast, userId]);
+
+    useEffect(() => {
+        if (scrollRef.current) {
+            const behavior = isFirstMount.current ? 'auto' : 'smooth';
+            // Wrap in requestAnimationFrame for smoother sync with browser paint cycles
+            const requestScroll = () => {
+                if (scrollRef.current) {
+                    scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior });
+                }
+            };
+            requestAnimationFrame(requestScroll);
+
+            if (isFirstMount.current && messages.length > 0) {
+                isFirstMount.current = false;
+            }
+        }
+    }, [messages, loading]);
+
+    // Persist coach history in localStorage whenever messages change (images stripped to save space)
+    useEffect(() => {
+        try {
+            const toStore = messages.slice(-MAX_STORED_MESSAGES).map(m => ({
+                ...m,
+                content: m.image && !m.content.includes(PHOTO_ATTACHMENT_NOTE)
+                    ? `${m.content}\n${PHOTO_ATTACHMENT_NOTE}`
+                    : m.content,
+                image: null,
+            }));
+            localStorage.setItem(COACH_STORAGE_KEY, JSON.stringify(toStore));
+        } catch { } // Fail silently if quota is exceeded
+    }, [messages, COACH_STORAGE_KEY]);
+
+    const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const ta = e.target;
+        ta.style.height = 'auto';
+        ta.style.height = Math.min(ta.scrollHeight, 128) + 'px';
+        // Only flip React state when empty‚Üînon-empty ‚Äî prevents re-render on every typed character
+        const nowHasContent = ta.value.trim().length > 0;
+        setHasContent(prev => prev === nowHasContent ? prev : nowHasContent);
+    }, []);
+
+    const handleSend = useCallback(async () => {
+        const trimmed = textareaRef.current?.value.trim() || '';
+        if ((!trimmed && !image) || loading) return;
+
+        const cost = image ? 2 : 1;
+        if (!isPremium && credits < cost) {
+            onClose();
+            setTimeout(() => onCreditsExhausted ? onCreditsExhausted() : onGoPremium && onGoPremium(), 300);
+            return;
+        }
+
+        const userMsg: CoachMessage = {
+            role: 'user',
+            content: trimmed || "Analyze this.",
+            image: image,
+            timestamp: new Date().toISOString()
+        };
+
+        // Capture image status BEFORE clearing state (used for credit cost below)
+        const hadImage = !!image;
+
+        const next = [...messages, userMsg];
+        setMessages(next);
+        if (textareaRef.current) textareaRef.current.value = '';
+        setHasContent(false);
+        setImage(null);
+        if (textareaRef.current) textareaRef.current.style.height = 'auto';
+        setLoading(true);
+
+        try {
+            const customInstruction = selectedVibe?.startsWith('custom:') ? customPersonas?.find(p => p.id === selectedVibe.split(':')[1])?.instruction : undefined;
+            const response = await generateCoachAdvice(next, shadowNotes, selectedVibe || undefined, customInstruction);
+            // Persist updated intel dossier if the AI tacked one on
+            if (response.updatedNotes && response.updatedNotes !== shadowNotes) {
+                onUpdateShadowNotes(response.updatedNotes);
+            }
+            setMessages(prev => [...prev, {
+                role: 'assistant', content: response.reply, timestamp: new Date().toISOString()
+            }]);
+
+            // Image costs 2 credits, text costs 1
+            const cost = hadImage ? 2 : 1;
+            if (!isPremium) onUpdateCredits((prev) => prev - cost);
+        } catch (err: any) {
+            console.error('Coach error:', err);
+            if (err.message === 'LOGIN_REQUIRED') {
+                if (onLoginRequired) onLoginRequired();
+                return;
+            }
+            if (err.message === 'INSUFFICIENT_CREDITS') {
+                onClose();
+                setTimeout(() => onCreditsExhausted ? onCreditsExhausted() : onGoPremium && onGoPremium(), 300);
+                return;
+            }
+            if (
+                err.message === 'PROFILE_NOT_FOUND' ||
+                err.message === 'PROFILE_BOOTSTRAP_FAILED' ||
+                err.message === 'SUPABASE_BACKEND_UNAVAILABLE' ||
+                err.message === 'CREDIT_DEDUCTION_FAILED'
+            ) {
+                showToast('Account sync is temporarily unavailable. Try again in a moment.', 'error');
+                return;
+            }
+            setMessages(prev => [...prev, {
+                role: 'assistant', content: "Got a connection issue. Try again in a second. üîÅ",
+                timestamp: new Date().toISOString()
+            }]);
+        } finally {
+            setLoading(false);
+        }
+    }, [image, loading, isPremium, credits, messages, shadowNotes, onUpdateCredits, onUpdateShadowNotes, showToast, selectedVibe, customPersonas, onClose, onGoPremium, onCreditsExhausted, onLoginRequired]);
+
+    const handleImageUpload = useCallback(async () => {
+        if (!canUseNativeCamera()) {
+            fileInputRef.current?.click();
+            return;
+        }
+
+        try {
+            const photo = await Camera.getPhoto({
+                quality: 80,
+                allowEditing: false,
+                resultType: CameraResultType.DataUrl,
+                source: CameraSource.Prompt
+            });
+
+            if (photo.dataUrl) {
+                setImage(photo.dataUrl);
+            }
+        } catch (e: any) {
+            if (e.message !== 'User cancelled photos app') {
+                console.error('Camera Error:', e);
+            }
+        }
+    }, []);
+
+    const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) return; // 5MB limit
+            const reader = new FileReader();
+            reader.onloadend = () => setImage(reader.result as string);
+            reader.readAsDataURL(file);
+        }
+    }, []);
+
+    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+    }, [handleSend]);
+
+    const handleClearChat = useCallback(() => {
+        try { localStorage.removeItem(COACH_STORAGE_KEY); } catch { }
+        try { localStorage.removeItem(SHADOW_NOTES_KEY); } catch { }
+
+        const defaultVibe = COACH_VIBES.find(v => v.label === "Elite Wingman");
+        setMessages([{
+            role: 'assistant',
+            content: defaultVibe?.welcome || INITIAL_MESSAGE.content,
+            timestamp: new Date().toISOString()
+        }]);
+        onUpdateShadowNotes('');
+        setHasContent(false);
+        setSelectedVibe("Elite Wingman");
+        if (textareaRef.current) { textareaRef.current.value = ''; textareaRef.current.style.height = 'auto'; }
+    }, [onUpdateShadowNotes, COACH_STORAGE_KEY, SHADOW_NOTES_KEY]);
+
+    const handleVibeClick = useCallback((vibe: { label: string, isPro: boolean }) => {
+        if (vibe.isPro && !isPremium) {
+            showToast(`'${vibe.label}' is a Pro vibe!`, 'error');
+            onClose(); // Close coach
+            setTimeout(() => onGoPremium && onGoPremium(), 300); // Trigger premium modal after transition
+            return;
+        }
+        setSelectedVibe(vibe.label);
+    }, [isPremium, onClose, onGoPremium, showToast]);
+
+    const canSend = useMemo(() => (hasContent || image !== null) && !loading, [hasContent, image, loading]);
+
+    const currentTheme = useMemo(() => {
+        let defaultTheme = COACH_VIBES.find(v => v.label === selectedVibe);
+        if (defaultTheme) return defaultTheme;
+
+        // If it's a custom persona like 'custom:123'
+        if (selectedVibe?.startsWith('custom:')) {
+            const personaName = customPersonas.find(p => p.id === selectedVibe.split(':')[1])?.name || 'Custom Persona';
+            return {
+                label: personaName,
+                isPro: false,
+                icon: <DefaultIcon />, // Reusing default icon for custom personas
+                welcome: "I'm ready. Let's do this.",
+                colors: { primary: '#FF0080', secondary: '#7928CA', background: 'rgba(255,0,128,0.13)', glow: 'rgba(255,0,128,0.3)' }
+            };
+        }
+
+        return COACH_VIBES[0];
+    }, [selectedVibe, customPersonas]);
+
+    if (!isOpen) return null;
+
+    return (
+        <>
+            <div style={{
+                position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column',
+                background: '#050505', zIndex: 100,
+                willChange: 'transform',
+            }} className="app-surface">
+                <AuroraBackground colors={currentTheme.colors} />
+
+                {/* Header */}
+                <div style={{
+                    flexShrink: 0, position: 'relative', zIndex: 10,
+                    paddingTop: !isPremium ? 'calc(env(safe-area-inset-top) + 44px)' : 'calc(env(safe-area-inset-top) + 0.75rem)',
+                    background: 'rgba(5,5,5,0.75)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+                    animation: 'coachStaggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both',
+                    willChange: 'transform, opacity',
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', maxWidth: '672px', margin: '0 auto' }}>
+                        {/* Back */}
+                        <button onClick={onClose} aria-label="Go back"
+                            style={{
+                                width: '36px', height: '36px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)',
+                                background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                cursor: 'pointer', flexShrink: 0, transition: 'transform 0.15s',
+                            }}
+                            onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.05)')}
+                            onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="rgba(255,255,255,0.7)" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+
+                        {onOpenWebMenu && (
+                            <button onClick={onOpenWebMenu} aria-label="Open navigation menu"
+                                style={{
+                                    width: '36px', height: '36px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)',
+                                    background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    cursor: 'pointer', flexShrink: 0,
+                                }}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="rgba(255,255,255,0.7)" strokeWidth={2.5}>
+                                    <path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" />
+                                </svg>
+                            </button>
+                        )}
+
+                        {/* Pulsing avatar */}
+                        <div style={{ position: 'relative', flexShrink: 0 }}>
+                            <div style={{
+                                position: 'absolute', inset: '-4px', borderRadius: '50%',
+                                background: `linear-gradient(135deg, ${currentTheme.colors.primary}, ${currentTheme.colors.secondary})`,
+                                animation: 'coachPulseRing 2s ease-out infinite',
+                            }} />
+                            <div style={{
+                                position: 'relative', width: '44px', height: '44px', borderRadius: '50%',
+                                background: `linear-gradient(135deg, ${currentTheme.colors.primary} 0%, ${currentTheme.colors.secondary} 100%)`,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                boxShadow: `0 4px 20px ${currentTheme.colors.glow}`,
+                            }}>
+                                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', transform: 'scale(1.5)' }}>
+                                    {COACH_VIBES.find(v => v.label === selectedVibe)?.icon || <DefaultIcon />}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Identity & Dropdown */}
+                        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                            <div style={{ fontSize: '15px', fontWeight: 900, color: 'white', letterSpacing: '-0.02em', lineHeight: 1 }}>Rizz AI</div>
+                            <button
+                                onClick={() => setShowVibeDropdown(!showVibeDropdown)}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px',
+                                    padding: '3px 9px', borderRadius: '10px',
+                                    background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+                                    cursor: 'pointer', transition: 'background 0.2s', width: 'fit-content',
+                                    maxWidth: '130px' // Prevent overlap on smaller screens
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.12)'}
+                                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+                            >
+                                <span style={{
+                                    fontSize: '10.5px', color: 'rgba(255,255,255,0.9)', fontWeight: 700,
+                                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                    flex: 1
+                                }}>
+                                    {`Expert: ${currentTheme.label || 'Elite Wingman'}`}
+                                </span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} style={{ opacity: 0.7, flexShrink: 0 }}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Credits / Premium pill */}
+                        {!isPremium ? (
+                            <div
+                                onClick={() => showToast("Credits reset to 5 daily. Extra ad credits do not stack.", "info")}
+                                style={{
+                                    flexShrink: 0, display: 'flex', alignItems: 'center', gap: '6px',
+                                    padding: '6px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: 700,
+                                    background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <svg viewBox="0 0 24 24" fill="none" width="12" height="12"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#facc15" /></svg>
+                                <span style={{ color: 'rgba(255,255,255,0.7)' }}>{credits}</span>
+                            </div>
+                        ) : (
+                            <div style={{
+                                flexShrink: 0, display: 'flex', alignItems: 'center', gap: '4px',
+                                padding: '6px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: 700,
+                                background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.25)'
+                            }}>
+                                <CrownIcon />
+                                <span style={{ color: '#facc15' }}>VIP</span>
+                            </div>
+                        )}
+                        {/* Clear chat ‚Äî shown when history exists */}
+                        {messages.length > 1 && (
+                            <button
+                                onClick={handleClearChat}
+                                aria-label="Clear chat history"
+                                style={{
+                                    flexShrink: 0, width: '32px', height: '32px', borderRadius: '50%',
+                                    border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    cursor: 'pointer', opacity: 0.5, transition: 'opacity 0.2s', padding: 0,
+                                }}
+                                onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+                                onMouseLeave={e => (e.currentTarget.style.opacity = '0.5')}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="rgba(255,255,255,0.65)" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Vibe Dropdown Menu */}
+                {showVibeDropdown && (
+                    <div style={{
+                        position: 'absolute', top: 'calc(env(safe-area-inset-top) + 80px)',
+                        left: 0, right: 0, margin: '0 auto',
+                        background: 'rgba(20,20,20,0.98)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255,255,255,0.12)', borderRadius: '16px', padding: '8px',
+                        display: 'flex', flexDirection: 'column', gap: '4px', zIndex: 100, width: '220px',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                        animation: 'coachMsgIn 0.2s cubic-bezier(0.16,1,0.3,1)',
+                        willChange: 'transform, opacity'
+                    }}>
+                        {COACH_VIBES.map((vibe) => (
+                            <button
+                                key={vibe.label}
+                                onClick={() => {
+                                    handleVibeClick({ label: vibe.label, isPro: vibe.isPro });
+                                    if (!vibe.isPro || isPremium) setShowVibeDropdown(false);
+                                }}
+                                style={{
+                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                    textAlign: 'left', padding: '10px 12px', background: selectedVibe === vibe.label ? 'rgba(255,0,128,0.15)' : 'transparent',
+                                    border: 'none', borderRadius: '10px', color: selectedVibe === vibe.label ? '#FF0080' : 'rgba(255,255,255,0.8)',
+                                    fontSize: '14px', fontWeight: selectedVibe === vibe.label ? 700 : 500, cursor: 'pointer'
+                                }}
+                            >
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', borderRadius: '6px', background: 'rgba(255,255,255,0.08)' }}>{vibe.icon}</span>
+                                    {vibe.label}
+                                </span>
+                                {vibe.isPro && !isPremium && <LockIcon />}
+                                {vibe.isPro && isPremium && selectedVibe !== vibe.label && <CrownIcon />}
+                            </button>
+                        ))}
+                        {customPersonas.map((persona) => (
+                            <button
+                                key={`custom:${persona.id}`}
+                                onClick={() => {
+                                    handleVibeClick({ label: `custom:${persona.id}`, isPro: false });
+                                    setShowVibeDropdown(false);
+                                }}
+                                style={{
+                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                    textAlign: 'left', padding: '10px 12px', background: selectedVibe === `custom:${persona.id}` ? 'rgba(255,0,128,0.15)' : 'transparent',
+                                    border: 'none', borderRadius: '10px', color: selectedVibe === `custom:${persona.id}` ? '#FF0080' : 'rgba(255,255,255,0.8)',
+                                    fontSize: '14px', fontWeight: selectedVibe === `custom:${persona.id}` ? 700 : 500, cursor: 'pointer'
+                                }}
+                            >
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', borderRadius: '6px', background: 'rgba(255,255,255,0.08)' }}>üë§</span>
+                                    {persona.name}
+                                </span>
+                                <span onClick={(e) => { e.stopPropagation(); onEditPersona(persona); setShowVibeDropdown(false); }} style={{ opacity: 0.5, padding: '4px' }}>‚úèÔ∏è</span>
+                            </button>
+                        ))}
+                        <button
+                            onClick={() => { onAddPersona(); setShowVibeDropdown(false); }}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: '8px',
+                                textAlign: 'left', padding: '10px 12px', background: 'transparent',
+                                border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '10px', color: 'rgba(255,255,255,0.5)',
+                                fontSize: '13px', fontWeight: 600, cursor: 'pointer', marginTop: '4px'
+                            }}
+                        >
+                            <span>+ Persona</span>
+                            {(!isPremium && customPersonas.length === 0) && <span style={{ fontSize: '10px', color: '#facc15' }}>(Free)</span>}
+                            {(!isPremium && customPersonas.length >= 1) && <span style={{ fontSize: '10px' }}>üîí</span>}
+                        </button>
+                    </div>
+                )}
+
+                {/* Backdrop handler to close dropdown */}
+                {showVibeDropdown && (
+                    <div onClick={() => setShowVibeDropdown(false)} style={{ position: 'absolute', inset: 0, zIndex: 90 }} />
+                )}
+
+                {/* Messages */}
+                <div ref={scrollRef} style={{
+                    flex: 1, overflowY: 'auto', position: 'relative', zIndex: 10, padding: '1rem 1.25rem 0',
+                    animation: 'coachStaggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both',
+                    willChange: 'transform, opacity',
+                }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', maxWidth: '672px', margin: '0 auto', paddingBottom: '0.5rem' }}>
+                        {messages.map((msg, i) => (
+                            <MessageBubble
+                                key={i}
+                                msg={msg}
+                                onReport={handleReportMessage}
+                                icon={currentTheme.icon}
+                                colors={currentTheme.colors}
+                            />
+                        ))}
+                        {loading && <TypingIndicator icon={currentTheme.icon} colors={currentTheme.colors} />}
+                    </div>
+                </div>
+
+                {/* Input Container Wrapper */}
+                <div style={{
+                    flexShrink: 0, position: 'relative', zIndex: 10,
+                    padding: '0 0 env(safe-area-inset-bottom)',
+                    borderTop: '1px solid rgba(255,255,255,0.06)',
+                    animation: 'coachStaggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both',
+                    willChange: 'transform, opacity',
+                }}>
+
+                    {/* Quick-Tap Prompts */}
+                    {messages.length === 1 && !loading && !image && (
+                        <div style={{
+                            padding: '10px 16px 8px', display: 'flex', gap: '8px', overflowX: 'auto', maxWidth: '672px', margin: '0 auto',
+                            WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none',
+                            animation: 'coachEntrance 0.5s ease-out'
+                        }}>
+                            {[
+                                { text: "She left me on read üìµ", icon: "üìµ" },
+                                { text: "She's going cold ü•∂", icon: "ü•∂" },
+                                { text: "Help me ask her out üç∑", icon: "üç∑" }
+                            ].map((prompt, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => {
+                                        if (textareaRef.current) {
+                                            textareaRef.current.value = prompt.text;
+                                            textareaRef.current.style.height = 'auto';
+                                            textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 128) + 'px';
+                                            textareaRef.current.focus();
+                                        }
+                                        setHasContent(true);
+                                    }}
+                                    style={{
+                                        whiteSpace: 'nowrap', padding: '10px 16px', background: 'rgba(255,255,255,0.05)',
+                                        border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px',
+                                        color: 'rgba(255,255,255,0.9)', fontSize: '13.5px', fontWeight: 600,
+                                        cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0
+                                    }}
+                                >
+                                    {prompt.text}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Image Preview Area */}
+                    {image && (
+                        <div style={{ padding: '12px 20px 0', display: 'flex' }}>
+                            <div style={{ position: 'relative', display: 'inline-block' }}>
+                                <img src={image} alt="Upload preview" style={{ height: '70px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.2)', objectFit: 'cover' }} />
+                                <button
+                                    onClick={() => setImage(null)}
+                                    style={{
+                                        position: 'absolute', top: '-8px', right: '-8px', width: '24px', height: '24px',
+                                        background: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.2)', padding: 0,
+                                        borderRadius: '50%', color: 'white', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        cursor: 'pointer'
+                                    }}
+                                >‚úï</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Input Area */}
+                    <div style={{ padding: '0px 16px 6px' }}>
+                        <div style={{
+                            display: 'flex', alignItems: 'flex-end', gap: '8px', maxWidth: '672px', margin: '0 auto',
+                            borderRadius: '1.25rem', padding: '8px 8px 8px 16px',
+                            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                        }}>
+                            <button
+                                onClick={handleImageUpload}
+                                style={{
+                                    flexShrink: 0, width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
+                                    borderRadius: '10px', transition: 'all 0.2s', padding: '0'
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+                                onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.6)'}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                                </svg>
+                            </button>
+                            <input type="file" ref={fileInputRef} onChange={handleFileInput} accept="image/*" style={{ display: 'none' }} />
+
+                            <textarea
+                                ref={textareaRef}
+                                defaultValue=""
+                                onChange={handleInputChange}
+                                onKeyDown={handleKeyDown}
+                                placeholder={image ? "Add context..." : "What's the situation?"}
+                                rows={1}
+                                disabled={loading}
+                                style={{
+                                    flex: 1, background: 'transparent', border: 'none', outline: 'none',
+                                    color: 'white', fontSize: '15px', lineHeight: 1.6, resize: 'none',
+                                    fontFamily: 'inherit', minHeight: '24px', maxHeight: '128px',
+                                    opacity: loading ? 0.4 : 1,
+                                }}
+                            />
+                            <button onClick={handleSend} disabled={!canSend} aria-label="Send"
+                                style={{
+                                    flexShrink: 0, width: '40px', height: '40px', borderRadius: '50%', border: 'none',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    cursor: canSend ? 'pointer' : 'not-allowed', opacity: canSend ? 1 : 0.4,
+                                    transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)', paddingLeft: '2px',
+                                    transform: canSend ? 'scale(1)' : 'scale(0.9)',
+                                    ...(canSend
+                                        ? {
+                                            background: `linear-gradient(135deg, ${currentTheme.colors.primary}, ${currentTheme.colors.secondary})`,
+                                            boxShadow: `0 4px 16px ${currentTheme.colors.glow}`,
+                                            animation: 'coachPulseRing 2s infinite'
+                                        }
+                                        : { background: 'rgba(255,255,255,0.1)' }
+                                    )
+                                }}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="white">
+                                    <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div >
+        </>
+    );
+};
+
+export default RizzCoach;
