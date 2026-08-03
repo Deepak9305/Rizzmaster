@@ -1,6 +1,8 @@
 import 'cordova-plugin-purchase';
 import { Capacitor } from '@capacitor/core';
 import { canUseNativeIap } from './nativeCapabilities';
+import { getApiUrl } from './runtimeConfig';
+import { supabase } from './supabaseClient';
 
 // Helper to safely get the CdvPurchase object (Native or Mock)
 const getCdvPurchase = () => {
@@ -141,6 +143,10 @@ const getAndroidSubscriptionProductId = () => {
     return IAP_CONFIG.WEEKLY.androidId || IAP_CONFIG.MONTHLY.androidId || '';
 };
 
+const getExactAndroidOffer = (product: any, basePlanId: string) => product?.offers?.find((offer: any) => (
+    offer?.id === basePlanId || offer?.basePlanId === basePlanId
+));
+
 const logIapJson = (message: string, data: Record<string, any>) => {
     try {
         console.log(`${message} ${JSON.stringify(data)}`);
@@ -185,6 +191,7 @@ class IAPService {
     lastApprovedTransaction: any = null;
     activeIntent: 'purchase' | 'restore' | null = null;
     currentUserId: string | null = null;
+    currentAccountBinding: string | null = null;
 
     initialize(onSuccess: (purchaseData: any) => boolean | void | Promise<boolean | void>, onError: (msg: string) => void) {
         this.onSuccess = onSuccess;
@@ -201,7 +208,7 @@ class IAPService {
         if (!CdvPurchase) return; // Safety check
 
         const { store, Platform } = CdvPurchase;
-        store.applicationUsername = () => this.currentUserId || undefined;
+        store.applicationUsername = () => this.currentAccountBinding || undefined;
 
         // 1. Prepare Registration List
         const productsToRegister: any[] = [];
@@ -401,6 +408,14 @@ class IAPService {
             return;
         }
 
+        let accountBinding: string;
+        try {
+            accountBinding = await this.getAccountBinding(normalizedOwnerUserId);
+        } catch (error) {
+            this.onError?.(getIapErrorMessage(error, "Could not prepare your account for purchase."));
+            return;
+        }
+
         const CdvPurchase = getCdvPurchase();
         const { store } = CdvPurchase;
         const isIOS = Capacitor.getPlatform() === 'ios';
@@ -411,7 +426,8 @@ class IAPService {
         this.pendingPlan = plan;
         this.activeIntent = 'purchase';
         this.currentUserId = normalizedOwnerUserId;
-        const orderData = { applicationUsername: normalizedOwnerUserId };
+        this.currentAccountBinding = accountBinding;
+        const orderData = { applicationUsername: accountBinding };
 
         logIapJson("IAP: Attempting purchase", {
             productId,
@@ -435,16 +451,11 @@ class IAPService {
         if (product && product.canPurchase) {
             try {
                 if (basePlanId) {
-                    if (!product.offers || product.offers.length === 0) {
-                        await store.order(productId, orderData);
-                        return;
-                    }
-
-                    const offer = product.offers.find((o: any) => o.id === basePlanId || o.id.includes(basePlanId));
+                    const offer = getExactAndroidOffer(product, basePlanId);
                     if (offer) {
                         await offer.order(orderData);
                     } else {
-                        await store.order(productId, orderData);
+                        throw new Error("The selected subscription plan is unavailable. Please refresh the store and try again.");
                     }
                 } else {
                     const offer = product.getOffer();
@@ -479,12 +490,18 @@ class IAPService {
 
     async restore(ownerUserId?: string | null) {
         if (!canUseNativeIap()) return;
+        const normalizedOwnerUserId = typeof ownerUserId === 'string' ? ownerUserId.trim() : '';
+        if (!normalizedOwnerUserId) {
+            this.onError?.("Please sign in again before restoring purchases.");
+            return;
+        }
+
         const CdvPurchase = getCdvPurchase();
         try {
+            const accountBinding = await this.getAccountBinding(normalizedOwnerUserId);
             this.activeIntent = 'restore';
-            this.currentUserId = typeof ownerUserId === 'string' && ownerUserId.trim()
-                ? ownerUserId.trim()
-                : this.currentUserId;
+            this.currentUserId = normalizedOwnerUserId;
+            this.currentAccountBinding = accountBinding;
             await CdvPurchase.store.restore();
             await CdvPurchase.store.update();
         } catch (e) {
@@ -512,12 +529,47 @@ class IAPService {
         if (!product) return null;
 
         if (basePlanId) {
-            const offer = product.offers?.find((o: any) => o.id === basePlanId || o.id.includes(basePlanId));
+            const offer = getExactAndroidOffer(product, basePlanId);
             if (offer && offer.pricingPhases && offer.pricingPhases.length > 0) {
                 return offer.pricingPhases[0].price;
             }
+            return null;
         }
         return product.offers?.[0]?.pricingPhases?.[0]?.price || null;
+    }
+
+    clearUser() {
+        this.pendingPlan = null;
+        this.activeIntent = null;
+        this.currentUserId = null;
+        this.currentAccountBinding = null;
+        this.lastApprovedTransaction = null;
+    }
+
+    private async getAccountBinding(ownerUserId: string): Promise<string> {
+        if (!supabase) {
+            throw new Error("Login system is not ready. Please restart the app.");
+        }
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token || session.user.id !== ownerUserId) {
+            throw new Error("Please sign in again before purchasing.");
+        }
+
+        const response = await fetch(getApiUrl('/api/iap-account-binding'), {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${session.access_token}`,
+            },
+        });
+        const payload = await response.json().catch(() => null);
+        const accountBinding = typeof payload?.accountBinding === 'string' ? payload.accountBinding.trim() : '';
+
+        if (!response.ok || !accountBinding) {
+            throw new Error(payload?.error || "Could not prepare purchase account binding.");
+        }
+
+        return accountBinding;
     }
 }
 
