@@ -264,183 +264,71 @@ const HeroPoster: React.FC = () => (
     <div className="absolute -inset-8 rounded-[4rem] bg-pink-500/20 blur-3xl" />
     <div className="pointer-events-none absolute -left-8 top-12 z-10 hidden sm:block"><FloatingHeroChip>Flirty</FloatingHeroChip></div>
     <div className="pointer-events-none absolute -right-8 top-28 z-10 hidden sm:block"><FloatingHeroChip>Funny</FloatingHeroChip></div>
-    <div className="pointer-events-no￿ێտ󨑩쾚͹￿󻠤isplay: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', borderRadius: '6px', background: 'rgba(255,255,255,0.08)' }}>👤</span>
-                                    {persona.name}
-                                </span>
-                                <span onClick={(e) => { e.stopPropagation(); onEditPersona(persona); setShowVibeDropdown(false); }} style={{ opacity: 0.5, padding: '4px' }}>✏️</span>
-                            </button>
-                        ))}
-                        <button
-                            onClick={() => { onAddPersona(); setShowVibeDropdown(false); }}
-                            style={{
-                                display: 'flex', alignItems: 'center', gap: '8px',
-                                textAlign: 'left', padding: '10px 12px', background: 'transparent',
-                                border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '10px', color: 'rgba(255,255,255,0.5)',
-                                fontSize: '13px', fontWeight: 600, cursor: 'pointer', marginTop: '4px'
-                            }}
-                        >
-                            <span>+ Persona</span>
-                            {(!isPremium && customPersonas.length === 0) && <span style={{ fontSize: '10px', color: '#facc15' }}>(Free)</span>}
-                            {(!isPremium && customPersonas.length >= 1) && <span style={{ fontSize: '10px' }}>🔒</span>}
-                        </button>
-                    </div>
-                )}
+    <div className="pointer-events-none absolute -left-12 bott￿͹֚$z{-Ωܪם�^H^Yݛ[و]۝ݘ\وHܚXȝڝ\ܛۘ[]KɋӛݎȉМڈڙ]\ȝHۚو؜șݛ۞H܈ژ\و؛Y][ۋɈKȈ	ٝ[۞K\Xڝ\[[ٜ˝]]ۜډΈșΈ	՜وH[و\ȘH݈ۙ][ؚ[ݛȘH٘[ۛݙ\ܘ][ۋɋӛݎȉ՜٘]Hܙ[ٜțZوH\ٛܛX[ؙH]ٙYȘHٜ]Y[ɈKȈ	ؙ\݋Y][ًX\Xڛ˚YX\˙ۜ˙ݞ\ɎȞșΈ	Ԛ\وܙXڙژș]Z[ȝ]XZوHٞY\ܘYو؝ڛݜˉˈӛݎȉњ[HڛȝڝܛؙXٛˈݛ\ˈ܈ۛ\Z[ݜˉȟKȈ	ݚ]]˝^XYݙ\˘KYڜܝY]IΈșΈ	ЙH[Y[KܙXڙژˈ[وۙX\ȘX۝][ڛޚ[وH]Kɋӛݎȉ՘Z]ۜȘH\ٙX݈\ؙܘ\܈Y][ݜȜ\ܛۘ[]H]؞KɈBߎ؛݈ۜ\ݚXۙT]ZXڐ[ܝٜΈ٘X݋ѐϞȜܝȐۛٔܝOȏH
+ȜܝJHOȊȈ\ڙHۘ\ܓ؛YOHܙ[]]وݙ\ٛ݋ZY[Ȝ۝[ٙYLޛۜٙ\Șۜٙ\˜[ڋĽ̌ًYܘYY[݋]˘܈ܛۋ\[ڋML̌ȝژK]ښ]K֌̌׈˜\ܛKML̌MțY܋Mȏ]Șۘ\ܓ؛YOHؘܛ۝]H\ڙڝLL]܋LLL̈ˌ̈۝[ٙYYݛً\[ڋM̍H۝\ˌޛȋςȈۘ\ܓ؛YOHܙ[]]و^^șۛ݋XۘXڈ\\ؘ\وؘښ[ًV̙̋[WH^\[ڋĽΌϔ]ZXڈ[ܝٜϋ܏ۘ\ܓ؛YOHܙ[]]و]Lȝ^X؜وXY[ًMȝ^]ښ]K͍HϞܛܝٞٜܝO܏؜ڙON؛݈ۜ\ݚXۙQ^[\P۞Ȕ٘X݋ѐϞș^[\\ώȜݜڛٖ׈OȏH
+ș^[\\ȟJHOȞYȊY^[\\ϋۙ[ٝ
+Hٝ\ۈݛȈٝ\ۈ
+Ȉ]Șۘ\ܓ؛YOHܛݛٙYLޛۜٙ\Șۜٙ\˝ښ]Ǩً]ښ]K֌̌͗HMHY܋Mȏۘ\ܓ؛YOHݙ^^șۛ݋XۘXڈ\\ؘ\وؘښ[ًV̙̋[WH^\[ڋĽ͍HϕވHٜHZو\ϋ܏]Șۘ\ܓ؛YOH۝MܘXً^KLȏٞ[\\˛X\
 
-                {/* Backdrop handler to close dropdown */}
-                {showVibeDropdown && (
-                    <div onClick={() => setShowVibeDropdown(false)} style={{ position: 'absolute', inset: 0, zIndex: 90 }} />
-                )}
+^[\JHOȏ]ȚٞO^ٞ[\_Hۘ\ܓ؛YOHܛݛٙYLޛ۝[ٙY]\ۈۜٙ\Șۜٙ\˜[ڋĽ̍Hً\[ڋĽ֌̍׈MKLȝ^\ۈXY[ًMȝ^]ښ]KΌϞٞ[\_Oٚ]ϊ_BȈٚ]ςȈٚ]ςȈ
+NN؛݈ۜ\ݚXۙQћ۝Ȕ٘X݋ѐϞȜܝȐۛٔܝOȏH
+ȜܝJHOȞۛܝ\ȏHTՒPӑWѓבӕܛܝܛY׎YȊ]\ʈٝ\ۈݛȈٝ\ۈ
+Ȉ]Șۘ\ܓ؛YOHٜڙ؜LȜێٜڙXۛˌȏ]Șۘ\ܓ؛YOHܛݛٙYLޛۜٙ\Șۜٙ\˙[Y\؛Ľ̍HًY[Y\؛Ľ֌̍WHMHϏۘ\ܓ؛YOHݙ^^șۛ݋XۘXڈ\\ؘ\وؘښ[ًV̙̋[WH^Y[Y\؛ĽΌϑϋ܏Ϝۘ\ܓ؛YOH۝Lȝ^\ۈXY[ًMȝ^]ښ]K͌Ϟݚ\˙ߏ܏ϋٚ]ςȈ]Șۘ\ܓ؛YOHܛݛٙYLޛۜٙ\Șۜٙ\˜ًۜĽ̍Hً\ًۜĽ֌̍WHMHϏۘ\ܓ؛YOHݙ^^șۛ݋XۘXڈ\\ؘ\وؘښ[ًV̙̋[WH^\ًۜĽΌϑۉݏ܏Ϝۘ\ܓ؛YOH۝Lȝ^\ۈXY[ًMȝ^]ښ]K͌Ϟݚ\˙ӛݟO܏ϋٚ]ςȈٚ]ςȈ
+NN؛݈ۜٛ]YܝΈ٘X݋ѐϞȜܝȐۛٔܝț؝ڙ؝NȊ]ȜݜڛيHOȝۚYOȏH
+Ȝܝ؝ڙ؝HJHOȞۛܝٛ]YܝȏHӓїԓԕ˙ڛ\ʊ؛ٚY]JHOȘ؛ٚY]KܛYȈOOHܝܛYʋܛXيʎȈٝ\ۈ
+Ȉ٘ݚ[ۈۘ\ܓ؛YOH۝L̈ۜٙ\˝ۜٙ\˝ښ]ǨLLȏۘ\ܓ؛YOHݙ^^șۛ݋XۘXڈ\\ؘ\وؘښ[ًV̙̋[WH^\[ڋĽ͍Hϒٙ\٘Y[ُ܏Șۘ\ܓ؛YOH۝Lȝ^Lޛۛ݋XۘXڈ^]ښ]HYݙ^Lޛϓ[ܙH[ۜȞ[ݜțٞ^ڌςȈ]Șۘ\ܓ؛YOH۝MșܚY؜MYٜڙXۛˌȏޜٛ]Yܝ˛X\
 
-                {/* Messages */}
-                <div ref={scrollRef} style={{
-                    flex: 1, overflowY: 'auto', position: 'relative', zIndex: 10, padding: '1rem 1.25rem 0',
-                    animation: 'coachStaggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both',
-                    willChange: 'transform, opacity',
-                }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', maxWidth: '672px', margin: '0 auto', paddingBottom: '0.5rem' }}>
-                        {messages.map((msg, i) => (
-                            <MessageBubble
-                                key={i}
-                                msg={msg}
-                                onReport={handleReportMessage}
-                                icon={currentTheme.icon}
-                                colors={currentTheme.colors}
-                            />
-                        ))}
-                        {loading && <TypingIndicator icon={currentTheme.icon} colors={currentTheme.colors} />}
-                    </div>
-                </div>
+ٛ]Y
+HOȏِۛ؜وٞO^ܙ[]YܛY߈ܝ^ܙ[]YH؝ڙ؝O^ۘ]ڙ؝_Hϊ_Oٚ]ςȈܙXݚ[ۏ
+NN؛݈ۜTՒPӑWғՑTӐSӒSҔΈُ٘ۜݜڛً\ܘ^OȜ۝YΈݜڛَțXٛȜݜڛوOψH	ܙ\K]˙ދ]^ɎȖȜ۝YΈ	ܙ\K]ڙ[˜ڙK\؞\˚ZIˈXٛȉқ݈ȜٜHڙ[ȜڙH؞\ȚZIȟKȈȜ۝YΈ	ؙ\݋][ٙ\˛ܙ[ٜ܋Yۜ˙ݞ\ɋXٛȉЙ]\ȕ[ٙ\țܙ[ٜ܉ȟKȈȜ۝YΈ	ݚ]]˝^XYݙ\˘KYڜܝY]IˈXٛȉ՚]ȝ^Yݙ\ȘHڜܝ]IȟBȈKȈ	ؙ\݋][ٙ\˛ܙ[ٜ܋Yۜ˙ݞ\ɎȖȜ۝YΈ	ٝ[۞K\Xڝ\[[ٜ˝]]ۜډˈXٛȉѝ[۞HXڝ\[ٜȝ]ۜډȟKȈȜ۝YΈ	ؙ\݋Y][ًX\Xڛ˚YX\˙ۜ˙ݞ\ɋXٛȉј][و\ڛȚYX\ɈKȈȜ۝YΈ	ܙ\K]˙ދ]^ɋXٛȉқ݈ȜٜHșވ^ɈBȈKȈ	ܙ\K]ڙ[˜ڙK\؞\˚ZIΈȜ۝YΈ	ܙ\K]˙ދ]^ɋXٛȉқ݈Ț[ٛHHވ^	ȟKȈȜ۝YΈ	ٝ[۞K\Xڝ\[[ٜ˝]]ۜډˈXٛȉѝ[۞Hۛݙ\ܘ][ۈݘ\ݙ\܉ȟKȈȜ۝YΈ	ݚ]]˝^XYݙ\˘KYڜܝY]IˈXٛȉԛܝY]H^[وYژىȟBȈKȈ	ٝ[۞K\Xڝ\[[ٜ˝]]ۜډΈȜ۝YΈ	ؙ\݋][ٙ\˛ܙ[ٜ܋Yۜ˙ݞ\ɋXٛȉЙ\݈[ٙ\țܙ[ٜ܉ȟKȈȜ۝YΈ	ܙ\K]ڙ[˜ڙK\؞\˚ZIˈXٛȉ՚]Ȝ؞HYݙ\ȘH]YډȟKȈȜ۝YΈ	ؙ\݋Y][ًX\Xڛ˚YX\˙ۜ˙ݞ\ɋXٛȉ՜ڝHHٝ\ș][وڛɈBȈKȈ	ؙ\݋Y][ًX\Xڛ˚YX\˙ۜ˙ݞ\ɎȖȜ۝YΈ	ؙ\݋][ٙ\˛ܙ[ٜ܋Yۜ˙ݞ\ɋXٛȉӜ[ٜ܈]ݘ\݈ۛݙ\ܘ][ۜɈKȈȜ۝YΈ	ٝ[۞K\Xڝ\[[ٜ˝]]ۜډˈXٛȉԛ^YݛXڝ\[ٜɈKȈȜ۝YΈ	ݚ]]˝^XYݙ\˘KYڜܝY]IˈXٛȉ՚]ȝ^Yݙ\ȘH]IȟBȈKȈ	ݚ]]˝^XYݙ\˘KYڜܝY]IΈȜ۝YΈ	ܙ\K]˙ދ]^ɋXٛȉԙ\HȘHڛܝY\ܘYىȟKȈȜ۝YΈ	ܙ\K]ڙ[˜ڙK\؞\˚ZIˈXٛȉҙY\H^Yݛژ][ݚ[ىȟKȈȜ۝YΈ	ؙ\݋Y][ًX\Xڛ˚YX\˙ۜ˙ݞ\ɋXٛȉԙYܙ\ڈ[ݜș][وۙڛIȟBȈBߎ؛݈ۜ\ݚXۙR[ݙ\ۘ[[ڜΈ٘X݋ѐϞȜܝȐۛٔܝț؝ڙ؝NȊ]ȜݜڛيHOȝۚYOȏH
+Ȝܝ؝ڙ؝HJHOȊȈ؝Ș\ژK[XٛHԙ[]Y][وݚY\Ȉۘ\ܓ؛YOHܛݛٙYLޛۜٙ\Șۜٙ\˝ښ]Ǩً]ښ]K֌̌׈MHY܋Mȏۘ\ܓ؛YOHݙ^^șۛ݋XۘXڈ\\ؘ\وؘښ[ًV̙̋[WH^\[ڋĽ͍Hϐۛݚ[ݙH٘Y[ُ܏]Șۘ\ܓ؛YOH۝Mۙ^ۙ^]ܘ\؜LˍHςȈʐTՒPӑWғՑTӐSӒSҔ֜ܝܛY׈׊Kۘ\
 
-                {/* Input Container Wrapper */}
-                <div style={{
-                    flexShrink: 0, position: 'relative', zIndex: 10,
-                    padding: '0 0 env(safe-area-inset-bottom)',
-                    borderTop: '1px solid rgba(255,255,255,0.06)',
-                    animation: 'coachStaggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both',
-                    willChange: 'transform, opacity',
-                }}>
+[ڊHOȏHٞO^ۚ[ڋܛY߈ٙϞ؋؛ًɞۚ[ڋܛYߘHېۚXڏ^ʙ]ٛ݊HOȞș]ٛ݋ܜٝٛݑY؝[
 
-                    {/* Quick-Tap Prompts */}
-                    {messages.length === 1 && !loading && !image && (
-                        <div style={{
-                            padding: '10px 16px 8px', display: 'flex', gap: '8px', overflowX: 'auto', maxWidth: '672px', margin: '0 auto',
-                            WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none',
-                            animation: 'coachEntrance 0.5s ease-out'
-                        }}>
-                            {[
-                                { text: "She left me on read 📵", icon: "📵" },
-                                { text: "She's going cold 🥶", icon: "🥶" },
-                                { text: "Help me ask her out 🍷", icon: "🍷" }
-                            ].map((prompt, i) => (
-                                <button
-                                    key={i}
-                                    onClick={() => {
-                                        if (textareaRef.current) {
-                                            textareaRef.current.value = prompt.text;
-                                            textareaRef.current.style.height = 'auto';
-                                            textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 128) + 'px';
-                                            textareaRef.current.focus();
-                                        }
-                                        setHasContent(true);
-                                    }}
-                                    style={{
-                                        whiteSpace: 'nowrap', padding: '10px 16px', background: 'rgba(255,255,255,0.05)',
-                                        border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px',
-                                        color: 'rgba(255,255,255,0.9)', fontSize: '13.5px', fontWeight: 600,
-                                        cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0
-                                    }}
-                                >
-                                    {prompt.text}
-                                </button>
-                            ))}
-                        </div>
-                    )}
+Nț؝ڙ؝J؛ًɞۚ[ڋܛYߘ
+Nȟ_Hۘ\ܓ؛YOHܛݛٙYYݛۜٙ\Șۜٙ\˝ښ]ǨًXۘXڋ̌LˍHKLȝ^^șۛ݋Xۛ^]ښ]K͍H؛ܚ][ۋXۛܜȚݙ\Θۜٙ\˜[ڋĽ̌ݙ\Ν^\[ڋLLϞۚ[ڋۘXٛHܘ[Ș\ژKZY[ψݜݙHϸdϋܜ[Ϗ؏ʟBȈٚ]ςȈۘ]ςʎ؛݈ۜ\ݚXۙTYَȔ٘X݋ѐϞȜܝȐۛٔܝț؝ڙ؝NȊ]ȜݜڛيHOȝۚYOȏH
+Ȝܝ؝ڙ؝HJHOȞۛܝZYR[ٙ^HX]ؙZ[
+ܝܙXݚ[ۜ˛[ٝȌʎȈٝ\ۈXZ[Șۘ\ܓ؛YOHۘ\ڙ][ًXۛݘZ[ٜțX\ڙ][ً\Yً\Y[وςȈHٙψ˘ۛوțېۚXڏ^ʙ]ٛ݊HOȞș]ٛ݋ܜٝٛݑY؝[
 
-                    {/* Image Preview Area */}
-                    {image && (
-                        <div style={{ padding: '12px 20px 0', display: 'flex' }}>
-                            <div style={{ position: 'relative', display: 'inline-block' }}>
-                                <img src={image} alt="Upload preview" style={{ height: '70px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.2)', objectFit: 'cover' }} />
-                                <button
-                                    onClick={() => setImage(null)}
-                                    style={{
-                                        position: 'absolute', top: '-8px', right: '-8px', width: '24px', height: '24px',
-                                        background: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.2)', padding: 0,
-                                        borderRadius: '50%', color: 'white', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        cursor: 'pointer'
-                                    }}
-                                >✕</button>
-                            </div>
-                        </div>
-                    )}
+Nț؝ڙ؝J	˘ۛىʎȟ_Hۘ\ܓ؛YOHۘˌL[ۚ[ًYۙ^][\˘ٛݙ\ș؜Lȝ^\ۈۛ݋Xۛ^]ښ]K͍H؛ܚ][ۋXۛܜȚݙ\Ν^]ښ]HϸdؘڈȝHُۛ؏\ݚXۙHۘ\ܓ؛YOH۞X]]țX^]ˌޛςȈ]Șۘ\ܓ؛YOHٛ^ۙ^]ܘ\][\˘ٛݙ\ș؜Lȝ^^șۛ݋Xۛ\\ؘ\وؘښ[ًV̋̎[WH^]ښ]K̍HϏܘ[Șۘ\ܓ؛YOHݙ^\[ڋĽΌϞܛܝؘ]YۜޟOܜ[Ϗܘ[ϸ(ϋܜ[Ϗܘ[ϞܛܝܙXY[ٕ[Y_Oܜ[Ϗܘ[ϸ(ϋܜ[Ϗ[YH]U[YO^ܛܝ٘]_Oޛٝȑ]J	ܛܝ٘]_ULΌ̌
+Kݛӛؘ[Q]Tݜڛي	ٛ˕Tɋț[۝ȉۛۙɋ^Nȉ۝[Y\ژɋYX\Έ	۝[Y\ژɈJ_Oݚ[YOϋٚ]ςȈHۘ\ܓ؛YOH۝Mȝ^Mۛ݋XۘXڈXY[ًV̋̍WHؘښ[ًVˌ̍[WH^]ښ]HYݙ^MޛϞܛܝݚ]_OڌOۘ\ܓ؛YOH۝Mȝ^[țXY[ًN^]ښ]K͍HϞܛܝٙ\؜ڜ[۟O܏]Șۘ\ܓ؛YOH۝LLܘXً^KMHςȈ\ݚXۙT]ZXڐ[ܝٜȜܝ^ܛܝHςȈ\ݚXۙQ^[\P۞^[\\ϞДՒPӑWіSTT֜ܝܛYןHςȈ\ݚXۙQћ۝ܝ^ܛܝHςȈ\ݚXۙR[ݙ\ۘ[[ڜȜܝ^ܛܝH؝ڙ؝O^ۘ]ڙ؝_HςȈٚ]ςȈ]Șۘ\ܓ؛YOH۝LLȜܘXً^KLLȏܛܝܙXݚ[ۜ˛X\
 
-                    {/* Input Area */}
-                    <div style={{ padding: '0px 16px 6px' }}>
-                        <div style={{
-                            display: 'flex', alignItems: 'flex-end', gap: '8px', maxWidth: '672px', margin: '0 auto',
-                            borderRadius: '1.25rem', padding: '8px 8px 8px 16px',
-                            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                        }}>
-                            <button
-                                onClick={handleImageUpload}
-                                style={{
-                                    flexShrink: 0, width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
-                                    borderRadius: '10px', transition: 'all 0.2s', padding: '0'
-                                }}
-                                onMouseEnter={e => e.currentTarget.style.color = '#fff'}
-                                onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.6)'}
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                                </svg>
-                            </button>
-                            <input type="file" ref={fileInputRef} onChange={handleFileInput} accept="image/*" style={{ display: 'none' }} />
+٘ݚ[ۋ[ٙ^
+HOȏ٘X݋ќؙۙ[݈ٞO^ܙXݚ[ۋڙXY[ٟOڛٙ^OOHZYR[ٙ^	Ɉ\ݚXۙPݘH؝ڙ؝O^ۘ]ڙ؝_Hۛ\X݈ϟBȈ٘ݚ[ۏϚȘۘ\ܓ؛YOHݙ^Lޛۛ݋Xۛؘښ[ً]Yڝ^]ښ]HYݙ^LޛϞܙXݚ[ۋڙXY[ٟOڌϞܙXݚ[ۋܘ\ؙܘ\˛X\
 
-                            <textarea
-                                ref={textareaRef}
-                                defaultValue=""
-                                onChange={handleInputChange}
-                                onKeyDown={handleKeyDown}
-                                placeholder={image ? "Add context..." : "What's the situation?"}
-                                rows={1}
-                                disabled={loading}
-                                style={{
-                                    flex: 1, background: 'transparent', border: 'none', outline: 'none',
-                                    color: 'white', fontSize: '15px', lineHeight: 1.6, resize: 'none',
-                                    fontFamily: 'inherit', minHeight: '24px', maxHeight: '128px',
-                                    opacity: loading ? 0.4 : 1,
-                                }}
-                            />
-                            <button onClick={handleSend} disabled={!canSend} aria-label="Send"
-                                style={{
-                                    flexShrink: 0, width: '40px', height: '40px', borderRadius: '50%', border: 'none',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    cursor: canSend ? 'pointer' : 'not-allowed', opacity: canSend ? 1 : 0.4,
-                                    transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)', paddingLeft: '2px',
-                                    transform: canSend ? 'scale(1)' : 'scale(0.9)',
-                                    ...(canSend
-                                        ? {
-                                            background: `linear-gradient(135deg, ${currentTheme.colors.primary}, ${currentTheme.colors.secondary})`,
-                                            boxShadow: `0 4px 16px ${currentTheme.colors.glow}`,
-                                            animation: 'coachPulseRing 2s infinite'
-                                        }
-                                        : { background: 'rgba(255,255,255,0.1)' }
-                                    )
-                                }}
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="white">
-                                    <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+\ؙܘ\
+HOȏٞO^ܘ\ؙܘ\Hۘ\ܓ؛YOH۝MH^X؜وXY[ًN^]ښ]K͌Ϟܘ\ؙܘ\O܏ʟ^ܙXݚ[ۋ؝[]ȉɈ[ۘ\ܓ؛YOH۝MȜܘXً^KLȜ۝[ٙYLޛۜٙ\Șۜٙ\˜[ڋĽ̌ً\[ڋĽ֌̍HMH^\ۈXY[ًMȝ^]ښ]K͍HϞܙXݚ[ۋ؝[]˛X\
 
-            </div >
-        </>
-    );
-};
+ݛ]
+HOȏHٞO^؝[]Hۘ\ܓ؛YOHٛ^؜LȏϜܘ[Șۘ\ܓ؛YOH۝LH^\[ڋĽϸǩϋܜ[Ϗܘ[Ϟ؝[]Oܜ[ϏۚOʟOݛߏܙXݚ[ۏԙXX݋ќؙۙ[ݏʟBȈٚ]ςȈ\ݚXۙPݘH؝ڙ؝O^ۘ]ڙ؝_HςȈٛ]YܝȜܝ^ܛܝH؝ڙ؝O^ۘ]ڙ؝_HςȈ؜ݚXۙOۘZ[ςȈX\ڙ][ّۛݙ\ț؝ڙ؝O^ۘ]ڙ؝_HςȈώN؛݈ۜ\ݚXۙPݘNȔ٘X݋ѐϞț؝ڙ؝NȊ]ȜݜڛيHOȝۚYȘۛ\XݏΈۛۙX[ȟOȏH
+ț؝ڙ؝Kۛ\X݈H؛وJHOȏ]Șۘ\ܓ؛YO^؜ٛ]]وݙ\ٛ݋ZY[Ȝ۝[ٙYLޛۜٙ\Șۜٙ\˜[ڋĽ̍HًYܘYY[݋]˘܈ܛۋ\[ڋML̍H˜\ܛKML̌	؛ۜX݈ȉ۞KLȜMɈȉ۝LMȜMțY܋NIߘOϙ]Șۘ\ܓ؛YOHؘܛ۝]H\ڙڝLLȋ]܋LLȚL̈ˌ̈۝[ٙYYݛً\[ڋM̌۝\ˌޛȋϏۘ\ܓ؛YOHܙ[]]و^^șۛ݋Xۛ\\ؘ\وؘښ[ًV̋̌ٛWH^\[ڋĽ͍HϓٙYH٘ۛوܚ[ڛۏϋ܏ϚȘۘ\ܓ؛YOHܙ[]]و]Lȝ^Lޛۛ݋Xۛ^]ښ]Hϕ\ۈHڝX][ۈ[ݛȘHًٛ\٘YHٜKϋڌϏۘ\ܓ؛YOHܙ[]]و]LțX^]˞^\ۈXY[ًMȝ^]ښ]K͌ϔڞވX\ݙ\Ț[Ȟ[݈ڛوHڙڝٜۜȝڝݝܚ[و[ݜȜ\ܛۘ[]Kϋ܏ϙ]Șۘ\ܓ؛YOHܙ[]]و]Mșۙ^ۙ^Xۛ؜LȜێٛ^\۝ȏϔ^TݛܙPݝۈϏݝۈېۚXڏ^ʊHOț؝ڙ؝JPTґUSїғӑWԐU
+_Hۘ\ܓ؛YOHܛݛٙYLޛMHKLˍH^\ۈۛ݋Xۛ^]ښ]K͌؛ܚ][ۋXۛܜȚݙ\Ν^]ښ]Hϑ^ܙHڞވX\ݙ\ȸdϋ؝]ۏϋٚ]Ϗٚ]ώ؛݈ۜY؛YَȔ٘X݋ѐϞȚڛَȉܜڝؘމȟ	ݙ\ۜɈ	ܝ\ܝ	Έ؝ڙ؝NȊ]ȜݜڛيHOȝۚYOȏH
+Țڛً؝ڙ؝HJHOȞۛܝۛݙ[݈HڝؘގȞș^YXܛݎȉ֛ݜș]HX]\܉ˈ]NȉԜڝؘވۚXމˈ[ݜێȉԚ^ވX\ݙ\Ț\Șݚ[Ț[ڝ]ٜޙ^Hۛݙ\ܘ][ۜȝښ[Hٙ\[و]HۛXݚ[ۈۘݜٙۈݛۚ[وHۙX݋ɋ٘ݚ[ۜΈ։՚]وۛX݉ˈ	ՙHX^Hٜۘ܈X؛ݛ݈]Z[ˈ؝ٙ][\ˈۙڛHؙٜٙٛ\ˈ\ؚ\وݘ]K[وH^܈[XYوۛݙ^[݈ڛۜوȜݘۚ]ۜșٜٛ؝[ۋȕوۛH\و\Ț[ٛܛX][ۈȜ۝ڙK٘ݜً[و[\۝وHٜݚXًɗKɑٜٛ؝Yۛݙ[݉ˈ	қܝ]Ș\وٜۘܙYșٜٛ؝HٜܛٜۜˈۛH][\Ȟ[݈^XڝH؝و\و[ݙ[ٙYȜٛXZ[Ț[Ȟ[ݜȘX؛ݛ݈\ݛܞKȔٝڙ]ȝHݛܝYۚXވ[ڙYٛ݈ۜȝHݜܙ[݈]Z[ˉ׋ɖ[ݜȘڛژٜɋ	֛݈؛Ȝٜ]Y\݈X؛ݛ݈[]H]Y\ݚ[ۜˈ܈[][ۈ۝YڈݜܝɗWK[ڎȓQГӒSҔ˜ڝؘވKȈ\ۜΈș^YXܛݎȉ՜و]ݙڝݛIˈ]Nȉՙ\ۜțوٜݚXىˈ[ݜێȉԚ^ވX\ݙ\Ț\Ș[ȐRH][و\ܚ\ݘ[݈ۜș[ݙ\ݘZ[ۙ[݈[وۛ[][ژ؝[ۈݜܝ8%۝Hݘܝ]]HۜȞ[ݜȚݙۙ[݋ɋ٘ݚ[ۜΈ։՜ڛوHٜݚXىˈ	֛݈\وٜܛۜژۙHۜȝHY\ܘYٜȞ[݈ٛو[وH؞H[݈\وRKYٜٛ؝Yݙٙ\ݚ[ۜˈۛݙ[݈X^Hو[\\ٙX݋ۈٝڙ]Ț]ٙۜوژ\ڛًɗKɔٜܙXݙݛۛٝX݉ˈ	ћț۝\وHٜݚXوȘܙX]H\ۙݛ[Y؛Xݜڝً܈\؜ܚ[وۛݙ[݋ȐXؙ\܈X^Hو[Z]Yڙ[ȝHٜݚXو\țZ\ݜٙɗKɔ\ؚ\ٜɋ	ԜٛZ][H٘]\ٜȘ[وݘܘܚ\[ۜȘ\وX[ؙٙ۝YڈHۛٛH^HݛܙKɗWK[ڎȓQГӒSҔ˝\ۜȟKȈݜܝȞș^YXܛݎȉՙH\و\وȚ[	ˈ]Nȉԝ\ܝٛݙ\ɋ[ݜێȉԝY\ݚ[ۜȘX۝]ܙY]ˈݘܘܚ\[ۜˈX؛ݛ݈Xؙ\܋܈H٘]\وYXOȔٛو\ȘH۝H[ووڛ[[݈ڛوHٞݙ\ɋ٘ݚ[ۜΈ։Л۝X݈ݜܝ	ˈ	ћXZ[ڞޛX\ݙ\ڙ[X[PۘZ[؛ۈۜȘݙ܋ڛ[و]Y\ݚ[ۜˈX؛ݛ݈[][ۈٜ]Y\ݜˈ܈ٜٛ؛[ɗKɐܙY]Ș[وٛZ][Iˈ	ќٙHܙY]ȜٜٝZ[KȔٛZ][HXؙ\܈[وݘܘܚ\[ۈ؛ؙ[][ۈ\وX[ؙٙ۝YڈۛٛH^KɗKɐX؛ݛ݈[][ۉˈ	ћXZ[ݜܝܛۈHYٜ܈ۛۙXݙYȞ[ݜȘX؛ݛ݈[و[؛YH8'[]H^HX؛ݛݸ'H[ȝHݘڙX݋ɗWK[ڎȓQГӒSҔ˜ݜܝ[XZ[KȈVښ[ٗNٝ\ۈXZ[Șۘ\ܓ؛YOHۘ\ڙ][ًXۛݘZ[ٜțX\ڙ][ً\Yً\Y[وϏݝۈېۚXڏ^ʊHOț؝ڙ؝JPTґUSїғӑWԐU
+_Hۘ\ܓ؛YOHۘˌL[ۚ[ًYۙ^][\˘ٛݙ\ș؜Lȝ^\ۈۛ݋Xۛ^]ښ]K͍H؛ܚ][ۋXۛܜȚݙ\Ν^]ښ]HϸdؘڈۙO؝]ۏϙ]Șۘ\ܓ؛YOHۘ^]ˌޛϏۘ\ܓ؛YOHݙ^^șۛ݋Xۛ\\ؘ\وؘښ[ًV̋̎[WH^\[ڋĽΌϞ؛۝[݋ٞYXܛݟO܏ϚHۘ\ܓ؛YOH۝MH^M^ۛ݋XۘXڈؘښ[ًVˌ̍[WH^]ښ]HYݙ^MޛϞ؛۝[݋ݚ]_OڌOϜۘ\ܓ؛YOH۝Mȝ^[țXY[ًN^]ښ]K͍HϞ؛۝[݋ڛݜ۟O܏ϋٚ]Ϗ]Șۘ\ܓ؛YOH۝LLțX^]ˌޛܘXً^KMHϞ؛۝[݋ܙXݚ[ۜ˛X\
 
-export default RizzCoach;
+ڙXY[ًۜWJHOȏ٘ݚ[ۈٞO^ڙXY[ٟHۘ\ܓ؛YOHۘ\ڙ][ًX؜وMțY܋NϏȘۘ\ܓ؛YOHݙ^^ۛ݋Xۛ^]ښ]HϞڙXY[ٟOڌϏۘ\ܓ؛YOH۝Lȝ^\ۈXY[ًMȝ^]ښ]K͍HϞ؛ܞ_O܏ϋܙXݚ[ۏʟOٚ]ϏHٙϞ؛۝[݋ۚ[ڟH\ٙ]^ښ[وOOH	ܝ\ܝ	ȏȝ[ٙYڛٙȉטۘ[ډ߈ٛ^ښ[وOOH	ܝ\ܝ	ȏȝ[ٙYڛٙȉۛܙYٜܙ\ɟHۘ\ܓ؛YOH۝N[ۚ[ًYۙ^۝[ٙYLޛۜٙ\Șۜٙ\˝ښ]K̍Hً]ښ]K֌̍WHMHKLˍH^\ۈۛ݋Xۛ^]ښ]H؛ܚ][ۋXۛܜȚݙ\Θً]ښ]ǨϞښ[وOOH	ܝ\ܝ	ȏȉћXZ[ݜܝ	ȎȉԙXYHݛۚXވ8dɟO؏ϋۘZ[ϏX\ڙ][ّۛݙ\ț؝ڙ؝O^ۘ]ڙ؝_HςȈώN؛݈ۜ۝۝[ٔYَȔ٘X݋ѐϞț؝ڙ؝NȊ]ȜݜڛيHOȝۚYOȏH
+ț؝ڙ؝HJHOȏXZ[Șۘ\ܓ؛YOHۘ\ڙ][ًXۛݘZ[ٜțX\ڙ][ً\Yً\Y[وϏۘ\ܓ؛YOHݙ^^șۛ݋Xۛ\\ؘ\وؘښ[ًV̋̎[WH^\[ڋĽΌύ܏ϚHۘ\ܓ؛YOH۝MH^M^ۛ݋XۘXڈ^]ښ]Hϕ]YوڛܝY[݋ϋڌOϜۘ\ܓ؛YOH۝MH^]ښ]K͍Hϓ]8&\șٝ[݈ؘڈȝHۛو\݋ϋ܏ϘݝۈېۚXڏ^ʊHOț؝ڙ؝JPTґUSїғӑWԐU
+_Hۘ\ܓ؛YOHۘ\ڙ][ًXݘK\ڛX\ވ]N۝[ٙYLޛMHKLˍH^\ۈۛ݋Xۛ^]ښ]HϐؘڈۙH8dϋ؝]ۏϋۘZ[ώ؛݈ۜX\ڙ][ٔڝNȔ٘X݋ѐȏH
+
+HOȞۛܝܘ]؛YKٝ]؛YWHH\ٔݘ]J
+
+HOȝ\[وڛ݈ٛOOH	ݛٙYڛٙ	ȏȉˉȎȝڛٛ݋ؘۛ][ۋܘ]؛YJNۛܝ۝]HH\ٓY[[ʊ
+HOșٝ۝]J]؛YJKܘ]؛YWJNȈ\ّYٙX݊
+
+HOȞۛܝ۔ܔݘ]HH
+
+HOȜٝ]؛YJڛٛ݋ؘۛ][ۋܘ]؛YJNڛٛ݋ؙ]ٛݓ\ݙ[ٜʉܛܜݘ]Iˈ۔ܔݘ]JNٝ\ۈ
+
+HOȝڛٛ݋ܙ[[ݙQ]ٛݓ\ݙ[ٜʉܛܜݘ]Iˈ۔ܔݘ]JNK׊NȈ\ّYٙX݊
+
+HOȞ\]Tٛʜ۝]JNڛٛ݋ܘܛۛʞȝ܎Ȍٚ]ڛ܎ȉ؝]ɈJNKܛݝWJNȈۛܝ؝ڙ؝HH
+]ȜݜڛيHOȞۛܝܘ]؛YT\݋\ڗHH]ܜ]
+	ȉʎۛܝٞ]H]؛YT\݈	ˉ΂Ȉڛٛ݋ښ\ݛܞKܝ\ڔݘ]Jߋ	ɋ	ۙ^]Iژ\ڈȘɞژ\ڟXȉɟX
+Nٝ]؛YJٞ]
+Nڛٛ݋ܙ][Y[ݝ
+
+
+HOȞYȊ\ڊH؝[Y[݋ٙ][[Y[ݐޒY
+\ڊO˜؜ۛ[ݛ՚Y]ʞȘٚ]ڛ܎ȉܛ[۝	ȟJN[وڛٛ݋ܘܛۛʞȝ܎Ȍٚ]ڛ܎ȉ؝]ɈJNK
+NNȈۛܝ\ݚXۙHH۝]Kښ[وOOH	؜ݚXۙIȏșٝۛٔܝ
+۝]KܛYʈȝ[ٙYڛٙȈٝ\ۈ]Șۘ\ܓ؛YOHۘ\ڙ][ً\ڝHZ[˚\؜ٙ[țݙ\ٛ݋^ZY[ȘًVȌL׈^]ښ]HϏX\ڙ][ٓ؝ț؝ڙ؝O^ۘ]ڙ؝_HϞܛݝKښ[وOOH	ڛۙIȏȏۙTYو؝ڙ؝O^ۘ]ڙ؝_HψȜ۝]Kښ[وOOH	؛ىȏȏْۛ[ٙ^Yو؝ڙ؝O^ۘ]ڙ؝_HψȘ\ݚXۙHȏ\ݚXۙTYوܝ^؜ݚXۙ_H؝ڙ؝O^ۘ]ڙ؝_HψȜ۝]Kښ[وOOH	ܜڝؘމȟ۝]Kښ[وOOH	ݙ\ۜɈ۝]Kښ[وOOH	ܝ\ܝ	ȏȏY؛Yوڛُ^ܛݝKښ[ٟH؝ڙ؝O^ۘ]ڙ؝_Hψȏϓ۝۝[ٔYو؝ڙ؝O^ۘ]ڙ؝_HϏX\ڙ][ّۛݙ\ț؝ڙ؝O^ۘ]ڙ؝_HϏϟOٚ]ώNٞܝY؝[X\ڙ][ٔڝN¿￿
