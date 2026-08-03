@@ -350,6 +350,28 @@ const revokeLegacyProfilePremium = async (client, profile, premiumSource = 'revo
   };
 };
 
+const hasActivePremiumVerificationGrace = (profile) => {
+  const graceExpiresAt = new Date(profile?.premium_grace_expires_at || '').getTime();
+  return Number.isFinite(graceExpiresAt) && graceExpiresAt > Date.now();
+};
+
+const recordLegacyPremiumVerificationFailure = async (client, profile, reason) => {
+  const { data, error } = await client.rpc('admin_record_premium_verification_failure', {
+    p_user_uuid: profile.id,
+    p_reason: reason,
+  });
+
+  if (error) {
+    throw new AppDataError(
+      error.message || 'Failed to record premium verification failure',
+      'PROFILE_BOOTSTRAP_FAILED',
+      500
+    );
+  }
+
+  return normalizeLegacyRpcProfile(data) || profile;
+};
+
 const verifyLegacySubscriptionWithGooglePlay = async (profile, subscription) => {
   try {
     return await verifyStorePurchase({
@@ -378,12 +400,15 @@ const verifyLegacySubscriptionWithGooglePlay = async (profile, subscription) => 
 const syncLegacyProfilePremiumFromVerification = async (client, profile, receipt, verificationResult) => {
   return setLegacyProfilePremium(client, profile, {
     platform: 'android',
-    productId: receipt?.product_id || profile.premium_product_id || 'premium',
-    basePlanId: verificationResult?.verifiedBasePlanId || receipt?.base_plan_id || profile.premium_base_plan_id || null,
-    transactionId: receipt?.transaction_id || profile.premium_transaction_id || null,
+    productId: verificationResult?.verifiedProductId,
+    basePlanId: verificationResult?.verifiedBasePlanId,
+    transactionId: verificationResult?.verifiedTransactionId,
     purchaseTokenIdentifier: receipt?.purchase_token || null,
-    expiresAt: verificationResult?.expiresAt || profile.premium_expires_at || null,
-    rawPayload: receipt?.raw_payload || {},
+    expiresAt: verificationResult?.expiresAt,
+    rawPayload: {
+      verification_provider: verificationResult?.verificationProvider || null,
+      verification: verificationResult?.verificationPayload || {},
+    },
   });
 };
 
@@ -444,16 +469,28 @@ const normalizeExpiredLegacyPremium = async (client, profile) => {
       return revokedProfile;
     }
 
-    console.warn('[Premium] Expired premium verification unavailable; keeping stored premium state.', {
+    const graceProfile = await recordLegacyPremiumVerificationFailure(client, profile, verificationResultCode);
+    if (hasActivePremiumVerificationGrace(graceProfile)) {
+      console.warn('[Premium] Expired premium verification unavailable; keeping premium only within the verification grace period.', {
+        userId: profile.id,
+        hadExpiredPremium,
+        verificationResultCode,
+        graceExpiresAt: graceProfile.premium_grace_expires_at || null,
+      });
+      return graceProfile;
+    }
+
+    const revokedProfile = await revokeLegacyProfilePremium(client, profile, 'verification_grace_expired');
+    logPremiumNormalization({
       userId: profile.id,
       hadExpiredPremium,
       verificationResultCode,
       updatedExpiryPresent: false,
-      revoked: false,
+      revoked: true,
       noPurchaseToken: false,
       noRawReceipt: !latestReceipt?.raw_payload,
     });
-    return profile;
+    return revokedProfile;
   }
 
   try {
@@ -522,8 +559,22 @@ const reconcileLegacyProfilePremium = async (client, profile) => {
         };
       }
     } catch (error) {
+      if (shouldRevokeForStoreVerificationError(error)) {
+        await deactivateLegacyPremiumSubscription(client, activeSubscription.id);
+        return revokeLegacyProfilePremium(client, profile);
+      }
+
+      const graceProfile = await recordLegacyPremiumVerificationFailure(
+        client,
+        profile,
+        error instanceof PurchaseVerificationError ? error.code : 'UNKNOWN_VERIFICATION_ERROR'
+      );
+      if (hasActivePremiumVerificationGrace(graceProfile)) {
+        return graceProfile;
+      }
+
       await deactivateLegacyPremiumSubscription(client, activeSubscription.id);
-      return revokeLegacyProfilePremium(client, profile);
+      return revokeLegacyProfilePremium(client, graceProfile, 'verification_grace_expired');
     }
   }
 
@@ -745,15 +796,15 @@ export const claimDailyCreditsAndStreak = async (userId) => withTransaction(asyn
     let bonusCredits = 0;
     if (nextStreak >= 8) {
       bonusCredits = 3;
-      streakMsg = `🔥 Day ${nextStreak} Streak! +${bonusCredits} Bonus Credits!`;
+      streakMsg = `ðŸ”¥ Day ${nextStreak} Streak! +${bonusCredits} Bonus Credits!`;
     } else if (nextStreak >= 5) {
       bonusCredits = 2;
-      streakMsg = `🔥 Day ${nextStreak} Streak! +${bonusCredits} Bonus Credits!`;
+      streakMsg = `ðŸ”¥ Day ${nextStreak} Streak! +${bonusCredits} Bonus Credits!`;
     } else if (nextStreak >= 2) {
       bonusCredits = 1;
-      streakMsg = `🔥 Day ${nextStreak} Streak! +${bonusCredits} Bonus Credit!`;
+      streakMsg = `ðŸ”¥ Day ${nextStreak} Streak! +${bonusCredits} Bonus Credit!`;
     } else {
-      streakMsg = 'Welcome back! 🔥 Day 1 – keep it up for bonus credits!';
+      streakMsg = 'Welcome back! ðŸ”¥ Day 1 â€“ keep it up for bonus credits!';
     }
 
     const creditedAmount = bonusCredits > 0 && !profile.is_premium ? bonusCredits : 0;
