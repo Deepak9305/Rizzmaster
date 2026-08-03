@@ -44,7 +44,6 @@ const LoginPage = lazy(() => import('./components/LoginPage'));
 const OnboardingFlow = lazy(() => import('./components/OnboardingFlow'));
 import ErrorBoundary from './components/ErrorBoundary';
 import NoInternetOverlay from './components/NoInternetOverlay';
-import SettingsModal from './components/SettingsModal';
 
 const DAILY_CREDITS = 5;
 const IS_WEB_PLATFORM = !Capacitor.isNativePlatform();
@@ -427,7 +426,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   // Modals & Flags
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showSavedModal, setShowSavedModal] = useState(false);
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showWebMenu, setShowWebMenu] = useState(false);
   const [showPlayStorePrompt, setShowPlayStorePrompt] = useState(false);
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
@@ -558,14 +556,13 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const stateRef = useRef({
     currentView,
     showPremiumModal,
-    showSavedModal,
-    showSettingsModal
+    showSavedModal
   });
 
   // Keep stateRef in sync
   useEffect(() => {
-    stateRef.current = { currentView, showPremiumModal, showSavedModal, showSettingsModal };
-  }, [currentView, showPremiumModal, showSavedModal, showSettingsModal]);
+    stateRef.current = { currentView, showPremiumModal, showSavedModal };
+  }, [currentView, showPremiumModal, showSavedModal]);
 
   const isPublicInfoView =
     currentView === 'PRIVACY' ||
@@ -1065,7 +1062,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       setCurrentView(state.view || getViewFromLocation());
       setShowPremiumModal(!!state.premium);
       setShowSavedModal(!!state.saved);
-      setShowSettingsModal(false);
     };
 
     if (!window.history.state) {
@@ -1089,12 +1085,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       if (backButtonListener) backButtonListener.remove();
 
       backButtonListener = await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
-        const { currentView, showPremiumModal, showSavedModal, showSettingsModal } = stateRef.current;
-
-        if (showSettingsModal) {
-          setShowSettingsModal(false);
-          return;
-        }
+        const { currentView, showPremiumModal, showSavedModal } = stateRef.current;
 
         if (showPremiumModal || showSavedModal) {
           window.history.back();
@@ -1140,7 +1131,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       setCurrentView('HOME');
       setShowPremiumModal(false);
       setShowSavedModal(false);
-      setShowSettingsModal(false);
       window.history.replaceState({ view: 'HOME' }, '', '/');
     }
 
@@ -1166,15 +1156,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     window.history.pushState({ view: currentView, saved: true }, '');
     setShowSavedModal(true);
   }, [currentView]);
-
-  const handleSettingsNavigation = useCallback((page: 'PRIVACY' | 'TERMS' | 'SUPPORT') => {
-    setShowSettingsModal(false);
-    if (IS_WEB_PLATFORM && onNavigateToPath) {
-      onNavigateToPath(`/${page.toLowerCase()}`);
-      return;
-    }
-    void handleViewNavigation(page);
-  }, [handleViewNavigation, onNavigateToPath]);
 
   useEffect(() => {
     if (!supabase) {
@@ -2194,17 +2175,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         />
       )}
       {IS_WEB_PLATFORM && <PlayStorePromptModal isOpen={showPlayStorePrompt} onClose={() => setShowPlayStorePrompt(false)} />}
-      <SettingsModal
-        isOpen={showSettingsModal}
-        onClose={() => setShowSettingsModal(false)}
-        onLogout={() => { void handleLogout(); }}
-        onRestorePurchases={() => { void handleRestorePurchases(); }}
-        onNavigate={handleSettingsNavigation}
-        email={profile?.email || session?.user?.email || null}
-        isGuest={isGuest}
-        isPremium={profile?.is_premium || false}
-        credits={profile?.credits || 0}
-      />
       {IS_WEB_PLATFORM && onNavigateToPath && !profile && !showSplash && (
         <button onClick={() => setShowWebMenu(true)} aria-label="Open navigation menu" className="fixed left-4 top-4 z-[150] flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-black/60 text-white/75 shadow-lg backdrop-blur transition-colors hover:bg-white/10 hover:text-white">
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" /></svg>
@@ -2405,18 +2375,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                   )}
                 <button onClick={handleLogout} className="web-app-logout px-3 py-1.5 text-xs md:text-sm text-white/40 hover:text-white hover:bg-white/5 rounded-lg transition-all uppercase tracking-widest font-medium border border-transparent hover:border-white/10 flex items-center gap-2 active:scale-95">
                   <span className="text-lg">←</span> <span>Logout</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowSettingsModal(true)}
-                  aria-label="Open settings"
-                  aria-haspopup="dialog"
-                  aria-expanded={showSettingsModal}
-                  className="web-app-settings-button flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/55 transition-colors hover:bg-white/10 hover:text-white"
-                >
-                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8.25a3.75 3.75 0 1 0 0 7.5 3.75 3.75 0 0 0 0-7.5Zm0-5.25v2.1m0 13.8V21m9-9h-2.1M5.1 12H3m15.36-6.36-1.49 1.49M7.13 16.87l-1.49 1.49m12.72 0-1.49-1.49M7.13 7.13 5.64 5.64" />
-                  </svg>
                 </button>
                 </div>
 
