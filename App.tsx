@@ -428,6 +428,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const [showSavedModal, setShowSavedModal] = useState(false);
   const [showWebMenu, setShowWebMenu] = useState(false);
   const [showPlayStorePrompt, setShowPlayStorePrompt] = useState(false);
+  const [playStorePromptReason, setPlayStorePromptReason] = useState<'credits' | 'premium'>('credits');
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
   const [isSessionBlocked, setIsSessionBlocked] = useState(false);
   const [isAdLoading, setIsAdLoading] = useState<'hidden' | 'interstitial'>('hidden');
@@ -1138,6 +1139,12 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   }, [currentView, loading]);
 
   const handleOpenPremium = useCallback(() => {
+    if (IS_WEB_PLATFORM) {
+      setPlayStorePromptReason('premium');
+      setShowPlayStorePrompt(true);
+      return;
+    }
+
     // Guests see the premium modal first so they understand what they're getting
     window.history.pushState({ view: currentView, premium: true }, '');
     setShowPremiumModal(true);
@@ -1145,6 +1152,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
   const handleCreditsExhausted = useCallback(() => {
     if (IS_WEB_PLATFORM) {
+      setPlayStorePromptReason('credits');
       setShowPlayStorePrompt(true);
       return;
     }
@@ -2174,7 +2182,13 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
           onLogout={() => { void handleLogout(); }}
         />
       )}
-      {IS_WEB_PLATFORM && <PlayStorePromptModal isOpen={showPlayStorePrompt} onClose={() => setShowPlayStorePrompt(false)} />}
+      {IS_WEB_PLATFORM && (
+        <PlayStorePromptModal
+          isOpen={showPlayStorePrompt}
+          reason={playStorePromptReason}
+          onClose={() => setShowPlayStorePrompt(false)}
+        />
+      )}
       {IS_WEB_PLATFORM && onNavigateToPath && !profile && !showSplash && (
         <button onClick={() => setShowWebMenu(true)} aria-label="Open navigation menu" className="fixed left-4 top-4 z-[150] flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-black/60 text-white/75 shadow-lg backdrop-blur transition-colors hover:bg-white/10 hover:text-white">
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" /></svg>

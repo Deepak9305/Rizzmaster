@@ -4,10 +4,12 @@ import { PLAY_STORE_URL } from '../services/marketingContent';
 interface PlayStorePromptModalProps {
   isOpen: boolean;
   onClose: () => void;
+  reason?: 'credits' | 'premium';
 }
 
-const PlayStorePromptModal: React.FC<PlayStorePromptModalProps> = ({ isOpen, onClose }) => {
+const PlayStorePromptModal: React.FC<PlayStorePromptModalProps> = ({ isOpen, onClose, reason = 'credits' }) => {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const isPremiumPrompt = reason === 'premium';
 
   useEffect(() => {
     if (!isOpen) return;
@@ -30,9 +32,17 @@ const PlayStorePromptModal: React.FC<PlayStorePromptModalProps> = ({ isOpen, onC
         <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-pink-500/30 blur-3xl" />
         <div className="relative">
           <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-pink-300/20 bg-pink-300/10 text-2xl text-pink-200">+</span>
-          <h2 id="play-store-prompt-title" className="mt-5 text-2xl font-black tracking-tight text-white">Free credits used</h2>
-          <p className="mt-3 text-sm leading-6 text-white/65">You have used your free credits for today. Get unlimited Rizz Master in the Android app.</p>
-          <p className="mt-2 text-xs text-white/40">Your free credits reset tomorrow.</p>
+          <h2 id="play-store-prompt-title" className="mt-5 text-2xl font-black tracking-tight text-white">
+            {isPremiumPrompt ? 'Get Premium in the app' : 'Free credits used'}
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-white/65">
+            {isPremiumPrompt
+              ? 'Premium subscriptions are available in the Android app. Continue to Google Play to unlock unlimited Rizz Master.'
+              : 'You have used your free credits for today. Get unlimited Rizz Master in the Android app.'}
+          </p>
+          <p className="mt-2 text-xs text-white/40">
+            {isPremiumPrompt ? 'Sign in with the same account in the app to keep your profile.' : 'Your free credits reset tomorrow.'}
+          </p>
           <div className="mt-7 space-y-3">
             <a href={PLAY_STORE_URL} target="_blank" rel="noreferrer" onClick={onClose} className="flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 px-5 py-3.5 text-sm font-black text-white transition-transform hover:scale-[1.01]">
               Get it on Google Play
