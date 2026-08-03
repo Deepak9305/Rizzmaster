@@ -162,7 +162,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
 
   return (
     <div
-      className={`fixed inset-0 z-[200] flex flex-col transition-opacity duration-500 ${isExiting ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+      className={`app-surface fixed inset-0 z-[200] flex flex-col transition-opacity duration-500 ${isExiting ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
       style={{ background: '#09090b' }}
     >
       {/* Ambient glow */}

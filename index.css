@@ -417,13 +417,10 @@ body {
   }
 }
 
-/* --- WEB APP EXPERIENCE --- */
+/* Shared neon app shell for browser and Capacitor WebView. */
 .web-app-root {
-  --web-ink: #f8f5fb;
-  --web-muted: rgba(235, 220, 242, 0.62);
-  --web-line: rgba(255, 255, 255, 0.13);
-  --web-pink: #ff1686;
-  --web-orange: #ffad3d;
+  --app-ink: #f8f5fb;
+  --app-muted: rgba(235, 220, 242, 0.62);
   isolation: isolate;
   background: #05030b;
 }
@@ -432,7 +429,7 @@ body {
   width: min(1380px, calc(100% - 28px));
   margin-inline: auto;
   padding: 1rem 0 0;
-  color: var(--web-ink);
+  color: var(--app-ink);
 }
 
 .web-app-backdrop {
@@ -490,13 +487,8 @@ body {
   align-items: center;
 }
 
-.web-app-topbar-leading {
-  gap: 0.75rem;
-}
-
-.web-app-topbar-actions {
-  gap: 0.75rem;
-}
+.web-app-topbar-leading { gap: 0.75rem; }
+.web-app-topbar-actions { gap: 0.75rem; }
 
 .web-app-brand-mark {
   display: inline-flex;
@@ -550,15 +542,8 @@ body {
   box-shadow: 0 0 24px rgba(255, 175, 50, 0.27), inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
-.web-app-credits {
-  padding-inline: 1.15rem;
-}
-
-.web-app-heading {
-  position: relative;
-  z-index: 1;
-  margin-bottom: 1.35rem;
-}
+.web-app-credits { padding-inline: 1.15rem; }
+.web-app-heading { position: relative; z-index: 1; margin-bottom: 1.35rem; }
 
 .web-app-title {
   font-size: clamp(3.4rem, 8vw, 5.9rem);
@@ -598,16 +583,8 @@ body {
   box-shadow: none !important;
 }
 
-.web-app-tabs > button:hover {
-  color: #fff !important;
-  background: rgba(255, 255, 255, 0.055) !important;
-}
-
-.web-app-tabs > button.rizz-gradient {
-  background: linear-gradient(105deg, #ff147e, #ed228d 54%, #fb5c76) !important;
-  color: #fff !important;
-  box-shadow: 0 0 28px rgba(255, 21, 135, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
-}
+.web-app-tabs > button:hover { color: #fff !important; background: rgba(255, 255, 255, 0.055) !important; }
+.web-app-tabs > button.rizz-gradient { background: linear-gradient(105deg, #ff147e, #ed228d 54%, #fb5c76) !important; color: #fff !important; box-shadow: 0 0 28px rgba(255, 21, 135, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important; }
 
 .web-app-workspace {
   position: relative;
@@ -624,15 +601,8 @@ body {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 22px 75px rgba(0, 0, 0, 0.25), 0 0 36px rgba(226, 24, 144, 0.06);
 }
 
-.web-app-panel {
-  padding: 1.35rem !important;
-  border-radius: 1.15rem !important;
-}
-
-.web-app-input-panel label {
-  color: rgba(255, 248, 255, 0.88) !important;
-  letter-spacing: 0.13em;
-}
+.web-app-panel { padding: 1.35rem !important; border-radius: 1.15rem !important; }
+.web-app-input-panel label { color: rgba(255, 248, 255, 0.88) !important; letter-spacing: 0.13em; }
 
 .web-app-textarea {
   min-height: 7.75rem;
@@ -642,38 +612,13 @@ body {
   box-shadow: inset 0 1px 12px rgba(0, 0, 0, 0.25);
 }
 
-.web-app-textarea:focus {
-  border-color: rgba(255, 33, 145, 0.7) !important;
-  box-shadow: 0 0 0 3px rgba(255, 27, 143, 0.12), 0 0 24px rgba(255, 27, 143, 0.12);
-}
+.web-app-textarea:focus { border-color: rgba(255, 33, 145, 0.7) !important; box-shadow: 0 0 0 3px rgba(255, 27, 143, 0.12), 0 0 24px rgba(255, 27, 143, 0.12); }
+.web-app-segmented { width: 100%; justify-content: space-between; border-radius: 0.9rem; }
+.web-app-segmented button { flex: 1; min-width: 0; padding-inline: 0.65rem; }
+.web-app-segmented button[class*="bg-rose-500"] { background: linear-gradient(105deg, #ff1788, #ff506d) !important; box-shadow: 0 0 20px rgba(255, 32, 143, 0.25); }
 
-.web-app-segmented {
-  width: 100%;
-  justify-content: space-between;
-  border-radius: 0.9rem;
-}
-
-.web-app-segmented button {
-  flex: 1;
-  min-width: 0;
-  padding-inline: 0.65rem;
-}
-
-.web-app-segmented button[class*="bg-rose-500"] {
-  background: linear-gradient(105deg, #ff1788, #ff506d) !important;
-  box-shadow: 0 0 20px rgba(255, 32, 143, 0.25);
-}
-
-.web-app-media-button {
-  min-height: 3.35rem;
-  border-color: rgba(255, 255, 255, 0.15) !important;
-  background: rgba(8, 7, 16, 0.68) !important;
-}
-
-.web-app-media-button:hover {
-  border-color: rgba(255, 149, 108, 0.48) !important;
-  background: rgba(255, 48, 145, 0.08) !important;
-}
+.web-app-media-button { min-height: 3.35rem; border-color: rgba(255, 255, 255, 0.15) !important; background: rgba(8, 7, 16, 0.68) !important; }
+.web-app-media-button:hover { border-color: rgba(255, 149, 108, 0.48) !important; background: rgba(255, 48, 145, 0.08) !important; }
 
 .web-app-generate-button {
   min-height: 4.1rem;
@@ -683,24 +628,10 @@ body {
   font-size: 1.15rem;
 }
 
-.web-app-generate-button:hover {
-  opacity: 1 !important;
-  filter: saturate(1.1) brightness(1.08);
-  box-shadow: 0 0 42px rgba(255, 26, 137, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.45);
-}
-
-.web-app-credit-note {
-  color: rgba(241, 225, 245, 0.62) !important;
-  letter-spacing: 0.01em;
-}
-
-.web-app-credit-note span {
-  color: #ffc231 !important;
-}
-
-.web-app-results-panel {
-  min-height: 100%;
-}
+.web-app-generate-button:hover { opacity: 1 !important; filter: saturate(1.1) brightness(1.08); box-shadow: 0 0 42px rgba(255, 26, 137, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.45); }
+.web-app-credit-note { color: rgba(241, 225, 245, 0.62) !important; letter-spacing: 0.01em; }
+.web-app-credit-note span { color: #ffc231 !important; }
+.web-app-results-panel { min-height: 100%; }
 
 .web-app-empty-state {
   min-height: 36rem;
@@ -709,21 +640,9 @@ body {
   background: radial-gradient(circle at 50% 46%, rgba(177, 22, 126, 0.12), transparent 36%), rgba(9, 6, 20, 0.7) !important;
 }
 
-.web-app-empty-state > span {
-  color: #ff5cb4;
-  opacity: 0.72;
-  filter: drop-shadow(0 0 16px rgba(255, 44, 157, 0.56));
-}
-
-.web-app-empty-state p {
-  color: rgba(255, 252, 255, 0.95);
-  font-size: clamp(1.2rem, 2vw, 1.55rem);
-  font-weight: 700;
-}
-
-.web-app-result-card {
-  border-radius: 1.15rem !important;
-}
+.web-app-empty-state > span { color: #ff5cb4; opacity: 0.72; filter: drop-shadow(0 0 16px rgba(255, 44, 157, 0.56)); }
+.web-app-empty-state p { color: rgba(255, 252, 255, 0.95); font-size: clamp(1.2rem, 2vw, 1.55rem); font-weight: 700; }
+.web-app-result-card { border-radius: 1.15rem !important; }
 
 .web-app-footer {
   position: relative;
@@ -735,117 +654,58 @@ body {
   background: linear-gradient(110deg, rgba(44, 9, 46, 0.62), rgba(7, 6, 16, 0.82)) !important;
 }
 
-.web-app-footer > div {
-  max-width: none;
-  gap: 1rem;
-}
-
-.web-app-footer button {
-  border-color: rgba(255, 255, 255, 0.14);
-  background: rgba(7, 6, 15, 0.52);
-}
-
-.web-app-root :is(button, textarea):focus-visible {
-  outline: 2px solid rgba(255, 124, 179, 0.9);
-  outline-offset: 3px;
-}
+.web-app-footer > div { max-width: none; gap: 1rem; }
+.web-app-footer button { border-color: rgba(255, 255, 255, 0.14); background: rgba(7, 6, 15, 0.52); }
+.web-app-root :is(button, textarea):focus-visible { outline: 2px solid rgba(255, 124, 179, 0.9); outline-offset: 3px; }
 
 @media (max-width: 1023px) {
-  .web-app-topbar {
-    margin-bottom: 3rem;
-  }
-
-  .web-app-workspace {
-    grid-template-columns: 1fr;
-  }
-
-  .web-app-input-panel {
-    position: static !important;
-    max-height: none !important;
-    overflow: visible !important;
-  }
-
-  .web-app-empty-state {
-    min-height: 24rem;
-  }
+  .web-app-topbar { margin-bottom: 3rem; }
+  .web-app-workspace { grid-template-columns: 1fr; }
+  .web-app-input-panel { position: static !important; max-height: none !important; overflow: visible !important; }
+  .web-app-empty-state { min-height: 24rem; }
 }
 
 @media (max-width: 640px) {
-  .web-app-shell {
-    width: min(100% - 1rem, 1380px);
-    padding-top: 0.5rem;
-  }
-
-  .web-app-topbar {
-    min-height: 4rem;
-    margin-bottom: 2.4rem;
-    padding: 0.5rem 0.7rem;
-    border-radius: 0.85rem;
-  }
-
-  .web-app-topbar-leading,
-  .web-app-topbar-actions {
-    gap: 0.4rem;
-  }
-
-  .web-app-menu-trigger {
-    width: 2.65rem;
-    height: 2.65rem;
-  }
-
-  .web-app-logout {
-    padding-inline: 0.4rem;
-    font-size: 0.65rem;
-    letter-spacing: 0.1em;
-  }
-
-  .web-app-brand-mark {
-    width: 1.2rem;
-    font-size: 1.1rem;
-  }
-
-  .web-app-credits {
-    padding-inline: 0.65rem;
-  }
-
-  .web-app-heading {
-    margin-bottom: 1.05rem;
-  }
-
-  .web-app-title {
-    font-size: clamp(3rem, 15vw, 4.4rem);
-  }
-
-  .web-app-subtitle {
-    font-size: 0.9rem;
-  }
-
-  .web-app-tabs {
-    width: 100%;
-    margin-bottom: 1rem;
-  }
-
-  .web-app-tabs > button {
-    min-height: 2.9rem;
-    padding-inline: 0.25rem !important;
-    font-size: 0.72rem !important;
-  }
-
-  .web-app-panel {
-    padding: 1rem !important;
-  }
-
-  .web-app-empty-state {
-    min-height: 19rem;
-  }
+  .web-app-shell { width: min(100% - 1rem, 1380px); padding-top: 0.5rem; }
+  .web-app-topbar { min-height: 4rem; margin-bottom: 2.4rem; padding: 0.5rem 0.7rem; border-radius: 0.85rem; }
+  .web-app-topbar-leading, .web-app-topbar-actions { gap: 0.4rem; }
+  .web-app-menu-trigger { width: 2.65rem; height: 2.65rem; }
+  .web-app-logout { padding-inline: 0.4rem; font-size: 0.65rem; letter-spacing: 0.1em; }
+  .web-app-brand-mark { width: 1.2rem; font-size: 1.1rem; }
+  .web-app-credits { padding-inline: 0.65rem; }
+  .web-app-heading { margin-bottom: 1.05rem; }
+  .web-app-title { font-size: clamp(3rem, 15vw, 4.4rem); }
+  .web-app-subtitle { font-size: 0.9rem; }
+  .web-app-tabs { width: 100%; margin-bottom: 1rem; }
+  .web-app-tabs > button { min-height: 2.9rem; padding-inline: 0.25rem !important; font-size: 0.72rem !important; }
+  .web-app-panel { padding: 1rem !important; }
+  .web-app-empty-state { min-height: 19rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .web-app-root *,
-  .web-app-root *::before,
-  .web-app-root *::after {
+  .web-app-root *, .web-app-root *::before, .web-app-root *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Shared supporting surfaces keep secondary native and web screens in the same visual system. */
+.app-surface {
+  background:
+    radial-gradient(circle at 16% 18%, rgba(255, 21, 139, 0.11), transparent 30%),
+    radial-gradient(circle at 84% 82%, rgba(255, 169, 58, 0.08), transparent 28%),
+    #05030b;
+}
+
+.app-card {
+  border-color: rgba(255, 55, 153, 0.24) !important;
+  background: linear-gradient(145deg, rgba(24, 8, 32, 0.82), rgba(8, 8, 18, 0.86)) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 24px 80px rgba(0, 0, 0, 0.3), 0 0 36px rgba(226, 24, 144, 0.08);
+}
+
+.app-modal :is(button, input, textarea):focus-visible,
+.app-surface :is(button, input, textarea):focus-visible {
+  outline: 2px solid rgba(255, 124, 179, 0.9);
+  outline-offset: 3px;
 }

@@ -10,11 +10,11 @@ const NoInternetOverlay: React.FC<NoInternetOverlayProps> = ({ isVisible, onRetr
     if (!isVisible) return null;
 
     return (
-        <div className="fixed inset-0 z-[10000] bg-black flex flex-col items-center justify-center p-6 text-center animate-fade-in">
+        <div className="app-surface fixed inset-0 z-[10000] bg-black flex flex-col items-center justify-center p-6 text-center animate-fade-in">
             {/* Decorative Blur */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-rose-500/10 rounded-full blur-[100px] pointer-events-none" />
 
-            <div className="relative z-10 max-w-sm w-full glass p-8 rounded-3xl border border-white/10 shadow-2xl">
+            <div className="app-card relative z-10 max-w-sm w-full glass p-8 rounded-3xl border border-white/10 shadow-2xl">
                 <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center text-3xl mb-6 mx-auto border border-white/10">
                     📡
                 </div>

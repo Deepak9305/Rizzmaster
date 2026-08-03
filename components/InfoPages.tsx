@@ -152,7 +152,7 @@ const InfoPages: React.FC<InfoPagesProps> = ({ page, onBack, onDeleteAccount }) 
   };
 
   return (
-    <div className="min-h-screen w-full bg-black text-white animate-fade-in pb-0">
+    <div className="app-surface min-h-screen w-full bg-black text-white animate-fade-in pb-0">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <button
           onClick={onBack}
@@ -161,7 +161,7 @@ const InfoPages: React.FC<InfoPagesProps> = ({ page, onBack, onDeleteAccount }) 
           <span className="group-hover:-translate-x-1 transition-transform">←</span> Back to Dashboard
         </button>
 
-        <div className="glass p-8 md:p-12 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden">
+        <div className="app-card glass p-8 md:p-12 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden">
           {/* Decorative Background Elements */}
           <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-rose-500/5 rounded-full blur-[80px] pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-amber-500/5 rounded-full blur-[80px] pointer-events-none" />

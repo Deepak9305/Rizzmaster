@@ -15,11 +15,11 @@ const ForceUpdateGate: React.FC<ForceUpdateGateProps> = ({ config }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black px-6 py-10 relative overflow-hidden">
+    <div className="app-surface min-h-screen flex items-center justify-center bg-black px-6 py-10 relative overflow-hidden">
       <div className="absolute top-[-10%] left-[-10%] w-[420px] h-[420px] rounded-full bg-rose-600/20 blur-[120px]" />
       <div className="absolute bottom-[-15%] right-[-10%] w-[460px] h-[460px] rounded-full bg-amber-500/15 blur-[140px]" />
 
-      <div className="relative z-10 max-w-md w-full glass p-8 rounded-3xl border border-white/10 shadow-2xl text-center">
+      <div className="app-card relative z-10 max-w-md w-full glass p-8 rounded-3xl border border-white/10 shadow-2xl text-center">
         <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-3xl">
           ⬆
         </div>

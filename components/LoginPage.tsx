@@ -189,7 +189,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
     };
 
     return (
-        <div className="min-h-screen flex bg-black overflow-hidden relative">
+        <div className="app-surface min-h-screen flex bg-black overflow-hidden relative">
 
             {/* Legal Modals Overlay */}
             {activeLegalModal && (
@@ -259,7 +259,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
                         <p className="text-white/60 text-sm">AI-Powered Dating Assistant</p>
                     </div>
 
-                    <div className="glass md:bg-transparent md:backdrop-filter-none p-8 md:p-0 rounded-3xl md:rounded-none border border-white/10 md:border-none shadow-2xl md:shadow-none">
+                    <div className="app-card glass md:bg-transparent md:backdrop-filter-none p-8 md:p-0 rounded-3xl md:rounded-none border border-white/10 md:border-none shadow-2xl md:shadow-none">
 
 
                         <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 md:mb-3">

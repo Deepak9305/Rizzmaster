@@ -341,34 +341,7 @@ CRITICAL: ${length === 'short'
 
       messages.push({
         role: "user",
-        content: [
-          { type: "text", text: finalInput },
-          { type: "image_url", image_url: { url: cleanOptimized } }
-        ]
-      });
-    } else {
-      messages.push({
-        role: "user",
-        content: finalInput
-      });
-    }
-
-    // Retry logic for robustness
-    let attempts = 0;
-    while (attempts < 3) {
-      try {
-        const completion = await callAiChatCompletion({
-          model: getPreferredModel(Boolean(image)),
-          messages: messages,
-          temperature: 1.3,
-          max_tokens: 1000
-        });
-        const responseText = completion.content;
-
-        if (responseText) {
-          let rawData: any;
-          try {
-            rawData = JSON.parse(cleanJson(responseText));
+        contentÛm­¢G§²ÚîÆ­yÐ         rawData = JSON.parse(cleanJson(responseText));
           } catch (parseError) {
             console.warn("Rizz JSON parse failed, returning sanitized fallback:", parseError);
             const fallback = sanitizeText(responseText).slice(0, 240);
@@ -490,7 +463,7 @@ CRITICAL: ${length === 'short'
           { role: "system", content: systemInstruction },
           { role: "user", content: isUnsafe ? "Generate roast." : inputText }
         ],
-        temperature: 1.15,
+        temperature: 0.85,
         max_tokens: length === 'short' ? 400 : length === 'medium' ? 600 : 900
       });
       const responseText = completion.content;
@@ -664,7 +637,7 @@ Carry over all existing intel and update it when new facts emerge.`;
       const completion = await callAiChatCompletion({
         model: getPreferredModel(recentMessages.some(message => Boolean(message.image))),
         messages: [{ role: 'system', content: systemInstruction }, ...rawMessages],
-        temperature: 1.05,
+        temperature: 0.85,
         max_tokens: 650,
       });
       const rawReply = completion.content;

@@ -19,13 +19,13 @@ const SavedModal: React.FC<SavedModalProps> = ({
   const displayItems = savedItems.filter(item => item.type !== 'system');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-end">
+    <div className="app-modal fixed inset-0 z-50 flex items-center justify-end">
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
 
-      <div className="relative w-full max-w-md h-full bg-[#0a0a0a] border-l border-white/10 shadow-2xl flex flex-col animate-slide-in-right">
+      <div className="app-card relative w-full max-w-md h-full bg-[#0a0a0a] border-l border-white/10 shadow-2xl flex flex-col animate-slide-in-right">
         <div className="p-6 border-b border-white/10 flex items-center justify-between bg-black/20">
           <h2 className="text-xl font-bold text-white">Saved Gems</h2>
           <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full text-white/50 hover:text-white">✕</button>
