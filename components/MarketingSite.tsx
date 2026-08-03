@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { LEGAL_LINKS } from '../services/legalLinks';
 import { BLOG_POSTS, getBlogPost, PLAY_STORE_URL, type BlogPost } from '../services/marketingContent';
-import { normalizeMarketingPath } from '../services/marketingRoutes';
+import { MARKETING_HOME_PATH, normalizeMarketingPath } from '../services/marketingRoutes';
 
 type MarketingRoute =
   | { kind: 'home' | 'blog' | 'privacy' | 'terms' | 'support' }
@@ -11,7 +11,7 @@ type MarketingRoute =
 const getRoute = (pathname: string): MarketingRoute => {
   const path = normalizeMarketingPath(pathname).toLowerCase();
 
-  if (path === '/') return { kind: 'home' };
+  if (path === MARKETING_HOME_PATH) return { kind: 'home' };
   if (path === '/blog') return { kind: 'blog' };
   if (path === '/privacy') return { kind: 'privacy' };
   if (path === '/terms') return { kind: 'terms' };
@@ -109,7 +109,7 @@ const PlayStoreButton: React.FC<{
 }> = ({
   variant = 'primary',
   label = 'Get it on Google Play',
-  supportText = 'Free daily credits · Android app',
+  supportText = 'Free daily credits Â· Android app',
   compact = false,
   className = ''
 }) => (
@@ -135,14 +135,14 @@ const PlayStoreButton: React.FC<{
       <span className={`block truncate font-black leading-tight ${compact ? 'text-xs' : 'text-sm'}`}>{label}</span>
       {supportText && <span className={`mt-1 block truncate font-medium leading-tight text-white/60 ${compact ? 'text-[9px]' : 'text-[10px]'}`}>{supportText}</span>}
     </span>
-    <span className="text-white/60 transition-transform group-hover:translate-x-1" aria-hidden="true">→</span>
+    <span className="text-white/60 transition-transform group-hover:translate-x-1" aria-hidden="true">â†’</span>
   </a>
 );
 
 const MarketingNav: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) => (
   <header className="relative z-20 border-b border-white/[0.07] bg-black/30 backdrop-blur-xl">
     <div className="marketing-container flex h-20 items-center justify-between gap-6">
-      <button onClick={() => navigate('/')} className="flex items-center gap-3 text-left" aria-label="Rizz Master home">
+      <button onClick={() => navigate(MARKETING_HOME_PATH)} className="flex items-center gap-3 text-left" aria-label="Rizz Master home">
         <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-pink-300/25 bg-gradient-to-br from-pink-500/25 to-purple-500/25 shadow-[0_0_30px_rgba(236,72,153,0.2)]">
           <img src="/logo.png" alt="" className="h-8 w-8 object-contain" />
         </span>
@@ -150,8 +150,8 @@ const MarketingNav: React.FC<{ navigate: (path: string) => void }> = ({ navigate
       </button>
 
       <nav className="hidden items-center gap-7 text-sm text-white/55 md:flex" aria-label="Marketing navigation">
-        <a href="/#features" onClick={(event) => { event.preventDefault(); navigate('/#features'); }} className="transition-colors hover:text-white">Features</a>
-        <a href="/#how-it-works" onClick={(event) => { event.preventDefault(); navigate('/#how-it-works'); }} className="transition-colors hover:text-white">How it works</a>
+        <a href="/landing#features" onClick={(event) => { event.preventDefault(); navigate('/landing#features'); }} className="transition-colors hover:text-white">Features</a>
+        <a href="/landing#how-it-works" onClick={(event) => { event.preventDefault(); navigate('/landing#how-it-works'); }} className="transition-colors hover:text-white">How it works</a>
         <a href="/blog" onClick={(event) => { event.preventDefault(); navigate('/blog'); }} className="transition-colors hover:text-white">Blog</a>
       </nav>
 
@@ -171,7 +171,7 @@ const MarketingFooter: React.FC<{ navigate: (path: string) => void }> = ({ navig
   <footer className="border-t border-white/[0.08] bg-black/50">
     <div className="marketing-container flex flex-col gap-8 py-10 md:flex-row md:items-center md:justify-between">
       <div>
-        <button onClick={() => navigate('/')} className="font-bold tracking-tight text-white">Rizz <span className="text-pink-300">Master</span></button>
+        <button onClick={() => navigate(MARKETING_HOME_PATH)} className="font-bold tracking-tight text-white">Rizz <span className="text-pink-300">Master</span></button>
         <p className="mt-2 text-xs text-white/35">Built for people who overthink every text.</p>
       </div>
       <div className="flex flex-wrap gap-x-6 gap-y-3 text-xs font-semibold text-white/45">
@@ -183,7 +183,7 @@ const MarketingFooter: React.FC<{ navigate: (path: string) => void }> = ({ navig
       <div className="flex max-w-md flex-wrap gap-x-4 gap-y-2 text-[11px] font-medium text-white/30">
         {OFFICIAL_LEGAL_LINKS.map((link) => <a key={link.href} href={link.href} target="_blank" rel="noreferrer" className="transition-colors hover:text-white/70">{link.label}</a>)}
       </div>
-      <p className="text-xs text-white/25">© {new Date().getFullYear()} Rizz Master</p>
+      <p className="text-xs text-white/25">Â© {new Date().getFullYear()} Rizz Master</p>
     </div>
   </footer>
 );
@@ -206,7 +206,7 @@ const BlogCard: React.FC<{ post: BlogPost; navigate: (path: string) => void; fea
     <h3 className={`font-bold leading-tight text-white transition-colors group-hover:text-pink-200 ${featured ? 'text-2xl md:text-3xl' : 'text-xl'}`}>{post.title}</h3>
     <p className="mt-4 flex-1 text-sm leading-6 text-white/50">{post.excerpt}</p>
     <a href={`/blog/${post.slug}`} onClick={(event) => { event.preventDefault(); navigate(`/blog/${post.slug}`); }} className="mt-7 inline-flex items-center gap-2 self-start rounded-full border border-pink-300/15 bg-pink-300/[0.06] px-3 py-2 text-sm font-bold text-pink-200 transition-all group-hover:gap-3">
-      Read the guide <span>→</span>
+      Read the guide <span>â†’</span>
     </a>
   </article>
 );
@@ -236,9 +236,9 @@ const MESSAGE_EXAMPLES: MessageExample[] = [
 ];
 
 const FEATURE_HIGHLIGHTS = [
-  { icon: '✦', title: 'AI Reply Generator', copy: 'Paste the message, choose the vibe, and get thoughtful options that sound ready to send.', accent: 'from-pink-500/20 to-purple-500/10' },
-  { icon: '◉', title: 'AI Chat Coach', copy: 'Talk through the whole situation with Rizz AI. Share the context or a screenshot, get the vibe decoded, and find your next move.', accent: 'from-purple-500/20 to-fuchsia-500/10' },
-  { icon: '⌁', title: 'Dating Bio Generator', copy: 'Turn your interests, energy, and sense of humor into a profile that sounds like you.', accent: 'from-fuchsia-500/20 to-pink-500/10' }
+  { icon: 'âœ¦', title: 'AI Reply Generator', copy: 'Paste the message, choose the vibe, and get thoughtful options that sound ready to send.', accent: 'from-pink-500/20 to-purple-500/10' },
+  { icon: 'â—‰', title: 'AI Chat Coach', copy: 'Talk through the whole situation with Rizz AI. Share the context or a screenshot, get the vibe decoded, and find your next move.', accent: 'from-purple-500/20 to-fuchsia-500/10' },
+  { icon: 'âŒ', title: 'Dating Bio Generator', copy: 'Turn your interests, energy, and sense of humor into a profile that sounds like you.', accent: 'from-fuchsia-500/20 to-pink-500/10' }
 ];
 
 const SECONDARY_FEATURES = ['Pickup lines', 'Tone selection', 'Custom personas', 'Save favorites', 'Daily free credits', 'Premium modes'];
@@ -303,7 +303,7 @@ const FeatureHighlightCard: React.FC<{ icon: string; title: string; copy: string
     <span className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-pink-300/20 bg-black/20 text-xl text-pink-100 transition-transform group-hover:scale-110">{icon}</span>
     <h3 className="relative mt-7 text-xl font-black text-white">{title}</h3>
     <p className="relative mt-3 text-sm leading-6 text-white/60">{copy}</p>
-    <span className="relative mt-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-pink-200/75">Built for the moment <span aria-hidden="true">→</span></span>
+    <span className="relative mt-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-pink-200/75">Built for the moment <span aria-hidden="true">â†’</span></span>
   </article>
 );
 
@@ -323,10 +323,10 @@ const StickyMobileCta: React.FC = () => {
     <div className="marketing-sticky-cta fixed inset-x-3 bottom-3 z-40 md:hidden">
       <a href={PLAY_STORE_URL} target="_blank" rel="noreferrer" className="marketing-cta-primary flex items-center justify-between gap-4 rounded-2xl border border-pink-200/20 px-4 py-3 text-white shadow-[0_14px_40px_rgba(236,72,153,0.35)]" aria-label="Download Rizz Master from Google Play">
         <span className="flex min-w-0 items-center gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-black/20 text-lg" aria-hidden="true">↓</span>
-          <span className="min-w-0 text-left"><span className="block truncate text-sm font-black">Download Rizz Master</span><span className="mt-0.5 block text-[10px] font-medium text-white/65">Free daily credits · Android app</span></span>
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-black/20 text-lg" aria-hidden="true">â†“</span>
+          <span className="min-w-0 text-left"><span className="block truncate text-sm font-black">Download Rizz Master</span><span className="mt-0.5 block text-[10px] font-medium text-white/65">Free daily credits Â· Android app</span></span>
         </span>
-        <span className="shrink-0 text-sm font-black" aria-hidden="true">→</span>
+        <span className="shrink-0 text-sm font-black" aria-hidden="true">â†’</span>
       </a>
     </div>
   );
@@ -339,87 +339,14 @@ const HomePage: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) 
         <div className="marketing-grid absolute inset-0 opacity-60" />
         <div className="marketing-container relative grid items-center gap-16 pb-20 pt-16 md:grid-cols-[1.05fr_0.95fr] md:pb-28 md:pt-24">
           <div className="relative z-10 max-w-2xl">
-            <div className="marketing-kicker mb-6 inline-flex items-center gap-2 rounded-full border border-pink-300/15 bg-pink-300/[0.06] px-3 py-2 text-[11px] font-bold uppercase tracking-[0.2em] text-pink-100/75">
-              <span className="h-1.5 w-1.5 rounded-full bg-pink-300 shadow-[0_0_12px_rgba(244,114,182,0.9)]" /> AI dating assistant
-            </div>
-            <h1 className="max-w-xl text-5xl font-black leading-[0.98] tracking-[-0.06em] text-white sm:text-6xl md:text-7xl">Never run out of <span className="marketing-text-gradient">replies</span> again.</h1>
-            <p className="mt-7 max-w-xl text-lg leading-8 text-white/58 md:text-xl">Rizz Master helps you create flirty replies, dating bios, openers, and conversation starters in seconds.</p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <PlayStoreButton />
-              <a href="/blog" onClick={(event) => { event.preventDefault(); navigate('/blog'); }} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3.5 text-sm font-bold text-white/75 transition-all hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.08] hover:text-white">Read texting tips <span>→</span></a>
-            </div>
-            <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-white/35">
-              <span className="flex items-center gap-2"><span className="text-pink-300">✦</span> Daily free credits</span>
-              <span className="flex items-center gap-2"><span className="text-pink-300">✦</span> Your tone, your choice</span>
-              <span className="flex items-center gap-2"><span className="text-pink-300">✦</span> Android app</span>
-            </div>
-          </div>
-          <HeroPoster />
-        </div>
-      </section>
-
-      <section className="marketing-section marketing-container">
-        <SectionHeading eyebrow="The blank screen problem" title="You have the feeling. Not the words." description="When the moment matters, a blank typing box can turn one simple text into a full spiral." />
-        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            ['01', 'She replied with “haha” and now you’re stuck.', 'Turn a dead-end reply into a natural next move.'],
-            ['02', 'Your dating bio sounds boring.', 'Find a sharper way to show your personality.'],
-            ['03', 'You do not know how to start the conversation.', 'Get openers that give them something to answer.'],
-            ['04', 'You overthink every message before sending it.', 'Choose a tone, get options, and hit send.']
-          ].map(([number, title, copy]) => <div key={number} className="marketing-card p-6"><span className="text-xs font-black tracking-[0.2em] text-pink-300/60">{number}</span><h3 className="mt-10 text-lg font-bold leading-snug text-white">{title}</h3><p className="mt-3 text-sm leading-6 text-white/45">{copy}</p></div>)}
-        </div>
-      </section>
-
-      <section className="marketing-section marketing-container">
-        <SectionHeading eyebrow="See the difference in seconds" title="Less staring. More send-ready." description="A small nudge can turn a flat prompt into a reply that sounds like you and gives the conversation somewhere to go." />
-        <div className="mt-12 grid gap-4 lg:grid-cols-3">{MESSAGE_EXAMPLES.map((example) => <MessageExampleCard key={example.before} {...example} />)}</div>
-      </section>
-
-      <section id="features" className="marketing-section marketing-container scroll-mt-8">
-        <SectionHeading eyebrow="More than a one-liner" title="A better way to find your next move" description="From one perfect reply to a full conversation coach, Rizz Master gives you the right kind of help for the moment." />
-        <div className="mt-12 grid gap-4 lg:grid-cols-3">{FEATURE_HIGHLIGHTS.map((feature) => <FeatureHighlightCard key={feature.title} {...feature} />)}</div>
-        <div className="mt-5 flex flex-wrap gap-3">{SECONDARY_FEATURES.map((feature) => <span key={feature} className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-4 py-2.5 text-sm font-semibold text-white/65"><span className="h-1.5 w-1.5 rounded-full bg-pink-300/80" />{feature}</span>)}</div>
-        <div className="hidden">
-          {[
-            ['✦', 'AI reply generator', 'Paste the message, choose the vibe, and get thoughtful options in seconds.'],
-            ['⌁', 'Dating bio generator', 'Turn your interests, energy, and sense of humor into a profile that sounds like you.'],
-            ['♡', 'Pickup line generator', 'Start with playful openers that make the next message easier.'],
-            ['◌', 'Your tone, your choice', 'Go flirty, funny, wholesome, confident, savage, or romantic.'],
-            ['▢', 'Save your favorites', 'Keep the replies that feel right so your best ideas are always close.'],
-            ['∞', 'Daily free credits', 'Get useful help every day, with premium modes when you want more range.'],
-            ['◎', 'AI Chat Coach', 'Talk through the whole situation with Rizz AI. Share the context or a screenshot, get the vibe decoded, and find your next move.'],
-            ['✧', 'Custom personas', 'Create your own advisors with custom instructions—a playful wingman, a direct friend, or the exact voice you need.'],
-            ['♛', 'Premium coaching modes', 'Unlock deeper coaching, more tone range, and extra persona space when you want your personal dating assistant to go further.']
-          ].map(([icon, title, copy]) => <div key={title} className="marketing-card group p-7"><span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-pink-300/15 bg-pink-300/[0.07] text-xl text-pink-200 transition-transform group-hover:scale-110">{icon}</span><h3 className="mt-6 text-lg font-bold text-white">{title}</h3><p className="mt-3 text-sm leading-6 text-white/48">{copy}</p></div>)}
-        </div>
-      </section>
-
-      <section id="how-it-works" className="marketing-section marketing-container scroll-mt-8">
-        <SectionHeading eyebrow="Three easy steps" title="From overthinking to send-ready" />
-        <div className="relative mt-12 grid gap-4 md:grid-cols-3">
-          <div className="absolute left-[16%] right-[16%] top-12 hidden h-px bg-gradient-to-r from-pink-500/0 via-pink-300/35 to-purple-500/0 md:block" />
-          {[
-            ['1', 'Choose what you need', 'Reply, bio, opener, pickup line, or a fresh conversation starter.'],
-            ['2', 'Add your situation or message', 'Give Rizz Master the context, even if it is just a few words.'],
-            ['3', 'Get better replies instantly', 'Pick the line that feels most like you and make your move.']
-          ].map(([number, title, copy]) => <div key={number} className="relative z-10 text-center"><div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full border border-pink-300/25 bg-[#120d17] text-3xl font-black text-pink-200 shadow-[0_0_40px_rgba(236,72,153,0.15)]">{number}</div><h3 className="mt-7 text-lg font-bold text-white">{title}</h3><p className="mx-auto mt-3 max-w-xs text-sm leading-6 text-white/45">{copy}</p></div>)}
-        </div>
-      </section>
-
-      <section className="marketing-section marketing-container">
-        <div className="grid gap-8 rounded-[2rem] border border-white/[0.08] bg-gradient-to-br from-pink-500/[0.08] via-white/[0.02] to-purple-500/[0.07] p-6 md:grid-cols-[0.85fr_1.15fr] md:p-10">
-          <div><p className="text-xs font-bold uppercase tracking-[0.25em] text-pink-300/80">Built for real moments</p><h2 className="mt-4 text-3xl font-black tracking-tight text-white md:text-4xl">Your conversation does not need to be perfect.</h2><p className="mt-5 max-w-md text-sm leading-7 text-white/50">It just needs a little momentum. Use Rizz Master when you want a second opinion that is quick, personal, and actually fun to send.</p></div>
-          <div className="grid gap-3 sm:grid-cols-2">{USE_CASES.map(([useCase, copy], index) => <div key={useCase} className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4"><div className="flex items-center gap-3 text-sm font-semibold text-white/80"><span className="text-xs font-black text-pink-300/80">0{index + 1}</span>{useCase}</div><p className="mt-2 pl-7 text-xs leading-5 text-white/45">{copy}</p></div>)}</div>
-          <div className="hidden">
-            {['Tinder replies', 'Bumble openers', 'Instagram DM replies', 'Dating app bios', 'First-date follow-ups', '“What should I text back?”'].map((useCase, index) => <div key={useCase} className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-sm font-semibold text-white/70"><span className="mr-3 text-pink-300/80">{['↗', '✦', '◎', '⌁', '♡', '?'][index]}</span>{useCase}</div>)}
-          </div>
+            <div className="marketing-kick…2238 tokens truncated…       </div>
         </div>
       </section>
 
       <section className="marketing-container py-8 md:py-12">
         <div className="marketing-trust-band mx-auto flex max-w-4xl flex-col gap-5 rounded-3xl px-6 py-6 md:flex-row md:items-center md:justify-between md:px-8">
           <div className="flex items-start gap-4">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-pink-300/20 bg-pink-300/[0.08] text-pink-200">✦</span>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-pink-300/20 bg-pink-300/[0.08] text-pink-200">âœ¦</span>
             <div>
               <h2 className="text-lg font-bold leading-snug text-white md:text-xl">Designed for faster, better, more confident replies.</h2>
               <p className="mt-1.5 text-sm text-pink-100/45">Built for people who overthink every text.</p>
@@ -430,7 +357,7 @@ const HomePage: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) 
       </section>
 
       <section className="marketing-container pb-24 pt-8 md:pb-32 md:pt-12">
-        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between"><SectionHeading align="left" eyebrow="From the blog" title="A little help for your next text" description="Practical advice for openers, dry replies, profiles, and the moments you replay before hitting send." /><a href="/blog" onClick={(event) => { event.preventDefault(); navigate('/blog'); }} className="self-start whitespace-nowrap text-sm font-bold text-pink-200 transition-colors hover:text-white md:self-end">View all tips →</a></div>
+        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between"><SectionHeading align="left" eyebrow="From the blog" title="A little help for your next text" description="Practical advice for openers, dry replies, profiles, and the moments you replay before hitting send." /><a href="/blog" onClick={(event) => { event.preventDefault(); navigate('/blog'); }} className="self-start whitespace-nowrap text-sm font-bold text-pink-200 transition-colors hover:text-white md:self-end">View all tips â†’</a></div>
         <div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-3">{BLOG_POSTS.slice(0, 6).map((post) => <BlogCard key={post.slug} post={post} navigate={navigate} />)}</div>
       </section>
 
@@ -553,7 +480,7 @@ const ArticleInternalLinks: React.FC<{ post: BlogPost; navigate: (path: string) 
   <nav aria-label="Related dating guides" className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 md:p-6">
     <p className="text-xs font-black uppercase tracking-[0.2em] text-pink-200/75">Continue reading</p>
     <div className="mt-4 flex flex-wrap gap-2.5">
-      {(ARTICLE_INTERNAL_LINKS[post.slug] || []).map((link) => <a key={link.slug} href={`/blog/${link.slug}`} onClick={(event) => { event.preventDefault(); navigate(`/blog/${link.slug}`); }} className="rounded-full border border-white/10 bg-black/20 px-3.5 py-2 text-xs font-bold text-white/65 transition-colors hover:border-pink-300/30 hover:text-pink-100">{link.label} <span aria-hidden="true">→</span></a>)}
+      {(ARTICLE_INTERNAL_LINKS[post.slug] || []).map((link) => <a key={link.slug} href={`/blog/${link.slug}`} onClick={(event) => { event.preventDefault(); navigate(`/blog/${link.slug}`); }} className="rounded-full border border-white/10 bg-black/20 px-3.5 py-2 text-xs font-bold text-white/65 transition-colors hover:border-pink-300/30 hover:text-pink-100">{link.label} <span aria-hidden="true">â†’</span></a>)}
     </div>
   </nav>
 );
@@ -563,9 +490,9 @@ const ArticlePage: React.FC<{ post: BlogPost; navigate: (path: string) => void }
 
   return <>
     <main className="marketing-container marketing-page-padding">
-      <a href="/blog" onClick={(event) => { event.preventDefault(); navigate('/blog'); }} className="mb-10 inline-flex items-center gap-2 text-sm font-bold text-white/45 transition-colors hover:text-white">← Back to the blog</a>
+      <a href="/blog" onClick={(event) => { event.preventDefault(); navigate('/blog'); }} className="mb-10 inline-flex items-center gap-2 text-sm font-bold text-white/45 transition-colors hover:text-white">â† Back to the blog</a>
       <article className="mx-auto max-w-3xl">
-        <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-white/35"><span className="text-pink-300/80">{post.category}</span><span>•</span><span>{post.readingTime}</span><span>•</span><time dateTime={post.date}>{new Date(`${post.date}T12:00:00`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</time></div>
+        <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-white/35"><span className="text-pink-300/80">{post.category}</span><span>â€¢</span><span>{post.readingTime}</span><span>â€¢</span><time dateTime={post.date}>{new Date(`${post.date}T12:00:00`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</time></div>
         <h1 className="mt-6 text-4xl font-black leading-[1.05] tracking-[-0.04em] text-white md:text-6xl">{post.title}</h1>
         <p className="mt-7 text-lg leading-8 text-white/55">{post.description}</p>
         <div className="mt-10 space-y-5">
@@ -577,7 +504,7 @@ const ArticlePage: React.FC<{ post: BlogPost; navigate: (path: string) => void }
         <div className="mt-12 space-y-12">
           {post.sections.map((section, index) => <React.Fragment key={section.heading}>
             {index === middleIndex && <ArticleCta navigate={navigate} compact />}
-            <section><h2 className="text-2xl font-bold tracking-tight text-white md:text-3xl">{section.heading}</h2>{section.paragraphs.map((paragraph) => <p key={paragraph} className="mt-5 text-base leading-8 text-white/60">{paragraph}</p>)}{section.bullets && <ul className="mt-6 space-y-3 rounded-2xl border border-pink-300/10 bg-pink-300/[0.04] p-5 text-sm leading-7 text-white/65">{section.bullets.map((bullet) => <li key={bullet} className="flex gap-3"><span className="mt-1 text-pink-300">✦</span><span>{bullet}</span></li>)}</ul>}</section>
+            <section><h2 className="text-2xl font-bold tracking-tight text-white md:text-3xl">{section.heading}</h2>{section.paragraphs.map((paragraph) => <p key={paragraph} className="mt-5 text-base leading-8 text-white/60">{paragraph}</p>)}{section.bullets && <ul className="mt-6 space-y-3 rounded-2xl border border-pink-300/10 bg-pink-300/[0.04] p-5 text-sm leading-7 text-white/65">{section.bullets.map((bullet) => <li key={bullet} className="flex gap-3"><span className="mt-1 text-pink-300">âœ¦</span><span>{bullet}</span></li>)}</ul>}</section>
           </React.Fragment>)}
         </div>
         <ArticleCta navigate={navigate} />
@@ -588,20 +515,20 @@ const ArticlePage: React.FC<{ post: BlogPost; navigate: (path: string) => void }
   </>;
 };
 
-const ArticleCta: React.FC<{ navigate: (path: string) => void; compact?: boolean }> = ({ navigate, compact = false }) => <div className={`relative overflow-hidden rounded-3xl border border-pink-300/15 bg-gradient-to-br from-pink-500/15 to-purple-500/10 ${compact ? 'my-2 p-6' : 'mt-16 p-7 md:p-9'}`}><div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-pink-400/20 blur-3xl" /><p className="relative text-xs font-bold uppercase tracking-[0.22em] text-pink-200/75">Need a second opinion?</p><h2 className="relative mt-3 text-2xl font-bold text-white">Turn the situation into a send-ready reply.</h2><p className="relative mt-3 max-w-xl text-sm leading-6 text-white/50">Rizz Master helps you find the right words without losing your personality.</p><div className="relative mt-6 flex flex-col gap-3 sm:flex-row"><PlayStoreButton /><button onClick={() => navigate('/')} className="rounded-2xl px-5 py-3.5 text-sm font-bold text-white/60 transition-colors hover:text-white">Explore Rizz Master →</button></div></div>;
+const ArticleCta: React.FC<{ navigate: (path: string) => void; compact?: boolean }> = ({ navigate, compact = false }) => <div className={`relative overflow-hidden rounded-3xl border border-pink-300/15 bg-gradient-to-br from-pink-500/15 to-purple-500/10 ${compact ? 'my-2 p-6' : 'mt-16 p-7 md:p-9'}`}><div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-pink-400/20 blur-3xl" /><p className="relative text-xs font-bold uppercase tracking-[0.22em] text-pink-200/75">Need a second opinion?</p><h2 className="relative mt-3 text-2xl font-bold text-white">Turn the situation into a send-ready reply.</h2><p className="relative mt-3 max-w-xl text-sm leading-6 text-white/50">Rizz Master helps you find the right words without losing your personality.</p><div className="relative mt-6 flex flex-col gap-3 sm:flex-row"><PlayStoreButton /><button onClick={() => navigate(MARKETING_HOME_PATH)} className="rounded-2xl px-5 py-3.5 text-sm font-bold text-white/60 transition-colors hover:text-white">Explore Rizz Master â†’</button></div></div>;
 
 const LegalPage: React.FC<{ kind: 'privacy' | 'terms' | 'support'; navigate: (path: string) => void }> = ({ kind, navigate }) => {
   const content = {
     privacy: { eyebrow: 'Your data matters', title: 'Privacy Policy', intro: 'Rizz Master is built to help with everyday conversations while keeping data collection focused on running the product.', sections: [['What we collect', 'We may process account details, saved items, profile preferences, purchase state, and the text or image context you choose to submit for generation. We only use this information to provide, secure, and improve the service.'], ['Generated content', 'Inputs are processed to generate responses. Only items you explicitly save are intended to remain in your account history. Review the full hosted policy linked below for the current details.'], ['Your choices', 'You can request account help, data questions, or deletion through Support.']], link: LEGAL_LINKS.privacy },
-    terms: { eyebrow: 'Use it thoughtfully', title: 'Terms of Service', intro: 'Rizz Master is an AI dating assistant for entertainment and communication support—not a substitute for your judgment.', sections: [['Using the service', 'You are responsible for the messages you send and the way you use AI-generated suggestions. Content may be imperfect, so review it before sharing.'], ['Respectful conduct', 'Do not use the service to create harmful, illegal, abusive, or harassing content. Access may be limited when the service is misused.'], ['Purchases', 'Premium features and subscriptions are managed through the Google Play Store.']], link: LEGAL_LINKS.terms },
-    support: { eyebrow: 'We are here to help', title: 'Support Center', intro: 'Questions about credits, subscriptions, account access, or a feature idea? Send us a note and we will help you find the next step.', sections: [['Contact support', 'Email rizzmasterhelpteam@gmail.com for bugs, billing questions, account deletion requests, or general help.'], ['Credits and Premium', 'Free credits reset daily. Premium access and subscription cancellation are managed through Google Play.'], ['Account deletion', 'Email support from the address connected to your account and include “Delete my account” in the subject.']], link: LEGAL_LINKS.supportEmail },
+    terms: { eyebrow: 'Use it thoughtfully', title: 'Terms of Service', intro: 'Rizz Master is an AI dating assistant for entertainment and communication supportâ€”not a substitute for your judgment.', sections: [['Using the service', 'You are responsible for the messages you send and the way you use AI-generated suggestions. Content may be imperfect, so review it before sharing.'], ['Respectful conduct', 'Do not use the service to create harmful, illegal, abusive, or harassing content. Access may be limited when the service is misused.'], ['Purchases', 'Premium features and subscriptions are managed through the Google Play Store.']], link: LEGAL_LINKS.terms },
+    support: { eyebrow: 'We are here to help', title: 'Support Center', intro: 'Questions about credits, subscriptions, account access, or a feature idea? Send us a note and we will help you find the next step.', sections: [['Contact support', 'Email rizzmasterhelpteam@gmail.com for bugs, billing questions, account deletion requests, or general help.'], ['Credits and Premium', 'Free credits reset daily. Premium access and subscription cancellation are managed through Google Play.'], ['Account deletion', 'Email support from the address connected to your account and include â€œDelete my accountâ€ in the subject.']], link: LEGAL_LINKS.supportEmail },
   }[kind];
   return <>
-    <main className="marketing-container marketing-page-padding"><button onClick={() => navigate('/')} className="mb-10 inline-flex items-center gap-2 text-sm font-bold text-white/45 transition-colors hover:text-white">← Back home</button><div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.28em] text-pink-300/80">{content.eyebrow}</p><h1 className="mt-5 text-5xl font-black tracking-[-0.04em] text-white md:text-7xl">{content.title}</h1><p className="mt-6 text-lg leading-8 text-white/55">{content.intro}</p></div><div className="mt-12 max-w-3xl space-y-5">{content.sections.map(([heading, copy]) => <section key={heading} className="marketing-card p-6 md:p-8"><h2 className="text-xl font-bold text-white">{heading}</h2><p className="mt-3 text-sm leading-7 text-white/55">{copy}</p></section>)}</div><a href={content.link} target={kind === 'support' ? undefined : '_blank'} rel={kind === 'support' ? undefined : 'noreferrer'} className="mt-8 inline-flex rounded-2xl border border-white/15 bg-white/[0.05] px-5 py-3.5 text-sm font-bold text-white transition-colors hover:bg-white/10">{kind === 'support' ? 'Email support' : 'Read the full policy →'}</a></main><MarketingFooter navigate={navigate} />
+    <main className="marketing-container marketing-page-padding"><button onClick={() => navigate(MARKETING_HOME_PATH)} className="mb-10 inline-flex items-center gap-2 text-sm font-bold text-white/45 transition-colors hover:text-white">â† Back home</button><div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.28em] text-pink-300/80">{content.eyebrow}</p><h1 className="mt-5 text-5xl font-black tracking-[-0.04em] text-white md:text-7xl">{content.title}</h1><p className="mt-6 text-lg leading-8 text-white/55">{content.intro}</p></div><div className="mt-12 max-w-3xl space-y-5">{content.sections.map(([heading, copy]) => <section key={heading} className="marketing-card p-6 md:p-8"><h2 className="text-xl font-bold text-white">{heading}</h2><p className="mt-3 text-sm leading-7 text-white/55">{copy}</p></section>)}</div><a href={content.link} target={kind === 'support' ? undefined : '_blank'} rel={kind === 'support' ? undefined : 'noreferrer'} className="mt-8 inline-flex rounded-2xl border border-white/15 bg-white/[0.05] px-5 py-3.5 text-sm font-bold text-white transition-colors hover:bg-white/10">{kind === 'support' ? 'Email support' : 'Read the full policy â†’'}</a></main><MarketingFooter navigate={navigate} />
   </>;
 };
 
-const NotFoundPage: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) => <main className="marketing-container marketing-page-padding"><p className="text-xs font-bold uppercase tracking-[0.28em] text-pink-300/80">404</p><h1 className="mt-5 text-5xl font-black text-white">That page ghosted you.</h1><p className="mt-5 text-white/55">Let’s get you back to the good part.</p><button onClick={() => navigate('/')} className="marketing-cta-primary mt-8 rounded-2xl px-5 py-3.5 text-sm font-bold text-white">Back home →</button></main>;
+const NotFoundPage: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) => <main className="marketing-container marketing-page-padding"><p className="text-xs font-bold uppercase tracking-[0.28em] text-pink-300/80">404</p><h1 className="mt-5 text-5xl font-black text-white">That page ghosted you.</h1><p className="mt-5 text-white/55">Letâ€™s get you back to the good part.</p><button onClick={() => navigate(MARKETING_HOME_PATH)} className="marketing-cta-primary mt-8 rounded-2xl px-5 py-3.5 text-sm font-bold text-white">Back home â†’</button></main>;
 
 const MarketingSite: React.FC = () => {
   const [pathname, setPathname] = useState(() => typeof window === 'undefined' ? '/' : window.location.pathname);
