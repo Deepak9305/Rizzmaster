@@ -18,7 +18,6 @@ const PURCHASE_VERIFICATION_UNAVAILABLE_CODE = "PURCHASE_VERIFICATION_UNAVAILABL
 const PURCHASE_VERIFICATION_BACKEND_ERROR_CODE = "PURCHASE_VERIFICATION_BACKEND_ERROR";
 const PURCHASE_ACCOUNT_MISMATCH_CODE = "PURCHASE_ACCOUNT_MISMATCH";
 const PURCHASE_ALREADY_LINKED_CODE = "PURCHASE_ALREADY_LINKED";
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const getRequestId = (req) => {
   const value = req?.headers?.["x-vercel-id"];
@@ -61,24 +60,6 @@ const readString = (value) => {
 const readNullableString = (value) => {
   const normalized = readString(value);
   return normalized || null;
-};
-
-const looksLikeUuid = (value) => typeof value === "string" && UUID_PATTERN.test(value.trim());
-
-const normalizeOptionalTimestamp = (value) => {
-  if (value === null || value === undefined || value === "") {
-    return null;
-  }
-
-  const date = typeof value === "number" || typeof value === "string"
-    ? new Date(value)
-    : null;
-
-  if (!date || Number.isNaN(date.getTime())) {
-    throw new Error("Invalid expiration timestamp.");
-  }
-
-  return date.toISOString();
 };
 
 const parseJsonBody = (body) => {
@@ -191,14 +172,11 @@ export default async function handler(req, res) {
     const normalizedPlatform = readString(body.platform).toLowerCase();
     const productId = readString(body.productId);
     const transactionId = readString(body.transactionId);
-    const orderId = readNullableString(body.orderId);
-    const plan = readNullableString(body.plan);
     const intent = readString(body.intent) === "restore" ? "restore" : "purchase";
     const ownerUserId = readNullableString(body.ownerUserId);
     const basePlanId = readNullableString(body.basePlanId);
     const purchaseToken = readNullableString(body.purchaseToken);
     const rawReceipt = body.rawReceipt && typeof body.rawReceipt === "object" ? body.rawReceipt : {};
-    const expiresAt = normalizeOptionalTimestamp(body.expiresAt);
 
     if (!normalizedPlatform || !productId || !transactionId) {
       logIapApi("warn", "Missing basic purchase data.", { requestId, userId });
@@ -248,10 +226,8 @@ export default async function handler(req, res) {
       requestId,
       userId,
       intent,
-      plan,
       hasPurchaseToken: Boolean(purchaseToken),
       hasTransactionId: Boolean(transactionId),
-      hasOrderId: Boolean(orderId),
       ...buildSafeVerificationLog({
         platform: normalizedPlatform,
         productId,
@@ -259,7 +235,6 @@ export default async function handler(req, res) {
       }),
     });
 
-    const allowUnverified = process.env.ALLOW_UNVERIFIED_IAP === 'true';
     let verificationResult;
 
     try {
@@ -294,72 +269,41 @@ export default async function handler(req, res) {
         ...toSafeErrorLog(error),
         durationMs: Date.now() - startedAt,
       });
-      if (!allowUnverified) {
-        if (error instanceof PurchaseVerificationError) {
-          return json(res, error.statusCode, {
-            error: error.message,
-            code: error.code,
-          });
-        }
-
-        logIapApi("error", "Unexpected purchase verification error.", {
-          requestId,
-          userId,
-          safeErrorMessage: error instanceof Error ? error.message : "Unknown purchase verification error.",
-          durationMs: Date.now() - startedAt,
-        });
-        return json(res, 502, {
-          error: "Purchase verification failed because the store backend could not be reached.",
-          code: PURCHASE_VERIFICATION_BACKEND_ERROR_CODE,
+      if (error instanceof PurchaseVerificationError) {
+        return json(res, error.statusCode, {
+          error: error.message,
+          code: error.code,
         });
       }
 
-      logIapApi("warn", "ALLOW_UNVERIFIED_IAP override enabled. Granting premium without store proof.", {
+      logIapApi("error", "Unexpected purchase verification error.", {
         requestId,
         userId,
-        safeErrorMessage: error instanceof Error ? error.message : "Unknown verification failure",
+        safeErrorMessage: error instanceof Error ? error.message : "Unknown purchase verification error.",
+        durationMs: Date.now() - startedAt,
       });
-      verificationResult = {
-        expiresAt: expiresAt || null,
-        orderId,
-        verificationPayload: {
-          mode: "unverified_override",
-          reason: error instanceof Error ? error.message : "Unknown verification failure",
-        },
-        verificationProvider: "unverified_override",
-      };
+      return json(res, 502, {
+        error: "Purchase verification failed because the store backend could not be reached.",
+        code: PURCHASE_VERIFICATION_BACKEND_ERROR_CODE,
+      });
     }
 
-    const verifiedExpiresAt = verificationResult?.expiresAt || expiresAt || null;
-    const verifiedOrderId = verificationResult?.orderId || orderId || null;
-    const verifiedBasePlanId = verificationResult?.verifiedBasePlanId || basePlanId || null;
-    const verifiedExternalAccountId = readNullableString(verificationResult?.verifiedExternalAccountId);
+    const verifiedProductId = readNullableString(verificationResult?.verifiedProductId);
+    const verifiedBasePlanId = readNullableString(verificationResult?.verifiedBasePlanId);
+    const verifiedTransactionId = readNullableString(verificationResult?.verifiedTransactionId);
+    const verifiedExpiresAt = readNullableString(verificationResult?.expiresAt);
+    const verifiedOrderId = readNullableString(verificationResult?.orderId);
 
-    if (verifiedExternalAccountId && verifiedExternalAccountId !== userId) {
-      if (looksLikeUuid(verifiedExternalAccountId)) {
-        logIapApi("warn", "Google Play external account mismatch blocked.", {
-          requestId,
-          userId,
-          platform: normalizedPlatform,
-          productId,
-          basePlanId: verifiedBasePlanId,
-          hasVerifiedExternalAccountId: true,
-          verifiedExternalAccountIdFormat: "uuid",
-        });
-        return json(res, 409, {
-          error: "This purchase belongs to a different Rizzmaster account. Please sign in with that account and try again.",
-          code: PURCHASE_ACCOUNT_MISMATCH_CODE,
-        });
-      }
-
-      logIapApi("warn", "Google Play returned an obfuscated external account id that does not match the signed-in user.", {
+    if (!verifiedProductId || !verifiedTransactionId || !verifiedExpiresAt) {
+      logIapApi("error", "Store verification did not return required verified metadata.", {
         requestId,
         userId,
         platform: normalizedPlatform,
-        productId,
-        basePlanId: verifiedBasePlanId,
-        hasVerifiedExternalAccountId: true,
-        verifiedExternalAccountIdFormat: "non_uuid",
+        safeErrorMessage: "Verified product, transaction, or expiry metadata was missing.",
+      });
+      return json(res, 502, {
+        error: "Purchase verification did not return the required store metadata.",
+        code: PURCHASE_VERIFICATION_BACKEND_ERROR_CODE,
       });
     }
 
@@ -367,20 +311,16 @@ export default async function handler(req, res) {
     const { data: updatedProfile, error: rpcError } = await supabaseAdmin.rpc("admin_set_premium", {
       p_user_uuid: userId,
       p_platform_name: normalizedPlatform,
-      p_product_identifier: productId,
-      p_transaction_identifier: transactionId,
+      p_product_identifier: verifiedProductId,
+      p_transaction_identifier: verifiedTransactionId,
       p_base_plan_identifier: verifiedBasePlanId,
       p_purchase_token_identifier: purchaseToken,
       p_expires_at: verifiedExpiresAt,
       p_raw_payload: {
         orderId: verifiedOrderId,
-        plan,
         intent,
-        client_owner_user_id: ownerUserId,
-        client_base_plan_id: basePlanId,
-        receipt: rawReceipt,
         verification_provider: verificationResult?.verificationProvider || null,
-        verification: verificationResult?.verificationPayload || null,
+        verification: verificationResult?.verificationPayload || {},
       }
     });
 
@@ -422,12 +362,11 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     if (
-      error instanceof Error &&
-      (
-        error.message === "Invalid JSON body." ||
-        error.message === "Invalid request body." ||
-        error.message === "Invalid expiration timestamp."
-      )
+        error instanceof Error &&
+        (
+          error.message === "Invalid JSON body." ||
+        error.message === "Invalid request body."
+        )
     ) {
       return json(res, 400, {
         error: error.message,
