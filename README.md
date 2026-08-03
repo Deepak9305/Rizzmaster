@@ -15,6 +15,7 @@ You must provide the following environment variables during your production buil
 - `VITE_AUTH_REDIRECT_URL`: The exact hosted web URL Supabase should return to after Google login.
 - `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase server-only service role key for API routes. Never expose this with a `VITE_` prefix.
 - `GROQ_API_KEY`: Your Groq API key for accessing Llama models.
+- `IAP_ACCOUNT_BINDING_SECRET`: A high-entropy server-only secret used to bind an Android purchase to the signed-in Rizzmaster account. Set this in Vercel Production only; do not expose it with a `VITE_` prefix.
 
 Create a `.env.production` or inject these via your CI/CD pipeline (e.g., Vercel, GitHub Actions) before running the build.
 
@@ -30,7 +31,7 @@ For the reporting system to function, you must manually create a `reports` table
 
 Ensure Row Level Security (RLS) policies allow authenticated (and guest) inserts to this table, or simply allow all `INSERT` operations while restricting `SELECT` to admins.
 
-Run the SQL in `supabase_schema.sql` and then `secure_premium_schema.sql` from the Supabase SQL Editor before deploying backend changes. New Supabase projects may require explicit Data API grants; the schema files include those grants beside the RLS policies.
+Run the SQL in `supabase_schema.sql` and then `secure_premium_schema.sql` from the Supabase SQL Editor before deploying backend changes. Apply every file in `supabase/migrations/` to production before deploying code that depends on it, including `20260803161758_harden_premium_verification.sql` for premium verification grace handling. New Supabase projects may require explicit Data API grants; the schema files include those grants beside the RLS policies.
 
 ### 3. Database Functions (RPC)
 For the account deletion feature to work correctly, you must execute the `public.delete_user()` function script found in `supabase_schema.sql` via the Supabase SQL Editor. This ensures that user data and authentication credentials are completely removed when a user deletes their account.
