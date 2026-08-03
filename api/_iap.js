@@ -6,6 +6,9 @@ const GOOGLE_PLAY_API_BASE = "https://androidpublisher.googleapis.com/androidpub
 const APPLE_PRODUCTION_API_BASE = "https://api.storekit.itunes.apple.com";
 const APPLE_SANDBOX_API_BASE = "https://api.storekit-sandbox.itunes.apple.com";
 const DEFAULT_APP_ID = "app.vercel.rizzmaster";
+const GOOGLE_PLAY_SUBSCRIPTIONS = new Map([
+  ["premium", new Set(["weekly", "monthly"])],
+]);
 
 export class PurchaseVerificationError extends Error {
   constructor(message, code, statusCode = 400) {
@@ -24,6 +27,51 @@ const readEnv = (...keys) => {
     }
   }
   return "";
+};
+
+const assertAllowedGooglePlaySubscription = (productId, basePlanId) => {
+  const allowedBasePlans = GOOGLE_PLAY_SUBSCRIPTIONS.get(productId);
+  if (!allowedBasePlans || !basePlanId || !allowedBasePlans.has(basePlanId)) {
+    throw new PurchaseVerificationError(
+      "This Google Play subscription or base plan is not supported.",
+      "GOOGLE_PLAY_PRODUCT_MISMATCH",
+      400
+    );
+  }
+};
+
+const getIapAccountBindingSecret = () => {
+  const secret = readEnv("IAP_ACCOUNT_BINDING_SECRET");
+  if (!secret) {
+    throw new PurchaseVerificationError(
+      "Purchase account binding is not configured on the server.",
+      "IAP_ACCOUNT_BINDING_UNAVAILABLE",
+      503
+    );
+  }
+  return secret;
+};
+
+export const getIapAccountBinding = (userId) => {
+  if (typeof userId !== "string" || !userId.trim()) {
+    throw new PurchaseVerificationError(
+      "A signed-in account is required for purchase verification.",
+      "PURCHASE_ACCOUNT_MISMATCH",
+      409
+    );
+  }
+
+  return crypto
+    .createHmac("sha256", getIapAccountBindingSecret())
+    .update(`rizzmaster:iap:v1:${userId.trim()}`)
+    .digest("base64url");
+};
+
+const bindingsMatch = (left, right) => {
+  if (typeof left !== "string" || typeof right !== "string" || left.length !== right.length) {
+    return false;
+  }
+  return crypto.timingSafeEqual(Buffer.from(left), Buffer.from(right));
 };
 
 const logIap = (level, message, metadata = {}) => {
@@ -381,6 +429,7 @@ const readGoogleBasePlanId = (lineItem) => {
 };
 
 const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, appUserId }) => {
+  assertAllowedGooglePlaySubscription(productId, basePlanId);
   const { packageName } = getGooglePlayConfig();
   const diagnostics = getGooglePlayDiagnostics();
   logIap("info", "Google Play verification start", {
@@ -453,17 +502,35 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
   }
 
   const verifiedExternalAccountId = readGoogleExternalAccountId(payload);
+  const expectedExternalAccountId = getIapAccountBinding(appUserId);
+  if (verifiedExternalAccountId && !bindingsMatch(verifiedExternalAccountId, expectedExternalAccountId)) {
+    logIap("warn", "Google Play verification failure", {
+      platform: "android",
+      productId,
+      basePlanId: basePlanId || null,
+      ...diagnostics,
+      verificationErrorCode: "PURCHASE_ACCOUNT_MISMATCH",
+      verificationStatusCode: 409,
+      safeErrorMessage: "Google Play account binding does not match the signed-in account.",
+      googleHasExternalAccountId: true,
+    });
+    throw new PurchaseVerificationError(
+      "This purchase belongs to a different Rizzmaster account. Please sign in with that account and try again.",
+      "PURCHASE_ACCOUNT_MISMATCH",
+      409
+    );
+  }
+
   const lineItems = Array.isArray(payload.lineItems) ? payload.lineItems : [];
   const lineItemProductIds = [...new Set(lineItems.map((item) => (
     typeof item?.productId === "string" ? item.productId.trim() : ""
   )).filter(Boolean))];
-  const normalizedProductId = lineItemProductIds.length === 1 ? lineItemProductIds[0] : productId;
   const matchingLineItem = lineItems.find((item) => {
     const itemProductId = typeof item?.productId === "string" ? item.productId.trim() : "";
-    return itemProductId === normalizedProductId;
+    return itemProductId === productId;
   });
 
-  if (!matchingLineItem) {
+  if (!matchingLineItem || lineItemProductIds.length !== 1 || lineItemProductIds[0] !== productId) {
     logIap("warn", "Google Play verification failure", {
       platform: "android",
       productId,
@@ -481,24 +548,23 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
     );
   }
 
-  if (normalizedProductId !== productId) {
-    logIap("warn", "Client productId normalized from Google line item.", {
-      platform: "android",
-      clientProductId: productId,
-      normalizedProductId,
-      basePlanId: basePlanId || null,
-      ...diagnostics,
-    });
-  }
-
   const verifiedBasePlanId = readGoogleBasePlanId(matchingLineItem);
 
-  if (basePlanId && verifiedBasePlanId && basePlanId !== verifiedBasePlanId) {
-    logIap("warn", "Client basePlanId mismatch. Using Google verified base plan.", {
-      clientBasePlanId: basePlanId,
-      verifiedBasePlanId,
+  if (!verifiedBasePlanId || verifiedBasePlanId !== basePlanId) {
+    logIap("warn", "Google Play verification failure", {
+      platform: "android",
       productId,
+      basePlanId: basePlanId || null,
+      ...diagnostics,
+      verificationErrorCode: "GOOGLE_PLAY_PRODUCT_MISMATCH",
+      verificationStatusCode: 400,
+      safeErrorMessage: "Google Play verified a different subscription base plan than the one requested.",
     });
+    throw new PurchaseVerificationError(
+      "Google Play verified a different subscription base plan than the one requested.",
+      "GOOGLE_PLAY_PRODUCT_MISMATCH",
+      400
+    );
   }
 
   const expiresAt = coerceIsoTimestamp(matchingLineItem.expiryTime);
@@ -551,7 +617,7 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
   logIap("info", "Google Play verification success", {
     platform: "android",
     productId,
-    basePlanId: verifiedBasePlanId || basePlanId || null,
+    basePlanId: verifiedBasePlanId,
     ...diagnostics,
     googleSubscriptionState: state || null,
     googleHasExternalAccountId: Boolean(verifiedExternalAccountId),
@@ -561,12 +627,12 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
   return {
     expiresAt,
     orderId: typeof payload.latestOrderId === "string" ? payload.latestOrderId.trim() : null,
-    verifiedBasePlanId: verifiedBasePlanId || null,
-    verifiedExternalAccountId: verifiedExternalAccountId || null,
+    verifiedProductId: productId,
+    verifiedBasePlanId,
+    verifiedTransactionId: typeof payload.latestOrderId === "string" ? payload.latestOrderId.trim() : null,
     verificationPayload: {
-      ...payload,
-      verifiedBasePlanId,
-      verifiedExternalAccountId: verifiedExternalAccountId || null,
+      subscriptionState: state || null,
+      hasExternalAccountBinding: Boolean(verifiedExternalAccountId),
     },
     verificationProvider: "google_play",
   };
@@ -680,6 +746,11 @@ const verifyApplePurchase = async ({ transactionId, productId, rawReceipt }) => 
       expiresAt,
       orderId: typeof signedTransaction.originalTransactionId === "string"
         ? signedTransaction.originalTransactionId.trim()
+        : null,
+      verifiedProductId,
+      verifiedBasePlanId: null,
+      verifiedTransactionId: typeof signedTransaction.transactionId === "string"
+        ? signedTransaction.transactionId.trim()
         : null,
       verificationPayload: {
         environment: environment.name,

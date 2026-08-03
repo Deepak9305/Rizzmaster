@@ -10,5 +10,6 @@ export const routes = {
   '/api/runtime-config': () => import('./runtime-config.js'),
   '/api/delete-account': () => import('./delete-account.js'),
   '/api/revoke-premium': () => import('./revoke-premium.js'),
+  '/api/iap-account-binding': () => import('./iap-account-binding.js'),
   '/api/verify-purchase': () => import('./verify-purchase.js'),
 };

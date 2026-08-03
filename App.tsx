@@ -8,6 +8,8 @@ import { InputMode, RizzResponse, BioResponse, SavedItem, UserProfile, RizzOrBio
 import { supabase } from './services/supabaseClient';
 import RizzCard from './components/RizzCard';
 import Footer from './components/Footer';
+import PlayStorePromptModal from './components/PlayStorePromptModal';
+import WebAppMenu from './components/WebAppMenu';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
@@ -44,6 +46,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import NoInternetOverlay from './components/NoInternetOverlay';
 
 const DAILY_CREDITS = 5;
+const IS_WEB_PLATFORM = !Capacitor.isNativePlatform();
 const INTERSTITIAL_PRELOAD_RETRY_MS = 15000;
 const INTERSTITIAL_REFRESH_INTERVAL_MS = 8 * 60 * 1000;
 const SILENT_PREMIUM_RESTORE_WAIT_MS = 45000;
@@ -370,15 +373,19 @@ const AdLoadingOverlay: React.FC<{ mode: 'hidden' | 'interstitial' }> = ({ mode 
   );
 };
 
-const AppContent: React.FC = React.memo(() => {
+interface AppProps {
+  onNavigateToPath?: (path: string) => void;
+}
+
+const AppContent: React.FC<AppProps> = React.memo(({ onNavigateToPath }) => {
   return (
     <Suspense fallback={<div className="fixed inset-0 bg-black z-50" />}>
-      <AppContentInner />
+      <AppContentInner onNavigateToPath={onNavigateToPath} />
     </Suspense>
   );
 });
 
-const AppContentInner: React.FC = () => {
+const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const { showToast } = useToast();
 
   // Auth State
@@ -419,6 +426,8 @@ const AppContentInner: React.FC = () => {
   // Modals & Flags
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showSavedModal, setShowSavedModal] = useState(false);
+  const [showWebMenu, setShowWebMenu] = useState(false);
+  const [showPlayStorePrompt, setShowPlayStorePrompt] = useState(false);
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
   const [isSessionBlocked, setIsSessionBlocked] = useState(false);
   const [isAdLoading, setIsAdLoading] = useState<'hidden' | 'interstitial'>('hidden');
@@ -500,6 +509,7 @@ const AppContentInner: React.FC = () => {
   }, [showToast]);
 
   const handleExitGuestMode = useCallback(() => {
+    IAPService.clearUser();
     isGuestRef.current = false;
     setIsGuest(false);
     setIsSessionBlocked(false);
@@ -1133,6 +1143,15 @@ const AppContentInner: React.FC = () => {
     setShowPremiumModal(true);
   }, [currentView]);
 
+  const handleCreditsExhausted = useCallback(() => {
+    if (IS_WEB_PLATFORM) {
+      setShowPlayStorePrompt(true);
+      return;
+    }
+
+    handleOpenPremium();
+  }, [handleOpenPremium]);
+
   const handleOpenSaved = useCallback(() => {
     window.history.pushState({ view: currentView, saved: true }, '');
     setShowSavedModal(true);
@@ -1501,6 +1520,7 @@ const AppContentInner: React.FC = () => {
     const currentProfile = profileRef.current;
 
     if (isGuest) {
+      IAPService.clearUser();
       handleExitGuestMode();
       showToast("Successfully logged out 👋", 'success');
       return;
@@ -1530,6 +1550,7 @@ const AppContentInner: React.FC = () => {
     } catch (err) {
       console.error("Logout failed:", err);
     } finally {
+      IAPService.clearUser();
       setSession(null);
       setProfile(null);
       setSavedItems([]);
@@ -1896,7 +1917,7 @@ const AppContentInner: React.FC = () => {
 
     // Guests are rate-limited server-side (5 req/min by IP) but still adhere to client-side credit limits
     if (!currentProfile.is_premium && (currentProfile.credits || 0) < cost) {
-      handleOpenPremium();
+      handleCreditsExhausted();
       return;
     }
 
@@ -2048,7 +2069,7 @@ const AppContentInner: React.FC = () => {
       }
       if (error.message === 'INSUFFICIENT_CREDITS') {
          refundOptimisticCredits();
-         handleOpenPremium();
+         handleCreditsExhausted();
          if (shouldSyncSignedInProfile) {
            syncProfile().catch(() => {});
          }
@@ -2084,7 +2105,7 @@ const AppContentInner: React.FC = () => {
         await syncProfile().catch(() => null);
       }
     }
-  }, [mode, inputText, image, selectedVibe, responseLength, showToast, handleOpenPremium, updateCredits, customPersonas, profile, isGuest, syncProfile, loading, showOnboarding, showPremiumModal, showSavedModal]);
+  }, [mode, inputText, image, selectedVibe, responseLength, showToast, handleCreditsExhausted, updateCredits, customPersonas, profile, isGuest, syncProfile, loading, showOnboarding, showPremiumModal, showSavedModal]);
 
   const isSaved = useCallback((content: string) => savedItems.some(item => item.content === content), [savedItems]);
   const clear = useCallback(() => {
@@ -2141,6 +2162,24 @@ const AppContentInner: React.FC = () => {
           if (status.connected) showToast("We're back online! 📡", "success");
         }}
       />
+
+      {IS_WEB_PLATFORM && onNavigateToPath && (
+        <WebAppMenu
+          isOpen={showWebMenu}
+          onClose={() => setShowWebMenu(false)}
+          onOpenRizz={() => { void handleViewNavigation('HOME'); }}
+          onOpenCoach={() => { void handleViewNavigation('COACH'); }}
+          onOpenSaved={handleOpenSaved}
+          onNavigateToPath={onNavigateToPath}
+          onLogout={() => { void handleLogout(); }}
+        />
+      )}
+      {IS_WEB_PLATFORM && <PlayStorePromptModal isOpen={showPlayStorePrompt} onClose={() => setShowPlayStorePrompt(false)} />}
+      {IS_WEB_PLATFORM && onNavigateToPath && !profile && !showSplash && (
+        <button onClick={() => setShowWebMenu(true)} aria-label="Open navigation menu" className="fixed left-4 top-4 z-[150] flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-black/60 text-white/75 shadow-lg backdrop-blur transition-colors hover:bg-white/10 hover:text-white">
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" /></svg>
+        </button>
+      )}
 
       {/* Onboarding Flow: Shows after Splash if not completed */}
       {!showSplash && showOnboarding && !isPublicInfoView && (
@@ -2213,6 +2252,8 @@ const AppContentInner: React.FC = () => {
                 onUpdateCredits={updateCredits}
                 isPremium={profile?.is_premium || false}
                 onGoPremium={() => { handleBackNavigation(); handleOpenPremium(); }}
+                onCreditsExhausted={handleCreditsExhausted}
+                onOpenWebMenu={IS_WEB_PLATFORM && onNavigateToPath ? () => setShowWebMenu(true) : undefined}
                 onLoginRequired={() => {
                   setLoginReason('premium');
                   handleExitGuestMode();
@@ -2326,9 +2367,16 @@ const AppContentInner: React.FC = () => {
 
 
               <nav className="flex justify-between items-center mb-8 md:mb-12">
+                <div className="flex items-center gap-2">
+                  {IS_WEB_PLATFORM && onNavigateToPath && (
+                    <button onClick={() => setShowWebMenu(true)} aria-label="Open navigation menu" className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/70 transition-colors hover:bg-white/10 hover:text-white">
+                      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" /></svg>
+                    </button>
+                  )}
                 <button onClick={handleLogout} className="px-3 py-1.5 text-xs md:text-sm text-white/40 hover:text-white hover:bg-white/5 rounded-lg transition-all uppercase tracking-widest font-medium border border-transparent hover:border-white/10 flex items-center gap-2 active:scale-95">
                   <span className="text-lg">←</span> <span>Logout</span>
                 </button>
+                </div>
 
                 <div className="flex items-center gap-2 md:gap-3">
 
@@ -2568,7 +2616,7 @@ const AppContentInner: React.FC = () => {
                 </section>
               </div>
 
-              <Footer className="mt-2 md:mt-4" onNavigate={handleViewNavigation} />
+              <Footer className="mt-2 md:mt-4" onNavigate={handleViewNavigation} onWebNavigate={IS_WEB_PLATFORM ? onNavigateToPath : undefined} />
             </div>
           )}
       </div>
@@ -2577,12 +2625,12 @@ const AppContentInner: React.FC = () => {
 }
 
 // Wrap AppContent with Provider
-const App: React.FC = () => {
+const App: React.FC<AppProps> = ({ onNavigateToPath }) => {
   return (
     <ErrorBoundary>
       <ToastProvider>
         <Suspense fallback={<div className="min-h-screen bg-black" />}>
-          <AppContent />
+          <AppContent onNavigateToPath={onNavigateToPath} />
         </Suspense>
       </ToastProvider>
     </ErrorBoundary>

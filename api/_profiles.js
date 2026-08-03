@@ -350,6 +350,28 @@ const revokeLegacyProfilePremium = async (client, profile, premiumSource = 'revo
   };
 };
 
+const hasActivePremiumVerificationGrace = (profile) => {
+  const graceExpiresAt = new Date(profile?.premium_grace_expires_at || '').getTime();
+  return Number.isFinite(graceExpiresAt) && graceExpiresAt > Date.now();
+};
+
+const recordLegacyPremiumVerificationFailure = async (client, profile, reason) => {
+  const { data, error } = await client.rpc('admin_record_premium_verification_failure', {
+    p_user_uuid: profile.id,
+    p_reason: reason,
+  });
+
+  if (error) {
+    throw new AppDataError(
+      error.message || 'Failed to record premium verification failure',
+      'PROFILE_BOOTSTRAP_FAILED',
+      500
+    );
+  }
+
+  return normalizeLegacyRpcProfile(data) || profile;
+};
+
 const verifyLegacySubscriptionWithGooglePlay = async (profile, subscription) => {
   try {
     return await verifyStorePurchase({
@@ -378,12 +400,15 @@ const verifyLegacySubscriptionWithGooglePlay = async (profile, subscription) => 
 const syncLegacyProfilePremiumFromVerification = async (client, profile, receipt, verificationResult) => {
   return setLegacyProfilePremium(client, profile, {
     platform: 'android',
-    productId: receipt?.product_id || profile.premium_product_id || 'premium',
-    basePlanId: verificationResult?.verifiedBasePlanId || receipt?.base_plan_id || profile.premium_base_plan_id || null,
-    transactionId: receipt?.transaction_id || profile.premium_transaction_id || null,
+    productId: verificationResult?.verifiedProductId,
+    basePlanId: verificationResult?.verifiedBasePlanId,
+    transactionId: verificationResult?.verifiedTransactionId,
     purchaseTokenIdentifier: receipt?.purchase_token || null,
-    expiresAt: verificationResult?.expiresAt || profile.premium_expires_at || null,
-    rawPayload: receipt?.raw_payload || {},
+    expiresAt: verificationResult?.expiresAt,
+    rawPayload: {
+      verification_provider: verificationResult?.verificationProvider || null,
+      verification: verificationResult?.verificationPayload || {},
+    },
   });
 };
 
@@ -444,633 +469,25 @@ const normalizeExpiredLegacyPremium = async (client, profile) => {
       return revokedProfile;
     }
 
-    console.warn('[Premium] Expired premium verification unavailable; keeping stored premium state.', {
+    const graceProfile = await recordLegacyPremiumVerificationFailure(client, profile, verificationResultCode);
+    if (hasActivePremiumVerificationGrace(graceProfile)) {
+      console.warn('[Premium] Expired premium verification unavailable; keeping premium only within the verification grace period.', {
+        userId: profile.id,
+        hadExpiredPremium,
+        verificationResultCode,
+        graceExpiresAt: graceProfile.premium_grace_expires_at || null,
+      });
+      return graceProfile;
+    }
+
+    const revokedProfile = await revokeLegacyProfilePremium(client, profile, 'verification_grace_expired');
+    logPremiumNormalization({
       userId: profile.id,
       hadExpiredPremium,
       verificationResultCode,
       updatedExpiryPresent: false,
-      revoked: false,
+      revoked: true,
       noPurchaseToken: false,
       noRawReceipt: !latestReceipt?.raw_payload,
     });
-    return profile;
-  }
-
-  try {
-    const updatedProfile = await syncLegacyProfilePremiumFromVerification(
-      client,
-      profile,
-      latestReceipt,
-      verificationResult
-    );
-
-    logPremiumNormalization({
-      userId: profile.id,
-      hadExpiredPremium,
-      verificationResultCode: 'GOOGLE_PLAY_RENEWED',
-      updatedExpiryPresent: Boolean(updatedProfile?.premium_expires_at),
-      revoked: false,
-      noPurchaseToken: false,
-      noRawReceipt: !latestReceipt?.raw_payload,
-    });
-    return updatedProfile;
-  } catch (error) {
-    console.error('[Premium] expired premium sync failed after Google verification', {
-      userId: profile.id,
-      verificationResultCode: 'GOOGLE_PLAY_RENEWED',
-      updatedExpiryPresent: Boolean(verificationResult?.expiresAt),
-      revoked: false,
-      noPurchaseToken: false,
-      noRawReceipt: !latestReceipt?.raw_payload,
-      message: error instanceof Error ? error.message : String(error),
-    });
-
-    if (error instanceof AppDataError) {
-      throw error;
-    }
-
-    throw new AppDataError(
-      'Failed to sync verified premium profile',
-      'PROFILE_BOOTSTRAP_FAILED',
-      500
-    );
-  }
-};
-
-const reconcileLegacyProfilePremium = async (client, profile) => {
-  const subscriptions = await loadLegacyPremiumSubscriptions(client, profile.id);
-  let activeSubscription = subscriptions
-    .filter(isActivePremiumSubscription)
-    .sort((left, right) => {
-      const leftUpdated = new Date(left.updated_at || left.purchase_date || 0).getTime();
-      const rightUpdated = new Date(right.updated_at || right.purchase_date || 0).getTime();
-      return rightUpdated - leftUpdated;
-    })[0];
-
-  if (!activeSubscription) {
-    return profile;
-  }
-
-  if (isGooglePlaySourceOfTruth(activeSubscription)) {
-    try {
-      const verificationResult = await verifyLegacySubscriptionWithGooglePlay(profile, activeSubscription);
-      if (verificationResult?.expiresAt || verificationResult?.verifiedBasePlanId) {
-        activeSubscription = {
-          ...activeSubscription,
-          expires_at: verificationResult.expiresAt || activeSubscription.expires_at || null,
-          base_plan_id: verificationResult.verifiedBasePlanId || activeSubscription.base_plan_id || null,
-        };
-      }
-    } catch (error) {
-      await deactivateLegacyPremiumSubscription(client, activeSubscription.id);
-      return revokeLegacyProfilePremium(client, profile);
-    }
-  }
-
-  const needsUpdate =
-    profile.is_premium !== true ||
-    (activeSubscription.platform || null) !== (profile.premium_platform || null) ||
-    (activeSubscription.product_id || null) !== (profile.premium_product_id || null) ||
-    (activeSubscription.base_plan_id || null) !== (profile.premium_base_plan_id || null) ||
-    (activeSubscription.transaction_id || null) !== (profile.premium_transaction_id || null) ||
-    (activeSubscription.expires_at || null) !== (profile.premium_expires_at || null);
-
-  if (!needsUpdate) {
-    return profile;
-  }
-
-  return setLegacyProfilePremium(client, profile, {
-    platform: activeSubscription.platform || profile.premium_platform || 'android',
-    productId: activeSubscription.product_id || profile.premium_product_id || 'premium',
-    basePlanId: activeSubscription.base_plan_id || profile.premium_base_plan_id || null,
-    transactionId: activeSubscription.transaction_id || profile.premium_transaction_id || null,
-    purchaseTokenIdentifier: activeSubscription.purchase_token_identifier || null,
-    expiresAt: activeSubscription.expires_at || profile.premium_expires_at || null,
-    rawPayload: activeSubscription.raw_payload || {},
-  });
-};
-
-const ensureLegacyUserProfile = async (client, user) => {
-  let profile = await loadLegacyProfileById(client, user.id);
-
-  if (profile) {
-    if (user.email && user.email !== profile.email) {
-      const { data: updated, error: updateError } = await client
-        .from('profiles')
-        .update({ email: user.email })
-        .eq('id', user.id)
-        .select('*')
-        .maybeSingle();
-
-      if (updateError) {
-        throw new AppDataError(
-          updateError.message || 'Failed to update profile email',
-          'PROFILE_BOOTSTRAP_FAILED',
-          500
-        );
-      }
-
-      profile = updated || profile;
-    }
-
-    profile = await normalizeExpiredLegacyPremium(client, profile);
-    profile = await reconcileLegacyProfilePremium(client, profile);
-    return { profile: normalizeProfileForApi(profile), created: false, migrated: false };
-  }
-
-  const defaults = buildDefaultProfile(user);
-  const { data: inserted, error: insertError } = await client
-    .from('profiles')
-    .insert(defaults)
-    .select('*')
-    .maybeSingle();
-
-  if (insertError) {
-    const existingProfile = await loadLegacyProfileById(client, user.id);
-    if (existingProfile) {
-      return { profile: normalizeProfileForApi(existingProfile), created: false, migrated: false };
-    }
-
-    throw new AppDataError(
-      insertError.message || 'Failed to create profile',
-      'PROFILE_BOOTSTRAP_FAILED',
-      500
-    );
-  }
-
-  profile = await reconcileLegacyProfilePremium(client, inserted);
-  return { profile: normalizeProfileForApi(profile), created: true, migrated: false };
-};
-
-export const ensureUserProfile = async (maybeUserOrClient, maybeUser = null) => {
-  const user = maybeUser && maybeUser.id ? maybeUser : maybeUserOrClient;
-  const clientArg = maybeUser && maybeUser.id && maybeUserOrClient?.query ? maybeUserOrClient : null;
-  const legacyClientArg = !isDatabaseConfigured && maybeUser && maybeUser.id && isSupabaseLikeClient(maybeUserOrClient)
-    ? maybeUserOrClient
-    : null;
-
-  if (!user?.id) {
-    throw new AppDataError('User id is required to ensure profile', 'PROFILE_BOOTSTRAP_FAILED', 500);
-  }
-
-  if (legacyClientArg) {
-    logProfilePath('supabase-client');
-    return ensureLegacyUserProfile(legacyClientArg, user);
-  }
-
-  const work = async (client) => {
-    let profile = await loadProfileById(client, user.id, true);
-    if (profile) {
-      if (user.email && user.email !== profile.email) {
-        const updated = await client.query(
-          `
-            UPDATE profiles
-            SET email = $2,
-                updated_at = NOW()
-            WHERE id = $1
-            RETURNING *
-          `,
-          [user.id, user.email]
-        );
-        profile = updated.rows[0];
-      }
-
-      profile = await reconcileProfilePremium(client, profile);
-      return { profile: normalizeProfileForApi(profile), created: false, migrated: false };
-    }
-
-    const legacyProfile = await loadProfileByEmail(client, user.email, true);
-    if (legacyProfile) {
-      const migrated = await client.query(
-        `
-          UPDATE profiles
-          SET id = $1,
-              email = COALESCE($2, email),
-              legacy_user_id = COALESCE(legacy_user_id, $3),
-              migrated_to_firebase_at = COALESCE(migrated_to_firebase_at, NOW()),
-              updated_at = NOW()
-          WHERE id = $3
-          RETURNING *
-        `,
-        [user.id, user.email, legacyProfile.id]
-      );
-
-      const reconciledProfile = await reconcileProfilePremium(client, migrated.rows[0]);
-      return {
-        profile: normalizeProfileForApi(reconciledProfile),
-        created: false,
-        migrated: true,
-      };
-    }
-
-    const defaults = buildDefaultProfile(user);
-    const inserted = await client.query(
-      `
-        INSERT INTO profiles (
-          id,
-          email,
-          credits,
-          is_premium,
-          last_daily_reset,
-          shadow_notes,
-          streak_count,
-          last_streak_claim,
-          total_time_spent_ms
-        )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        RETURNING *
-      `,
-      [
-        defaults.id,
-        defaults.email,
-        defaults.credits,
-        defaults.is_premium,
-        defaults.last_daily_reset,
-        defaults.shadow_notes,
-        defaults.streak_count,
-        defaults.last_streak_claim,
-        defaults.total_time_spent_ms,
-      ]
-    );
-
-    const reconciledProfile = await reconcileProfilePremium(client, inserted.rows[0]);
-    return { profile: normalizeProfileForApi(reconciledProfile), created: true, migrated: false };
-  };
-
-  if (clientArg) {
-    logProfilePath('raw-pg-client');
-    return work(clientArg);
-  }
-
-  logProfilePath('raw-pg-transaction');
-  return withTransaction(work);
-};
-
-export const claimDailyCreditsAndStreak = async (userId) => withTransaction(async (client) => {
-  const today = getTodayDateString();
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-
-  let profile = await loadProfileById(client, userId, true);
-  if (!profile) {
-    throw new AppDataError('Profile not found', 'PROFILE_NOT_FOUND', 404);
-  }
-
-  let updated = false;
-  let streakMsg = '';
-  let credits = Number.isFinite(profile.credits) ? profile.credits : 0;
-
-  if (!profile.last_daily_reset || profile.last_daily_reset < today) {
-    const resetResult = await client.query(
-      `
-        UPDATE profiles
-        SET credits = $2,
-            last_daily_reset = $3,
-            updated_at = NOW()
-        WHERE id = $1
-        RETURNING *
-      `,
-      [userId, DEFAULT_FREE_CREDITS, today]
-    );
-    profile = resetResult.rows[0];
-    credits = DEFAULT_FREE_CREDITS;
-    updated = true;
-  }
-
-  if (!profile.last_streak_claim || profile.last_streak_claim < today) {
-    const nextStreak =
-      profile.last_streak_claim && profile.last_streak_claim === yesterday
-        ? (Number.isFinite(profile.streak_count) ? profile.streak_count : 0) + 1
-        : 1;
-
-    let bonusCredits = 0;
-    if (nextStreak >= 8) {
-      bonusCredits = 3;
-      streakMsg = `ðŸ”¥ Day ${nextStreak} Streak! +${bonusCredits} Bonus Credits!`;
-    } else if (nextStreak >= 5) {
-      bonusCredits = 2;
-      streakMsg = `ðŸ”¥ Day ${nextStreak} Streak! +${bonusCredits} Bonus Credits!`;
-    } else if (nextStreak >= 2) {
-      bonusCredits = 1;
-      streakMsg = `ðŸ”¥ Day ${nextStreak} Streak! +${bonusCredits} Bonus Credit!`;
-    } else {
-      streakMsg = 'Welcome back! ðŸ”¥ Day 1 â€“ keep it up for bonus credits!';
-    }
-
-    const creditedAmount = bonusCredits > 0 && !profile.is_premium ? bonusCredits : 0;
-    const streakResult = await client.query(
-      `
-        UPDATE profiles
-        SET streak_count = $2,
-            last_streak_claim = $3,
-            credits = credits + $4,
-            updated_at = NOW()
-        WHERE id = $1
-        RETURNING *
-      `,
-      [userId, nextStreak, today, creditedAmount]
-    );
-
-    profile = streakResult.rows[0];
-    credits = Number.isFinite(profile.credits) ? profile.credits : credits;
-    updated = true;
-  }
-
-  return {
-    updated,
-    profile: normalizeProfileForApi({ ...profile, credits }),
-    streak_msg: streakMsg,
-  };
-});
-
-export const getProfileById = async (userId) => {
-  if (!pool) {
-    throw new Error('Database is not configured.');
-  }
-
-  const result = await pool.query('SELECT * FROM profiles WHERE id = $1', [userId]);
-  return result.rows[0] ? normalizeProfileForApi(result.rows[0]) : null;
-};
-
-export const updateProfile = async (userId, updates) => {
-  const fields = [];
-  const values = [userId];
-
-  if (Object.prototype.hasOwnProperty.call(updates, 'shadow_notes')) {
-    values.push(updates.shadow_notes ?? '');
-    fields.push(`shadow_notes = $${values.length}`);
-  }
-
-  if (fields.length === 0) {
-    const profile = await getProfileById(userId);
-    return profile;
-  }
-
-  values.push(new Date().toISOString());
-  const result = await pool.query(
-    `
-      UPDATE profiles
-      SET ${fields.join(', ')},
-          updated_at = $${values.length}
-      WHERE id = $1
-      RETURNING *
-    `,
-    values
-  );
-
-  return result.rows[0] ? normalizeProfileForApi(result.rows[0]) : null;
-};
-
-export const listSavedItems = async (userId, { ascending = false } = {}) => {
-  const result = await pool.query(
-    `
-      SELECT *
-      FROM saved_items
-      WHERE user_id = $1
-      ORDER BY created_at ${ascending ? 'ASC' : 'DESC'}
-    `,
-    [userId]
-  );
-  return result.rows;
-};
-
-export const createSavedItem = async (userId, item) => {
-  const result = await pool.query(
-    `
-      INSERT INTO saved_items (user_id, content, type)
-      VALUES ($1, $2, $3)
-      RETURNING *
-    `,
-    [userId, item.content, item.type]
-  );
-  return result.rows[0] || null;
-};
-
-export const deleteSavedItem = async (userId, itemId) => {
-  if (userId) {
-    await pool.query(
-      `
-        DELETE FROM saved_items
-        WHERE id = $1
-          AND user_id = $2
-      `,
-      [itemId, userId]
-    );
-    return;
-  }
-
-  await pool.query(
-    `
-      DELETE FROM saved_items
-      WHERE id = $1
-    `,
-    [itemId]
-  );
-};
-
-export const createReport = async (userId, content, type) => {
-  await pool.query(
-    `
-      INSERT INTO reports (user_id, content, type)
-      VALUES ($1, $2, $3)
-    `,
-    [userId, content, type]
-  );
-};
-
-export const recordUserActivity = async (userId, activeDate = getTodayDateString()) => {
-  await pool.query(
-    `
-      INSERT INTO user_activity_log (user_id, active_date)
-      VALUES ($1, $2)
-      ON CONFLICT (user_id, active_date) DO NOTHING
-    `,
-    [userId, activeDate]
-  );
-};
-
-export const incrementTotalTimeSpent = async (userId, inputMs) => {
-  if (!inputMs || inputMs <= 0) {
-    throw new AppDataError('input_ms must be greater than zero', 'INVALID_INPUT', 400);
-  }
-
-  const result = await pool.query(
-    `
-      UPDATE profiles
-      SET total_time_spent_ms = COALESCE(total_time_spent_ms, 0) + $2,
-          updated_at = NOW()
-      WHERE id = $1
-      RETURNING total_time_spent_ms
-    `,
-    [userId, inputMs]
-  );
-
-  if (!result.rows[0]) {
-    throw new AppDataError('Profile not found', 'PROFILE_NOT_FOUND', 404);
-  }
-
-  return Number(result.rows[0].total_time_spent_ms || 0);
-};
-
-export const modifyCredits = async (userId, amountChange) => withTransaction(async (client) => {
-  const profile = await loadProfileById(client, userId, true);
-  if (!profile) {
-    throw new AppDataError('Profile not found', 'PROFILE_NOT_FOUND', 404);
-  }
-
-  const currentCredits = Number.isFinite(profile.credits) ? profile.credits : 0;
-  const nextCredits = currentCredits + amountChange;
-  if (nextCredits < 0) {
-    throw new AppDataError('Insufficient credits', 'INSUFFICIENT_CREDITS', 403);
-  }
-
-  const updated = await client.query(
-    `
-      UPDATE profiles
-      SET credits = $2,
-          updated_at = NOW()
-      WHERE id = $1
-      RETURNING credits
-    `,
-    [userId, nextCredits]
-  );
-
-  return Number(updated.rows[0]?.credits || 0);
-});
-
-export const setPremium = async ({
-  userId,
-  platformName,
-  productIdentifier,
-  transactionIdentifier,
-  basePlanIdentifier,
-  purchaseTokenIdentifier,
-  expiresAt,
-  rawPayload,
-}) => withTransaction(async (client) => {
-  const profileResult = await client.query(
-    `
-      UPDATE profiles
-      SET is_premium = TRUE,
-          premium_source = 'native',
-          premium_platform = $2,
-          premium_product_id = $3,
-          premium_base_plan_id = $4,
-          premium_transaction_id = $5,
-          premium_expires_at = $6,
-          premium_verified_at = NOW(),
-          updated_at = NOW()
-      WHERE id = $1
-      RETURNING *
-    `,
-    [
-      userId,
-      platformName,
-      productIdentifier,
-      basePlanIdentifier,
-      transactionIdentifier,
-      expiresAt,
-    ]
-  );
-
-  const serializedPayload = JSON.stringify(rawPayload || {});
-  const existingSubscriptionResult = await client.query(
-    `
-      SELECT id
-      FROM premium_subscriptions
-      WHERE user_id = $1
-      ORDER BY updated_at DESC NULLS LAST, purchase_date DESC NULLS LAST, created_at DESC NULLS LAST
-      LIMIT 1
-    `,
-    [userId]
-  );
-
-  if (existingSubscriptionResult.rows[0]?.id) {
-    await client.query(
-      `
-        UPDATE premium_subscriptions
-        SET platform = $2,
-            product_id = $3,
-            base_plan_id = $4,
-            transaction_id = $5,
-            purchase_token_identifier = $6,
-            is_active = TRUE,
-            purchase_date = NOW(),
-            expires_at = $7,
-            raw_payload = $8::jsonb,
-            updated_at = NOW()
-        WHERE id = $1
-      `,
-      [
-        existingSubscriptionResult.rows[0].id,
-        platformName,
-        productIdentifier,
-        basePlanIdentifier,
-        transactionIdentifier,
-        purchaseTokenIdentifier,
-        expiresAt,
-        serializedPayload,
-      ]
-    );
-  } else {
-    await client.query(
-      `
-        INSERT INTO premium_subscriptions (
-          user_id,
-          platform,
-          product_id,
-          base_plan_id,
-          transaction_id,
-          purchase_token_identifier,
-          is_active,
-          purchase_date,
-          expires_at,
-          raw_payload
-        )
-        VALUES ($1, $2, $3, $4, $5, $6, TRUE, NOW(), $7, $8::jsonb)
-      `,
-      [
-        userId,
-        platformName,
-        productIdentifier,
-        basePlanIdentifier,
-        transactionIdentifier,
-        purchaseTokenIdentifier,
-        expiresAt,
-        serializedPayload,
-      ]
-    );
-  }
-
-  return normalizeProfileForApi(profileResult.rows[0]);
-});
-
-export const revokePremium = async (userId) => withTransaction(async (client) => {
-  const profileResult = await client.query(
-    `
-      UPDATE profiles
-      SET is_premium = FALSE,
-          premium_source = 'revoked',
-          premium_expires_at = NULL,
-          updated_at = NOW()
-      WHERE id = $1
-      RETURNING *
-    `,
-    [userId]
-  );
-
-  await client.query(
-    `
-      UPDATE premium_subscriptions
-      SET is_active = FALSE,
-          updated_at = NOW()
-      WHERE user_id = $1
-    `,
-    [userId]
-  );
-
-  return profileResult.rows[0] ? normalizeProfileForApi(profileResult.rows[0]) : null;
-});
-
-export const deleteAccountData = async (userId) => {
-  await pool.query('DELETE FROM profiles WHERE id = $1', [userId]);
-};
+    return revokedProfi×]ø¶‰žËkºwµçIÍÉ¥ÁÑ¥½¸¹•áÁ¥É•Í}…Ðñð¹Õ±°¤€„ôô€¡ÁÉ½™¥±”¹ÁÉ•µ¥Õµ}•áÁ¥É•Í}…Ðñð¹Õ±°¤ì((€¥˜€ …¹••‘ÍUÁ‘…Ñ”¤ì(€€€É•ÑÕÉ¸ÁÉ½™¥±”ì(€ô((€É•ÑÕÉ¸Í•Ñ1•…åAÉ½™¥±•AÉ•µ¥Õ´¡±¥•¹Ð°ÁÉ½™¥±”°ì(€€€Á±…Ñ™½É´è…Ñ¥Ù•MÕ‰ÍÉ¥ÁÑ¥½¸¹Á±…Ñ™½É´ñðÁÉ½™¥±”¹ÁÉ•µ¥Õµ}Á±…Ñ™½É´ñð€…¹‘É½¥œ°(€€€ÁÉ½‘ÕÑ%è…Ñ¥Ù•MÕ‰ÍÉ¥ÁÑ¥½¸¹ÁÉ½‘ÕÑ}¥ñðÁÉ½™¥±”¹ÁÉ•µ¥Õµ}ÁÉ½‘ÕÑ}¥ñð€ÁÉ•µ¥Õ´œ°(€€€‰…Í•A±…¹%è…Ñ¥Ù•MÕ‰ÍÉ¥ÁÑ¥½¸¹‰…Í•}Á±…¹}¥ñðÁÉ½™¥±”¹ÁÉ•µ¥Õµ}‰…Í•}Á±…¹}¥ñð¹Õ±°°(€€€ÑÉ…¹Í…Ñ¥½¹%è…Ñ¥Ù•MÕ‰ÍÉ¥ÁÑ¥½¸¹ÑÉ…¹Í…Ñ¥½¹}¥ñðÁÉ½™¥±”¹ÁÉ•µ¥Õµ}ÑÉ…¹Í…Ñ¥½¹}¥ñð¹Õ±°°(€€€ÁÕÉ¡…Í•Q½­•¹%‘•¹Ñ¥™¥•Èè…Ñ¥Ù•MÕ‰ÍÉ¥ÁÑ¥½¸¹ÁÕÉ¡…Í•}Ñ½­•¹}¥‘•¹Ñ¥™¥•Èñð¹Õ±°°(€€€•áÁ¥É•ÍÐè…Ñ¥Ù•MÕ‰ÍÉ¥ÁÑ¥½¸¹•áÁ¥É•Í}…ÐñðÁÉ½™¥±”¹ÁÉ•µ¥Õµ}•áÁ¥É•Í}…Ðñð¹Õ±°°(€€€É…ÝA…å±½…è…Ñ¥Ù•MÕ‰ÍÉ¥ÁÑ¥½¸¹É…Ý}Á…å±½…ñðíô°(€ô¤ì)ôì()½¹ÍÐ•¹ÍÕÉ•1•…åUÍ•ÉAÉ½™¥±”€ô…Íå¹Œ€¡±¥•¹Ð°ÕÍ•È¤€ôøì(€±•ÐÁÉ½™¥±”€ô…Ý…¥Ð±½…‘1•…åAÉ½™¥±•	å%¡±¥•¹Ð°ÕÍ•È¹¥¤ì((€¥˜€¡ÁÉ½™¥±”¤ì(€€€¥˜€¡ÕÍ•È¹•µ…¥°€˜˜ÕÍ•È¹•µ…¥°€„ôôÁÉ½™¥±”¹•µ…¥°¤ì(€€€€€½¹ÍÐì‘…Ñ„èÕÁ‘…Ñ•°•ÉÉ½ÈèÕÁ‘…Ñ•ÉÉ½Èô€ô…Ý…¥Ð±¥•¹Ð(€€€€€€€€¹™É½´ ÁÉ½™¥±•Ìœ¤(€€€€€€€€¹ÕÁ‘…Ñ”¡ì•µ…¥°èÕÍ•È¹•µ…¥°ô¤(€€€€€€€€¹•Ä ¥œ°ÕÍ•È¹¥¤(€€€€€€€€¹Í•±•Ð œ¨œ¤(€€€€€€€€¹µ…å‰•M¥¹±” ¤ì((€€€€€¥˜€¡ÕÁ‘…Ñ•ÉÉ½È¤ì(€€€€€€€Ñ¡É½Ü¹•ÜÁÁ…Ñ…ÉÉ½È (€€€€€€€€€ÕÁ‘…Ñ•ÉÉ½È¹µ•ÍÍ…”ñð€…¥±•Ñ¼ÕÁ‘…Ñ”ÁÉ½™¥±”•µ…¥°œ°(€€€€€€€€€€AI=%1}	==QMQIA}%1œ°(€€€€€€€€€€ÔÀÀ(€€€€€€€€¤ì(€€€€€ô((€€€€€ÁÉ½™¥±”€ôÕÁ‘…Ñ•ñðÁÉ½™¥±”ì(€€€ô((€€€ÁÉ½™¥±”€ô…Ý…¥Ð¹½Éµ…±¥é•áÁ¥É•‘1•…åAÉ•µ¥Õ´¡±¥•¹Ð°ÁÉ½™¥±”¤ì(€€€ÁÉ½™¥±”€ô…Ý…¥ÐÉ•½¹¥±•1•…åAÉ½™¥±•AÉ•µ¥Õ´¡±¥•¹Ð°ÁÉ½™¥±”¤ì(€€€É•ÑÕÉ¸ìÁÉ½™¥±”è¹½Éµ…±¥é•AÉ½™¥±•½ÉÁ¤¡ÁÉ½™¥±”¤°É•…Ñ•è™…±Í”°µ¥É…Ñ•è™…±Í”ôì(€ô((€½¹ÍÐ‘•™…Õ±ÑÌ€ô‰Õ¥±‘•™…Õ±ÑAÉ½™¥±”¡ÕÍ•È¤ì(€½¹ÍÐì‘…Ñ„è¥¹Í•ÉÑ•°•ÉÉ½Èè¥¹Í•ÉÑÉÉ½Èô€ô…Ý…¥Ð±¥•¹Ð(€€€€¹™É½´ ÁÉ½™¥±•Ìœ¤(€€€€¹¥¹Í•ÉÐ¡‘•™…Õ±ÑÌ¤(€€€€¹Í•±•Ð œ¨œ¤(€€€€¹µ…å‰•M¥¹±” ¤ì((€¥˜€¡¥¹Í•ÉÑÉÉ½È¤ì(€€€½¹ÍÐ•á¥ÍÑ¥¹AÉ½™¥±”€ô…Ý…¥Ð±½…‘1•…åAÉ½™¥±•	å%¡±¥•¹Ð°ÕÍ•È¹¥¤ì(€€€¥˜€¡•á¥ÍÑ¥¹AÉ½™¥±”¤ì(€€€€€É•ÑÕÉ¸ìÁÉ½™¥±”è¹½Éµ…±¥é•AÉ½™¥±•½ÉÁ¤¡•á¥ÍÑ¥¹AÉ½™¥±”¤°É•…Ñ•è™…±Í”°µ¥É…Ñ•è™…±Í”ôì(€€€ô((€€€Ñ¡É½Ü¹•ÜÁÁ…Ñ…ÉÉ½È (€€€€€¥¹Í•ÉÑÉÉ½È¹µ•ÍÍ…”ñð€…¥±•Ñ¼É•…Ñ”ÁÉ½™¥±”œ°(€€€€€€AI=%1}	==QMQIA}%1œ°(€€€€€€ÔÀÀ(€€€€¤ì(€ô((€ÁÉ½™¥±”€ô…Ý…¥ÐÉ•½¹¥±•1•…åAÉ½™¥±•AÉ•µ¥Õ´¡±¥•¹Ð°¥¹Í•ÉÑ•¤ì(€É•ÑÕÉ¸ìÁÉ½™¥±”è¹½Éµ…±¥é•AÉ½™¥±•½ÉÁ¤¡ÁÉ½™¥±”¤°É•…Ñ•èÑÉÕ”°µ¥É…Ñ•è™…±Í”ôì)ôì()•áÁ½ÉÐ½¹ÍÐ•¹ÍÕÉ•UÍ•ÉAÉ½™¥±”€ô…Íå¹Œ€¡µ…å‰•UÍ•É=É±¥•¹Ð°µ…å‰•UÍ•È€ô¹Õ±°¤€ôøì(€½¹ÍÐÕÍ•È€ôµ…å‰•UÍ•È€˜˜µ…å‰•UÍ•È¹¥€üµ…å‰•UÍ•È€èµ…å‰•UÍ•É=É±¥•¹Ðì(€½¹ÍÐ±¥•¹ÑÉœ€ôµ…å‰•UÍ•È€˜˜µ…å‰•UÍ•È¹¥€˜˜µ…å‰•UÍ•É=É±¥•¹Ðü¹ÅÕ•Éä€üµ…å‰•UÍ•É=É±¥•¹Ð€è¹Õ±°ì(€½¹ÍÐ±•…å±¥•¹ÑÉœ€ô€…¥Í…Ñ…‰…Í•½¹™¥ÕÉ•€˜˜µ…å‰•UÍ•È€˜˜µ…å‰•UÍ•È¹¥€˜˜¥ÍMÕÁ…‰…Í•1¥­•±¥•¹Ð¡µ…å‰•UÍ•É=É±¥•¹Ð¤(€€€€üµ…å‰•UÍ•É=É±¥•¹Ð(€€€€è¹Õ±°ì((€¥˜€ …ÕÍ•Èü¹¥¤ì(€€€Ñ¡É½Ü¹•ÜÁÁ…Ñ…ÉÉ½È UÍ•È¥¥ÌÉ•ÅÕ¥É•Ñ¼•¹ÍÕÉ”ÁÉ½™¥±”œ°€AI=%1}	==QMQIA}%1œ°€ÔÀÀ¤ì(€ô((€¥˜€¡±•…å±¥•¹ÑÉœ¤ì(€€€±½AÉ½™¥±•A…Ñ  ÍÕÁ…‰…Í”µ±¥•¹Ðœ¤ì(€€€É•ÑÕÉ¸•¹ÍÕÉ•1•…åUÍ•ÉAÉ½™¥±”¡±•…å±¥•¹ÑÉœ°ÕÍ•È¤ì(€ô((€½¹ÍÐÝ½É¬€ô…Íå¹Œ€¡±¥•¹Ð¤€ôøì(€€€±•ÐÁÉ½™¥±”€ô…Ý…¥Ð±½…‘AÉ½™¥±•	å%¡±¥•¹Ð°ÕÍ•È¹¥°ÑÉÕ”¤ì(€€€¥˜€¡ÁÉ½™¥±”¤ì(€€€€€¥˜€¡ÕÍ•È¹•µ…¥°€˜˜ÕÍ•È¹•µ…¥°€„ôôÁÉ½™¥±”¹•µ…¥°¤ì(€€€€€€€½¹ÍÐÕÁ‘…Ñ•€ô…Ý…¥Ð±¥•¹Ð¹ÅÕ•Éä (€€€€€€€€€€(€€€€€€€€€€€UAQÁÉ½™¥±•Ì(€€€€€€€€€€€MP•µ…¥°€ô€È°(€€€€€€€€€€€€€€€ÕÁ‘…Ñ•‘}…Ð€ô9=\ ¤(€€€€€€€€€€€]!I¥€ô€Ä(€€€€€€€€€€€IQUI9%9€¨(€€€€€€€€€€°(€€€€€€€€€mÕÍ•È¹¥°ÕÍ•È¹•µ…¥±t(€€€€€€€€¤ì(€€€€€€€ÁÉ½™¥±”€ôÕÁ‘…Ñ•¹É½ÝÍlÁtì(€€€€€ô((€€€€€ÁÉ½™¥±”€ô…Ý…¥ÐÉ•½¹¥±•AÉ½™¥±•AÉ•µ¥Õ´¡±¥•¹Ð°ÁÉ½™¥±”¤ì(€€€€€É•ÑÕÉ¸ìÁÉ½™¥±”è¹½Éµ…±¥é•AÉ½™¥±•½ÉÁ¤¡ÁÉ½™¥±”¤°É•…Ñ•è™…±Í”°µ¥É…Ñ•è™…±Í”ôì(€€€ô((€€€½¹ÍÐ±•…åAÉ½™¥±”€ô…Ý…¥Ð±½…‘AÉ½™¥±•	åµ…¥°¡±¥•¹Ð°ÕÍ•È¹•µ…¥°°ÑÉÕ”¤ì(€€€¥˜€¡±•…åAÉ½™¥±”¤ì(€€€€€½¹ÍÐµ¥É…Ñ•€ô…Ý…¥Ð±¥•¹Ð¹ÅÕ•Éä (€€€€€€€€(€€€€€€€€€UAQÁÉ½™¥±•Ì(€€€€€€€€€MP¥€ô€Ä°(€€€€€€€€€€€€€•µ…¥°€ô=1M È°•µ…¥°¤°(€€€€€€€€€€€€€±•…å}ÕÍ•É}¥€ô=1M¡±•…å}ÕÍ•É}¥°€Ì¤°(€€€€€€€€€€€€€µ¥É…Ñ•‘}Ñ½}™¥É•‰…Í•}…Ð€ô=1M¡µ¥É…Ñ•‘}Ñ½}™¥É•‰…Í•}…Ð°9=\ ¤¤°(€€€€€€€€€€€€€ÕÁ‘…Ñ•‘}…Ð€ô9=\ ¤(€€€€€€€€€]!I¥€ô€Ì(€€€€€€€€€IQUI9%9€¨(€€€€€€€€°(€€€€€€€mÕÍ•È¹¥°ÕÍ•È¹•µ…¥°°±•…åAÉ½™¥±”¹¥‘t(€€€€€€¤ì((€€€€€½¹ÍÐÉ•½¹¥±•‘AÉ½™¥±”€ô…Ý…¥ÐÉ•½¹¥±•AÉ½™¥±•AÉ•µ¥Õ´¡±¥•¹Ð°µ¥É…Ñ•¹É½ÝÍlÁt¤ì(€€€€€É•ÑÕÉ¸ì(€€€€€€€ÁÉ½™¥±”è¹½Éµ…±¥é•AÉ½™¥±•½ÉÁ¤¡É•½¹¥±•‘AÉ½™¥±”¤°(€€€€€€€É•…Ñ•è™…±Í”°(€€€€€€€µ¥É…Ñ•èÑÉÕ”°(€€€€€ôì(€€€ô((€€€½¹ÍÐ‘•™…Õ±ÑÌ€ô‰Õ¥±‘•™…Õ±ÑAÉ½™¥±”¡ÕÍ•È¤ì(€€€½¹ÍÐ¥¹Í•ÉÑ•€ô…Ý…¥Ð±¥•¹Ð¹ÅÕ•Éä (€€€€€€(€€€€€€€%9MIP%9Q<ÁÉ½™¥±•Ì€ (€€€€€€€€€¥°(€€€€€€€€€•µ…¥°°(€€€€€€€€€É•‘¥ÑÌ°(€€€€€€€€€¥Í}ÁÉ•µ¥Õ´°(€€€€€€€€€±…ÍÑ}‘…¥±å}É•Í•Ð°(€€€€€€€€€Í¡…‘½Ý}¹½Ñ•Ì°(€€€€€€€€€ÍÑÉ•…­}½Õ¹Ð°(€€€€€€€€€±…ÍÑ}ÍÑÉ•…­}±…¥´°(€€€€€€€€€Ñ½Ñ…±}Ñ¥µ•}ÍÁ•¹Ñ}µÌ(€€€€€€€€¤(€€€€€€€Y1UL€ Ä°€È°€Ì°€Ð°€Ô°€Ø°€Ü°€à°€ä¤(€€€€€€€IQUI9%9€¨(€€€€€€°(€€€€€l(€€€€€€€‘•™…Õ±ÑÌ¹¥°(€€€€€€€‘•™…Õ±ÑÌ¹•µ…¥°°(€€€€€€€‘•™…Õ±ÑÌ¹É•‘¥ÑÌ°(€€€€€€€‘•™…Õ±ÑÌ¹¥Í}ÁÉ•µ¥Õ´°(€€€€€€€‘•™…Õ±ÑÌ¹±…ÍÑ}‘…¥±å}É•Í•Ð°(€€€€€€€‘•™…Õ±ÑÌ¹Í¡…‘½Ý}¹½Ñ•Ì°(€€€€€€€‘•™…Õ±ÑÌ¹ÍÑÉ•…­}½Õ¹Ð°(€€€€€€€‘•™…Õ±ÑÌ¹±…ÍÑ}ÍÑÉ•…­}±…¥´°(€€€€€€€‘•™…Õ±ÑÌ¹Ñ½Ñ…±}Ñ¥µ•}ÍÁ•¹Ñ}µÌ°(€€€€€t(€€€€¤ì((€€€½¹ÍÐÉ•½¹¥±•‘AÉ½™¥±”€ô…Ý…¥ÐÉ•½¹¥±•AÉ½™¥±•AÉ•µ¥Õ´¡±¥•¹Ð°¥¹Í•ÉÑ•¹É½ÝÍlÁt¤ì(€€€É•ÑÕÉ¸ìÁÉ½™¥±”è¹½Éµ…±¥é•AÉ½™¥±•½ÉÁ¤¡É•½¹¥±•‘AÉ½™¥±”¤°É•…Ñ•èÑÉÕ”°µ¥É…Ñ•è™…±Í”ôì(€ôì((€¥˜€¡±¥•¹ÑÉœ¤ì(€€€±½AÉ½™¥±•A…Ñ  É…ÜµÁœµ±¥•¹Ðœ¤ì(€€€É•ÑÕÉ¸Ý½É¬¡±¥•¹ÑÉœ¤ì(€ô((€±½AÉ½™¥±•A…Ñ  É…ÜµÁœµÑÉ…¹Í…Ñ¥½¸œ¤ì(€É•ÑÕÉ¸Ý¥Ñ¡QÉ…¹Í…Ñ¥½¸¡Ý½É¬¤ì)ôì()•áÁ½ÉÐ½¹ÍÐ±…¥µ…¥±åÉ•‘¥ÑÍ¹‘MÑÉ•…¬€ô…Íå¹Œ€¡ÕÍ•É%¤€ôøÝ¥Ñ¡QÉ…¹Í…Ñ¥½¸¡…Íå¹Œ€¡±¥•¹Ð¤€ôøì(€½¹ÍÐÑ½‘…ä€ô•ÑQ½‘…å…Ñ•MÑÉ¥¹œ ¤ì(€½¹ÍÐå•ÍÑ•É‘…ä€ô¹•Ü…Ñ”¡…Ñ”¹¹½Ü ¤€´€àØÐÀÀÀÀÀ¤¹Ñ½%M=MÑÉ¥¹œ ¤¹ÍÁ±¥Ð Pœ¥lÁtì((€±•ÐÁÉ½™¥±”€ô…Ý…¥Ð±½…‘AÉ½™¥±•	å%¡±¥•¹Ð°ÕÍ•É%°ÑÉÕ”¤ì(€¥˜€ …ÁÉ½™¥±”¤ì(€€€Ñ¡É½Ü¹•ÜÁÁ…Ñ…ÉÉ½È AÉ½™¥±”¹½Ð™½Õ¹œ°€AI=%1}9=Q}=U9œ°€ÐÀÐ¤ì(€ô((€±•ÐÕÁ‘…Ñ•€ô™…±Í”ì(€±•ÐÍÑÉ•…­5Íœ€ô€œœì(€±•ÐÉ•‘¥ÑÌ€ô9Õµ‰•È¹¥Í¥¹¥Ñ”¡ÁÉ½™¥±”¹É•‘¥ÑÌ¤€üÁÉ½™¥±”¹É•‘¥ÑÌ€è€Àì((€¥˜€ …ÁÉ½™¥±”¹±…ÍÑ}‘…¥±å}É•Í•ÐñðÁÉ½™¥±”¹±…ÍÑ}‘…¥±å}É•Í•Ð€ðÑ½‘…ä¤ì(€€€½¹ÍÐÉ•Í•ÑI•ÍÕ±Ð€ô…Ý…¥Ð±¥•¹Ð¹ÅÕ•Éä (€€€€€€(€€€€€€€UAQÁÉ½™¥±•Ì(€€€€€€€MPÉ•‘¥ÑÌ€ô€È°(€€€€€€€€€€€±…ÍÑ}‘…¥±å}É•Í•Ð€ô€Ì°(€€€€€€€€€€€ÕÁ‘…Ñ•‘}…Ð€ô9=\ ¤(€€€€€€€]!I¥€ô€Ä(€€€€€€€IQUI9%9€¨(€€€€€€°(€€€€€mÕÍ•É%°U1Q}I}I%QL°Ñ½‘…åt(€€€€¤ì(€€€ÁÉ½™¥±”€ôÉ•Í•ÑI•ÍÕ±Ð¹É½ÝÍlÁtì(€€€É•‘¥ÑÌ€ôU1Q}I}I%QLì(€€€ÕÁ‘…Ñ•€ôÑÉÕ”ì(€ô((€¥˜€ …ÁÉ½™¥±”¹±…ÍÑ}ÍÑÉ•…­}±…¥´ñðÁÉ½™¥±”¹±…ÍÑ}ÍÑÉ•…­}±…¥´€ðÑ½‘…ä¤ì(€€€½¹ÍÐ¹•áÑMÑÉ•…¬€ô(€€€€€ÁÉ½™¥±”¹±…ÍÑ}ÍÑÉ•…­}±…¥´€˜˜ÁÉ½™¥±”¹±…ÍÑ}ÍÑÉ•…­}±…¥´€ôôôå•ÍÑ•É‘…ä(€€€€€€€€ü€¡9Õµ‰•È¹¥Í¥¹¥Ñ”¡ÁÉ½™¥±”¹ÍÑÉ•…­}½Õ¹Ð¤€üÁÉ½™¥±”¹ÍÑÉ•…­}½Õ¹Ð€è€À¤€¬€Ä(€€€€€€€€è€Äì((€€€±•Ð‰½¹ÕÍÉ•‘¥ÑÌ€ô€Àì(€€€¥˜€¡¹•áÑMÑÉ•…¬€øô€à¤ì(€€€€€‰½¹ÕÍÉ•‘¥ÑÌ€ô€Ìì(€€€€€ÍÑÉ•…­5Íœ€ôƒÂ~R”…ä€‘í¹•áÑMÑÉ•…­ôMÑÉ•…¬„€¬‘í‰½¹ÕÍÉ•‘¥ÑÍô	½¹ÕÌÉ•‘¥ÑÌ…€ì(€€€ô•±Í”¥˜€¡¹•áÑMÑÉ•…¬€øô€Ô¤ì(€€€€€‰½¹ÕÍÉ•‘¥ÑÌ€ô€Èì(€€€€€ÍÑÉ•…­5Íœ€ôƒÂ~R”…ä€‘í¹•áÑMÑÉ•…­ôMÑÉ•…¬„€¬‘í‰½¹ÕÍÉ•‘¥ÑÍô	½¹ÕÌÉ•‘¥ÑÌ…€ì(€€€ô•±Í”¥˜€¡¹•áÑMÑÉ•…¬€øô€È¤ì(€€€€€‰½¹ÕÍÉ•‘¥ÑÌ€ô€Äì(€€€€€ÍÑÉ•…­5Íœ€ôƒÂ~R”…ä€‘í¹•áÑMÑÉ•…­ôMÑÉ•…¬„€¬‘í‰½¹ÕÍÉ•‘¥ÑÍô	½¹ÕÌÉ•‘¥Ð…€ì(€€€ô•±Í”ì(€€€€€ÍÑÉ•…­5Íœ€ô€]•±½µ”‰…¬„ƒÂ~R”…ä€ÄƒŠL­••À¥ÐÕÀ™½È‰½¹ÕÌÉ•‘¥ÑÌ„œì(€€€ô((€€€½¹ÍÐÉ•‘¥Ñ•‘µ½Õ¹Ð€ô‰½¹ÕÍÉ•‘¥ÑÌ€ø€À€˜˜€…ÁÉ½™¥±”¹¥Í}ÁÉ•µ¥Õ´€ü‰½¹ÕÍÉ•‘¥ÑÌ€è€Àì(€€€½¹ÍÐÍÑÉ•…­I•ÍÕ±Ð€ô…Ý…¥Ð±¥•¹Ð¹ÅÕ•Éä (€€€€€€(€€€€€€€UAQÁÉ½™¥±•Ì(€€€€€€€MPÍÑÉ•…­}½Õ¹Ð€ô€È°(€€€€€€€€€€€±…ÍÑ}ÍÑÉ•…­}±…¥´€ô€Ì°(€€€€€€€€€€€É•‘¥ÑÌ€ôÉ•‘¥ÑÌ€¬€Ð°(€€€€€€€€€€€ÕÁ‘…Ñ•‘}…Ð€ô9=\ ¤(€€€€€€€]!I¥€ô€Ä(€€€€€€€IQUI9%9€¨(€€€€€€°(€€€€€mÕÍ•É%°¹•áÑMÑÉ•…¬°Ñ½‘…ä°É•‘¥Ñ•‘µ½Õ¹Ñt(€€€€¤ì((€€€ÁÉ½™¥±”€ôÍÑÉ•…­I•ÍÕ±Ð¹É½ÝÍlÁtì(€€€É•‘¥ÑÌ€ô9Õµ‰•È¹¥Í¥¹¥Ñ”¡ÁÉ½™¥±”¹É•‘¥ÑÌ¤€üÁÉ½™¥±”¹É•‘¥ÑÌ€èÉ•‘¥ÑÌì(€€€ÕÁ‘…Ñ•€ôÑÉÕ”ì(€ô((€É•ÑÕÉ¸ì(€€€ÕÁ‘…Ñ•°(€€€ÁÉ½™¥±”è¹½Éµ…±¥é•AÉ½™¥±•½ÉÁ¤¡ì€¸¸¹ÁÉ½™¥±”°É•‘¥ÑÌô¤°(€€€ÍÑÉ•…­}µÍœèÍÑÉ•…­5Íœ°(€ôì)ô¤ì()•áÁ½ÉÐ½¹ÍÐ•ÑAÉ½™¥±•	å%€ô…Íå¹Œ€¡ÕÍ•É%¤€ôøì(€¥˜€ …Á½½°¤ì(€€€Ñ¡É½Ü¹•ÜÉÉ½È …Ñ…‰…Í”¥Ì¹½Ð½¹™¥ÕÉ•¸œ¤ì(€ô((€½¹ÍÐÉ•ÍÕ±Ð€ô…Ý…¥ÐÁ½½°¹ÅÕ•Éä M1P€¨I=4ÁÉ½™¥±•Ì]!I¥€ô€Äœ°mÕÍ•É%‘t¤ì(€É•ÑÕÉ¸É•ÍÕ±Ð¹É½ÝÍlÁt€ü¹½Éµ…±¥é•AÉ½™¥±•½ÉÁ¤¡É•ÍÕ±Ð¹É½ÝÍlÁt¤€è¹Õ±°ì)ôì()•áÁ½ÉÐ½¹ÍÐÕÁ‘…Ñ•AÉ½™¥±”€ô…Íå¹Œ€¡ÕÍ•É%°ÕÁ‘…Ñ•Ì¤€ôøì(€½¹ÍÐ™¥•±‘Ì€ômtì(€½¹ÍÐÙ…±Õ•Ì€ômÕÍ•É%‘tì((€¥˜€¡=‰©•Ð¹ÁÉ½Ñ½ÑåÁ”¹¡…Í=Ý¹AÉ½Á•ÉÑä¹…±°¡ÕÁ‘…Ñ•Ì°€Í¡…‘½Ý}¹½Ñ•Ìœ¤¤ì(€€€Ù…±Õ•Ì¹ÁÕÍ ¡ÕÁ‘…Ñ•Ì¹Í¡…‘½Ý}¹½Ñ•Ì€üü€œœ¤ì(€€€™¥•±‘Ì¹ÁÕÍ ¡Í¡…‘½Ý}¹½Ñ•Ì€ô€‘íÙ…±Õ•Ì¹±•¹Ñ¡õ€¤ì(€ô((€¥˜€¡™¥•±‘Ì¹±•¹Ñ €ôôô€À¤ì(€€€½¹ÍÐÁÉ½™¥±”€ô…Ý…¥Ð•ÑAÉ½™¥±•	å%¡ÕÍ•É%¤ì(€€€É•ÑÕÉ¸ÁÉ½™¥±”ì(€ô((€Ù…±Õ•Ì¹ÁÕÍ ¡¹•Ü…Ñ” ¤¹Ñ½%M=MÑÉ¥¹œ ¤¤ì(€½¹ÍÐÉ•ÍÕ±Ð€ô…Ý…¥ÐÁ½½°¹ÅÕ•Éä (€€€€(€€€€€UAQÁÉ½™¥±•Ì(€€€€€MP€‘í™¥•±‘Ì¹©½¥¸ œ°€œ¥ô°(€€€€€€€€€ÕÁ‘…Ñ•‘}…Ð€ô€‘íÙ…±Õ•Ì¹±•¹Ñ¡ô(€€€€€]!I¥€ô€Ä(€€€€€IQUI9%9€¨(€€€€°(€€€Ù…±Õ•Ì(€€¤ì((€É•ÑÕÉ¸É•ÍÕ±Ð¹É½ÝÍlÁt€ü¹½Éµ…±¥é•AÉ½™¥±•½ÉÁ¤¡É•ÍÕ±Ð¹É½ÝÍlÁt¤€è¹Õ±°ì)ôì()•áÁ½ÉÐ½¹ÍÐ±¥ÍÑM…Ù•‘%Ñ•µÌ€ô…Íå¹Œ€¡ÕÍ•É%°ì…Í•¹‘¥¹œ€ô™…±Í”ô€ôíô¤€ôøì(€½¹ÍÐÉ•ÍÕ±Ð€ô…Ý…¥ÐÁ½½°¹ÅÕ•Éä (€€€€(€€€€€M1P€¨(€€€€€I=4Í…Ù•‘}¥Ñ•µÌ(€€€€€]!IÕÍ•É}¥€ô€Ä(€€€€€=IH	dÉ•…Ñ•‘}…Ð€‘í…Í•¹‘¥¹œ€ü€Mœ€è€Mô(€€€€°(€€€mÕÍ•É%‘t(€€¤ì(€É•ÑÕÉ¸É•ÍÕ±Ð¹É½ÝÌì)ôì()•áÁ½ÉÐ½¹ÍÐÉ•…Ñ•M…Ù•‘%Ñ•´€ô…Íå¹Œ€¡ÕÍ•É%°¥Ñ•´¤€ôøì(€½¹ÍÐÉ•ÍÕ±Ð€ô…Ý…¥ÐÁ½½°¹ÅÕ•Éä (€€€€(€€€€€%9MIP%9Q<Í…Ù•‘}¥Ñ•µÌ€¡ÕÍ•É}¥°½¹Ñ•¹Ð°ÑåÁ”¤(€€€€€Y1UL€ Ä°€È°€Ì¤(€€€€€IQUI9%9€¨(€€€€°(€€€mÕÍ•É%°¥Ñ•´¹½¹Ñ•¹Ð°¥Ñ•´¹ÑåÁ•t(€€¤ì(€É•ÑÕÉ¸É•ÍÕ±Ð¹É½ÝÍlÁtñð¹Õ±°ì)ôì()•áÁ½ÉÐ½¹ÍÐ‘•±•Ñ•M…Ù•‘%Ñ•´€ô…Íå¹Œ€¡ÕÍ•É%°¥Ñ•µ%¤€ôøì(€¥˜€¡ÕÍ•É%¤ì(€€€…Ý…¥ÐÁ½½°¹ÅÕ•Éä (€€€€€€(€€€€€€€1QI=4Í…Ù•‘}¥Ñ•µÌ(€€€€€€€]!I¥€ô€Ä(€€€€€€€€€9ÕÍ•É}¥€ô€È(€€€€€€°(€€€€€m¥Ñ•µ%°ÕÍ•É%‘t(€€€€¤ì(€€€É•ÑÕÉ¸ì(€ô((€…Ý…¥ÐÁ½½°¹ÅÕ•Éä (€€€€(€€€€€1QI=4Í…Ù•‘}¥Ñ•µÌ(€€€€€]!I¥€ô€Ä(€€€€°(€€€m¥Ñ•µ%‘t(€€¤ì)ôì()•áÁ½ÉÐ½¹ÍÐÉ•…Ñ•I•Á½ÉÐ€ô…Íå¹Œ€¡ÕÍ•É%°½¹Ñ•¹Ð°ÑåÁ”¤€ôøì(€…Ý…¥ÐÁ½½°¹ÅÕ•Éä (€€€€(€€€€€%9MIP%9Q<É•Á½ÉÑÌ€¡ÕÍ•É}¥°½¹Ñ•¹Ð°ÑåÁ”¤(€€€€€Y1UL€ Ä°€È°€Ì¤(€€€€°(€€€mÕÍ•É%°½¹Ñ•¹Ð°ÑåÁ•t(€€¤ì)ôì()•áÁ½ÉÐ½¹ÍÐÉ•½É‘UÍ•ÉÑ¥Ù¥Ñä€ô…Íå¹Œ€¡ÕÍ•É%°…Ñ¥Ù•…Ñ”€ô•ÑQ½‘…å…Ñ•MÑÉ¥¹œ ¤¤€ôøì(€…Ý…¥ÐÁ½½°¹ÅÕ•Éä (€€€€(€€€€€%9MIP%9Q<ÕÍ•É}…Ñ¥Ù¥Ñå}±½œ€¡ÕÍ•É}¥°…Ñ¥Ù•}‘…Ñ”¤(€€€€€Y1UL€ Ä°€È¤(€€€€€=8=91%P€¡ÕÍ•É}¥°…Ñ¥Ù•}‘…Ñ”¤<9=Q!%9(€€€€°(€€€mÕÍ•É%°…Ñ¥Ù•…Ñ•t(€€¤ì)ôì()•áÁ½ÉÐ½¹ÍÐ¥¹É•µ•¹ÑQ½Ñ…±Q¥µ•MÁ•¹Ð€ô…Íå¹Œ€¡ÕÍ•É%°¥¹ÁÕÑ5Ì¤€ôøì(€¥˜€ …¥¹ÁÕÑ5Ìñð¥¹ÁÕÑ5Ì€ðô€À¤ì(€€€Ñ¡É½Ü¹•ÜÁÁ…Ñ…ÉÉ½È ¥¹ÁÕÑ}µÌµÕÍÐ‰”É•…Ñ•ÈÑ¡…¸é•É¼œ°€%9Y1%}%9AUPœ°€ÐÀÀ¤ì(€ô((€½¹ÍÐÉ•ÍÕ±Ð€ô…Ý…¥ÐÁ½½°¹ÅÕ•Éä (€€€€(€€€€€UAQÁÉ½™¥±•Ì(€€€€€MPÑ½Ñ…±}Ñ¥µ•}ÍÁ•¹Ñ}µÌ€ô=1M¡Ñ½Ñ…±}Ñ¥µ•}ÍÁ•¹Ñ}µÌ°€À¤€¬€È°(€€€€€€€€€ÕÁ‘…Ñ•‘}…Ð€ô9=\ ¤(€€€€€]!I¥€ô€Ä(€€€€€IQUI9%9Ñ½Ñ…±}Ñ¥µ•}ÍÁ•¹Ñ}µÌ(€€€€°(€€€mÕÍ•É%°¥¹ÁÕÑ5Ít(€€¤ì((€¥˜€ …É•ÍÕ±Ð¹É½ÝÍlÁt¤ì(€€€Ñ¡É½Ü¹•ÜÁÁ…Ñ…ÉÉ½È AÉ½™¥±”¹½Ð™½Õ¹œ°€AI=%1}9=Q}=U9œ°€ÐÀÐ¤ì(€ô((€É•ÑÕÉ¸9Õµ‰•È¡É•ÍÕ±Ð¹É½ÝÍlÁt¹Ñ½Ñ…±}Ñ¥µ•}ÍÁ•¹Ñ}µÌñð€À¤ì)ôì()•áÁ½ÉÐ½¹ÍÐµ½‘¥™åÉ•‘¥ÑÌ€ô…Íå¹Œ€¡ÕÍ•É%°…µ½Õ¹Ñ¡…¹”¤€ôøÝ¥Ñ¡QÉ…¹Í…Ñ¥½¸¡…Íå¹Œ€¡±¥•¹Ð¤€ôøì(€½¹ÍÐÁÉ½™¥±”€ô…Ý…¥Ð±½…‘AÉ½™¥±•	å%¡±¥•¹Ð°ÕÍ•É%°ÑÉÕ”¤ì(€¥˜€ …ÁÉ½™¥±”¤ì(€€€Ñ¡É½Ü¹•ÜÁÁ…Ñ…ÉÉ½È AÉ½™¥±”¹½Ð™½Õ¹œ°€AI=%1}9=Q}=U9œ°€ÐÀÐ¤ì(€ô((€½¹ÍÐÕÉÉ•¹ÑÉ•‘¥ÑÌ€ô9Õµ‰•È¹¥Í¥¹¥Ñ”¡ÁÉ½™¥±”¹É•‘¥ÑÌ¤€üÁÉ½™¥±”¹É•‘¥ÑÌ€è€Àì(€½¹ÍÐ¹•áÑÉ•‘¥ÑÌ€ôÕÉÉ•¹ÑÉ•‘¥ÑÌ€¬…µ½Õ¹Ñ¡…¹”ì(€¥˜€¡¹•áÑÉ•‘¥ÑÌ€ð€À¤ì(€€€Ñ¡É½Ü¹•ÜÁÁ…Ñ…ÉÉ½È %¹ÍÕ™™¥¥•¹ÐÉ•‘¥ÑÌœ°€%9MU%%9Q}I%QLœ°€ÐÀÌ¤ì(€ô((€½¹ÍÐÕÁ‘…Ñ•€ô…Ý…¥Ð±¥•¹Ð¹ÅÕ•Éä (€€€€(€€€€€UAQÁÉ½™¥±•Ì(€€€€€MPÉ•‘¥ÑÌ€ô€È°(€€€€€€€€€ÕÁ‘…Ñ•‘}…Ð€ô9=\ ¤(€€€€€]!I¥€ô€Ä(€€€€€IQUI9%9É•‘¥ÑÌ(€€€€°(€€€mÕÍ•É%°¹•áÑÉ•‘¥ÑÍt(€€¤ì((€É•ÑÕÉ¸9Õµ‰•È¡ÕÁ‘…Ñ•¹É½ÝÍlÁtü¹É•‘¥ÑÌñð€À¤ì)ô¤ì()•áÁ½ÉÐ½¹ÍÐÍ•ÑAÉ•µ¥Õ´€ô…Íå¹Œ€¡ì(€ÕÍ•É%°(€Á±…Ñ™½Éµ9…µ”°(€ÁÉ½‘ÕÑ%‘•¹Ñ¥™¥•È°(€ÑÉ…¹Í…Ñ¥½¹%‘•¹Ñ¥™¥•È°(€‰…Í•A±…¹%‘•¹Ñ¥™¥•È°(€ÁÕÉ¡…Í•Q½­•¹%‘•¹Ñ¥™¥•È°(€•áÁ¥É•ÍÐ°(€É…ÝA…å±½…°)ô¤€ôøÝ¥Ñ¡QÉ…¹Í…Ñ¥½¸¡…Íå¹Œ€¡±¥•¹Ð¤€ôøì(€½¹ÍÐÁÉ½™¥±•I•ÍÕ±Ð€ô…Ý…¥Ð±¥•¹Ð¹ÅÕ•Éä (€€€€(€€€€€UAQÁÉ½™¥±•Ì(€€€€€MP¥Í}ÁÉ•µ¥Õ´€ôQIU°(€€€€€€€€€ÁÉ•µ¥Õµ}Í½ÕÉ”€ô€¹…Ñ¥Ù”œ°(€€€€€€€€€ÁÉ•µ¥Õµ}Á±…Ñ™½É´€ô€È°(€€€€€€€€€ÁÉ•µ¥Õµ}ÁÉ½‘ÕÑ}¥€ô€Ì°(€€€€€€€€€ÁÉ•µ¥Õµ}‰…Í•}Á±…¹}¥€ô€Ð°(€€€€€€€€€ÁÉ•µ¥Õµ}ÑÉ…¹Í…Ñ¥½¹}¥€ô€Ô°(€€€€€€€€€ÁÉ•µ¥Õµ}•áÁ¥É•Í}…Ð€ô€Ø°(€€€€€€€€€ÁÉ•µ¥Õµ}Ù•É¥™¥•‘}…Ð€ô9=\ ¤°(€€€€€€€€€ÕÁ‘…Ñ•‘}…Ð€ô9=\ ¤(€€€€€]!I¥€ô€Ä(€€€€€IQUI9%9€¨(€€€€°(€€€l(€€€€€ÕÍ•É%°(€€€€€Á±…Ñ™½Éµ9…µ”°(€€€€€ÁÉ½‘ÕÑ%‘•¹Ñ¥™¥•È°(€€€€€‰…Í•A±…¹%‘•¹Ñ¥™¥•È°(€€€€€ÑÉ…¹Í…Ñ¥½¹%‘•¹Ñ¥™¥•È°(€€€€€•áÁ¥É•ÍÐ°(€€€t(€€¤ì((€½¹ÍÐÍ•É¥…±¥é•‘A…å±½…€ô)M=8¹ÍÑÉ¥¹¥™ä¡É…ÝA…å±½…ñðíô¤ì(€½¹ÍÐ•á¥ÍÑ¥¹MÕ‰ÍÉ¥ÁÑ¥½¹I•ÍÕ±Ð€ô…Ý…¥Ð±¥•¹Ð¹ÅÕ•Éä (€€€€(€€€€€M1P¥(€€€€€I=4ÁÉ•µ¥Õµ}ÍÕ‰ÍÉ¥ÁÑ¥½¹Ì(€€€€€]!IÕÍ•É}¥€ô€Ä(€€€€€=IH	dÕÁ‘…Ñ•‘}…ÐM9U11L1MP°ÁÕÉ¡…Í•}‘…Ñ”M9U11L1MP°É•…Ñ•‘}…ÐM9U11L1MP(€€€€€1%5%P€Ä(€€€€°(€€€mÕÍ•É%‘t(€€¤ì((€¥˜€¡•á¥ÍÑ¥¹MÕ‰ÍÉ¥ÁÑ¥½¹I•ÍÕ±Ð¹É½ÝÍlÁtü¹¥¤ì(€€€…Ý…¥Ð±¥•¹Ð¹ÅÕ•Éä (€€€€€€(€€€€€€€UAQÁÉ•µ¥Õµ}ÍÕ‰ÍÉ¥ÁÑ¥½¹Ì(€€€€€€€MPÁ±…Ñ™½É´€ô€È°(€€€€€€€€€€€ÁÉ½‘ÕÑ}¥€ô€Ì°(€€€€€€€€€€€‰…Í•}Á±…¹}¥€ô€Ð°(€€€€€€€€€€€ÑÉ…¹Í…Ñ¥½¹}¥€ô€Ô°(€€€€€€€€€€€ÁÕÉ¡…Í•}Ñ½­•¹}¥‘•¹Ñ¥™¥•È€ô€Ø°(€€€€€€€€€€€¥Í}…Ñ¥Ù”€ôQIU°(€€€€€€€€€€€ÁÕÉ¡…Í•}‘…Ñ”€ô9=\ ¤°(€€€€€€€€€€€•áÁ¥É•Í}…Ð€ô€Ü°(€€€€€€€€€€€É…Ý}Á…å±½…€ô€àèé©Í½¹ˆ°(€€€€€€€€€€€ÕÁ‘…Ñ•‘}…Ð€ô9=\ ¤(€€€€€€€]!I¥€ô€Ä(€€€€€€°(€€€€€l(€€€€€€€•á¥ÍÑ¥¹MÕ‰ÍÉ¥ÁÑ¥½¹I•ÍÕ±Ð¹É½ÝÍlÁt¹¥°(€€€€€€€Á±…Ñ™½Éµ9…µ”°(€€€€€€€ÁÉ½‘ÕÑ%‘•¹Ñ¥™¥•È°(€€€€€€€‰…Í•A±…¹%‘•¹Ñ¥™¥•È°(€€€€€€€ÑÉ…¹Í…Ñ¥½¹%‘•¹Ñ¥™¥•È°(€€€€€€€ÁÕÉ¡…Í•Q½­•¹%‘•¹Ñ¥™¥•È°(€€€€€€€•áÁ¥É•ÍÐ°(€€€€€€€Í•É¥…±¥é•‘A…å±½…°(€€€€€t(€€€€¤ì(€ô•±Í”ì(€€€…Ý…¥Ð±¥•¹Ð¹ÅÕ•Éä (€€€€€€(€€€€€€€%9MIP%9Q<ÁÉ•µ¥Õµ}ÍÕ‰ÍÉ¥ÁÑ¥½¹Ì€ (€€€€€€€€€ÕÍ•É}¥°(€€€€€€€€€Á±…Ñ™½É´°(€€€€€€€€€ÁÉ½‘ÕÑ}¥°(€€€€€€€€€‰…Í•}Á±…¹}¥°(€€€€€€€€€ÑÉ…¹Í…Ñ¥½¹}¥°(€€€€€€€€€ÁÕÉ¡…Í•}Ñ½­•¹}¥‘•¹Ñ¥™¥•È°(€€€€€€€€€¥Í}…Ñ¥Ù”°(€€€€€€€€€ÁÕÉ¡…Í•}‘…Ñ”°(€€€€€€€€€•áÁ¥É•Í}…Ð°(€€€€€€€€€É…Ý}Á…å±½…(€€€€€€€€¤(€€€€€€€Y1UL€ Ä°€È°€Ì°€Ð°€Ô°€Ø°QIU°9=\ ¤°€Ü°€àèé©Í½¹ˆ¤(€€€€€€°(€€€€€l(€€€€€€€ÕÍ•É%°(€€€€€€€Á±…Ñ™½Éµ9…µ”°(€€€€€€€ÁÉ½‘ÕÑ%‘•¹Ñ¥™¥•È°(€€€€€€€‰…Í•A±…¹%‘•¹Ñ¥™¥•È°(€€€€€€€ÑÉ…¹Í…Ñ¥½¹%‘•¹Ñ¥™¥•È°(€€€€€€€ÁÕÉ¡…Í•Q½­•¹%‘•¹Ñ¥™¥•È°(€€€€€€€•áÁ¥É•ÍÐ°(€€€€€€€Í•É¥…±¥é•‘A…å±½…°(€€€€€t(€€€€¤ì(€ô((€É•ÑÕÉ¸¹½Éµ…±¥é•AÉ½™¥±•½ÉÁ¤¡ÁÉ½™¥±•I•ÍÕ±Ð¹É½ÝÍlÁt¤ì)ô¤ì()•áÁ½ÉÐ½¹ÍÐÉ•Ù½­•AÉ•µ¥Õ´€ô…Íå¹Œ€¡ÕÍ•É%¤€ôøÝ¥Ñ¡QÉ…¹Í…Ñ¥½¸¡…Íå¹Œ€¡±¥•¹Ð¤€ôøì(€½¹ÍÐÁÉ½™¥±•I•ÍÕ±Ð€ô…Ý…¥Ð±¥•¹Ð¹ÅÕ•Éä (€€€€(€€€€€UAQÁÉ½™¥±•Ì(€€€€€MP¥Í}ÁÉ•µ¥Õ´€ô1M°(€€€€€€€€€ÁÉ•µ¥Õµ}Í½ÕÉ”€ô€É•Ù½­•œ°(€€€€€€€€€ÁÉ•µ¥Õµ}•áÁ¥É•Í}…Ð€ô9U10°(€€€€€€€€€ÕÁ‘…Ñ•‘}…Ð€ô9=\ ¤(€€€€€]!I¥€ô€Ä(€€€€€IQUI9%9€¨(€€€€°(€€€mÕÍ•É%‘t(€€¤ì((€…Ý…¥Ð±¥•¹Ð¹ÅÕ•Éä (€€€€(€€€€€UAQÁÉ•µ¥Õµ}ÍÕ‰ÍÉ¥ÁÑ¥½¹Ì(€€€€€MP¥Í}…Ñ¥Ù”€ô1M°(€€€€€€€€€ÕÁ‘…Ñ•‘}…Ð€ô9=\ ¤(€€€€€]!IÕÍ•É}¥€ô€Ä(€€€€°(€€€mÕÍ•É%‘t(€€¤ì((€É•ÑÕÉ¸ÁÉ½™¥±•I•ÍÕ±Ð¹É½ÝÍlÁt€ü¹½Éµ…±¥é•AÉ½™¥±•½ÉÁ¤¡ÁÉ½™¥±•I•ÍÕ±Ð¹É½ÝÍlÁt¤€è¹Õ±°ì)ô¤ì()•áÁ½ÉÐ½¹ÍÐ‘•±•Ñ•½Õ¹Ñ…Ñ„€ô…Íå¹Œ€¡ÕÍ•É%¤€ôøì(€…Ý…¥ÐÁ½½°¹ÅÕ•Éä 1QI=4ÁÉ½™¥±•Ì]!I¥€ô€Äœ°mÕÍ•É%‘t¤ì)ôì(

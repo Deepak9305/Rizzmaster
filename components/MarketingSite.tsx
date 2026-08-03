@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { LEGAL_LINKS } from '../services/legalLinks';
 import { BLOG_POSTS, getBlogPost, PLAY_STORE_URL, type BlogPost } from '../services/marketingContent';
-import { normalizeMarketingPath } from '../services/marketingRoutes';
+import { MARKETING_HOME_PATH, normalizeMarketingPath } from '../services/marketingRoutes';
 
 type MarketingRoute =
   | { kind: 'home' | 'blog' | 'privacy' | 'terms' | 'support' }
@@ -11,7 +11,7 @@ type MarketingRoute =
 const getRoute = (pathname: string): MarketingRoute => {
   const path = normalizeMarketingPath(pathname).toLowerCase();
 
-  if (path === '/') return { kind: 'home' };
+  if (path === MARKETING_HOME_PATH) return { kind: 'home' };
   if (path === '/blog') return { kind: 'blog' };
   if (path === '/privacy') return { kind: 'privacy' };
   if (path === '/terms') return { kind: 'terms' };
@@ -142,7 +142,7 @@ const PlayStoreButton: React.FC<{
 const MarketingNav: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) => (
   <header className="relative z-20 border-b border-white/[0.07] bg-black/30 backdrop-blur-xl">
     <div className="marketing-container flex h-20 items-center justify-between gap-6">
-      <button onClick={() => navigate('/')} className="flex items-center gap-3 text-left" aria-label="Rizz Master home">
+      <button onClick={() => navigate(MARKETING_HOME_PATH)} className="flex items-center gap-3 text-left" aria-label="Rizz Master home">
         <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-pink-300/25 bg-gradient-to-br from-pink-500/25 to-purple-500/25 shadow-[0_0_30px_rgba(236,72,153,0.2)]">
           <img src="/logo.png" alt="" className="h-8 w-8 object-contain" />
         </span>
@@ -150,8 +150,8 @@ const MarketingNav: React.FC<{ navigate: (path: string) => void }> = ({ navigate
       </button>
 
       <nav className="hidden items-center gap-7 text-sm text-white/55 md:flex" aria-label="Marketing navigation">
-        <a href="/#features" onClick={(event) => { event.preventDefault(); navigate('/#features'); }} className="transition-colors hover:text-white">Features</a>
-        <a href="/#how-it-works" onClick={(event) => { event.preventDefault(); navigate('/#how-it-works'); }} className="transition-colors hover:text-white">How it works</a>
+        <a href="/landing#features" onClick={(event) => { event.preventDefault(); navigate('/landing#features'); }} className="transition-colors hover:text-white">Features</a>
+        <a href="/landing#how-it-works" onClick={(event) => { event.preventDefault(); navigate('/landing#how-it-works'); }} className="transition-colors hover:text-white">How it works</a>
         <a href="/blog" onClick={(event) => { event.preventDefault(); navigate('/blog'); }} className="transition-colors hover:text-white">Blog</a>
       </nav>
 
@@ -171,7 +171,7 @@ const MarketingFooter: React.FC<{ navigate: (path: string) => void }> = ({ navig
   <footer className="border-t border-white/[0.08] bg-black/50">
     <div className="marketing-container flex flex-col gap-8 py-10 md:flex-row md:items-center md:justify-between">
       <div>
-        <button onClick={() => navigate('/')} className="font-bold tracking-tight text-white">Rizz <span className="text-pink-300">Master</span></button>
+        <button onClick={() => navigate(MARKETING_HOME_PATH)} className="font-bold tracking-tight text-white">Rizz <span className="text-pink-300">Master</span></button>
         <p className="mt-2 text-xs text-white/35">Built for people who overthink every text.</p>
       </div>
       <div className="flex flex-wrap gap-x-6 gap-y-3 text-xs font-semibold text-white/45">
@@ -588,7 +588,7 @@ const ArticlePage: React.FC<{ post: BlogPost; navigate: (path: string) => void }
   </>;
 };
 
-const ArticleCta: React.FC<{ navigate: (path: string) => void; compact?: boolean }> = ({ navigate, compact = false }) => <div className={`relative overflow-hidden rounded-3xl border border-pink-300/15 bg-gradient-to-br from-pink-500/15 to-purple-500/10 ${compact ? 'my-2 p-6' : 'mt-16 p-7 md:p-9'}`}><div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-pink-400/20 blur-3xl" /><p className="relative text-xs font-bold uppercase tracking-[0.22em] text-pink-200/75">Need a second opinion?</p><h2 className="relative mt-3 text-2xl font-bold text-white">Turn the situation into a send-ready reply.</h2><p className="relative mt-3 max-w-xl text-sm leading-6 text-white/50">Rizz Master helps you find the right words without losing your personality.</p><div className="relative mt-6 flex flex-col gap-3 sm:flex-row"><PlayStoreButton /><button onClick={() => navigate('/')} className="rounded-2xl px-5 py-3.5 text-sm font-bold text-white/60 transition-colors hover:text-white">Explore Rizz Master →</button></div></div>;
+const ArticleCta: React.FC<{ navigate: (path: string) => void; compact?: boolean }> = ({ navigate, compact = false }) => <div className={`relative overflow-hidden rounded-3xl border border-pink-300/15 bg-gradient-to-br from-pink-500/15 to-purple-500/10 ${compact ? 'my-2 p-6' : 'mt-16 p-7 md:p-9'}`}><div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-pink-400/20 blur-3xl" /><p className="relative text-xs font-bold uppercase tracking-[0.22em] text-pink-200/75">Need a second opinion?</p><h2 className="relative mt-3 text-2xl font-bold text-white">Turn the situation into a send-ready reply.</h2><p className="relative mt-3 max-w-xl text-sm leading-6 text-white/50">Rizz Master helps you find the right words without losing your personality.</p><div className="relative mt-6 flex flex-col gap-3 sm:flex-row"><PlayStoreButton /><button onClick={() => navigate(MARKETING_HOME_PATH)} className="rounded-2xl px-5 py-3.5 text-sm font-bold text-white/60 transition-colors hover:text-white">Explore Rizz Master →</button></div></div>;
 
 const LegalPage: React.FC<{ kind: 'privacy' | 'terms' | 'support'; navigate: (path: string) => void }> = ({ kind, navigate }) => {
   const content = {
@@ -597,11 +597,11 @@ const LegalPage: React.FC<{ kind: 'privacy' | 'terms' | 'support'; navigate: (pa
     support: { eyebrow: 'We are here to help', title: 'Support Center', intro: 'Questions about credits, subscriptions, account access, or a feature idea? Send us a note and we will help you find the next step.', sections: [['Contact support', 'Email rizzmasterhelpteam@gmail.com for bugs, billing questions, account deletion requests, or general help.'], ['Credits and Premium', 'Free credits reset daily. Premium access and subscription cancellation are managed through Google Play.'], ['Account deletion', 'Email support from the address connected to your account and include “Delete my account” in the subject.']], link: LEGAL_LINKS.supportEmail },
   }[kind];
   return <>
-    <main className="marketing-container marketing-page-padding"><button onClick={() => navigate('/')} className="mb-10 inline-flex items-center gap-2 text-sm font-bold text-white/45 transition-colors hover:text-white">← Back home</button><div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.28em] text-pink-300/80">{content.eyebrow}</p><h1 className="mt-5 text-5xl font-black tracking-[-0.04em] text-white md:text-7xl">{content.title}</h1><p className="mt-6 text-lg leading-8 text-white/55">{content.intro}</p></div><div className="mt-12 max-w-3xl space-y-5">{content.sections.map(([heading, copy]) => <section key={heading} className="marketing-card p-6 md:p-8"><h2 className="text-xl font-bold text-white">{heading}</h2><p className="mt-3 text-sm leading-7 text-white/55">{copy}</p></section>)}</div><a href={content.link} target={kind === 'support' ? undefined : '_blank'} rel={kind === 'support' ? undefined : 'noreferrer'} className="mt-8 inline-flex rounded-2xl border border-white/15 bg-white/[0.05] px-5 py-3.5 text-sm font-bold text-white transition-colors hover:bg-white/10">{kind === 'support' ? 'Email support' : 'Read the full policy →'}</a></main><MarketingFooter navigate={navigate} />
+    <main className="marketing-container marketing-page-padding"><button onClick={() => navigate(MARKETING_HOME_PATH)} className="mb-10 inline-flex items-center gap-2 text-sm font-bold text-white/45 transition-colors hover:text-white">← Back home</button><div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.28em] text-pink-300/80">{content.eyebrow}</p><h1 className="mt-5 text-5xl font-black tracking-[-0.04em] text-white md:text-7xl">{content.title}</h1><p className="mt-6 text-lg leading-8 text-white/55">{content.intro}</p></div><div className="mt-12 max-w-3xl space-y-5">{content.sections.map(([heading, copy]) => <section key={heading} className="marketing-card p-6 md:p-8"><h2 className="text-xl font-bold text-white">{heading}</h2><p className="mt-3 text-sm leading-7 text-white/55">{copy}</p></section>)}</div><a href={content.link} target={kind === 'support' ? undefined : '_blank'} rel={kind === 'support' ? undefined : 'noreferrer'} className="mt-8 inline-flex rounded-2xl border border-white/15 bg-white/[0.05] px-5 py-3.5 text-sm font-bold text-white transition-colors hover:bg-white/10">{kind === 'support' ? 'Email support' : 'Read the full policy →'}</a></main><MarketingFooter navigate={navigate} />
   </>;
 };
 
-const NotFoundPage: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) => <main className="marketing-container marketing-page-padding"><p className="text-xs font-bold uppercase tracking-[0.28em] text-pink-300/80">404</p><h1 className="mt-5 text-5xl font-black text-white">That page ghosted you.</h1><p className="mt-5 text-white/55">Let’s get you back to the good part.</p><button onClick={() => navigate('/')} className="marketing-cta-primary mt-8 rounded-2xl px-5 py-3.5 text-sm font-bold text-white">Back home →</button></main>;
+const NotFoundPage: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) => <main className="marketing-container marketing-page-padding"><p className="text-xs font-bold uppercase tracking-[0.28em] text-pink-300/80">404</p><h1 className="mt-5 text-5xl font-black text-white">That page ghosted you.</h1><p className="mt-5 text-white/55">Let’s get you back to the good part.</p><button onClick={() => navigate(MARKETING_HOME_PATH)} className="marketing-cta-primary mt-8 rounded-2xl px-5 py-3.5 text-sm font-bold text-white">Back home →</button></main>;
 
 const MarketingSite: React.FC = () => {
   const [pathname, setPathname] = useState(() => typeof window === 'undefined' ? '/' : window.location.pathname);

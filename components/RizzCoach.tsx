@@ -35,6 +35,8 @@ interface RizzCoachProps {
     onUpdateCredits: (newAmountOrUpdater: number | ((prev: number) => number)) => void;
     isPremium: boolean;
     onGoPremium?: () => void;
+    onCreditsExhausted?: () => void;
+    onOpenWebMenu?: () => void;
     onLoginRequired?: () => void;
     shadowNotes: string;
     onUpdateShadowNotes: (notes: string) => void;
@@ -280,7 +282,7 @@ const AuroraBackground = React.memo(({ colors }: { colors: any }) => (
     </div>
 ));
 
-const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits, onUpdateCredits, isPremium, onGoPremium, onLoginRequired, shadowNotes, onUpdateShadowNotes, customPersonas = [], onAddPersona, onEditPersona }) => {
+const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits, onUpdateCredits, isPremium, onGoPremium, onCreditsExhausted, onOpenWebMenu, onLoginRequired, shadowNotes, onUpdateShadowNotes, customPersonas = [], onAddPersona, onEditPersona }) => {
     const { showToast } = useToast();
 
     // Dynamically scoped keys to prevent cross-account pollution on shared devices
@@ -373,7 +375,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
         const cost = image ? 2 : 1;
         if (!isPremium && credits < cost) {
             onClose();
-            setTimeout(() => onGoPremium && onGoPremium(), 300);
+            setTimeout(() => onCreditsExhausted ? onCreditsExhausted() : onGoPremium && onGoPremium(), 300);
             return;
         }
 
@@ -417,7 +419,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
             }
             if (err.message === 'INSUFFICIENT_CREDITS') {
                 onClose();
-                setTimeout(() => onGoPremium && onGoPremium(), 300);
+                setTimeout(() => onCreditsExhausted ? onCreditsExhausted() : onGoPremium && onGoPremium(), 300);
                 return;
             }
             if (
@@ -436,7 +438,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
         } finally {
             setLoading(false);
         }
-    }, [image, loading, isPremium, credits, messages, shadowNotes, onUpdateCredits, onUpdateShadowNotes, showToast, selectedVibe, customPersonas, onClose, onGoPremium, onLoginRequired]);
+    }, [image, loading, isPremium, credits, messages, shadowNotes, onUpdateCredits, onUpdateShadowNotes, showToast, selectedVibe, customPersonas, onClose, onGoPremium, onCreditsExhausted, onLoginRequired]);
 
     const handleImageUpload = useCallback(async () => {
         if (!canUseNativeCamera()) {
@@ -557,6 +559,20 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                             </svg>
                         </button>
+
+                        {onOpenWebMenu && (
+                            <button onClick={onOpenWebMenu} aria-label="Open navigation menu"
+                                style={{
+                                    width: '36px', height: '36px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)',
+                                    background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    cursor: 'pointer', flexShrink: 0,
+                                }}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="rgba(255,255,255,0.7)" strokeWidth={2.5}>
+                                    <path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" />
+                                </svg>
+                            </button>
+                        )}
 
                         {/* Pulsing avatar */}
                         <div style={{ position: 'relative', flexShrink: 0 }}>

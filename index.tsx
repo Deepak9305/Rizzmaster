@@ -2,14 +2,11 @@ import React, { lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import { Capacitor } from '@capacitor/core';
-import { isMarketingPath } from './services/marketingRoutes';
 
 const App = lazy(() => import('./App'));
-const MarketingSite = lazy(() => import('./components/MarketingSite'));
+const WebRouter = lazy(() => import('./components/WebRouter'));
 
-const shouldRenderMarketing = typeof window !== 'undefined'
-  && !Capacitor.isNativePlatform()
-  && isMarketingPath(window.location.pathname);
+const shouldRenderWebRouter = typeof window !== 'undefined' && !Capacitor.isNativePlatform();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -20,7 +17,7 @@ const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
     <Suspense fallback={<div className="min-h-screen bg-[#050407]" />}>
-      {shouldRenderMarketing ? <MarketingSite /> : <App />}
+      {shouldRenderWebRouter ? <WebRouter /> : <App />}
     </Suspense>
   </React.StrictMode>
 );

@@ -3,9 +3,15 @@ import React from 'react';
 interface FooterProps {
   className?: string;
   onNavigate: (page: 'PRIVACY' | 'TERMS' | 'SUPPORT') => void;
+  onWebNavigate?: (path: '/privacy' | '/terms' | '/support') => void;
 }
 
-const Footer: React.FC<FooterProps> = ({ className = "", onNavigate }) => {
+const Footer: React.FC<FooterProps> = ({ className = "", onNavigate, onWebNavigate }) => {
+  const navigate = (page: 'PRIVACY' | 'TERMS' | 'SUPPORT') => {
+    const path = `/${page.toLowerCase()}` as '/privacy' | '/terms' | '/support';
+    onWebNavigate ? onWebNavigate(path) : onNavigate(page);
+  };
+
   return (
     <footer
       className={`w-full border-t border-white/5 bg-gradient-to-t from-black via-black/80 to-transparent ${className}`}
@@ -30,19 +36,19 @@ const Footer: React.FC<FooterProps> = ({ className = "", onNavigate }) => {
         {/* Navigation Links - Pill Design for better Touch Targets */}
         <div className="flex flex-wrap justify-center gap-3">
           <button
-            onClick={() => onNavigate('PRIVACY')}
+            onClick={() => navigate('PRIVACY')}
             className="px-4 py-2 text-[10px] font-bold text-white/50 bg-white/5 hover:bg-white/10 hover:text-white rounded-lg transition-all uppercase tracking-widest border border-white/5 hover:border-white/20 active:scale-95"
           >
             Privacy
           </button>
           <button
-            onClick={() => onNavigate('TERMS')}
+            onClick={() => navigate('TERMS')}
             className="px-4 py-2 text-[10px] font-bold text-white/50 bg-white/5 hover:bg-white/10 hover:text-white rounded-lg transition-all uppercase tracking-widest border border-white/5 hover:border-white/20 active:scale-95"
           >
             Terms
           </button>
           <button
-            onClick={() => onNavigate('SUPPORT')}
+            onClick={() => navigate('SUPPORT')}
             className="px-4 py-2 text-[10px] font-bold text-white/50 bg-white/5 hover:bg-white/10 hover:text-white rounded-lg transition-all uppercase tracking-widest border border-white/5 hover:border-white/20 active:scale-95"
           >
             Support
