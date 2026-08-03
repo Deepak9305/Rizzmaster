@@ -41,8 +41,22 @@ const assertAllowedGooglePlaySubscription = (productId, basePlanId) => {
 };
 
 const getIapAccountBindingSecret = () => {
-  const secret = readEnv("IAP_ACCOUNT_BINDING_SECRET");
-  if (!secret) {
+  const configuredSecret = readEnv("IAP_ACCOUNT_BINDING_SECRET");
+  if (configuredSecret) {
+    return configuredSecret;
+  }
+
+  // Keep existing production deployments working while a dedicated secret is added.
+  // The service-role key never leaves the server and is domain-separated before use.
+  const serviceRoleKey = readEnv("SUPABASE_SERVICE_ROLE_KEY");
+  if (serviceRoleKey) {
+    return crypto
+      .createHash("sha256")
+      .update(`rizzmaster:iap-binding-secret:v1:${serviceRoleKey}`)
+      .digest("hex");
+  }
+
+  if (!configuredSecret && !serviceRoleKey) {
     throw new PurchaseVerificationError(
       "Purchase account binding is not configured on the server.",
       "IAP_ACCOUNT_BINDING_UNAVAILABLE",

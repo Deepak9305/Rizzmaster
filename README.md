@@ -15,7 +15,7 @@ You must provide the following environment variables during your production buil
 - `VITE_AUTH_REDIRECT_URL`: The exact hosted web URL Supabase should return to after Google login.
 - `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase server-only service role key for API routes. Never expose this with a `VITE_` prefix.
 - `GROQ_API_KEY`: Your Groq API key for accessing Llama models.
-- `IAP_ACCOUNT_BINDING_SECRET`: A high-entropy server-only secret used to bind an Android purchase to the signed-in Rizzmaster account. Set this in Vercel Production only; do not expose it with a `VITE_` prefix.
+- `IAP_ACCOUNT_BINDING_SECRET`: Preferred high-entropy server-only secret used to bind an Android purchase to the signed-in Rizzmaster account. If omitted, the API derives a domain-separated fallback from `SUPABASE_SERVICE_ROLE_KEY`; set this explicitly in Vercel Production for independent secret rotation. Never expose it with a `VITE_` prefix.
 
 Create a `.env.production` or inject these via your CI/CD pipeline (e.g., Vercel, GitHub Actions) before running the build.
 
