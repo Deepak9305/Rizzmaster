@@ -637,8 +637,7 @@ body {
 
 .web-app-empty-state {
   min-height: 36rem;
-  border-style: dashed !important;
-  border-color: rgba(255, 32, 145, 0.52) !important;
+  border: 1px solid rgba(255, 55, 153, 0.34) !important;
   background: radial-gradient(circle at 50% 46%, rgba(177, 22, 126, 0.12), transparent 36%), rgba(9, 6, 20, 0.7) !important;
 }
 
