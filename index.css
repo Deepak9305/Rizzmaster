@@ -471,7 +471,7 @@ body {
   justify-content: space-between;
   gap: 1rem;
   min-height: 4.75rem;
-  margin-bottom: clamp(2.8rem, 6vw, 5rem);
+  margin-bottom: clamp(1.15rem, 2vw, 1.75rem);
   padding: 0.65rem 1.35rem;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 1rem;
@@ -661,7 +661,7 @@ body {
 .web-app-root :is(button, textarea):focus-visible { outline: 2px solid rgba(255, 124, 179, 0.9); outline-offset: 3px; }
 
 @media (max-width: 1023px) {
-  .web-app-topbar { margin-bottom: 3rem; }
+  .web-app-topbar { margin-bottom: 1.25rem; }
   .web-app-workspace { grid-template-columns: 1fr; }
   .web-app-input-panel { position: static !important; max-height: none !important; overflow: visible !important; }
   .web-app-empty-state { min-height: 24rem; }
@@ -669,7 +669,7 @@ body {
 
 @media (max-width: 640px) {
   .web-app-shell { width: min(100% - 1rem, 1380px); padding-top: 0.5rem; }
-  .web-app-topbar { min-height: 4rem; margin-bottom: 2.4rem; padding: 0.5rem 0.7rem; border-radius: 0.85rem; }
+  .web-app-topbar { min-height: 4rem; margin-bottom: 1rem; padding: 0.5rem 0.7rem; border-radius: 0.85rem; }
   .web-app-topbar-leading, .web-app-topbar-actions { gap: 0.4rem; }
   .web-app-menu-trigger { width: 2.65rem; height: 2.65rem; }
   .web-app-logout { padding-inline: 0.4rem; font-size: 0.65rem; letter-spacing: 0.1em; }
