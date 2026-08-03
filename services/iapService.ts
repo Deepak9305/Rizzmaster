@@ -143,9 +143,20 @@ const getAndroidSubscriptionProductId = () => {
     return IAP_CONFIG.WEEKLY.androidId || IAP_CONFIG.MONTHLY.androidId || '';
 };
 
-const getExactAndroidOffer = (product: any, basePlanId: string) => product?.offers?.find((offer: any) => (
-    offer?.id === basePlanId || offer?.basePlanId === basePlanId
-));
+const getExactAndroidOffer = (product: any, basePlanId: string) => {
+    const offers = Array.isArray(product?.offers) ? product.offers : [];
+    const productId = typeof product?.id === 'string' ? product.id : '';
+    const canonicalOfferId = productId ? `${productId}@${basePlanId}` : '';
+
+    // cordova-plugin-purchase v13 represents Google base plans as product@basePlan.
+    return offers.find((offer: any) => offer?.id === canonicalOfferId)
+        || offers.find((offer: any) => (
+            offer?.id === basePlanId
+            || offer?.basePlanId === basePlanId
+            || offer?.base_plan_id === basePlanId
+            || (typeof offer?.id === 'string' && offer.id.endsWith(`@${basePlanId}`))
+        ));
+};
 
 const logIapJson = (message: string, data: Record<string, any>) => {
     try {
