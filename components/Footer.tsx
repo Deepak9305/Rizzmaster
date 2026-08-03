@@ -25,11 +25,11 @@ const Footer: React.FC<FooterProps> = ({ className = "", onNavigate, onWebNaviga
         {/* Logo & Copyright */}
         <div className="flex flex-col items-center gap-2">
           <div className="flex items-center gap-2 opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500 cursor-default">
-            <span className="text-xl">âœ¨</span>
+            <span className="text-xl">✨</span>
             <span className="font-bold text-white tracking-tighter">Rizz Master</span>
           </div>
           <p className="text-[10px] text-white/20 font-medium tracking-widest uppercase">
-            Â© {new Date().getFullYear()} AI Powered Dating Assistant
+            © {new Date().getFullYear()} AI Powered Dating Assistant
           </p>
         </div>
 
