@@ -2140,7 +2140,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   }
 
   return (
-    <div className="relative min-h-screen bg-black overflow-x-hidden">
+    <div className={IS_WEB_PLATFORM ? 'web-app-root relative min-h-screen overflow-x-hidden' : 'relative min-h-screen bg-black overflow-x-hidden'}>
 
       {showSplash && (
         <SplashScreen
@@ -2341,9 +2341,9 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
             </Suspense>
           </div>
           ) : (
-            <div className={`max-w-4xl mx-auto px-4 py-6 md:py-12 pb-0 relative min-h-[100dvh] flex flex-col safe-top ${currentView === 'HOME' ? 'animate-fade-in' : 'animate-view-zoom-out'}`}>
+            <div className={`${IS_WEB_PLATFORM ? 'web-app-shell' : 'max-w-4xl mx-auto px-4 py-6 md:py-12 pb-0'} relative min-h-[100dvh] flex flex-col safe-top ${currentView === 'HOME' ? 'animate-fade-in' : 'animate-view-zoom-out'}`}>
 
-              <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden bg-black" />
+              <div className={IS_WEB_PLATFORM ? 'web-app-backdrop fixed inset-0 z-[-1] pointer-events-none overflow-hidden' : 'fixed inset-0 z-[-1] pointer-events-none overflow-hidden bg-black'} />
 
               <Suspense fallback={null}>
                 {showPremiumModal && (
@@ -2365,34 +2365,35 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
 
 
-              <nav className="flex justify-between items-center mb-8 md:mb-12">
-                <div className="flex items-center gap-2">
+              <nav className={IS_WEB_PLATFORM ? 'web-app-topbar' : 'flex justify-between items-center mb-8 md:mb-12'}>
+                <div className={IS_WEB_PLATFORM ? 'web-app-topbar-leading' : 'flex items-center gap-2'}>
                   {IS_WEB_PLATFORM && onNavigateToPath && (
-                    <button onClick={() => setShowWebMenu(true)} aria-label="Open navigation menu" aria-haspopup="dialog" aria-expanded={showWebMenu} aria-controls="rizzmaster-web-navigation" className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/70 transition-colors hover:bg-white/10 hover:text-white">
+                    <button onClick={() => setShowWebMenu(true)} aria-label="Open navigation menu" aria-haspopup="dialog" aria-expanded={showWebMenu} aria-controls="rizzmaster-web-navigation" className="web-app-menu-trigger flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/70 transition-colors hover:bg-white/10 hover:text-white">
                       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" /></svg>
                     </button>
                   )}
-                <button onClick={handleLogout} className="px-3 py-1.5 text-xs md:text-sm text-white/40 hover:text-white hover:bg-white/5 rounded-lg transition-all uppercase tracking-widest font-medium border border-transparent hover:border-white/10 flex items-center gap-2 active:scale-95">
+                {IS_WEB_PLATFORM && <span className="web-app-brand-mark" aria-hidden="true">✦</span>}
+                <button onClick={handleLogout} className={`${IS_WEB_PLATFORM ? 'web-app-logout' : ''} px-3 py-1.5 text-xs md:text-sm text-white/40 hover:text-white hover:bg-white/5 rounded-lg transition-all uppercase tracking-widest font-medium border border-transparent hover:border-white/10 flex items-center gap-2 active:scale-95`}>
                   <span className="text-lg">←</span> <span>Logout</span>
                 </button>
                 </div>
 
-                <div className="flex items-center gap-2 md:gap-3">
+                <div className={IS_WEB_PLATFORM ? 'web-app-topbar-actions' : 'flex items-center gap-2 md:gap-3'}>
 
-                  <button onClick={handleOpenSaved} className="p-2 md:px-4 md:py-2 bg-white/5 hover:bg-white/10 rounded-full flex items-center gap-1.5 transition-all border border-white/5 active:scale-95">
+                  <button onClick={handleOpenSaved} className={`${IS_WEB_PLATFORM ? 'web-app-topbar-button' : ''} p-2 md:px-4 md:py-2 bg-white/5 hover:bg-white/10 rounded-full flex items-center gap-1.5 transition-all border border-white/5 active:scale-95`}>
                     <span className="text-rose-500 text-base md:text-lg">♥</span>
                     <span className="hidden md:inline text-xs font-bold text-white">Saved</span>
                   </button>
 
                   {!profile?.is_premium && (
-                    <button onClick={handleOpenPremium} className="hidden md:flex px-4 py-2 bg-gradient-to-r from-yellow-600 to-yellow-400 text-black text-xs font-bold rounded-full items-center gap-1 hover:brightness-110 transition-all active:scale-95">
+                    <button onClick={handleOpenPremium} className={`${IS_WEB_PLATFORM ? 'web-app-premium-button' : ''} hidden md:flex px-4 py-2 bg-gradient-to-r from-yellow-600 to-yellow-400 text-black text-xs font-bold rounded-full items-center gap-1 hover:brightness-110 transition-all active:scale-95`}>
                       <span>👑</span> Go Premium
                     </button>
                   )}
 
                   <div
                     onClick={() => showToast("Credits reset to 5 daily. Extra ad credits do not stack.", "info")}
-                    className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full border backdrop-blur-md cursor-pointer active:scale-95 transition-all ${profile?.is_premium ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-white/5 border-white/10'}`}
+                    className={`${IS_WEB_PLATFORM ? 'web-app-credits' : ''} flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full border backdrop-blur-md cursor-pointer active:scale-95 transition-all ${profile?.is_premium ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-white/5 border-white/10'}`}
                   >
                     <span className={profile?.is_premium ? "text-yellow-400 text-lg" : "text-yellow-400 text-lg"}>
                       {profile?.is_premium ? '👑' : '⚡'}
@@ -2404,27 +2405,27 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                 </div>
               </nav>
 
-              <header className="text-center mb-6 md:mb-8">
+              <header className={`${IS_WEB_PLATFORM ? 'web-app-heading' : ''} text-center mb-6 md:mb-8`}>
                 <div className="inline-block relative">
-                  <h1 className="text-5xl md:text-7xl font-black mb-2 tracking-tighter bg-gradient-to-r from-rose-400 via-amber-200 to-rose-400 bg-clip-text text-transparent pb-2 animate-text-shimmer">
+                  <h1 className={`${IS_WEB_PLATFORM ? 'web-app-title' : ''} text-5xl md:text-7xl font-black mb-2 tracking-tighter bg-gradient-to-r from-rose-400 via-amber-200 to-rose-400 bg-clip-text text-transparent pb-2 animate-text-shimmer`}>
                     Rizz Master
                   </h1>
                   {profile?.is_premium && <div className="absolute -top-4 -right-6 md:-right-8 rotate-12 bg-yellow-500 text-black font-bold text-[10px] md:text-xs px-2 py-1 rounded shadow-lg">PRO</div>}
                 </div>
-                <p className="text-white/60 text-sm md:text-xl font-light max-w-md mx-auto leading-relaxed">
+                <p className={`${IS_WEB_PLATFORM ? 'web-app-subtitle' : ''} text-white/60 text-sm md:text-xl font-light max-w-md mx-auto leading-relaxed`}>
                   Never send a boring text again.
                 </p>
               </header>
 
               {/* Main Mode Selection */}
-              <div className="flex gap-3 mb-6 max-w-lg mx-auto w-full select-none">
+              <div className={`${IS_WEB_PLATFORM ? 'web-app-tabs' : ''} flex gap-3 mb-6 max-w-lg mx-auto w-full select-none`}>
                 <button onClick={() => { setMode(InputMode.CHAT); setInputText(''); if (textareaRef.current) textareaRef.current.value = ''; setImage(null); setResult(null); setInputError(null); }} className={`flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 ${mode === InputMode.CHAT ? 'rizz-gradient text-white shadow-lg shadow-rose-500/20 shadow-purple-500/20' : 'bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10'}`}>Chat Reply</button>
                 <button onClick={() => { setMode(InputMode.BIO); setInputText(''); if (textareaRef.current) textareaRef.current.value = ''; setImage(null); setResult(null); setInputError(null); }} className={`flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 ${mode === InputMode.BIO ? 'rizz-gradient text-white shadow-lg shadow-rose-500/20 shadow-purple-500/20' : 'bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10'}`}>Profile Bio</button>
                 <button onClick={() => { handleViewNavigation('COACH'); }} className="flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 flex items-center justify-center gap-1.5">Rizz AI</button>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 items-start">
-                <section className="glass rounded-3xl p-5 md:p-6 border border-white/10 lg:sticky lg:top-8 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar">
+              <div className={`${IS_WEB_PLATFORM ? 'web-app-workspace' : ''} grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 items-start`}>
+                <section className={`${IS_WEB_PLATFORM ? 'web-app-panel web-app-input-panel' : ''} glass rounded-3xl p-5 md:p-6 border border-white/10 lg:sticky lg:top-8 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto custom-scrollbar`}>
                   <div className="mb-4">
                     <div className="flex justify-between items-center mb-2">
                       <label className="block text-xs font-bold text-white/50 uppercase tracking-widest">
@@ -2439,7 +2440,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                       defaultValue={inputText}
                       onChange={() => { if (inputError) setInputError(null); }}
                       placeholder={mode === InputMode.CHAT ? "Paste chat. Get Rizz." : "Hobbies, job, vibes..."}
-                      className="w-full h-32 md:h-40 bg-black/40 border border-white/10 rounded-2xl p-4 text-sm md:text-base focus:ring-2 focus:ring-rose-500/50 focus:outline-none resize-none transition-all placeholder:text-white/20"
+                      className={`${IS_WEB_PLATFORM ? 'web-app-textarea' : ''} w-full h-32 md:h-40 bg-black/40 border border-white/10 rounded-2xl p-4 text-sm md:text-base focus:ring-2 focus:ring-rose-500/50 focus:outline-none resize-none transition-all placeholder:text-white/20`}
                       style={{ fontSize: '16px' }}
                     />
                   </div>
@@ -2472,7 +2473,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                     <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-3">
                       Response Length
                     </label>
-                    <div className="flex p-0.5 bg-white/5 rounded-xl border border-white/10 select-none w-fit">
+                    <div className={`${IS_WEB_PLATFORM ? 'web-app-segmented' : ''} flex p-0.5 bg-white/5 rounded-xl border border-white/10 select-none w-fit`}>
                       <button
                         onClick={() => setResponseLength('short')}
                         className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all min-w-[80px] ${responseLength === 'short' ? 'bg-rose-500 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
@@ -2499,14 +2500,14 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                       <div className="grid grid-cols-2 gap-3 mb-3">
                         <button
                           onClick={handleCameraCapture}
-                          className="flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all active:scale-[0.98]"
+                          className={`${IS_WEB_PLATFORM ? 'web-app-media-button' : ''} flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all active:scale-[0.98]`}
                         >
                           <span className="text-xl">📸</span>
                           <span className="text-sm font-bold text-white/80">Camera</span>
                         </button>
                         <button
                           onClick={handleGalleryCapture}
-                          className="flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all active:scale-[0.98]"
+                          className={`${IS_WEB_PLATFORM ? 'web-app-media-button' : ''} flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all active:scale-[0.98]`}
                         >
                           <span className="text-xl">🖼️</span>
                           <span className="text-sm font-bold text-white/80">Gallery</span>
@@ -2536,7 +2537,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                     <button
                       onClick={() => handleGenerate(textareaRef.current?.value || '')}
                       disabled={loading}
-                      className={`w-full py-3.5 md:py-4 rounded-2xl font-bold text-base md:text-lg shadow-xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed ${profile?.is_premium
+                      className={`${IS_WEB_PLATFORM ? 'web-app-generate-button' : ''} w-full py-3.5 md:py-4 rounded-2xl font-bold text-base md:text-lg shadow-xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-30 disabled:cursor-not-allowed ${profile?.is_premium
                         ? "bg-gradient-to-r from-yellow-500 to-amber-600 text-black"
                         : "rizz-gradient text-white"
                         }`}
@@ -2558,16 +2559,16 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                   {!profile?.is_premium && (
                     <p
                       onClick={() => showToast("Credits reset to 5 daily. Extra ad credits do not stack.", "info")}
-                      className="text-center text-[10px] md:text-xs text-white/30 mt-3 md:mt-4 cursor-pointer hover:text-white transition-colors"
+                      className={`${IS_WEB_PLATFORM ? 'web-app-credit-note' : ''} text-center text-[10px] md:text-xs text-white/30 mt-3 md:mt-4 cursor-pointer hover:text-white transition-colors`}
                     >
                       {profile?.credits} daily credits remaining. <span className="text-yellow-500/80 cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); handleOpenPremium(); }}>Upgrade.</span>
                     </p>
                   )}
                 </section>
 
-                <section className="flex flex-col gap-4 md:gap-6 min-h-[300px]">
+                <section className={`${IS_WEB_PLATFORM ? 'web-app-results-panel' : ''} flex flex-col gap-4 md:gap-6 min-h-[300px]`}>
                   {!result && !loading && (
-                    <div className="h-full flex flex-col items-center justify-center text-white/20 py-6 px-4 text-center border-2 border-dashed border-white/5 rounded-3xl bg-white/[0.02] select-none">
+                    <div className={`${IS_WEB_PLATFORM ? 'web-app-empty-state' : ''} h-full flex flex-col items-center justify-center text-white/20 py-6 px-4 text-center border-2 border-dashed border-white/5 rounded-3xl bg-white/[0.02] select-none`}>
                       <span className="text-5xl md:text-6xl mb-4 grayscale opacity-50">✨</span>
                       <p className="text-sm md:text-xl font-medium max-w-[200px] md:max-w-none mx-auto">Results will appear here.</p>
                     </div>
@@ -2575,7 +2576,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
                   {result && 'tease' in result && (
                     <>
-                      <div className="glass rounded-3xl p-5 md:p-6 border border-white/10 animate-fade-in-up">
+                      <div className={`${IS_WEB_PLATFORM ? 'web-app-result-card' : ''} glass rounded-3xl p-5 md:p-6 border border-white/10 animate-fade-in-up`}>
                         <div className="flex justify-between items-center mb-3">
                           <h3 className="text-xs font-bold uppercase tracking-widest text-white/40">Analysis</h3>
                           <span className="text-2xl md:text-3xl font-black text-white">{result.loveScore}%</span>
@@ -2598,7 +2599,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                   )}
 
                   {result && 'bio' in result && (
-                    <div className="glass rounded-3xl p-6 md:p-8 border border-white/10 animate-fade-in-up pb-6">
+                    <div className={`${IS_WEB_PLATFORM ? 'web-app-result-card' : ''} glass rounded-3xl p-6 md:p-8 border border-white/10 animate-fade-in-up pb-6`}>
                       <div className="flex items-center gap-2 mb-4 md:mb-6">
                         <span className="text-2xl">📝</span>
                         <h3 className="text-xs md:text-sm font-semibold uppercase tracking-widest text-white/60">Bio Result</h3>
@@ -2615,7 +2616,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                 </section>
               </div>
 
-              <Footer className="mt-2 md:mt-4" onNavigate={handleViewNavigation} onWebNavigate={IS_WEB_PLATFORM ? onNavigateToPath : undefined} />
+              <Footer className={IS_WEB_PLATFORM ? 'web-app-footer mt-2 md:mt-4' : 'mt-2 md:mt-4'} onNavigate={handleViewNavigation} onWebNavigate={IS_WEB_PLATFORM ? onNavigateToPath : undefined} />
             </div>
           )}
       </div>
