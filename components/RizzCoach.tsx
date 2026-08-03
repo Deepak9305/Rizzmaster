@@ -7,7 +7,7 @@ import { Capacitor } from '@capacitor/core';
 import { useToast } from '../context/ToastContext';
 import { supabase } from '../services/supabaseClient';
 
-// Inject keyframe styles once at module load — avoids re-comparing the CSS string on every keystroke
+// Inject keyframe styles once at module load â€” avoids re-comparing the CSS string on every keystroke
 if (typeof document !== 'undefined') {
     const STYLE_ID = 'rizz-coach-keyframes';
     if (!document.getElementById(STYLE_ID)) {
@@ -35,6 +35,8 @@ interface RizzCoachProps {
     onUpdateCredits: (newAmountOrUpdater: number | ((prev: number) => number)) => void;
     isPremium: boolean;
     onGoPremium?: () => void;
+    onCreditsExhausted?: () => void;
+    onOpenWebMenu?: () => void;
     onLoginRequired?: () => void;
     shadowNotes: string;
     onUpdateShadowNotes: (notes: string) => void;
@@ -128,7 +130,7 @@ const COACH_VIBES = [
     {
         label: "Elite Wingman", isPro: false,
         icon: <WingmanIcon />,
-        welcome: "Yo! Senior Wingman here. I'm not just hype — I'm tactical. Show me the chat, let's secure this win.",
+        welcome: "Yo! Senior Wingman here. I'm not just hype â€” I'm tactical. Show me the chat, let's secure this win.",
         colors: { primary: '#FF0080', secondary: '#7928CA', background: 'rgba(255,0,128,0.13)', glow: 'rgba(255,0,128,0.3)' }
     },
     {
@@ -280,7 +282,7 @@ const AuroraBackground = React.memo(({ colors }: { colors: any }) => (
     </div>
 ));
 
-const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits, onUpdateCredits, isPremium, onGoPremium, onLoginRequired, shadowNotes, onUpdateShadowNotes, customPersonas = [], onAddPersona, onEditPersona }) => {
+const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits, onUpdateCredits, isPremium, onGoPremium, onCreditsExhausted, onOpenWebMenu, onLoginRequired, shadowNotes, onUpdateShadowNotes, customPersonas = [], onAddPersona, onEditPersona }) => {
     const { showToast } = useToast();
 
     // Dynamically scoped keys to prevent cross-account pollution on shared devices
@@ -361,7 +363,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
         const ta = e.target;
         ta.style.height = 'auto';
         ta.style.height = Math.min(ta.scrollHeight, 128) + 'px';
-        // Only flip React state when empty↔non-empty — prevents re-render on every typed character
+        // Only flip React state when emptyâ†”non-empty â€” prevents re-render on every typed character
         const nowHasContent = ta.value.trim().length > 0;
         setHasContent(prev => prev === nowHasContent ? prev : nowHasContent);
     }, []);
@@ -373,224 +375,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
         const cost = image ? 2 : 1;
         if (!isPremium && credits < cost) {
             onClose();
-            setTimeout(() => onGoPremium && onGoPremium(), 300);
-            return;
-        }
-
-        const userMsg: CoachMessage = {
-            role: 'user',
-            content: trimmed || "Analyze this.",
-            image: image,
-            timestamp: new Date().toISOString()
-        };
-
-        // Capture image status BEFORE clearing state (used for credit cost below)
-        const hadImage = !!image;
-
-        const next = [...messages, userMsg];
-        setMessages(next);
-        if (textareaRef.current) textareaRef.current.value = '';
-        setHasContent(false);
-        setImage(null);
-        if (textareaRef.current) textareaRef.current.style.height = 'auto';
-        setLoading(true);
-
-        try {
-            const customInstruction = selectedVibe?.startsWith('custom:') ? customPersonas?.find(p => p.id === selectedVibe.split(':')[1])?.instruction : undefined;
-            const response = await generateCoachAdvice(next, shadowNotes, selectedVibe || undefined, customInstruction);
-            // Persist updated intel dossier if the AI tacked one on
-            if (response.updatedNotes && response.updatedNotes !== shadowNotes) {
-                onUpdateShadowNotes(response.updatedNotes);
-            }
-            setMessages(prev => [...prev, {
-                role: 'assistant', content: response.reply, timestamp: new Date().toISOString()
-            }]);
-
-            // Image costs 2 credits, text costs 1
-            const cost = hadImage ? 2 : 1;
-            if (!isPremium) onUpdateCredits((prev) => prev - cost);
-        } catch (err: any) {
-            console.error('Coach error:', err);
-            if (err.message === 'LOGIN_REQUIRED') {
-                if (onLoginRequired) onLoginRequired();
-                return;
-            }
-            if (err.message === 'INSUFFICIENT_CREDITS') {
-                onClose();
-                setTimeout(() => onGoPremium && onGoPremium(), 300);
-                return;
-            }
-            if (
-                err.message === 'PROFILE_NOT_FOUND' ||
-                err.message === 'PROFILE_BOOTSTRAP_FAILED' ||
-                err.message === 'SUPABASE_BACKEND_UNAVAILABLE' ||
-                err.message === 'CREDIT_DEDUCTION_FAILED'
-            ) {
-                showToast('Account sync is temporarily unavailable. Try again in a moment.', 'error');
-                return;
-            }
-            setMessages(prev => [...prev, {
-                role: 'assistant', content: "Got a connection issue. Try again in a second. 🔁",
-                timestamp: new Date().toISOString()
-            }]);
-        } finally {
-            setLoading(false);
-        }
-    }, [image, loading, isPremium, credits, messages, shadowNotes, onUpdateCredits, onUpdateShadowNotes, showToast, selectedVibe, customPersonas, onClose, onGoPremium, onLoginRequired]);
-
-    const handleImageUpload = useCallback(async () => {
-        if (!canUseNativeCamera()) {
-            fileInputRef.current?.click();
-            return;
-        }
-
-        try {
-            const photo = await Camera.getPhoto({
-                quality: 80,
-                allowEditing: false,
-                resultType: CameraResultType.DataUrl,
-                source: CameraSource.Prompt
-            });
-
-            if (photo.dataUrl) {
-                setImage(photo.dataUrl);
-            }
-        } catch (e: any) {
-            if (e.message !== 'User cancelled photos app') {
-                console.error('Camera Error:', e);
-            }
-        }
-    }, []);
-
-    const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            if (file.size > 5 * 1024 * 1024) return; // 5MB limit
-            const reader = new FileReader();
-            reader.onloadend = () => setImage(reader.result as string);
-            reader.readAsDataURL(file);
-        }
-    }, []);
-
-    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
-    }, [handleSend]);
-
-    const handleClearChat = useCallback(() => {
-        try { localStorage.removeItem(COACH_STORAGE_KEY); } catch { }
-        try { localStorage.removeItem(SHADOW_NOTES_KEY); } catch { }
-
-        const defaultVibe = COACH_VIBES.find(v => v.label === "Elite Wingman");
-        setMessages([{
-            role: 'assistant',
-            content: defaultVibe?.welcome || INITIAL_MESSAGE.content,
-            timestamp: new Date().toISOString()
-        }]);
-        onUpdateShadowNotes('');
-        setHasContent(false);
-        setSelectedVibe("Elite Wingman");
-        if (textareaRef.current) { textareaRef.current.value = ''; textareaRef.current.style.height = 'auto'; }
-    }, [onUpdateShadowNotes, COACH_STORAGE_KEY, SHADOW_NOTES_KEY]);
-
-    const handleVibeClick = useCallback((vibe: { label: string, isPro: boolean }) => {
-        if (vibe.isPro && !isPremium) {
-            showToast(`'${vibe.label}' is a Pro vibe!`, 'error');
-            onClose(); // Close coach
-            setTimeout(() => onGoPremium && onGoPremium(), 300); // Trigger premium modal after transition
-            return;
-        }
-        setSelectedVibe(vibe.label);
-    }, [isPremium, onClose, onGoPremium, showToast]);
-
-    const canSend = useMemo(() => (hasContent || image !== null) && !loading, [hasContent, image, loading]);
-
-    const currentTheme = useMemo(() => {
-        let defaultTheme = COACH_VIBES.find(v => v.label === selectedVibe);
-        if (defaultTheme) return defaultTheme;
-
-        // If it's a custom persona like 'custom:123'
-        if (selectedVibe?.startsWith('custom:')) {
-            const personaName = customPersonas.find(p => p.id === selectedVibe.split(':')[1])?.name || 'Custom Persona';
-            return {
-                label: personaName,
-                isPro: false,
-                icon: <DefaultIcon />, // Reusing default icon for custom personas
-                welcome: "I'm ready. Let's do this.",
-                colors: { primary: '#FF0080', secondary: '#7928CA', background: 'rgba(255,0,128,0.13)', glow: 'rgba(255,0,128,0.3)' }
-            };
-        }
-
-        return COACH_VIBES[0];
-    }, [selectedVibe, customPersonas]);
-
-    if (!isOpen) return null;
-
-    return (
-        <>
-            <div style={{
-                position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column',
-                background: '#050505', zIndex: 100,
-                willChange: 'transform',
-            }}>
-                <AuroraBackground colors={currentTheme.colors} />
-
-                {/* Header */}
-                <div style={{
-                    flexShrink: 0, position: 'relative', zIndex: 10,
-                    paddingTop: !isPremium ? 'calc(env(safe-area-inset-top) + 44px)' : 'calc(env(safe-area-inset-top) + 0.75rem)',
-                    background: 'rgba(5,5,5,0.75)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-                    animation: 'coachStaggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both',
-                    willChange: 'transform, opacity',
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', maxWidth: '672px', margin: '0 auto' }}>
-                        {/* Back */}
-                        <button onClick={onClose} aria-label="Go back"
-                            style={{
-                                width: '36px', height: '36px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)',
-                                background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                cursor: 'pointer', flexShrink: 0, transition: 'transform 0.15s',
-                            }}
-                            onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.05)')}
-                            onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="rgba(255,255,255,0.7)" strokeWidth={2.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                            </svg>
-                        </button>
-
-                        {/* Pulsing avatar */}
-                        <div style={{ position: 'relative', flexShrink: 0 }}>
-                            <div style={{
-                                position: 'absolute', inset: '-4px', borderRadius: '50%',
-                                background: `linear-gradient(135deg, ${currentTheme.colors.primary}, ${currentTheme.colors.secondary})`,
-                                animation: 'coachPulseRing 2s ease-out infinite',
-                            }} />
-                            <div style={{
-                                position: 'relative', width: '44px', height: '44px', borderRadius: '50%',
-                                background: `linear-gradient(135deg, ${currentTheme.colors.primary} 0%, ${currentTheme.colors.secondary} 100%)`,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                boxShadow: `0 4px 20px ${currentTheme.colors.glow}`,
-                            }}>
-                                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', transform: 'scale(1.5)' }}>
-                                    {COACH_VIBES.find(v => v.label === selectedVibe)?.icon || <DefaultIcon />}
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Identity & Dropdown */}
-                        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                            <div style={{ fontSize: '15px', fontWeight: 900, color: 'white', letterSpacing: '-0.02em', lineHeight: 1 }}>Rizz AI</div>
-                            <button
-                                onClick={() => setShowVibeDropdown(!showVibeDropdown)}
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px',
-                                    padding: '3px 9px', borderRadius: '10px',
-                                    background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
-                                    cursor: 'pointer', transition: 'background 0.2s', width: 'fit-content',
-                                    maxWidth: '130px' // Prevent overlap on smaller screens
-                                }}
-                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.12)'}
-                                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+            setTimeout(() => onCreditsExhausted ? onCreditsExhausted() : onGoPremium && onGoPremium(), 300…3040 tokens truncated…,0.08)'}
                             >
                                 <span style={{
                                     fontSize: '10.5px', color: 'rgba(255,255,255,0.9)', fontWeight: 700,
@@ -629,7 +414,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                                 <span style={{ color: '#facc15' }}>VIP</span>
                             </div>
                         )}
-                        {/* Clear chat — shown when history exists */}
+                        {/* Clear chat â€” shown when history exists */}
                         {messages.length > 1 && (
                             <button
                                 onClick={handleClearChat}
@@ -700,10 +485,10 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                                 }}
                             >
                                 <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', borderRadius: '6px', background: 'rgba(255,255,255,0.08)' }}>👤</span>
+                                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', borderRadius: '6px', background: 'rgba(255,255,255,0.08)' }}>ðŸ‘¤</span>
                                     {persona.name}
                                 </span>
-                                <span onClick={(e) => { e.stopPropagation(); onEditPersona(persona); setShowVibeDropdown(false); }} style={{ opacity: 0.5, padding: '4px' }}>✏️</span>
+                                <span onClick={(e) => { e.stopPropagation(); onEditPersona(persona); setShowVibeDropdown(false); }} style={{ opacity: 0.5, padding: '4px' }}>âœï¸</span>
                             </button>
                         ))}
                         <button
@@ -717,7 +502,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                         >
                             <span>+ Persona</span>
                             {(!isPremium && customPersonas.length === 0) && <span style={{ fontSize: '10px', color: '#facc15' }}>(Free)</span>}
-                            {(!isPremium && customPersonas.length >= 1) && <span style={{ fontSize: '10px' }}>🔒</span>}
+                            {(!isPremium && customPersonas.length >= 1) && <span style={{ fontSize: '10px' }}>ðŸ”’</span>}
                         </button>
                     </div>
                 )}
@@ -764,9 +549,9 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                             animation: 'coachEntrance 0.5s ease-out'
                         }}>
                             {[
-                                { text: "She left me on read 📵", icon: "📵" },
-                                { text: "She's going cold 🥶", icon: "🥶" },
-                                { text: "Help me ask her out 🍷", icon: "🍷" }
+                                { text: "She left me on read ðŸ“µ", icon: "ðŸ“µ" },
+                                { text: "She's going cold ðŸ¥¶", icon: "ðŸ¥¶" },
+                                { text: "Help me ask her out ðŸ·", icon: "ðŸ·" }
                             ].map((prompt, i) => (
                                 <button
                                     key={i}
@@ -805,7 +590,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                                         borderRadius: '50%', color: 'white', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         cursor: 'pointer'
                                     }}
-                                >✕</button>
+                                >âœ•</button>
                             </div>
                         </div>
                     )}
