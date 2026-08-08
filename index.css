@@ -13,6 +13,24 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+.web-premium-scroll {
+  scrollbar-color: rgba(251, 191, 36, 0.35) transparent;
+  scrollbar-width: thin;
+}
+
+.web-premium-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.web-premium-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.web-premium-scroll::-webkit-scrollbar-thumb {
+  background: rgba(251, 191, 36, 0.28);
+  border-radius: 999px;
+}
+
 /* Safe Area Utilities */
 .safe-top {
   padding-top: calc(env(safe-area-inset-top) + 1.5rem);
