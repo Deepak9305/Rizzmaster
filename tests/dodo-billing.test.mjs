@@ -16,6 +16,7 @@ const {
   isDodoConfigured,
   isDodoPortalConfigured,
   isDodoWebhookConfigured,
+  isSafeDodoRedirectUrl,
   normalizeDodoSubscriptionStatus,
 } = await import('../server/api/_dodo.js');
 
@@ -58,4 +59,12 @@ test('active subscriptions require a valid access expiry', () => {
 test('checkout return URLs distinguish cancellation without changing entitlement', () => {
   assert.equal(getDodoReturnUrl(), 'https://rizzmaster.online/billing/return');
   assert.equal(getDodoReturnUrl('cancelled'), 'https://rizzmaster.online/billing/return?checkout=cancelled');
+});
+
+test('billing redirects accept only credential-free HTTPS URLs', () => {
+  assert.equal(isSafeDodoRedirectUrl('https://checkout.dodopayments.com/session/test'), true);
+  assert.equal(isSafeDodoRedirectUrl('http://checkout.dodopayments.com/session/test'), false);
+  assert.equal(isSafeDodoRedirectUrl('javascript:alert(1)'), false);
+  assert.equal(isSafeDodoRedirectUrl('https://user:secret@example.com/path'), false);
+  assert.equal(isSafeDodoRedirectUrl(undefined), false);
 });

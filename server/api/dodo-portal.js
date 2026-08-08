@@ -5,6 +5,7 @@ import {
   getDodoClient,
   getDodoReturnUrl,
   isDodoPortalConfigured,
+  isSafeDodoRedirectUrl,
   json,
   safeDodoError,
 } from './_dodo.js';
@@ -30,6 +31,9 @@ export default async function handler(req, res) {
       subscription.dodo_customer_id,
       { return_url: returnUrl, send_email: false }
     );
+    if (!isSafeDodoRedirectUrl(session?.link)) {
+      throw new Error('Dodo did not return a secure portal link.');
+    }
     return json(res, 200, { portalUrl: session.link });
   } catch (error) {
     const safe = safeDodoError(error);

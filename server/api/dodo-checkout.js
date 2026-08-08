@@ -9,6 +9,7 @@ import {
   getDodoPlan,
   getDodoReturnUrl,
   isDodoConfigured,
+  isSafeDodoRedirectUrl,
   json,
   recomputePremium,
   safeDodoError,
@@ -139,7 +140,7 @@ export default async function handler(req, res) {
       },
     });
 
-    if (!session?.session_id || !session?.checkout_url) {
+    if (!session?.session_id || !isSafeDodoRedirectUrl(session.checkout_url)) {
       throw new Error('Dodo did not return a complete checkout session.');
     }
 
