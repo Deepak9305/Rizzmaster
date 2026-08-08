@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { createApiServer } from './api/_http-server.js';
+import { createApiServer } from './server/api/_http-server.js';
 
 const loadEnvFile = (fileName) => {
   const filePath = resolve(process.cwd(), fileName);

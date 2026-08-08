@@ -44,9 +44,9 @@ const parseRequestBody = (rawBody) => {
   }
 };
 
-export const createApiServer = () => http.createServer(async (req, res) => {
+export const handleApiRequest = async (req, res, { routePath } = {}) => {
   const url = new URL(req.url || '/', 'http://localhost');
-  const loadRoute = routes[url.pathname];
+  const loadRoute = routes[routePath || url.pathname];
 
   if (!loadRoute) {
     res.statusCode = 404;
@@ -68,6 +68,7 @@ export const createApiServer = () => http.createServer(async (req, res) => {
 
     req.body = parsedBody.body;
     req.query = Object.fromEntries(url.searchParams.entries());
+    delete req.query.__route;
 
     const route = await loadRoute();
     await route.default(req, createResponseAdapter(res));
@@ -79,4 +80,8 @@ export const createApiServer = () => http.createServer(async (req, res) => {
     }
     res.end(JSON.stringify({ error: 'Local API request failed.' }));
   }
-});
+};
+
+export const createApiServer = () => http.createServer((req, res) =>
+  handleApiRequest(req, res)
+);

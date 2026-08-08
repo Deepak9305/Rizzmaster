@@ -1,4 +1,4 @@
-import { createApiServer } from './api/_http-server.js';
+import { createApiServer } from './server/api/_http-server.js';
 
 const port = Number(process.env.PORT || 8080);
 createApiServer().listen(port, () => {
