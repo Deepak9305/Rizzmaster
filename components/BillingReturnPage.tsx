@@ -6,7 +6,7 @@ interface BillingReturnPageProps {
   onContinue: () => void;
 }
 
-type ConfirmationState = 'checking' | 'active' | 'pending' | 'login';
+type ConfirmationState = 'checking' | 'active' | 'pending' | 'cancelled' | 'login';
 
 const BillingReturnPage: React.FC<BillingReturnPageProps> = ({ onContinue }) => {
   const [state, setState] = useState<ConfirmationState>('checking');
@@ -16,6 +16,14 @@ const BillingReturnPage: React.FC<BillingReturnPageProps> = ({ onContinue }) => 
     const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
     const confirm = async () => {
+      const query = new URLSearchParams(window.location.search);
+      const checkoutState = query.get('checkout')?.toLowerCase();
+      const providerStatus = query.get('status')?.toLowerCase();
+      if (checkoutState === 'cancelled' || providerStatus === 'cancelled' || providerStatus === 'failed') {
+        if (!cancelled) setState('cancelled');
+        return;
+      }
+
       if (!supabase) {
         setState('login');
         return;
@@ -48,6 +56,7 @@ const BillingReturnPage: React.FC<BillingReturnPageProps> = ({ onContinue }) => 
     checking: ['Confirming your subscription', 'We are waiting for secure confirmation from Dodo Payments.'],
     active: ['Premium is active', 'Your subscription is verified and premium is ready on this account.'],
     pending: ['Payment confirmation is pending', 'This can take a moment. Return to the app and use Sync Profile shortly.'],
+    cancelled: ['Checkout was not completed', 'No premium access was granted. You can return and try again whenever you are ready.'],
     login: ['Sign in to confirm premium', 'Use the same Rizz Master account that started checkout.'],
   }[state];
 

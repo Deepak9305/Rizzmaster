@@ -1,9 +1,9 @@
 import { applyCors } from './_cors.js';
 import {
   authenticateBillingRequest,
-  dodoConfig,
   getManageableDodoSubscription,
   getDodoClient,
+  getDodoReturnUrl,
   isDodoPortalConfigured,
   json,
   safeDodoError,
@@ -22,9 +22,13 @@ export default async function handler(req, res) {
     if (!subscription?.dodo_customer_id) {
       return json(res, 404, { error: 'No active web subscription was found.', code: 'DODO_SUBSCRIPTION_NOT_FOUND' });
     }
+    const returnUrl = getDodoReturnUrl();
+    if (!returnUrl) {
+      return json(res, 503, { error: 'Web billing return URL is unavailable.', code: 'DODO_CONFIG_MISSING' });
+    }
     const session = await getDodoClient().customers.customerPortal.create(
       subscription.dodo_customer_id,
-      { return_url: dodoConfig.returnUrl, send_email: false }
+      { return_url: returnUrl, send_email: false }
     );
     return json(res, 200, { portalUrl: session.link });
   } catch (error) {

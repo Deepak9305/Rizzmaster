@@ -4,10 +4,10 @@ import { ensureUserProfile } from './_profiles.js';
 import { supabaseAdmin } from './_supabase.js';
 import {
   authenticateBillingRequest,
-  dodoConfig,
   getManageableDodoSubscription,
   getDodoClient,
   getDodoPlan,
+  getDodoReturnUrl,
   isDodoConfigured,
   json,
   recomputePremium,
@@ -113,6 +113,11 @@ export default async function handler(req, res) {
     checkoutRecordId = checkoutRecord.id;
 
     const client = getDodoClient();
+    const returnUrl = getDodoReturnUrl();
+    const cancelUrl = getDodoReturnUrl('cancelled');
+    if (!returnUrl || !cancelUrl) {
+      throw new Error('Dodo return URL is invalid.');
+    }
     const session = await client.checkoutSessions.create({
       product_cart: [{ product_id: plan.id, quantity: 1 }],
       billing_currency: 'USD',
@@ -125,8 +130,8 @@ export default async function handler(req, res) {
         billing_reference: billingReference,
         plan: plan.key,
       },
-      return_url: dodoConfig.returnUrl,
-      cancel_url: dodoConfig.returnUrl,
+      return_url: returnUrl,
+      cancel_url: cancelUrl,
       customization: { theme: 'dark' },
       feature_flags: {
         allow_customer_editing_email: false,

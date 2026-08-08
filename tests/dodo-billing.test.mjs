@@ -7,10 +7,12 @@ process.env.DODO_PAYMENTS_ENVIRONMENT = 'test_mode';
 process.env.DODO_PAYMENTS_WEEKLY_PRODUCT_ID = 'pdt_weekly';
 process.env.DODO_PAYMENTS_MONTHLY_PRODUCT_ID = 'pdt_monthly';
 process.env.DODO_PAYMENTS_ENABLED = 'false';
+process.env.DODO_PAYMENTS_RETURN_URL = 'https://rizzmaster.online/billing/return';
 
 const {
   hasActiveDodoAccess,
   hasValidDodoAccessExpiry,
+  getDodoReturnUrl,
   isDodoConfigured,
   isDodoPortalConfigured,
   isDodoWebhookConfigured,
@@ -51,4 +53,9 @@ test('active subscriptions require a valid access expiry', () => {
   assert.equal(hasValidDodoAccessExpiry('active', 'not-a-date'), false);
   assert.equal(hasValidDodoAccessExpiry('on_hold', null), true);
   assert.equal(hasValidDodoAccessExpiry('paused', null), true);
+});
+
+test('checkout return URLs distinguish cancellation without changing entitlement', () => {
+  assert.equal(getDodoReturnUrl(), 'https://rizzmaster.online/billing/return');
+  assert.equal(getDodoReturnUrl('cancelled'), 'https://rizzmaster.online/billing/return?checkout=cancelled');
 });

@@ -7,6 +7,13 @@ const readEnv = (key) => {
 };
 
 const isEnabledValue = (value) => /^(1|true|yes|on)$/i.test(value || '');
+const isHttpsUrl = (value) => {
+  try {
+    return new URL(value).protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
 const environmentValue = readEnv('DODO_PAYMENTS_ENVIRONMENT');
 const hasValidEnvironment = environmentValue === 'test_mode' || environmentValue === 'live_mode';
 
@@ -47,10 +54,19 @@ export const isDodoWebhookConfigured = () => Boolean(
 // This flag controls new sales only. Existing subscribers must always retain
 // webhook updates and portal access when the provider credentials are valid.
 export const isDodoConfigured = () => Boolean(
-  dodoConfig.enabled && isDodoWebhookConfigured()
+  dodoConfig.enabled && isDodoWebhookConfigured() && isHttpsUrl(dodoConfig.returnUrl)
 );
 
-export const isDodoPortalConfigured = isDodoApiConfigured;
+export const isDodoPortalConfigured = () => Boolean(
+  isDodoApiConfigured() && isHttpsUrl(dodoConfig.returnUrl)
+);
+
+export const getDodoReturnUrl = (checkoutState = null) => {
+  if (!isHttpsUrl(dodoConfig.returnUrl)) return null;
+  const url = new URL(dodoConfig.returnUrl);
+  if (checkoutState) url.searchParams.set('checkout', checkoutState);
+  return url.toString();
+};
 
 export const getDodoClient = () => {
   if (!isDodoApiConfigured()) return null;
