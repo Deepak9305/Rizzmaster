@@ -10,9 +10,11 @@ process.env.DODO_PAYMENTS_ENABLED = 'false';
 
 const {
   hasActiveDodoAccess,
+  hasValidDodoAccessExpiry,
   isDodoConfigured,
   isDodoPortalConfigured,
   isDodoWebhookConfigured,
+  normalizeDodoSubscriptionStatus,
 } = await import('../server/api/_dodo.js');
 
 test('sales can be disabled without disabling webhooks or the portal', () => {
@@ -23,7 +25,7 @@ test('sales can be disabled without disabling webhooks or the portal', () => {
 
 test('active access observes expiry while provider management remains separate', () => {
   const now = Date.parse('2026-08-08T12:00:00Z');
-  assert.equal(hasActiveDodoAccess({ status: 'active', access_expires_at: null }, now), true);
+  assert.equal(hasActiveDodoAccess({ status: 'active', access_expires_at: null }, now), false);
   assert.equal(hasActiveDodoAccess({ status: 'active', access_expires_at: '2026-08-08T13:00:00Z' }, now), true);
   assert.equal(hasActiveDodoAccess({ status: 'active', access_expires_at: '2026-08-08T11:00:00Z' }, now), false);
   assert.equal(hasActiveDodoAccess({ status: 'cancelled', access_expires_at: null }, now), false);
@@ -34,4 +36,19 @@ test('on-hold access ends at the 48-hour grace boundary', () => {
   assert.equal(hasActiveDodoAccess({ status: 'on_hold', on_hold_grace_expires_at: '2026-08-08T13:00:00Z' }, now), true);
   assert.equal(hasActiveDodoAccess({ status: 'on_hold', on_hold_grace_expires_at: '2026-08-08T12:00:00Z' }, now), false);
   assert.equal(hasActiveDodoAccess({ status: 'on_hold', on_hold_grace_expires_at: null }, now), false);
+});
+
+test('webhook states fail closed and support paused subscriptions', () => {
+  assert.equal(normalizeDodoSubscriptionStatus('subscription.active', 'unknown'), 'active');
+  assert.equal(normalizeDodoSubscriptionStatus('subscription.updated', 'paused'), 'paused');
+  assert.equal(normalizeDodoSubscriptionStatus('subscription.paused', 'active'), 'paused');
+  assert.equal(normalizeDodoSubscriptionStatus('subscription.updated', 'unknown'), null);
+});
+
+test('active subscriptions require a valid access expiry', () => {
+  assert.equal(hasValidDodoAccessExpiry('active', '2026-08-15T12:00:00Z'), true);
+  assert.equal(hasValidDodoAccessExpiry('active', null), false);
+  assert.equal(hasValidDodoAccessExpiry('active', 'not-a-date'), false);
+  assert.equal(hasValidDodoAccessExpiry('on_hold', null), true);
+  assert.equal(hasValidDodoAccessExpiry('paused', null), true);
 });

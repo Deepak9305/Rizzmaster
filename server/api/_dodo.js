@@ -99,7 +99,7 @@ export const getManageableDodoSubscription = async (userId) => {
     .from('dodo_subscriptions')
     .select('dodo_customer_id,dodo_subscription_id,product_id,plan,status,cancel_at_next_billing_date,next_billing_date,access_expires_at,on_hold_grace_expires_at')
     .eq('user_id', userId)
-    .in('status', ['active', 'on_hold'])
+    .in('status', ['active', 'on_hold', 'paused'])
     .order('updated_at', { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -115,7 +115,39 @@ export const hasActiveDodoAccess = (subscription, now = Date.now()) => {
   }
   if (subscription.status !== 'active') return false;
   const expiry = new Date(subscription.access_expires_at || '').getTime();
-  return !subscription.access_expires_at || (Number.isFinite(expiry) && expiry > now);
+  return Number.isFinite(expiry) && expiry > now;
+};
+
+const EVENT_STATUS_OVERRIDES = {
+  'subscription.active': 'active',
+  'subscription.renewed': 'active',
+  'subscription.on_hold': 'on_hold',
+  'subscription.paused': 'paused',
+  'subscription.cancelled': 'cancelled',
+  'subscription.failed': 'failed',
+  'subscription.expired': 'expired',
+};
+
+const DODO_SUBSCRIPTION_STATUSES = new Set([
+  'pending',
+  'active',
+  'on_hold',
+  'paused',
+  'cancelled',
+  'failed',
+  'expired',
+]);
+
+export const normalizeDodoSubscriptionStatus = (eventType, providerStatus) => {
+  const eventStatus = EVENT_STATUS_OVERRIDES[eventType];
+  if (eventStatus) return eventStatus;
+  return DODO_SUBSCRIPTION_STATUSES.has(providerStatus) ? providerStatus : null;
+};
+
+export const hasValidDodoAccessExpiry = (status, nextBillingDate) => {
+  if (status !== 'active') return true;
+  if (typeof nextBillingDate !== 'string' || !nextBillingDate.trim()) return false;
+  return Number.isFinite(Date.parse(nextBillingDate));
 };
 
 export const getActiveDodoSubscription = async (userId) => {

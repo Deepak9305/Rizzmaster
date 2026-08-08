@@ -1,4 +1,13 @@
-import { dodoConfig, getDodoClient, getPlanForProductId, isDodoWebhookConfigured, json, safeDodoError } from './_dodo.js';
+import {
+  dodoConfig,
+  getDodoClient,
+  getPlanForProductId,
+  hasValidDodoAccessExpiry,
+  isDodoWebhookConfigured,
+  json,
+  normalizeDodoSubscriptionStatus,
+  safeDodoError,
+} from './_dodo.js';
 import { supabaseAdmin } from './_supabase.js';
 
 export const config = { api: { bodyParser: false } };
@@ -8,7 +17,9 @@ const SUBSCRIPTION_EVENTS = new Set([
   'subscription.renewed',
   'subscription.updated',
   'subscription.plan_changed',
+  'subscription.update_payment_method',
   'subscription.on_hold',
+  'subscription.paused',
   'subscription.cancelled',
   'subscription.failed',
   'subscription.expired',
@@ -36,17 +47,6 @@ const uuidValue = (value) => {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(candidate)
     ? candidate
     : null;
-};
-
-const statusForEvent = (eventType, providerStatus) => {
-  if (eventType === 'subscription.on_hold') return 'on_hold';
-  if (eventType === 'subscription.cancelled') return 'cancelled';
-  if (eventType === 'subscription.failed') return 'failed';
-  if (eventType === 'subscription.expired') return 'expired';
-  if (providerStatus === 'on_hold') return 'on_hold';
-  return ['pending', 'active', 'cancelled', 'failed', 'expired'].includes(providerStatus)
-    ? providerStatus
-    : 'active';
 };
 
 const recordIgnoredEvent = async (webhookId, eventType, eventTimestamp, subscriptionId, code, message) => {
@@ -138,6 +138,12 @@ export default async function handler(req, res) {
         await recordIgnoredEvent(webhookId, eventType, eventTimestamp, subscriptionId, null, null);
         return json(res, 200, { received: true, ignored: true });
       }
+      const normalizedStatus = normalizeDodoSubscriptionStatus(eventType, stringValue(subscription.status));
+      const nextBillingDate = stringValue(subscription.next_billing_date) || null;
+      if (!normalizedStatus || !hasValidDodoAccessExpiry(normalizedStatus, nextBillingDate)) {
+        await recordIgnoredEvent(webhookId, eventType, eventTimestamp, subscriptionId, 'DODO_SUBSCRIPTION_STATE_INVALID', 'Verified subscription state or access expiry was invalid.');
+        return json(res, 200, { received: true, applied: false });
+      }
 
       const { data: applied, error: applyError } = await supabaseAdmin.rpc('admin_apply_dodo_subscription_event', {
         p_webhook_id: webhookId,
@@ -148,9 +154,9 @@ export default async function handler(req, res) {
         p_customer_id: customerId,
         p_product_id: subscription.product_id,
         p_plan: plan,
-        p_status: statusForEvent(eventType, stringValue(subscription.status)),
+        p_status: normalizedStatus,
         p_cancel_at_next_billing_date: subscription.cancel_at_next_billing_date === true,
-        p_next_billing_date: stringValue(subscription.next_billing_date) || null,
+        p_next_billing_date: nextBillingDate,
         p_recurring_amount: Number.isFinite(subscription.recurring_pre_tax_amount) ? subscription.recurring_pre_tax_amount : null,
         p_currency: stringValue(subscription.currency) || 'USD',
         p_billing_reference: checkout.billing_reference,
@@ -221,6 +227,20 @@ export default async function handler(req, res) {
       return json(res, 200, { received: true, applied: false });
     }
 
+    const normalizedStatus = normalizeDodoSubscriptionStatus(eventType, stringValue(data.status));
+    const nextBillingDate = stringValue(data.next_billing_date) || null;
+    if (!normalizedStatus || !hasValidDodoAccessExpiry(normalizedStatus, nextBillingDate)) {
+      await recordIgnoredEvent(
+        webhookId,
+        eventType,
+        eventTimestamp,
+        subscriptionId,
+        'DODO_SUBSCRIPTION_STATE_INVALID',
+        'Subscription state or access expiry was invalid.'
+      );
+      return json(res, 200, { received: true, applied: false });
+    }
+
     if (billingReference) {
       const { data: checkout } = await supabaseAdmin
         .from('dodo_checkout_sessions')
@@ -242,9 +262,9 @@ export default async function handler(req, res) {
       p_customer_id: customerId,
       p_product_id: productId,
       p_plan: plan,
-      p_status: statusForEvent(eventType, stringValue(data.status)),
+      p_status: normalizedStatus,
       p_cancel_at_next_billing_date: data.cancel_at_next_billing_date === true,
-      p_next_billing_date: stringValue(data.next_billing_date) || null,
+      p_next_billing_date: nextBillingDate,
       p_recurring_amount: Number.isFinite(data.recurring_pre_tax_amount) ? data.recurring_pre_tax_amount : null,
       p_currency: stringValue(data.currency) || 'USD',
       p_billing_reference: billingReference,

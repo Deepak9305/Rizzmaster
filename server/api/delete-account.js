@@ -80,7 +80,7 @@ export default async function handler(req, res) {
     if (dodoLookupError && !['42P01', 'PGRST205'].includes(dodoLookupError.code)) {
       throw dodoLookupError;
     }
-    if (dodoSubscriptions?.some((subscription) => ['active', 'on_hold'].includes(subscription.status))) {
+    if (dodoSubscriptions?.some((subscription) => ['active', 'on_hold', 'paused'].includes(subscription.status))) {
       return json(res, 409, {
         error: 'Cancel your active web subscription in the billing portal before deleting your account.',
         code: 'ACTIVE_DODO_SUBSCRIPTION',
