@@ -12,4 +12,8 @@ export const routes = {
   '/api/revoke-premium': () => import('./revoke-premium.js'),
   '/api/iap-account-binding': () => import('./iap-account-binding.js'),
   '/api/verify-purchase': () => import('./verify-purchase.js'),
+  '/api/dodo-plans': () => import('./dodo-plans.js'),
+  '/api/dodo-checkout': () => import('./dodo-checkout.js'),
+  '/api/dodo-portal': () => import('./dodo-portal.js'),
+  '/api/dodo-webhook': () => import('./dodo-webhook.js'),
 };

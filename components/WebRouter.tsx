@@ -2,13 +2,19 @@ import React, { startTransition, useEffect, useState } from 'react';
 import App from '../App';
 import { isMarketingPath, normalizeMarketingPath } from '../services/marketingRoutes';
 import MarketingSite from './MarketingSite';
+import BillingReturnPage from './BillingReturnPage';
 
 const getPathname = () => normalizeMarketingPath(window.location.pathname);
+const isBillingReturnPath = (pathname: string) => pathname.toLowerCase() === '/billing/return';
 
 const WebRouter: React.FC = () => {
   const [pathname, setPathname] = useState(getPathname);
-  const [hasVisitedApp, setHasVisitedApp] = useState(() => !isMarketingPath(getPathname()));
+  const [hasVisitedApp, setHasVisitedApp] = useState(() => {
+    const initialPath = getPathname();
+    return !isMarketingPath(initialPath) && !isBillingReturnPath(initialPath);
+  });
   const isMarketingPage = isMarketingPath(pathname);
+  const isBillingReturnPage = isBillingReturnPath(pathname);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -21,10 +27,10 @@ const WebRouter: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!isMarketingPage) {
+    if (!isMarketingPage && !isBillingReturnPage) {
       setHasVisitedApp(true);
     }
-  }, [isMarketingPage]);
+  }, [isBillingReturnPage, isMarketingPage]);
 
   const navigate = (path: string) => {
     const nextPathname = normalizeMarketingPath(path);
@@ -37,11 +43,12 @@ const WebRouter: React.FC = () => {
   return (
     <>
       {hasVisitedApp && (
-        <div hidden={isMarketingPage}>
+        <div hidden={isMarketingPage || isBillingReturnPage}>
           <App onNavigateToPath={navigate} />
         </div>
       )}
       {isMarketingPage && <MarketingSite />}
+      {isBillingReturnPage && <BillingReturnPage onContinue={() => navigate('/')} />}
     </>
   );
 };

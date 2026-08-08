@@ -71,11 +71,42 @@ export default async function handler(req, res) {
   }
 
   try {
+    const { data: dodoSubscriptions, error: dodoLookupError } = await supabaseAdmin
+      .from('dodo_subscriptions')
+      .select('id,dodo_subscription_id,status')
+      .eq('user_id', user.id)
+      .limit(100);
+
+    if (dodoLookupError && !['42P01', 'PGRST205'].includes(dodoLookupError.code)) {
+      throw dodoLookupError;
+    }
+    if (dodoSubscriptions?.some((subscription) => ['active', 'on_hold'].includes(subscription.status))) {
+      return json(res, 409, {
+        error: 'Cancel your active web subscription in the billing portal before deleting your account.',
+        code: 'ACTIVE_DODO_SUBSCRIPTION',
+        canManage: true,
+      });
+    }
+
     await deleteUserOwnedRows('saved_items', 'user_id', user.id);
     await deleteUserOwnedRows('user_activity_log', 'user_id', user.id);
     await deleteUserOwnedRows('reports', 'user_id', user.id);
     await deleteUserOwnedRows('purchase_receipts', 'user_id', user.id);
     await deleteUserOwnedRows('premium_subscriptions', 'user_id', user.id);
+    if (!dodoLookupError) {
+      const subscriptionIds = (dodoSubscriptions || [])
+        .map((subscription) => subscription.dodo_subscription_id)
+        .filter(Boolean);
+      if (subscriptionIds.length) {
+        const { error: eventDeleteError } = await supabaseAdmin
+          .from('dodo_webhook_events')
+          .delete()
+          .in('dodo_subscription_id', subscriptionIds);
+        if (eventDeleteError) throw eventDeleteError;
+      }
+      await deleteUserOwnedRows('dodo_checkout_sessions', 'user_id', user.id);
+      await deleteUserOwnedRows('dodo_subscriptions', 'user_id', user.id);
+    }
     await deleteUserOwnedRows('profiles', 'id', user.id);
 
     const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id, true);

@@ -347,6 +347,17 @@ export default async function handler(req, res) {
       });
     }
 
+    const { data: recomputedProfile, error: recomputeError } = await supabaseAdmin.rpc("admin_recompute_premium", {
+      p_user_uuid: userId,
+    });
+    if (recomputeError && recomputeError.code !== "PGRST202") {
+      logIapApi("warn", "Shared premium entitlement recompute failed after Google Play sync.", {
+        requestId,
+        userId,
+        safeErrorMessage: recomputeError.message || "Unknown entitlement recompute error.",
+      });
+    }
+
     logIapApi("info", "Premium verification applied successfully.", {
       requestId,
       userId,
@@ -358,7 +369,7 @@ export default async function handler(req, res) {
     return json(res, 200, { 
       success: true, 
       message: "Premium subscription verified and applied successfully.",
-      profile: updatedProfile
+      profile: recomputedProfile || updatedProfile
     });
   } catch (error) {
     if (

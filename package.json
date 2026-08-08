@@ -33,6 +33,7 @@
     "@google/genai": "2.10.0",
     "@supabase/supabase-js": "^2.39.8",
     "cordova-plugin-purchase": "^13.0.0",
+    "dodopayments": "2.45.1",
     "onesignal-cordova-plugin": "^5.3.3",
     "openai": "^4.28.0",
     "pg": "^8.13.1",

@@ -101,7 +101,7 @@ const InfoPages: React.FC<InfoPagesProps> = ({ page, onBack, onDeleteAccount }) 
                   <span className="transform group-open:rotate-180 transition-transform text-white/50">▼</span>
                 </summary>
                 <div className="p-5 pt-0 text-white/60 leading-relaxed border-t border-white/5 mt-2">
-                  Yes, you can cancel your subscription at any time through the Google Play Store. You will retain access until the end of your billing period.
+                  Yes. Android subscriptions are managed through Google Play, while web subscriptions are managed through the secure Dodo Payments portal. Access continues until the applicable billing period ends.
                 </div>
               </details>
 

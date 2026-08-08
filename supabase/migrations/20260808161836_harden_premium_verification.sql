@@ -21,7 +21,7 @@ CREATE OR REPLACE FUNCTION public.admin_set_premium(
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = ''
 AS $$
 DECLARE
   updated_profile record;
@@ -32,7 +32,7 @@ BEGIN
     RAISE EXCEPTION 'Unauthorized: Only service_role can set premium';
   END IF;
 
-  PERFORM set_config('app.bypass_profile_trigger', 'true', true);
+  PERFORM pg_catalog.set_config('app.bypass_profile_trigger', 'true', true);
 
   IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = p_user_uuid) THEN
     RAISE EXCEPTION 'User profile not found';
@@ -106,7 +106,7 @@ BEGIN
   END IF;
 
   SELECT * INTO updated_profile FROM public.profiles WHERE id = p_user_uuid;
-  RETURN to_jsonb(updated_profile);
+  RETURN pg_catalog.to_jsonb(updated_profile);
 END;
 $$;
 
@@ -117,7 +117,7 @@ CREATE OR REPLACE FUNCTION public.admin_record_premium_verification_failure(
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = ''
 AS $$
 DECLARE
   updated_profile record;
@@ -126,7 +126,7 @@ BEGIN
     RAISE EXCEPTION 'Unauthorized: Only service_role can record premium verification failures';
   END IF;
 
-  PERFORM set_config('app.bypass_profile_trigger', 'true', true);
+  PERFORM pg_catalog.set_config('app.bypass_profile_trigger', 'true', true);
 
   UPDATE public.profiles
   SET verification_failure_count = COALESCE(verification_failure_count, 0) + 1,
@@ -141,7 +141,7 @@ BEGIN
     RAISE EXCEPTION 'User profile not found';
   END IF;
 
-  RETURN to_jsonb(updated_profile);
+  RETURN pg_catalog.to_jsonb(updated_profile);
 END;
 $$;
 

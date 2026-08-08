@@ -264,374 +264,4 @@ const HeroPoster: React.FC = () => (
     <div className="absolute -inset-8 rounded-[4rem] bg-pink-500/20 blur-3xl" />
     <div className="pointer-events-none absolute -left-8 top-12 z-10 hidden sm:block"><FloatingHeroChip>Flirty</FloatingHeroChip></div>
     <div className="pointer-events-none absolute -right-8 top-28 z-10 hidden sm:block"><FloatingHeroChip>Funny</FloatingHeroChip></div>
-    <div className="pointer-events-none absolute -left-12 bottom-32 z-10 hidden sm:block"><FloatingHeroChip>Screenshot analysis</FloatingHeroChip></div>
-    <div className="pointer-events-none absolute -right-8 bottom-20 z-10 hidden sm:block"><FloatingHeroChip>Send-ready replies</FloatingHeroChip></div>
-    <div className="pointer-events-none absolute -bottom-3 left-0 z-10 hidden max-w-[220px] rounded-2xl border border-pink-300/15 bg-[#110b16]/95 p-3 text-xs leading-5 text-white/70 shadow-[0_18px_45px_rgba(0,0,0,0.4)] backdrop-blur-xl sm:block">
-      <p><span className="font-bold text-pink-200">Her:</span> haha</p>
-      <p><span className="font-bold text-purple-200">You:</span> Don't laugh too much, I'm trying to look mysterious here.</p>
-    </div>
-    <img
-      src="/rizzmaster-hero-poster.png"
-      alt="Rizz Master app poster showing smart replies, custom vibes, and AI-powered dating tools"
-      className="marketing-phone relative mx-auto block w-full rounded-[2rem] border border-pink-300/25 shadow-[0_30px_100px_rgba(0,0,0,0.65)]"
-      loading="eager"
-      decoding="async"
-    />
-  </div>
-);
-
-const MessageExampleCard: React.FC<MessageExample> = ({ before, after, context }) => (
-  <article className="marketing-card group relative overflow-hidden p-5 sm:p-6">
-    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-pink-300/60 to-transparent" />
-    <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/35">{context}</p>
-    <div className="mt-6 space-y-3">
-      <div className="flex items-start gap-3">
-        <span className="mt-1 shrink-0 text-[10px] font-black uppercase tracking-[0.16em] text-white/35">Before</span>
-        <div className="rounded-2xl rounded-tl-sm border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-white/60">{before}</div>
-      </div>
-      <div className="flex items-start gap-3">
-        <span className="mt-1 shrink-0 text-[10px] font-black uppercase tracking-[0.16em] text-pink-200/75">After</span>
-        <div className="rounded-2xl rounded-tl-sm border border-pink-300/20 bg-gradient-to-br from-pink-500/15 to-purple-500/10 px-4 py-3 text-sm leading-6 text-white">{after}</div>
-      </div>
-    </div>
-  </article>
-);
-
-const FeatureHighlightCard: React.FC<{ icon: string; title: string; copy: string; accent: string }> = ({ icon, title, copy, accent }) => (
-  <article className={`marketing-card group relative overflow-hidden bg-gradient-to-br ${accent} p-6 md:p-7`}>
-    <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-pink-300/10 blur-3xl" />
-    <span className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-pink-300/20 bg-black/20 text-xl text-pink-100 transition-transform group-hover:scale-110">{icon}</span>
-    <h3 className="relative mt-7 text-xl font-black text-white">{title}</h3>
-    <p className="relative mt-3 text-sm leading-6 text-white/60">{copy}</p>
-    <span className="relative mt-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-pink-200/75">Built for the moment <span aria-hidden="true">‚Üí</span></span>
-  </article>
-);
-
-const StickyMobileCta: React.FC = () => {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const updateVisibility = () => setVisible(window.scrollY > Math.min(window.innerHeight * 0.72, 520));
-    updateVisibility();
-    window.addEventListener('scroll', updateVisibility, { passive: true });
-    return () => window.removeEventListener('scroll', updateVisibility);
-  }, []);
-
-  if (!visible) return null;
-
-  return (
-    <div className="marketing-sticky-cta fixed inset-x-3 bottom-3 z-40 md:hidden">
-      <a href={PLAY_STORE_URL} target="_blank" rel="noreferrer" className="marketing-cta-primary flex items-center justify-between gap-4 rounded-2xl border border-pink-200/20 px-4 py-3 text-white shadow-[0_14px_40px_rgba(236,72,153,0.35)]" aria-label="Download Rizz Master from Google Play">
-        <span className="flex min-w-0 items-center gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-black/20 text-lg" aria-hidden="true">‚Üì</span>
-          <span className="min-w-0 text-left"><span className="block truncate text-sm font-black">Download Rizz Master</span><span className="mt-0.5 block text-[10px] font-medium text-white/65">Free daily credits ¬∑ Android app</span></span>
-        </span>
-        <span className="shrink-0 text-sm font-black" aria-hidden="true">‚Üí</span>
-      </a>
-    </div>
-  );
-};
-
-const HomePage: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) => (
-  <>
-    <main>
-      <section className="marketing-hero relative overflow-hidden">
-        <div className="marketing-grid absolute inset-0 opacity-60" />
-        <div className="marketing-container relative grid items-center gap-16 pb-20 pt-16 md:grid-cols-[1.05fr_0.95fr] md:pb-28 md:pt-24">
-          <div className="relative z-10 max-w-2xl">
-            <div className="marketing-kicker mb-6 inline-flex items-center gap-2 rounded-full border border-pink-300/15 bg-pink-300/[0.06] px-3 py-2 text-[11px] font-bold uppercase tracking-[0.2em] text-pink-100/75">
-              <span className="h-1.5 w-1.5 rounded-full bg-pink-300 shadow-[0_0_12px_rgba(244,114,182,0.9)]" /> AI dating assistant
-            </div>
-            <h1 className="max-w-xl text-5xl font-black leading-[0.98] tracking-[-0.06em] text-white sm:text-6xl md:text-7xl">Never run out of <span className="marketing-text-gradient">replies</span> again.</h1>
-            <p className="mt-7 max-w-xl text-lg leading-8 text-white/58 md:text-xl">Rizz Master helps you create flirty replies, dating bios, openers, and conversation starters in seconds.</p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <PlayStoreButton />
-              <a href="/blog" onClick={(event) => { event.preventDefault(); navigate('/blog'); }} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3.5 text-sm font-bold text-white/75 transition-all hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.08] hover:text-white">Read texting tips <span>‚Üí</span></a>
-            </div>
-            <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-white/35">
-              <span className="flex items-center gap-2"><span className="text-pink-300">‚ú¶</span> Daily free credits</span>
-              <span className="flex items-center gap-2"><span className="text-pink-300">‚ú¶</span> Your tone, your choice</span>
-              <span className="flex items-center gap-2"><span className="text-pink-300">‚ú¶</span> Android app</span>
-            </div>
-          </div>
-          <HeroPoster />
-        </div>
-      </section>
-
-      <section className="marketing-section marketing-container">
-        <SectionHeading eyebrow="The blank screen problem" title="You have the feeling. Not the words." description="When the moment matters, a blank typing box can turn one simple text into a full spiral." />
-        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            ['01', 'She replied with ‚Äúhaha‚Äù and now you‚Äôre stuck.', 'Turn a dead-end reply into a natural next move.'],
-            ['02', 'Your dating bio sounds boring.', 'Find a sharper way to show your personality.'],
-            ['03', 'You do not know how to start the conversation.', 'Get openers that give them something to answer.'],
-            ['04', 'You overthink every message before sending it.', 'Choose a tone, get options, and hit send.']
-          ].map(([number, title, copy]) => <div key={number} className="marketing-card p-6"><span className="text-xs font-black tracking-[0.2em] text-pink-300/60">{number}</span><h3 className="mt-10 text-lg font-bold leading-snug text-white">{title}</h3><p className="mt-3 text-sm leading-6 text-white/45">{copy}</p></div>)}
-        </div>
-      </section>
-
-      <section className="marketing-section marketing-container">
-        <SectionHeading eyebrow="See the difference in seconds" title="Less staring. More send-ready." description="A small nudge can turn a flat prompt into a reply that sounds like you and gives the conversation somewhere to go." />
-        <div className="mt-12 grid gap-4 lg:grid-cols-3">{MESSAGE_EXAMPLES.map((example) => <MessageExampleCard key={example.before} {...example} />)}</div>
-      </section>
-
-      <section id="features" className="marketing-section marketing-container scroll-mt-8">
-        <SectionHeading eyebrow="More than a one-liner" title="A better way to find your next move" description="From one perfect reply to a full conversation coach, Rizz Master gives you the right kind of help for the moment." />
-        <div className="mt-12 grid gap-4 lg:grid-cols-3">{FEATURE_HIGHLIGHTS.map((feature) => <FeatureHighlightCard key={feature.title} {...feature} />)}</div>
-        <div className="mt-5 flex flex-wrap gap-3">{SECONDARY_FEATURES.map((feature) => <span key={feature} className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-4 py-2.5 text-sm font-semibold text-white/65"><span className="h-1.5 w-1.5 rounded-full bg-pink-300/80" />{feature}</span>)}</div>
-        <div className="hidden">
-          {[
-            ['‚ú¶', 'AI reply generator', 'Paste the message, choose the vibe, and get thoughtful options in seconds.'],
-            ['‚åÅ', 'Dating bio generator', 'Turn your interests, energy, and sense of humor into a profile that sounds like you.'],
-            ['‚ô°', 'Pickup line generator', 'Start with playful openers that make the next message easier.'],
-            ['‚óå', 'Your tone, your choice', 'Go flirty, funny, wholesome, confident, savage, or romantic.'],
-            ['‚ñ¢', 'Save your favorites', 'Keep the replies that feel right so your best ideas are always close.'],
-            ['‚àû', 'Daily free credits', 'Get useful help every day, with premium modes when you want more range.'],
-            ['‚óé', 'AI Chat Coach', 'Talk through the whole situation with Rizz AI. Share the context or a screenshot, get the vibe decoded, and find your next move.'],
-            ['‚úß', 'Custom personas', 'Create your own advisors with custom instructions‚Äîa playful wingman, a direct friend, or the exact voice you need.'],
-            ['‚ôõ', 'Premium coaching modes', 'Unlock deeper coaching, more tone range, and extra persona space when you want your personal dating assistant to go further.']
-          ].map(([icon, title, copy]) => <div key={title} className="marketing-card group p-7"><span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-pink-300/15 bg-pink-300/[0.07] text-xl text-pink-200 transition-transform group-hover:scale-110">{icon}</span><h3 className="mt-6 text-lg font-bold text-white">{title}</h3><p className="mt-3 text-sm leading-6 text-white/48">{copy}</p></div>)}
-        </div>
-      </section>
-
-      <section id="how-it-works" className="marketing-section marketing-container scroll-mt-8">
-        <SectionHeading eyebrow="Three easy steps" title="From overthinking to send-ready" />
-        <div className="relative mt-12 grid gap-4 md:grid-cols-3">
-          <div className="absolute left-[16%] right-[16%] top-12 hidden h-px bg-gradient-to-r from-pink-500/0 via-pink-300/35 to-purple-500/0 md:block" />
-          {[
-            ['1', 'Choose what you need', 'Reply, bio, opener, pickup line, or a fresh conversation starter.'],
-            ['2', 'Add your situation or message', 'Give Rizz Master the context, even if it is just a few words.'],
-            ['3', 'Get better replies instantly', 'Pick the line that feels most like you and make your move.']
-          ].map(([number, title, copy]) => <div key={number} className="relative z-10 text-center"><div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full border border-pink-300/25 bg-[#120d17] text-3xl font-black text-pink-200 shadow-[0_0_40px_rgba(236,72,153,0.15)]">{number}</div><h3 className="mt-7 text-lg font-bold text-white">{title}</h3><p className="mx-auto mt-3 max-w-xs text-sm leading-6 text-white/45">{copy}</p></div>)}
-        </div>
-      </section>
-
-      <section className="marketing-section marketing-container">
-        <div className="grid gap-8 rounded-[2rem] border border-white/[0.08] bg-gradient-to-br from-pink-500/[0.08] via-white/[0.02] to-purple-500/[0.07] p-6 md:grid-cols-[0.85fr_1.15fr] md:p-10">
-          <div><p className="text-xs font-bold uppercase tracking-[0.25em] text-pink-300/80">Built for real moments</p><h2 className="mt-4 text-3xl font-black tracking-tight text-white md:text-4xl">Your conversation does not need to be perfect.</h2><p className="mt-5 max-w-md text-sm leading-7 text-white/50">It just needs a little momentum. Use Rizz Master when you want a second opinion that is quick, personal, and actually fun to send.</p></div>
-          <div className="grid gap-3 sm:grid-cols-2">{USE_CASES.map(([useCase, copy], index) => <div key={useCase} className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4"><div className="flex items-center gap-3 text-sm font-semibold text-white/80"><span className="text-xs font-black text-pink-300/80">0{index + 1}</span>{useCase}</div><p className="mt-2 pl-7 text-xs leading-5 text-white/45">{copy}</p></div>)}</div>
-          <div className="hidden">
-            {['Tinder replies', 'Bumble openers', 'Instagram DM replies', 'Dating app bios', 'First-date follow-ups', '‚ÄúWhat should I text back?‚Äù'].map((useCase, index) => <div key={useCase} className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-sm font-semibold text-white/70"><span className="mr-3 text-pink-300/80">{['‚Üó', '‚ú¶', '‚óé', '‚åÅ', '‚ô°', '?'][index]}</span>{useCase}</div>)}
-          </div>
-        </div>
-      </section>
-
-      <section className="marketing-container py-8 md:py-12">
-        <div className="marketing-trust-band mx-auto flex max-w-4xl flex-col gap-5 rounded-3xl px-6 py-6 md:flex-row md:items-center md:justify-between md:px-8">
-          <div className="flex items-start gap-4">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-pink-300/20 bg-pink-300/[0.08] text-pink-200">‚ú¶</span>
-            <div>
-              <h2 className="text-lg font-bold leading-snug text-white md:text-xl">Designed for faster, better, more confident replies.</h2>
-              <p className="mt-1.5 text-sm text-pink-100/45">Built for people who overthink every text.</p>
-            </div>
-          </div>
-          <p className="max-w-sm text-sm leading-6 text-white/45 md:text-right">No fake numbers. No pressure to perform. Just a little help for the moments you want to show up well.</p>
-        </div>
-      </section>
-
-      <section className="marketing-container pb-24 pt-8 md:pb-32 md:pt-12">
-        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between"><SectionHeading align="left" eyebrow="From the blog" title="A little help for your next text" description="Practical advice for openers, dry replies, profiles, and the moments you replay before hitting send." /><a href="/blog" onClick={(event) => { event.preventDefault(); navigate('/blog'); }} className="self-start whitespace-nowrap text-sm font-bold text-pink-200 transition-colors hover:text-white md:self-end">View all tips ‚Üí</a></div>
-        <div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-3">{BLOG_POSTS.slice(0, 6).map((post) => <BlogCard key={post.slug} post={post} navigate={navigate} />)}</div>
-      </section>
-
-      <section className="relative overflow-hidden border-y border-white/[0.08] bg-gradient-to-br from-pink-500/10 via-black to-purple-500/10">
-        <div className="marketing-container relative py-20 text-center md:py-28"><div className="absolute left-1/2 top-1/2 h-60 w-60 -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink-500/20 blur-[100px]" /><div className="relative"><p className="text-xs font-bold uppercase tracking-[0.25em] text-pink-300/80">Your next message is closer than you think</p><h2 className="mx-auto mt-5 max-w-2xl text-4xl font-black tracking-tight text-white md:text-6xl">Stop staring at the typing box.</h2><p className="mx-auto mt-5 max-w-lg text-base text-white/50">Get better replies with Rizz Master.</p><div className="mt-8"><PlayStoreButton /></div></div></div>
-      </section>
-    </main>
-    <StickyMobileCta />
-    <MarketingFooter navigate={navigate} />
-  </>
-);
-
-const BlogIndexPage: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) => (
-  <>
-    <main className="marketing-container marketing-page-padding">
-      <div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.28em] text-pink-300/80">The Rizz Master blog</p><h1 className="mt-5 text-5xl font-black tracking-[-0.04em] text-white md:text-7xl">Better texts start with a better next move.</h1><p className="mt-6 max-w-2xl text-lg leading-8 text-white/55">Practical texting and dating advice for the conversations you want to handle with a little more confidence.</p></div>
-      <div className="mt-16 grid gap-5 md:grid-cols-2">{BLOG_POSTS.map((post, index) => <BlogCard key={post.slug} post={post} navigate={navigate} featured={index === 0} />)}</div>
-    </main>
-    <MarketingFooter navigate={navigate} />
-  </>
-);
-
-const ARTICLE_EXAMPLES: Record<string, string[]> = {
-  'reply-to-dry-texts': ['That was the diplomatic answer. What is the honest version?', 'I am choosing to believe you are saving the good story for later.'],
-  'best-tinder-openers-for-guys': ['Important question: was that hike worth the view or the snack break?', 'You seem like you have a strong coffee order. What am I judging?'],
-  'reply-when-she-says-haha': ['I will accept that laugh, but I am keeping score.', 'Okay, your turn - make me laugh.'],
-  'funny-pickup-lines-that-work': ['I had a clever opener ready, but your profile distracted me. What is your best recommendation around here?'],
-  'best-dating-app-bio-ideas-for-guys': ['Ideal Sunday: long walk, new coffee shop, and pretending I will meal prep.'],
-  'what-to-text-after-a-first-date': ['I had a great time tonight - your story about the failed cooking class still has me laughing.']
-};
-
-const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
-  'reply-to-dry-texts': { do: 'Offer one specific hook, then give the conversation room.', doNot: 'Stack questions or send three follow-ups to force momentum.' },
-  'best-tinder-openers-for-guys': { do: 'Notice one real detail and ask a question with a point of view.', doNot: 'Lead with a generic compliment or an interview question.' },
-  'reply-when-she-says-haha': { do: 'Stay playful and pivot toward a topic with personality.', doNot: 'Ask whether the joke was funny or chase validation.' },
-  'funny-pickup-lines-that-work': { do: 'Use the line as a soft launch into a real conversation.', doNot: 'Treat the opener like a performance that needs a sequel.' },
-  'best-dating-app-bio-ideas-for-guys': { do: 'Share specific details that make the next message obvious.', doNot: 'Fill the bio with broad labels, rules, or complaints.' },
-  'what-to-text-after-a-first-date': { do: 'Be timely, specific, and clear about enjoying the date.', doNot: 'Wait for a perfect paragraph or edit your personality away.' }
-};
-
-const ArticleQuickAnswer: React.FC<{ post: BlogPost }> = ({ post }) => (
-  <aside className="relative overflow-hidden rounded-3xl border border-pink-300/20 bg-gradient-to-br from-pink-500/12 via-white/[0.03] to-purple-500/10 p-6 md:p-7">
-    <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-pink-400/15 blur-3xl" />
-    <p className="relative text-xs font-black uppercase tracking-[0.2em] text-pink-200/80">Quick answer</p>
-    <p className="relative mt-3 text-base leading-7 text-white/75">{post.excerpt}</p>
-  </aside>
-);
-
-const ArticleExampleBox: React.FC<{ examples?: string[] }> = ({ examples }) => {
-  if (!examples?.length) return null;
-
-  return (
-    <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5 md:p-6">
-      <p className="text-xs font-black uppercase tracking-[0.2em] text-pink-200/75">Try a reply like this</p>
-      <div className="mt-4 space-y-3">
-        {examples.map((example) => <div key={example} className="rounded-2xl rounded-tl-sm border border-pink-300/15 bg-pink-300/[0.06] px-4 py-3 text-sm leading-6 text-white/80">{example}</div>)}
-      </div>
-    </div>
-  );
-};
-
-const ArticleDoDont: React.FC<{ post: BlogPost }> = ({ post }) => {
-  const tips = ARTICLE_DO_DONT[post.slug];
-  if (!tips) return null;
-
-  return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      <div className="rounded-2xl border border-emerald-300/15 bg-emerald-300/[0.05] p-5"><p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-200/80">Do</p><p className="mt-3 text-sm leading-6 text-white/70">{tips.do}</p></div>
-      <div className="rounded-2xl border border-rose-300/15 bg-rose-300/[0.05] p-5"><p className="text-xs font-black uppercase tracking-[0.2em] text-rose-200/80">Don't</p><p className="mt-3 text-sm leading-6 text-white/70">{tips.doNot}</p></div>
-    </div>
-  );
-};
-
-const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void }> = ({ post, navigate }) => {
-  const relatedPosts = BLOG_POSTS.filter((candidate) => candidate.slug !== post.slug).slice(0, 3);
-
-  return (
-    <section className="mt-20 border-t border-white/10 pt-12">
-      <p className="text-xs font-black uppercase tracking-[0.2em] text-pink-200/75">Keep reading</p>
-      <h2 className="mt-3 text-2xl font-black text-white md:text-3xl">More help for your next text</h2>
-      <div className="mt-7 grid gap-4 md:grid-cols-3">{relatedPosts.map((related) => <BlogCard key={related.slug} post={related} navigate={navigate} />)}</div>
-    </section>
-  );
-};
-
-const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
-  'reply-to-dry-texts': [
-    { slug: 'reply-when-she-says-haha', label: 'How to reply when she says haha' },
-    { slug: 'best-tinder-openers-for-guys', label: 'Better Tinder openers' },
-    { slug: 'what-to-text-after-a-first-date', label: 'What to text after a first date' }
-  ],
-  'best-tinder-openers-for-guys': [
-    { slug: 'funny-pickup-lines-that-work', label: 'Funny pickup lines that work' },
-    { slug: 'best-dating-app-bio-ideas-for-guys', label: 'Dating app bio ideas' },
-    { slug: 'reply-to-dry-texts', label: 'How to reply to dry texts' }
-  ],
-  'reply-when-she-says-haha': [
-    { slug: 'reply-to-dry-texts', label: 'How to handle a dry text' },
-    { slug: 'funny-pickup-lines-that-work', label: 'Funny conversation starters' },
-    { slug: 'what-to-text-after-a-first-date', label: 'Post-date texting advice' }
-  ],
-  'funny-pickup-lines-that-work': [
-    { slug: 'best-tinder-openers-for-guys', label: 'Best Tinder openers' },
-    { slug: 'reply-when-she-says-haha', label: 'What to say after a laugh' },
-    { slug: 'best-dating-app-bio-ideas-for-guys', label: 'Write a better dating bio' }
-  ],
-  'best-dating-app-bio-ideas-for-guys': [
-    { slug: 'best-tinder-openers-for-guys', label: 'Openers that start conversations' },
-    { slug: 'funny-pickup-lines-that-work', label: 'Playful pickup lines' },
-    { slug: 'what-to-text-after-a-first-date', label: 'What to text after a date' }
-  ],
-  'what-to-text-after-a-first-date': [
-    { slug: 'reply-to-dry-texts', label: 'Reply to a short message' },
-    { slug: 'reply-when-she-says-haha', label: 'Keep a playful chat moving' },
-    { slug: 'best-dating-app-bio-ideas-for-guys', label: 'Refresh your dating profile' }
-  ]
-};
-
-const ArticleInternalLinks: React.FC<{ post: BlogPost; navigate: (path: string) => void }> = ({ post, navigate }) => (
-  <nav aria-label="Related dating guides" className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 md:p-6">
-    <p className="text-xs font-black uppercase tracking-[0.2em] text-pink-200/75">Continue reading</p>
-    <div className="mt-4 flex flex-wrap gap-2.5">
-      {(ARTICLE_INTERNAL_LINKS[post.slug] || []).map((link) => <a key={link.slug} href={`/blog/${link.slug}`} onClick={(event) => { event.preventDefault(); navigate(`/blog/${link.slug}`); }} className="rounded-full border border-white/10 bg-black/20 px-3.5 py-2 text-xs font-bold text-white/65 transition-colors hover:border-pink-300/30 hover:text-pink-100">{link.label} <span aria-hidden="true">‚Üí</span></a>)}
-    </div>
-  </nav>
-);
-
-const ArticlePage: React.FC<{ post: BlogPost; navigate: (path: string) => void }> = ({ post, navigate }) => {
-  const middleIndex = Math.ceil(post.sections.length / 2);
-
-  return <>
-    <main className="marketing-container marketing-page-padding">
-      <a href="/blog" onClick={(event) => { event.preventDefault(); navigate('/blog'); }} className="mb-10 inline-flex items-center gap-2 text-sm font-bold text-white/45 transition-colors hover:text-white">‚Üê Back to the blog</a>
-      <article className="mx-auto max-w-3xl">
-        <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-white/35"><span className="text-pink-300/80">{post.category}</span><span>‚Ä¢</span><span>{post.readingTime}</span><span>‚Ä¢</span><time dateTime={post.date}>{new Date(`${post.date}T12:00:00`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</time></div>
-        <h1 className="mt-6 text-4xl font-black leading-[1.05] tracking-[-0.04em] text-white md:text-6xl">{post.title}</h1>
-        <p className="mt-7 text-lg leading-8 text-white/55">{post.description}</p>
-        <div className="mt-10 space-y-5">
-          <ArticleQuickAnswer post={post} />
-          <ArticleExampleBox examples={ARTICLE_EXAMPLES[post.slug]} />
-          <ArticleDoDont post={post} />
-          <ArticleInternalLinks post={post} navigate={navigate} />
-        </div>
-        <div className="mt-12 space-y-12">
-          {post.sections.map((section, index) => <React.Fragment key={section.heading}>
-            {index === middleIndex && <ArticleCta navigate={navigate} compact />}
-            <section><h2 className="text-2xl font-bold tracking-tight text-white md:text-3xl">{section.heading}</h2>{section.paragraphs.map((paragraph) => <p key={paragraph} className="mt-5 text-base leading-8 text-white/60">{paragraph}</p>)}{section.bullets && <ul className="mt-6 space-y-3 rounded-2xl border border-pink-300/10 bg-pink-300/[0.04] p-5 text-sm leading-7 text-white/65">{section.bullets.map((bullet) => <li key={bullet} className="flex gap-3"><span className="mt-1 text-pink-300">‚ú¶</span><span>{bullet}</span></li>)}</ul>}</section>
-          </React.Fragment>)}
-        </div>
-        <ArticleCta navigate={navigate} />
-        <RelatedPosts post={post} navigate={navigate} />
-      </article>
-    </main>
-    <MarketingFooter navigate={navigate} />
-  </>;
-};
-
-const ArticleCta: React.FC<{ navigate: (path: string) => void; compact?: boolean }> = ({ navigate, compact = false }) => <div className={`relative overflow-hidden rounded-3xl border border-pink-300/15 bg-gradient-to-br from-pink-500/15 to-purple-500/10 ${compact ? 'my-2 p-6' : 'mt-16 p-7 md:p-9'}`}><div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-pink-400/20 blur-3xl" /><p className="relative text-xs font-bold uppercase tracking-[0.22em] text-pink-200/75">Need a second opinion?</p><h2 className="relative mt-3 text-2xl font-bold text-white">Turn the situation into a send-ready reply.</h2><p className="relative mt-3 max-w-xl text-sm leading-6 text-white/50">Rizz Master helps you find the right words without losing your personality.</p><div className="relative mt-6 flex flex-col gap-3 sm:flex-row"><PlayStoreButton /><button onClick={() => navigate(MARKETING_HOME_PATH)} className="rounded-2xl px-5 py-3.5 text-sm font-bold text-white/60 transition-colors hover:text-white">Explore Rizz Master ‚Üí</button></div></div>;
-
-const LegalPage: React.FC<{ kind: 'privacy' | 'terms' | 'support'; navigate: (path: string) => void }> = ({ kind, navigate }) => {
-  const content = {
-    privacy: { eyebrow: 'Your data matters', title: 'Privacy Policy', intro: 'Rizz Master is built to help with everyday conversations while keeping data collection focused on running the product.', sections: [['What we collect', 'We may process account details, saved items, profile preferences, purchase state, and the text or image context you choose to submit for generation. We only use this information to provide, secure, and improve the service.'], ['Generated content', 'Inputs are processed to generate responses. Only items you explicitly save are intended to remain in your account history. Review the full hosted policy linked below for the current details.'], ['Your choices', 'You can request account help, data questions, or deletion through Support.']], link: LEGAL_LINKS.privacy },
-    terms: { eyebrow: 'Use it thoughtfully', title: 'Terms of Service', intro: 'Rizz Master is an AI dating assistant for entertainment and communication support‚Äînot a substitute for your judgment.', sections: [['Using the service', 'You are responsible for the messages you send and the way you use AI-generated suggestions. Content may be imperfect, so review it before sharing.'], ['Respectful conduct', 'Do not use the service to create harmful, illegal, abusive, or harassing content. Access may be limited when the service is misused.'], ['Purchases', 'Premium features and subscriptions are managed through the Google Play Store.']], link: LEGAL_LINKS.terms },
-    support: { eyebrow: 'We are here to help', title: 'Support Center', intro: 'Questions about credits, subscriptions, account access, or a feature idea? Send us a note and we will help you find the next step.', sections: [['Contact support', 'Email rizzmasterhelpteam@gmail.com for bugs, billing questions, account deletion requests, or general help.'], ['Credits and Premium', 'Free credits reset daily. Premium access and subscription cancellation are managed through Google Play.'], ['Account deletion', 'Email support from the address connected to your account and include ‚ÄúDelete my account‚Äù in the subject.']], link: LEGAL_LINKS.supportEmail },
-  }[kind];
-  return <>
-    <main className="marketing-container marketing-page-padding"><button onClick={() => navigate(MARKETING_HOME_PATH)} className="mb-10 inline-flex items-center gap-2 text-sm font-bold text-white/45 transition-colors hover:text-white">‚Üê Back home</button><div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.28em] text-pink-300/80">{content.eyebrow}</p><h1 className="mt-5 text-5xl font-black tracking-[-0.04em] text-white md:text-7xl">{content.title}</h1><p className="mt-6 text-lg leading-8 text-white/55">{content.intro}</p></div><div className="mt-12 max-w-3xl space-y-5">{content.sections.map(([heading, copy]) => <section key={heading} className="marketing-card p-6 md:p-8"><h2 className="text-xl font-bold text-white">{heading}</h2><p className="mt-3 text-sm leading-7 text-white/55">{copy}</p></section>)}</div><a href={content.link} target={kind === 'support' ? undefined : '_blank'} rel={kind === 'support' ? undefined : 'noreferrer'} className="mt-8 inline-flex rounded-2xl border border-white/15 bg-white/[0.05] px-5 py-3.5 text-sm font-bold text-white transition-colors hover:bg-white/10">{kind === 'support' ? 'Email support' : 'Read the full policy ‚Üí'}</a></main><MarketingFooter navigate={navigate} />
-  </>;
-};
-
-const NotFoundPage: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) => <main className="marketing-container marketing-page-padding"><p className="text-xs font-bold uppercase tracking-[0.28em] text-pink-300/80">404</p><h1 className="mt-5 text-5xl font-black text-white">That page ghosted you.</h1><p className="mt-5 text-white/55">Let‚Äôs get you back to the good part.</p><button onClick={() => navigate(MARKETING_HOME_PATH)} className="marketing-cta-primary mt-8 rounded-2xl px-5 py-3.5 text-sm font-bold text-white">Back home ‚Üí</button></main>;
-
-const MarketingSite: React.FC = () => {
-  const [pathname, setPathname] = useState(() => typeof window === 'undefined' ? '/' : window.location.pathname);
-  const route = useMemo(() => getRoute(pathname), [pathname]);
-
-  useEffect(() => {
-    const onPopState = () => setPathname(window.location.pathname);
-    window.addEventListener('popstate', onPopState);
-    return () => window.removeEventListener('popstate', onPopState);
-  }, []);
-
-  useEffect(() => {
-    updateSeo(route);
-    window.scrollTo({ top: 0, behavior: 'auto' });
-  }, [route]);
-
-  const navigate = (path: string) => {
-    const [pathnamePart, hash] = path.split('#');
-    const nextPath = pathnamePart || '/';
-    window.history.pushState({}, '', `${nextPath}${hash ? `#${hash}` : ''}`);
-    setPathname(nextPath);
-    window.setTimeout(() => {
-      if (hash) document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth' });
-      else window.scrollTo({ top: 0, behavior: 'auto' });
-    }, 0);
-  };
-
-  const article = route.kind === 'article' ? getBlogPost(route.slug) : undefined;
-
-  return <div className="marketing-site min-h-screen overflow-x-hidden bg-[#050407] text-white"><MarketingNav navigate={navigate} />{route.kind === 'home' ? <HomePage navigate={navigate} /> : route.kind === 'blog' ? <BlogIndexPage navigate={navigate} /> : article ? <ArticlePage post={article} navigate={navigate} /> : route.kind === 'privacy' || route.kind === 'terms' || route.kind === 'support' ? <LegalPage kind={route.kind} navigate={navigate} /> : <><NotFoundPage navigate={navigate} /><MarketingFooter navigate={navigate} /></>}</div>;
-};
-
-export default MarketingSite;
+    <div className="pointer-events-none absolute -left-12 bottÎ}9∂âûÀk∫wµÁUÕîÅ—°îÅ±•πîÅÖÃÅÑÅÕΩô–Å±Ö’πç†Å•π—ºÅÑÅ…ïÖ∞ÅçΩπŸï…ÕÖ—•Ω∏∏ú∞ÅëΩ9Ω–ËÄùQ…ïÖ–Å—°îÅΩ¡ïπï»Å±•≠îÅÑÅ¡ï…ôΩ…µÖπçîÅ—°Ö–ÅπïïëÃÅÑÅÕï≈’ï∞∏úÅÙ∞(ÄÄùâïÕ–µëÖ—•πúµÖ¡¿µâ•ºµ•ëïÖÃµôΩ»µù’ÂÃúËÅÏÅëºËÄùM°Ö…îÅÕ¡ïç•ô•åÅëï—Ö•±ÃÅ—°Ö–ÅµÖ≠îÅ—°îÅπï·–ÅµïÕÕÖùîÅΩâŸ•Ω’Ã∏ú∞ÅëΩ9Ω–ËÄù•±∞Å—°îÅâ•ºÅ›•—†Åâ…ΩÖêÅ±Öâï±Ã∞Å…’±ïÃ∞ÅΩ»ÅçΩµ¡±Ö•π—Ã∏úÅÙ∞(ÄÄù›°Ö–µ—ºµ—ï·–µÖô—ï»µÑµô•…Õ–µëÖ—îúËÅÏÅëºËÄù	îÅ—•µï±‰∞ÅÕ¡ïç•ô•å∞ÅÖπêÅç±ïÖ»ÅÖâΩ’–Åïπ©ΩÂ•πúÅ—°îÅëÖ—î∏ú∞ÅëΩ9Ω–ËÄù]Ö•–ÅôΩ»ÅÑÅ¡ï…ôïç–Å¡Ö…Öù…Ö¡†ÅΩ»Åïë•–ÅÂΩ’»Å¡ï…ÕΩπÖ±•—‰ÅÖ›Ö‰∏úÅÙ)ÙÏ()çΩπÕ–Å…—•ç±ïE’•ç≠πÕ›ï»ËÅIïÖç–πÒÏÅ¡ΩÕ–ËÅ	±ΩùAΩÕ–ÅÙ¯ÄÙÄ°ÏÅ¡ΩÕ–ÅÙ§ÄÙ¯Ä†(ÄÄÒÖÕ•ëîÅç±ÖÕÕ9ÖµîÙâ…ï±Ö—•ŸîÅΩŸï…ô±Ω‹µ°•ëëï∏Å…Ω’πëïê¥Õ·∞ÅâΩ…ëï»ÅâΩ…ëï»µ¡•π¨¥Ã¿¿º»¿Åâúµù…Öë•ïπ–µ—ºµâ»Åô…Ω¥µ¡•π¨¥‘¿¿ºƒ»ÅŸ•Ñµ›°•—îΩl¿∏¿ÕtÅ—ºµ¡’…¡±î¥‘¿¿ºƒ¿Å¿¥ÿÅµêÈ¿¥‹à¯(ÄÄÄÄÒë•ÿÅç±ÖÕÕ9ÖµîÙâÖâÕΩ±’—îÄµ…•ù°–¥ƒ¿Äµ—Ω¿¥ƒ¿Å†¥Ã»Å‹¥Ã»Å…Ω’πëïêµô’±∞Åâúµ¡•π¨¥–¿¿ºƒ‘Åâ±’»¥Õ·∞àÄº¯(ÄÄÄÄÒ¿Åç±ÖÕÕ9ÖµîÙâ…ï±Ö—•ŸîÅ—ï·–µ·ÃÅôΩπ–µâ±Öç¨Å’¡¡ï…çÖÕîÅ—…Öç≠•πúµl¿∏…ïµtÅ—ï·–µ¡•π¨¥»¿¿º‡¿à˘E’•ç¨ÅÖπÕ›ï»Ω¿¯(ÄÄÄÄÒ¿Åç±ÖÕÕ9ÖµîÙâ…ï±Ö—•ŸîÅµ–¥ÃÅ—ï·–µâÖÕîÅ±ïÖë•πú¥‹Å—ï·–µ›°•—îº‹‘à˘Ì¡ΩÕ–πï·çï…¡—ÙΩ¿¯(ÄÄΩÖÕ•ëî¯(§Ï()çΩπÕ–Å…—•ç±ï·Öµ¡±ï	Ω‡ËÅIïÖç–πÒÏÅï·Öµ¡±ïÃ¸ËÅÕ—…•πùmtÅÙ¯ÄÙÄ°ÏÅï·Öµ¡±ïÃÅÙ§ÄÙ¯ÅÏ(ÄÅ•òÄ†Öï·Öµ¡±ïÃ¸π±ïπù—†§Å…ï—’…∏Åπ’±∞Ï((ÄÅ…ï—’…∏Ä†(ÄÄÄÄÒë•ÿÅç±ÖÕÕ9ÖµîÙâ…Ω’πëïê¥Õ·∞ÅâΩ…ëï»ÅâΩ…ëï»µ›°•—îºƒ¿Åâúµ›°•—îΩl¿∏¿Ã’tÅ¿¥‘ÅµêÈ¿¥ÿà¯(ÄÄÄÄÄÄÒ¿Åç±ÖÕÕ9ÖµîÙâ—ï·–µ·ÃÅôΩπ–µâ±Öç¨Å’¡¡ï…çÖÕîÅ—…Öç≠•πúµl¿∏…ïµtÅ—ï·–µ¡•π¨¥»¿¿º‹‘à˘Q…‰ÅÑÅ…ï¡±‰Å±•≠îÅ—°•ÃΩ¿¯(ÄÄÄÄÄÄÒë•ÿÅç±ÖÕÕ9ÖµîÙâµ–¥–ÅÕ¡Öçîµ‰¥Ãà¯(ÄÄÄÄÄÄÄÅÌï·Öµ¡±ïÃπµÖ¿†°ï·Öµ¡±î§ÄÙ¯ÄÒë•ÿÅ≠ï‰ıÌï·Öµ¡±ïÙÅç±ÖÕÕ9ÖµîÙâ…Ω’πëïê¥…·∞Å…Ω’πëïêµ—∞µÕ¥ÅâΩ…ëï»ÅâΩ…ëï»µ¡•π¨¥Ã¿¿ºƒ‘Åâúµ¡•π¨¥Ã¿¿Ωl¿∏¿ŸtÅ¡‡¥–Å¡‰¥ÃÅ—ï·–µÕ¥Å±ïÖë•πú¥ÿÅ—ï·–µ›°•—îº‡¿à˘Ìï·Öµ¡±ïÙΩë•ÿ¯•Ù(ÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄΩë•ÿ¯(ÄÄ§Ï)ÙÏ()çΩπÕ–Å…—•ç±ïΩΩπ–ËÅIïÖç–πÒÏÅ¡ΩÕ–ËÅ	±ΩùAΩÕ–ÅÙ¯ÄÙÄ°ÏÅ¡ΩÕ–ÅÙ§ÄÙ¯ÅÏ(ÄÅçΩπÕ–Å—•¡ÃÄÙÅIQ%1}=}=9Qm¡ΩÕ–πÕ±’ùtÏ(ÄÅ•òÄ†Ö—•¡Ã§Å…ï—’…∏Åπ’±∞Ï((ÄÅ…ï—’…∏Ä†(ÄÄÄÄÒë•ÿÅç±ÖÕÕ9ÖµîÙâù…•êÅùÖ¿¥ÃÅÕ¥Èù…•êµçΩ±Ã¥»à¯(ÄÄÄÄÄÄÒë•ÿÅç±ÖÕÕ9ÖµîÙâ…Ω’πëïê¥…·∞ÅâΩ…ëï»ÅâΩ…ëï»µïµï…Ö±ê¥Ã¿¿ºƒ‘Åâúµïµï…Ö±ê¥Ã¿¿Ωl¿∏¿’tÅ¿¥‘à¯Ò¿Åç±ÖÕÕ9ÖµîÙâ—ï·–µ·ÃÅôΩπ–µâ±Öç¨Å’¡¡ï…çÖÕîÅ—…Öç≠•πúµl¿∏…ïµtÅ—ï·–µïµï…Ö±ê¥»¿¿º‡¿à˘ºΩ¿¯Ò¿Åç±ÖÕÕ9ÖµîÙâµ–¥ÃÅ—ï·–µÕ¥Å±ïÖë•πú¥ÿÅ—ï·–µ›°•—îº‹¿à˘Ì—•¡ÃπëΩÙΩ¿¯Ωë•ÿ¯(ÄÄÄÄÄÄÒë•ÿÅç±ÖÕÕ9ÖµîÙâ…Ω’πëïê¥…·∞ÅâΩ…ëï»ÅâΩ…ëï»µ…ΩÕî¥Ã¿¿ºƒ‘Åâúµ…ΩÕî¥Ã¿¿Ωl¿∏¿’tÅ¿¥‘à¯Ò¿Åç±ÖÕÕ9ÖµîÙâ—ï·–µ·ÃÅôΩπ–µâ±Öç¨Å’¡¡ï…çÖÕîÅ—…Öç≠•πúµl¿∏…ïµtÅ—ï·–µ…ΩÕî¥»¿¿º‡¿à˘Ω∏ù–Ω¿¯Ò¿Åç±ÖÕÕ9ÖµîÙâµ–¥ÃÅ—ï·–µÕ¥Å±ïÖë•πú¥ÿÅ—ï·–µ›°•—îº‹¿à˘Ì—•¡ÃπëΩ9Ω—ÙΩ¿¯Ωë•ÿ¯(ÄÄÄÄΩë•ÿ¯(ÄÄ§Ï)ÙÏ()çΩπÕ–ÅIï±Ö—ïëAΩÕ—ÃËÅIïÖç–πÒÏÅ¡ΩÕ–ËÅ	±ΩùAΩÕ–ÏÅπÖŸ•ùÖ—îËÄ°¡Ö—†ËÅÕ—…•πú§ÄÙ¯ÅŸΩ•êÅÙ¯ÄÙÄ°ÏÅ¡ΩÕ–∞ÅπÖŸ•ùÖ—îÅÙ§ÄÙ¯ÅÏ(ÄÅçΩπÕ–Å…ï±Ö—ïëAΩÕ—ÃÄÙÅ	1=}A=MQLπô•±—ï»†°çÖπë•ëÖ—î§ÄÙ¯ÅçÖπë•ëÖ—îπÕ±’úÄÑÙÙÅ¡ΩÕ–πÕ±’ú§πÕ±•çî†¿∞ÄÃ§Ï((ÄÅ…ï—’…∏Ä†(ÄÄÄÄÒÕïç—•Ω∏Åç±ÖÕÕ9ÖµîÙâµ–¥»¿ÅâΩ…ëï»µ–ÅâΩ…ëï»µ›°•—îºƒ¿Å¡–¥ƒ»à¯(ÄÄÄÄÄÄÒ¿Åç±ÖÕÕ9ÖµîÙâ—ï·–µ·ÃÅôΩπ–µâ±Öç¨Å’¡¡ï…çÖÕîÅ—…Öç≠•πúµl¿∏…ïµtÅ—ï·–µ¡•π¨¥»¿¿º‹‘à˘-ïï¿Å…ïÖë•πúΩ¿¯(ÄÄÄÄÄÄÒ†»Åç±ÖÕÕ9ÖµîÙâµ–¥ÃÅ—ï·–¥…·∞ÅôΩπ–µâ±Öç¨Å—ï·–µ›°•—îÅµêÈ—ï·–¥Õ·∞à˘5Ω…îÅ°ï±¿ÅôΩ»ÅÂΩ’»Åπï·–Å—ï·–Ω†»¯(ÄÄÄÄÄÄÒë•ÿÅç±ÖÕÕ9ÖµîÙâµ–¥‹Åù…•êÅùÖ¿¥–ÅµêÈù…•êµçΩ±Ã¥Ãà˘Ì…ï±Ö—ïëAΩÕ—ÃπµÖ¿†°…ï±Ö—ïê§ÄÙ¯ÄÒ	±ΩùÖ…êÅ≠ï‰ıÌ…ï±Ö—ïêπÕ±’ùÙÅ¡ΩÕ–ıÌ…ï±Ö—ïëÙÅπÖŸ•ùÖ—îıÌπÖŸ•ùÖ—ïÙÄº¯•ÙΩë•ÿ¯(ÄÄÄÄΩÕïç—•Ω∏¯(ÄÄ§Ï)ÙÏ()çΩπÕ–ÅIQ%1}%9QI91}1%9-LËÅIïçΩ…êÒÕ—…•πú∞Å……Ö‰ÒÏÅÕ±’úËÅÕ—…•πúÏÅ±Öâï∞ËÅÕ—…•πúÅÙ¯¯ÄÙÅÏ(ÄÄù…ï¡±‰µ—ºµë…‰µ—ï·—ÃúËÅl(ÄÄÄÅÏÅÕ±’úËÄù…ï¡±‰µ›°ï∏µÕ°îµÕÖÂÃµ°Ö°Ñú∞Å±Öâï∞ËÄù!Ω‹Å—ºÅ…ï¡±‰Å›°ï∏ÅÕ°îÅÕÖÂÃÅ°Ö°ÑúÅÙ∞(ÄÄÄÅÏÅÕ±’úËÄùâïÕ–µ—•πëï»µΩ¡ïπï…ÃµôΩ»µù’ÂÃú∞Å±Öâï∞ËÄù	ï——ï»ÅQ•πëï»ÅΩ¡ïπï…ÃúÅÙ∞(ÄÄÄÅÏÅÕ±’úËÄù›°Ö–µ—ºµ—ï·–µÖô—ï»µÑµô•…Õ–µëÖ—îú∞Å±Öâï∞ËÄù]°Ö–Å—ºÅ—ï·–ÅÖô—ï»ÅÑÅô•…Õ–ÅëÖ—îúÅÙ(ÄÅt∞(ÄÄùâïÕ–µ—•πëï»µΩ¡ïπï…ÃµôΩ»µù’ÂÃúËÅl(ÄÄÄÅÏÅÕ±’úËÄùô’ππ‰µ¡•ç≠’¿µ±•πïÃµ—°Ö–µ›Ω…¨ú∞Å±Öâï∞ËÄù’ππ‰Å¡•ç≠’¿Å±•πïÃÅ—°Ö–Å›Ω…¨úÅÙ∞(ÄÄÄÅÏÅÕ±’úËÄùâïÕ–µëÖ—•πúµÖ¡¿µâ•ºµ•ëïÖÃµôΩ»µù’ÂÃú∞Å±Öâï∞ËÄùÖ—•πúÅÖ¡¿Åâ•ºÅ•ëïÖÃúÅÙ∞(ÄÄÄÅÏÅÕ±’úËÄù…ï¡±‰µ—ºµë…‰µ—ï·—Ãú∞Å±Öâï∞ËÄù!Ω‹Å—ºÅ…ï¡±‰Å—ºÅë…‰Å—ï·—ÃúÅÙ(ÄÅt∞(ÄÄù…ï¡±‰µ›°ï∏µÕ°îµÕÖÂÃµ°Ö°ÑúËÅl(ÄÄÄÅÏÅÕ±’úËÄù…ï¡±‰µ—ºµë…‰µ—ï·—Ãú∞Å±Öâï∞ËÄù!Ω‹Å—ºÅ°Öπë±îÅÑÅë…‰Å—ï·–úÅÙ∞(ÄÄÄÅÏÅÕ±’úËÄùô’ππ‰µ¡•ç≠’¿µ±•πïÃµ—°Ö–µ›Ω…¨ú∞Å±Öâï∞ËÄù’ππ‰ÅçΩπŸï…ÕÖ—•Ω∏ÅÕ—Ö…—ï…ÃúÅÙ∞(ÄÄÄÅÏÅÕ±’úËÄù›°Ö–µ—ºµ—ï·–µÖô—ï»µÑµô•…Õ–µëÖ—îú∞Å±Öâï∞ËÄùAΩÕ–µëÖ—îÅ—ï·—•πúÅÖëŸ•çîúÅÙ(ÄÅt∞(ÄÄùô’ππ‰µ¡•ç≠’¿µ±•πïÃµ—°Ö–µ›Ω…¨úËÅl(ÄÄÄÅÏÅÕ±’úËÄùâïÕ–µ—•πëï»µΩ¡ïπï…ÃµôΩ»µù’ÂÃú∞Å±Öâï∞ËÄù	ïÕ–ÅQ•πëï»ÅΩ¡ïπï…ÃúÅÙ∞(ÄÄÄÅÏÅÕ±’úËÄù…ï¡±‰µ›°ï∏µÕ°îµÕÖÂÃµ°Ö°Ñú∞Å±Öâï∞ËÄù]°Ö–Å—ºÅÕÖ‰ÅÖô—ï»ÅÑÅ±Ö’ù†úÅÙ∞(ÄÄÄÅÏÅÕ±’úËÄùâïÕ–µëÖ—•πúµÖ¡¿µâ•ºµ•ëïÖÃµôΩ»µù’ÂÃú∞Å±Öâï∞ËÄù]…•—îÅÑÅâï——ï»ÅëÖ—•πúÅâ•ºúÅÙ(ÄÅt∞(ÄÄùâïÕ–µëÖ—•πúµÖ¡¿µâ•ºµ•ëïÖÃµôΩ»µù’ÂÃúËÅl(ÄÄÄÅÏÅÕ±’úËÄùâïÕ–µ—•πëï»µΩ¡ïπï…ÃµôΩ»µù’ÂÃú∞Å±Öâï∞ËÄù=¡ïπï…ÃÅ—°Ö–ÅÕ—Ö…–ÅçΩπŸï…ÕÖ—•ΩπÃúÅÙ∞(ÄÄÄÅÏÅÕ±’úËÄùô’ππ‰µ¡•ç≠’¿µ±•πïÃµ—°Ö–µ›Ω…¨ú∞Å±Öâï∞ËÄùA±ÖÂô’∞Å¡•ç≠’¿Å±•πïÃúÅÙ∞(ÄÄÄÅÏÅÕ±’úËÄù›°Ö–µ—ºµ—ï·–µÖô—ï»µÑµô•…Õ–µëÖ—îú∞Å±Öâï∞ËÄù]°Ö–Å—ºÅ—ï·–ÅÖô—ï»ÅÑÅëÖ—îúÅÙ(ÄÅt∞(ÄÄù›°Ö–µ—ºµ—ï·–µÖô—ï»µÑµô•…Õ–µëÖ—îúËÅl(ÄÄÄÅÏÅÕ±’úËÄù…ï¡±‰µ—ºµë…‰µ—ï·—Ãú∞Å±Öâï∞ËÄùIï¡±‰Å—ºÅÑÅÕ°Ω…–ÅµïÕÕÖùîúÅÙ∞(ÄÄÄÅÏÅÕ±’úËÄù…ï¡±‰µ›°ï∏µÕ°îµÕÖÂÃµ°Ö°Ñú∞Å±Öâï∞ËÄù-ïï¿ÅÑÅ¡±ÖÂô’∞Åç°Ö–ÅµΩŸ•πúúÅÙ∞(ÄÄÄÅÏÅÕ±’úËÄùâïÕ–µëÖ—•πúµÖ¡¿µâ•ºµ•ëïÖÃµôΩ»µù’ÂÃú∞Å±Öâï∞ËÄùIïô…ïÕ†ÅÂΩ’»ÅëÖ—•πúÅ¡…Ωô•±îúÅÙ(ÄÅt)ÙÏ()çΩπÕ–Å…—•ç±ï%π—ï…πÖ±1•π≠ÃËÅIïÖç–πÒÏÅ¡ΩÕ–ËÅ	±ΩùAΩÕ–ÏÅπÖŸ•ùÖ—îËÄ°¡Ö—†ËÅÕ—…•πú§ÄÙ¯ÅŸΩ•êÅÙ¯ÄÙÄ°ÏÅ¡ΩÕ–∞ÅπÖŸ•ùÖ—îÅÙ§ÄÙ¯Ä†(ÄÄÒπÖÿÅÖ…•Ñµ±Öâï∞ÙâIï±Ö—ïêÅëÖ—•πúÅù’•ëïÃàÅç±ÖÕÕ9ÖµîÙâ…Ω’πëïê¥Õ·∞ÅâΩ…ëï»ÅâΩ…ëï»µ›°•—îºƒ¿Åâúµ›°•—îΩl¿∏¿ÕtÅ¿¥‘ÅµêÈ¿¥ÿà¯(ÄÄÄÄÒ¿Åç±ÖÕÕ9ÖµîÙâ—ï·–µ·ÃÅôΩπ–µâ±Öç¨Å’¡¡ï…çÖÕîÅ—…Öç≠•πúµl¿∏…ïµtÅ—ï·–µ¡•π¨¥»¿¿º‹‘à˘Ωπ—•π’îÅ…ïÖë•πúΩ¿¯(ÄÄÄÄÒë•ÿÅç±ÖÕÕ9ÖµîÙâµ–¥–Åô±ï‡Åô±ï‡µ›…Ö¿ÅùÖ¿¥»∏‘à¯(ÄÄÄÄÄÅÏ°IQ%1}%9QI91}1%9-Mm¡ΩÕ–πÕ±’ùtÅÒÅmt§πµÖ¿†°±•π¨§ÄÙ¯ÄÒÑÅ≠ï‰ıÌ±•π¨πÕ±’ùÙÅ°…ïòıÌÄΩâ±ΩúºëÌ±•π¨πÕ±’ùıÅÙÅΩπ±•ç¨ıÏ°ïŸïπ–§ÄÙ¯ÅÏÅïŸïπ–π¡…ïŸïπ—ïôÖ’±–†§ÏÅπÖŸ•ùÖ—î°ÄΩâ±ΩúºëÌ±•π¨πÕ±’ùıÄ§ÏÅıÙÅç±ÖÕÕ9ÖµîÙâ…Ω’πëïêµô’±∞ÅâΩ…ëï»ÅâΩ…ëï»µ›°•—îºƒ¿Åâúµâ±Öç¨º»¿Å¡‡¥Ã∏‘Å¡‰¥»Å—ï·–µ·ÃÅôΩπ–µâΩ±êÅ—ï·–µ›°•—îºÿ‘Å—…ÖπÕ•—•Ω∏µçΩ±Ω…ÃÅ°ΩŸï»ÈâΩ…ëï»µ¡•π¨¥Ã¿¿ºÃ¿Å°ΩŸï»È—ï·–µ¡•π¨¥ƒ¿¿à˘Ì±•π¨π±Öâï±ÙÄÒÕ¡Ö∏ÅÖ…•Ñµ°•ëëï∏Ùâ—…’îà˚äHΩÕ¡Ö∏¯ΩÑ¯•Ù(ÄÄÄÄΩë•ÿ¯(ÄÄΩπÖÿ¯(§Ï()çΩπÕ–Å…—•ç±ïAÖùîËÅIïÖç–πÒÏÅ¡ΩÕ–ËÅ	±ΩùAΩÕ–ÏÅπÖŸ•ùÖ—îËÄ°¡Ö—†ËÅÕ—…•πú§ÄÙ¯ÅŸΩ•êÅÙ¯ÄÙÄ°ÏÅ¡ΩÕ–∞ÅπÖŸ•ùÖ—îÅÙ§ÄÙ¯ÅÏ(ÄÅçΩπÕ–Åµ•ëë±ï%πëï‡ÄÙÅ5Ö—†πçï•∞°¡ΩÕ–πÕïç—•ΩπÃπ±ïπù—†ÄºÄ»§Ï((ÄÅ…ï—’…∏Ä¯(ÄÄÄÄÒµÖ•∏Åç±ÖÕÕ9ÖµîÙâµÖ…≠ï—•πúµçΩπ—Ö•πï»ÅµÖ…≠ï—•πúµ¡Öùîµ¡Öëë•πúà¯(ÄÄÄÄÄÄÒÑÅ°…ïòÙàΩâ±ΩúàÅΩπ±•ç¨ıÏ°ïŸïπ–§ÄÙ¯ÅÏÅïŸïπ–π¡…ïŸïπ—ïôÖ’±–†§ÏÅπÖŸ•ùÖ—î†úΩâ±Ωúú§ÏÅıÙÅç±ÖÕÕ9ÖµîÙâµà¥ƒ¿Å•π±•πîµô±ï‡Å•—ïµÃµçïπ—ï»ÅùÖ¿¥»Å—ï·–µÕ¥ÅôΩπ–µâΩ±êÅ—ï·–µ›°•—îº–‘Å—…ÖπÕ•—•Ω∏µçΩ±Ω…ÃÅ°ΩŸï»È—ï·–µ›°•—îà˚ä@Å	Öç¨Å—ºÅ—°îÅâ±ΩúΩÑ¯(ÄÄÄÄÄÄÒÖ…—•ç±îÅç±ÖÕÕ9ÖµîÙâµ‡µÖ’—ºÅµÖ‡µ‹¥Õ·∞à¯(ÄÄÄÄÄÄÄÄÒë•ÿÅç±ÖÕÕ9ÖµîÙâô±ï‡Åô±ï‡µ›…Ö¿Å•—ïµÃµçïπ—ï»ÅùÖ¿¥ÃÅ—ï·–µ·ÃÅôΩπ–µâΩ±êÅ’¡¡ï…çÖÕîÅ—…Öç≠•πúµl¿∏ƒ·ïµtÅ—ï·–µ›°•—îºÃ‘à¯ÒÕ¡Ö∏Åç±ÖÕÕ9ÖµîÙâ—ï·–µ¡•π¨¥Ã¿¿º‡¿à˘Ì¡ΩÕ–πçÖ—ïùΩ…ÂÙΩÕ¡Ö∏¯ÒÕ¡Ö∏˚äàΩÕ¡Ö∏¯ÒÕ¡Ö∏˘Ì¡ΩÕ–π…ïÖë•πùQ•µïÙΩÕ¡Ö∏¯ÒÕ¡Ö∏˚äàΩÕ¡Ö∏¯Ò—•µîÅëÖ—ïQ•µîıÌ¡ΩÕ–πëÖ—ïÙ˘Ìπï‹ÅÖ—î°ÄëÌ¡ΩÕ–πëÖ—ïıPƒ»Ë¿¿Ë¿¡Ä§π—Ω1ΩçÖ±ïÖ—ïM—…•πú†ùï∏µULú∞ÅÏÅµΩπ—†ËÄù±Ωπúú∞ÅëÖ‰ËÄùπ’µï…•åú∞ÅÂïÖ»ËÄùπ’µï…•åúÅÙ•ÙΩ—•µî¯Ωë•ÿ¯(ÄÄÄÄÄÄÄÄÒ†ƒÅç±ÖÕÕ9ÖµîÙâµ–¥ÿÅ—ï·–¥—·∞ÅôΩπ–µâ±Öç¨Å±ïÖë•πúµlƒ∏¿’tÅ—…Öç≠•πúµl¥¿∏¿—ïµtÅ—ï·–µ›°•—îÅµêÈ—ï·–¥Ÿ·∞à˘Ì¡ΩÕ–π—•—±ïÙΩ†ƒ¯(ÄÄÄÄÄÄÄÄÒ¿Åç±ÖÕÕ9ÖµîÙâµ–¥‹Å—ï·–µ±úÅ±ïÖë•πú¥‡Å—ï·–µ›°•—îº‘‘à˘Ì¡ΩÕ–πëïÕç…•¡—•ΩπÙΩ¿¯(ÄÄÄÄÄÄÄÄÒë•ÿÅç±ÖÕÕ9ÖµîÙâµ–¥ƒ¿ÅÕ¡Öçîµ‰¥‘à¯(ÄÄÄÄÄÄÄÄÄÄÒ…—•ç±ïE’•ç≠πÕ›ï»Å¡ΩÕ–ıÌ¡ΩÕ—ÙÄº¯(ÄÄÄÄÄÄÄÄÄÄÒ…—•ç±ï·Öµ¡±ï	Ω‡Åï·Öµ¡±ïÃıÌIQ%1}a5A1Mm¡ΩÕ–πÕ±’ùuÙÄº¯(ÄÄÄÄÄÄÄÄÄÄÒ…—•ç±ïΩΩπ–Å¡ΩÕ–ıÌ¡ΩÕ—ÙÄº¯(ÄÄÄÄÄÄÄÄÄÄÒ…—•ç±ï%π—ï…πÖ±1•π≠ÃÅ¡ΩÕ–ıÌ¡ΩÕ—ÙÅπÖŸ•ùÖ—îıÌπÖŸ•ùÖ—ïÙÄº¯(ÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄÒë•ÿÅç±ÖÕÕ9ÖµîÙâµ–¥ƒ»ÅÕ¡Öçîµ‰¥ƒ»à¯(ÄÄÄÄÄÄÄÄÄÅÌ¡ΩÕ–πÕïç—•ΩπÃπµÖ¿†°Õïç—•Ω∏∞Å•πëï‡§ÄÙ¯ÄÒIïÖç–π…Öùµïπ–Å≠ï‰ıÌÕïç—•Ω∏π°ïÖë•πùÙ¯(ÄÄÄÄÄÄÄÄÄÄÄÅÌ•πëï‡ÄÙÙÙÅµ•ëë±ï%πëï‡ÄòòÄÒ…—•ç±ï—ÑÅπÖŸ•ùÖ—îıÌπÖŸ•ùÖ—ïÙÅçΩµ¡Öç–Äº˘Ù(ÄÄÄÄÄÄÄÄÄÄÄÄÒÕïç—•Ω∏¯Ò†»Åç±ÖÕÕ9ÖµîÙâ—ï·–¥…·∞ÅôΩπ–µâΩ±êÅ—…Öç≠•πúµ—•ù°–Å—ï·–µ›°•—îÅµêÈ—ï·–¥Õ·∞à˘ÌÕïç—•Ω∏π°ïÖë•πùÙΩ†»˘ÌÕïç—•Ω∏π¡Ö…Öù…Ö¡°ÃπµÖ¿†°¡Ö…Öù…Ö¡†§ÄÙ¯ÄÒ¿Å≠ï‰ıÌ¡Ö…Öù…Ö¡°ÙÅç±ÖÕÕ9ÖµîÙâµ–¥‘Å—ï·–µâÖÕîÅ±ïÖë•πú¥‡Å—ï·–µ›°•—îºÿ¿à˘Ì¡Ö…Öù…Ö¡°ÙΩ¿¯•ıÌÕïç—•Ω∏πâ’±±ï—ÃÄòòÄÒ’∞Åç±ÖÕÕ9ÖµîÙâµ–¥ÿÅÕ¡Öçîµ‰¥ÃÅ…Ω’πëïê¥…·∞ÅâΩ…ëï»ÅâΩ…ëï»µ¡•π¨¥Ã¿¿ºƒ¿Åâúµ¡•π¨¥Ã¿¿Ωl¿∏¿—tÅ¿¥‘Å—ï·–µÕ¥Å±ïÖë•πú¥‹Å—ï·–µ›°•—îºÿ‘à˘ÌÕïç—•Ω∏πâ’±±ï—ÃπµÖ¿†°â’±±ï–§ÄÙ¯ÄÒ±§Å≠ï‰ıÌâ’±±ï—ÙÅç±ÖÕÕ9ÖµîÙâô±ï‡ÅùÖ¿¥Ãà¯ÒÕ¡Ö∏Åç±ÖÕÕ9ÖµîÙâµ–¥ƒÅ—ï·–µ¡•π¨¥Ã¿¿à˚äròΩÕ¡Ö∏¯ÒÕ¡Ö∏˘Ìâ’±±ï—ÙΩÕ¡Ö∏¯Ω±§¯•ÙΩ’∞˘ÙΩÕïç—•Ω∏¯(ÄÄÄÄÄÄÄÄÄÄΩIïÖç–π…Öùµïπ–¯•Ù(ÄÄÄÄÄÄÄÄΩë•ÿ¯(ÄÄÄÄÄÄÄÄÒ…—•ç±ï—ÑÅπÖŸ•ùÖ—îıÌπÖŸ•ùÖ—ïÙÄº¯(ÄÄÄÄÄÄÄÄÒIï±Ö—ïëAΩÕ—ÃÅ¡ΩÕ–ıÌ¡ΩÕ—ÙÅπÖŸ•ùÖ—îıÌπÖŸ•ùÖ—ïÙÄº¯(ÄÄÄÄÄÄΩÖ…—•ç±î¯(ÄÄÄÄΩµÖ•∏¯(ÄÄÄÄÒ5Ö…≠ï—•πùΩΩ—ï»ÅπÖŸ•ùÖ—îıÌπÖŸ•ùÖ—ïÙÄº¯(ÄÄº¯Ï)ÙÏ()çΩπÕ–Å…—•ç±ï—ÑËÅIïÖç–πÒÏÅπÖŸ•ùÖ—îËÄ°¡Ö—†ËÅÕ—…•πú§ÄÙ¯ÅŸΩ•êÏÅçΩµ¡Öç–¸ËÅâΩΩ±ïÖ∏ÅÙ¯ÄÙÄ°ÏÅπÖŸ•ùÖ—î∞ÅçΩµ¡Öç–ÄÙÅôÖ±ÕîÅÙ§ÄÙ¯ÄÒë•ÿÅç±ÖÕÕ9ÖµîıÌÅ…ï±Ö—•ŸîÅΩŸï…ô±Ω‹µ°•ëëï∏Å…Ω’πëïê¥Õ·∞ÅâΩ…ëï»ÅâΩ…ëï»µ¡•π¨¥Ã¿¿ºƒ‘Åâúµù…Öë•ïπ–µ—ºµâ»Åô…Ω¥µ¡•π¨¥‘¿¿ºƒ‘Å—ºµ¡’…¡±î¥‘¿¿ºƒ¿ÄëÌçΩµ¡Öç–Ä¸Äùµ‰¥»Å¿¥ÿúÄËÄùµ–¥ƒÿÅ¿¥‹ÅµêÈ¿¥‰ùıÅÙ¯Òë•ÿÅç±ÖÕÕ9ÖµîÙâÖâÕΩ±’—îÄµ…•ù°–¥ƒ»Äµ—Ω¿¥ƒ»Å†¥Ã»Å‹¥Ã»Å…Ω’πëïêµô’±∞Åâúµ¡•π¨¥–¿¿º»¿Åâ±’»¥Õ·∞àÄº¯Ò¿Åç±ÖÕÕ9ÖµîÙâ…ï±Ö—•ŸîÅ—ï·–µ·ÃÅôΩπ–µâΩ±êÅ’¡¡ï…çÖÕîÅ—…Öç≠•πúµl¿∏»…ïµtÅ—ï·–µ¡•π¨¥»¿¿º‹‘à˘9ïïêÅÑÅÕïçΩπêÅΩ¡•π•Ω∏¸Ω¿¯Ò†»Åç±ÖÕÕ9ÖµîÙâ…ï±Ö—•ŸîÅµ–¥ÃÅ—ï·–¥…·∞ÅôΩπ–µâΩ±êÅ—ï·–µ›°•—îà˘Q’…∏Å—°îÅÕ•—’Ö—•Ω∏Å•π—ºÅÑÅÕïπêµ…ïÖë‰Å…ï¡±‰∏Ω†»¯Ò¿Åç±ÖÕÕ9ÖµîÙâ…ï±Ö—•ŸîÅµ–¥ÃÅµÖ‡µ‹µ·∞Å—ï·–µÕ¥Å±ïÖë•πú¥ÿÅ—ï·–µ›°•—îº‘¿à˘I•ÈËÅ5ÖÕ—ï»Å°ï±¡ÃÅÂΩ‘Åô•πêÅ—°îÅ…•ù°–Å›Ω…ëÃÅ›•—°Ω’–Å±ΩÕ•πúÅÂΩ’»Å¡ï…ÕΩπÖ±•—‰∏Ω¿¯Òë•ÿÅç±ÖÕÕ9ÖµîÙâ…ï±Ö—•ŸîÅµ–¥ÿÅô±ï‡Åô±ï‡µçΩ∞ÅùÖ¿¥ÃÅÕ¥Èô±ï‡µ…Ω‹à¯ÒA±ÖÂM—Ω…ï	’——Ω∏Äº¯Òâ’——Ω∏ÅΩπ±•ç¨ıÏ†§ÄÙ¯ÅπÖŸ•ùÖ—î°5I-Q%9}!=5}AQ •ÙÅç±ÖÕÕ9ÖµîÙâ…Ω’πëïê¥…·∞Å¡‡¥‘Å¡‰¥Ã∏‘Å—ï·–µÕ¥ÅôΩπ–µâΩ±êÅ—ï·–µ›°•—îºÿ¿Å—…ÖπÕ•—•Ω∏µçΩ±Ω…ÃÅ°ΩŸï»È—ï·–µ›°•—îà˘·¡±Ω…îÅI•ÈËÅ5ÖÕ—ï»ÉäHΩâ’——Ω∏¯Ωë•ÿ¯Ωë•ÿ¯Ï()çΩπÕ–Å1ïùÖ±AÖùîËÅIïÖç–πÒÏÅ≠•πêËÄù¡…•ŸÖç‰úÅÄù—ï…µÃúÅÄùÕ’¡¡Ω…–úÏÅπÖŸ•ùÖ—îËÄ°¡Ö—†ËÅÕ—…•πú§ÄÙ¯ÅŸΩ•êÅÙ¯ÄÙÄ°ÏÅ≠•πê∞ÅπÖŸ•ùÖ—îÅÙ§ÄÙ¯ÅÏ(ÄÅçΩπÕ–ÅçΩπ—ïπ–ÄÙÅÏ(ÄÄÄÅ¡…•ŸÖç‰ËÅÏÅïÂïâ…Ω‹ËÄùeΩ’»ÅëÖ—ÑÅµÖ——ï…Ãú∞Å—•—±îËÄùA…•ŸÖç‰ÅAΩ±•ç‰ú∞Å•π—…ºËÄùI•ÈËÅ5ÖÕ—ï»Å•ÃÅâ’•±–Å—ºÅ°ï±¿Å›•—†ÅïŸï…ÂëÖ‰ÅçΩπŸï…ÕÖ—•ΩπÃÅ›°•±îÅ≠ïï¡•πúÅëÖ—ÑÅçΩ±±ïç—•Ω∏ÅôΩç’ÕïêÅΩ∏Å…’ππ•πúÅ—°îÅ¡…Ωë’ç–∏ú∞ÅÕïç—•ΩπÃËÅmlù]°Ö–Å›îÅçΩ±±ïç–ú∞Äù]îÅµÖ‰Å¡…ΩçïÕÃÅÖççΩ’π–Åëï—Ö•±Ã∞ÅÕÖŸïêÅ•—ïµÃ∞Å¡…Ωô•±îÅ¡…ïôï…ïπçïÃ∞Å¡’…ç°ÖÕîÅÕ—Ö—î∞ÅÖπêÅ—°îÅ—ï·–ÅΩ»Å•µÖùîÅçΩπ—ï·–ÅÂΩ‘Åç°ΩΩÕîÅ—ºÅÕ’âµ•–ÅôΩ»Åùïπï…Ö—•Ω∏∏Å]îÅΩπ±‰Å’ÕîÅ—°•ÃÅ•πôΩ…µÖ—•Ω∏Å—ºÅ¡…ΩŸ•ëî∞ÅÕïç’…î∞ÅÖπêÅ•µ¡…ΩŸîÅ—°îÅÕï…Ÿ•çî∏ùt∞Ålùïπï…Ö—ïêÅçΩπ—ïπ–ú∞Äù%π¡’—ÃÅÖ…îÅ¡…ΩçïÕÕïêÅ—ºÅùïπï…Ö—îÅ…ïÕ¡ΩπÕïÃ∏Å=π±‰Å•—ïµÃÅÂΩ‘Åï·¡±•ç•—±‰ÅÕÖŸîÅÖ…îÅ•π—ïπëïêÅ—ºÅ…ïµÖ•∏Å•∏ÅÂΩ’»ÅÖççΩ’π–Å°•Õ—Ω…‰∏ÅIïŸ•ï‹Å—°îÅô’±∞Å°ΩÕ—ïêÅ¡Ω±•ç‰Å±•π≠ïêÅâï±Ω‹ÅôΩ»Å—°îÅç’……ïπ–Åëï—Ö•±Ã∏ùt∞ÅlùeΩ’»Åç°Ω•çïÃú∞ÄùeΩ‘ÅçÖ∏Å…ï≈’ïÕ–ÅÖççΩ’π–Å°ï±¿∞ÅëÖ—ÑÅ≈’ïÕ—•ΩπÃ∞ÅΩ»Åëï±ï—•Ω∏Å—°…Ω’ù†ÅM’¡¡Ω…–∏ùut∞Å±•π¨ËÅ11}1%9-Lπ¡…•ŸÖç‰ÅÙ∞(ÄÄÄÅ—ï…µÃËÅÏÅïÂïâ…Ω‹ËÄùUÕîÅ•–Å—°Ω’ù°—ô’±±‰ú∞Å—•—±îËÄùQï…µÃÅΩòÅMï…Ÿ•çîú∞Å•π—…ºËÄùI•ÈËÅ5ÖÕ—ï»Å•ÃÅÖ∏Å$ÅëÖ—•πúÅÖÕÕ•Õ—Öπ–ÅôΩ»Åïπ—ï…—Ö•πµïπ–ÅÖπêÅçΩµµ’π•çÖ—•Ω∏ÅÕ’¡¡Ω…”äQπΩ–ÅÑÅÕ’âÕ—•—’—îÅôΩ»ÅÂΩ’»Å©’ëùµïπ–∏ú∞ÅÕïç—•ΩπÃËÅmlùUÕ•πúÅ—°îÅÕï…Ÿ•çîú∞ÄùeΩ‘ÅÖ…îÅ…ïÕ¡ΩπÕ•â±îÅôΩ»Å—°îÅµïÕÕÖùïÃÅÂΩ‘ÅÕïπêÅÖπêÅ—°îÅ›Ö‰ÅÂΩ‘Å’ÕîÅ$µùïπï…Ö—ïêÅÕ’ùùïÕ—•ΩπÃ∏ÅΩπ—ïπ–ÅµÖ‰ÅâîÅ•µ¡ï…ôïç–∞ÅÕºÅ…ïŸ•ï‹Å•–ÅâïôΩ…îÅÕ°Ö…•πú∏ùt∞ÅlùIïÕ¡ïç—ô’∞ÅçΩπë’ç–ú∞ÄùºÅπΩ–Å’ÕîÅ—°îÅÕï…Ÿ•çîÅ—ºÅç…ïÖ—îÅ°Ö…µô’∞∞Å•±±ïùÖ∞∞ÅÖâ’Õ•Ÿî∞ÅΩ»Å°Ö…ÖÕÕ•πúÅçΩπ—ïπ–∏ÅççïÕÃÅµÖ‰ÅâîÅ±•µ•—ïêÅ›°ï∏Å—°îÅÕï…Ÿ•çîÅ•ÃÅµ•Õ’Õïê∏ùt∞ÅlùA’…ç°ÖÕïÃú∞Äùπë…Ω•êÅÕ’âÕç…•¡—•ΩπÃÅÖ…îÅâ•±±ïêÅ—°…Ω’ù†ÅΩΩù±îÅA±Ö‰∏Å]ïàÅÕ’âÕç…•¡—•ΩπÃÅÖ…îÅâ•±±ïêÅ—°…Ω’ù†ÅΩëºÅAÖÂµïπ—ÃÅÖπêÅçÖ∏ÅâîÅµÖπÖùïêÅô…Ω¥Å—°îÅ›ïàÅâ•±±•πúÅ¡Ω…—Ö∞∏ùut∞Å±•π¨ËÅ11}1%9-Lπ—ï…µÃÅÙ∞(ÄÄÄÅÕ’¡¡Ω…–ËÅÏÅïÂïâ…Ω‹ËÄù]îÅÖ…îÅ°ï…îÅ—ºÅ°ï±¿ú∞Å—•—±îËÄùM’¡¡Ω…–Åïπ—ï»ú∞Å•π—…ºËÄùE’ïÕ—•ΩπÃÅÖâΩ’–Åç…ïë•—Ã∞ÅÕ’âÕç…•¡—•ΩπÃ∞ÅÖççΩ’π–ÅÖççïÕÃ∞ÅΩ»ÅÑÅôïÖ—’…îÅ•ëïÑ¸ÅMïπêÅ’ÃÅÑÅπΩ—îÅÖπêÅ›îÅ›•±∞Å°ï±¿ÅÂΩ‘Åô•πêÅ—°îÅπï·–ÅÕ—ï¿∏ú∞ÅÕïç—•ΩπÃËÅmlùΩπ—Öç–ÅÕ’¡¡Ω…–ú∞ÄùµÖ•∞Å…•ÈÈµÖÕ—ï…°ï±¡—ïÖµùµÖ•∞πçΩ¥ÅôΩ»Åâ’ùÃ∞Åâ•±±•πúÅ≈’ïÕ—•ΩπÃ∞ÅÖççΩ’π–Åëï±ï—•Ω∏Å…ï≈’ïÕ—Ã∞ÅΩ»Åùïπï…Ö∞Å°ï±¿∏ùt∞Ålù…ïë•—ÃÅÖπêÅA…ïµ•’¥ú∞Äù…ïîÅç…ïë•—ÃÅ…ïÕï–ÅëÖ•±‰∏Å5ÖπÖùîÅπë…Ω•êÅÕ’âÕç…•¡—•ΩπÃÅ•∏ÅΩΩù±îÅA±Ö‰ÅÖπêÅ›ïàÅÕ’âÕç…•¡—•ΩπÃÅ•∏Å—°îÅΩëºÅAÖÂµïπ—ÃÅ¡Ω…—Ö∞∏ÅA…ïµ•’¥ÅôΩ±±Ω›ÃÅ—°îÅÕÖµîÅÕ•ùπïêµ•∏ÅI•ÈËÅ5ÖÕ—ï»ÅÖççΩ’π–∏ùt∞ÅlùççΩ’π–Åëï±ï—•Ω∏ú∞ÄùÖπçï∞ÅÖ∏ÅÖç—•ŸîÅ›ïàÅÕ’âÕç…•¡—•Ω∏ÅâïôΩ…îÅëï±ï—•πúÅÂΩ’»ÅÖççΩ’π–∏ÅeΩ‘ÅçÖ∏Å—°ï∏Åëï±ï—îÅ—°îÅÖççΩ’π–Åô…Ω¥ÅM’¡¡Ω…–Å•πÕ•ëîÅ—°îÅÖ¡¿∏ùut∞Å±•π¨ËÅ11}1%9-LπÕ’¡¡Ω…—µÖ•∞ÅÙ∞(ÄÅım≠•πëtÏ(ÄÅ…ï—’…∏Ä¯(ÄÄÄÄÒµÖ•∏Åç±ÖÕÕ9ÖµîÙâµÖ…≠ï—•πúµçΩπ—Ö•πï»ÅµÖ…≠ï—•πúµ¡Öùîµ¡Öëë•πúà¯Òâ’——Ω∏ÅΩπ±•ç¨ıÏ†§ÄÙ¯ÅπÖŸ•ùÖ—î°5I-Q%9}!=5}AQ •ÙÅç±ÖÕÕ9ÖµîÙâµà¥ƒ¿Å•π±•πîµô±ï‡Å•—ïµÃµçïπ—ï»ÅùÖ¿¥»Å—ï·–µÕ¥ÅôΩπ–µâΩ±êÅ—ï·–µ›°•—îº–‘Å—…ÖπÕ•—•Ω∏µçΩ±Ω…ÃÅ°ΩŸï»È—ï·–µ›°•—îà˚ä@Å	Öç¨Å°ΩµîΩâ’——Ω∏¯Òë•ÿÅç±ÖÕÕ9ÖµîÙâµÖ‡µ‹¥Õ·∞à¯Ò¿Åç±ÖÕÕ9ÖµîÙâ—ï·–µ·ÃÅôΩπ–µâΩ±êÅ’¡¡ï…çÖÕîÅ—…Öç≠•πúµl¿∏»·ïµtÅ—ï·–µ¡•π¨¥Ã¿¿º‡¿à˘ÌçΩπ—ïπ–πïÂïâ…Ω›ÙΩ¿¯Ò†ƒÅç±ÖÕÕ9ÖµîÙâµ–¥‘Å—ï·–¥’·∞ÅôΩπ–µâ±Öç¨Å—…Öç≠•πúµl¥¿∏¿—ïµtÅ—ï·–µ›°•—îÅµêÈ—ï·–¥›·∞à˘ÌçΩπ—ïπ–π—•—±ïÙΩ†ƒ¯Ò¿Åç±ÖÕÕ9ÖµîÙâµ–¥ÿÅ—ï·–µ±úÅ±ïÖë•πú¥‡Å—ï·–µ›°•—îº‘‘à˘ÌçΩπ—ïπ–π•π—…ΩÙΩ¿¯Ωë•ÿ¯Òë•ÿÅç±ÖÕÕ9ÖµîÙâµ–¥ƒ»ÅµÖ‡µ‹¥Õ·∞ÅÕ¡Öçîµ‰¥‘à˘ÌçΩπ—ïπ–πÕïç—•ΩπÃπµÖ¿†°m°ïÖë•πú∞ÅçΩ¡Ât§ÄÙ¯ÄÒÕïç—•Ω∏Å≠ï‰ıÌ°ïÖë•πùÙÅç±ÖÕÕ9ÖµîÙâµÖ…≠ï—•πúµçÖ…êÅ¿¥ÿÅµêÈ¿¥‡à¯Ò†»Åç±ÖÕÕ9ÖµîÙâ—ï·–µ·∞ÅôΩπ–µâΩ±êÅ—ï·–µ›°•—îà˘Ì°ïÖë•πùÙΩ†»¯Ò¿Åç±ÖÕÕ9ÖµîÙâµ–¥ÃÅ—ï·–µÕ¥Å±ïÖë•πú¥‹Å—ï·–µ›°•—îº‘‘à˘ÌçΩ¡ÂÙΩ¿¯ΩÕïç—•Ω∏¯•ÙΩë•ÿ¯ÒÑÅ°…ïòıÌçΩπ—ïπ–π±•π≠ÙÅ—Ö…ùï–ıÌ≠•πêÄÙÙÙÄùÕ’¡¡Ω…–úÄ¸Å’πëïô•πïêÄËÄù}â±Öπ¨ùÙÅ…ï∞ıÌ≠•πêÄÙÙÙÄùÕ’¡¡Ω…–úÄ¸Å’πëïô•πïêÄËÄùπΩ…ïôï……ï»ùÙÅç±ÖÕÕ9ÖµîÙâµ–¥‡Å•π±•πîµô±ï‡Å…Ω’πëïê¥…·∞ÅâΩ…ëï»ÅâΩ…ëï»µ›°•—îºƒ‘Åâúµ›°•—îΩl¿∏¿’tÅ¡‡¥‘Å¡‰¥Ã∏‘Å—ï·–µÕ¥ÅôΩπ–µâΩ±êÅ—ï·–µ›°•—îÅ—…ÖπÕ•—•Ω∏µçΩ±Ω…ÃÅ°ΩŸï»Èâúµ›°•—îºƒ¿à˘Ì≠•πêÄÙÙÙÄùÕ’¡¡Ω…–úÄ¸ÄùµÖ•∞ÅÕ’¡¡Ω…–úÄËÄùIïÖêÅ—°îÅô’±∞Å¡Ω±•ç‰ÉäHùÙΩÑ¯ΩµÖ•∏¯Ò5Ö…≠ï—•πùΩΩ—ï»ÅπÖŸ•ùÖ—îıÌπÖŸ•ùÖ—ïÙÄº¯(ÄÄº¯Ï)ÙÏ()çΩπÕ–Å9Ω—Ω’πëAÖùîËÅIïÖç–πÒÏÅπÖŸ•ùÖ—îËÄ°¡Ö—†ËÅÕ—…•πú§ÄÙ¯ÅŸΩ•êÅÙ¯ÄÙÄ°ÏÅπÖŸ•ùÖ—îÅÙ§ÄÙ¯ÄÒµÖ•∏Åç±ÖÕÕ9ÖµîÙâµÖ…≠ï—•πúµçΩπ—Ö•πï»ÅµÖ…≠ï—•πúµ¡Öùîµ¡Öëë•πúà¯Ò¿Åç±ÖÕÕ9ÖµîÙâ—ï·–µ·ÃÅôΩπ–µâΩ±êÅ’¡¡ï…çÖÕîÅ—…Öç≠•πúµl¿∏»·ïµtÅ—ï·–µ¡•π¨¥Ã¿¿º‡¿à¯–¿–Ω¿¯Ò†ƒÅç±ÖÕÕ9ÖµîÙâµ–¥‘Å—ï·–¥’·∞ÅôΩπ–µâ±Öç¨Å—ï·–µ›°•—îà˘Q°Ö–Å¡ÖùîÅù°ΩÕ—ïêÅÂΩ‘∏Ω†ƒ¯Ò¿Åç±ÖÕÕ9ÖµîÙâµ–¥‘Å—ï·–µ›°•—îº‘‘à˘1ï”äeÃÅùï–ÅÂΩ‘ÅâÖç¨Å—ºÅ—°îÅùΩΩêÅ¡Ö…–∏Ω¿¯Òâ’——Ω∏ÅΩπ±•ç¨ıÏ†§ÄÙ¯ÅπÖŸ•ùÖ—î°5I-Q%9}!=5}AQ •ÙÅç±ÖÕÕ9ÖµîÙâµÖ…≠ï—•πúµç—Ñµ¡…•µÖ…‰Åµ–¥‡Å…Ω’πëïê¥…·∞Å¡‡¥‘Å¡‰¥Ã∏‘Å—ï·–µÕ¥ÅôΩπ–µâΩ±êÅ—ï·–µ›°•—îà˘	Öç¨Å°ΩµîÉäHΩâ’——Ω∏¯ΩµÖ•∏¯Ï()çΩπÕ–Å5Ö…≠ï—•πùM•—îËÅIïÖç–πÄÙÄ†§ÄÙ¯ÅÏ(ÄÅçΩπÕ–Åm¡Ö—°πÖµî∞ÅÕï—AÖ—°πÖµïtÄÙÅ’ÕïM—Ö—î††§ÄÙ¯Å—Â¡ïΩòÅ›•πëΩ‹ÄÙÙÙÄù’πëïô•πïêúÄ¸ÄúºúÄËÅ›•πëΩ‹π±ΩçÖ—•Ω∏π¡Ö—°πÖµî§Ï(ÄÅçΩπÕ–Å…Ω’—îÄÙÅ’Õï5ïµº††§ÄÙ¯Åùï—IΩ’—î°¡Ö—°πÖµî§∞Åm¡Ö—°πÖµït§Ï((ÄÅ’Õïôôïç–††§ÄÙ¯ÅÏ(ÄÄÄÅçΩπÕ–ÅΩπAΩ¡M—Ö—îÄÙÄ†§ÄÙ¯ÅÕï—AÖ—°πÖµî°›•πëΩ‹π±ΩçÖ—•Ω∏π¡Ö—°πÖµî§Ï(ÄÄÄÅ›•πëΩ‹πÖëëŸïπ—1•Õ—ïπï»†ù¡Ω¡Õ—Ö—îú∞ÅΩπAΩ¡M—Ö—î§Ï(ÄÄÄÅ…ï—’…∏Ä†§ÄÙ¯Å›•πëΩ‹π…ïµΩŸïŸïπ—1•Õ—ïπï»†ù¡Ω¡Õ—Ö—îú∞ÅΩπAΩ¡M—Ö—î§Ï(ÄÅÙ∞Åmt§Ï((ÄÅ’Õïôôïç–††§ÄÙ¯ÅÏ(ÄÄÄÅ’¡ëÖ—ïMïº°…Ω’—î§Ï(ÄÄÄÅ›•πëΩ‹πÕç…Ω±±Qº°ÏÅ—Ω¿ËÄ¿∞Åâï°ÖŸ•Ω»ËÄùÖ’—ºúÅÙ§Ï(ÄÅÙ∞Åm…Ω’—ït§Ï((ÄÅçΩπÕ–ÅπÖŸ•ùÖ—îÄÙÄ°¡Ö—†ËÅÕ—…•πú§ÄÙ¯ÅÏ(ÄÄÄÅçΩπÕ–Åm¡Ö—°πÖµïAÖ…–∞Å°ÖÕ°tÄÙÅ¡Ö—†πÕ¡±•–†úåú§Ï(ÄÄÄÅçΩπÕ–Åπï·—AÖ—†ÄÙÅ¡Ö—°πÖµïAÖ…–ÅÒÄúºúÏ(ÄÄÄÅ›•πëΩ‹π°•Õ—Ω…‰π¡’Õ°M—Ö—î°ÌÙ∞Äúú∞ÅÄëÌπï·—AÖ—°ÙëÌ°ÖÕ†Ä¸ÅÄåëÌ°ÖÕ°ıÄÄËÄúùıÄ§Ï(ÄÄÄÅÕï—AÖ—°πÖµî°πï·—AÖ—†§Ï(ÄÄÄÅ›•πëΩ‹πÕï—Q•µïΩ’–††§ÄÙ¯ÅÏ(ÄÄÄÄÄÅ•òÄ°°ÖÕ†§ÅëΩç’µïπ–πùï—±ïµïπ—	Â%ê°°ÖÕ†§¸πÕç…Ω±±%π—ΩY•ï‹°ÏÅâï°ÖŸ•Ω»ËÄùÕµΩΩ—†úÅÙ§Ï(ÄÄÄÄÄÅï±ÕîÅ›•πëΩ‹πÕç…Ω±±Qº°ÏÅ—Ω¿ËÄ¿∞Åâï°ÖŸ•Ω»ËÄùÖ’—ºúÅÙ§Ï(ÄÄÄÅÙ∞Ä¿§Ï(ÄÅÙÏ((ÄÅçΩπÕ–ÅÖ…—•ç±îÄÙÅ…Ω’—îπ≠•πêÄÙÙÙÄùÖ…—•ç±îúÄ¸Åùï—	±ΩùAΩÕ–°…Ω’—îπÕ±’ú§ÄËÅ’πëïô•πïêÏ((ÄÅ…ï—’…∏ÄÒë•ÿÅç±ÖÕÕ9ÖµîÙâµÖ…≠ï—•πúµÕ•—îÅµ•∏µ†µÕç…ïï∏ÅΩŸï…ô±Ω‹µ‡µ°•ëëï∏Åâúµlå¿‘¿–¿›tÅ—ï·–µ›°•—îà¯Ò5Ö…≠ï—•πù9ÖÿÅπÖŸ•ùÖ—îıÌπÖŸ•ùÖ—ïÙÄº˘Ì…Ω’—îπ≠•πêÄÙÙÙÄù°ΩµîúÄ¸ÄÒ!ΩµïAÖùîÅπÖŸ•ùÖ—îıÌπÖŸ•ùÖ—ïÙÄº¯ÄËÅ…Ω’—îπ≠•πêÄÙÙÙÄùâ±ΩúúÄ¸ÄÒ	±Ωù%πëï·AÖùîÅπÖŸ•ùÖ—îıÌπÖŸ•ùÖ—ïÙÄº¯ÄËÅÖ…—•ç±îÄ¸ÄÒ…—•ç±ïAÖùîÅ¡ΩÕ–ıÌÖ…—•ç±ïÙÅπÖŸ•ùÖ—îıÌπÖŸ•ùÖ—ïÙÄº¯ÄËÅ…Ω’—îπ≠•πêÄÙÙÙÄù¡…•ŸÖç‰úÅÒÅ…Ω’—îπ≠•πêÄÙÙÙÄù—ï…µÃúÅÒÅ…Ω’—îπ≠•πêÄÙÙÙÄùÕ’¡¡Ω…–úÄ¸ÄÒ1ïùÖ±AÖùîÅ≠•πêıÌ…Ω’—îπ≠•πëÙÅπÖŸ•ùÖ—îıÌπÖŸ•ùÖ—ïÙÄº¯ÄËÄ¯Ò9Ω—Ω’πëAÖùîÅπÖŸ•ùÖ—îıÌπÖŸ•ùÖ—ïÙÄº¯Ò5Ö…≠ï—•πùΩΩ—ï»ÅπÖŸ•ùÖ—îıÌπÖŸ•ùÖ—ïÙÄº¯º˘ÙΩë•ÿ¯Ï)ÙÏ()ï·¡Ω…–ÅëïôÖ’±–Å5Ö…≠ï—•πùM•—îÏ
