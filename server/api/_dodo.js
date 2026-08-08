@@ -32,19 +32,28 @@ export const dodoConfig = {
   },
 };
 
-export const isDodoConfigured = () => Boolean(
-  dodoConfig.enabled &&
+const isDodoApiConfigured = () => Boolean(
   dodoConfig.apiKey &&
+  hasValidEnvironment
+);
+
+export const isDodoWebhookConfigured = () => Boolean(
+  isDodoApiConfigured() &&
   dodoConfig.webhookKey &&
-  hasValidEnvironment &&
   dodoConfig.products.WEEKLY.id &&
   dodoConfig.products.MONTHLY.id
 );
 
-export const isDodoWebhookConfigured = isDodoConfigured;
+// This flag controls new sales only. Existing subscribers must always retain
+// webhook updates and portal access when the provider credentials are valid.
+export const isDodoConfigured = () => Boolean(
+  dodoConfig.enabled && isDodoWebhookConfigured()
+);
+
+export const isDodoPortalConfigured = isDodoApiConfigured;
 
 export const getDodoClient = () => {
-  if (!dodoConfig.apiKey) return null;
+  if (!isDodoApiConfigured()) return null;
   return new DodoPayments({
     bearerToken: dodoConfig.apiKey,
     webhookKey: dodoConfig.webhookKey,
@@ -84,7 +93,7 @@ export const recomputePremium = async (userId) => {
   return data;
 };
 
-export const getActiveDodoSubscription = async (userId) => {
+export const getManageableDodoSubscription = async (userId) => {
   if (!supabaseAdmin) return null;
   const { data, error } = await supabaseAdmin
     .from('dodo_subscriptions')
@@ -95,13 +104,23 @@ export const getActiveDodoSubscription = async (userId) => {
     .limit(1)
     .maybeSingle();
   if (error) throw error;
-  if (!data) return null;
-  if (data.status === 'on_hold') {
-    const grace = new Date(data.on_hold_grace_expires_at || '').getTime();
-    return Number.isFinite(grace) && grace > Date.now() ? data : null;
+  return data || null;
+};
+
+export const hasActiveDodoAccess = (subscription, now = Date.now()) => {
+  if (!subscription) return false;
+  if (subscription.status === 'on_hold') {
+    const grace = new Date(subscription.on_hold_grace_expires_at || '').getTime();
+    return Number.isFinite(grace) && grace > now;
   }
-  const expiry = new Date(data.access_expires_at || '').getTime();
-  return !data.access_expires_at || (Number.isFinite(expiry) && expiry > Date.now()) ? data : null;
+  if (subscription.status !== 'active') return false;
+  const expiry = new Date(subscription.access_expires_at || '').getTime();
+  return !subscription.access_expires_at || (Number.isFinite(expiry) && expiry > now);
+};
+
+export const getActiveDodoSubscription = async (userId) => {
+  const subscription = await getManageableDodoSubscription(userId);
+  return hasActiveDodoAccess(subscription) ? subscription : null;
 };
 
 export const safeDodoError = (error) => {

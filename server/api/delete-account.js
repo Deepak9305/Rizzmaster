@@ -100,7 +100,11 @@ export default async function handler(req, res) {
       if (subscriptionIds.length) {
         const { error: eventDeleteError } = await supabaseAdmin
           .from('dodo_webhook_events')
-          .delete()
+          .update({
+            dodo_subscription_id: null,
+            safe_error_code: null,
+            safe_error_message: null,
+          })
           .in('dodo_subscription_id', subscriptionIds);
         if (eventDeleteError) throw eventDeleteError;
       }

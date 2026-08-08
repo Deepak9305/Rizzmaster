@@ -34,7 +34,7 @@ const WebPremiumModal: React.FC<WebPremiumModalProps> = ({
 }) => {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const [plans, setPlans] = useState<DodoPlan[]>(fallbackPlans);
-  const [enabled, setEnabled] = useState(true);
+  const [enabled, setEnabled] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState<DodoPlanId | 'PORTAL' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const hasDodoPremium = premiumSource === 'dodo' || premiumSource === 'both';
@@ -54,6 +54,7 @@ const WebPremiumModal: React.FC<WebPremiumModalProps> = ({
   useEffect(() => {
     if (!isOpen || !isAuthenticated || isPremium) return;
     let cancelled = false;
+    setEnabled(false);
     getDodoPlans()
       .then((result) => {
         if (cancelled) return;
@@ -131,7 +132,7 @@ const WebPremiumModal: React.FC<WebPremiumModalProps> = ({
             <>
               <div className="mt-7 grid gap-3 sm:grid-cols-2">
                 {plans.map((plan) => (
-                  <button key={plan.id} type="button" disabled={!enabled || !plan.available || Boolean(loadingPlan)} onClick={() => { void beginCheckout(plan.id); }} className="group rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-left transition hover:border-pink-300/40 hover:bg-pink-300/[0.07] disabled:cursor-not-allowed disabled:opacity-45">
+                  <button key={plan.id} type="button" disabled={(isAuthenticated && !enabled) || !plan.available || Boolean(loadingPlan)} onClick={() => { void beginCheckout(plan.id); }} className="group rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-left transition hover:border-pink-300/40 hover:bg-pink-300/[0.07] disabled:cursor-not-allowed disabled:opacity-45">
                     <span className="text-sm font-black text-white">{plan.label}</span>
                     <span className="mt-3 block text-2xl font-black text-white">{plan.price}</span>
                     <span className="text-xs text-white/40">per {plan.interval}</span>
@@ -139,7 +140,7 @@ const WebPremiumModal: React.FC<WebPremiumModalProps> = ({
                   </button>
                 ))}
               </div>
-              {!enabled && <p className="mt-4 rounded-xl border border-amber-400/20 bg-amber-400/10 p-3 text-xs text-amber-100">Web billing is being configured. You can still subscribe in the Android app.</p>}
+              {isAuthenticated && !enabled && <p className="mt-4 rounded-xl border border-amber-400/20 bg-amber-400/10 p-3 text-xs text-amber-100">Web billing is being configured. You can still subscribe in the Android app.</p>}
               <p className="mt-4 text-center text-xs text-white/35">Secure recurring billing by Dodo Payments. Cancel anytime from the web billing portal.</p>
             </>
           )}

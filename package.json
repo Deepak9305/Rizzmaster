@@ -9,6 +9,7 @@
     "start:cloud-run": "node cloud-run-server.js",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "test:dodo": "node --test tests/dodo-billing.test.mjs",
     "verify:native-config": "node scripts/verify-native-config.js",
     "db:export-supabase": "node scripts/export-supabase-data.mjs",
     "db:import-cloudsql": "node scripts/import-cloudsql-data.mjs"
