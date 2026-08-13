@@ -597,3 +597,70 @@ const ArticlePage: React.FC<{ post: BlogPost; navigate: (path: string) => void }
           <ArticleExampleBox examples={ARTICLE_EXAMPLES[post.slug]} />
           <ArticleDoDont post={post} />
           <ArticleInternalLinks post={post} navigate={navigate} />
+Exit code: 0
+Wall time: 1 seconds
+Output:
+          {post.slug === 'what-to-text-when-they-stop-replying' && <figure className="overflow-hidden rounded-3xl border border-amber-300/15 bg-black/20"><img src="/blog/what-to-text-when-they-stop-replying-follow-up.svg" alt="Three calm follow-up directions: check in, make a plan, or close the conversation" className="aspect-[3/2] w-full object-cover" loading="lazy" decoding="async" /><figcaption className="border-t border-white/10 px-5 py-3 text-xs text-white/35">Choose the message that matches what you actually want, not the one most likely to provoke a reply.</figcaption></figure>}
+          <ArticleResources post={post} />
+        </div>
+        <div className="mt-12 space-y-12">
+          {post.sections.map((section, index) => <React.Fragment key={section.heading}>
+            {index === middleIndex && <ArticleCta navigate={navigate} compact />}
+            <section><h2 className="text-2xl font-bold tracking-tight text-white md:text-3xl">{section.heading}</h2>{section.paragraphs.map((paragraph) => <p key={paragraph} className="mt-5 text-base leading-8 text-white/60">{paragraph}</p>)}{section.bullets && <ul className="mt-6 space-y-3 rounded-2xl border border-pink-300/10 bg-pink-300/[0.04] p-5 text-sm leading-7 text-white/65">{section.bullets.map((bullet) => <li key={bullet} className="flex gap-3"><span className="mt-1 text-pink-300">âœ¦</span><span>{bullet}</span></li>)}</ul>}</section>
+          </React.Fragment>)}
+        </div>
+        <ArticleCta navigate={navigate} />
+        <RelatedPosts post={post} navigate={navigate} />
+      </article>
+    </main>
+    <MarketingFooter navigate={navigate} />
+  </>;
+};
+
+const ArticleCta: React.FC<{ navigate: (path: string) => void; compact?: boolean }> = ({ navigate, compact = false }) => <div className={`relative overflow-hidden rounded-3xl border border-pink-300/15 bg-gradient-to-br from-pink-500/15 to-purple-500/10 ${compact ? 'my-2 p-6' : 'mt-16 p-7 md:p-9'}`}><div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-pink-400/20 blur-3xl" /><p className="relative text-xs font-bold uppercase tracking-[0.22em] text-pink-200/75">Need a second opinion?</p><h2 className="relative mt-3 text-2xl font-bold text-white">Turn the situation into a send-ready reply.</h2><p className="relative mt-3 max-w-xl text-sm leading-6 text-white/50">Rizz Master helps you find the right words without losing your personality.</p><div className="relative mt-6 flex flex-col gap-3 sm:flex-row"><PlayStoreButton /><button onClick={() => navigate(MARKETING_HOME_PATH)} className="rounded-2xl px-5 py-3.5 text-sm font-bold text-white/60 transition-colors hover:text-white">Explore Rizz Master â†’</button></div></div>;
+
+const LegalPage: React.FC<{ kind: 'privacy' | 'terms' | 'support'; navigate: (path: string) => void }> = ({ kind, navigate }) => {
+  const content = {
+    privacy: { eyebrow: 'Your data matters', title: 'Privacy Policy', intro: 'Rizz Master is built to help with everyday conversations while keeping data collection focused on running the product.', sections: [['What we collect', 'We may process account details, saved items, profile preferences, purchase state, and the text or image context you choose to submit for generation. We only use this information to provide, secure, and improve the service.'], ['Generated content', 'Inputs are processed to generate responses. Only items you explicitly save are intended to remain in your account history. Review the full hosted policy linked below for the current details.'], ['Your choices', 'You can request account help, data questions, or deletion through Support.']], link: LEGAL_LINKS.privacy },
+    terms: { eyebrow: 'Use it thoughtfully', title: 'Terms of Service', intro: 'Rizz Master is an AI dating assistant for entertainment and communication supportâ€”not a substitute for your judgment.', sections: [['Using the service', 'You are responsible for the messages you send and the way you use AI-generated suggestions. Content may be imperfect, so review it before sharing.'], ['Respectful conduct', 'Do not use the service to create harmful, illegal, abusive, or harassing content. Access may be limited when the service is misused.'], ['Purchases', 'Android subscriptions are billed through Google Play. Web subscriptions are billed through Dodo Payments and can be managed from the web billing portal.']], link: LEGAL_LINKS.terms },
+    support: { eyebrow: 'We are here to help', title: 'Support Center', intro: 'Questions about credits, subscriptions, account access, or a feature idea? Send us a note and we will help you find the next step.', sections: [['Contact support', 'Email rizzmasterhelpteam@gmail.com for bugs, billing questions, account deletion requests, or general help.'], ['Credits and Premium', 'Free credits reset daily. Manage Android subscriptions in Google Play and web subscriptions in the Dodo Payments portal. Premium follows the same signed-in Rizz Master account.'], ['Account deletion', 'Cancel an active web subscription before deleting your account. You can then delete the account from Support inside the app.']], link: LEGAL_LINKS.supportEmail },
+  }[kind];
+  return <>
+    <main className="marketing-container marketing-page-padding"><button onClick={() => navigate(MARKETING_HOME_PATH)} className="mb-10 inline-flex items-center gap-2 text-sm font-bold text-white/45 transition-colors hover:text-white">â† Back home</button><div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.28em] text-pink-300/80">{content.eyebrow}</p><h1 className="mt-5 text-5xl font-black tracking-[-0.04em] text-white md:text-7xl">{content.title}</h1><p className="mt-6 text-lg leading-8 text-white/55">{content.intro}</p></div><div className="mt-12 max-w-3xl space-y-5">{content.sections.map(([heading, copy]) => <section key={heading} className="marketing-card p-6 md:p-8"><h2 className="text-xl font-bold text-white">{heading}</h2><p className="mt-3 text-sm leading-7 text-white/55">{copy}</p></section>)}</div><a href={content.link} target={kind === 'support' ? undefined : '_blank'} rel={kind === 'support' ? undefined : 'noreferrer'} className="mt-8 inline-flex rounded-2xl border border-white/15 bg-white/[0.05] px-5 py-3.5 text-sm font-bold text-white transition-colors hover:bg-white/10">{kind === 'support' ? 'Email support' : 'Read the full policy â†’'}</a></main><MarketingFooter navigate={navigate} />
+  </>;
+};
+
+const NotFoundPage: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) => <main className="marketing-container marketing-page-padding"><p className="text-xs font-bold uppercase tracking-[0.28em] text-pink-300/80">404</p><h1 className="mt-5 text-5xl font-black text-white">That page ghosted you.</h1><p className="mt-5 text-white/55">Letâ€™s get you back to the good part.</p><button onClick={() => navigate(MARKETING_HOME_PATH)} className="marketing-cta-primary mt-8 rounded-2xl px-5 py-3.5 text-sm font-bold text-white">Back home â†’</button></main>;
+
+const MarketingSite: React.FC = () => {
+  const [pathname, setPathname] = useState(() => typeof window === 'undefined' ? '/' : window.location.pathname);
+  const route = useMemo(() => getRoute(pathname), [pathname]);
+
+  useEffect(() => {
+    const onPopState = () => setPathname(window.location.pathname);
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  useEffect(() => {
+    updateSeo(route);
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, [route]);
+
+  const navigate = (path: string) => {
+    const [pathnamePart, hash] = path.split('#');
+    const nextPath = pathnamePart || '/';
+    window.history.pushState({}, '', `${nextPath}${hash ? `#${hash}` : ''}`);
+    setPathname(nextPath);
+    window.setTimeout(() => {
+      if (hash) document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth' });
+      else window.scrollTo({ top: 0, behavior: 'auto' });
+    }, 0);
+  };
+
+  const article = route.kind === 'article' ? getBlogPost(route.slug) : undefined;
+
+  return <div className="marketing-site min-h-screen overflow-x-hidden bg-[#050407] text-white"><MarketingNav navigate={navigate} />{route.kind === 'home' ? <HomePage navigate={navigate} /> : route.kind === 'blog' ? <BlogIndexPage navigate={navigate} /> : article ? <ArticlePage post={article} navigate={navigate} /> : route.kind === 'privacy' || route.kind === 'terms' || route.kind === 'support' ? <LegalPage kind={route.kind} navigate={navigate} /> : <><NotFoundPage navigate={navigate} /><MarketingFooter navigate={navigate} /></>}</div>;
+};
+
+export default MarketingSite;
