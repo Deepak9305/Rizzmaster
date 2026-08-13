@@ -201,7 +201,7 @@ const SectionHeading: React.FC<{ eyebrow: string; title: string; description?: s
 const BlogCard: React.FC<{ post: BlogPost; navigate: (path: string) => void; featured?: boolean }> = ({ post, navigate, featured = false }) => (
   <article className={`marketing-card group relative flex h-full flex-col overflow-hidden p-6 ${featured ? 'md:col-span-2 md:p-8' : ''}`}>
     <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-pink-400/80 via-fuchsia-400/45 to-purple-400/80 opacity-70" />
-    {post.image && <img src={post.image} alt={post.imageAlt || post.title} className="mb-6 aspect-[16/9] w-full rounded-2xl border border-pink-300/15 object-cover opacity-90 transition-transform duration-500 group-hover:scale-[1.02]" loading="lazy" decoding="async" />}
+    {post.image && <img src={post.image} alt={post.imageAlt || post.title} className={`mb-6 w-full rounded-2xl border border-pink-300/15 object-cover opacity-90 transition-transform duration-500 group-hover:scale-[1.02] ${featured ? 'aspect-[2.7/1] max-h-64 md:max-h-72' : 'aspect-[16/9]'}`} loading="lazy" decoding="async" />}
     <div className="mb-7 flex items-center justify-between gap-4 text-[11px] font-bold uppercase tracking-[0.18em] text-white/35">
       <span className="rounded-full border border-pink-300/15 bg-pink-300/[0.07] px-2.5 py-1 text-pink-200/85">{post.category}</span>
       <span>{post.readingTime}</span>
