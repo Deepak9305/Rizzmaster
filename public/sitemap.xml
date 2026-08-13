@@ -8,9 +8,15 @@
   </url>
   <url>
     <loc>https://rizzmaster.online/blog</loc>
-    <lastmod>2026-07-25</lastmod>
+    <lastmod>2026-08-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://rizzmaster.online/blog/what-to-text-when-they-stop-replying</loc>
+    <lastmod>2026-08-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
   </url>
   <url>
     <loc>https://rizzmaster.online/blog/reply-to-dry-texts</loc>

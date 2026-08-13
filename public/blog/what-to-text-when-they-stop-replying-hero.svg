@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">A calm follow-up after a conversation goes quiet</title>
+  <desc id="desc">A glowing phone and abstract chat bubbles on a midnight plum background, with a clear path from silence to a thoughtful message.</desc>
+  <defs>
+    <radialGradient id="bg" cx="54%" cy="44%" r="75%">
+      <stop offset="0" stop-color="#32142f"/>
+      <stop offset="0.52" stop-color="#120b1b"/>
+      <stop offset="1" stop-color="#05050c"/>
+    </radialGradient>
+    <linearGradient id="pink" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff2b9a"/>
+      <stop offset="1" stop-color="#9b35ff"/>
+    </linearGradient>
+    <linearGradient id="amber" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffcf58"/>
+      <stop offset="1" stop-color="#ff7a53"/>
+    </linearGradient>
+    <filter id="glowPink" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="24" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowAmber" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="18" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.03"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <ellipse cx="1240" cy="420" rx="430" ry="180" fill="#ff2b9a" opacity="0.14" filter="url(#glowPink)"/>
+  <ellipse cx="420" cy="760" rx="430" ry="170" fill="#7136ff" opacity="0.14" filter="url(#glowPink)"/>
+  <path d="M-60 680 C 300 520, 490 770, 785 600 S 1220 160, 1690 300" fill="none" stroke="url(#pink)" stroke-opacity="0.35" stroke-width="3"/>
+  <path d="M-40 690 C 300 530, 500 780, 790 610 S 1220 170, 1660 310" fill="none" stroke="#ff7bc8" stroke-opacity="0.18" stroke-width="16" filter="url(#glowPink)"/>
+  <g opacity="0.65" fill="#ff9fdc">
+    <circle cx="280" cy="165" r="3"/><circle cx="385" cy="255" r="2"/><circle cx="1120" cy="155" r="3"/><circle cx="1320" cy="230" r="2"/><circle cx="1460" cy="610" r="3"/>
+  </g>
+  <g transform="translate(510 150) rotate(-8 260 330)">
+    <rect x="24" y="24" width="510" height="690" rx="64" fill="#05050d" stroke="#ff3ea8" stroke-opacity="0.5" stroke-width="5" filter="url(#glowPink)"/>
+    <rect x="40" y="40" width="478" height="658" rx="50" fill="#0c0b18" stroke="url(#glass)" stroke-width="2"/>
+    <rect x="210" y="63" width="138" height="12" rx="6" fill="#ffffff" opacity="0.13"/>
+    <circle cx="105" cy="121" r="27" fill="url(#pink)" opacity="0.9"/>
+    <rect x="151" y="102" width="183" height="14" rx="7" fill="#ffffff" opacity="0.55"/>
+    <rect x="151" y="128" width="120" height="10" rx="5" fill="#ffffff" opacity="0.2"/>
+    <rect x="83" y="205" width="254" height="94" rx="28" fill="#1a1224" stroke="#ff62bd" stroke-opacity="0.18" stroke-width="2"/>
+    <rect x="104" y="231" width="173" height="11" rx="5" fill="#ffffff" opacity="0.18"/>
+    <rect x="104" y="255" width="118" height="11" rx="5" fill="#ffffff" opacity="0.1"/>
+    <path d="M337 279 l30 28 0-28z" fill="#1a1224" stroke="#ff62bd" stroke-opacity="0.18" stroke-width="2"/>
+    <rect x="160" y="346" width="275" height="108" rx="30" fill="url(#pink)" opacity="0.94"/>
+    <rect x="186" y="375" width="185" height="12" rx="6" fill="#ffffff" opacity="0.8"/>
+    <rect x="186" y="401" width="135" height="11" rx="5" fill="#ffffff" opacity="0.44"/>
+    <path d="M160 434 l-30 28 0-28z" fill="#c92e98"/>
+    <circle cx="162" cy="575" r="56" fill="#120e20" stroke="url(#amber)" stroke-width="4" filter="url(#glowAmber)"/>
+    <path d="M162 543 v38 l25 15" fill="none" stroke="#ffd77a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="162" cy="575" r="8" fill="#ffd77a"/>
+  </g>
+  <g transform="translate(1120 370)">
+    <path d="M0 80 C 60 32, 112 34, 156 70" fill="none" stroke="#ff88ce" stroke-opacity="0.45" stroke-width="4" stroke-dasharray="10 16"/>
+    <path d="M210 82 l36 -36 M246 46 l-7 28 M246 46 l-28 7" fill="none" stroke="url(#amber)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" filter="url(#glowAmber)"/>
+    <circle cx="70" cy="100" r="20" fill="#ff3ea8" opacity="0.85" filter="url(#glowPink)"/>
+    <circle cx="115" cy="155" r="10" fill="#ffb95b" opacity="0.9"/>
+  </g>
+  <g transform="translate(1190 560) rotate(8)">
+    <rect width="260" height="116" rx="32" fill="url(#glass)" stroke="#ffb560" stroke-opacity="0.45" stroke-width="3"/>
+    <rect x="34" y="35" width="156" height="12" rx="6" fill="#ffffff" opacity="0.55"/>
+    <rect x="34" y="63" width="100" height="10" rx="5" fill="#ffffff" opacity="0.23"/>
+    <path d="M30 113 l26 30 4-31" fill="url(#glass)" stroke="#ffb560" stroke-opacity="0.45" stroke-width="3"/>
+  </g>
+  <g fill="#ffd46c" opacity="0.9" filter="url(#glowAmber)">
+    <path d="m1115 274 7 18 18 7-18 7-7 18-7-18-18-7 18-7z"/>
+    <path d="m1420 410 5 13 13 5-13 5-5 13-5-13-13-5 13-5z"/>
+  </g>
+</svg>

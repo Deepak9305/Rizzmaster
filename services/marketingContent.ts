@@ -16,482 +16,158 @@ export interface BlogPost {
   readingTime: string;
   category: string;
   keywords: string[];
+  image?: string;
+  imageAlt?: string;
+  resources?: Array<{ label: string; url: string }>;
   sections: BlogSection[];
 }
 
 export const BLOG_POSTS: BlogPost[] = [
   {
-    slug: 'reply-to-dry-texts',
-    title: 'How to Reply to Dry Texts Without Sounding Desperate',
-    description: 'Learn how to reply to dry texts, short messages, and low-energy replies without chasing or overthinking every conversation.',
-    excerpt: 'A short reply does not always mean a dead conversation. Read the context, add a real hook, and bring the energy back without forcing it.',
-    date: '2026-07-10',
-    updatedAt: '2026-07-25',
-    readingTime: '7 min read',
+    slug: 'what-to-text-when-they-stop-replying',
+    title: 'What to Text When They Stop Replying: A Calm Follow-Up Guide',
+    description: 'Not sure what to text when someone stops replying? Learn how long to wait, when to double text, and how to send one confident follow-up without chasing.',
+    excerpt: 'Send one clear, low-pressure follow-up, then let their response, timing, and effort give you the information you need. Silence is data, not a challenge to overcome.',
+    date: '2026-08-13',
+    updatedAt: '2026-08-13',
+    readingTime: '10 min read',
     category: 'Texting advice',
-    keywords: ['how to reply to dry texts', 'dry texting advice', 'what to text back', 'how to keep a conversation going'],
+    keywords: [
+      'what to text when they stop replying',
+      'what to text when someone stops replying',
+      'what to say when they stop texting',
+      'what to text after being ghosted',
+      'should I double text after no reply',
+      'how long to wait before texting again',
+      'how to follow up after no response',
+      'last text before giving up',
+      'how to respond when someone comes back after ghosting',
+      'double texting advice',
+      'texting anxiety after no reply'
+    ],
+    image: '/blog/what-to-text-when-they-stop-replying-hero.svg',
+    imageAlt: 'Editorial illustration of a paused phone conversation and a calm follow-up message',
+    resources: [
+      { label: 'The Gottman Institute: Notice bids for connection', url: 'https://www.gottman.com/blog/want-to-improve-your-relationship-start-paying-more-attention-to-bids/' },
+      { label: 'The Gottman Institute: Improve communication', url: 'https://www.gottman.com/improve-communication-relationship/' },
+      { label: 'National Domestic Violence Hotline: Healthy relationship guide', url: 'https://www.thehotline.org/pdf/Healthy_Relationships.pdf' }
+    ],
     sections: [
       {
-        heading: 'What a dry text actually means',
+        heading: 'First, do not turn a quiet chat into a verdict on your worth',
         paragraphs: [
-          'A dry text is usually short, low-detail, or difficult to build on: "k," "lol," "nice," or a single-word answer to a question. It can feel personal because you are offering energy and getting very little back. Before you decide that the person is not interested, remember that a dry reply can also mean they are busy, distracted, tired, or unsure what to say. One message is a clue, not a final verdict on the connection.',
-          'Look at the pattern around the message. Did they normally ask questions and share stories? Did the short reply arrive during work, late at night, or after a long gap? A conversation that is usually warm deserves a different response from a match that has been one-sided from the beginning. The goal is to read the whole exchange, then choose a reply that protects your confidence while giving mutual interest one easy chance to show up.'
+          'When someone stops replying, your brain usually wants an instant explanation. You may reread the last message, compare the punctuation with earlier texts, or imagine that one awkward sentence changed everything. That reaction is common, but it is not reliable evidence. A delayed reply can mean a busy day, low phone energy, a forgotten notification, uncertainty about what to say, or a drop in interest. You cannot identify the reason from silence alone.',
+          'The useful question is not "How do I make them answer?" It is "What is the clearest, kindest next move for me?" That shift matters. You can send a follow-up that makes replying easy, but you cannot text someone into genuine interest. Treat the gap as information about the current level of communication, not as a problem you must solve with a better performance.',
+          'Also look at the pattern instead of one isolated gap. Someone who normally communicates warmly and disappears during a stressful week deserves more benefit of the doubt than someone who has replied with one-word answers, cancelled twice, and never asks anything about you. Context should decide your tone.'
         ],
         bullets: [
-          'Notice whether their reply is short once or short every time.',
-          'Check the timing and the tone of the messages before it.',
-          'Do not turn one low-energy text into a story about your worth.'
+          'One slow reply is a pause; a repeated one-sided pattern is useful information.',
+          'Your goal is clarity and self-respect, not a guaranteed response.',
+          'Do not send a message solely to reduce your own anxiety for five minutes.'
         ]
       },
       {
-        heading: 'Give the conversation a specific hook',
+        heading: 'How long should you wait before texting again?',
         paragraphs: [
-          'The easiest way to reply to a dry text is to make your next message more specific than the one that came before it. Generic questions such as "How was your day?" create work because they ask the other person to invent a topic from nothing. A better message offers a small opinion, a playful prediction, or two choices. Specificity makes the reply easier because the other person can react instead of designing the entire conversation.',
-          'Try turning a flat answer into a tiny decision or a low-pressure challenge. If they say "fine" about dinner, ask which food they would defend in an argument. If they say "lol," share a funny observation and invite their take. Keep the hook connected to what they already said so it feels natural, not like a random interview question. One clear angle is stronger than five questions stacked together.'
+          'There is no universal number of hours that makes a double text confident. The right wait depends on the conversation, the person, and what you already sent. If you asked a practical question about plans, a same-day check-in can be reasonable. If you sent a casual thought late at night, give it until the next day. If the person told you they were travelling, working, or dealing with something personal, respect the timeframe they gave you.',
+          'As a simple rule, wait long enough that your next message is a fresh choice rather than an emotional reflex. For many casual conversations, that means waiting until the next day and sending one message. After that, allow the other person to take a turn. A calendar rule cannot tell you whether someone is interested, but a little space makes the answer easier to see.'
         ],
         bullets: [
-          '"That was the diplomatic answer. What is the honest version?"',
-          '"Quick verdict: best part of your day so far?"',
-          '"You seem like you have a strong coffee order. What am I judging?"'
+          'Plans or logistics: follow up when the decision actually needs an answer.',
+          'New match or early chat: usually wait until the next day before one light follow-up.',
+          'Several unanswered messages: stop adding more and let the conversation rest.'
         ]
       },
       {
-        heading: 'Use a warm reply instead of a bigger performance',
+        heading: 'Should you double text after no reply?',
         paragraphs: [
-          'When someone sends a short message, the instinct is often to compensate with a long paragraph, an explanation, or a second joke. That can accidentally create pressure. A confident reply is usually shorter and more relaxed. Share one real detail, make one playful observation, or ask one question with a point of view. You are trying to create an opening, not audition for the role of carrying the entire conversation.',
-          'A good dry-text response should sound like something you could say out loud. If your normal style is calm, do not suddenly become an exaggerated comedian. If you are naturally playful, let that show without making the other person prove that every line worked. The most attractive tone is often comfortable and specific: interested enough to continue, relaxed enough not to chase a reaction.'
+          'Double texting is not automatically desperate. People miss messages, lose their place in a chat, and get interrupted. A second message becomes uncomfortable when it is designed to punish the silence, demand reassurance, or make the other person feel responsible for your mood. The content and the pattern matter more than the fact that it is message number two.',
+          'Make the follow-up easy to receive. Add new context, answer your own earlier question, send a specific idea, or acknowledge that they may be busy. Avoid sending "hello?", "did I do something?", or a sequence of increasingly dramatic messages. One calm follow-up gives a person a clear opening. Multiple follow-ups remove the space needed for an honest choice.'
         ],
         bullets: [
-          '"I am choosing to believe you are saving the good story for later."',
-          '"That answer has mysterious side-character energy."',
-          '"I will give you one chance to make that answer more interesting."'
+          'Good double text: a new detail, a clear plan, or a low-pressure check-in.',
+          'Bad double text: guilt, accusations, tests, or a demand for an explanation.',
+          'After one thoughtful follow-up, stop and watch whether effort becomes mutual.'
         ]
       },
       {
-        heading: 'Try the two-message test',
+        heading: 'What to text when someone stops replying',
         paragraphs: [
-          'If the conversation has gone flat, give it one thoughtful follow-up and one natural pivot. For example, respond playfully to the short answer, then move toward a topic that gives them something easy to share. This is enough effort to create a new opening without turning the chat into a rescue mission. If they respond with more detail, match that energy and let the conversation develop at its own pace.',
-          'If the reply stays dry after a genuine attempt, stop adding pressure. You can leave the chat for a while, respond later when you have something real to say, or let the conversation end. Interest should eventually feel like a shared effort. Knowing when to pause is not giving up; it is refusing to confuse persistence with chemistry. Your time and attention are part of the conversation too.'
-        ]
-      },
-      {
-        heading: 'Make the next message sound like you',
-        paragraphs: [
-          'The best answer to a dry text is not necessarily the cleverest line in a list. It is the line that fits your voice and the situation. Pick a tone that feels natural: funny, flirty, confident, thoughtful, or wholesome. Keep it short enough to invite a response, then edit out anything you would never say in real life. A message can be polished without becoming artificial.',
-          'If you are stuck, Rizz Master can help you turn the exact context into several directions instead of forcing one generic comeback. Add the message, describe the vibe, and choose the option that sounds closest to you. AI can help with the blank screen, but your judgment still decides whether the moment needs a joke, a question, a pause, or a clear next step.'
-        ]
-      },
-      {
-        heading: 'When it is better to let the chat breathe',
-        paragraphs: [
-          'Sometimes a dry reply is simply information. If you have offered a specific question, a warm observation, and enough room to respond, you do not need to keep inventing new topics. A short pause protects the tone better than a string of anxious follow-ups. People who want to continue usually make the next opening easier when you give them space.',
-          'Do not measure your value by how quickly a person texts back. Healthy conversations have different rhythms, and a match can be interested without being available every minute. At the same time, you deserve reciprocity. Reply with care, watch the pattern, and invest where the other person is also choosing to show up.'
-        ]
-      },
-      {
-        heading: 'A quick checklist before you send',
-        paragraphs: [
-          'Before replying to a dry text, ask yourself three questions: am I responding to the actual context, am I giving the other person an easy opening, and would I be comfortable saying this out loud? Those questions remove most of the pressure. They also stop you from sending a message designed only to get reassurance. A good text can be playful and interested without asking the other person to repair your confidence.',
-          'If the answer still feels uncertain, choose the smallest useful move. Send one specific observation, one light question, or one honest pivot. Then put your phone down and let the other person decide whether to meet you there. This approach works because it balances warmth with self-respect. You are making space for a better conversation, not trying to force a response from a blank screen.'
+          'The best message depends on what happened immediately before the silence. If the chat was playful, keep the follow-up light. If you were making plans, be direct. If you had already shared interest and the conversation simply faded, a warm close can protect your dignity better than another attempt to restart it. Your text should sound like a person with a full life, not a customer-service escalation.',
+          'Here are a few adaptable examples. Change the wording so it sounds like you, and only send one that is true. A line that is technically clever but emotionally false will make you more anxious after you send it.',
+          'If you are unsure, choose the most neutral version first. You can be interested without acting as though the outcome is already decided. The other person should be able to reply, decline, or remain quiet without being cornered.'
         ],
         bullets: [
-          'Context first: respond to the message and the pattern around it.',
-          'One hook: give them one clear way to continue.',
-          'Room to respond: do not follow a thoughtful text with anxious extras.'
+          'Light check-in: "I am guessing your week got busy. No pressure - how is it going?"',
+          'Specific plan: "I enjoyed talking with you. Want to continue over coffee this week?"',
+          'Open door: "I had fun chatting. If you are still interested, I would be happy to pick this up later."',
+          'Clear close: "I am going to stop double-texting, but I enjoyed meeting you. Take care."'
         ]
-      }
-    ]
-  },
-  {
-    slug: 'best-tinder-openers-for-guys',
-    title: 'Best Tinder Openers That Do Not Sound Boring',
-    description: 'Skip "hey" with Tinder openers that feel natural, specific, respectful, and simple for a match to answer.',
-    excerpt: 'The best Tinder opener is not the cleverest line. It is the one that gives someone a real reason to reply.',
-    date: '2026-07-08',
-    updatedAt: '2026-07-25',
-    readingTime: '7 min read',
-    category: 'Dating apps',
-    keywords: ['best Tinder openers', 'Tinder openers for guys', 'what to say on Tinder', 'dating app conversation starters'],
-    sections: [
+      },
       {
-        heading: 'Start with something you can actually see',
+        heading: 'If they stopped replying after a good conversation',
         paragraphs: [
-          'A profile-specific opener feels more confident because it proves you looked at the person instead of sending the same line to every match. Notice the travel photo, the oddly specific hobby, the pet, the food opinion, or the detail that suggests a story. You do not need to comment on appearance first. A small observation about their world creates a more useful opening and makes the conversation about a real person.',
-          'Keep the observation positive and leave room for them to add their side. "That hike looks brutal" is less inviting than asking whether the view or the snack break was worth it. A good Tinder opener is an observation plus an easy invitation. It shows attention without pretending you already know everything about them.'
+          'A strong conversation followed by silence feels especially confusing because the earlier connection was real in that moment. It still does not guarantee that the person has the time, availability, or intention to continue. People can enjoy a conversation and later decide they are not ready to date, become distracted by another priority, or realise that their interest is not strong enough to maintain contact. The earlier good energy was not necessarily fake; it was simply incomplete information.',
+          'Send a follow-up that refers to the shared moment instead of asking for a postmortem. Mention the story, joke, place, or plan you were discussing and offer one easy next step. If there is no response, let the good conversation remain a good conversation rather than trying to extract a different ending from it.'
         ],
         bullets: [
-          '"Important question: was that hike worth the view or the snack break?"',
-          '"I need the backstory behind the dog photo. Who is actually in charge?"',
-          '"That restaurant photo has convinced me you have a strong food opinion. What should I order?"'
+          'Reference something specific you both enjoyed.',
+          'Offer one simple next step instead of asking what went wrong.',
+          'Do not use the previous chemistry as evidence that they owe you access now.'
         ]
       },
       {
-        heading: 'Ask a question with a point of view',
+        heading: 'If you were making plans and they went quiet',
         paragraphs: [
-          'Questions are easier to answer when they are not interview questions. "What do you do for fun?" is broad enough to make anyone pause. A question with a point of view gives the other person a direction: offer two fun choices, make a low-stakes prediction, or ask for a recommendation you would genuinely use. The question should feel like the start of a conversation, not a form you want them to complete.',
-          'You can make a basic topic more memorable by adding your own side of the answer. Instead of asking what their ideal weekend is, say that yours involves coffee, a long walk, and pretending you will cook, then ask what version they would choose. Sharing a little first lowers the pressure and gives them something concrete to react to.'
+          'Logistics deserve a more direct follow-up because both people need clarity. If you proposed a day and never received confirmation, send a message that states the plan and gives an easy alternative. For example: "Are we still on for Thursday? If this week is packed, no worries - we can choose another time." That message is clear without pretending that a non-response is acceptable forever.',
+          'Set a practical cutoff for yourself. If you need to make other plans, say so: "I will assume tonight is not happening if I do not hear back by this afternoon." Then follow through without a second argument. Clear boundaries reduce waiting-room anxiety and show that your time is part of the equation.'
         ],
         bullets: [
-          '"What is your ideal Sunday when nobody needs anything from you?"',
-          '"Are you more likely to plan the trip or improvise the entire weekend?"',
-          '"What is one local place you would actually recommend to a friend?"'
+          'Ask for confirmation rather than fishing for reassurance.',
+          'Offer a real alternative only if you genuinely want one.',
+          'Make other plans when the deadline passes; do not keep the slot emotionally reserved.'
         ]
       },
       {
-        heading: 'Use a simple opener formula',
+        heading: 'What not to text when they stop answering',
         paragraphs: [
-          'If you freeze when writing the first message, use a repeatable formula: notice one detail, add a light opinion, and ask one easy question. This structure works for photos, prompts, travel, music, food, and hobbies. It keeps the opener specific without requiring a perfect joke. Your goal is not to prove that you are the funniest person on the app; it is to make the next message feel easy.',
-          'Another useful formula is a playful either-or question. Give two options that reveal personality, such as sunrise or late night, beach or mountains, cooking or ordering in. Avoid choices that sound like a test. The best Tinder openers create a small amount of tension and then make it safe to answer. A match should be able to respond in one sentence and still have somewhere to go next.'
+          'Avoid messages that turn uncertainty into a confrontation before you have enough context. "Why are you ignoring me?", "I guess you never cared", and "You could have just said no" may express a real feeling, but they usually make a conversation less honest and less likely to recover. They also give a near-stranger a large role in regulating your confidence. If you need closure, you can create it through your own decision to stop reaching out.',
+          'Do not send a disguised test. Posting something to make them jealous, sending a random meme only to check whether they are online, or deleting and re-sending messages keeps you tied to the response. A follow-up should communicate something you actually mean. If you would not send it when you felt calm, wait until you can edit it into a message you will respect later.'
         ],
         bullets: [
-          'Profile detail + playful observation + easy question.',
-          'Two choices + your own answer + a follow-up.',
-          'Specific recommendation request + a reason you might use it.'
+          'Skip guilt trips, sarcasm about their silence, and passive-aggressive status updates.',
+          'Do not send multiple channels of contact when one message is unanswered.',
+          'Never use threats, pressure, or personal information to force a reply.'
         ]
       },
       {
-        heading: 'Avoid the openers that create work',
+        heading: 'How to stop chasing someone who is not replying',
         paragraphs: [
-          'The most common boring Tinder openers are not always short. A long paragraph can be just as difficult to answer when it contains a compliment, a joke, several questions, and a personal story all at once. Avoid copy-pasted lines, heavy compliments before you know the person, and questions that sound like a job interview. More words do not automatically create more connection.',
-          'Do not over-optimize for a response either. A line that gets attention but does not sound like you will make the second message harder. Keep your opener respectful and readable. If their profile gives you no usable detail, a simple question about a prompt, a weekend plan, or a low-stakes preference is enough. Natural beats complicated.'
+          'Stopping does not require a dramatic announcement. Archive the chat, mute notifications, put your phone in another room, or decide that you will not initiate again unless they return with clear effort. Replace the checking loop with a concrete action: finish a workout, call a friend, make plans, or return to a task that existed before the conversation. The goal is not to pretend that you do not care. It is to stop outsourcing your next hour to a notification.',
+          'Pay attention to your own boundary. If you repeatedly feel activated by someone who gives inconsistent attention, that pattern is worth taking seriously even if they eventually reply. Healthy communication is not constant availability, but it should not require you to abandon your standards. You can like someone and still choose not to keep chasing a connection that is not meeting you halfway.',
+          'If silence is part of a larger pattern of control, intimidation, threats, or pressure, prioritise your safety and reach out to someone you trust or a local support service. Dating advice should never encourage you to stay in a situation that feels unsafe.'
         ]
       },
       {
-        heading: 'Know how to follow up after they reply',
+        heading: 'What to do if they come back after ghosting',
         paragraphs: [
-          'The opener only creates the first step. When your match answers, respond to the detail they actually gave you instead of immediately changing topics. Reflect one part of their answer, add a related detail from your own life, and ask a smaller follow-up. This creates a rhythm of sharing rather than a sequence of questions. If they give a short answer, offer a light opinion or a choice to keep the next step easy.',
-          'A strong conversation does not need a new punchline in every message. It needs curiosity, room, and a clear sense that both people are contributing. Rizz Master can help you turn a match profile into several opener directions and follow-ups, so you can choose the one that sounds most like you before you hit send.'
-        ]
-      },
-      {
-        heading: 'Move from the app to a real plan naturally',
-        paragraphs: [
-          'Once the conversation has a little momentum, you do not need to keep collecting messages forever. Look for a shared interest, a local place, or a topic that can become a low-pressure plan. A clear invitation is easier to answer than vague enthusiasm: suggest coffee, a walk, a market, or another simple activity connected to what you discussed.',
-          'Keep the first plan straightforward and respectful. The purpose of a Tinder opener is not to force instant chemistry; it is to create enough comfort for two people to decide whether they want to continue. Pay attention to their response, accept a no without arguing, and let a mutual yes develop into an actual conversation.'
-        ]
-      },
-      {
-        heading: 'Tinder opener checklist for better matches',
-        paragraphs: [
-          'Before sending a Tinder opener, check that it is specific enough to belong to this profile, easy enough to answer in one sentence, and open enough to lead somewhere after the first reply. Remove anything that sounds copied, overly sexual, or like a test. If you can answer your own question with a short story, the match will have a clearer model for how to respond. If the line only asks them to perform, simplify it.',
-          'The strongest first messages are small invitations. They do not promise a relationship or demand instant chemistry. They create a moment of curiosity and let the other person decide whether they want to add energy. Use the profile as your starting point, share a little of yourself, and let the quality of the next reply guide the rest of the conversation.'
+          'A return message does not automatically erase the gap. You can be curious without acting as though nothing happened. Start by noticing whether they offer a real explanation, acknowledge the missed conversation, and make a specific effort to reconnect. "Hey stranger" is not the same as a thoughtful message that takes responsibility and suggests a clear plan.',
+          'Choose your response based on what you want now, not on the relief of finally seeing their name. If you want to continue, name the standard lightly: "Good to hear from you. I am open to chatting, but I prefer more consistent communication." If you are no longer interested, a brief "Thanks for checking in, but I am going to pass" is enough. You do not owe a second chance because someone reopened the door.'
         ],
         bullets: [
-          'Specific to the profile, not copied for every match.',
-          'Easy to answer without writing an essay.',
-          'Open enough to support a natural follow-up.'
+          'Look for changed effort, not only a new explanation.',
+          'Ask for what you need before investing again.',
+          'A polite no is a complete answer when the pattern no longer works for you.'
         ]
-      }
-    ]
-  },
-  {
-    slug: 'reply-when-she-says-haha',
-    title: 'How to Reply When She Says Haha',
-    description: 'Learn how to reply when she says "haha" with playful follow-ups that keep the conversation moving without sounding needy.',
-    excerpt: '"Haha" can mean amused, polite, busy, or ready for a new topic. Read the moment and give the conversation somewhere to go.',
-    date: '2026-07-06',
-    updatedAt: '2026-07-25',
-    readingTime: '7 min read',
-    category: 'Texting advice',
-    keywords: ['how to reply when she says haha', 'what to say after haha', 'texting after a joke', 'playful text replies'],
-    sections: [
+      },
       {
-        heading: 'Read the energy around the haha',
+        heading: 'The last text before giving up',
         paragraphs: [
-          'A "haha" after a playful message is different from a "haha" that arrives three hours later with no follow-up. Read the whole exchange before deciding what it means. Are there earlier questions, emojis, stories, or signs that the person was engaged? Did the conversation already feel flat? One short reply is not a verdict on the connection, and treating it like one can make your next message more anxious than the moment requires.',
-          'The length of the word can also change the tone, but do not build an entire theory from punctuation. "Haha," "haha," and "hahaha" are only small clues. Focus on the pattern of effort. If the earlier messages were warm, stay light and playful. If the conversation has gone quiet, a pivot or a pause may work better than trying to squeeze another laugh from the same joke.'
+          'You do not have to send a final text at all. Silence can be your boundary. If a closing message would help you feel clear, keep it short, warm, and free of a hidden request for reassurance: "I enjoyed getting to know you, but I am going to move on. Wishing you well." Send it because it reflects your decision, not because you hope the perfect goodbye will trigger an apology.',
+          'After you send it, do not negotiate with the lack of response. A good final text closes your side of the loop; it does not require the other person to approve the closure. The healthiest next move is usually the least dramatic one: return your attention to people and activities that respond with care.',
+          'For future conversations, use a simple check before you send: is this specific, respectful, and easy to answer? If yes, send it once. Then let the response, or the continued silence, give you the information you need.'
         ],
         bullets: [
-          '"I will accept that laugh, but I am keeping score."',
-          '"That sounded suspiciously polite. Want to try again?"',
-          '"Okay, your turn - make me laugh."'
-        ]
-      },
-      {
-        heading: 'Choose a follow-up that gives her something to answer',
-        paragraphs: [
-          'The best reply to "haha" does more than announce that you noticed the laugh. It gives the conversation a new direction. You can tease lightly, ask for her opinion, or connect the joke to a real topic. A playful follow-up might say you are keeping score, but it should leave an easy opening. A question about her weekend, a current obsession, or a small debate can turn a reaction into an actual exchange.',
-          'Keep the next message shorter than your worry about the next message. If you send a paragraph explaining the joke, the humor loses its relaxed feeling. Instead, let the line stand and add one simple hook. A person who is interested does not need a perfect performance to continue. They need a comfortable reason to contribute.'
-        ],
-        bullets: [
-          '"That is one laugh. What is the topic you could talk about for hours?"',
-          '"I am taking that as a vote for my comedy career. What are we debating next?"',
-          '"Fair. What has made you laugh today?"'
-        ]
-      },
-      {
-        heading: 'Pivot instead of begging for validation',
-        paragraphs: [
-          'Avoid asking "was that funny?" or sending a second punchline to prove the first one worked. Those messages put the other person in the role of judge and make the chat feel like a performance review. A better move is to pivot into a topic that reveals personality: a current obsession, a weekend plan, a food argument, or an unusual preference.',
-          'The pivot should still feel connected to the energy of the chat. If you were talking about a bad movie, ask what film they would defend even though it is objectively terrible. If you were teasing their coffee order, ask what their ideal lazy morning looks like. The goal is not to abandon the playful tone; it is to give it somewhere more interesting to go.'
-        ]
-      },
-      {
-        heading: 'Match the amount of effort you receive',
-        paragraphs: [
-          'A short "haha" can be a bridge to a better conversation, but you should not be the only person building it. Send one good follow-up, then see what comes back. If she answers with a story, a question, or a new detail, match that energy. If the replies stay short and you keep creating every topic, let the chat breathe instead of adding more pressure.',
-          'Matching effort does not mean becoming cold or keeping a scorecard. It means noticing whether there is a shared rhythm. People have busy days, and a slow response is not automatically rejection. The useful question is whether the pattern eventually includes curiosity from both sides. Confidence is staying open without abandoning your own boundaries.'
-        ]
-      },
-      {
-        heading: 'Keep confidence quiet and natural',
-        paragraphs: [
-          'Confidence in a text conversation is not pretending that every line lands. It is staying relaxed enough to move on when one joke gets a small reaction. You can be flirty without demanding reassurance, funny without forcing a punchline, and interested without sending a series of follow-ups. The strongest message is often the one that sounds like the person you would be in real life.',
-          'If you want help finding the next angle, Rizz Master can suggest replies in a funny, flirty, wholesome, or confident tone using the actual context. Use the suggestions as options, not a script. Choose the line you can own, edit it into your voice, and remember that a real conversation is more important than winning one text exchange.'
-        ]
-      },
-      {
-        heading: 'When to change the subject or pause',
-        paragraphs: [
-          'If the conversation has already had a few short replies, do not keep returning to the joke. Change the subject once with a specific question, or leave the chat for later. A pause can create room for the other person to re-enter with a new thought. It also prevents the familiar spiral of sending another message just because the last one did not receive the reaction you imagined.',
-          'Your job is to make connection easier, not to manufacture interest. A good reply to "haha" is an invitation. Whether the other person accepts it gives you information. Keep your tone warm, make your next move clear, and allow the conversation to become mutual or move on.'
-        ]
-      },
-      {
-        heading: 'A practical haha reply checklist',
-        paragraphs: [
-          'When you see "haha," pause before guessing what it means. Read the two or three messages around it, notice whether she has been contributing, and decide what you actually want from your next message. If you want to keep the playful tone, send one light tease. If you want to learn more about her, ask a specific question. If the chat already feels one-sided, give it room instead of performing harder.',
-          'This simple check keeps you from treating every reaction as a test. You can be interested without needing an instant score, and you can be confident without pretending you do not care. The best response makes a next step available while respecting the other person enough to let them choose it.'
-        ],
-        bullets: [
-          'Read the pattern, not only the word "haha."',
-          'Choose one playful hook or one real question.',
-          'Send it once, then let the reply guide your next move.'
-        ]
-      }
-    ]
-  },
-  {
-    slug: 'funny-pickup-lines-that-work',
-    title: 'Funny Pickup Lines That Actually Work',
-    description: 'Use funny pickup lines as respectful conversation starters, with examples that make it easy to keep talking after the first laugh.',
-    excerpt: 'A good pickup line opens a door. The follow-up is what turns it into an actual conversation.',
-    date: '2026-07-03',
-    updatedAt: '2026-07-25',
-    readingTime: '7 min read',
-    category: 'Openers',
-    keywords: ['funny pickup lines', 'pickup lines that work', 'funny dating app openers', 'conversation starters'],
-    sections: [
-      {
-        heading: 'Why playful lines work better than perfect lines',
-        paragraphs: [
-          'A funny pickup line works when it lowers the pressure and gives both people something easy to react to. It does not need to be original enough for a comedy special. It needs to be light, readable, and appropriate for the setting. A little self-awareness makes a cheesy line feel intentional instead of awkward, while a respectful tone keeps the other person from feeling like they have been turned into an audience.',
-          'Think of the line as a soft launch into a real conversation. The opening creates a small moment, but the follow-up reveals whether you are curious about the person behind the profile. A joke that gets a laugh but leaves nowhere to go is less useful than a simple line that invites a story, a preference, or a playful disagreement.'
-        ],
-        bullets: [
-          '"Are you always this easy to match with, or am I having a lucky day?"',
-          '"I had a clever opener ready, but your profile distracted me. What is your best recommendation around here?"',
-          '"On a scale from one more episode to up at sunrise, how chaotic is your weekend?"'
-        ]
-      },
-      {
-        heading: 'Choose a line that fits the person and the platform',
-        paragraphs: [
-          'The same pickup line can feel charming in one conversation and strange in another. Read the profile, the app, and the amount of context you have. A playful question about a photo may work well on Tinder or Bumble because it connects to something visible. A bold compliment may feel too much when the person has not given any signal that they want that intensity. Start with the lowest-pressure version that still sounds like you.',
-          'Avoid lines that rely on insults, sexual assumptions, or exaggerated claims about someone you do not know. Humor should create shared energy, not make the other person manage your confidence. If the profile is quiet, choose a line that is easy to answer without pretending you have a deep read on their personality. Specific and kind is usually more memorable than loud.'
-        ]
-      },
-      {
-        heading: 'Use the line as an invitation, not a performance',
-        paragraphs: [
-          'A common mistake is sending one pickup line after another because the first message got a laugh. That turns a conversation into a stand-up set. After the line, give the other person room to be more than an audience. Ask about the detail that made you swipe right, invite a small opinion, or share why you chose the line. The best follow-up changes the focus from the joke to the two people talking.',
-          'You can also make the line more natural by adding a small truth. If you say you had a clever opener ready, explain that their food photo made you curious about the restaurant. If you make a dramatic prediction about their coffee order, be willing to reveal yours. A little vulnerability makes playful confidence easier to believe.'
-        ],
-        bullets: [
-          'Line + profile detail + one easy question.',
-          'Line + your own answer so the other person is not doing all the work.',
-          'Line + a simple invitation to disagree or tell a story.'
-        ]
-      },
-      {
-        heading: 'Follow up when the line gets a laugh',
-        paragraphs: [
-          'If the other person responds with a laugh, a compliment, or a playful answer, build on the detail they gave you. Do not immediately send another punchline. Reflect what they said, add a related detail from your own life, and ask a question that keeps the exchange moving. For example, if they laugh at a travel line and mention a city, ask what they would do there again rather than asking for a full list of destinations.',
-          'When the reply is short, you can offer two choices or a light observation. If they say "haha thanks," do not panic and do not demand a bigger reaction. Try a small pivot once, then let the conversation show you whether they want to continue. Good chemistry is not measured by one perfect response.'
-        ]
-      },
-      {
-        heading: 'Know when a pickup line is the wrong move',
-        paragraphs: [
-          'A pickup line is not a substitute for reading the room. If the conversation is serious, the person has shared something vulnerable, or their profile clearly invites a thoughtful answer, a big joke may feel disconnected. You can still be warm and playful, but choose a response that acknowledges the context. Respect is more attractive than forcing a brand identity as the funny person.',
-          'The same applies when someone does not respond positively. Do not argue that they should have understood the joke or send more messages to recover. Thank them for the exchange, change direction if they invite it, or move on. Rizz Master can generate several opening directions so you can choose between funny, flirty, confident, and sincere instead of using one tone for every person.'
-        ]
-      },
-      {
-        heading: 'Turn the opener into a real conversation',
-        paragraphs: [
-          'The point of a funny pickup line is not to keep the spotlight on the line. It is to create enough comfort for both people to share something real. Ask about a recommendation, a current obsession, a weekend plan, or the story behind a profile detail. Offer your own answer too. A good conversation alternates between curiosity and contribution rather than turning one person into an interviewer.',
-          'When the chat develops a natural rhythm, suggest a simple next step connected to what you have discussed. That could be coffee, a walk, a market, or a place they recommended. Keep the invitation clear and low pressure. The best pickup line is the one that leads to a conversation where neither person needs another line.'
-        ]
-      },
-      {
-        heading: 'A pickup line checklist before you send',
-        paragraphs: [
-          'Ask whether the line is respectful, connected to the context, and easy for the other person to answer. If it depends on a compliment about their body, an assumption about their interest, or a joke that would be uncomfortable face to face, rewrite it. A funny opener should make the next message easier for both people. It should never require the other person to reward you for taking a risk.',
-          'Keep one or two reliable formats ready: a profile detail plus a playful question, or a light line plus your own answer. Having a structure reduces overthinking without turning the message into a script. Choose the tone that fits the person and the moment, then let the reply tell you whether to keep joking, ask something real, or leave the conversation alone.'
-        ],
-        bullets: [
-          'Kind enough to say in person.',
-          'Specific enough to feel written for this profile.',
-          'Open enough to create a second message.'
-        ]
-      }
-    ]
-  },
-  {
-    slug: 'best-dating-app-bio-ideas-for-guys',
-    title: 'Best Dating App Bio Ideas for Guys',
-    description: 'Build a dating app bio that is specific, confident, and easy to start a conversation from, without sounding fake or generic.',
-    excerpt: 'A strong dating bio is a shortcut to the right conversation. Show a point of view, not a list of requirements.',
-    date: '2026-06-30',
-    updatedAt: '2026-07-25',
-    readingTime: '8 min read',
-    category: 'Dating profiles',
-    keywords: ['dating app bio ideas for guys', 'best dating profile bio', 'funny dating bio ideas', 'how to write a dating profile'],
-    sections: [
-      {
-        heading: 'Give people an opening instead of a rÃ©sumÃ©',
-        paragraphs: [
-          '"I like food, travel, and having fun" is true for almost everyone, so it gives a match nowhere to begin. A dating bio works better when it includes one vivid detail: the dish you cook best, the city you would revisit tomorrow, the hobby you are oddly competitive about, or the small routine that makes your weekend feel like yours. Specific details create natural questions and help the right person recognize your personality.',
-          'You do not need to list every interest. Choose two or three details that have texture and leave a little room for curiosity. "I am learning to make restaurant-level ramen and still lose at every board game" is more useful than a list of broad labels. The reader can ask about the ramen, challenge the game claim, or share their own obsession. A strong bio makes the next message obvious.'
-        ],
-        bullets: [
-          '"I make a dangerously good breakfast burrito and defend pineapple on pizza."',
-          '"Ideal Sunday: a long walk, a new coffee shop, and pretending I will meal prep."',
-          '"I am collecting local restaurant recommendations and bad karaoke stories."'
-        ]
-      },
-      {
-        heading: 'Use a simple bio structure',
-        paragraphs: [
-          'A useful dating profile bio can follow a three-part structure: a specific detail, a glimpse of your lifestyle, and an invitation. The detail makes you memorable, the lifestyle gives context, and the invitation gives a match an easy opening. For example, mention the meal you are trying to perfect, the kind of weekend you enjoy, and ask for the best place to get dessert. This structure keeps the bio concise without making it empty.',
-          'Your invitation does not have to be a direct request to match. It can be a playful question or a preference people can answer. "Tell me your most overrated food opinion" creates more energy than "message me if you like food." The goal is not to write a clever puzzle. It is to make your profile feel like the first turn in a conversation.'
-        ],
-        bullets: [
-          'Detail: what you cook, collect, practice, or always notice.',
-          'Lifestyle: how you actually spend a free afternoon.',
-          'Invitation: a recommendation, debate, or low-pressure question.'
-        ]
-      },
-      {
-        heading: 'Sound confident without sounding performative',
-        paragraphs: [
-          'Confidence sounds like knowing what you enjoy, not trying to impress everyone. Use warm, direct language and describe the life you are building instead of listing demands for a future partner. A positive preference is more inviting than a complaint. "I appreciate people who are curious and kind" gives a sense of your values; a long list of what you refuse to tolerate makes the reader feel like they are applying for a job.',
-          'Humor helps when it is connected to something true. Self-awareness can make an ordinary detail charming, but jokes that put yourself or other people down can make the bio feel defensive. If you mention a flaw, let it be light and human rather than a warning label. The best profile voice is relaxed, specific, and recognizable from the photos and prompts around it.'
-        ]
-      },
-      {
-        heading: 'Write for the conversation you want',
-        paragraphs: [
-          'Your bio is not only there to collect likes. It helps attract conversations that fit your interests and energy. If you want to meet someone who enjoys trying new places, mention a restaurant you want to test. If you prefer quiet weekends, make that sound like a life you enjoy rather than an apology. A profile becomes more useful when it tells someone what being around you might feel like.',
-          'Avoid trying to appeal to every possible match with the safest version of yourself. General language may seem broadly acceptable, but it is easy to forget. A clear point of view gives compatible people a reason to message you and gives incompatible people permission to keep scrolling. That is useful filtering, not a failure.'
-        ]
-      },
-      {
-        heading: 'Try a few versions and edit for clarity',
-        paragraphs: [
-          'One bio rarely captures every part of your personality. Try a funny version, a relaxed version, and a more direct version, then compare them with your photos. The strongest option usually has a clear first line, two or three concrete details, and no unnecessary explanation. Read it out loud. If a phrase sounds like marketing copy or a line you would never say, replace it with simpler language.',
-          'Ask whether each sentence gives a match something to ask, react to, or remember. Remove repeated adjectives and broad claims such as "love to laugh." Replace them with the situation that makes you laugh. Rizz Master can turn your interests into several bio directions when you are staring at a blank profile box, but you should always choose the version that feels honest enough to live up to.'
-        ]
-      },
-      {
-        heading: 'Keep the bio current and easy to respond to',
-        paragraphs: [
-          'A dating profile should change when your life changes. Update an old reference, replace a generic detail with something you are doing now, and check that the bio still matches your photos. A current profile gives a match a more accurate reason to start a conversation. It also shows that you are participating in the experience rather than leaving a page untouched for years.',
-          'End with an opening, not a demand. A short question, a recommendation request, or a playful debate is enough. Your bio does not need to convince everyone. It needs to make the right person think, "I know what I would say to that."'
-        ]
-      },
-      {
-        heading: 'Dating bio checklist for a stronger profile',
-        paragraphs: [
-          'Read the bio as if you were a match seeing it for the first time. Can you identify what this person enjoys, how they spend time, and what message would be easy to send? If the answer is no, replace one broad claim with a scene or detail. Swap "I love adventures" for the kind of adventure you actually repeat. Swap "I am easygoing" for the Sunday routine that shows it.',
-          'Then check the balance. Your profile should contain more invitations than requirements, more curiosity than complaints, and enough confidence to sound like a life you enjoy. A few specific lines are enough when they are supported by photos that feel current. The goal is not a perfect bio; it is a clear, honest starting point for the kind of conversation you want.'
-        ],
-        bullets: [
-          'One detail a match could ask about.',
-          'One glimpse of your real routine.',
-          'One low-pressure invitation to respond.'
-        ]
-      }
-    ]
-  },
-  {
-    slug: 'what-to-text-after-a-first-date',
-    title: 'What to Text After a First Date',
-    description: 'Know what to text after a first date so your message feels clear, warm, and confident without overthinking every word.',
-    excerpt: 'The best post-date text is timely, specific, and honest about enjoying the time together.',
-    date: '2026-06-27',
-    updatedAt: '2026-07-25',
-    readingTime: '7 min read',
-    category: 'Dating advice',
-    keywords: ['what to text after a first date', 'first date follow up text', 'text after a good date', 'how to ask for a second date'],
-    sections: [
-      {
-        heading: 'Send the simple version while the memory is fresh',
-        paragraphs: [
-          'You do not need to wait three days or write a perfect paragraph after a first date. If you enjoyed the date, say so while the memory is fresh. Mention one real moment from the evening, then make your interest clear. Specificity makes a short text feel personal because it proves you were present. It also gives the other person something better to respond to than a vague "had fun."',
-          'Timing does not need to be a game. Send the message when it feels natural, whether that is when you get home or the next morning. A warm follow-up is not needy when it is honest and leaves room for their response. You are not asking them to decide the entire future of the connection. You are simply acknowledging a good experience and opening the door to another one.'
-        ],
-        bullets: [
-          '"I had a great time tonight - your cooking-class story still has me laughing."',
-          '"That was fun. I am still thinking about the dessert place you mentioned."',
-          '"Made it home, and I am glad we finally did that. I would like to see you again."'
-        ]
-      },
-      {
-        heading: 'Make the message specific without over-writing it',
-        paragraphs: [
-          'A good post-date text usually needs one detail, one feeling, and one clear direction. The detail might be a story, a restaurant, a shared joke, or a small moment you noticed. The feeling can be as simple as "I had a great time" or "I enjoyed talking with you." The direction can be an invitation, a promise to continue a topic, or a question about their evening.',
-          'Do not turn the follow-up into a review of the date. You do not need to explain every moment you liked or apologize for anything that felt slightly awkward. Early dates are allowed to be imperfect. A short message with warmth and clarity is more attractive than a carefully edited essay that sounds unlike you.'
-        ]
-      },
-      {
-        heading: 'Suggest a second date when it feels right',
-        paragraphs: [
-          'A clear invitation is easier to respond to than vague enthusiasm. Offer a simple plan with a little flexibility: a day, an activity, or a place connected to something you discussed. If they mentioned a favorite market, suggest visiting it. If you debated a restaurant, ask whether they want to test it together. A specific idea gives the next conversation a shape without making it feel like a contract.',
-          'You can be direct without putting pressure on the other person. "I would like to see you again - are you free next week?" is clear and respectful. If they need time or cannot make the suggested day, pay attention to whether they offer another option. Interest usually becomes easier to read when both people are willing to help make a plan.'
-        ],
-        bullets: [
-          'Connect the invitation to something you already talked about.',
-          'Offer one simple plan instead of asking for an undefined hangout.',
-          'Leave room for a yes, a no, or another day without pressure.'
-        ]
-      },
-      {
-        heading: 'Handle uncertainty without sending anxious follow-ups',
-        paragraphs: [
-          'If the response is slower than you hoped, try not to send a second message that asks whether they received the first one or whether the date was a mistake. People have different schedules, and one delayed reply does not tell you everything. Give the message enough room to receive an honest response. Your first text should not create a new obligation for them to manage your anxiety.',
-          'If they answer warmly but cannot make the first plan, see whether they suggest another time. If the replies stay vague, you can make one clear attempt to confirm interest and then step back. A respectful follow-up is useful because it gives you information. Repeated persuasion does not create mutual interest; it only makes the conversation less comfortable for both people.'
-        ]
-      },
-      {
-        heading: 'Keep the tone consistent with the date',
-        paragraphs: [
-          'A post-date message should sound like the person they just met. Keep the warmth, humor, directness, or calm energy that was already there. If you were playful in person, you can include a small callback. If the date was thoughtful and quiet, a sincere message may fit better than a dramatic line. Consistency builds trust because the text does not feel like a completely different version of you.',
-          'Do not use a generic dating script if it removes the detail that made the date feel personal. The goal is not to perform confidence. It is to communicate clearly enough that both people know what the next step could be. Rizz Master can turn the actual date context into a few natural drafts, but your judgment should choose the one that still sounds like you.'
-        ]
-      },
-      {
-        heading: 'When the feeling is not mutual',
-        paragraphs: [
-          'Sometimes a date is pleasant and still does not lead to a second date. If you are not interested, a brief honest message is kinder than disappearing after they have followed up. If the other person is not interested, let their answer stand without trying to negotiate. A clear no is not a challenge to overcome; it is useful information that protects both people from more uncertainty.',
-          'The best first-date follow-up is not the one that guarantees a result. It is the one that represents you accurately and gives the other person a comfortable way to respond. Be specific, be timely, and let the next step be mutual. That is how a good message becomes the beginning of a better conversation.'
-        ]
-      },
-      {
-        heading: 'A simple checklist for your post-date text',
-        paragraphs: [
-          'Before sending, check that the message includes one specific memory, one honest signal of interest, and one comfortable next step. If you are not ready to suggest another date, the next step can simply be a question about something you discussed. If you do want to meet again, say so clearly. A direct message is easier to answer than a paragraph filled with hints.',
-          'Then read the text once out loud and remove anything that sounds like a strategy. You do not need to manufacture distance, hide that you enjoyed yourself, or add extra jokes to make the message impressive. A first-date follow-up works when it feels like a natural continuation of the person they just met. Clear, warm, and specific is enough.'
-        ],
-        bullets: [
-          'Specific memory: show that you were present.',
-          'Honest feeling: say whether you enjoyed the date.',
-          'Clear next step: invite a response without pressure.'
-        ]
-      }
-    ]
-  }
-];
-
-export const getBlogPost = (slug: string) => BLOG_POSTS.find((post) => post.slug === slug);
+          'Specific: it reflects the actual conversation or plan.',
+          'Respectful: it does not punish or pressure the other person.',
+          'Complete: it does not depend on a reply×NxÚÚ$z{-®éÜj×rÀ¢FW67&—F–öã¢t'V–ÆBFF–ær&–òF†B—27V6–f–2Â6öæf–FVçBÂæBV7’Fò7F'B6öçfW'6F–öâg&öÒÂv—F†÷WB6÷VæF–ærf¶R÷"vVæW&–2ârÀ¢W†6W'C¢t7G&öærFF–ær&–ò—26†÷'F7WBFòF†R&–v‡B6öçfW'6F–öââ6†÷rö–çBöbf–WrÂæ÷BÆ—7Böb&WV—&VÖVçG2ârÀ¢FFS¢s##bÓbÓ3rÀ¢WFFVDC¢s##bÓrÓ#RrÀ¢&VF–æuF–ÖS¢s‚Ö–â&VBrÀ¢6FVv÷'“¢tFF–ær&öf–ÆW2rÀ¢¶W—v÷&G3¢²vFF–ær&–ò–FV2f÷"wW—2rÂv&W7BFF–ær&öf–ÆR&–òrÂvgVæç’FF–ær&–ò–FV2rÂv†÷rFòw&—FRFF–ær&öf–ÆRuÒÀ¢6V7F–öç3¢°¢°¢†VF–æs¢tv—fRV÷ÆRâ÷Væ–ær–ç7FVBöb,:—7VÜ:’rÀ¢&w&‡3¢°¢r$’Æ–¶RfööBÂG&fVÂÂæB†f–ærgVâ"—2G'VRf÷"ÆÖ÷7BWfW'–öæRÂ6ò—Bv—fW2ÖF6‚æ÷v†W&RFò&Vv–ââFF–ær&–òv÷&·2&WGFW"v†Vâ—B–æ6ÇVFW2öæRf—f–BFWF–Ã¢F†RF—6‚–÷R6öö²&W7BÂF†R6—G’–÷Rv÷VÆB&Wf—6—BFöÖ÷'&÷rÂF†R†ö&'’–÷R&RöFFÇ’6ö×WF—F—fR&÷WBÂ÷"F†R6ÖÆÂ&÷WF–æRF†BÖ¶W2–÷W"vVV¶VæBfVVÂÆ–¶R–÷W'2â7V6–f–2FWF–Ç27&VFRæGW&ÂVW7F–öç2æB†VÇF†R&–v‡BW'6öâ&V6övæ—¦R–÷W"W'6öæÆ—G’ârÀ¢u–÷RFòæ÷BæVVBFòÆ—7BWfW'’–çFW&W7Bâ6†ö÷6RGvò÷"F‡&VRFWF–Ç2F†B†fRFW‡GW&RæBÆVfRÆ—GFÆR&ööÒf÷"7W&–÷6—G’â$’ÒÆV&æ–ærFòÖ¶R&W7FW&çBÖÆWfVÂ&ÖVâæB7F–ÆÂÆ÷6RBWfW'’&ö&BvÖR"—2Ö÷&RW6VgVÂF†âÆ—7Böb'&öBÆ&VÇ2âF†R&VFW"6â6²&÷WBF†R&ÖVâÂ6†ÆÆVævRF†RvÖR6Æ–ÒÂ÷"6†&RF†V—"÷vâö'6W76–öââ7G&öær&–òÖ¶W2F†RæW‡BÖW76vRö'f–÷W2âp¢ÒÀ¢'VÆÆWG3¢°¢r$’Ö¶RFævW&÷W6Ç’vööB'&V¶f7B'W'&—FòæBFVfVæB–æVÆRöâ—§¦â"rÀ¢r$–FVÂ7VæF“¢ÆöærvÆ²ÂæWr6öffVR6†÷ÂæB&WFVæF–ær’v–ÆÂÖVÂ&Wâ"rÀ¢r$’Ò6öÆÆV7F–ærÆö6Â&W7FW&çB&V6öÖÖVæFF–öç2æB&B¶&ö¶R7F÷&–W2â"p¢Ð¢ÒÀ¢°¢†VF–æs¢uW6R6–×ÆR&–ò7G'V7GW&RrÀ¢&w&‡3¢°¢tW6VgVÂFF–ær&öf–ÆR&–ò6âföÆÆ÷rF‡&VR×'B7G'V7GW&S¢7V6–f–2FWF–ÂÂvÆ–×6Röb–÷W"Æ–fW7G–ÆRÂæBâ–çf—FF–öââF†RFWF–ÂÖ¶W2–÷RÖVÖ÷&&ÆRÂF†RÆ–fW7G–ÆRv—fW26öçFW‡BÂæBF†R–çf—FF–öâv—fW2ÖF6‚âV7’÷Væ–ærâf÷"W†×ÆRÂÖVçF–öâF†RÖVÂ–÷R&RG'––ærFòW&fV7BÂF†R¶–æBöbvVV¶VæB–÷RVæ¦÷’ÂæB6²f÷"F†R&W7BÆ6RFòvWBFW76W'BâF†—27G'V7GW&R¶VW2F†R&–ò6öæ6—6Rv—F†÷WBÖ¶–ær—BV×G’ârÀ¢u–÷W"–çf—FF–öâFöW2æ÷B†fRFò&RF—&V7B&WVW7BFòÖF6‚â—B6â&RÆ–gVÂVW7F–öâ÷"&VfW&Væ6RV÷ÆR6âç7vW"â%FVÆÂÖR–÷W"Ö÷7B÷fW'&FVBfööB÷–æ–öâ"7&VFW2Ö÷&RVæW&w’F†â&ÖW76vRÖR–b–÷RÆ–¶RfööBâ"F†RvöÂ—2æ÷BFòw&—FR6ÆWfW"W§¦ÆRâ—B—2FòÖ¶R–÷W"&öf–ÆRfVVÂÆ–¶RF†Rf—'7BGW&â–â6öçfW'6F–öââp¢ÒÀ¢'VÆÆWG3¢°¢tFWF–Ã¢v†B–÷R6öö²Â6öÆÆV7BÂ&7F–6RÂ÷"Çv—2æ÷F–6RârÀ¢tÆ–fW7G–ÆS¢†÷r–÷R7GVÆÇ’7VæBg&VRgFW&æööâârÀ¢t–çf—FF–öã¢&V6öÖÖVæFF–öâÂFV&FRÂ÷"Æ÷r×&W77W&RVW7F–öââp¢Ð¢ÒÀ¢°¢†VF–æs¢u6÷VæB6öæf–FVçBv—F†÷WB6÷VæF–ærW&f÷&ÖF—fRrÀ¢&w&‡3¢°¢t6öæf–FVæ6R6÷VæG2Æ–¶R¶æ÷v–ærv†B–÷RVæ¦÷’Âæ÷BG'––ærFò–×&W72WfW'–öæRâW6Rv&ÒÂF—&V7BÆæwVvRæBFW67&–&RF†RÆ–fR–÷R&R'V–ÆF–ær–ç7FVBöbÆ—7F–ærFVÖæG2f÷"gWGW&R'FæW"â÷6—F—fR&VfW&Væ6R—2Ö÷&R–çf—F–ærF†â6ö×Æ–çBâ$’&V6–FRV÷ÆRv†ò&R7W&–÷W2æB¶–æB"v—fW26Vç6Röb–÷W"fÇVW3²ÆöærÆ—7Böbv†B–÷R&VgW6RFòFöÆW&FRÖ¶W2F†R&VFW"fVVÂÆ–¶RF†W’&RÇ––ærf÷"¦ö"ârÀ¢t‡VÖ÷"†VÇ2v†Vâ—B—26öææV7FVBFò6öÖWF†–ærG'VRâ6VÆbÖv&VæW726âÖ¶Râ÷&F–æ'’FWF–Â6†&Ö–ærÂ'WB¦ö¶W2F†BWB–÷W'6VÆb÷"÷F†W"V÷ÆRF÷vâ6âÖ¶RF†R&–òfVVÂFVfVç6—fRâ–b–÷RÖVçF–öâfÆrÂÆWB—B&RÆ–v‡BæB‡VÖâ&F†W"F†âv&æ–ærÆ&VÂâF†R&W7B&öf–ÆRfö–6R—2&VÆ†VBÂ7V6–f–2ÂæB&V6övæ—¦&ÆRg&öÒF†R†÷F÷2æB&ö×G2&÷VæB—Bâp¢Ð¢ÒÀ¢°¢†VF–æs¢uw&—FRf÷"F†R6öçfW'6F–öâ–÷RvçBrÀ¢&w&‡3¢°¢u–÷W"&–ò—2æ÷BöæÇ’F†W&RFò6öÆÆV7BÆ–¶W2â—B†VÇ2GG&7B6öçfW'6F–öç2F†Bf—B–÷W"–çFW&W7G2æBVæW&w’â–b–÷RvçBFòÖVWB6öÖVöæRv†òVæ¦÷—2G'––æræWrÆ6W2ÂÖVçF–öâ&W7FW&çB–÷RvçBFòFW7Bâ–b–÷R&VfW"V–WBvVV¶VæG2ÂÖ¶RF†B6÷VæBÆ–¶RÆ–fR–÷RVæ¦÷’&F†W"F†ââöÆöw’â&öf–ÆR&V6öÖW2Ö÷&RW6VgVÂv†Vâ—BFVÆÇ26öÖVöæRv†B&V–ær&÷VæB–÷RÖ–v‡BfVVÂÆ–¶RârÀ¢tfö–BG'––ærFòVÂFòWfW'’÷76–&ÆRÖF6‚v—F‚F†R6fW7BfW'6–öâöb–÷W'6VÆbâvVæW&ÂÆæwVvRÖ’6VVÒ'&öFÇ’66WF&ÆRÂ'WB—B—2V7’Fòf÷&vWBâ6ÆV"ö–çBöbf–Wrv—fW26ö×F–&ÆRV÷ÆR&V6öâFòÖW76vR–÷RæBv—fW2–æ6ö×F–&ÆRV÷ÆRW&Ö—76–öâFò¶VW67&öÆÆ–ærâF†B—2W6VgVÂf–ÇFW&–ærÂæ÷Bf–ÇW&Râp¢Ð¢ÒÀ¢°¢†VF–æs¢uG'’fWrfW'6–öç2æBVF—Bf÷"6Æ&—G’rÀ¢&w&‡3¢°¢töæR&–ò&&VÇ’6GW&W2WfW'’'Böb–÷W"W'6öæÆ—G’âG'’gVæç’fW'6–öâÂ&VÆ†VBfW'6–öâÂæBÖ÷&RF—&V7BfW'6–öâÂF†Vâ6ö×&RF†VÒv—F‚–÷W"†÷F÷2âF†R7G&öævW7B÷F–öâW7VÆÇ’†26ÆV"f—'7BÆ–æRÂGvò÷"F‡&VR6öæ7&WFRFWF–Ç2ÂæBæòVææV6W76'’W‡ÆæF–öââ&VB—B÷WBÆ÷VBâ–b‡&6R6÷VæG2Æ–¶RÖ&¶WF–ær6÷’÷"Æ–æR–÷Rv÷VÆBæWfW"6’Â&WÆ6R—Bv—F‚6–×ÆW"ÆæwVvRârÀ¢t6²v†WF†W"V6‚6VçFVæ6Rv—fW2ÖF6‚6öÖWF†–ærFò6²Â&V7BFòÂ÷"&VÖVÖ&W"â&VÖ÷fR&WVFVBF¦V7F—fW2æB'&öB6Æ–×27V6‚2&Æ÷fRFòÆVv‚â"&WÆ6RF†VÒv—F‚F†R6—GVF–öâF†BÖ¶W2–÷RÆVv‚â&—§¢Ö7FW"6âGW&â–÷W"–çFW&W7G2–çFò6WfW&Â&–òF—&V7F–öç2v†Vâ–÷R&R7F&–ærB&Ææ²&öf–ÆR&÷‚Â'WB–÷R6†÷VÆBÇv—26†ö÷6RF†RfW'6–öâF†BfVVÇ2†öæW7BVæ÷Vv‚FòÆ—fRWFòâp¢Ð¢ÒÀ¢°¢†VF–æs¢t¶VWF†R&–ò7W'&VçBæBV7’Fò&W7öæBFòrÀ¢&w&‡3¢°¢tFF–ær&öf–ÆR6†÷VÆB6†ævRv†Vâ–÷W"Æ–fR6†ævW2âWFFRâöÆB&VfW&Væ6RÂ&WÆ6RvVæW&–2FWF–Âv—F‚6öÖWF†–ær–÷R&RFö–æræ÷rÂæB6†V6²F†BF†R&–ò7F–ÆÂÖF6†W2–÷W"†÷F÷2â7W'&VçB&öf–ÆRv—fW2ÖF6‚Ö÷&R67W&FR&V6öâFò7F'B6öçfW'6F–öââ—BÇ6ò6†÷w2F†B–÷R&R'F–6—F–ær–âF†RW‡W&–Væ6R&F†W"F†âÆVf–ærvRVçF÷V6†VBf÷"–V'2ârÀ¢tVæBv—F‚â÷Væ–ærÂæ÷BFVÖæBâ6†÷'BVW7F–öâÂ&V6öÖÖVæFF–öâ&WVW7BÂ÷"Æ–gVÂFV&FR—2Væ÷Vv‚â–÷W"&–òFöW2æ÷BæVVBFò6öçf–æ6RWfW'–öæRâ—BæVVG2FòÖ¶RF†R&–v‡BW'6öâF†–æ²Â$’¶æ÷rv†B’v÷VÆB6’FòF†Bâ"p¢Ð¢ÒÀ¢°¢†VF–æs¢tFF–ær&–ò6†V6¶Æ—7Bf÷"7G&öævW"&öf–ÆRrÀ¢&w&‡3¢°¢u&VBF†R&–ò2–b–÷RvW&RÖF6‚6VV–ær—Bf÷"F†Rf—'7BF–ÖRâ6â–÷R–FVçF–g’v†BF†—2W'6öâVæ¦÷—2Â†÷rF†W’7VæBF–ÖRÂæBv†BÖW76vRv÷VÆB&RV7’Fò6VæCò–bF†Rç7vW"—2æòÂ&WÆ6RöæR'&öB6Æ–Òv—F‚66VæR÷"FWF–Ââ7v$’Æ÷fRGfVçGW&W2"f÷"F†R¶–æBöbGfVçGW&R–÷R7GVÆÇ’&WVBâ7v$’ÒV7–vö–ær"f÷"F†R7VæF’&÷WF–æRF†B6†÷w2—BârÀ¢uF†Vâ6†V6²F†R&Ææ6Râ–÷W"&öf–ÆR6†÷VÆB6öçF–âÖ÷&R–çf—FF–öç2F†â&WV—&VÖVçG2ÂÖ÷&R7W&–÷6—G’F†â6ö×Æ–çG2ÂæBVæ÷Vv‚6öæf–FVæ6RFò6÷VæBÆ–¶RÆ–fR–÷RVæ¦÷’âfWr7V6–f–2Æ–æW2&RVæ÷Vv‚v†VâF†W’&R7W÷'FVB'’†÷F÷2F†BfVVÂ7W'&VçBâF†RvöÂ—2æ÷BW&fV7B&–ó²—B—26ÆV"Â†öæW7B7F'F–ærö–çBf÷"F†R¶–æBöb6öçfW'6F–öâ–÷RvçBâp¢ÒÀ¢'VÆÆWG3¢°¢töæRFWF–ÂÖF6‚6÷VÆB6²&÷WBârÀ¢töæRvÆ–×6Röb–÷W"&VÂ&÷WF–æRârÀ¢töæRÆ÷r×&W77W&R–çf—FF–öâFò&W7öæBâp¢Ð¢Ð¢Ð¢ÒÀ¢°¢6ÇVs¢wv†B×Fò×FW‡BÖgFW"ÖÖf—'7BÖFFRrÀ¢F—FÆS¢uv†BFòFW‡BgFW"f—'7BFFRrÀ¢FW67&—F–öã¢t¶æ÷rv†BFòFW‡BgFW"f—'7BFFR6ò–÷W"ÖW76vRfVVÇ26ÆV"Âv&ÒÂæB6öæf–FVçBv—F†÷WB÷fW'F†–æ¶–ærWfW'’v÷&BârÀ¢W†6W'C¢uF†R&W7B÷7BÖFFRFW‡B—2F–ÖVÇ’Â7V6–f–2ÂæB†öæW7B&÷WBVæ¦÷––ærF†RF–ÖRFövWF†W"ârÀ¢FFS¢s##bÓbÓ#rrÀ¢WFFVDC¢s##bÓrÓ#RrÀ¢&VF–æuF–ÖS¢srÖ–â&VBrÀ¢6FVv÷'“¢tFF–ærGf–6RrÀ¢¶W—v÷&G3¢²wv†BFòFW‡BgFW"f—'7BFFRrÂvf—'7BFFRföÆÆ÷rWFW‡BrÂwFW‡BgFW"vööBFFRrÂv†÷rFò6²f÷"6V6öæBFFRuÒÀ¢6V7F–öç3¢°¢°¢†VF–æs¢u6VæBF†R6–×ÆRfW'6–öâv†–ÆRF†RÖVÖ÷'’—2g&W6‚rÀ¢&w&‡3¢°¢u–÷RFòæ÷BæVVBFòv—BF‡&VRF—2÷"w&—FRW&fV7B&w&‚gFW"f—'7BFFRâ–b–÷RVæ¦÷–VBF†RFFRÂ6’6òv†–ÆRF†RÖVÖ÷'’—2g&W6‚âÖVçF–öâöæR&VÂÖöÖVçBg&öÒF†RWfVæ–ærÂF†VâÖ¶R–÷W"–çFW&W7B6ÆV"â7V6–f–6—G’Ö¶W26†÷'BFW‡BfVVÂW'6öæÂ&V6W6R—B&÷fW2–÷RvW&R&W6VçBâ—BÇ6òv—fW2F†R÷F†W"W'6öâ6öÖWF†–ær&WGFW"Fò&W7öæBFòF†âfwVR&†BgVââ"rÀ¢uF–Ö–ærFöW2æ÷BæVVBFò&RvÖRâ6VæBF†RÖW76vRv†Vâ—BfVVÇ2æGW&ÂÂv†WF†W"F†B—2v†Vâ–÷RvWB†öÖR÷"F†RæW‡BÖ÷&æ–ærâv&ÒföÆÆ÷r×W—2æ÷BæVVG’v†Vâ—B—2†öæW7BæBÆVfW2&ööÒf÷"F†V—"&W7öç6Râ–÷R&Ræ÷B6¶–ærF†VÒFòFV6–FRF†RVçF—&RgWGW&RöbF†R6öææV7F–öââ–÷R&R6–×Ç’6¶æ÷vÆVFv–ærvööBW‡W&–Væ6RæB÷Væ–ærF†RFö÷"Fòæ÷F†W"öæRâp¢ÒÀ¢'VÆÆWG3¢°¢r$’†Bw&VBF–ÖRFöæ–v‡BÒ–÷W"6öö¶–ærÖ6Æ727F÷'’7F–ÆÂ†2ÖRÆVv†–ærâ"rÀ¢r%F†Bv2gVââ’Ò7F–ÆÂF†–æ¶–ær&÷WBF†RFW76W'BÆ6R–÷RÖVçF–öæVBâ"rÀ¢r$ÖFR—B†öÖRÂæB’ÒvÆBvRf–æÆÇ’F–BF†Bâ’v÷VÆBÆ–¶RFò6VR–÷Rv–ââ"p¢Ð¢ÒÀ¢°¢†VF–æs¢tÖ¶RF†RÖW76vR7V6–f–2v—F†÷WB÷fW"×w&—F–ær—BrÀ¢&w&‡3¢°¢tvööB÷7BÖFFRFW‡BW7VÆÇ’æVVG2öæRFWF–ÂÂöæRfVVÆ–ærÂæBöæR6ÆV"F—&V7F–öââF†RFWF–ÂÖ–v‡B&R7F÷'’Â&W7FW&çBÂ6†&VB¦ö¶RÂ÷"6ÖÆÂÖöÖVçB–÷Ræ÷F–6VBâF†RfVVÆ–ær6â&R26–×ÆR2$’†Bw&VBF–ÖR"÷"$’Væ¦÷–VBFÆ¶–ærv—F‚–÷Râ"F†RF—&V7F–öâ6â&Râ–çf—FF–öâÂ&öÖ—6RFò6öçF–çVRF÷–2Â÷"VW7F–öâ&÷WBF†V—"WfVæ–ærârÀ¢tFòæ÷BGW&âF†RföÆÆ÷r×W–çFò&Wf–WröbF†RFFRâ–÷RFòæ÷BæVVBFòW‡Æ–âWfW'’ÖöÖVçB–÷RÆ–¶VB÷"öÆöv—¦Rf÷"ç—F†–ærF†BfVÇB6Æ–v‡FÇ’v·v&BâV&Ç’FFW2&RÆÆ÷vVBFò&R–×W&fV7Bâ6†÷'BÖW76vRv—F‚v&×F‚æB6Æ&—G’—2Ö÷&RGG&7F—fRF†â6&VgVÆÇ’VF—FVBW76’F†B6÷VæG2VæÆ–¶R–÷Râp¢Ð¢ÒÀ¢°¢†VF–æs¢u7VvvW7B6V6öæBFFRv†Vâ—BfVVÇ2&–v‡BrÀ¢&w&‡3¢°¢t6ÆV"–çf—FF–öâ—2V6–W"Fò&W7öæBFòF†âfwVRVçF‡W6–6ÒâöffW"6–×ÆRÆâv—F‚Æ—GFÆRfÆW†–&–Æ—G“¢F’Ââ7F—f—G’Â÷"Æ6R6öææV7FVBFò6öÖWF†–ær–÷RF—67W76VBâ–bF†W’ÖVçF–öæVBff÷&—FRÖ&¶WBÂ7VvvW7Bf—6—F–ær—Bâ–b–÷RFV&FVB&W7FW&çBÂ6²v†WF†W"F†W’vçBFòFW7B—BFövWF†W"â7V6–f–2–FVv—fW2F†RæW‡B6öçfW'6F–öâ6†Rv—F†÷WBÖ¶–ær—BfVVÂÆ–¶R6öçG&7BârÀ¢u–÷R6â&RF—&V7Bv—F†÷WBWGF–ær&W77W&RöâF†R÷F†W"W'6öââ$’v÷VÆBÆ–¶RFò6VR–÷Rv–âÒ&R–÷Rg&VRæW‡BvVV³ò"—26ÆV"æB&W7V7FgVÂâ–bF†W’æVVBF–ÖR÷"6ææ÷BÖ¶RF†R7VvvW7FVBF’Â’GFVçF–öâFòv†WF†W"F†W’öffW"æ÷F†W"÷F–öââ–çFW&W7BW7VÆÇ’&V6öÖW2V6–W"Fò&VBv†Vâ&÷F‚V÷ÆR&Rv–ÆÆ–ærFò†VÇÖ¶RÆââp¢ÒÀ¢'VÆÆWG3¢°¢t6öææV7BF†R–çf—FF–öâFò6öÖWF†–ær–÷RÇ&VG’FÆ¶VB&÷WBârÀ¢töffW"öæR6–×ÆRÆâ–ç7FVBöb6¶–ærf÷"âVæFVf–æVB†æv÷WBârÀ¢tÆVfR&ööÒf÷"–W2ÂæòÂ÷"æ÷F†W"F’v—F†÷WB&W77W&Râp¢Ð¢ÒÀ¢°¢†VF–æs¢t†æFÆRVæ6W'F–çG’v—F†÷WB6VæF–ærç†–÷W2föÆÆ÷r×W2rÀ¢&w&‡3¢°¢t–bF†R&W7öç6R—26Æ÷vW"F†â–÷R†÷VBÂG'’æ÷BFò6VæB6V6öæBÖW76vRF†B6·2v†WF†W"F†W’&V6V—fVBF†Rf—'7BöæR÷"v†WF†W"F†RFFRv2Ö—7F¶RâV÷ÆR†fRF–ffW&VçB66†VGVÆW2ÂæBöæRFVÆ–VB&WÇ’FöW2æ÷BFVÆÂ–÷RWfW'—F†–ærâv—fRF†RÖW76vRVæ÷Vv‚&ööÒFò&V6V—fRâ†öæW7B&W7öç6Râ–÷W"f—'7BFW‡B6†÷VÆBæ÷B7&VFRæWrö&Æ–vF–öâf÷"F†VÒFòÖævR–÷W"ç†–WG’ârÀ¢t–bF†W’ç7vW"v&ÖÇ’'WB6ææ÷BÖ¶RF†Rf—'7BÆâÂ6VRv†WF†W"F†W’7VvvW7Bæ÷F†W"F–ÖRâ–bF†R&WÆ–W27F’fwVRÂ–÷R6âÖ¶RöæR6ÆV"GFV×BFò6öæf—&Ò–çFW&W7BæBF†Vâ7FW&6²â&W7V7FgVÂföÆÆ÷r×W—2W6VgVÂ&V6W6R—Bv—fW2–÷R–æf÷&ÖF–öââ&WVFVBW'7V6–öâFöW2æ÷B7&VFR×WGVÂ–çFW&W7C²—BöæÇ’Ö¶W2F†R6öçfW'6F–öâÆW726öÖf÷'F&ÆRf÷"&÷F‚V÷ÆRâp¢Ð¢ÒÀ¢°¢†VF–æs¢t¶VWF†RFöæR6öç6—7FVçBv—F‚F†RFFRrÀ¢&w&‡3¢°¢t÷7BÖFFRÖW76vR6†÷VÆB6÷VæBÆ–¶RF†RW'6öâF†W’§W7BÖWBâ¶VWF†Rv&×F‚Â‡VÖ÷"ÂF—&V7FæW72Â÷"6ÆÒVæW&w’F†Bv2Ç&VG’F†W&Râ–b–÷RvW&RÆ–gVÂ–âW'6öâÂ–÷R6â–æ6ÇVFR6ÖÆÂ6ÆÆ&6²â–bF†RFFRv2F†÷Vv‡FgVÂæBV–WBÂ6–æ6W&RÖW76vRÖ’f—B&WGFW"F†âG&ÖF–2Æ–æRâ6öç6—7FVæ7’'V–ÆG2G'W7B&V6W6RF†RFW‡BFöW2æ÷BfVVÂÆ–¶R6ö×ÆWFVÇ’F–ffW&VçBfW'6–öâöb–÷RârÀ¢tFòæ÷BW6RvVæW&–2FF–ær67&—B–b—B&VÖ÷fW2F†RFWF–ÂF†BÖFRF†RFFRfVVÂW'6öæÂâF†RvöÂ—2æ÷BFòW&f÷&Ò6öæf–FVæ6Râ—B—2Fò6öÖ×Væ–6FR6ÆV&Ç’Væ÷Vv‚F†B&÷F‚V÷ÆR¶æ÷rv†BF†RæW‡B7FW6÷VÆB&Râ&—§¢Ö7FW"6âGW&âF†R7GVÂFFR6öçFW‡B–çFòfWræGW&ÂG&gG2Â'WB–÷W"§VFvÖVçB6†÷VÆB6†ö÷6RF†RöæRF†B7F–ÆÂ6÷VæG2Æ–¶R–÷Râp¢Ð¢ÒÀ¢°¢†VF–æs¢uv†VâF†RfVVÆ–ær—2æ÷B×WGVÂrÀ¢&w&‡3¢°¢u6öÖWF–ÖW2FFR—2ÆV6çBæB7F–ÆÂFöW2æ÷BÆVBFò6V6öæBFFRâ–b–÷R&Ræ÷B–çFW&W7FVBÂ'&–Vb†öæW7BÖW76vR—2¶–æFW"F†âF—6V&–ærgFW"F†W’†fRföÆÆ÷vVBWâ–bF†R÷F†W"W'6öâ—2æ÷B–çFW&W7FVBÂÆWBF†V—"ç7vW"7FæBv—F†÷WBG'––ærFòæVv÷F–FRâ6ÆV"æò—2æ÷B6†ÆÆVævRFò÷fW&6öÖS²—B—2W6VgVÂ–æf÷&ÖF–öâF†B&÷FV7G2&÷F‚V÷ÆRg&öÒÖ÷&RVæ6W'F–çG’ârÀ¢uF†R&W7Bf—'7BÖFFRföÆÆ÷r×W—2æ÷BF†RöæRF†BwV&çFVW2&W7VÇBâ—B—2F†RöæRF†B&W&W6VçG2–÷R67W&FVÇ’æBv—fW2F†R÷F†W"W'6öâ6öÖf÷'F&ÆRv’Fò&W7öæBâ&R7V6–f–2Â&RF–ÖVÇ’ÂæBÆWBF†RæW‡B7FW&R×WGVÂâF†B—2†÷rvööBÖW76vR&V6öÖW2F†R&Vv–ææ–æröb&WGFW"6öçfW'6F–öââp¢Ð¢ÒÀ¢°¢†VF–æs¢t6–×ÆR6†V6¶Æ—7Bf÷"–÷W"÷7BÖFFRFW‡BrÀ¢&w&‡3¢°¢t&Vf÷&R6VæF–ærÂ6†V6²F†BF†RÖW76vR–æ6ÇVFW2öæR7V6–f–2ÖVÖ÷'’ÂöæR†öæW7B6–væÂöb–çFW&W7BÂæBöæR6öÖf÷'F&ÆRæW‡B7FWâ–b–÷R&Ræ÷B&VG’Fò7VvvW7Bæ÷F†W"FFRÂF†RæW‡B7FW6â6–×Ç’&RVW7F–öâ&÷WB6öÖWF†–ær–÷RF—67W76VBâ–b–÷RFòvçBFòÖVWBv–âÂ6’6ò6ÆV&Ç’âF—&V7BÖW76vR—2V6–W"Fòç7vW"F†â&w&‚f–ÆÆVBv—F‚†–çG2ârÀ¢uF†Vâ&VBF†RFW‡Böæ6R÷WBÆ÷VBæB&VÖ÷fRç—F†–ærF†B6÷VæG2Æ–¶R7G&FVw’â–÷RFòæ÷BæVVBFòÖçVf7GW&RF—7Fæ6RÂ†–FRF†B–÷RVæ¦÷–VB–÷W'6VÆbÂ÷"FBW‡G&¦ö¶W2FòÖ¶RF†RÖW76vR–×&W76—fRâf—'7BÖFFRföÆÆ÷r×Wv÷&·2v†Vâ—BfVVÇ2Æ–¶RæGW&Â6öçF–çVF–öâöbF†RW'6öâF†W’§W7BÖWBâ6ÆV"Âv&ÒÂæB7V6–f–2—2Væ÷Vv‚âp¢ÒÀ¢'VÆÆWG3¢°¢u7V6–f–2ÖVÖ÷'“¢6†÷rF†B–÷RvW&R&W6VçBârÀ¢t†öæW7BfVVÆ–æs¢6’v†WF†W"–÷RVæ¦÷–VBF†RFFRârÀ¢t6ÆV"æW‡B7FW¢–çf—FR&W7öç6Rv—F†÷WB&W77W&Râp¢Ð¢Ð¢Ð¢Ð¥Ó° ¦W‡÷'B6öç7BvWD&Æöu÷7BÒ‡6ÇVs¢7G&–ær’Óâ$Äôuõõ5E2æf–æB‚‡÷7B’Óâ÷7Bç6ÇVrÓÓÒ6ÇVr“°
