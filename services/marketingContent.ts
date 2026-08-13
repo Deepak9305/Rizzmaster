@@ -170,4 +170,264 @@ export const BLOG_POSTS: BlogPost[] = [
         bullets: [
           'Specific: it reflects the actual conversation or plan.',
           'Respectful: it does not punish or pressure the other person.',
-          'Complete: it does not depend on a reply×NxÚÚ$z{-®éÜj×rÀ¢FW67&—F–öã¢t'V–ÆBFF–ær&–òF†B—27V6–f–2Â6öæf–FVçBÂæBV7’Fò7F'B6öçfW'6F–öâg&öÒÂv—F†÷WB6÷VæF–ærf¶R÷"vVæW&–2ârÀ¢W†6W'C¢t7G&öærFF–ær&–ò—26†÷'F7WBFòF†R&–v‡B6öçfW'6F–öââ6†÷rö–çBöbf–WrÂæ÷BÆ—7Böb&WV—&VÖVçG2ârÀ¢FFS¢s##bÓbÓ3rÀ¢WFFVDC¢s##bÓrÓ#RrÀ¢&VF–æuF–ÖS¢s‚Ö–â&VBrÀ¢6FVv÷'“¢tFF–ær&öf–ÆW2rÀ¢¶W—v÷&G3¢²vFF–ær&–ò–FV2f÷"wW—2rÂv&W7BFF–ær&öf–ÆR&–òrÂvgVæç’FF–ær&–ò–FV2rÂv†÷rFòw&—FRFF–ær&öf–ÆRuÒÀ¢6V7F–öç3¢°¢°¢†VF–æs¢tv—fRV÷ÆRâ÷Væ–ær–ç7FVBöb,:—7VÜ:’rÀ¢&w&‡3¢°¢r$’Æ–¶RfööBÂG&fVÂÂæB†f–ærgVâ"—2G'VRf÷"ÆÖ÷7BWfW'–öæRÂ6ò—Bv—fW2ÖF6‚æ÷v†W&RFò&Vv–ââFF–ær&–òv÷&·2&WGFW"v†Vâ—B–æ6ÇVFW2öæRf—f–BFWF–Ã¢F†RF—6‚–÷R6öö²&W7BÂF†R6—G’–÷Rv÷VÆB&Wf—6—BFöÖ÷'&÷rÂF†R†ö&'’–÷R&RöFFÇ’6ö×WF—F—fR&÷WBÂ÷"F†R6ÖÆÂ&÷WF–æRF†BÖ¶W2–÷W"vVV¶VæBfVVÂÆ–¶R–÷W'2â7V6–f–2FWF–Ç27&VFRæGW&ÂVW7F–öç2æB†VÇF†R&–v‡BW'6öâ&V6övæ—¦R–÷W"W'6öæÆ—G’ârÀ¢u–÷RFòæ÷BæVVBFòÆ—7BWfW'’–çFW&W7Bâ6†ö÷6RGvò÷"F‡&VRFWF–Ç2F†B†fRFW‡GW&RæBÆVfRÆ—GFÆR&ööÒf÷"7W&–÷6—G’â$’ÒÆV&æ–ærFòÖ¶R&W7FW&çBÖÆWfVÂ&ÖVâæB7F–ÆÂÆ÷6RBWfW'’&ö&BvÖR"—2Ö÷&RW6VgVÂF†âÆ—7Böb'&öBÆ&VÇ2âF†R&VFW"6â6²&÷WBF†R&ÖVâÂ6†ÆÆVævRF†RvÖR6Æ–ÒÂ÷"6†&RF†V—"÷vâö'6W76–öââ7G&öær&–òÖ¶W2F†RæW‡BÖW76vRö'f–÷W2âp¢ÒÀ¢'VÆÆWG3¢°¢r$’Ö¶RFævW&÷W6Ç’vööB'&V¶f7B'W'&—FòæBFVfVæB–æVÆRöâ—§¦â"rÀ¢r$–FVÂ7VæF“¢ÆöærvÆ²ÂæWr6öffVR6†÷ÂæB&WFVæF–ær’v–ÆÂÖVÂ&Wâ"rÀ¢r$’Ò6öÆÆV7F–ærÆö6Â&W7FW&çB&V6öÖÖVæFF–öç2æB&B¶&ö¶R7F÷&–W2â"p¢Ð¢ÒÀ¢°¢†VF–æs¢uW6R6–×ÆR&–ò7G'V7GW&RrÀ¢&w&‡3¢°¢tW6VgVÂFF–ær&öf–ÆR&–ò6âföÆÆ÷rF‡&VR×'B7G'V7GW&S¢7V6–f–2FWF–ÂÂvÆ–×6Röb–÷W"Æ–fW7G–ÆRÂæBâ–çf—FF–öââF†RFWF–ÂÖ¶W2–÷RÖVÖ÷&&ÆRÂF†RÆ–fW7G–ÆRv—fW26öçFW‡BÂæBF†R–çf—FF–öâv—fW2ÖF6‚âV7’÷Væ–ærâf÷"W†×ÆRÂÖVçF–öâF†RÖVÂ–÷R&RG'––ærFòW&fV7BÂF†R¶–æBöbvVV¶VæB–÷RVæ¦÷’ÂæB6²f÷"F†R&W7BÆ6RFòvWBFW76W'BâF†—27G'V7GW&R¶VW2F†R&–ò6öæ6—6Rv—F†÷WBÖ¶–ær—BV×G’ârÀ¢u–÷W"–çf—FF–öâFöW2æ÷B†fRFò&RF—&V7B&WVW7BFòÖF6‚â—B6â&RÆ–gVÂVW7F–öâ÷"&VfW&Væ6RV÷ÆR6âç7vW"â%FVÆÂÖR–÷W"Ö÷7B÷fW'&FVBfööB÷–æ–öâ"7&VFW2Ö÷&RVæW&w’F†â&ÖW76vRÖR–b–÷RÆ–¶RfööBâ"F†RvöÂ—2æ÷BFòw&—FR6ÆWfW"W§¦ÆRâ—B—2FòÖ¶R–÷W"&öf–ÆRfVVÂÆ–¶RF†Rf—'7BGW&â–â6öçfW'6F–öââp¢ÒÀ¢'VÆÆWG3¢°¢tFWF–Ã¢v†B–÷R6öö²Â6öÆÆV7BÂ&7F–6RÂ÷"Çv—2æ÷F–6RârÀ¢tÆ–fW7G–ÆS¢†÷r–÷R7GVÆÇ’7VæBg&VRgFW&æööâârÀ¢t–çf—FF–öã¢&V6öÖÖVæFF–öâÂFV&FRÂ÷"Æ÷r×&W77W&RVW7F–öââp¢Ð¢ÒÀ¢°¢†VF–æs¢u6÷VæB6öæf–FVçBv—F†÷WB6÷VæF–ærW&f÷&ÖF—fRrÀ¢&w&‡3¢°¢t6öæf–FVæ6R6÷VæG2Æ–¶R¶æ÷v–ærv†B–÷RVæ¦÷’Âæ÷BG'––ærFò–×&W72WfW'–öæRâW6Rv&ÒÂF—&V7BÆæwVvRæBFW67&–&RF†RÆ–fR–÷R&R'V–ÆF–ær–ç7FVBöbÆ—7F–ærFVÖæG2f÷"gWGW&R'FæW"â÷6—F—fR&VfW&Væ6R—2Ö÷&R–çf—F–ærF†â6ö×Æ–çBâ$’&V6–FRV÷ÆRv†ò&R7W&–÷W2æB¶–æB"v—fW26Vç6Röb–÷W"fÇVW3²ÆöærÆ—7Böbv†B–÷R&VgW6RFòFöÆW&FRÖ¶W2F†R&VFW"fVVÂÆ–¶RF†W’&RÇ––ærf÷"¦ö"ârÀ¢t‡VÖ÷"†VÇ2v†Vâ—B—26öææV7FVBFò6öÖWF†–ærG'VRâ6VÆbÖv&VæW726âÖ¶Râ÷&F–æ'’FWF–Â6†&Ö–ærÂ'WB¦ö¶W2F†BWB–÷W'6VÆb÷"÷F†W"V÷ÆRF÷vâ6âÖ¶RF†R&–òfVVÂFVfVç6—fRâ–b–÷RÖVçF–öâfÆrÂÆWB—B&RÆ–v‡BæB‡VÖâ&F†W"F†âv&æ–ærÆ&VÂâF†R&W7B&öf–ÆRfö–6R—2&VÆ†VBÂ7V6–f–2ÂæB&V6övæ—¦&ÆRg&öÒF†R†÷F÷2æB&ö×G2&÷VæB—Bâp¢Ð¢ÒÀ¢°¢†VF–æs¢uw&—FRf÷"F†R6öçfW'6F–öâ–÷RvçBrÀ¢&w&‡3¢°¢u–÷W"&–ò—2æ÷BöæÇ’F†W&RFò6öÆÆV7BÆ–¶W2â—B†VÇ2GG&7B6öçfW'6F–öç2F†Bf—B–÷W"–çFW&W7G2æBVæW&w’â–b–÷RvçBFòÖVWB6öÖVöæRv†òVæ¦÷—2G'––æræWrÆ6W2ÂÖVçF–öâ&W7FW&çB–÷RvçBFòFW7Bâ–b–÷R&VfW"V–WBvVV¶VæG2ÂÖ¶RF†B6÷VæBÆ–¶RÆ–fR–÷RVæ¦÷’&F†W"F†ââöÆöw’â&öf–ÆR&V6öÖW2Ö÷&RW6VgVÂv†Vâ—BFVÆÇ26öÖVöæRv†B&V–ær&÷VæB–÷RÖ–v‡BfVVÂÆ–¶RârÀ¢tfö–BG'––ærFòVÂFòWfW'’÷76–&ÆRÖF6‚v—F‚F†R6fW7BfW'6–öâöb–÷W'6VÆbâvVæW&ÂÆæwVvRÖ’6VVÒ'&öFÇ’66WF&ÆRÂ'WB—B—2V7’Fòf÷&vWBâ6ÆV"ö–çBöbf–Wrv—fW26ö×F–&ÆRV÷ÆR&V6öâFòÖW76vR–÷RæBv—fW2–æ6ö×F–&ÆRV÷ÆRW&Ö—76–öâFò¶VW67&öÆÆ–ærâF†B—2W6VgVÂf–ÇFW&–ærÂæ÷Bf–ÇW&Râp¢Ð¢ÒÀ¢°¢†VF–æs¢uG'’fWrfW'6–öç2æBVF—Bf÷"6Æ&—G’rÀ¢&w&‡3¢°¢töæR&–ò&&VÇ’6GW&W2WfW'’'Böb–÷W"W'6öæÆ—G’âG'’gVæç’fW'6–öâÂ&VÆ†VBfW'6–öâÂæBÖ÷&RF—&V7BfW'6–öâÂF†Vâ6ö×&RF†VÒv—F‚–÷W"†÷F÷2âF†R7G&öævW7B÷F–öâW7VÆÇ’†26ÆV"f—'7BÆ–æRÂGvò÷"F‡&VR6öæ7&WFRFWF–Ç2ÂæBæòVææV6W76'’W‡ÆæF–öââ&VB—B÷WBÆ÷VBâ–b‡&6R6÷VæG2Æ–¶RÖ&¶WF–ær6÷’÷"Æ–æR–÷Rv÷VÆBæWfW"6’Â&WÆ6R—Bv—F‚6–×ÆW"ÆæwVvRârÀ¢t6²v†WF†W"V6‚6VçFVæ6Rv—fW2ÖF6‚6öÖWF†–ærFò6²Â&V7BFòÂ÷"&VÖVÖ&W"â&VÖ÷fR&WVFVBF¦V7F—fW2æB'&öB6Æ–×27V6‚2&Æ÷fRFòÆVv‚â"&WÆ6RF†VÒv—F‚F†R6—GVF–öâF†BÖ¶W2–÷RÆVv‚â&—§¢Ö7FW"6âGW&â–÷W"–çFW&W7G2–çFò6WfW&Â&–òF—&V7F–öç2v†Vâ–÷R&R7F&–ærB&Ææ²&öf–ÆR&÷‚Â'WB–÷R6†÷VÆBÇv—26†ö÷6RF†RfW'6–öâF†BfVVÇ2†öæW7BVæ÷Vv‚FòÆ—fRWFòâp¢Ð¢ÒÀ¢°¢†VF–æs¢t¶VWF†R&–ò7W'&VçBæBV7’Fò&W7öæBFòrÀ¢&w&‡3¢°¢tFF–ær&öf–ÆR6†÷VÆB6†ævRv†Vâ–÷W"Æ–fR6†ævW2âWFFRâöÆB&VfW&Væ6RÂ&WÆ6RvVæW&–2FWF–Âv—F‚6öÖWF†–ær–÷R&RFö–æræ÷rÂæB6†V6²F†BF†R&–ò7F–ÆÂÖF6†W2–÷W"†÷F÷2â7W'&VçB&öf–ÆRv—fW2ÖF6‚Ö÷&R67W&FR&V6öâFò7F'B6öçfW'6F–öââ—BÇ6ò6†÷w2F†B–÷R&R'F–6—F–ær–âF†RW‡W&–Væ6R&F†W"F†âÆVf–ærvRVçF÷V6†VBf÷"–V'2ârÀ¢tVæBv—F‚â÷Væ–ærÂæ÷BFVÖæBâ6†÷'BVW7F–öâÂ&V6öÖÖVæFF–öâ&WVW7BÂ÷"Æ–gVÂFV&FR—2Væ÷Vv‚â–÷W"&–òFöW2æ÷BæVVBFò6öçf–æ6RWfW'–öæRâ—BæVVG2FòÖ¶RF†R&–v‡BW'6öâF†–æ²Â$’¶æ÷rv†B’v÷VÆB6’FòF†Bâ"p¢Ð¢ÒÀ¢°¢†VF–æs¢tFF–ær&–ò6†V6¶Æ—7Bf÷"7G&öævW"&öf–ÆRrÀ¢&w&‡3¢°¢u&VBF†R&–ò2–b–÷RvW&RÖF6‚6VV–ær—Bf÷"F†Rf—'7BF–ÖRâ6â–÷R–FVçF–g’v†BF†—2W'6öâVæ¦÷—2Â†÷rF†W’7VæBF–ÖRÂæBv†BÖW76vRv÷VÆB&RV7’Fò6VæCò–bF†Rç7vW"—2æòÂ&WÆ6RöæR'&öB6Æ–Òv—F‚66VæR÷"FWF–Ââ7v$’Æ÷fRGfVçGW&W2"f÷"F†R¶–æBöbGfVçGW&R–÷R7GVÆÇ’&WVBâ7v$’ÒV7–vö–ær"f÷"F†R7VæF’&÷WF–æRF†B6†÷w2—BârÀ¢uF†Vâ6†V6²F†R&Ææ6Râ–÷W"&öf–ÆR6†÷VÆB6öçF–âÖ÷&R–çf—FF–öç2F†â&WV—&VÖVçG2ÂÖ÷&R7W&–÷6—G’F†â6ö×Æ–çG2ÂæBVæ÷Vv‚6öæf–FVæ6RFò6÷VæBÆ–¶RÆ–fR–÷RVæ¦÷’âfWr7V6–f–2Æ–æW2&RVæ÷Vv‚v†VâF†W’&R7W÷'FVB'’†÷F÷2F†BfVVÂ7W'&VçBâF†RvöÂ—2æ÷BW&fV7B&–ó²—B—26ÆV"Â†öæW7B7F'F–ærö–çBf÷"F†R¶–æBöb6öçfW'6F–öâ–÷RvçBâp¢ÒÀ¢'VÆÆWG3¢°¢töæRFWF–ÂÖF6‚6÷VÆB6²&÷WBârÀ¢töæRvÆ–×6Röb–÷W"&VÂ&÷WF–æRârÀ¢töæRÆ÷r×&W77W&R–çf—FF–öâFò&W7öæBâp¢Ð¢Ð¢Ð¢ÒÀ¢°¢6ÇVs¢wv†B×Fò×FW‡BÖgFW"ÖÖf—'7BÖFFRrÀ¢F—FÆS¢uv†BFòFW‡BgFW"f—'7BFFRrÀ¢FW67&—F–öã¢t¶æ÷rv†BFòFW‡BgFW"f—'7BFFR6ò–÷W"ÖW76vRfVVÇ26ÆV"Âv&ÒÂæB6öæf–FVçBv—F†÷WB÷fW'F†–æ¶–ærWfW'’v÷&BârÀ¢W†6W'C¢uF†R&W7B÷7BÖFFRFW‡B—2F–ÖVÇ’Â7V6–f–2ÂæB†öæW7B&÷WBVæ¦÷––ærF†RF–ÖRFövWF†W"ârÀ¢FFS¢s##bÓbÓ#rrÀ¢WFFVDC¢s##bÓrÓ#RrÀ¢&VF–æuF–ÖS¢srÖ–â&VBrÀ¢6FVv÷'“¢tFF–ærGf–6RrÀ¢¶W—v÷&G3¢²wv†BFòFW‡BgFW"f—'7BFFRrÂvf—'7BFFRföÆÆ÷rWFW‡BrÂwFW‡BgFW"vööBFFRrÂv†÷rFò6²f÷"6V6öæBFFRuÒÀ¢6V7F–öç3¢°¢°¢†VF–æs¢u6VæBF†R6–×ÆRfW'6–öâv†–ÆRF†RÖVÖ÷'’—2g&W6‚rÀ¢&w&‡3¢°¢u–÷RFòæ÷BæVVBFòv—BF‡&VRF—2÷"w&—FRW&fV7B&w&‚gFW"f—'7BFFRâ–b–÷RVæ¦÷–VBF†RFFRÂ6’6òv†–ÆRF†RÖVÖ÷'’—2g&W6‚âÖVçF–öâöæR&VÂÖöÖVçBg&öÒF†RWfVæ–ærÂF†VâÖ¶R–÷W"–çFW&W7B6ÆV"â7V6–f–6—G’Ö¶W26†÷'BFW‡BfVVÂW'6öæÂ&V6W6R—B&÷fW2–÷RvW&R&W6VçBâ—BÇ6òv—fW2F†R÷F†W"W'6öâ6öÖWF†–ær&WGFW"Fò&W7öæBFòF†âfwVR&†BgVââ"rÀ¢uF–Ö–ærFöW2æ÷BæVVBFò&RvÖRâ6VæBF†RÖW76vRv†Vâ—BfVVÇ2æGW&ÂÂv†WF†W"F†B—2v†Vâ–÷RvWB†öÖR÷"F†RæW‡BÖ÷&æ–ærâv&ÒföÆÆ÷r×W—2æ÷BæVVG’v†Vâ—B—2†öæW7BæBÆVfW2&ööÒf÷"F†V—"&W7öç6Râ–÷R&Ræ÷B6¶–ærF†VÒFòFV6–FRF†RVçF—&RgWGW&RöbF†R6öææV7F–öââ–÷R&R6–×Ç’6¶æ÷vÆVFv–ærvööBW‡W&–Væ6RæB÷Væ–ærF†RFö÷"Fòæ÷F†W"öæRâp¢ÒÀ¢'VÆÆWG3¢°¢r$’†Bw&VBF–ÖRFöæ–v‡BÒ–÷W"6öö¶–ærÖ6Æ727F÷'’7F–ÆÂ†2ÖRÆVv†–ærâ"rÀ¢r%F†Bv2gVââ’Ò7F–ÆÂF†–æ¶–ær&÷WBF†RFW76W'BÆ6R–÷RÖVçF–öæVBâ"rÀ¢r$ÖFR—B†öÖRÂæB’ÒvÆBvRf–æÆÇ’F–BF†Bâ’v÷VÆBÆ–¶RFò6VR–÷Rv–ââ"p¢Ð¢ÒÀ¢°¢†VF–æs¢tÖ¶RF†RÖW76vR7V6–f–2v—F†÷WB÷fW"×w&—F–ær—BrÀ¢&w&‡3¢°¢tvööB÷7BÖFFRFW‡BW7VÆÇ’æVVG2öæRFWF–ÂÂöæRfVVÆ–ærÂæBöæR6ÆV"F—&V7F–öââF†RFWF–ÂÖ–v‡B&R7F÷'’Â&W7FW&çBÂ6†&VB¦ö¶RÂ÷"6ÖÆÂÖöÖVçB–÷Ræ÷F–6VBâF†RfVVÆ–ær6â&R26–×ÆR2$’†Bw&VBF–ÖR"÷"$’Væ¦÷–VBFÆ¶–ærv—F‚–÷Râ"F†RF—&V7F–öâ6â&Râ–çf—FF–öâÂ&öÖ—6RFò6öçF–çVRF÷–2Â÷"VW7F–öâ&÷WBF†V—"WfVæ–ærârÀ¢tFòæ÷BGW&âF†RföÆÆ÷r×W–çFò&Wf–WröbF†RFFRâ–÷RFòæ÷BæVVBFòW‡Æ–âWfW'’ÖöÖVçB–÷RÆ–¶VB÷"öÆöv—¦Rf÷"ç—F†–ærF†BfVÇB6Æ–v‡FÇ’v·v&BâV&Ç’FFW2&RÆÆ÷vVBFò&R–×W&fV7Bâ6†÷'BÖW76vRv—F‚v&×F‚æB6Æ&—G’—2Ö÷&RGG&7F—fRF†â6&VgVÆÇ’VF—FVBW76’F†B6÷VæG2VæÆ–¶R–÷Râp¢Ð¢ÒÀ¢°¢†VF–æs¢u7VvvW7B6V6öæBFFRv†Vâ—BfVVÇ2&–v‡BrÀ¢&w&‡3¢°¢t6ÆV"–çf—FF–öâ—2V6–W"Fò&W7öæBFòF†âfwVRVçF‡W6–6ÒâöffW"6–×ÆRÆâv—F‚Æ—GFÆRfÆW†–&–Æ—G“¢F’Ââ7F—f—G’Â÷"Æ6R6öææV7FVBFò6öÖWF†–ær–÷RF—67W76VBâ–bF†W’ÖVçF–öæVBff÷&—FRÖ&¶WBÂ7VvvW7Bf—6—F–ær—Bâ–b–÷RFV&FVB&W7FW&çBÂ6²v†WF†W"F†W’vçBFòFW7B—BFövWF†W"â7V6–f–2–FVv—fW2F†RæW‡B6öçfW'6F–öâ6†Rv—F†÷WBÖ¶–ær—BfVVÂÆ–¶R6öçG&7BârÀ¢u–÷R6â&RF—&V7Bv—F†÷WBWGF–ær&W77W&RöâF†R÷F†W"W'6öââ$’v÷VÆBÆ–¶RFò6VR–÷Rv–âÒ&R–÷Rg&VRæW‡BvVV³ò"—26ÆV"æB&W7V7FgVÂâ–bF†W’æVVBF–ÖR÷"6ææ÷BÖ¶RF†R7VvvW7FVBF’Â’GFVçF–öâFòv†WF†W"F†W’öffW"æ÷F†W"÷F–öââ–çFW&W7BW7VÆÇ’&V6öÖW2V6–W"Fò&VBv†Vâ&÷F‚V÷ÆR&Rv–ÆÆ–ærFò†VÇÖ¶RÆââp¢ÒÀ¢'VÆÆWG3¢°¢t6öææV7BF†R–çf—FF–öâFò6öÖWF†–ær–÷RÇ&VG’FÆ¶VB&÷WBârÀ¢töffW"öæR6–×ÆRÆâ–ç7FVBöb6¶–ærf÷"âVæFVf–æVB†æv÷WBârÀ¢tÆVfR&ööÒf÷"–W2ÂæòÂ÷"æ÷F†W"F’v—F†÷WB&W77W&Râp¢Ð¢ÒÀ¢°¢†VF–æs¢t†æFÆRVæ6W'F–çG’v—F†÷WB6VæF–ærç†–÷W2föÆÆ÷r×W2rÀ¢&w&‡3¢°¢t–bF†R&W7öç6R—26Æ÷vW"F†â–÷R†÷VBÂG'’æ÷BFò6VæB6V6öæBÖW76vRF†B6·2v†WF†W"F†W’&V6V—fVBF†Rf—'7BöæR÷"v†WF†W"F†RFFRv2Ö—7F¶RâV÷ÆR†fRF–ffW&VçB66†VGVÆW2ÂæBöæRFVÆ–VB&WÇ’FöW2æ÷BFVÆÂ–÷RWfW'—F†–ærâv—fRF†RÖW76vRVæ÷Vv‚&ööÒFò&V6V—fRâ†öæW7B&W7öç6Râ–÷W"f—'7BFW‡B6†÷VÆBæ÷B7&VFRæWrö&Æ–vF–öâf÷"F†VÒFòÖævR–÷W"ç†–WG’ârÀ¢t–bF†W’ç7vW"v&ÖÇ’'WB6ææ÷BÖ¶RF†Rf—'7BÆâÂ6VRv†WF†W"F†W’7VvvW7Bæ÷F†W"F–ÖRâ–bF†R&WÆ–W27F’fwVRÂ–÷R6âÖ¶RöæR6ÆV"GFV×BFò6öæf—&Ò–çFW&W7BæBF†Vâ7FW&6²â&W7V7FgVÂföÆÆ÷r×W—2W6VgVÂ&V6W6R—Bv—fW2–÷R–æf÷&ÖF–öââ&WVFVBW'7V6–öâFöW2æ÷B7&VFR×WGVÂ–çFW&W7C²—BöæÇ’Ö¶W2F†R6öçfW'6F–öâÆW726öÖf÷'F&ÆRf÷"&÷F‚V÷ÆRâp¢Ð¢ÒÀ¢°¢†VF–æs¢t¶VWF†RFöæR6öç6—7FVçBv—F‚F†RFFRrÀ¢&w&‡3¢°¢t÷7BÖFFRÖW76vR6†÷VÆB6÷VæBÆ–¶RF†RW'6öâF†W’§W7BÖWBâ¶VWF†Rv&×F‚Â‡VÖ÷"ÂF—&V7FæW72Â÷"6ÆÒVæW&w’F†Bv2Ç&VG’F†W&Râ–b–÷RvW&RÆ–gVÂ–âW'6öâÂ–÷R6â–æ6ÇVFR6ÖÆÂ6ÆÆ&6²â–bF†RFFRv2F†÷Vv‡FgVÂæBV–WBÂ6–æ6W&RÖW76vRÖ’f—B&WGFW"F†âG&ÖF–2Æ–æRâ6öç6—7FVæ7’'V–ÆG2G'W7B&V6W6RF†RFW‡BFöW2æ÷BfVVÂÆ–¶R6ö×ÆWFVÇ’F–ffW&VçBfW'6–öâöb–÷RârÀ¢tFòæ÷BW6RvVæW&–2FF–ær67&—B–b—B&VÖ÷fW2F†RFWF–ÂF†BÖFRF†RFFRfVVÂW'6öæÂâF†RvöÂ—2æ÷BFòW&f÷&Ò6öæf–FVæ6Râ—B—2Fò6öÖ×Væ–6FR6ÆV&Ç’Væ÷Vv‚F†B&÷F‚V÷ÆR¶æ÷rv†BF†RæW‡B7FW6÷VÆB&Râ&—§¢Ö7FW"6âGW&âF†R7GVÂFFR6öçFW‡B–çFòfWræGW&ÂG&gG2Â'WB–÷W"§VFvÖVçB6†÷VÆB6†ö÷6RF†RöæRF†B7F–ÆÂ6÷VæG2Æ–¶R–÷Râp¢Ð¢ÒÀ¢°¢†VF–æs¢uv†VâF†RfVVÆ–ær—2æ÷B×WGVÂrÀ¢&w&‡3¢°¢u6öÖWF–ÖW2FFR—2ÆV6çBæB7F–ÆÂFöW2æ÷BÆVBFò6V6öæBFFRâ–b–÷R&Ræ÷B–çFW&W7FVBÂ'&–Vb†öæW7BÖW76vR—2¶–æFW"F†âF—6V&–ærgFW"F†W’†fRföÆÆ÷vVBWâ–bF†R÷F†W"W'6öâ—2æ÷B–çFW&W7FVBÂÆWBF†V—"ç7vW"7FæBv—F†÷WBG'––ærFòæVv÷F–FRâ6ÆV"æò—2æ÷B6†ÆÆVævRFò÷fW&6öÖS²—B—2W6VgVÂ–æf÷&ÖF–öâF†B&÷FV7G2&÷F‚V÷ÆRg&öÒÖ÷&RVæ6W'F–çG’ârÀ¢uF†R&W7Bf—'7BÖFFRföÆÆ÷r×W—2æ÷BF†RöæRF†BwV&çFVW2&W7VÇBâ—B—2F†RöæRF†B&W&W6VçG2–÷R67W&FVÇ’æBv—fW2F†R÷F†W"W'6öâ6öÖf÷'F&ÆRv’Fò&W7öæBâ&R7V6–f–2Â&RF–ÖVÇ’ÂæBÆWBF†RæW‡B7FW&R×WGVÂâF†B—2†÷rvööBÖW76vR&V6öÖW2F†R&Vv–ææ–æröb&WGFW"6öçfW'6F–öââp¢Ð¢ÒÀ¢°¢†VF–æs¢t6–×ÆR6†V6¶Æ—7Bf÷"–÷W"÷7BÖFFRFW‡BrÀ¢&w&‡3¢°¢t&Vf÷&R6VæF–ærÂ6†V6²F†BF†RÖW76vR–æ6ÇVFW2öæR7V6–f–2ÖVÖ÷'’ÂöæR†öæW7B6–væÂöb–çFW&W7BÂæBöæR6öÖf÷'F&ÆRæW‡B7FWâ–b–÷R&Ræ÷B&VG’Fò7VvvW7Bæ÷F†W"FFRÂF†RæW‡B7FW6â6–×Ç’&RVW7F–öâ&÷WB6öÖWF†–ær–÷RF—67W76VBâ–b–÷RFòvçBFòÖVWBv–âÂ6’6ò6ÆV&Ç’âF—&V7BÖW76vR—2V6–W"Fòç7vW"F†â&w&‚f–ÆÆVBv—F‚†–çG2ârÀ¢uF†Vâ&VBF†RFW‡Böæ6R÷WBÆ÷VBæB&VÖ÷fRç—F†–ærF†B6÷VæG2Æ–¶R7G&FVw’â–÷RFòæ÷BæVVBFòÖçVf7GW&RF—7Fæ6RÂ†–FRF†B–÷RVæ¦÷–VB–÷W'6VÆbÂ÷"FBW‡G&¦ö¶W2FòÖ¶RF†RÖW76vR–×&W76—fRâf—'7BÖFFRföÆÆ÷r×Wv÷&·2v†Vâ—BfVVÇ2Æ–¶RæGW&Â6öçF–çVF–öâöbF†RW'6öâF†W’§W7BÖWBâ6ÆV"Âv&ÒÂæB7V6–f–2—2Væ÷Vv‚âp¢ÒÀ¢'VÆÆWG3¢°¢u7V6–f–2ÖVÖ÷'“¢6†÷rF†B–÷RvW&R&W6VçBârÀ¢t†öæW7BfVVÆ–æs¢6’v†WF†W"–÷RVæ¦÷–VBF†RFFRârÀ¢t6ÆV"æW‡B7FW¢–çf—FR&W7öç6Rv—F†÷WB&W77W&Râp¢Ð¢Ð¢Ð¢Ð¥Ó° ¦W‡÷'B6öç7BvWD&Æöu÷7BÒ‡6ÇVs¢7G&–ær’Óâ$Äôuõõ5E2æf–æB‚‡÷7B’Óâ÷7Bç6ÇVrÓÓÒ6ÇVr“°
+          'Complete: it does not depend on a reply to make your boundary real.'
+        ]
+      },
+      {
+        heading: 'Use an AI reply generator without losing your voice',
+        paragraphs: [
+          'When texting anxiety makes every draft sound too needy or too cold, an AI reply generator can give you a few starting points. The useful input is the real context: what you sent, how long the gap has been, what tone you want, and whether you are trying to restart the conversation or close it. The tool should help you compare options, not convince someone to reply.',
+          'Rizz Master can turn that context into calm, playful, direct, or respectful versions you can edit before sending. Keep the final message honest and short. The best result is not the line with the highest chance of getting attention; it is the line that communicates what you mean while leaving both people free to choose what happens next.'
+        ]
+      }
+    ]
+  },
+  {
+    slug: 'reply-to-dry-texts',
+    title: 'How to Reply to Dry Texts Without Sounding Desperate',
+    description: 'Learn how to reply to dry texts, short messages, and low-energy replies without chasing or overthinking every conversation.',
+    excerpt: 'A short reply does not always mean a dead conversation. Read the context, add a real hook, and bring the energy back without forcing it.',
+    date: '2026-07-10',
+    updatedAt: '2026-07-25',
+    readingTime: '7 min read',
+    category: 'Texting advice',
+    keywords: ['how to reply to dry texts', 'dry texting advice', 'what to text back', 'how to keep a conversation going'],
+    sections: [
+      {
+        heading: 'What a dry text actually means',
+        paragraphs: [
+          'A dry text is usually short, low-detail, or difficult to build on: "k," "lol," "nice," or a single-word answer to a question. It can feel personal because you are offering energy and getting very little back. Before you decide that the person is not interested, remember that a dry reply can also mean they are busy, distracted, tired, or unsure what to say. One message is a clue, not a final verdict on the connection.',
+          'Look at the pattern around the message. Did they normally ask questions and share stories? Did the short reply arrive during work, late at night, or after a long gap? A conversation that is usually warm deserves a different response from a match that has been one-sided from the beginning. The goal is to read the whole exchange, then choose a reply that protects your confidence while giving mutual interest one easy chance to show up.'
+        ],
+        bullets: [
+          'Notice whether their reply is short once or short every time.',
+          'Check the timing and the tone of the messages before it.',
+          'Do not turn one low-energy text into a story about your worth.'
+        ]
+      },
+      {
+        heading: 'Give the conversation a specific hook',
+        paragraphs: [
+          'The easiest way to reply to a dry text is to make your next message more specific than the one that came before it. Generic questions such as "How was your day?" create work because they ask the other person to invent a topic from nothing. A better message offers a small opinion, a playful prediction, or two choices. Specificity makes the reply easier because the other person can react instead of designing the entire conversation.',
+          'Try turning a flat answer into a tiny decision or a low-pressure challenge. If they say "fine" about dinner, ask which food they would defend in an argument. If they say "lol," share a funny observation and invite their take. Keep the hook connected to what they already said so it feels natural, not like a random interview question. One clear angle is stronger than five questions stacked together.'
+        ],
+        bullets: [
+          '"That was the diplomatic answer. What is the honest version?"',
+          '"Quick verdict: best part of your day so far?"',
+          '"You seem like you have a strong coffee order. What am I judging?"'
+        ]
+      },
+      {
+        heading: 'Use a warm reply instead of a bigger performance',
+        paragraphs: [
+          'When someone sends a short message, the instinct is often to compensate with a long paragraph, an explanation, or a second joke. That can accidentally create pressure. A confident reply is usually shorter and more relaxed. Share one real detail, make one playful observation, or ask one question with a point of view. You are trying to create an opening, not audition for the role of carrying the entire conversation.',
+          'A good dry-text response should sound like something you could say out loud. If your normal style is calm, do not suddenly become an exaggerated comedian. If you are naturally playful, let that show without making the other person prove that every line worked. The most attractive tone is often comfortable and specific: interested enough to continue, relaxed enough not to chase a reaction.'
+        ],
+        bullets: [
+          '"I am choosiâ€¦5406 tokens truncatedâ€¦n their personality. Specific and kind is usually more memorable than loud.'
+        ]
+      },
+      {
+        heading: 'Use the line as an invitation, not a performance',
+        paragraphs: [
+          'A common mistake is sending one pickup line after another because the first message got a laugh. That turns a conversation into a stand-up set. After the line, give the other person room to be more than an audience. Ask about the detail that made you swipe right, invite a small opinion, or share why you chose the line. The best follow-up changes the focus from the joke to the two people talking.',
+          'You can also make the line more natural by adding a small truth. If you say you had a clever opener ready, explain that their food photo made you curious about the restaurant. If you make a dramatic prediction about their coffee order, be willing to reveal yours. A little vulnerability makes playful confidence easier to believe.'
+        ],
+        bullets: [
+          'Line + profile detail + one easy question.',
+          'Line + your own answer so the other person is not doing all the work.',
+          'Line + a simple invitation to disagree or tell a story.'
+        ]
+      },
+      {
+        heading: 'Follow up when the line gets a laugh',
+        paragraphs: [
+          'If the other person responds with a laugh, a compliment, or a playful answer, build on the detail they gave you. Do not immediately send another punchline. Reflect what they said, add a related detail from your own life, and ask a question that keeps the exchange moving. For example, if they laugh at a travel line and mention a city, ask what they would do there again rather than asking for a full list of destinations.',
+          'When the reply is short, you can offer two choices or a light observation. If they say "haha thanks," do not panic and do not demand a bigger reaction. Try a small pivot once, then let the conversation show you whether they want to continue. Good chemistry is not measured by one perfect response.'
+        ]
+      },
+      {
+        heading: 'Know when a pickup line is the wrong move',
+        paragraphs: [
+          'A pickup line is not a substitute for reading the room. If the conversation is serious, the person has shared something vulnerable, or their profile clearly invites a thoughtful answer, a big joke may feel disconnected. You can still be warm and playful, but choose a response that acknowledges the context. Respect is more attractive than forcing a brand identity as the funny person.',
+          'The same applies when someone does not respond positively. Do not argue that they should have understood the joke or send more messages to recover. Thank them for the exchange, change direction if they invite it, or move on. Rizz Master can generate several opening directions so you can choose between funny, flirty, confident, and sincere instead of using one tone for every person.'
+        ]
+      },
+      {
+        heading: 'Turn the opener into a real conversation',
+        paragraphs: [
+          'The point of a funny pickup line is not to keep the spotlight on the line. It is to create enough comfort for both people to share something real. Ask about a recommendation, a current obsession, a weekend plan, or the story behind a profile detail. Offer your own answer too. A good conversation alternates between curiosity and contribution rather than turning one person into an interviewer.',
+          'When the chat develops a natural rhythm, suggest a simple next step connected to what you have discussed. That could be coffee, a walk, a market, or a place they recommended. Keep the invitation clear and low pressure. The best pickup line is the one that leads to a conversation where neither person needs another line.'
+        ]
+      },
+      {
+        heading: 'A pickup line checklist before you send',
+        paragraphs: [
+          'Ask whether the line is respectful, connected to the context, and easy for the other person to answer. If it depends on a compliment about their body, an assumption about their interest, or a joke that would be uncomfortable face to face, rewrite it. A funny opener should make the next message easier for both people. It should never require the other person to reward you for taking a risk.',
+          'Keep one or two reliable formats ready: a profile detail plus a playful question, or a light line plus your own answer. Having a structure reduces overthinking without turning the message into a script. Choose the tone that fits the person and the moment, then let the reply tell you whether to keep joking, ask something real, or leave the conversation alone.'
+        ],
+        bullets: [
+          'Kind enough to say in person.',
+          'Specific enough to feel written for this profile.',
+          'Open enough to create a second message.'
+        ]
+      }
+    ]
+  },
+  {
+    slug: 'best-dating-app-bio-ideas-for-guys',
+    title: 'Best Dating App Bio Ideas for Guys',
+    description: 'Build a dating app bio that is specific, confident, and easy to start a conversation from, without sounding fake or generic.',
+    excerpt: 'A strong dating bio is a shortcut to the right conversation. Show a point of view, not a list of requirements.',
+    date: '2026-06-30',
+    updatedAt: '2026-07-25',
+    readingTime: '8 min read',
+    category: 'Dating profiles',
+    keywords: ['dating app bio ideas for guys', 'best dating profile bio', 'funny dating bio ideas', 'how to write a dating profile'],
+    sections: [
+      {
+        heading: 'Give people an opening instead of a rÃ©sumÃ©',
+        paragraphs: [
+          '"I like food, travel, and having fun" is true for almost everyone, so it gives a match nowhere to begin. A dating bio works better when it includes one vivid detail: the dish you cook best, the city you would revisit tomorrow, the hobby you are oddly competitive about, or the small routine that makes your weekend feel like yours. Specific details create natural questions and help the right person recognize your personality.',
+          'You do not need to list every interest. Choose two or three details that have texture and leave a little room for curiosity. "I am learning to make restaurant-level ramen and still lose at every board game" is more useful than a list of broad labels. The reader can ask about the ramen, challenge the game claim, or share their own obsession. A strong bio makes the next message obvious.'
+        ],
+        bullets: [
+          '"I make a dangerously good breakfast burrito and defend pineapple on pizza."',
+          '"Ideal Sunday: a long walk, a new coffee shop, and pretending I will meal prep."',
+          '"I am collecting local restaurant recommendations and bad karaoke stories."'
+        ]
+      },
+      {
+        heading: 'Use a simple bio structure',
+        paragraphs: [
+          'A useful dating profile bio can follow a three-part structure: a specific detail, a glimpse of your lifestyle, and an invitation. The detail makes you memorable, the lifestyle gives context, and the invitation gives a match an easy opening. For example, mention the meal you are trying to perfect, the kind of weekend you enjoy, and ask for the best place to get dessert. This structure keeps the bio concise without making it empty.',
+          'Your invitation does not have to be a direct request to match. It can be a playful question or a preference people can answer. "Tell me your most overrated food opinion" creates more energy than "message me if you like food." The goal is not to write a clever puzzle. It is to make your profile feel like the first turn in a conversation.'
+        ],
+        bullets: [
+          'Detail: what you cook, collect, practice, or always notice.',
+          'Lifestyle: how you actually spend a free afternoon.',
+          'Invitation: a recommendation, debate, or low-pressure question.'
+        ]
+      },
+      {
+        heading: 'Sound confident without sounding performative',
+        paragraphs: [
+          'Confidence sounds like knowing what you enjoy, not trying to impress everyone. Use warm, direct language and describe the life you are building instead of listing demands for a future partner. A positive preference is more inviting than a complaint. "I appreciate people who are curious and kind" gives a sense of your values; a long list of what you refuse to tolerate makes the reader feel like they are applying for a job.',
+          'Humor helps when it is connected to something true. Self-awareness can make an ordinary detail charming, but jokes that put yourself or other people down can make the bio feel defensive. If you mention a flaw, let it be light and human rather than a warning label. The best profile voice is relaxed, specific, and recognizable from the photos and prompts around it.'
+        ]
+      },
+      {
+        heading: 'Write for the conversation you want',
+        paragraphs: [
+          'Your bio is not only there to collect likes. It helps attract conversations that fit your interests and energy. If you want to meet someone who enjoys trying new places, mention a restaurant you want to test. If you prefer quiet weekends, make that sound like a life you enjoy rather than an apology. A profile becomes more useful when it tells someone what being around you might feel like.',
+          'Avoid trying to appeal to every possible match with the safest version of yourself. General language may seem broadly acceptable, but it is easy to forget. A clear point of view gives compatible people a reason to message you and gives incompatible people permission to keep scrolling. That is useful filtering, not a failure.'
+        ]
+      },
+      {
+        heading: 'Try a few versions and edit for clarity',
+        paragraphs: [
+          'One bio rarely captures every part of your personality. Try a funny version, a relaxed version, and a more direct version, then compare them with your photos. The strongest option usually has a clear first line, two or three concrete details, and no unnecessary explanation. Read it out loud. If a phrase sounds like marketing copy or a line you would never say, replace it with simpler language.',
+          'Ask whether each sentence gives a match something to ask, react to, or remember. Remove repeated adjectives and broad claims such as "love to laugh." Replace them with the situation that makes you laugh. Rizz Master can turn your interests into several bio directions when you are staring at a blank profile box, but you should always choose the version that feels honest enough to live up to.'
+        ]
+      },
+      {
+        heading: 'Keep the bio current and easy to respond to',
+        paragraphs: [
+          'A dating profile should change when your life changes. Update an old reference, replace a generic detail with something you are doing now, and check that the bio still matches your photos. A current profile gives a match a more accurate reason to start a conversation. It also shows that you are participating in the experience rather than leaving a page untouched for years.',
+          'End with an opening, not a demand. A short question, a recommendation request, or a playful debate is enough. Your bio does not need to convince everyone. It needs to make the right person think, "I know what I would say to that."'
+        ]
+      },
+      {
+        heading: 'Dating bio checklist for a stronger profile',
+        paragraphs: [
+          'Read the bio as if you were a match seeing it for the first time. Can you identify what this person enjoys, how they spend time, and what message would be easy to send? If the answer is no, replace one broad claim with a scene or detail. Swap "I love adventures" for the kind of adventure you actually repeat. Swap "I am easygoing" for the Sunday routine that shows it.',
+          'Then check the balance. Your profile should contain more invitations than requirements, more curiosity than complaints, and enough confidence to sound like a life you enjoy. A few specific lines are enough when they are supported by photos that feel current. The goal is not a perfect bio; it is a clear, honest starting point for the kind of conversation you want.'
+        ],
+        bullets: [
+          'One detail a match could ask about.',
+          'One glimpse of your real routine.',
+          'One low-pressure invitation to respond.'
+        ]
+      }
+    ]
+  },
+  {
+    slug: 'what-to-text-after-a-first-date',
+    title: 'What to Text After a First Date',
+    description: 'Know what to text after a first date so your message feels clear, warm, and confident without overthinking every word.',
+    excerpt: 'The best post-date text is timely, specific, and honest about enjoying the time together.',
+    date: '2026-06-27',
+    updatedAt: '2026-07-25',
+    readingTime: '7 min read',
+    category: 'Dating advice',
+    keywords: ['what to text after a first date', 'first date follow up text', 'text after a good date', 'how to ask for a second date'],
+    sections: [
+      {
+        heading: 'Send the simple version while the memory is fresh',
+        paragraphs: [
+          'You do not need to wait three days or write a perfect paragraph after a first date. If you enjoyed the date, say so while the memory is fresh. Mention one real moment from the evening, then make your interest clear. Specificity makes a short text feel personal because it proves you were present. It also gives the other person something better to respond to than a vague "had fun."',
+          'Timing does not need to be a game. Send the message when it feels natural, whether that is when you get home or the next morning. A warm follow-up is not needy when it is honest and leaves room for their response. You are not asking them to decide the entire future of the connection. You are simply acknowledging a good experience and opening the door to another one.'
+        ],
+        bullets: [
+          '"I had a great time tonight - your cooking-class story still has me laughing."',
+          '"That was fun. I am still thinking about the dessert place you mentioned."',
+          '"Made it home, and I am glad we finally did that. I would like to see you again."'
+        ]
+      },
+      {
+        heading: 'Make the message specific without over-writing it',
+        paragraphs: [
+          'A good post-date text usually needs one detail, one feeling, and one clear direction. The detail might be a story, a restaurant, a shared joke, or a small moment you noticed. The feeling can be as simple as "I had a great time" or "I enjoyed talking with you." The direction can be an invitation, a promise to continue a topic, or a question about their evening.',
+          'Do not turn the follow-up into a review of the date. You do not need to explain every moment you liked or apologize for anything that felt slightly awkward. Early dates are allowed to be imperfect. A short message with warmth and clarity is more attractive than a carefully edited essay that sounds unlike you.'
+        ]
+      },
+      {
+        heading: 'Suggest a second date when it feels right',
+        paragraphs: [
+          'A clear invitation is easier to respond to than vague enthusiasm. Offer a simple plan with a little flexibility: a day, an activity, or a place connected to something you discussed. If they mentioned a favorite market, suggest visiting it. If you debated a restaurant, ask whether they want to test it together. A specific idea gives the next conversation a shape without making it feel like a contract.',
+          'You can be direct without putting pressure on the other person. "I would like to see you again - are you free next week?" is clear and respectful. If they need time or cannot make the suggested day, pay attention to whether they offer another option. Interest usually becomes easier to read when both people are willing to help make a plan.'
+        ],
+        bullets: [
+          'Connect the invitation to something you already talked about.',
+          'Offer one simple plan instead of asking for an undefined hangout.',
+          'Leave room for a yes, a no, or another day without pressure.'
+        ]
+      },
+      {
+        heading: 'Handle uncertainty without sending anxious follow-ups',
+        paragraphs: [
+          'If the response is slower than you hoped, try not to send a second message that asks whether they received the first one or whether the date was a mistake. People have different schedules, and one delayed reply does not tell you everything. Give the message enough room to receive an honest response. Your first text should not create a new obligation for them to manage your anxiety.',
+          'If they answer warmly but cannot make the first plan, see whether they suggest another time. If the replies stay vague, you can make one clear attempt to confirm interest and then step back. A respectful follow-up is useful because it gives you information. Repeated persuasion does not create mutual interest; it only makes the conversation less comfortable for both people.'
+        ]
+      },
+      {
+        heading: 'Keep the tone consistent with the date',
+        paragraphs: [
+          'A post-date message should sound like the person they just met. Keep the warmth, humor, directness, or calm energy that was already there. If you were playful in person, you can include a small callback. If the date was thoughtful and quiet, a sincere message may fit better than a dramatic line. Consistency builds trust because the text does not feel like a completely different version of you.',
+          'Do not use a generic dating script if it removes the detail that made the date feel personal. The goal is not to perform confidence. It is to communicate clearly enough that both people know what the next step could be. Rizz Master can turn the actual date context into a few natural drafts, but your judgment should choose the one that still sounds like you.'
+        ]
+      },
+      {
+        heading: 'When the feeling is not mutual',
+        paragraphs: [
+          'Sometimes a date is pleasant and still does not lead to a second date. If you are not interested, a brief honest message is kinder than disappearing after they have followed up. If the other person is not interested, let their answer stand without trying to negotiate. A clear no is not a challenge to overcome; it is useful information that protects both people from more uncertainty.',
+          'The best first-date follow-up is not the one that guarantees a result. It is the one that represents you accurately and gives the other person a comfortable way to respond. Be specific, be timely, and let the next step be mutual. That is how a good message becomes the beginning of a better conversation.'
+        ]
+      },
+      {
+        heading: 'A simple checklist for your post-date text',
+        paragraphs: [
+          'Before sending, check that the message includes one specific memory, one honest signal of interest, and one comfortable next step. If you are not ready to suggest another date, the next step can simply be a question about something you discussed. If you do want to meet again, say so clearly. A direct message is easier to answer than a paragraph filled with hints.',
+          'Then read the text once out loud and remove anything that sounds like a strategy. You do not need to manufacture distance, hide that you enjoyed yourself, or add extra jokes to make the message impressive. A first-date follow-up works when it feels like a natural continuation of the person they just met. Clear, warm, and specific is enough.'
+        ],
+        bullets: [
+          'Specific memory: show that you were present.',
+          'Honest feeling: say whether you enjoyed the date.',
+          'Clear next step: invite a response without pressure.'
+        ]
+      }
+    ]
+  }
+];
+
+export const getBlogPost = (slug: string) => BLOG_POSTS.find((post) => post.slug === slug);
