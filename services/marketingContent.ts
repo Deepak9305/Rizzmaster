@@ -224,7 +224,233 @@ export const BLOG_POSTS: BlogPost[] = [
           'A good dry-text response should sound like something you could say out loud. If your normal style is calm, do not suddenly become an exaggerated comedian. If you are naturally playful, let that show without making the other person prove that every line worked. The most attractive tone is often comfortable and specific: interested enough to continue, relaxed enough not to chase a reaction.'
         ],
         bullets: [
-          '"I am choosi…5406 tokens truncated…n their personality. Specific and kind is usually more memorable than loud.'
+          '"I am choosing to believe you are saving the good story for later."',
+          '"That answer has mysterious side-character energy."',
+          '"I will give you one chance to make that answer more interesting."'
+        ]
+      },
+      {
+        heading: 'Try the two-message test',
+        paragraphs: [
+          'If the conversation has gone flat, give it one thoughtful follow-up and one natural pivot. For example, respond playfully to the short answer, then move toward a topic that gives them something easy to share. This is enough effort to create a new opening without turning the chat into a rescue mission. If they respond with more detail, match that energy and let the conversation develop at its own pace.',
+          'If the reply stays dry after a genuine attempt, stop adding pressure. You can leave the chat for a while, respond later when you have something real to say, or let the conversation end. Interest should eventually feel like a shared effort. Knowing when to pause is not giving up; it is refusing to confuse persistence with chemistry. Your time and attention are part of the conversation too.'
+        ]
+      },
+      {
+        heading: 'Make the next message sound like you',
+        paragraphs: [
+          'The best answer to a dry text is not necessarily the cleverest line in a list. It is the line that fits your voice and the situation. Pick a tone that feels natural: funny, flirty, confident, thoughtful, or wholesome. Keep it short enough to invite a response, then edit out anything you would never say in real life. A message can be polished without becoming artificial.',
+          'If you are stuck, Rizz Master can help you turn the exact context into several directions instead of forcing one generic comeback. Add the message, describe the vibe, and choose the option that sounds closest to you. AI can help with the blank screen, but your judgment still decides whether the moment needs a joke, a question, a pause, or a clear next step.'
+        ]
+      },
+      {
+        heading: 'When it is better to let the chat breathe',
+        paragraphs: [
+          'Sometimes a dry reply is simply information. If you have offered a specific question, a warm observation, and enough room to respond, you do not need to keep inventing new topics. A short pause protects the tone better than a string of anxious follow-ups. People who want to continue usually make the next opening easier when you give them space.',
+          'Do not measure your value by how quickly a person texts back. Healthy conversations have different rhythms, and a match can be interested without being available every minute. At the same time, you deserve reciprocity. Reply with care, watch the pattern, and invest where the other person is also choosing to show up.'
+        ]
+      },
+      {
+        heading: 'A quick checklist before you send',
+        paragraphs: [
+          'Before replying to a dry text, ask yourself three questions: am I responding to the actual context, am I giving the other person an easy opening, and would I be comfortable saying this out loud? Those questions remove most of the pressure. They also stop you from sending a message designed only to get reassurance. A good text can be playful and interested without asking the other person to repair your confidence.',
+          'If the answer still feels uncertain, choose the smallest useful move. Send one specific observation, one light question, or one honest pivot. Then put your phone down and let the other person decide whether to meet you there. This approach works because it balances warmth with self-respect. You are making space for a better conversation, not trying to force a response from a blank screen.'
+        ],
+        bullets: [
+          'Context first: respond to the message and the pattern around it.',
+          'One hook: give them one clear way to continue.',
+          'Room to respond: do not follow a thoughtful text with anxious extras.'
+        ]
+      }
+    ]
+  },
+  {
+    slug: 'best-tinder-openers-for-guys',
+    title: 'Best Tinder Openers That Do Not Sound Boring',
+    description: 'Skip "hey" with Tinder openers that feel natural, specific, respectful, and simple for a match to answer.',
+    excerpt: 'The best Tinder opener is not the cleverest line. It is the one that gives someone a real reason to reply.',
+    date: '2026-07-08',
+    updatedAt: '2026-07-25',
+    readingTime: '7 min read',
+    category: 'Dating apps',
+    keywords: ['best Tinder openers', 'Tinder openers for guys', 'what to say on Tinder', 'dating app conversation starters'],
+    sections: [
+      {
+        heading: 'Start with something you can actually see',
+        paragraphs: [
+          'A profile-specific opener feels more confident because it proves you looked at the person instead of sending the same line to every match. Notice the travel photo, the oddly specific hobby, the pet, the food opinion, or the detail that suggests a story. You do not need to comment on appearance first. A small observation about their world creates a more useful opening and makes the conversation about a real person.',
+          'Keep the observation positive and leave room for them to add their side. "That hike looks brutal" is less inviting than asking whether the view or the snack break was worth it. A good Tinder opener is an observation plus an easy invitation. It shows attention without pretending you already know everything about them.'
+        ],
+        bullets: [
+          '"Important question: was that hike worth the view or the snack break?"',
+          '"I need the backstory behind the dog photo. Who is actually in charge?"',
+          '"That restaurant photo has convinced me you have a strong food opinion. What should I order?"'
+        ]
+      },
+      {
+        heading: 'Ask a question with a point of view',
+        paragraphs: [
+          'Questions are easier to answer when they are not interview questions. "What do you do for fun?" is broad enough to make anyone pause. A question with a point of view gives the other person a direction: offer two fun choices, make a low-stakes prediction, or ask for a recommendation you would genuinely use. The question should feel like the start of a conversation, not a form you want them to complete.',
+          'You can make a basic topic more memorable by adding your own side of the answer. Instead of asking what their ideal weekend is, say that yours involves coffee, a long walk, and pretending you will cook, then ask what version they would choose. Sharing a little first lowers the pressure and gives them something concrete to react to.'
+        ],
+        bullets: [
+          '"What is your ideal Sunday when nobody needs anything from you?"',
+          '"Are you more likely to plan the trip or improvise the entire weekend?"',
+          '"What is one local place you would actually recommend to a friend?"'
+        ]
+      },
+      {
+        heading: 'Use a simple opener formula',
+        paragraphs: [
+          'If you freeze when writing the first message, use a repeatable formula: notice one detail, add a light opinion, and ask one easy question. This structure works for photos, prompts, travel, music, food, and hobbies. It keeps the opener specific without requiring a perfect joke. Your goal is not to prove that you are the funniest person on the app; it is to make the next message feel easy.',
+          'Another useful formula is a playful either-or question. Give two options that reveal personality, such as sunrise or late night, beach or mountains, cooking or ordering in. Avoid choices that sound like a test. The best Tinder openers create a small amount of tension and then make it safe to answer. A match should be able to respond in one sentence and still have somewhere to go next.'
+        ],
+        bullets: [
+          'Profile detail + playful observation + easy question.',
+          'Two choices + your own answer + a follow-up.',
+          'Specific recommendation request + a reason you might use it.'
+        ]
+      },
+      {
+        heading: 'Avoid the openers that create work',
+        paragraphs: [
+          'The most common boring Tinder openers are not always short. A long paragraph can be just as difficult to answer when it contains a compliment, a joke, several questions, and a personal story all at once. Avoid copy-pasted lines, heavy compliments before you know the person, and questions that sound like a job interview. More words do not automatically create more connection.',
+          'Do not over-optimize for a response either. A line that gets attention but does not sound like you will make the second message harder. Keep your opener respectful and readable. If their profile gives you no usable detail, a simple question about a prompt, a weekend plan, or a low-stakes preference is enough. Natural beats complicated.'
+        ]
+      },
+      {
+        heading: 'Know how to follow up after they reply',
+        paragraphs: [
+          'The opener only creates the first step. When your match answers, respond to the detail they actually gave you instead of immediately changing topics. Reflect one part of their answer, add a related detail from your own life, and ask a smaller follow-up. This creates a rhythm of sharing rather than a sequence of questions. If they give a short answer, offer a light opinion or a choice to keep the next step easy.',
+          'A strong conversation does not need a new punchline in every message. It needs curiosity, room, and a clear sense that both people are contributing. Rizz Master can help you turn a match profile into several opener directions and follow-ups, so you can choose the one that sounds most like you before you hit send.'
+        ]
+      },
+      {
+        heading: 'Move from the app to a real plan naturally',
+        paragraphs: [
+          'Once the conversation has a little momentum, you do not need to keep collecting messages forever. Look for a shared interest, a local place, or a topic that can become a low-pressure plan. A clear invitation is easier to answer than vague enthusiasm: suggest coffee, a walk, a market, or another simple activity connected to what you discussed.',
+          'Keep the first plan straightforward and respectful. The purpose of a Tinder opener is not to force instant chemistry; it is to create enough comfort for two people to decide whether they want to continue. Pay attention to their response, accept a no without arguing, and let a mutual yes develop into an actual conversation.'
+        ]
+      },
+      {
+        heading: 'Tinder opener checklist for better matches',
+        paragraphs: [
+          'Before sending a Tinder opener, check that it is specific enough to belong to this profile, easy enough to answer in one sentence, and open enough to lead somewhere after the first reply. Remove anything that sounds copied, overly sexual, or like a test. If you can answer your own question with a short story, the match will have a clearer model for how to respond. If the line only asks them to perform, simplify it.',
+          'The strongest first messages are small invitations. They do not promise a relationship or demand instant chemistry. They create a moment of curiosity and let the other person decide whether they want to add energy. Use the profile as your starting point, share a little of yourself, and let the quality of the next reply guide the rest of the conversation.'
+        ],
+        bullets: [
+          'Specific to the profile, not copied for every match.',
+          'Easy to answer without writing an essay.',
+          'Open enough to support a natural follow-up.'
+        ]
+      }
+    ]
+  },
+  {
+    slug: 'reply-when-she-says-haha',
+    title: 'How to Reply When She Says Haha',
+    description: 'Learn how to reply when she says "haha" with playful follow-ups that keep the conversation moving without sounding needy.',
+    excerpt: '"Haha" can mean amused, polite, busy, or ready for a new topic. Read the moment and give the conversation somewhere to go.',
+    date: '2026-07-06',
+    updatedAt: '2026-07-25',
+    readingTime: '7 min read',
+    category: 'Texting advice',
+    keywords: ['how to reply when she says haha', 'what to say after haha', 'texting after a joke', 'playful text replies'],
+    sections: [
+      {
+        heading: 'Read the energy around the haha',
+        paragraphs: [
+          'A "haha" after a playful message is different from a "haha" that arrives three hours later with no follow-up. Read the whole exchange before deciding what it means. Are there earlier questions, emojis, stories, or signs that the person was engaged? Did the conversation already feel flat? One short reply is not a verdict on the connection, and treating it like one can make your next message more anxious than the moment requires.',
+          'The length of the word can also change the tone, but do not build an entire theory from punctuation. "Haha," "haha," and "hahaha" are only small clues. Focus on the pattern of effort. If the earlier messages were warm, stay light and playful. If the conversation has gone quiet, a pivot or a pause may work better than trying to squeeze another laugh from the same joke.'
+        ],
+        bullets: [
+          '"I will accept that laugh, but I am keeping score."',
+          '"That sounded suspiciously polite. Want to try again?"',
+          '"Okay, your turn - make me laugh."'
+        ]
+      },
+      {
+        heading: 'Choose a follow-up that gives her something to answer',
+        paragraphs: [
+          'The best reply to "haha" does more than announce that you noticed the laugh. It gives the conversation a new direction. You can tease lightly, ask for her opinion, or connect the joke to a real topic. A playful follow-up might say you are keeping score, but it should leave an easy opening. A question about her weekend, a current obsession, or a small debate can turn a reaction into an actual exchange.',
+          'Keep the next message shorter than your worry about the next message. If you send a paragraph explaining the joke, the humor loses its relaxed feeling. Instead, let the line stand and add one simple hook. A person who is interested does not need a perfect performance to continue. They need a comfortable reason to contribute.'
+        ],
+        bullets: [
+          '"That is one laugh. What is the topic you could talk about for hours?"',
+          '"I am taking that as a vote for my comedy career. What are we debating next?"',
+          '"Fair. What has made you laugh today?"'
+        ]
+      },
+      {
+        heading: 'Pivot instead of begging for validation',
+        paragraphs: [
+          'Avoid asking "was that funny?" or sending a second punchline to prove the first one worked. Those messages put the other person in the role of judge and make the chat feel like a performance review. A better move is to pivot into a topic that reveals personality: a current obsession, a weekend plan, a food argument, or an unusual preference.',
+          'The pivot should still feel connected to the energy of the chat. If you were talking about a bad movie, ask what film they would defend even though it is objectively terrible. If you were teasing their coffee order, ask what their ideal lazy morning looks like. The goal is not to abandon the playful tone; it is to give it somewhere more interesting to go.'
+        ]
+      },
+      {
+        heading: 'Match the amount of effort you receive',
+        paragraphs: [
+          'A short "haha" can be a bridge to a better conversation, but you should not be the only person building it. Send one good follow-up, then see what comes back. If she answers with a story, a question, or a new detail, match that energy. If the replies stay short and you keep creating every topic, let the chat breathe instead of adding more pressure.',
+          'Matching effort does not mean becoming cold or keeping a scorecard. It means noticing whether there is a shared rhythm. People have busy days, and a slow response is not automatically rejection. The useful question is whether the pattern eventually includes curiosity from both sides. Confidence is staying open without abandoning your own boundaries.'
+        ]
+      },
+      {
+        heading: 'Keep confidence quiet and natural',
+        paragraphs: [
+          'Confidence in a text conversation is not pretending that every line lands. It is staying relaxed enough to move on when one joke gets a small reaction. You can be flirty without demanding reassurance, funny without forcing a punchline, and interested without sending a series of follow-ups. The strongest message is often the one that sounds like the person you would be in real life.',
+          'If you want help finding the next angle, Rizz Master can suggest replies in a funny, flirty, wholesome, or confident tone using the actual context. Use the suggestions as options, not a script. Choose the line you can own, edit it into your voice, and remember that a real conversation is more important than winning one text exchange.'
+        ]
+      },
+      {
+        heading: 'When to change the subject or pause',
+        paragraphs: [
+          'If the conversation has already had a few short replies, do not keep returning to the joke. Change the subject once with a specific question, or leave the chat for later. A pause can create room for the other person to re-enter with a new thought. It also prevents the familiar spiral of sending another message just because the last one did not receive the reaction you imagined.',
+          'Your job is to make connection easier, not to manufacture interest. A good reply to "haha" is an invitation. Whether the other person accepts it gives you information. Keep your tone warm, make your next move clear, and allow the conversation to become mutual or move on.'
+        ]
+      },
+      {
+        heading: 'A practical haha reply checklist',
+        paragraphs: [
+          'When you see "haha," pause before guessing what it means. Read the two or three messages around it, notice whether she has been contributing, and decide what you actually want from your next message. If you want to keep the playful tone, send one light tease. If you want to learn more about her, ask a specific question. If the chat already feels one-sided, give it room instead of performing harder.',
+          'This simple check keeps you from treating every reaction as a test. You can be interested without needing an instant score, and you can be confident without pretending you do not care. The best response makes a next step available while respecting the other person enough to let them choose it.'
+        ],
+        bullets: [
+          'Read the pattern, not only the word "haha."',
+          'Choose one playful hook or one real question.',
+          'Send it once, then let the reply guide your next move.'
+        ]
+      }
+    ]
+  },
+  {
+    slug: 'funny-pickup-lines-that-work',
+    title: 'Funny Pickup Lines That Actually Work',
+    description: 'Use funny pickup lines as respectful conversation starters, with examples that make it easy to keep talking after the first laugh.',
+    excerpt: 'A good pickup line opens a door. The follow-up is what turns it into an actual conversation.',
+    date: '2026-07-03',
+    updatedAt: '2026-07-25',
+    readingTime: '7 min read',
+    category: 'Openers',
+    keywords: ['funny pickup lines', 'pickup lines that work', 'funny dating app openers', 'conversation starters'],
+    sections: [
+      {
+        heading: 'Why playful lines work better than perfect lines',
+        paragraphs: [
+          'A funny pickup line works when it lowers the pressure and gives both people something easy to react to. It does not need to be original enough for a comedy special. It needs to be light, readable, and appropriate for the setting. A little self-awareness makes a cheesy line feel intentional instead of awkward, while a respectful tone keeps the other person from feeling like they have been turned into an audience.',
+          'Think of the line as a soft launch into a real conversation. The opening creates a small moment, but the follow-up reveals whether you are curious about the person behind the profile. A joke that gets a laugh but leaves nowhere to go is less useful than a simple line that invites a story, a preference, or a playful disagreement.'
+        ],
+        bullets: [
+          '"Are you always this easy to match with, or am I having a lucky day?"',
+          '"I had a clever opener ready, but your profile distracted me. What is your best recommendation around here?"',
+          '"On a scale from one more episode to up at sunrise, how chaotic is your weekend?"'
+        ]
+      },
+      {
+        heading: 'Choose a line that fits the person and the platform',
+        paragraphs: [
+          'The same pickup line can feel charming in one conversation and strange in another. Read the profile, the app, and the amount of context you have. A playful question about a photo may work well on Tinder or Bumble because it connects to something visible. A bold compliment may feel too much when the person has not given any signal that they want that intensity. Start with the lowest-pressure version that still sounds like you.',
+          'Avoid lines that rely on insults, sexual assumptions, or exaggerated claims about someone you do not know. Humor should create shared energy, not make the other person manage your confidence. If the profile is quiet, choose a line that is easy to answer without pretending you have a deep read on their personality. Specific and kind is usually more memorable than loud.'
         ]
       },
       {
@@ -427,7 +653,3 @@ export const BLOG_POSTS: BlogPost[] = [
         ]
       }
     ]
-  }
-];
-
-export const getBlogPost = (slug: string) => BLOG_POSTS.find((post) => post.slug === slug);
