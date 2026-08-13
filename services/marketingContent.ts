@@ -653,9 +653,6 @@ export const BLOG_POSTS: BlogPost[] = [
         ]
       }
     ]
-Exit code: 0
-Wall time: 1.1 seconds
-Output:
   }
 ];
 
