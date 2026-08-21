@@ -462,7 +462,8 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
   'reply-when-she-says-haha': ['I will accept that laugh, but I am keeping score.', 'Okay, your turn - make me laugh.'],
   'funny-pickup-lines-that-work': ['I had a clever opener ready, but your profile distracted me. What is your best recommendation around here?'],
   'best-dating-app-bio-ideas-for-guys': ['Ideal Sunday: long walk, new coffee shop, and pretending I will meal prep.'],
-  'what-to-text-after-a-first-date': ['I had a great time tonight - your story about the failed cooking class still has me laughing.']
+  'what-to-text-after-a-first-date': ['I had a great time tonight - your story about the failed cooking class still has me laughing.'],
+  'signs-texting-conversation-losing-momentum': ['You mentioned wanting a quiet weekend. Did you actually get one?', 'I passed a place that reminded me of your terrible food ranking. Still defending that opinion?', 'I have enjoyed talking with you. Want to continue this over coffee this week?']
 };
 
 const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
@@ -472,7 +473,8 @@ const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
   'reply-when-she-says-haha': { do: 'Stay playful and pivot toward a topic with personality.', doNot: 'Ask whether the joke was funny or chase validation.' },
   'funny-pickup-lines-that-work': { do: 'Use the line as a soft launch into a real conversation.', doNot: 'Treat the opener like a performance that needs a sequel.' },
   'best-dating-app-bio-ideas-for-guys': { do: 'Share specific details that make the next message obvious.', doNot: 'Fill the bio with broad labels, rules, or complaints.' },
-  'what-to-text-after-a-first-date': { do: 'Be timely, specific, and clear about enjoying the date.', doNot: 'Wait for a perfect paragraph or edit your personality away.' }
+  'what-to-text-after-a-first-date': { do: 'Be timely, specific, and clear about enjoying the date.', doNot: 'Wait for a perfect paragraph or edit your personality away.' },
+  'signs-texting-conversation-losing-momentum': { do: 'Make one specific, low-pressure move and watch for shared effort.', doNot: 'Stack messages, test their interest, or carry the whole conversation alone.' }
 };
 
 const ArticleQuickAnswer: React.FC<{ post: BlogPost }> = ({ post }) => (
@@ -555,6 +557,11 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'reply-to-dry-texts', label: 'Reply to a short message' },
     { slug: 'reply-when-she-says-haha', label: 'Keep a playful chat moving' },
     { slug: 'best-dating-app-bio-ideas-for-guys', label: 'Refresh your dating profile' }
+  ],
+  'signs-texting-conversation-losing-momentum': [
+    { slug: 'reply-to-dry-texts', label: 'How to reply to dry texts' },
+    { slug: 'what-to-text-when-they-stop-replying', label: 'What to text when they stop replying' },
+    { slug: 'what-to-text-after-a-first-date', label: 'What to text after a first date' }
   ]
 };
 
