@@ -675,6 +675,11 @@ export const BLOG_POSTS: BlogPost[] = [
       'texting conversation feels one sided',
       'when to stop texting someone'
     ],
+    resources: [
+      { label: 'The Gottman Institute: Improve relationship communication', url: 'https://www.gottman.com/improve-communication-relationship/' },
+      { label: 'The Gottman Institute: Pay attention to bids for connection', url: 'https://www.gottman.com/blog/want-to-improve-your-relationship-start-paying-more-attention-to-bids/' },
+      { label: 'loveisrespect: How can I communicate better?', url: 'https://www.loveisrespect.org/pdf/How_Can_I_Communicate_Better.pdf' }
+    ],
     sections: [
       {
         heading: 'A quiet day is not always a dying conversation',
