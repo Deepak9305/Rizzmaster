@@ -653,7 +653,139 @@ export const BLOG_POSTS: BlogPost[] = [
         ]
       }
     ]
+  },
+  {
+    slug: 'signs-texting-conversation-losing-momentum',
+    title: 'Signs Your Texting Conversation Is Losing Momentum',
+    description: 'Learn the signs your texting conversation is losing momentum, how to tell a slow day from fading interest, and what to text next without forcing the connection.',
+    excerpt: 'A conversation loses momentum when curiosity, follow-through, and shared effort quietly disappear. Notice the pattern, make one clear move, then let the response guide you.',
+    date: '2026-08-21',
+    updatedAt: '2026-08-21',
+    readingTime: '8 min read',
+    category: 'Texting advice',
+    keywords: [
+      'signs texting conversation is losing momentum',
+      'how to tell if a texting conversation is dying',
+      'texting conversation losing momentum',
+      'how to keep a text conversation going',
+      'what to text when conversation gets boring',
+      'signs someone is losing interest over text',
+      'how to revive a dead text conversation',
+      'how to know if they are interested over text',
+      'texting conversation feels one sided',
+      'when to stop texting someone'
+    ],
+    sections: [
+      {
+        heading: 'A quiet day is not always a dying conversation',
+        paragraphs: [
+          'Texting momentum is the feeling that both people are helping the conversation move forward. There is curiosity, a little rhythm, and enough shared effort that neither person has to invent every topic. When that rhythm slows, it is easy to treat one late reply as proof that the connection is over. That is usually too fast a conclusion. People get busy, lose energy, travel, work long shifts, or forget to answer a message they genuinely meant to return to.',
+          'The useful signal is not one delayed response. It is a repeated change in the pattern. A conversation may be losing momentum when replies become shorter, questions disappear, plans stay vague, and you keep doing all the work to restart the chat. Read several messages together before you decide what the change means. Then choose a next step that creates clarity instead of trying to force chemistry through a better performance.'
+        ],
+        bullets: [
+          'One slow reply is a pause; a consistent drop in effort is a pattern.',
+          'Look for curiosity and follow-through, not only response speed.',
+          'Your goal is a mutual conversation, not a guaranteed reply.'
+        ]
+      },
+      {
+        heading: 'Sign one: replies get shorter and harder to build on',
+        paragraphs: [
+          'Short replies are not automatically bad. Someone can be interested and still answer with "haha" or "long day" when they are distracted. The warning sign is a consistent shift from detailed, engaged messages to answers that close every door. They stop adding stories, opinions, or details that give you something to respond to. You send a thoughtful message and receive a reaction that acknowledges it without continuing it.',
+          'Compare the current exchange with the earlier pattern. If they used to ask follow-up questions and now only answer what you ask, the conversation may be becoming one-sided. Do not respond by sending longer paragraphs or five new questions. Offer one specific hook that is easy to answer, then see whether they choose to add energy. Their next few messages will tell you more than a theory about punctuation.'
+        ],
+        bullets: [
+          'A one-word reply once is normal; repeated closed replies are information.',
+          'Notice whether they volunteer anything without being prompted.',
+          'Do not compensate for low effort with an even bigger performance.'
+        ]
+      },
+      {
+        heading: 'Sign two: you are carrying every topic',
+        paragraphs: [
+          'A healthy text conversation does not require perfectly equal message lengths, but it should feel shared. You introduce the topic, ask the question, make the joke, and revive the chat after every pause. When you stop sending, nothing continues. That is a stronger sign of lost momentum than a slow reply because it shows that the conversation has no independent pull from the other person.',
+          'Try a small test that is not a game: respond warmly to their last message without immediately adding another question. Leave a natural opening and allow them to choose whether to use it. If they pick up the thread, ask about you, or introduce something new, there is still shared interest to work with. If the chat ends every time you stop supplying oxygen, accept that the current level of effort may not be enough for you.'
+        ]
+      },
+      {
+        heading: 'Sign three: the conversation has no callbacks or real curiosity',
+        paragraphs: [
+          'Momentum grows when people remember details. They ask about the event you mentioned, return to an inside joke, or follow up on the story you told yesterday. A conversation can be frequent and still feel empty when every message resets to a generic "how was your day?" There may be plenty of notifications but no sense that the other person is getting to know you or letting you get to know them.',
+          'Look for questions that reveal attention rather than questions that simply keep a streak alive. Curiosity does not have to be intense or romantic. It can be a recommendation, an opinion, a small memory, or a plan connected to something you shared. If the exchange has become a loop of surface-level check-ins, change the shape once with a more specific topic. If they still do not engage with the substance, the issue is probably not that you have not found the perfect prompt.'
+        ],
+        bullets: [
+          'Callbacks show that the conversation is being remembered, not only consumed.',
+          'Specific questions create more momentum than routine check-ins.',
+          'Do not mistake constant notifications for genuine connection.'
+        ]
+      },
+      {
+        heading: 'Sign four: plans stay vague or keep getting postponed',
+        paragraphs: [
+          'Texting can feel lively while a real connection goes nowhere. You exchange jokes, discuss meeting, and say you should do something soon, but nobody chooses a day. A vague plan becomes a momentum problem when it is repeatedly mentioned without a concrete next step. Repeated postponements without an alternative can also show that the person enjoys the attention but is not prioritising a meeting.',
+          'Make one clear invitation connected to something you already discussed. Offer a day and a simple activity, then leave room for another option. For example: "You made a strong case for that cafe. Want to try it Saturday afternoon?" A person who is interested but busy can usually help move the plan forward by suggesting another time. If the answer stays vague, stop treating the plan as pending. Let their follow-through, not their enthusiastic words, set your expectations.'
+        ],
+        bullets: [
+          'Turn general enthusiasm into one specific, low-pressure plan.',
+          'Notice whether they suggest an alternative when they cannot make your day.',
+          'Do not keep a calendar slot open for a plan that has never been confirmed.'
+        ]
+      },
+      {
+        heading: 'Sign five: the tone feels polite instead of engaged',
+        paragraphs: [
+          'A conversation can remain friendly while romantic or personal interest fades. The messages are not rude, but they feel like maintenance: polite answers, safe reactions, and no playful risk. You may notice that the other person responds because they do not want to be unkind, not because they are eager to continue. This is difficult to read from one line, so pay attention to whether warmth is paired with initiative.',
+          'Do not try to manufacture a stronger response by becoming louder, more sexual, or more dramatic. A sudden personality change usually creates pressure rather than interest. Instead, share one honest opinion or make one direct invitation. A clear move gives the other person an easy way to meet you with similar energy. If they remain courteous but distant, believe the pattern and protect your time.'
+        ]
+      },
+      {
+        heading: 'How to revive a text conversation that is fading',
+        paragraphs: [
+          'If you want to give the conversation one fair chance, do not send a generic "what is up?" after a long gap. Bring a fresh, specific hook that connects to the person or your earlier exchange. Share a quick observation, ask for a real recommendation, or return to a topic they seemed excited about. A good restart gives them something to react to and makes your reason for texting obvious.',
+          'Keep the message short enough that it does not feel like a rescue operation. You can say, "I passed a place that reminded me of your terrible food ranking. Still defending that opinion?" Or: "You mentioned wanting a quiet weekend. Did you actually get one?" These messages show attention without demanding an explanation for the gap. Send one, then allow the response to determine whether the conversation has a path forward.'
+        ],
+        bullets: [
+          'Use a specific callback instead of a generic check-in.',
+          'Ask one question with a point of view, not an interview list.',
+          'Give the other person room to show whether they want to re-enter.'
+        ]
+      },
+      {
+        heading: 'What not to do when the chat loses momentum',
+        paragraphs: [
+          'Do not send a stack of messages designed to provoke reassurance. "Are you bored of me?", "I guess you do not care," and "Why are you ignoring me?" may describe your fear, but they turn uncertainty into pressure. Avoid testing them with jealousy posts, deliberately delayed replies, or a dramatic goodbye that secretly asks them to stop you. Those tactics may create a reaction, but they do not create the mutual interest you actually want.',
+          'Also avoid over-editing every message in search of the perfect line. A stronger opener can improve a conversation, but it cannot replace someone else\'s willingness to participate. If your draft needs to be funnier, cooler, and more detached than you really feel, simplify it. The right message is one you can send honestly and still respect if the reply is slow or never arrives.'
+        ],
+        bullets: [
+          'Skip guilt trips, indirect tests, and multiple-channel follow-ups.',
+          'Do not use a clever line to avoid saying what you actually want.',
+          'One clear attempt is enough to learn whether the energy is mutual.'
+        ]
+      },
+      {
+        heading: 'When to stop trying to restart the conversation',
+        paragraphs: [
+          'You do not need a dramatic final message to stop investing. If you have sent one thoughtful follow-up and the replies remain closed, vague, or absent, let the conversation rest. Archive the chat, turn off the notifications that keep pulling you back, and return your attention to people who are easier to reach. Stopping is not a punishment. It is a decision not to keep doing unpaid emotional labour for a connection that is not meeting you halfway.',
+          'If they return later, judge the new effort rather than the relief of seeing their name. A real restart includes curiosity, accountability, or a concrete plan. A low-effort "hey" does not require an instant restart from you. You can answer if you genuinely want to, ask for more clarity, or move on. The healthiest texting habit is not keeping every conversation alive. It is noticing which conversations are alive without you having to carry them.'
+        ],
+        bullets: [
+          'Pause after one clear attempt instead of negotiating with silence.',
+          'Look for changed behaviour if they come back.',
+          'Choose conversations where effort and curiosity can move in both directions.'
+        ]
+      },
+      {
+        heading: 'A simple momentum check before you send',
+        paragraphs: [
+          'Before your next text, ask three questions: am I responding to the actual pattern, am I giving them one easy way to participate, and would I still feel good about sending this if there is no reply? If the answer is yes, send the message and let it stand. If you are sending only to reduce anxiety, wait. A few minutes of space can help you choose a message that represents your interest without handing the other person responsibility for your confidence.',
+          'Texting momentum is useful information, not a score you have to manipulate. You can make a conversation more inviting with specificity, warmth, and a clear next step. You cannot create a shared rhythm alone. Notice the signs, make one honest move, and let the response show you whether there is something mutual to build.'
+        ],
+        bullets: [
+          'Pattern: what has changed across the last few messages?',
+          'Opening: can they answer or add something without doing all the work?',
+          'Self-respect: will you be okay with your message even if it gets no reply?'
+        ]
+      }
+    ]
   }
 ];
-
-export const getBlogPost = (slug: string) => BLOG_POSTS.find((post) => post.slug === slug);
