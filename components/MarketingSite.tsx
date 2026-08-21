@@ -613,7 +613,7 @@ Output:
         <div className="mt-12 space-y-12">
           {post.sections.map((section, index) => <React.Fragment key={section.heading}>
             {index === middleIndex && <ArticleCta navigate={navigate} compact />}
-            <section><h2 className="text-2xl font-bold tracking-tight text-white md:text-3xl">{section.heading}</h2>{section.paragraphs.map((paragraph) => <p key={paragraph} className="mt-5 text-base leading-8 text-white/60">{paragraph}</p>)}{section.bullets && <ul className="mt-6 space-y-3 rounded-2xl border border-pink-300/10 bg-pink-300/[0.04] p-5 text-sm leading-7 text-white/65">{section.bullets.map((bullet) => <li key={bullet} className="flex gap-3"><span className="mt-1 text-pink-300">âœ¦</span><span>{bullet}</span></li>)}</ul>}</section>
+            <section><h2 className="text-2xl font-bold tracking-tight text-white md:text-3xl">{section.heading}</h2>{section.paragraphs.map((paragraph) => <p key={paragraph} className="mt-5 text-base leading-8 text-white/60">{paragraph}</p>)}{section.bullets && <ul className="mt-6 space-y-3 rounded-2xl border border-pink-300/10 bg-pink-300/[0.04] p-5 text-sm leading-7 text-white/65">{section.bullets.map((bullet) => <li key={bullet} className="flex gap-3"><span className="mt-1 text-pink-300">&#10022;</span><span>{bullet}</span></li>)}</ul>}</section>
           </React.Fragment>)}
         </div>
         <ArticleCta navigate={navigate} />
