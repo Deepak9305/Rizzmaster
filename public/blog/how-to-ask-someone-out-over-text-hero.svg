@@ -1,0 +1,87 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">How to ask someone out over text</title>
+  <desc id="desc">A glowing phone showing a clear coffee date invitation surrounded by stars and a small calendar.</desc>
+  <defs>
+    <linearGradient id="bg" x1="80" y1="50" x2="1515" y2="860" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B0716"/>
+      <stop offset="0.52" stop-color="#17091D"/>
+      <stop offset="1" stop-color="#08060F"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(806 438) rotate(90) scale(368 520)">
+      <stop stop-color="#EC4899" stop-opacity="0.36"/>
+      <stop offset="0.7" stop-color="#A21CAF" stop-opacity="0.1"/>
+      <stop offset="1" stop-color="#0B0716" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="phone" x1="541" y1="130" x2="1073" y2="782" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F472B6"/>
+      <stop offset="0.5" stop-color="#D946EF"/>
+      <stop offset="1" stop-color="#F59E0B"/>
+    </linearGradient>
+    <linearGradient id="button" x1="705" y1="574" x2="973" y2="650" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EC4899"/>
+      <stop offset="1" stop-color="#F59E0B"/>
+    </linearGradient>
+    <filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="38"/>
+    </filter>
+    <filter id="smallBlur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="900" rx="34" fill="url(#bg)"/>
+  <ellipse cx="800" cy="475" rx="510" ry="360" fill="url(#glow)"/>
+  <ellipse cx="820" cy="700" rx="350" ry="54" fill="#EC4899" fill-opacity="0.2" filter="url(#blur)"/>
+
+  <path d="M-40 700C224 547 373 581 568 698C765 816 1012 819 1251 622C1398 501 1526 482 1640 541" stroke="#F472B6" stroke-opacity="0.2" stroke-width="4"/>
+  <path d="M-40 724C224 571 373 605 568 722C765 840 1012 843 1251 646C1398 525 1526 506 1640 565" stroke="#F59E0B" stroke-opacity="0.09" stroke-width="2"/>
+
+  <g opacity="0.7">
+    <circle cx="255" cy="178" r="4" fill="#F9A8D4"/>
+    <circle cx="255" cy="178" r="18" fill="#EC4899" fill-opacity="0.2" filter="url(#smallBlur)"/>
+    <circle cx="1320" cy="174" r="3" fill="#FCD34D"/>
+    <circle cx="1320" cy="174" r="16" fill="#F59E0B" fill-opacity="0.25" filter="url(#smallBlur)"/>
+    <circle cx="1438" cy="390" r="4" fill="#F9A8D4"/>
+    <circle cx="348" cy="694" r="3" fill="#FCD34D"/>
+  </g>
+
+  <g transform="translate(610 92) rotate(-7 190 360)">
+    <rect x="-18" y="-18" width="416" height="756" rx="72" fill="#EC4899" fill-opacity="0.2" filter="url(#blur)"/>
+    <rect x="0" y="0" width="380" height="720" rx="56" fill="#070711" stroke="url(#phone)" stroke-width="8"/>
+    <rect x="24" y="24" width="332" height="672" rx="38" fill="#0E0B1A" stroke="#FFFFFF" stroke-opacity="0.12" stroke-width="2"/>
+    <rect x="126" y="44" width="128" height="18" rx="9" fill="#FFFFFF" fill-opacity="0.12"/>
+    <text x="52" y="118" fill="#F9A8D4" font-family="Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="3">NEW MESSAGE</text>
+    <text x="52" y="166" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="28" font-weight="700">Want to grab coffee</text>
+    <text x="52" y="204" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="28" font-weight="700">this Saturday?</text>
+    <rect x="52" y="238" width="176" height="7" rx="3.5" fill="#FFFFFF" fill-opacity="0.2"/>
+    <rect x="52" y="260" width="116" height="7" rx="3.5" fill="#FFFFFF" fill-opacity="0.12"/>
+
+    <rect x="52" y="314" width="276" height="108" rx="24" fill="#EC4899" fill-opacity="0.08" stroke="#EC4899" stroke-opacity="0.42" stroke-width="2"/>
+    <circle cx="86" cy="350" r="16" fill="#F59E0B" fill-opacity="0.2" stroke="#FCD34D" stroke-width="2"/>
+    <path d="M86 340V350L93 355" stroke="#FCD34D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="120" y="350" fill="#FFFFFF" fill-opacity="0.75" font-family="Arial, sans-serif" font-size="16" font-weight="700">SATURDAY</text>
+    <text x="120" y="378" fill="#F9A8D4" font-family="Arial, sans-serif" font-size="14">A clear plan feels easy.</text>
+
+    <rect x="52" y="478" width="276" height="76" rx="20" fill="url(#button)"/>
+    <text x="190" y="526" text-anchor="middle" fill="#17091D" font-family="Arial, sans-serif" font-size="19" font-weight="800">SEND INVITATION</text>
+    <text x="190" y="630" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.34" font-family="Arial, sans-serif" font-size="14">warm  +  specific  +  low pressure</text>
+  </g>
+
+  <g transform="translate(1120 222) rotate(8 150 114)">
+    <rect width="300" height="228" rx="30" fill="#130D1D" stroke="#F59E0B" stroke-opacity="0.5" stroke-width="3"/>
+    <rect x="24" y="26" width="252" height="48" rx="16" fill="#F59E0B" fill-opacity="0.12"/>
+    <text x="46" y="58" fill="#FCD34D" font-family="Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="2">DATE PLAN</text>
+    <text x="34" y="122" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="24" font-weight="700">Coffee + a walk</text>
+    <text x="34" y="160" fill="#FFFFFF" fill-opacity="0.55" font-family="Arial, sans-serif" font-size="17">Saturday, 3:00 PM</text>
+    <path d="M34 188H192" stroke="#EC4899" stroke-width="4" stroke-linecap="round"/>
+    <path d="M208 182L218 192L242 168" stroke="#FCD34D" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <g fill="#F9A8D4">
+    <path d="M410 254L417 273L436 280L417 287L410 306L403 287L384 280L403 273L410 254Z"/>
+    <path d="M1210 560L1217 579L1236 586L1217 593L1210 612L1203 593L1184 586L1203 579L1210 560Z"/>
+    <path d="M493 498L498 511L511 516L498 521L493 534L488 521L475 516L488 511L493 498Z" fill="#FCD34D"/>
+  </g>
+  <text x="800" y="830" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.42" font-family="Arial, sans-serif" font-size="18" letter-spacing="5">MAKE THE NEXT MOVE CLEAR</text>
+</svg>
+
