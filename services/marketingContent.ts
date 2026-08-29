@@ -792,11 +792,7 @@ export const BLOG_POSTS: BlogPost[] = [
         ]
       }
     ]
-  }
-];
-
-export const getBlogPost = (slug: string) => BLOG_POSTS.find((post) => post.slug === slug);
-,
+  },
   {
     slug: 'how-to-ask-someone-out-over-text',
     title: 'How to Ask Someone Out Over Text Without Making It Awkward',
