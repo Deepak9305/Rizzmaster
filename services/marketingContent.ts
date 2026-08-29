@@ -796,3 +796,205 @@ export const BLOG_POSTS: BlogPost[] = [
 ];
 
 export const getBlogPost = (slug: string) => BLOG_POSTS.find((post) => post.slug === slug);
+,
+  {
+    slug: 'how-to-ask-someone-out-over-text',
+    title: 'How to Ask Someone Out Over Text Without Making It Awkward',
+    description: 'Learn how to ask someone out over text with simple message examples, the right timing, and a clear plan that feels confident instead of forced.',
+    excerpt: 'The least awkward way to ask someone out is to be warm, specific, and easy to answer. Suggest a simple plan, then let their response be information rather than a test of your worth.',
+    date: '2026-08-29',
+    updatedAt: '2026-08-29',
+    readingTime: '10 min read',
+    category: 'Dating advice',
+    keywords: [
+      'how to ask someone out over text',
+      'what to text to ask someone out',
+      'how to ask someone out without being awkward',
+      'text examples to ask someone out',
+      'best message to ask someone on a date',
+      'how to ask someone on a date over text',
+      'casual date invitation text',
+      'how to ask for a date confidently',
+      'what to say when asking someone out',
+      'asking someone out over text examples'
+    ],
+    image: '/blog/how-to-ask-someone-out-over-text-hero.svg',
+    imageAlt: 'Editorial illustration of a phone with a clear date invitation and a coffee plan',
+    resources: [
+      { label: 'The Gottman Institute: Improve relationship communication', url: 'https://www.gottman.com/improve-communication-relationship/' },
+      { label: 'The Gottman Institute: Ask for what you really want', url: 'https://www.gottman.com/blog/complain-not-getting-didnt-ask-for/' },
+      { label: 'loveisrespect: What are my boundaries?', url: 'https://www.loveisrespect.org/resources/what-are-my-boundaries/' }
+    ],
+    sections: [
+      {
+        heading: 'Why asking someone out over text feels awkward',
+        paragraphs: [
+          'Asking someone out over text can feel harder than asking in person because you have time to imagine every possible outcome. You may worry that the message sounds too eager, too casual, too serious, or too much like a copied dating script. The more you edit, the more the invitation starts to feel like a performance instead of a simple expression of interest.',
+          'A date invitation does not need to guarantee a yes. Its job is to make your interest clear and give the other person a comfortable way to respond. You are not trying to control their reaction. You are showing enough confidence to make a real suggestion and enough respect to accept their choice. That is what makes the message feel natural.'
+        ],
+        bullets: [
+          'Awkwardness usually comes from hiding the invitation inside too many hints.',
+          'A clear plan is easier to answer than a vague question about hanging out sometime.',
+          'The goal is a mutual next step, not a perfectly managed outcome.'
+        ]
+      },
+      {
+        heading: 'Know when the timing is right',
+        paragraphs: [
+          'You do not need weeks of texting before asking for a date. If the conversation has some back-and-forth, they respond with reasonable interest, and you have found at least one shared topic, a simple invitation is usually more useful than endless messaging. Texting for too long can create pressure because both people start building an idea of the connection without seeing whether you actually enjoy time together.',
+          'Look for signs of participation rather than trying to decode every emoji. They ask questions, remember details, reply with more than polite one-word answers, or help keep the conversation moving. These are not guarantees that they will say yes, but they are enough to make a respectful invitation reasonable. If the conversation already feels one-sided, read the signs before adding a date request. The texting momentum guide on Rizz Master can help you separate a quiet day from a repeated lack of effort.'
+        ],
+        bullets: [
+          'Ask when the conversation feels shared, not only when you feel anxious about losing it.',
+          'Use something you already discussed as the bridge to the invitation.',
+          'Do not wait for absolute certainty; dating rarely provides it before the first date.'
+        ]
+      },
+      {
+        heading: 'Use the simple invitation formula',
+        paragraphs: [
+          'The most reliable formula is interest plus a specific plan plus an easy question. Start with a short signal that you enjoy talking with them. Suggest an activity, place, or type of date. Then ask whether they are free on a particular day or offer two realistic options. This gives the message warmth and direction without turning it into a speech.',
+          'For example: "I have enjoyed talking with you. Want to grab coffee at that place you mentioned this Saturday?" The message works because it says what you want, connects the plan to the conversation, and leaves room for a yes or another time. You do not need to explain why you chose coffee, apologise for asking, or add a paragraph about how relaxed the invitation is.'
+        ],
+        bullets: [
+          'Interest: "I have enjoyed talking with you."',
+          'Plan: "Want to grab coffee at that place you mentioned?"',
+          'Timing: "Are you free Saturday afternoon?"'
+        ]
+      },
+      {
+        heading: 'Text examples for asking someone out',
+        paragraphs: [
+          'The best invitation is one that sounds like you. A direct message is not automatically intense, and a playful message is not automatically confident. Choose a tone that matches the conversation you already have. If you have mostly been sincere and thoughtful, do not suddenly send a dramatic one-liner. If you have been joking around, a small callback can make the invitation feel like a natural continuation.',
+          'Keep the activity simple for a first date. Coffee, a walk in a busy public place, a casual meal, or a local event gives both people an easy exit and enough time to talk. You are not planning the rest of the relationship in one text. You are choosing a comfortable first step that can tell you whether the connection works offline too.'
+        ],
+        bullets: [
+          'Coffee: "You have convinced me that your coffee recommendation is worth testing. Free Saturday morning?"',
+          'Drinks: "I like talking with you. Want to continue this over a drink Thursday evening?"',
+          'Dinner: "You mentioned loving that restaurant. Want to try it together next week?"',
+          'Casual: "I am going to the weekend market Sunday. Want to join me for a walk and a snack?"',
+          'Direct: "I would like to take you on a date. Are you free this week?"'
+        ]
+      },
+      {
+        heading: 'Be specific without making the plan feel rigid',
+        paragraphs: [
+          'A vague invitation such as "We should hang out sometime" can sound friendly but does not create a next step. It makes the other person do the work of deciding whether you mean it and when it could happen. A specific invitation is kinder because the answer can be specific too. They can say yes, suggest another time, or tell you that they are not interested without guessing what you wanted.',
+          'Specific does not mean inflexible. Give a day and a general time, then allow a reasonable alternative. "I am free Tuesday or Thursday after work - would either work for coffee?" is clear and collaborative. If they cannot make either option but suggest another, that is useful effort. If they only say they are busy without offering any path forward, do not keep negotiating against the information you are receiving.'
+        ],
+        bullets: [
+          'Name an activity and a day instead of asking for an undefined hangout.',
+          'Offer one or two options, not an open-ended scheduling interview.',
+          'Let them suggest another time if they are interested but unavailable.'
+        ]
+      },
+      {
+        heading: 'Choose a tone: direct, playful, or low-pressure',
+        paragraphs: [
+          'Direct invitations are often the least confusing. Say that you would like to see them and name the plan. This works well when the conversation has already included flirting or when you prefer not to hide your intention. Direct does not mean demanding. The message can be confident and still make a no feel safe.',
+          'Playful invitations work when the joke is connected to something real. "You have made three suspiciously strong opinions about noodles, so I think you owe me a food tour" gives the invitation personality, but it should still lead to a real day or question. Low-pressure wording is useful when you are not sure how they feel: "I have enjoyed chatting. If you are interested, want to grab coffee next week?" Avoid using humour to make the invitation impossible to interpret.'
+        ],
+        bullets: [
+          'Direct: clear interest and a simple plan.',
+          'Playful: a real invitation with one natural callback.',
+          'Low-pressure: honest interest that leaves room for their choice.'
+        ]
+      },
+      {
+        heading: 'What to say after they say yes',
+        paragraphs: [
+          'When they say yes, keep the momentum practical. Confirm the day, time, place, and any detail that would prevent confusion. You do not need to celebrate with ten messages or immediately ask whether they are excited. A calm response shows that you can make a plan without turning the date into a high-stakes event.',
+          'Try: "Nice. Let us do Saturday at 3 at North Street Coffee. I will send the exact spot that morning." If the plan is more flexible, agree on the next decision: "Great. Thursday works. Want to choose between the two places we mentioned?" Then let the conversation breathe. A good date plan should support the connection, not require constant texting until you meet.'
+        ],
+        bullets: [
+          'Confirm the time and place soon enough that both people can plan.',
+          'Keep a little conversation going, but do not force all-day contact before meeting.',
+          'Follow through on the plan you suggested.'
+        ]
+      },
+      {
+        heading: 'What to say if they say maybe or seem unsure',
+        paragraphs: [
+          'A maybe can mean several things: they are busy, they need more time, they are unsure about the plan, or they do not want to reject you directly. Give the answer one respectful chance to become clearer. You can ask whether another day would work, but do not turn uncertainty into a negotiation. An invitation is not a sales pitch that improves with more reasons.',
+          'Reply with something like: "No problem. If you would like to, let me know when your week settles down." This keeps the door open without putting you in a waiting position. If they are interested but busy, they can return with a concrete option. If the conversation stays vague, take that as information and continue with your life. The right person does not need to be pressured into giving you a time.'
+        ],
+        bullets: [
+          'Accept uncertainty without demanding an instant explanation.',
+          'Give them room to suggest a time if they genuinely want to meet.',
+          'Do not keep your schedule open indefinitely for an unconfirmed plan.'
+        ]
+      },
+      {
+        heading: 'What to say after a no or no response',
+        paragraphs: [
+          'A no is disappointing, but it is also clear. The confident response is brief: "Thanks for being honest. Wishing you well." You do not need to ask what was wrong with you, make a joke that punishes them, or immediately offer a smaller and easier date. Respecting the answer protects your dignity and makes the interaction safer for both people.',
+          'No response is also a response when enough time has passed and the pattern already feels uncertain. Do not send a series of follow-ups to make the invitation impossible to ignore. If you want to close the loop, one message such as "I will leave it there, but it was nice talking with you" is enough. The Rizz Master guide on what to text when they stop replying covers how to follow up once without turning silence into a challenge.'
+        ],
+        bullets: [
+          'Take a clear no without trying to change their mind.',
+          'Do not treat silence as an invitation to increase the pressure.',
+          'Move on without rewriting the invitation as evidence that you are unworthy.'
+        ]
+      },
+      {
+        heading: 'Avoid these awkward asking-out mistakes',
+        paragraphs: [
+          'The biggest mistake is hiding the invitation behind a long preamble. Messages such as "This might be weird and you probably do not feel the same, but I have been thinking..." make the other person manage your fear before they can answer the actual question. You can acknowledge a little nervousness if it is natural, but do not make them reassure you before saying yes or no.',
+          'Another mistake is making the plan too intense too early. A surprise trip, an expensive reservation, or a late-night private meeting may create unnecessary pressure, especially when you have not met before. Keep the first invitation proportionate to the relationship. Also avoid making the person prove their interest through immediate availability. Schedules are real; what matters is whether there is respectful follow-through over time.',
+          'Finally, do not send a message designed to create jealousy or guilt if they decline. Attraction is not something you can argue someone into. Be clear, accept the answer, and keep your attention available for people who choose to meet you with similar energy.'
+        ],
+        bullets: [
+          'Skip apologies, disclaimers, and a long explanation before the ask.',
+          'Avoid expensive, private, or overly elaborate first-date plans.',
+          'Never use guilt, jealousy, persistence, or pressure to get a yes.'
+        ]
+      },
+      {
+        heading: 'If you already know them in real life',
+        paragraphs: [
+          'Asking out a friend, coworker, or person in your wider social circle needs a little extra care because the relationship continues after the answer. Be clear enough that they do not mistake the invitation for a casual group plan, but relaxed enough that a no does not threaten the connection. "I like spending time with you, and I would like to take you on a date if you are open to that. No pressure if you would rather keep it friendly" is honest without cornering them.',
+          'Think about the context before you ask. Do not put someone on the spot in a group chat, use a professional power difference to create pressure, or keep asking after they have declined. If they say no, respond normally and give them the amount of space they need. Respect is more important than preserving the exact version of the relationship you hoped for.'
+        ],
+        bullets: [
+          'Make the romantic intention clear so there is no confusing subtext.',
+          'Ask privately and in a context where they can answer freely.',
+          'Accept the answer without changing the social environment into a punishment.'
+        ]
+      },
+      {
+        heading: 'Keep the invitation respectful and safe',
+        paragraphs: [
+          'A first date should give both people control over their time, location, and boundaries. Choose a public place when meeting someone new, make your own travel arrangements, and do not assume that agreeing to a date means agreeing to physical intimacy or continued access. A respectful invitation leaves room for the other person to set limits and change their mind.',
+          'Good communication is not only about getting the wording right. It is also about noticing whether the other person feels comfortable and whether your own needs are being respected. The loveisrespect guide to boundaries is a useful reference for thinking about communication, consent, and personal limits before a date.'
+        ],
+        bullets: [
+          'Choose a location and plan that make both people feel comfortable.',
+          'Treat a date yes as agreement to meet, not agreement to anything beyond that.',
+          'Respect boundaries and make your own boundaries clear when needed.'
+        ]
+      },
+      {
+        heading: 'A final checklist before you press send',
+        paragraphs: [
+          'Read the invitation once and check whether the intention is obvious. Could the other person tell what you want, when you want it, and how to answer? If not, remove the extra explanation and add one concrete detail. A message that is short, warm, and specific will usually feel more confident than one packed with clever wording.',
+          'Then ask yourself whether you can respect the answer. If the answer is yes, send it and let it stand. You do not need to monitor the typing indicator, send a follow-up after five minutes, or edit the invitation while it is unread. Asking someone out over text is a small act of courage because it replaces guessing with clarity. Make the move, stay kind, and let mutual interest do the rest.'
+        ],
+        bullets: [
+          'Warmth: have I shown genuine interest without overselling it?',
+          'Clarity: did I suggest a real activity and time?',
+          'Freedom: can they say yes, no, or not now without pressure?',
+          'Self-respect: will I be okay with the message even if the answer is no?'
+        ]
+      },
+      {
+        heading: 'Turn your real context into a natural invitation',
+        paragraphs: [
+          'If you know what you want to say but keep rewriting the draft, start with the facts instead of a pickup line. Note what you have been talking about, the tone you want, the kind of date you would enjoy, and the days you are available. A reply generator can help you compare a direct, playful, or low-pressure version, but you should choose the one that sounds like a real person and edit it before sending.',
+          'Rizz Master can turn your conversation context into send-ready options without removing your personality. Use it to get unstuck, not to manufacture a personality or pressure someone into a response. The strongest invitation is still the one that is clear enough to answer and honest enough to stand behind.'
+        ]
+      }
+    ]
+  }
+];
+
+export const getBlogPost = (slug: string) => BLOG_POSTS.find((post) => post.slug === slug);
