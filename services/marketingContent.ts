@@ -990,6 +990,202 @@ export const BLOG_POSTS: BlogPost[] = [
         ]
       }
     ]
+  },
+  {
+    slug: 'how-long-should-you-text-before-asking-someone-out',
+    title: 'How Long Should You Text Before Asking Someone Out?',
+    description: 'Wondering how long to text before asking someone out? Learn the signs it is time to make a plan, when to wait, and what to say without overthinking it.',
+    excerpt: 'There is no magic number of days. Ask when the conversation has shared effort, a little rapport, and one clear reason to meet. Waiting for certainty usually creates more anxiety than clarity.',
+    date: '2026-09-01',
+    updatedAt: '2026-09-01',
+    readingTime: '9 min read',
+    category: 'Dating advice',
+    keywords: [
+      'how long should you text before asking someone out',
+      'how long to text before asking for a date',
+      'when to ask someone out over text',
+      'how long should you talk before a first date',
+      'how long to text before meeting in person',
+      'when to ask a dating app match out',
+      'how many messages before asking someone out',
+      'should you ask someone out after texting for a week',
+      'how to know when to ask someone out',
+      'texting before first date'
+    ],
+    image: '/blog/how-long-should-you-text-before-asking-someone-out-hero.svg',
+    imageAlt: 'Editorial illustration of a phone conversation turning into a simple first-date plan',
+    resources: [
+      { label: 'The Gottman Institute: Improve relationship communication', url: 'https://www.gottman.com/improve-communication-relationship/' },
+      { label: 'The Gottman Institute: Ask for what you really want', url: 'https://www.gottman.com/blog/complain-not-getting-didnt-ask-for/' },
+      { label: 'loveisrespect: Dating basics and healthy boundaries', url: 'https://www.loveisrespect.org/pdf/Dating_Basics.pdf' }
+    ],
+    sections: [
+      {
+        heading: 'There is no magic number of days',
+        paragraphs: [
+          'People often search for a rule: ask after three days, seven days, or a certain number of messages. A number can feel comforting because it promises to remove the risk from the decision. But the right time to ask someone out depends less on the calendar and more on whether the conversation has enough shared energy to make meeting feel like a natural next step.',
+          'You do not need to know everything about someone before suggesting a date. You need a little rapport, a reason to think they may be open to meeting, and a simple plan that they can accept or decline comfortably. Texting for too long can create its own awkwardness because both people keep building the connection in theory instead of finding out whether they enjoy being together in real life.'
+        ],
+        bullets: [
+          'Use the quality of the exchange, not a rigid day count, as your guide.',
+          'Ask when there is enough context for a natural invitation.',
+          'A date is a way to learn more, not a reward for completing a texting phase.'
+        ]
+      },
+      {
+        heading: 'A useful window for most new conversations',
+        paragraphs: [
+          'For a new dating-app match, asking within the first few days to a week of consistent conversation is often a sensible starting point. That does not mean sending a date request immediately after a single hello, and it does not mean waiting exactly seven days. It means noticing when the exchange has moved beyond introductions and both people are contributing something real.',
+          'If you have been messaging for several days and the conversation is still easy, you can make a low-pressure suggestion instead of creating another round of small talk. If the chat is sporadic or one-sided, more time will not automatically solve the problem. Read our guide to signs a texting conversation is losing momentum before deciding whether to ask or step back.'
+        ],
+        bullets: [
+          'A few days of engaged back-and-forth can be enough.',
+          'A week of consistent conversation is not a requirement or a guarantee.',
+          'If the exchange feels flat, ask for clarity or stop investing rather than texting indefinitely.'
+        ]
+      },
+      {
+        heading: 'Look for shared effort before you ask',
+        paragraphs: [
+          'Shared effort is a better signal than reply speed. They may take a while to answer and still be thoughtful, curious, and willing to continue the conversation. Look for questions that show attention, details they volunteer without being prompted, callbacks to things you mentioned, and some willingness to keep the exchange moving. These signs do not promise a yes, but they make an invitation reasonable.',
+          'Do not treat every emoji or fast reply as proof of interest. Someone can text frequently because they enjoy attention, have free time, or simply like chatting. What matters is whether the conversation gives you a real bridge to a plan. If you are always starting, asking, and reviving the chat, the issue is probably not that you have waited too few days.'
+        ],
+        bullets: [
+          'They ask questions instead of only answering yours.',
+          'They remember details and add new topics or opinions.',
+          'They show some willingness to help the conversation move forward.'
+        ]
+      },
+      {
+        heading: 'Move from texting to a date when you have a bridge',
+        paragraphs: [
+          'The easiest time to ask is after a small moment of connection. Maybe you discover that you both like the same cafe, debate the best local food, laugh about a bad travel story, or realise you are both free on the weekend. Use that detail as the bridge. It makes the invitation feel connected to the actual conversation instead of appearing out of nowhere.',
+          'For example, if they mention a bakery they love, you could say: "You have made a strong case for that bakery. Want to try it together Saturday morning?" The invitation has a reason, a plan, and a question. It does not need a grand confession because the conversation already supplied the context.'
+        ],
+        bullets: [
+          'Use a shared interest, recommendation, or inside joke as the reason to meet.',
+          'Ask after a positive exchange rather than during a long silence.',
+          'Keep the bridge specific enough that the invitation feels personal.'
+        ]
+      },
+      {
+        heading: 'How to ask after one day of texting',
+        paragraphs: [
+          'Asking after one day can work when the conversation is unusually engaged and there is a clear, comfortable reason to meet. It is more natural when you already know each other in real life, matched through a shared community, or quickly found a concrete common interest. Keep the plan casual and avoid acting as though one good conversation has created a serious connection.',
+          'A simple message is enough: "I am enjoying this conversation. Want to continue it over coffee this week?" If they prefer more time, let them say so without trying to persuade them. A quick invitation can be confident, but it should never make the other person feel rushed or responsible for protecting your ego.'
+        ],
+        bullets: [
+          'Ask early only when the interaction already feels mutual and comfortable.',
+          'Choose a short, public, low-pressure first date.',
+          'Do not use an early ask to force certainty from someone you barely know.'
+        ]
+      },
+      {
+        heading: 'How to ask after a week or more of texting',
+        paragraphs: [
+          'If you have been texting for a week or more and the connection feels good, it is usually better to suggest meeting than to keep adding imaginary milestones. Long conversations can create false confidence: you may know each other’s opinions but not yet know how the interaction feels face to face. A date gives both people better information than another hundred messages.',
+          'You can acknowledge the conversation without making the invitation heavy: "We have talked about everything from terrible movies to weekend plans. I would like to meet you properly. Are you free Thursday or Saturday?" Give them a real option and allow them to suggest a different time. If they repeatedly enjoy the chat but avoid any concrete plan, pay attention to that pattern.'
+        ],
+        bullets: [
+          'Do not confuse a long text history with a real-world relationship.',
+          'Suggest meeting before endless texting raises the stakes.',
+          'Repeatedly vague answers are information, not a scheduling puzzle.'
+        ]
+      },
+      {
+        heading: 'What to text when the timing feels right',
+        paragraphs: [
+          'Your message should be short enough to answer and specific enough to mean something. Lead with a truthful signal of interest, connect the plan to a shared topic, and name a day or two. You do not need to include every reason you like them or explain why you have decided to ask now. The invitation itself provides the clarity.',
+          'Try one of these formats and change the words to fit your voice. Direct language is not awkward when it is respectful. The awkwardness usually comes from hiding the ask inside a paragraph of disclaimers, apologising for wanting to meet, or pretending that a date is not a date when you know that is what you mean.'
+        ],
+        bullets: [
+          '"I have enjoyed talking with you. Want to grab coffee this Saturday?"',
+          '"You mentioned loving that taco place. Want to test it together Thursday?"',
+          '"This has been fun. Are you free for a drink next week?"',
+          '"I would like to take you on a date. Would Tuesday or Sunday work?"'
+        ]
+      },
+      {
+        heading: 'Do not wait for perfect certainty',
+        paragraphs: [
+          'You may keep waiting because you want stronger proof that they will say yes. That proof rarely arrives before you ask. More texting can make you feel familiar with someone while increasing the fear of losing the imagined connection. If the conversation is mutual and you would like to meet, a simple invitation is often kinder to both of you than another week of trying to decode subtext.',
+          'The point is not to ask as soon as possible. The point is to stop using time as a substitute for a decision. Make the invitation proportionate to what you actually know. You are not asking for exclusivity, a relationship, or a promise. You are asking whether they want to spend a little time together and see how it feels.'
+        ],
+        bullets: [
+          'More messages cannot guarantee a positive answer.',
+          'A first date is a low-stakes way to replace fantasy with real information.',
+          'Ask because you want to meet, not because you need reassurance.'
+        ]
+      },
+      {
+        heading: 'What to do when they say yes',
+        paragraphs: [
+          'When they say yes, move from excitement to simple logistics. Confirm the day, approximate time, place, and any detail that matters. Keep the plan easy to change if something comes up, but do not leave everything vague. Clear planning is attractive because it shows consideration without turning the date into a production.',
+          'You can say: "Great. Let us do Saturday at 3 at North Street Coffee. I will send the exact spot that morning." After that, you do not need to keep the person engaged through constant messages until the date. Leave some room for the real conversation to happen in person. If you want more help with the follow-up afterward, read what to text after a first date.'
+        ],
+        bullets: [
+          'Confirm the practical details while the invitation is fresh.',
+          'Keep the first plan simple and comfortable for both people.',
+          'Do not turn pre-date texting into a full-time performance.'
+        ]
+      },
+      {
+        heading: 'What to do when they say maybe or they are busy',
+        paragraphs: [
+          'A busy response is not automatically a rejection. Give them one reasonable opportunity to offer another time. You can reply: "No worries. If you would like to, let me know when your week opens up." This is warm and clear without placing you in a permanent waiting room.',
+          'If they are interested, they can usually help create a path forward even if your first day does not work. If every response stays vague and you are the only person trying to schedule, stop treating the invitation as pending. You can be open to hearing from them without continuing to chase a plan they are not helping to make.'
+        ],
+        bullets: [
+          'Accept a genuine scheduling conflict without taking it personally.',
+          'Look for a concrete alternative rather than a flattering explanation.',
+          'Do not send repeated availability lists to force a decision.'
+        ]
+      },
+      {
+        heading: 'What if they do not respond to the invitation?',
+        paragraphs: [
+          'Give the message enough time to receive a normal response. If there has already been a pattern of slow or one-sided communication, do not use the invitation as a reason to send a stack of follow-ups. One calm check-in may make sense when the plan was practical, but you do not need to make the question louder to make the answer clearer.',
+          'If there is still no response, let the invitation stand and move forward. A lack of reply may reflect busyness, uncertainty, or a lack of interest, but you cannot solve that uncertainty by doing all the work. You can remain kind without remaining available for an indefinite almost-date.'
+        ],
+        bullets: [
+          'Do not send a second message designed to create guilt or urgency.',
+          'Let silence provide information about the current level of effort.',
+          'Protect your time instead of waiting for a perfect explanation.'
+        ]
+      },
+      {
+        heading: 'Keep the first date safe and low pressure',
+        paragraphs: [
+          'A first date should make it easy for both people to choose, participate, and leave comfortably. A public cafe, a daytime walk in a busy area, or a casual event is usually more suitable than an expensive reservation, a private home, or a plan that requires a long commitment. The best first date is not the most impressive one; it is the one that gives you useful information without unnecessary pressure.',
+          'Respect the other person’s boundaries and your own. Agreeing to meet is not agreement to physical intimacy, exclusivity, or continued contact. Healthy communication includes the freedom to change a plan or say no. The loveisrespect dating basics guide in the Further Reading section is a helpful reference for boundaries and respectful dating.'
+        ],
+        bullets: [
+          'Choose a public place and make your own travel arrangements.',
+          'Keep the plan proportionate to how well you know each other.',
+          'Treat a no or a changed mind as a boundary, not a negotiation.'
+        ]
+      },
+      {
+        heading: 'The simple answer: ask when there is enough to meet',
+        paragraphs: [
+          'How long should you text before asking someone out? Long enough to establish a little mutual interest and a natural reason to meet, but not so long that texting becomes a substitute for dating. For many new matches, that may be a few days or a week of good conversation. For others, the right moment arrives sooner or later. Use the pattern, not the stopwatch.',
+          'Before you send, check three things: have they contributed to the conversation, do you have a simple plan connected to something real, and can you accept a no without trying to change it? If the answer is yes, make the invitation. Clear, kind, and specific will take you further than another round of guessing.'
+        ],
+        bullets: [
+          'Mutuality: are both people contributing?',
+          'Context: is there a natural bridge to a plan?',
+          'Respect: can the other person answer freely?',
+          'Courage: are you willing to trade guessing for clarity?'
+        ]
+      },
+      {
+        heading: 'Turn your conversation into a natural date invite',
+        paragraphs: [
+          'If you have the context but cannot choose the wording, start with the details you actually know: what you have been discussing, what kind of date sounds comfortable, and when you are available. A reply generator can help you compare a direct, playful, or low-pressure version, but the final message should still sound like you and reflect a real plan.',
+          'Rizz Master can turn that context into send-ready options without asking you to perform a different personality. Use it to get unstuck, then edit the draft until it feels honest. The strongest message is not the one that guarantees a yes. It is the one that makes your interest clear and gives both people a respectful next move.'
+        ]
+      }
+    ]
   }
 ];
 
