@@ -1,0 +1,87 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">How long to text before asking someone out</title>
+  <desc id="desc">A glowing phone conversation leads to a simple first-date plan on a small calendar.</desc>
+  <defs>
+    <linearGradient id="background" x1="74" y1="48" x2="1516" y2="854" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0A0714"/>
+      <stop offset="0.5" stop-color="#19091D"/>
+      <stop offset="1" stop-color="#08060E"/>
+    </linearGradient>
+    <radialGradient id="centerGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(797 431) rotate(90) scale(358 520)">
+      <stop stop-color="#EC4899" stop-opacity="0.34"/>
+      <stop offset="0.7" stop-color="#A21CAF" stop-opacity="0.09"/>
+      <stop offset="1" stop-color="#0A0714" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="phoneEdge" x1="520" y1="126" x2="1057" y2="760" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F9A8D4"/>
+      <stop offset="0.52" stop-color="#D946EF"/>
+      <stop offset="1" stop-color="#F59E0B"/>
+    </linearGradient>
+    <linearGradient id="invite" x1="680" y1="576" x2="970" y2="655" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EC4899"/>
+      <stop offset="1" stop-color="#F59E0B"/>
+    </linearGradient>
+    <filter id="largeBlur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="36"/>
+    </filter>
+    <filter id="smallBlur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="11"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="900" rx="34" fill="url(#background)"/>
+  <ellipse cx="800" cy="456" rx="535" ry="380" fill="url(#centerGlow)"/>
+  <ellipse cx="800" cy="735" rx="370" ry="48" fill="#EC4899" fill-opacity="0.18" filter="url(#largeBlur)"/>
+
+  <path d="M-30 678C190 561 372 565 554 670C747 781 1002 823 1246 635C1401 515 1527 497 1630 553" stroke="#F472B6" stroke-opacity="0.22" stroke-width="4"/>
+  <path d="M-30 712C190 595 372 599 554 704C747 815 1002 857 1246 669C1401 549 1527 531 1630 587" stroke="#F59E0B" stroke-opacity="0.1" stroke-width="2"/>
+
+  <g opacity="0.72">
+    <circle cx="247" cy="193" r="4" fill="#F9A8D4"/>
+    <circle cx="247" cy="193" r="18" fill="#EC4899" fill-opacity="0.18" filter="url(#smallBlur)"/>
+    <circle cx="1336" cy="185" r="4" fill="#FCD34D"/>
+    <circle cx="1336" cy="185" r="18" fill="#F59E0B" fill-opacity="0.22" filter="url(#smallBlur)"/>
+    <circle cx="1375" cy="488" r="3" fill="#F9A8D4"/>
+    <circle cx="334" cy="671" r="3" fill="#FCD34D"/>
+  </g>
+
+  <g transform="translate(600 91) rotate(-7 190 360)">
+    <rect x="-18" y="-18" width="416" height="756" rx="72" fill="#EC4899" fill-opacity="0.2" filter="url(#largeBlur)"/>
+    <rect width="380" height="720" rx="56" fill="#070711" stroke="url(#phoneEdge)" stroke-width="8"/>
+    <rect x="24" y="24" width="332" height="672" rx="38" fill="#0E0B1A" stroke="#FFFFFF" stroke-opacity="0.12" stroke-width="2"/>
+    <rect x="126" y="44" width="128" height="18" rx="9" fill="#FFFFFF" fill-opacity="0.12"/>
+    <text x="52" y="118" fill="#F9A8D4" font-family="Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="3">GOOD CONVERSATION</text>
+    <text x="52" y="166" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="26" font-weight="700">A few days of real</text>
+    <text x="52" y="202" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="26" font-weight="700">back-and-forth is enough.</text>
+    <rect x="52" y="238" width="180" height="7" rx="3.5" fill="#FFFFFF" fill-opacity="0.2"/>
+    <rect x="52" y="260" width="120" height="7" rx="3.5" fill="#FFFFFF" fill-opacity="0.12"/>
+
+    <rect x="52" y="314" width="276" height="108" rx="24" fill="#EC4899" fill-opacity="0.08" stroke="#EC4899" stroke-opacity="0.42" stroke-width="2"/>
+    <circle cx="88" cy="350" r="17" fill="#F59E0B" fill-opacity="0.18" stroke="#FCD34D" stroke-width="2"/>
+    <path d="M88 340V350L95 355" stroke="#FCD34D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="122" y="350" fill="#FFFFFF" fill-opacity="0.76" font-family="Arial, sans-serif" font-size="16" font-weight="700">NEXT MOVE</text>
+    <text x="122" y="378" fill="#F9A8D4" font-family="Arial, sans-serif" font-size="14">Ask when the bridge is real.</text>
+
+    <rect x="52" y="478" width="276" height="76" rx="20" fill="url(#invite)"/>
+    <text x="190" y="526" text-anchor="middle" fill="#19091D" font-family="Arial, sans-serif" font-size="19" font-weight="800">SUGGEST A DATE</text>
+    <text x="190" y="630" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.34" font-family="Arial, sans-serif" font-size="14">mutual  +  specific  +  easy</text>
+  </g>
+
+  <g transform="translate(1113 225) rotate(8 153 113)">
+    <rect width="306" height="230" rx="30" fill="#130D1D" stroke="#F59E0B" stroke-opacity="0.5" stroke-width="3"/>
+    <rect x="24" y="26" width="258" height="48" rx="16" fill="#F59E0B" fill-opacity="0.12"/>
+    <text x="48" y="58" fill="#FCD34D" font-family="Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="2">SATURDAY</text>
+    <text x="34" y="122" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="24" font-weight="700">Coffee and a walk</text>
+    <text x="34" y="160" fill="#FFFFFF" fill-opacity="0.55" font-family="Arial, sans-serif" font-size="17">3:00 PM - simple plan</text>
+    <path d="M34 188H192" stroke="#EC4899" stroke-width="4" stroke-linecap="round"/>
+    <path d="M215 183L225 193L250 168" stroke="#FCD34D" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <g fill="#F9A8D4">
+    <path d="M404 256L411 275L430 282L411 289L404 308L397 289L378 282L397 275L404 256Z"/>
+    <path d="M1218 563L1225 582L1244 589L1225 596L1218 615L1211 596L1192 589L1211 582L1218 563Z"/>
+    <path d="M491 500L496 513L509 518L496 523L491 536L486 523L473 518L486 513L491 500Z" fill="#FCD34D"/>
+  </g>
+  <text x="800" y="832" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.42" font-family="Arial, sans-serif" font-size="18" letter-spacing="5">STOP COUNTING MESSAGES. START READING THE MOMENT.</text>
+</svg>
+
