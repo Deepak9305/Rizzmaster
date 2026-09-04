@@ -7,7 +7,7 @@
     "dev:vite": "vite",
     "dev:api": "node dev-api-server.js",
     "start:cloud-run": "node cloud-run-server.js",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build && node scripts/prerender-marketing.mjs",
     "preview": "vite preview",
     "test:dodo": "node --test tests/dodo-billing.test.mjs",
     "verify:native-config": "node scripts/verify-native-config.js",
@@ -57,3 +57,4 @@
     "@capacitor/core": "$@capacitor/core"
   }
 }
+
