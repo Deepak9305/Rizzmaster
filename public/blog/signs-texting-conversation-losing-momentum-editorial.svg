@@ -1,0 +1,17 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">A texting conversation losing momentum</title>
+  <desc id="desc">A conversation signal line moves from shared energy to a quiet pause.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="900" gradientUnits="userSpaceOnUse"><stop stop-color="#081A2B"/><stop offset="0.55" stop-color="#17364A"/><stop offset="1" stop-color="#17152D"/></linearGradient>
+    <linearGradient id="line" x1="230" y1="500" x2="1350" y2="500" gradientUnits="userSpaceOnUse"><stop stop-color="#67E8F9"/><stop offset="0.55" stop-color="#34D399"/><stop offset="1" stop-color="#A78BFA"/></linearGradient>
+    <filter id="glow" x="-50%" y="-100%" width="200%" height="300%"><feGaussianBlur stdDeviation="24"/></filter>
+  </defs>
+  <rect width="1600" height="900" rx="32" fill="url(#bg)"/><circle cx="760" cy="470" r="360" fill="#22D3EE" fill-opacity="0.13" filter="url(#glow)"/>
+  <text x="200" y="210" fill="#A5F3FC" font-family="Arial,sans-serif" font-size="20" font-weight="900" letter-spacing="5">SHARED EFFORT</text><text x="1190" y="210" fill="#C4B5FD" font-family="Arial,sans-serif" font-size="20" font-weight="900" letter-spacing="5">QUIET PATTERN</text>
+  <path d="M220 500C330 300 420 680 545 470C660 276 740 670 860 450C950 286 1050 640 1140 500C1210 390 1280 500 1390 500" stroke="url(#line)" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="220" cy="500" r="24" fill="#67E8F9"/><circle cx="545" cy="470" r="24" fill="#34D399"/><circle cx="860" cy="450" r="24" fill="#FDE68A"/><circle cx="1140" cy="500" r="24" fill="#A78BFA"/><circle cx="1390" cy="500" r="24" fill="#64748B" stroke="#CBD5E1" stroke-opacity="0.5" stroke-width="4"/>
+  <g transform="translate(210 610)"><rect width="260" height="100" rx="25" fill="#0C2A3A" stroke="#67E8F9" stroke-opacity="0.6" stroke-width="3"/><rect x="38" y="34" width="120" height="10" rx="5" fill="#BAE6FD" fill-opacity="0.7"/><rect x="38" y="59" width="75" height="10" rx="5" fill="#BAE6FD" fill-opacity="0.3"/></g>
+  <g transform="translate(1125 610)"><rect width="260" height="100" rx="25" fill="#181A32" stroke="#A78BFA" stroke-opacity="0.45" stroke-width="3"/><circle cx="68" cy="50" r="18" fill="#64748B"/><rect x="108" y="45" width="92" height="10" rx="5" fill="#CBD5E1" fill-opacity="0.2"/></g>
+  <text x="800" y="810" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.5" font-family="Arial,sans-serif" font-size="18" letter-spacing="6">NOTICE THE PATTERN  â€¢  MAKE ONE CLEAR MOVE  â€¢  READ THE RESPONSE</text>
+</svg>
+

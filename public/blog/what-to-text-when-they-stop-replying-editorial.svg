@@ -1,0 +1,28 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">A paused text conversation</title>
+  <desc id="desc">Two message bubbles sit on opposite sides of a pause symbol, illustrating a calm follow-up after silence.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="900" gradientUnits="userSpaceOnUse"><stop stop-color="#09071A"/><stop offset="0.5" stop-color="#251033"/><stop offset="1" stop-color="#0B101D"/></linearGradient>
+    <linearGradient id="pink" x1="210" y1="190" x2="650" y2="470" gradientUnits="userSpaceOnUse"><stop stop-color="#F472B6"/><stop offset="1" stop-color="#A855F7"/></linearGradient>
+    <linearGradient id="amber" x1="1020" y1="470" x2="1380" y2="700" gradientUnits="userSpaceOnUse"><stop stop-color="#FDE68A"/><stop offset="1" stop-color="#F97316"/></linearGradient>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="28"/></filter>
+  </defs>
+  <rect width="1600" height="900" rx="32" fill="url(#bg)"/>
+  <circle cx="810" cy="440" r="240" fill="#EC4899" fill-opacity="0.12" filter="url(#glow)"/>
+  <path d="M80 690C300 540 480 560 650 690" stroke="#F472B6" stroke-opacity="0.3" stroke-width="5"/>
+  <path d="M960 220C1130 110 1360 140 1530 280" stroke="#F59E0B" stroke-opacity="0.23" stroke-width="4"/>
+  <g transform="translate(170 230)">
+    <path d="M0 40C0 18 18 0 40 0H430C452 0 470 18 470 40V220C470 242 452 260 430 260H120L38 320V260H40C18 260 0 242 0 220V40Z" fill="url(#pink)" fill-opacity="0.9"/>
+    <circle cx="118" cy="128" r="12" fill="#190D2D"/><circle cx="174" cy="128" r="12" fill="#190D2D"/><circle cx="230" cy="128" r="12" fill="#190D2D"/>
+    <text x="30" y="365" fill="#F9A8D4" font-family="Arial,sans-serif" font-size="18" font-weight="700" letter-spacing="4">NO REPLY YET</text>
+  </g>
+  <g transform="translate(1010 430)">
+    <path d="M0 40C0 18 18 0 40 0H420C442 0 460 18 460 40V185C460 207 442 225 420 225H120L38 285V225H40C18 225 0 207 0 185V40Z" fill="url(#amber)" fill-opacity="0.92"/>
+    <rect x="40" y="70" width="180" height="12" rx="6" fill="#3A1621" fill-opacity="0.6"/><rect x="40" y="105" width="275" height="12" rx="6" fill="#3A1621" fill-opacity="0.35"/>
+    <text x="40" y="335" fill="#FCD34D" font-family="Arial,sans-serif" font-size="18" font-weight="700" letter-spacing="4">ONE CALM FOLLOW-UP</text>
+  </g>
+  <circle cx="820" cy="430" r="96" fill="#0B0917" stroke="#F9A8D4" stroke-width="5"/>
+  <rect x="789" y="390" width="18" height="82" rx="9" fill="#F9A8D4"/><rect x="833" y="390" width="18" height="82" rx="9" fill="#F9A8D4"/>
+  <text x="800" y="780" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.5" font-family="Arial,sans-serif" font-size="19" letter-spacing="6">PAUSE  â€¢  CHECK IN  â€¢  LET THEM CHOOSE</text>
+</svg>
+

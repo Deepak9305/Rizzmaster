@@ -1,0 +1,17 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">A specific dating app opener</title>
+  <desc id="desc">Layered dating profile cards lead to a colorful message prompt instead of a generic hello.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="900" gradientUnits="userSpaceOnUse"><stop stop-color="#130A2A"/><stop offset="0.5" stop-color="#25205A"/><stop offset="1" stop-color="#101827"/></linearGradient>
+    <linearGradient id="card" x1="320" y1="170" x2="660" y2="690" gradientUnits="userSpaceOnUse"><stop stop-color="#F9A8D4"/><stop offset="1" stop-color="#C084FC"/></linearGradient>
+    <linearGradient id="prompt" x1="940" y1="370" x2="1330" y2="650" gradientUnits="userSpaceOnUse"><stop stop-color="#FB7185"/><stop offset="1" stop-color="#FBBF24"/></linearGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="24"/></filter>
+  </defs>
+  <rect width="1600" height="900" rx="32" fill="url(#bg)"/>
+  <circle cx="470" cy="425" r="300" fill="#A855F7" fill-opacity="0.2" filter="url(#glow)"/>
+  <g transform="translate(270 132) rotate(-10 205 340)"><rect width="410" height="680" rx="34" fill="#17132E" stroke="#F9A8D4" stroke-opacity="0.3" stroke-width="4"/><rect x="25" y="25" width="360" height="250" rx="24" fill="#6D28D9" fill-opacity="0.45"/><circle cx="205" cy="125" r="65" fill="#F9A8D4" fill-opacity="0.35"/><path d="M125 215C155 176 255 176 285 215" stroke="#F9A8D4" stroke-opacity="0.7" stroke-width="12" stroke-linecap="round"/><rect x="44" y="330" width="240" height="17" rx="8" fill="#FFFFFF" fill-opacity="0.78"/><rect x="44" y="370" width="300" height="12" rx="6" fill="#FFFFFF" fill-opacity="0.22"/><rect x="44" y="410" width="220" height="12" rx="6" fill="#FFFFFF" fill-opacity="0.16"/><circle cx="62" cy="516" r="17" fill="#FBBF24"/><rect x="96" y="505" width="110" height="18" rx="9" fill="#FBBF24" fill-opacity="0.65"/></g>
+  <g transform="translate(830 285)"><path d="M0 48C0 22 22 0 48 0H420C446 0 468 22 468 48V250C468 276 446 298 420 298H130L45 360V298H48C22 298 0 276 0 250V48Z" fill="url(#prompt)"/><text x="45" y="84" fill="#35121C" font-family="Arial,sans-serif" font-size="18" font-weight="800" letter-spacing="4">NOT JUST HEY</text><text x="45" y="145" fill="#35121C" font-family="Arial,sans-serif" font-size="27" font-weight="800">Was the hike worth</text><text x="45" y="185" fill="#35121C" font-family="Arial,sans-serif" font-size="27" font-weight="800">the snack break?</text><path d="M45 238H300" stroke="#35121C" stroke-opacity="0.35" stroke-width="7" stroke-linecap="round"/></g>
+  <path d="M690 530L800 490" stroke="#FBBF24" stroke-width="7" stroke-linecap="round"/><path d="M773 468L807 488L781 520" stroke="#FBBF24" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="800" y="770" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.5" font-family="Arial,sans-serif" font-size="18" letter-spacing="6">NOTICE A DETAIL  â€¢  ASK WITH A POINT OF VIEW</text>
+</svg>
+

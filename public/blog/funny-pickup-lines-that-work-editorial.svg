@@ -1,0 +1,16 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">A funny pickup line becoming a conversation</title>
+  <desc id="desc">Colorful conversation cards orbit a spotlight, showing that a playful line needs a real follow-up.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="900" gradientUnits="userSpaceOnUse"><stop stop-color="#0D1222"/><stop offset="0.5" stop-color="#202A37"/><stop offset="1" stop-color="#141019"/></linearGradient>
+    <radialGradient id="spot" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(800 420) rotate(90) scale(390 510)"><stop stop-color="#FDE68A" stop-opacity="0.42"/><stop offset="1" stop-color="#FDE68A" stop-opacity="0"/></radialGradient>
+    <linearGradient id="ticket" x1="560" y1="300" x2="1040" y2="610" gradientUnits="userSpaceOnUse"><stop stop-color="#FB7185"/><stop offset="1" stop-color="#A3E635"/></linearGradient>
+  </defs>
+  <rect width="1600" height="900" rx="32" fill="url(#bg)"/><ellipse cx="800" cy="440" rx="540" ry="400" fill="url(#spot)"/>
+  <path d="M250 700L800 130L1350 700" stroke="#FDE68A" stroke-opacity="0.14" stroke-width="3"/>
+  <g transform="translate(160 230) rotate(-8 210 110)"><rect width="420" height="220" rx="28" fill="#202B31" stroke="#A3E635" stroke-width="4"/><text x="40" y="72" fill="#D9F99D" font-family="Arial,sans-serif" font-size="18" font-weight="800" letter-spacing="3">THE LINE</text><text x="40" y="130" fill="#FFFFFF" font-family="Arial,sans-serif" font-size="27" font-weight="800">Are you always</text><text x="40" y="168" fill="#FFFFFF" font-family="Arial,sans-serif" font-size="27" font-weight="800">this easy to match?</text></g>
+  <g transform="translate(600 270)"><path d="M200 0L252 92L360 110L282 185L298 295L200 245L102 295L118 185L40 110L148 92L200 0Z" fill="url(#ticket)"/><text x="200" y="145" text-anchor="middle" fill="#21131C" font-family="Arial,sans-serif" font-size="18" font-weight="900" letter-spacing="3">PLAYFUL</text><text x="200" y="185" text-anchor="middle" fill="#21131C" font-family="Arial,sans-serif" font-size="18" font-weight="900" letter-spacing="3">OPENING</text><circle cx="200" cy="215" r="8" fill="#21131C"/></g>
+  <g transform="translate(1080 475) rotate(8 190 100)"><rect width="380" height="200" rx="28" fill="#2A1C2A" stroke="#FB7185" stroke-width="4"/><text x="38" y="72" fill="#FDA4AF" font-family="Arial,sans-serif" font-size="18" font-weight="800" letter-spacing="3">THE FOLLOW-UP</text><text x="38" y="130" fill="#FFFFFF" font-family="Arial,sans-serif" font-size="25" font-weight="800">What should we</text><text x="38" y="166" fill="#FFFFFF" font-family="Arial,sans-serif" font-size="25" font-weight="800">debate next?</text></g>
+  <text x="800" y="790" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.5" font-family="Arial,sans-serif" font-size="18" letter-spacing="6">MAKE THEM SMILE  â†’  GIVE THEM SOMEWHERE TO GO</text>
+</svg>
+

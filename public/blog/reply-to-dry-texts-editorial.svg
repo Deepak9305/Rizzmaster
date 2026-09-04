@@ -1,0 +1,29 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Turning a dry text into a conversation</title>
+  <desc id="desc">A low-energy message meter rises toward a colorful conversation hook.</desc>
+  <defs>
+    <linearGradient id="bg" x1="80" y1="40" x2="1510" y2="870" gradientUnits="userSpaceOnUse"><stop stop-color="#07131E"/><stop offset="0.5" stop-color="#102B37"/><stop offset="1" stop-color="#10101D"/></linearGradient>
+    <linearGradient id="bar" x1="300" y1="590" x2="1280" y2="590" gradientUnits="userSpaceOnUse"><stop stop-color="#38BDF8"/><stop offset="0.52" stop-color="#2DD4BF"/><stop offset="1" stop-color="#FBBF24"/></linearGradient>
+    <filter id="glow" x="-50%" y="-100%" width="200%" height="300%"><feGaussianBlur stdDeviation="26"/></filter>
+  </defs>
+  <rect width="1600" height="900" rx="32" fill="url(#bg)"/>
+  <circle cx="1190" cy="270" r="220" fill="#22D3EE" fill-opacity="0.12" filter="url(#glow)"/>
+  <path d="M130 700C330 520 470 590 640 675C820 765 1090 760 1500 420" stroke="#2DD4BF" stroke-opacity="0.22" stroke-width="4"/>
+  <g transform="translate(170 190)">
+    <rect width="420" height="190" rx="34" fill="#0B111C" stroke="#38BDF8" stroke-opacity="0.58" stroke-width="3"/>
+    <circle cx="62" cy="60" r="20" fill="#38BDF8" fill-opacity="0.2" stroke="#38BDF8" stroke-width="3"/>
+    <rect x="105" y="48" width="170" height="12" rx="6" fill="#BAE6FD" fill-opacity="0.8"/><rect x="105" y="78" width="95" height="12" rx="6" fill="#BAE6FD" fill-opacity="0.3"/>
+    <text x="42" y="144" fill="#FFFFFF" font-family="Arial,sans-serif" font-size="34" font-weight="800">k</text><text x="89" y="144" fill="#FFFFFF" fill-opacity="0.38" font-family="Arial,sans-serif" font-size="25">low signal</text>
+  </g>
+  <text x="800" y="500" text-anchor="middle" fill="#A5F3FC" font-family="Arial,sans-serif" font-size="20" font-weight="700" letter-spacing="5">ADD ONE REAL HOOK</text>
+  <rect x="230" y="560" width="1140" height="34" rx="17" fill="#07131E" stroke="#FFFFFF" stroke-opacity="0.14" stroke-width="3"/>
+  <rect x="230" y="560" width="760" height="34" rx="17" fill="url(#bar)"/>
+  <circle cx="990" cy="577" r="20" fill="#FBBF24" stroke="#FEF3C7" stroke-width="4"/>
+  <g transform="translate(1080 240)">
+    <path d="M0 44C0 20 20 0 44 0H350C374 0 394 20 394 44V210C394 234 374 254 350 254H112L35 310V254H44C20 254 0 234 0 210V44Z" fill="#102E35" stroke="#2DD4BF" stroke-width="4"/>
+    <text x="38" y="92" fill="#99F6E4" font-family="Arial,sans-serif" font-size="18" font-weight="800" letter-spacing="3">TRY THIS</text>
+    <text x="38" y="145" fill="#FFFFFF" font-family="Arial,sans-serif" font-size="25" font-weight="700">Best part of your</text><text x="38" y="182" fill="#FFFFFF" font-family="Arial,sans-serif" font-size="25" font-weight="700">day so far?</text>
+  </g>
+  <text x="800" y="790" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.5" font-family="Arial,sans-serif" font-size="18" letter-spacing="6">SHORT REPLY  â†’  SPECIFIC QUESTION  â†’  ROOM TO ANSWER</text>
+</svg>
+

@@ -1,0 +1,15 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">A warm message after a first date</title>
+  <desc id="desc">A top-down cafe table, a shared receipt, and a checked message represent a clear post-date follow-up.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="900" gradientUnits="userSpaceOnUse"><stop stop-color="#24130F"/><stop offset="0.5" stop-color="#4A241E"/><stop offset="1" stop-color="#14252A"/></linearGradient>
+    <radialGradient id="table" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(800 450) rotate(90) scale(420 650)"><stop stop-color="#F59E0B" stop-opacity="0.38"/><stop offset="1" stop-color="#F59E0B" stop-opacity="0"/></radialGradient>
+    <linearGradient id="note" x1="820" y1="200" x2="1120" y2="650" gradientUnits="userSpaceOnUse"><stop stop-color="#FEF3C7"/><stop offset="1" stop-color="#FDE68A"/></linearGradient>
+  </defs>
+  <rect width="1600" height="900" rx="32" fill="url(#bg)"/><ellipse cx="800" cy="450" rx="620" ry="410" fill="url(#table)"/><path d="M0 210C300 330 420 80 720 215C1000 340 1210 60 1600 210" stroke="#FB923C" stroke-opacity="0.2" stroke-width="5"/>
+  <g transform="translate(260 190)"><circle cx="170" cy="205" r="125" fill="#0F2B2C" stroke="#34D399" stroke-opacity="0.6" stroke-width="5"/><circle cx="170" cy="205" r="72" fill="#FDE68A" fill-opacity="0.5"/><path d="M170 133V205L218 235" stroke="#78350F" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/><text x="0" y="390" fill="#FDE68A" font-family="Arial,sans-serif" font-size="18" font-weight="900" letter-spacing="3">MEMORY STILL FRESH</text></g>
+  <g transform="translate(760 145) rotate(-5 240 280)"><rect width="480" height="560" rx="28" fill="url(#note)"/><rect x="46" y="55" width="180" height="15" rx="7" fill="#78350F" fill-opacity="0.35"/><text x="46" y="145" fill="#431407" font-family="Arial,sans-serif" font-size="29" font-weight="900">I had a great</text><text x="46" y="188" fill="#431407" font-family="Arial,sans-serif" font-size="29" font-weight="900">time tonight.</text><rect x="46" y="244" width="310" height="12" rx="6" fill="#78350F" fill-opacity="0.22"/><rect x="46" y="278" width="260" height="12" rx="6" fill="#78350F" fill-opacity="0.14"/><rect x="46" y="370" width="355" height="74" rx="20" fill="#F59E0B" fill-opacity="0.3" stroke="#B45309" stroke-width="3"/><path d="M79 405L102 428L155 373" stroke="#166534" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><text x="184" y="419" fill="#431407" font-family="Arial,sans-serif" font-size="18" font-weight="900">SEND IT WARM</text></g>
+  <circle cx="1340" cy="220" r="28" fill="#FB7185"/><circle cx="1400" cy="270" r="12" fill="#FDE68A"/><circle cx="1290" cy="700" r="16" fill="#34D399"/>
+  <text x="800" y="830" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.5" font-family="Arial,sans-serif" font-size="18" letter-spacing="6">SPECIFIC MEMORY  â€¢  HONEST FEELING  â€¢  CLEAR NEXT STEP</text>
+</svg>
+

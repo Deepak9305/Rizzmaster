@@ -1,0 +1,17 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">A playful haha reply</title>
+  <desc id="desc">A comic-style laugh bubble turns into a new conversation prompt.</desc>
+  <defs>
+    <linearGradient id="bg" x1="100" y1="100" x2="1500" y2="820" gradientUnits="userSpaceOnUse"><stop stop-color="#2A0A2C"/><stop offset="0.5" stop-color="#5E1C45"/><stop offset="1" stop-color="#160D28"/></linearGradient>
+    <linearGradient id="burst" x1="500" y1="160" x2="1080" y2="670" gradientUnits="userSpaceOnUse"><stop stop-color="#FDE68A"/><stop offset="0.5" stop-color="#FB7185"/><stop offset="1" stop-color="#C084FC"/></linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="26"/></filter>
+  </defs>
+  <rect width="1600" height="900" rx="32" fill="url(#bg)"/>
+  <circle cx="800" cy="420" r="280" fill="#FB7185" fill-opacity="0.2" filter="url(#glow)"/>
+  <g stroke="#FDE68A" stroke-width="8" stroke-linecap="round" opacity="0.8"><path d="M800 100V180"/><path d="M800 660V740"/><path d="M460 420H540"/><path d="M1060 420H1140"/><path d="M560 180L615 235"/><path d="M985 605L1040 660"/><path d="M1040 180L985 235"/><path d="M615 605L560 660"/></g>
+  <path d="M520 285C520 222 572 170 635 170H965C1028 170 1080 222 1080 285V510C1080 573 1028 625 965 625H700L585 710V625H635C572 625 520 573 520 510V285Z" fill="url(#burst)"/>
+  <text x="800" y="440" text-anchor="middle" fill="#351020" font-family="Arial,sans-serif" font-size="118" font-weight="900" letter-spacing="-5">HAHA</text>
+  <path d="M1160 300C1160 272 1182 250 1210 250H1390C1418 250 1440 272 1440 300V380C1440 408 1418 430 1390 430H1260L1195 480V430H1210C1182 430 1160 408 1160 380V300Z" fill="#211233" stroke="#C084FC" stroke-width="4"/><text x="1200" y="350" fill="#E9D5FF" font-family="Arial,sans-serif" font-size="20" font-weight="800">YOUR TURN</text>
+  <text x="800" y="800" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.54" font-family="Arial,sans-serif" font-size="18" letter-spacing="6">MATCH THE ENERGY  â€¢  PIVOT  â€¢  KEEP IT EASY</text>
+</svg>
+

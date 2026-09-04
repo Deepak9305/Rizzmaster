@@ -45,8 +45,8 @@ export const BLOG_POSTS: BlogPost[] = [
       'double texting advice',
       'texting anxiety after no reply'
     ],
-    image: '/blog/what-to-text-when-they-stop-replying-hero.svg',
-    imageAlt: 'Editorial illustration of a paused phone conversation and a calm follow-up message',
+    image: '/blog/what-to-text-when-they-stop-replying-editorial.svg',
+    imageAlt: 'Editorial illustration of two message bubbles separated by a pause symbol',
     resources: [
       { label: 'The Gottman Institute: Notice bids for connection', url: 'https://www.gottman.com/blog/want-to-improve-your-relationship-start-paying-more-attention-to-bids/' },
       { label: 'The Gottman Institute: Improve communication', url: 'https://www.gottman.com/improve-communication-relationship/' },
@@ -192,6 +192,8 @@ export const BLOG_POSTS: BlogPost[] = [
     readingTime: '7 min read',
     category: 'Texting advice',
     keywords: ['how to reply to dry texts', 'dry texting advice', 'what to text back', 'how to keep a conversation going'],
+    image: '/blog/reply-to-dry-texts-editorial.svg',
+    imageAlt: 'Editorial illustration of a low-energy text becoming a specific conversation hook',
     sections: [
       {
         heading: 'What a dry text actually means',
@@ -274,6 +276,8 @@ export const BLOG_POSTS: BlogPost[] = [
     readingTime: '7 min read',
     category: 'Dating apps',
     keywords: ['best Tinder openers', 'Tinder openers for guys', 'what to say on Tinder', 'dating app conversation starters'],
+    image: '/blog/best-tinder-openers-for-guys-editorial.svg',
+    imageAlt: 'Editorial illustration of layered dating profile cards leading to a specific opener',
     sections: [
       {
         heading: 'Start with something you can actually see',
@@ -356,6 +360,8 @@ export const BLOG_POSTS: BlogPost[] = [
     readingTime: '7 min read',
     category: 'Texting advice',
     keywords: ['how to reply when she says haha', 'what to say after haha', 'texting after a joke', 'playful text replies'],
+    image: '/blog/reply-when-she-says-haha-editorial.svg',
+    imageAlt: 'Editorial comic illustration of a haha reply turning into a playful prompt',
     sections: [
       {
         heading: 'Read the energy around the haha',
@@ -433,6 +439,8 @@ export const BLOG_POSTS: BlogPost[] = [
     readingTime: '7 min read',
     category: 'Openers',
     keywords: ['funny pickup lines', 'pickup lines that work', 'funny dating app openers', 'conversation starters'],
+    image: '/blog/funny-pickup-lines-that-work-editorial.svg',
+    imageAlt: 'Editorial illustration of a playful pickup line becoming a real follow-up',
     sections: [
       {
         heading: 'Why playful lines work better than perfect lines',
@@ -510,9 +518,11 @@ export const BLOG_POSTS: BlogPost[] = [
     readingTime: '8 min read',
     category: 'Dating profiles',
     keywords: ['dating app bio ideas for guys', 'best dating profile bio', 'funny dating bio ideas', 'how to write a dating profile'],
+    image: '/blog/best-dating-app-bio-ideas-for-guys-editorial.svg',
+    imageAlt: 'Editorial illustration of a dating profile built from specific details and an easy opening',
     sections: [
       {
-        heading: 'Give people an opening instead of a résumé',
+        heading: 'Give people an opening instead of a rÃ©sumÃ©',
         paragraphs: [
           '"I like food, travel, and having fun" is true for almost everyone, so it gives a match nowhere to begin. A dating bio works better when it includes one vivid detail: the dish you cook best, the city you would revisit tomorrow, the hobby you are oddly competitive about, or the small routine that makes your weekend feel like yours. Specific details create natural questions and help the right person recognize your personality.',
           'You do not need to list every interest. Choose two or three details that have texture and leave a little room for curiosity. "I am learning to make restaurant-level ramen and still lose at every board game" is more useful than a list of broad labels. The reader can ask about the ramen, challenge the game claim, or share their own obsession. A strong bio makes the next message obvious.'
@@ -587,6 +597,8 @@ export const BLOG_POSTS: BlogPost[] = [
     readingTime: '7 min read',
     category: 'Dating advice',
     keywords: ['what to text after a first date', 'first date follow up text', 'text after a good date', 'how to ask for a second date'],
+    image: '/blog/what-to-text-after-a-first-date-editorial.svg',
+    imageAlt: 'Editorial illustration of a warm post-date message on a cafe table note',
     sections: [
       {
         heading: 'Send the simple version while the memory is fresh',
@@ -675,6 +687,8 @@ export const BLOG_POSTS: BlogPost[] = [
       'texting conversation feels one sided',
       'when to stop texting someone'
     ],
+    image: '/blog/signs-texting-conversation-losing-momentum-editorial.svg',
+    imageAlt: 'Editorial illustration of a conversation signal moving from shared effort to a quiet pattern',
     resources: [
       { label: 'The Gottman Institute: Improve relationship communication', url: 'https://www.gottman.com/improve-communication-relationship/' },
       { label: 'The Gottman Institute: Pay attention to bids for connection', url: 'https://www.gottman.com/blog/want-to-improve-your-relationship-start-paying-more-attention-to-bids/' },
@@ -814,8 +828,8 @@ export const BLOG_POSTS: BlogPost[] = [
       'what to say when asking someone out',
       'asking someone out over text examples'
     ],
-    image: '/blog/how-to-ask-someone-out-over-text-hero.svg',
-    imageAlt: 'Editorial illustration of a phone with a clear date invitation and a coffee plan',
+    image: '/blog/how-to-ask-someone-out-over-text-editorial.svg',
+    imageAlt: 'Editorial illustration of a calendar and a clear low-pressure date invitation',
     resources: [
       { label: 'The Gottman Institute: Improve relationship communication', url: 'https://www.gottman.com/improve-communication-relationship/' },
       { label: 'The Gottman Institute: Ask for what you really want', url: 'https://www.gottman.com/blog/complain-not-getting-didnt-ask-for/' },
@@ -1012,8 +1026,8 @@ export const BLOG_POSTS: BlogPost[] = [
       'how to know when to ask someone out',
       'texting before first date'
     ],
-    image: '/blog/how-long-should-you-text-before-asking-someone-out-hero.svg',
-    imageAlt: 'Editorial illustration of a phone conversation turning into a simple first-date plan',
+    image: '/blog/how-long-should-you-text-before-asking-someone-out-editorial.svg',
+    imageAlt: 'Editorial illustration of a clock and shared-effort timeline before asking for a date',
     resources: [
       { label: 'The Gottman Institute: Improve relationship communication', url: 'https://www.gottman.com/improve-communication-relationship/' },
       { label: 'The Gottman Institute: Ask for what you really want', url: 'https://www.gottman.com/blog/complain-not-getting-didnt-ask-for/' },
@@ -1083,7 +1097,7 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         heading: 'How to ask after a week or more of texting',
         paragraphs: [
-          'If you have been texting for a week or more and the connection feels good, it is usually better to suggest meeting than to keep adding imaginary milestones. Long conversations can create false confidence: you may know each other’s opinions but not yet know how the interaction feels face to face. A date gives both people better information than another hundred messages.',
+          'If you have been texting for a week or more and the connection feels good, it is usually better to suggest meeting than to keep adding imaginary milestones. Long conversations can create false confidence: you may know each otherâ€™s opinions but not yet know how the interaction feels face to face. A date gives both people better information than another hundred messages.',
           'You can acknowledge the conversation without making the invitation heavy: "We have talked about everything from terrible movies to weekend plans. I would like to meet you properly. Are you free Thursday or Saturday?" Give them a real option and allow them to suggest a different time. If they repeatedly enjoy the chat but avoid any concrete plan, pay attention to that pattern.'
         ],
         bullets: [
@@ -1157,7 +1171,7 @@ export const BLOG_POSTS: BlogPost[] = [
         heading: 'Keep the first date safe and low pressure',
         paragraphs: [
           'A first date should make it easy for both people to choose, participate, and leave comfortably. A public cafe, a daytime walk in a busy area, or a casual event is usually more suitable than an expensive reservation, a private home, or a plan that requires a long commitment. The best first date is not the most impressive one; it is the one that gives you useful information without unnecessary pressure.',
-          'Respect the other person’s boundaries and your own. Agreeing to meet is not agreement to physical intimacy, exclusivity, or continued contact. Healthy communication includes the freedom to change a plan or say no. The loveisrespect dating basics guide in the Further Reading section is a helpful reference for boundaries and respectful dating.'
+          'Respect the other personâ€™s boundaries and your own. Agreeing to meet is not agreement to physical intimacy, exclusivity, or continued contact. Healthy communication includes the freedom to change a plan or say no. The loveisrespect dating basics guide in the Further Reading section is a helpful reference for boundaries and respectful dating.'
         ],
         bullets: [
           'Choose a public place and make your own travel arrangements.',
@@ -1386,3 +1400,4 @@ export const BLOG_POSTS: BlogPost[] = [
 ];
 
 export const getBlogPost = (slug: string) => BLOG_POSTS.find((post) => post.slug === slug);
+

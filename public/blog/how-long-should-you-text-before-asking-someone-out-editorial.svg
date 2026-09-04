@@ -1,0 +1,16 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Timing a first date invitation</title>
+  <desc id="desc">A large clock and a shared-message timeline show that timing follows rapport rather than a rigid rule.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="900" gradientUnits="userSpaceOnUse"><stop stop-color="#0B1424"/><stop offset="0.5" stop-color="#202E46"/><stop offset="1" stop-color="#21192B"/></linearGradient>
+    <linearGradient id="clock" x1="260" y1="170" x2="760" y2="680" gradientUnits="userSpaceOnUse"><stop stop-color="#BAE6FD"/><stop offset="0.5" stop-color="#93C5FD"/><stop offset="1" stop-color="#FDE68A"/></linearGradient>
+    <linearGradient id="route" x1="850" y1="520" x2="1360" y2="520" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#FBBF24"/></linearGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="26"/></filter>
+  </defs>
+  <rect width="1600" height="900" rx="32" fill="url(#bg)"/><circle cx="510" cy="420" r="300" fill="#60A5FA" fill-opacity="0.15" filter="url(#glow)"/>
+  <g transform="translate(240 130)"><circle cx="300" cy="300" r="250" fill="#101827" stroke="url(#clock)" stroke-width="8"/><circle cx="300" cy="300" r="18" fill="#FDE68A"/><path d="M300 300V155M300 300L412 370" stroke="#FDE68A" stroke-width="15" stroke-linecap="round"/><path d="M300 75V105M525 300H495M300 525V495M75 300H105" stroke="#BAE6FD" stroke-width="10" stroke-linecap="round"/><text x="300" y="625" text-anchor="middle" fill="#BFDBFE" font-family="Arial,sans-serif" font-size="18" font-weight="900" letter-spacing="4">NO MAGIC NUMBER</text></g>
+  <text x="920" y="220" fill="#FDE68A" font-family="Arial,sans-serif" font-size="20" font-weight="900" letter-spacing="5">WATCH THE EXCHANGE</text><path d="M850 490H1370" stroke="url(#route)" stroke-width="12" stroke-linecap="round"/><circle cx="900" cy="490" r="32" fill="#60A5FA"/><circle cx="1080" cy="490" r="32" fill="#34D399"/><circle cx="1260" cy="490" r="32" fill="#FBBF24"/><path d="M900 390V455M1080 390V455M1260 390V455" stroke="#FFFFFF" stroke-opacity="0.4" stroke-width="3"/><text x="900" y="355" text-anchor="middle" fill="#BFDBFE" font-family="Arial,sans-serif" font-size="18" font-weight="800">curiosity</text><text x="1080" y="355" text-anchor="middle" fill="#A7F3D0" font-family="Arial,sans-serif" font-size="18" font-weight="800">shared effort</text><text x="1260" y="355" text-anchor="middle" fill="#FEF3C7" font-family="Arial,sans-serif" font-size="18" font-weight="800">make a plan</text>
+  <g transform="translate(880 600)"><rect width="420" height="105" rx="26" fill="#182238" stroke="#FBBF24" stroke-opacity="0.7" stroke-width="3"/><rect x="34" y="34" width="215" height="11" rx="5" fill="#FFFFFF" fill-opacity="0.72"/><rect x="34" y="61" width="290" height="11" rx="5" fill="#FFFFFF" fill-opacity="0.23"/><path d="M355 40L375 60L402 28" stroke="#FBBF24" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <text x="800" y="820" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.5" font-family="Arial,sans-serif" font-size="18" letter-spacing="6">RAPPORT FIRST  â€¢  ASK WHEN THE BRIDGE IS THERE</text>
+</svg>
+
