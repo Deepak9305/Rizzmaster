@@ -1186,6 +1186,202 @@ export const BLOG_POSTS: BlogPost[] = [
         ]
       }
     ]
+  },
+  {
+    slug: 'what-to-text-after-getting-someones-number',
+    title: "What to Text After Getting Someone's Number: First Message Examples",
+    description: 'Wondering what to text after getting someone\'s number? Use these natural first-message examples, timing tips, and follow-ups to start the conversation without forcing it.',
+    excerpt: 'Send a short message that identifies you, references how you met, and gives the other person an easy reason to reply. The best first text feels like a continuation, not an audition.',
+    date: '2026-09-04',
+    updatedAt: '2026-09-04',
+    readingTime: '9 min read',
+    category: 'Texting advice',
+    keywords: [
+      'what to text after getting someone\'s number',
+      'first text after getting her number',
+      'what to say after getting someone\'s number',
+      'how soon to text after getting a number',
+      'first message after meeting someone',
+      'what to text after getting a number from a girl',
+      'first text after meeting someone in person',
+      'how to start texting after getting a number',
+      'text after getting a number from a dating app',
+      'best first text examples'
+    ],
+    image: '/blog/what-to-text-after-getting-someones-number-hero.svg',
+    imageAlt: 'Editorial illustration of a new contact turning into a relaxed first text conversation',
+    resources: [
+      { label: 'The Gottman Institute: Improve relationship communication', url: 'https://www.gottman.com/improve-communication-relationship/' },
+      { label: 'loveisrespect: Dating basics and healthy boundaries', url: 'https://www.loveisrespect.org/pdf/Dating_Basics.pdf' },
+      { label: 'loveisrespect: What are my boundaries?', url: 'https://www.loveisrespect.org/resources/what-are-my-boundaries/' }
+    ],
+    sections: [
+      {
+        heading: 'The first text should continue the moment',
+        paragraphs: [
+          'Getting a number can feel like the hard part, but the first message often creates more anxiety. You may wonder whether to text immediately, wait until tomorrow, send a joke, or write something impressive. That pressure makes a simple introduction feel like a test. It does not need to be one.',
+          'The best first text after getting someone\'s number is usually short, recognisable, and connected to the moment that gave you a reason to exchange numbers. Remind them who you are, mention something you discussed, and give them an easy opening. Your aim is not to prove that you are fascinating in one message. It is to make continuing the conversation feel natural.'
+        ],
+        bullets: [
+          'Identify yourself if there is any chance they do not have your contact saved.',
+          'Reference a real detail instead of sending a generic hello.',
+          'Leave the message easy to answer without demanding instant attention.'
+        ]
+      },
+      {
+        heading: 'How soon should you text after getting a number?',
+        paragraphs: [
+          'There is no useful three-day rule. If you enjoyed meeting, texting later that day or the next day is usually reasonable. The best timing depends on how you met and what you said when you exchanged numbers. A message a few hours later can keep a good moment alive; a next-day text can feel natural when you met during a busy event or late evening.',
+          'Waiting several days to appear less interested often creates the exact uncertainty you are trying to avoid. Text when you have something genuine to say, not only when a timer tells you that you are allowed to. If you met through an app and have already been chatting, there is even less reason to invent a long pause. The conversation can simply move to the new channel.'
+        ],
+        bullets: [
+          'Same day works when you have a clear callback from meeting.',
+          'The next day works when you want to keep the message relaxed.',
+          'Do not delay only to perform a dating rule or create suspense.'
+        ]
+      },
+      {
+        heading: 'Use the three-part first-text formula',
+        paragraphs: [
+          'A reliable first message has three parts: identification, connection, and an opening. Identification tells them who is texting. Connection reminds them of the shared moment. The opening can be a question, a small opinion, or a simple continuation of the topic. You can fit all three parts into one or two sentences.',
+          'For example: "Hey, it is Alex from the bookstore. I am still thinking about your claim that the movie adaptation was better than the novel. What should I read next?" It works because the person knows who you are, remembers the interaction, and has a specific reason to respond. It is more inviting than "Hey, what is up?" without requiring a clever performance.'
+        ],
+        bullets: [
+          'Identification: make the contact easy to place.',
+          'Connection: use the detail that made the exchange memorable.',
+          'Opening: give them a comfortable way to add something.'
+        ]
+      },
+      {
+        heading: 'First text examples after meeting in person',
+        paragraphs: [
+          'When you met at a party, class, cafe, concert, or social event, use the environment as your natural context. You do not need to pretend that the exchange was more dramatic than it was. A simple reminder plus a small callback shows that you were paying attention and makes the message feel personal.',
+          'Choose an example that matches the energy of the interaction. If the conversation was calm and thoughtful, use a sincere question. If you both joked about something, bring back one light reference. Avoid turning an ordinary shared detail into an inside joke that the other person does not actually remember.'
+        ],
+        bullets: [
+          '"Hey, it is Maya from the cooking class. I tried your shortcut and it actually worked. What should I make next?"',
+          '"Good meeting you at the concert. I listened to the band you recommended and I understand the obsession now."',
+          '"It is Sam from the bookstore. I found the mystery novel you mentioned. Was the ending really that good?"',
+          '"I enjoyed talking with you last night. Did you ever settle the argument about the best late-night food?"'
+        ]
+      },
+      {
+        heading: 'What to text after getting a number from a dating app',
+        paragraphs: [
+          'Moving from a dating app to text does not require a completely new personality. You already have conversation history, so use it. Mention the topic you were discussing, answer a question you left unfinished, or suggest continuing a debate. The new channel should feel like a convenient next step rather than a reset to "hey, how are you?"',
+          'If you met through a dating app but have not talked much, keep the first message especially simple. Confirm that the number belongs to the right person, identify yourself, and ask one question connected to their profile or your short exchange. Avoid sending a long introduction that repeats information they already shared in the app.'
+        ],
+        bullets: [
+          '"Hey, it is Jordan from Hinge. I still need your answer: best comfort meal when the week goes badly?"',
+          '"Moving this conversation here as promised. Are you still defending that terrible movie ranking?"',
+          '"Hey, it is Priya from Bumble. You mentioned a great ramen place. Is it actually worth the queue?"'
+        ]
+      },
+      {
+        heading: 'Do not lead with only a compliment',
+        paragraphs: [
+          'A compliment can be welcome, but it is not always a conversation. "You are beautiful" may be true and still give the other person no clear way to respond. If you want to compliment them, connect it to something specific or pair it with a real opening. "You have a great laugh, and I am still curious about the story behind that travel photo" gives more direction than praise alone.',
+          'Specificity also lowers pressure. A message focused only on appearance can make the interaction feel like an evaluation. Mentioning humour, taste, curiosity, or a shared moment communicates that you noticed a person rather than only a profile or a face. Keep the compliment light enough that they do not need to return one.'
+        ],
+        bullets: [
+          'Use one sincere compliment rather than a string of exaggerated praise.',
+          'Connect the compliment to a question or shared detail.',
+          'Do not make the other person responsible for validating you back.'
+        ]
+      },
+      {
+        heading: 'Choose a question that is easy to answer',
+        paragraphs: [
+          'The first question should create room, not homework. Open-ended does not mean enormous. Ask about a recommendation, a choice, an opinion, or the next part of a story they already started. Questions with a little point of view are often easier to answer than a broad request to describe their entire life.',
+          'For example, "What do you do for fun?" is not wrong, but it asks the other person to invent a full answer. "You mentioned that you like weekend trips. What is the place you would happily visit twice?" gives the conversation a direction. If you need more ideas for hooks, the guide to how to reply to dry texts covers ways to make a message easier to build on.'
+        ],
+        bullets: [
+          'Ask about one detail instead of requesting a complete biography.',
+          'Offer your own small answer so the exchange does not feel like an interview.',
+          'Use a question that can lead naturally to a future plan.'
+        ]
+      },
+      {
+        heading: 'What to say when they reply warmly',
+        paragraphs: [
+          'A warm reply is an invitation to continue, not a signal that you need to send five more messages at once. Match the energy and build on what they gave you. If they answer your question with a story, respond to the story before jumping to another topic. If they ask you something, answer honestly and return the curiosity when it feels natural.',
+          'Keep the conversation balanced. You do not need to turn the first text into a complete interview or immediately ask for a date. Let a few exchanges develop, then suggest meeting when there is a shared topic and enough back-and-forth. Our guide on how long to text before asking someone out explains how to read that transition without relying on a rigid schedule.'
+        ],
+        bullets: [
+          'Respond to the detail they offered instead of ignoring it.',
+          'Share a little about yourself so the effort stays mutual.',
+          'Move toward a plan when the conversation gives you a natural bridge.'
+        ]
+      },
+      {
+        heading: 'What to do when the first reply is short',
+        paragraphs: [
+          'A short reply is not automatically a rejection. They may be working, tired, or unsure how to continue the topic. Read it alongside the timing and the earlier interaction. You can offer one more specific hook, answer your own question with a small detail, or leave the conversation open without forcing a response.',
+          'Do not compensate for a short reply with a longer performance. If you send three questions, two jokes, and a second follow-up, the other person has less room to choose their level of participation. One clear attempt is enough. If the pattern stays closed, our guide to signs a texting conversation is losing momentum can help you recognise when to stop carrying the chat.'
+        ],
+        bullets: [
+          'Give one low-pressure opportunity for the conversation to open up.',
+          'Do not interpret one short message without considering the context.',
+          'Step back when the other person repeatedly contributes very little.'
+        ]
+      },
+      {
+        heading: 'When should you suggest a date?',
+        paragraphs: [
+          'You do not need to keep a new contact in a texting phase for weeks. If the conversation is mutual and you have found a shared interest, suggest a simple plan. A short coffee, casual drink, public walk, or local event lets both people see whether the connection works beyond messages. The invitation can be direct without becoming heavy.',
+          'Try: "I have enjoyed talking with you. Want to continue this over coffee next week?" If you already discussed a place, use it: "You have convinced me that your favourite taco spot is worth testing. Free Thursday?" For more formulas and response options, read the full guide to how to ask someone out over text.'
+        ],
+        bullets: [
+          'Ask when the conversation feels shared and there is a real reason to meet.',
+          'Suggest a simple plan with a day or two instead of saying "sometime".',
+          'Let a yes, no, or vague answer give you useful information.'
+        ]
+      },
+      {
+        heading: 'What not to send after getting a number',
+        paragraphs: [
+          'Avoid opening with a message that creates pressure before any conversation has started. Do not send a sexual comment, a demand for a selfie, a complaint about response time, or a paragraph explaining how nervous you are. Do not use a fake emergency, jealousy bait, or a dramatic line designed to make the other person prove interest.',
+          'Also avoid treating the number as permission to contact someone across every platform. Use the channel they chose to share and respect the pace they set. If they stop responding, do not switch to another account or keep sending messages. Interest has to remain voluntary after the number is exchanged.'
+        ],
+        bullets: [
+          'Skip sexual pressure, guilt, and comments that reduce the person to appearance.',
+          'Do not send repeated messages because the first one is unread.',
+          'Respect the channel, pace, and boundaries the other person communicates.'
+        ]
+      },
+      {
+        heading: 'Keep the first conversation safe and respectful',
+        paragraphs: [
+          'A new number is a starting point, not a shortcut to personal access. Let the other person decide how much they want to share. Do not ask for a home address, private workplace details, or constant location updates. When you eventually meet, choose a public place and make it easy for both people to leave if the connection does not feel right.',
+          'Healthy communication includes the freedom to say no, change a plan, or take a break from texting. The loveisrespect dating basics and boundaries resources in Further Reading offer practical guidance for keeping new connections respectful. Confidence is not pushing past a limit; it is communicating clearly while accepting the answer.'
+        ],
+        bullets: [
+          'Share personal information gradually and only when it feels comfortable.',
+          'Choose a public first meeting and keep the plan proportionate to the connection.',
+          'Treat a boundary or a change of mind as information, not a challenge.'
+        ]
+      },
+      {
+        heading: 'A simple first-text checklist',
+        paragraphs: [
+          'Before you press send, check whether the message answers four questions: who are you, how do you know each other, why are you texting now, and how can they respond? If the answer is clear, the message is probably ready. Remove extra disclaimers and any line that exists only to protect you from the possibility of a no.',
+          'Then send it once and return to your day. You do not need to monitor the typing indicator or judge your worth by the speed of the reply. A good first text opens a door. The other person still gets to decide whether they want to walk through it.'
+        ],
+        bullets: [
+          'Recognisable: they know who is texting.',
+          'Personal: it refers to a real moment or detail.',
+          'Easy: there is a clear, low-pressure opening.',
+          'Respectful: it gives them room to respond at their own pace.'
+        ]
+      },
+      {
+        heading: 'Turn the real moment into a message that sounds like you',
+        paragraphs: [
+          'If you keep rewriting the first text, write down the facts first: where you met, what you talked about, the tone you want, and the question you genuinely want to ask. A reply generator can help you compare a direct, playful, or relaxed version, but the final message should stay close to your actual personality and the moment you shared.',
+          'Rizz Master can turn that context into a few send-ready options without making the message sound copied. Use it to get unstuck, then choose the line that feels honest enough to send and simple enough for the other person to answer. The strongest first text is not the cleverest one. It is the one that makes continuing feel easy.'
+        ]
+      }
+    ]
   }
 ];
 
