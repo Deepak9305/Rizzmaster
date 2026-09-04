@@ -465,7 +465,8 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
   'what-to-text-after-a-first-date': ['I had a great time tonight - your story about the failed cooking class still has me laughing.'],
   'signs-texting-conversation-losing-momentum': ['You mentioned wanting a quiet weekend. Did you actually get one?', 'I passed a place that reminded me of your terrible food ranking. Still defending that opinion?', 'I have enjoyed talking with you. Want to continue this over coffee this week?'],
   'how-to-ask-someone-out-over-text': ['I have enjoyed talking with you. Want to grab coffee at that place you mentioned this Saturday?', 'You have made three strong opinions about noodles, so I think you owe me a food tour. Free Thursday?', 'I like talking with you and would like to take you on a date. Are you free next week?'],
-  'how-long-should-you-text-before-asking-someone-out': ['I am enjoying this conversation. Want to continue it over coffee this week?', 'You have made a strong case for that bakery. Want to test it together Saturday?', 'This has been fun. Are you free for a drink next week?']
+  'how-long-should-you-text-before-asking-someone-out': ['I am enjoying this conversation. Want to continue it over coffee this week?', 'You have made a strong case for that bakery. Want to test it together Saturday?', 'This has been fun. Are you free for a drink next week?'],
+  'what-to-text-after-getting-someones-number': ['Hey, it is Alex from the bookstore. What should I read next?', 'Good meeting you at the concert. I listened to the band you recommended and I understand the obsession now.', 'I enjoyed talking with you last night. Want to continue it over coffee this week?']
 };
 
 const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
@@ -478,7 +479,8 @@ const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
   'what-to-text-after-a-first-date': { do: 'Be timely, specific, and clear about enjoying the date.', doNot: 'Wait for a perfect paragraph or edit your personality away.' },
   'signs-texting-conversation-losing-momentum': { do: 'Make one specific, low-pressure move and watch for shared effort.', doNot: 'Stack messages, test their interest, or carry the whole conversation alone.' },
   'how-to-ask-someone-out-over-text': { do: 'Show interest, suggest a real plan, and make the answer easy.', doNot: 'Hide the invitation behind disclaimers, pressure, or a vague "sometime".' },
-  'how-long-should-you-text-before-asking-someone-out': { do: 'Watch for shared effort, then make a clear invitation when there is a natural bridge.', doNot: 'Use a rigid day count or keep texting forever to avoid a real answer.' }
+  'how-long-should-you-text-before-asking-someone-out': { do: 'Watch for shared effort, then make a clear invitation when there is a natural bridge.', doNot: 'Use a rigid day count or keep texting forever to avoid a real answer.' },
+  'what-to-text-after-getting-someones-number': { do: 'Identify yourself, mention a real connection, and give them an easy opening.', doNot: 'Lead with pressure, a generic hello, or repeated messages across platforms.' }
 };
 
 const ArticleQuickAnswer: React.FC<{ post: BlogPost }> = ({ post }) => (
@@ -576,6 +578,11 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'how-to-ask-someone-out-over-text', label: 'How to ask someone out over text' },
     { slug: 'signs-texting-conversation-losing-momentum', label: 'Signs a conversation is losing momentum' },
     { slug: 'what-to-text-after-a-first-date', label: 'What to text after a first date' }
+  ],
+  'what-to-text-after-getting-someones-number': [
+    { slug: 'best-tinder-openers-for-guys', label: 'Better dating app openers' },
+    { slug: 'how-long-should-you-text-before-asking-someone-out', label: 'When to ask someone out' },
+    { slug: 'how-to-ask-someone-out-over-text', label: 'How to ask someone out over text' }
   ]
 };
 
