@@ -12,6 +12,7 @@ process.env.DODO_PAYMENTS_RETURN_URL = 'https://rizzmaster.online/billing/return
 const {
   hasActiveDodoAccess,
   hasValidDodoAccessExpiry,
+  canReuseDodoCheckout,
   getDodoReturnUrl,
   isDodoConfigured,
   isDodoPortalConfigured,
@@ -59,6 +60,18 @@ test('active subscriptions require a valid access expiry', () => {
 test('checkout return URLs distinguish cancellation without changing entitlement', () => {
   assert.equal(getDodoReturnUrl(), 'https://rizzmaster.online/billing/return');
   assert.equal(getDodoReturnUrl('cancelled'), 'https://rizzmaster.online/billing/return?checkout=cancelled');
+});
+
+test('unfinished checkout can only be reused for the same plan', () => {
+  const weeklyCheckout = {
+    checkout_url: 'https://checkout.dodopayments.com/session/weekly',
+    plan: 'WEEKLY',
+    status: 'redirected',
+  };
+  assert.equal(canReuseDodoCheckout(weeklyCheckout, 'WEEKLY'), true);
+  assert.equal(canReuseDodoCheckout(weeklyCheckout, 'MONTHLY'), false);
+  assert.equal(canReuseDodoCheckout({ ...weeklyCheckout, checkout_url: null }, 'WEEKLY'), false);
+  assert.equal(canReuseDodoCheckout({ ...weeklyCheckout, status: 'completed' }, 'WEEKLY'), false);
 });
 
 test('billing redirects accept only credential-free HTTPS URLs', () => {

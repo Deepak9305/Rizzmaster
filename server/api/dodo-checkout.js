@@ -4,6 +4,7 @@ import { ensureUserProfile } from './_profiles.js';
 import { supabaseAdmin } from './_supabase.js';
 import {
   authenticateBillingRequest,
+  canReuseDodoCheckout,
   getManageableDodoSubscription,
   getDodoClient,
   getDodoPlan,
@@ -77,15 +78,29 @@ export default async function handler(req, res) {
       return data || null;
     };
 
+    const expireOpenCheckout = async (checkout) => {
+      if (!checkout?.id) return;
+      const { error } = await supabaseAdmin
+        .from('dodo_checkout_sessions')
+        .update({
+          status: 'expired',
+          checkout_url: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', checkout.id)
+        .in('status', ['created', 'redirected']);
+      if (error) throw error;
+    };
+
     const openCheckout = await loadOpenCheckout();
-    if (openCheckout?.checkout_url && openCheckout.plan === plan.key) {
+    if (canReuseDodoCheckout(openCheckout, plan.key)) {
       return json(res, 200, { checkoutUrl: openCheckout.checkout_url, resumed: true });
     }
     if (openCheckout) {
-      return json(res, 409, {
-        error: 'A checkout is already being prepared. Please retry in a moment.',
-        code: 'DODO_CHECKOUT_PENDING',
-      });
+      // A user can change from weekly to monthly (or back) before paying.
+      // Close only this unfinished session so the partial unique index allows
+      // the newly selected plan to be created.
+      await expireOpenCheckout(openCheckout);
     }
 
     const billingReference = randomUUID();
