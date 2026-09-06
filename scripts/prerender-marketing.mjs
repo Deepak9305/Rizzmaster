@@ -6,6 +6,7 @@ import ts from 'typescript';
 const projectRoot = fileURLToPath(new URL('..', import.meta.url));
 const distRoot = join(projectRoot, 'dist');
 const contentPath = join(projectRoot, 'services', 'marketingContent.ts');
+const legalPath = join(projectRoot, 'services', 'marketingLegal.ts');
 const shellPath = join(distRoot, 'index.html');
 
 const escapeHtml = (value = '') => String(value)
@@ -17,19 +18,22 @@ const escapeHtml = (value = '') => String(value)
 
 const escapeAttribute = escapeHtml;
 
-const loadMarketingContent = async () => {
-  const source = await readFile(contentPath, 'utf8');
+const loadTypeScriptModule = async (sourcePath) => {
+  const source = await readFile(sourcePath, 'utf8');
   const transpiled = ts.transpileModule(source, {
     compilerOptions: {
       module: ts.ModuleKind.ESNext,
       target: ts.ScriptTarget.ES2020,
       removeComments: true
     },
-    fileName: contentPath
+    fileName: sourcePath
   }).outputText;
   const moduleUrl = `data:text/javascript;base64,${Buffer.from(transpiled).toString('base64')}`;
   return import(moduleUrl);
 };
+
+const loadMarketingContent = () => loadTypeScriptModule(contentPath);
+const loadMarketingLegal = () => loadTypeScriptModule(legalPath);
 
 const replaceTag = (html, pattern, replacement) => html.replace(pattern, replacement);
 
@@ -65,6 +69,11 @@ const renderArticle = (post, posts) => {
 };
 
 const renderBlogIndex = (posts) => `<main class="marketing-container marketing-page-padding"><div class="max-w-3xl"><p class="text-xs font-bold uppercase tracking-[0.28em] text-pink-300/80">The Rizz Master blog</p><h1 class="mt-5 text-5xl font-black tracking-[-0.04em] text-white md:text-7xl">Better texts start with a better next move.</h1><p class="mt-6 max-w-2xl text-lg leading-8 text-white/55">Practical texting and dating advice for the conversations you want to handle with a little more confidence.</p></div><div class="mt-16 grid gap-5 md:grid-cols-2">${posts.map((post) => `<article class="rounded-3xl border border-white/10 bg-white/[0.03] p-5"><a href="/blog/${escapeAttribute(post.slug)}">${post.image ? `<img src="${escapeAttribute(post.image)}" alt="${escapeAttribute(post.imageAlt || post.title)}" class="aspect-[16/9] w-full rounded-2xl object-cover">` : ''}<p class="mt-5 text-xs font-bold uppercase tracking-[0.18em] text-pink-300/80">${escapeHtml(post.category)} &bull; ${escapeHtml(post.readingTime)}</p><h2 class="mt-3 text-xl font-bold text-white">${escapeHtml(post.title)}</h2><p class="mt-3 text-sm leading-6 text-white/55">${escapeHtml(post.excerpt)}</p><span class="mt-5 inline-block text-sm font-bold text-pink-200">Read the guide -&gt;</span></a></article>`).join('')}</div></main><footer class="marketing-container border-t border-white/10 py-10 text-sm text-white/45"><a href="/landing">Rizz Master</a> <a href="/privacy" class="ml-4">Privacy</a> <a href="/terms" class="ml-4">Terms</a> <a href="/support" class="ml-4">Support</a></footer>`;
+
+const renderLegalPage = (page) => {
+  const sections = page.sections.map((section) => `<section class="rounded-3xl border border-white/10 bg-white/[0.03] p-6 md:p-8"><h2 class="text-xl font-bold text-white">${escapeHtml(section.heading)}</h2>${(section.paragraphs || []).map((paragraph) => `<p class="mt-3 text-sm leading-7 text-white/55">${escapeHtml(paragraph)}</p>`).join('')}${section.bullets?.length ? `<ul class="mt-4 space-y-2 text-sm leading-7 text-white/55">${section.bullets.map((bullet) => `<li class="flex gap-3"><span class="mt-3 h-1.5 w-1.5 shrink-0 rounded-full bg-pink-300" aria-hidden="true"></span><span>${escapeHtml(bullet)}</span></li>`).join('')}</ul>` : ''}</section>`).join('');
+  return `<main class="marketing-container marketing-page-padding"><a href="/landing" class="mb-10 inline-flex items-center gap-2 text-sm font-bold text-white/45">&lt;- Back home</a><div class="max-w-3xl"><p class="text-xs font-bold uppercase tracking-[0.28em] text-pink-300/80">${escapeHtml(page.eyebrow)}</p><h1 class="mt-5 text-5xl font-black tracking-[-0.04em] text-white md:text-7xl">${escapeHtml(page.title)}</h1><p class="mt-6 text-lg leading-8 text-white/55">${escapeHtml(page.intro)}</p><p class="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-white/30">Last updated ${escapeHtml(page.updatedAt)}</p></div><div class="mt-12 max-w-3xl space-y-5">${sections}</div><a href="${escapeAttribute(page.actionHref)}" class="mt-8 inline-flex rounded-2xl border border-white/15 bg-white/[0.05] px-5 py-3.5 text-sm font-bold text-white">${escapeHtml(page.actionLabel)}</a></main><footer class="marketing-container border-t border-white/10 py-10 text-sm text-white/45"><a href="/landing">Rizz Master</a> <a href="/blog" class="ml-4">Blog</a> <a href="/privacy" class="ml-4">Privacy</a> <a href="/terms" class="ml-4">Terms</a> <a href="/support" class="ml-4">Support</a></footer>`;
+};
 
 const setArticleMetadata = (html, post) => {
   const title = `${post.title} | Rizz Master`;
@@ -115,6 +124,27 @@ const setIndexMetadata = (html) => html
   .replace(/<div id="root">[\s\S]*?<\/div>\s*<\/body>/i, `<div id="root" data-prerendered="true">${renderBlogIndex(BLOG_POSTS)}</div>\n</body>`)
   .replace('</head>', '<link rel="canonical" href="https://rizzmaster.online/blog" />\n<script type="application/ld+json">{"@context":"https://schema.org","@type":"CollectionPage","name":"Rizz Master Blog","url":"https://rizzmaster.online/blog"}</script>\n</head>');
 
+const setLegalMetadata = (html, key, page) => {
+  const canonical = `https://rizzmaster.online/${key}`;
+  const schema = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: page.title,
+    description: page.intro,
+    url: canonical,
+  }).replaceAll('<', '\\u003c');
+  return html
+    .replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(page.title)} | Rizz Master</title>`)
+    .replace(/<meta\s+name="description"[^>]*>/i, `<meta name="description" content="${escapeAttribute(page.intro)}" />`)
+    .replace(/<meta\s+property="og:title"[^>]*>/i, `<meta property="og:title" content="${escapeAttribute(page.title)} | Rizz Master" />`)
+    .replace(/<meta\s+property="og:description"[^>]*>/i, `<meta property="og:description" content="${escapeAttribute(page.intro)}" />`)
+    .replace(/<meta\s+property="og:type"[^>]*>/i, '<meta property="og:type" content="website" />')
+    .replace(/<meta\s+property="og:url"[^>]*>/i, `<meta property="og:url" content="${escapeAttribute(canonical)}" />`)
+    .replace(/<link\s+rel="canonical"[^>]*>/i, '')
+    .replace(/<div id="root">[\s\S]*?<\/div>\s*<\/body>/i, `<div id="root" data-prerendered="true">${renderLegalPage(page)}</div>\n</body>`)
+    .replace('</head>', `<link rel="canonical" href="${escapeAttribute(canonical)}" />\n<script type="application/ld+json">${schema}</script>\n</head>`);
+};
+
 const createPageShell = (shell, body) => shell
   .replace(/(\s(?:src|href)=")\.\/assets\//g, '$1/assets/')
   .replace(/(\s(?:src|href)=")\.\/logo\.png/g, '$1/logo.png')
@@ -127,6 +157,7 @@ const writePage = async (route, html) => {
 };
 
 const { BLOG_POSTS } = await loadMarketingContent();
+const { MARKETING_LEGAL_PAGES } = await loadMarketingLegal();
 const shell = await readFile(shellPath, 'utf8');
 
 await writePage('blog', setIndexMetadata(createPageShell(shell, renderBlogIndex(BLOG_POSTS))));
@@ -134,5 +165,9 @@ for (const post of BLOG_POSTS) {
   await writePage(`blog/${post.slug}`, setArticleMetadata(createPageShell(shell, renderArticle(post, BLOG_POSTS)), post));
 }
 
-console.log(`Prerendered ${BLOG_POSTS.length} blog articles and the blog index.`);
+for (const [key, page] of Object.entries(MARKETING_LEGAL_PAGES)) {
+  await writePage(key, setLegalMetadata(createPageShell(shell, renderLegalPage(page)), key, page));
+}
+
+console.log(`Prerendered ${BLOG_POSTS.length} blog articles, the blog index, and legal pages.`);
 
