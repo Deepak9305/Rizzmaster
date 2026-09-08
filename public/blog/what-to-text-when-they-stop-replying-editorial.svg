@@ -23,6 +23,6 @@
   </g>
   <circle cx="820" cy="430" r="96" fill="#0B0917" stroke="#F9A8D4" stroke-width="5"/>
   <rect x="789" y="390" width="18" height="82" rx="9" fill="#F9A8D4"/><rect x="833" y="390" width="18" height="82" rx="9" fill="#F9A8D4"/>
-  <text x="800" y="780" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.5" font-family="Arial,sans-serif" font-size="19" letter-spacing="6">PAUSE  â€¢  CHECK IN  â€¢  LET THEM CHOOSE</text>
+  <text x="800" y="780" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.5" font-family="Arial,sans-serif" font-size="19" letter-spacing="6">PAUSE  |  CHECK IN  |  LET THEM CHOOSE</text>
 </svg>
 

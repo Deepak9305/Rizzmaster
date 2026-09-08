@@ -12,6 +12,6 @@
   <path d="M520 285C520 222 572 170 635 170H965C1028 170 1080 222 1080 285V510C1080 573 1028 625 965 625H700L585 710V625H635C572 625 520 573 520 510V285Z" fill="url(#burst)"/>
   <text x="800" y="440" text-anchor="middle" fill="#351020" font-family="Arial,sans-serif" font-size="118" font-weight="900" letter-spacing="-5">HAHA</text>
   <path d="M1160 300C1160 272 1182 250 1210 250H1390C1418 250 1440 272 1440 300V380C1440 408 1418 430 1390 430H1260L1195 480V430H1210C1182 430 1160 408 1160 380V300Z" fill="#211233" stroke="#C084FC" stroke-width="4"/><text x="1200" y="350" fill="#E9D5FF" font-family="Arial,sans-serif" font-size="20" font-weight="800">YOUR TURN</text>
-  <text x="800" y="800" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.54" font-family="Arial,sans-serif" font-size="18" letter-spacing="6">MATCH THE ENERGY  â€¢  PIVOT  â€¢  KEEP IT EASY</text>
+  <text x="800" y="800" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.54" font-family="Arial,sans-serif" font-size="18" letter-spacing="6">MATCH THE ENERGY  |  PIVOT  |  KEEP IT EASY</text>
 </svg>
 
