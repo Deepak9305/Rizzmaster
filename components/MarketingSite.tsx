@@ -469,6 +469,7 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
   'best-dating-app-bio-ideas-for-guys': ['Ideal Sunday: long walk, new coffee shop, and pretending I will meal prep.'],
   'what-to-text-after-a-first-date': ['I had a great time tonight - your story about the failed cooking class still has me laughing.'],
   'signs-texting-conversation-losing-momentum': ['You mentioned wanting a quiet weekend. Did you actually get one?', 'I passed a place that reminded me of your terrible food ranking. Still defending that opinion?', 'I have enjoyed talking with you. Want to continue this over coffee this week?'],
+  'signs-texting-conversation-becoming-one-sided': ['I have enjoyed our chats. Want to continue this over coffee this week?', 'I have noticed I am usually starting our conversations. Are you still interested in keeping in touch?', 'I do not want to keep carrying the conversation, so I am going to step back. Wishing you well.'],
   'how-to-ask-someone-out-over-text': ['I have enjoyed talking with you. Want to grab coffee at that place you mentioned this Saturday?', 'You have made three strong opinions about noodles, so I think you owe me a food tour. Free Thursday?', 'I like talking with you and would like to take you on a date. Are you free next week?'],
   'how-long-should-you-text-before-asking-someone-out': ['I am enjoying this conversation. Want to continue it over coffee this week?', 'You have made a strong case for that bakery. Want to test it together Saturday?', 'This has been fun. Are you free for a drink next week?'],
   'what-to-text-after-getting-someones-number': ['Hey, it is Alex from the bookstore. What should I read next?', 'Good meeting you at the concert. I listened to the band you recommended and I understand the obsession now.', 'I enjoyed talking with you last night. Want to continue it over coffee this week?']
@@ -483,6 +484,7 @@ const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
   'best-dating-app-bio-ideas-for-guys': { do: 'Share specific details that make the next message obvious.', doNot: 'Fill the bio with broad labels, rules, or complaints.' },
   'what-to-text-after-a-first-date': { do: 'Be timely, specific, and clear about enjoying the date.', doNot: 'Wait for a perfect paragraph or edit your personality away.' },
   'signs-texting-conversation-losing-momentum': { do: 'Make one specific, low-pressure move and watch for shared effort.', doNot: 'Stack messages, test their interest, or carry the whole conversation alone.' },
+  'signs-texting-conversation-becoming-one-sided': { do: 'Look at the pattern, communicate clearly once, and leave room for shared effort.', doNot: 'Keep rescuing the chat, run silent tests, or treat every quiet patch as a personal verdict.' },
   'how-to-ask-someone-out-over-text': { do: 'Show interest, suggest a real plan, and make the answer easy.', doNot: 'Hide the invitation behind disclaimers, pressure, or a vague "sometime".' },
   'how-long-should-you-text-before-asking-someone-out': { do: 'Watch for shared effort, then make a clear invitation when there is a natural bridge.', doNot: 'Use a rigid day count or keep texting forever to avoid a real answer.' },
   'what-to-text-after-getting-someones-number': { do: 'Identify yourself, mention a real connection, and give them an easy opening.', doNot: 'Lead with pressure, a generic hello, or repeated messages across platforms.' }
@@ -574,6 +576,11 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'what-to-text-when-they-stop-replying', label: 'What to text when they stop replying' },
     { slug: 'what-to-text-after-a-first-date', label: 'What to text after a first date' }
   ],
+  'signs-texting-conversation-becoming-one-sided': [
+    { slug: 'signs-texting-conversation-losing-momentum', label: 'Signs a conversation is losing momentum' },
+    { slug: 'reply-to-dry-texts', label: 'How to reply to dry texts' },
+    { slug: 'what-to-text-when-they-stop-replying', label: 'What to text when they stop replying' }
+  ],
   'how-to-ask-someone-out-over-text': [
     { slug: 'what-to-text-after-a-first-date', label: 'What to text after a first date' },
     { slug: 'signs-texting-conversation-losing-momentum', label: 'Signs a conversation is losing momentum' },
@@ -624,7 +631,7 @@ const ArticlePage: React.FC<{ post: BlogPost; navigate: (path: string) => void }
         <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-white/35"><span className="text-pink-300/80">{post.category}</span><span>•</span><span>{post.readingTime}</span><span>•</span><time dateTime={post.date}>{new Date(`${post.date}T12:00:00`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</time></div>
         <h1 className="mt-6 text-4xl font-black leading-[1.05] tracking-[-0.04em] text-white md:text-6xl">{post.title}</h1>
         <p className="mt-7 text-lg leading-8 text-white/55">{post.description}</p>
-        {post.image && <figure className="mt-9 overflow-hidden rounded-3xl border border-pink-300/15 bg-black/20 shadow-[0_24px_80px_rgba(236,72,153,0.12)]"><img src={post.image} alt={post.imageAlt || post.title} className="aspect-[16/9] w-full object-cover" loading="eager" decoding="async" /><figcaption className="border-t border-white/10 px-5 py-3 text-xs text-white/35">A better follow-up is clear, calm, and gives the other person room to choose.</figcaption></figure>}
+        {post.image && <figure className="mt-9 overflow-hidden rounded-3xl border border-pink-300/15 bg-black/20 shadow-[0_24px_80px_rgba(236,72,153,0.12)]"><img src={post.image} alt={post.imageAlt || post.title} className="aspect-[16/9] w-full object-cover" loading="eager" decoding="async" /><figcaption className="border-t border-white/10 px-5 py-3 text-xs text-white/35">{post.imageCaption || 'A better follow-up is clear, calm, and gives the other person room to choose.'}</figcaption></figure>}
         <div className="mt-10 space-y-5">
           <ArticleQuickAnswer post={post} />
           <ArticleExampleBox examples={ARTICLE_EXAMPLES[post.slug]} />

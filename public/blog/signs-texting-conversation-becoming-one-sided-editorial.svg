@@ -1,0 +1,55 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">A one-sided texting conversation</title>
+  <desc id="desc">Two message streams begin with shared energy, then one side fades while the other keeps reaching.</desc>
+  <defs>
+    <linearGradient id="bg" x1="80" y1="40" x2="1500" y2="860" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#160B25"/>
+      <stop offset="0.52" stop-color="#27113A"/>
+      <stop offset="1" stop-color="#071827"/>
+    </linearGradient>
+    <linearGradient id="active" x1="290" y1="0" x2="760" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F472B6"/>
+      <stop offset="1" stop-color="#FBBF24"/>
+    </linearGradient>
+    <linearGradient id="fading" x1="890" y1="0" x2="1320" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A78BFA"/>
+      <stop offset="1" stop-color="#64748B" stop-opacity="0.3"/>
+    </linearGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="34"/>
+    </filter>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="900" rx="36" fill="url(#bg)"/>
+  <circle cx="480" cy="420" r="260" fill="#EC4899" fill-opacity="0.18" filter="url(#glow)"/>
+  <circle cx="1200" cy="470" r="250" fill="#6366F1" fill-opacity="0.12" filter="url(#glow)"/>
+  <path d="M96 720C300 650 400 730 588 666C770 604 838 626 1016 662C1190 698 1304 610 1504 650" stroke="#F9A8D4" stroke-opacity="0.16" stroke-width="2"/>
+  <path d="M96 748C300 678 400 758 588 694C770 632 838 654 1016 690C1190 726 1304 638 1504 678" stroke="#A78BFA" stroke-opacity="0.14" stroke-width="2"/>
+  <text x="140" y="150" fill="#FBCFE8" font-family="Arial,sans-serif" font-size="22" font-weight="900" letter-spacing="6">SHARED AT FIRST</text>
+  <text x="1015" y="150" fill="#C4B5FD" font-family="Arial,sans-serif" font-size="22" font-weight="900" letter-spacing="6">THEN ONE-SIDED</text>
+  <path d="M310 418C420 286 520 538 648 394C724 308 774 346 820 410" stroke="url(#active)" stroke-width="13" stroke-linecap="round"/>
+  <path d="M820 410C912 516 970 338 1054 442C1140 548 1212 440 1324 494" stroke="url(#fading)" stroke-width="13" stroke-linecap="round" stroke-dasharray="1 30"/>
+  <circle cx="310" cy="418" r="24" fill="#F472B6"/>
+  <circle cx="648" cy="394" r="24" fill="#FBBF24"/>
+  <circle cx="820" cy="410" r="30" fill="#0F172A" stroke="#FDE68A" stroke-width="5"/>
+  <circle cx="1054" cy="442" r="22" fill="#A78BFA" fill-opacity="0.7"/>
+  <circle cx="1324" cy="494" r="18" fill="#64748B" fill-opacity="0.55"/>
+  <g transform="translate(220 570)">
+    <rect width="330" height="112" rx="28" fill="#210D32" stroke="#F472B6" stroke-opacity="0.7" stroke-width="3"/>
+    <circle cx="56" cy="56" r="19" fill="#F472B6"/>
+    <rect x="98" y="40" width="150" height="12" rx="6" fill="#FCE7F3" fill-opacity="0.85"/>
+    <rect x="98" y="66" width="104" height="11" rx="5" fill="#F9A8D4" fill-opacity="0.42"/>
+    <path d="M36 112L22 136L80 112" fill="#210D32" stroke="#F472B6" stroke-opacity="0.7" stroke-width="3"/>
+  </g>
+  <g transform="translate(1050 570)">
+    <rect width="330" height="112" rx="28" fill="#101526" stroke="#94A3B8" stroke-opacity="0.26" stroke-width="3"/>
+    <circle cx="56" cy="56" r="19" fill="#64748B" fill-opacity="0.7"/>
+    <rect x="98" y="40" width="138" height="12" rx="6" fill="#CBD5E1" fill-opacity="0.28"/>
+    <rect x="98" y="66" width="76" height="11" rx="5" fill="#CBD5E1" fill-opacity="0.14"/>
+    <path d="M294 112L308 136L250 112" fill="#101526" stroke="#94A3B8" stroke-opacity="0.26" stroke-width="3"/>
+  </g>
+  <circle cx="800" cy="410" r="64" fill="#FBBF24" fill-opacity="0.14" filter="url(#soft)"/>
+  <text x="800" y="814" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.58" font-family="Arial,sans-serif" font-size="19" font-weight="700" letter-spacing="4">NOTICE THE PATTERN  |  MAKE ONE CLEAR MOVE  |  LEAVE ROOM</text>
+</svg>

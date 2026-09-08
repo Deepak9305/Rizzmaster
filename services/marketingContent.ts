@@ -18,11 +18,176 @@ export interface BlogPost {
   keywords: string[];
   image?: string;
   imageAlt?: string;
+  imageCaption?: string;
   resources?: Array<{ label: string; url: string }>;
   sections: BlogSection[];
 }
 
 export const BLOG_POSTS: BlogPost[] = [
+  {
+    slug: 'signs-texting-conversation-becoming-one-sided',
+    title: 'Signs Your Texting Conversation Is Becoming One-Sided',
+    description: 'Is your texting conversation becoming one-sided? Learn how to spot uneven effort, tell a busy spell from fading interest, and respond without chasing.',
+    excerpt: 'A one-sided conversation is not defined by equal message lengths. It is the repeated feeling that curiosity, initiation, and follow-through only happen when you provide them.',
+    date: '2026-09-08',
+    updatedAt: '2026-09-08',
+    readingTime: '9 min read',
+    category: 'Texting advice',
+    keywords: [
+      'signs texting conversation is one sided',
+      'how to tell if a text conversation is one sided',
+      'one sided texting conversation',
+      'signs someone is losing interest over text',
+      'how to stop carrying a conversation',
+      'what to do when you always text first',
+      'text conversation feels one sided',
+      'how to know if someone is interested over text',
+      'when to stop texting someone',
+      'how to communicate uneven texting effort'
+    ],
+    image: '/blog/signs-texting-conversation-becoming-one-sided-editorial.svg',
+    imageAlt: 'Editorial illustration showing one person carrying a conversation while the other message stream fades',
+    imageCaption: 'Look for a repeated pattern of shared curiosity and follow-through, not perfect symmetry in every message.',
+    resources: [
+      { label: 'The Gottman Institute: Pay attention to bids for connection', url: 'https://www.gottman.com/blog/want-to-improve-your-relationship-start-paying-more-attention-to-bids/' },
+      { label: 'The Gottman Institute: Improve relationship communication', url: 'https://www.gottman.com/improve-communication-relationship/' },
+      { label: 'loveisrespect: What are my boundaries?', url: 'https://www.loveisrespect.org/resources/what-are-my-boundaries/' }
+    ],
+    sections: [
+      {
+        heading: 'One-sided does not mean perfectly unequal every day',
+        paragraphs: [
+          'Texting effort is not a scoreboard. One person may be busier, less comfortable initiating, or better at showing interest in person than over messages. A conversation can also be uneven for a day without being unhealthy. The useful question is not whether both people send the same number of texts. It is whether both people contribute enough curiosity and follow-through for the connection to feel mutual over time.',
+          'A conversation starts to feel one-sided when you are repeatedly opening the chat, asking the questions, introducing new topics, repairing every pause, and trying to turn vague enthusiasm into a real plan. The pattern leaves you feeling responsible for keeping the connection alive. Before you decide what it means, compare several exchanges rather than analysing one short reply.'
+        ],
+        bullets: [
+          'Unequal message length is normal; repeated one-way effort is the useful signal.',
+          'Look at initiation, curiosity, responsiveness, and follow-through together.',
+          'The goal is not a perfect 50/50 split. It is enough mutual effort to feel secure and respected.'
+        ]
+      },
+      {
+        heading: 'Sign one: you always send the first message',
+        paragraphs: [
+          'Being the first person to text is not automatically a problem. Some people are genuinely passive communicators, and an interested person can still appreciate your initiative. The concern is what happens when you stop initiating. If the conversation disappears completely until you restart it, you are learning that the current connection depends almost entirely on your effort.',
+          'Do not turn this into a silent experiment where you stop texting to punish them or measure the exact number of hours before they notice. Simply stop over-functioning for a little while and return to your own routine. If they want contact, they have room to create it. If they do not, the quiet gives you information that another clever opener probably would not.'
+        ],
+        bullets: [
+          'Notice whether they ever begin a conversation without needing a prompt.',
+          'Do not keep initiating just to prevent the chat from disappearing.',
+          'A pause is data, not a challenge to solve with more messages.'
+        ]
+      },
+      {
+        heading: 'Sign two: their replies acknowledge you but do not build anything',
+        paragraphs: [
+          'A reply can be polite without being engaged. Someone may answer your question, react to your joke, or send a quick emoji while giving you no new detail, opinion, or opening. One short reply is easy to explain. A repeated pattern of acknowledgements that close the conversation suggests they are responding to contact rather than actively creating a connection.',
+          'Compare the exchange with the effort you are putting in. If you send a thoughtful story and receive "nice" or "haha" with no follow-up, do not compensate by writing a longer story or asking three more questions. Give them one natural opening and see whether they choose to add something of their own.'
+        ],
+        bullets: [
+          'A response is not the same as participation.',
+          'Look for added detail, a question, a callback, or a clear next step.',
+          'Do not try to earn curiosity by becoming more entertaining on demand.'
+        ]
+      },
+      {
+        heading: 'Sign three: every exchange starts to feel like an interview',
+        paragraphs: [
+          'Healthy early texting often includes questions, but it should not feel like you are conducting an interview while the other person supplies short answers. You ask about their day, interests, weekend, work, and plans; they answer but rarely ask anything back. The conversation may look active in your phone while you are doing all the work required to learn about each other.',
+          'Try sharing a detail without attaching a question. For example: "I finally tried that restaurant near my office and the dessert was better than the main course." This gives them a chance to respond with curiosity, a story, or a recommendation. If they repeatedly make you pull every detail out of them, the problem may not be that your questions are weak. They may simply not be investing at the same level.'
+        ],
+        bullets: [
+          'Offer a detail and watch whether they volunteer something in return.',
+          'Curiosity should move in both directions, even when one person is more talkative.',
+          'Do not confuse access to answers with genuine interest.'
+        ]
+      },
+      {
+        heading: 'Sign four: they do not remember or return to anything you share',
+        paragraphs: [
+          'Conversation feels more mutual when someone remembers a detail and brings it back later. They ask whether your presentation went well, follow up on the book you mentioned, or reference the joke you both enjoyed. Memory is not proof of romantic interest, but a complete absence of callbacks can make the exchange feel disposable and generic.',
+          'Look for attention, not perfect recall. Nobody remembers every detail from a busy chat. The pattern matters: do they ever show that they were listening, or does each conversation reset to the same shallow check-in? If the chat has become repetitive, make one specific callback yourself. Their response will help you distinguish a stale format from a lack of willingness to engage.'
+        ],
+        bullets: [
+          'Specific callbacks are stronger evidence of attention than constant notifications.',
+          'Give the conversation a real detail to return to instead of another generic check-in.',
+          'If substance is repeatedly ignored, stop blaming your prompts.'
+        ]
+      },
+      {
+        heading: 'Sign five: plans stay vague and you are the only one moving them forward',
+        paragraphs: [
+          'A person can enjoy texting and still not be ready or willing to meet. That becomes a one-sided pattern when they repeatedly say they would like to hang out but never choose a time, suggest an alternative, or help turn the idea into a plan. Enthusiasm without follow-through keeps you emotionally invested in a possibility that has no practical shape.',
+          'Make one clear invitation connected to the conversation. Offer a simple activity and a real day: "You convinced me that bakery is worth trying. Want to go Saturday afternoon?" Someone who is interested but busy can usually suggest another time. If you get another vague answer, treat it as a no for now rather than keeping the plan open indefinitely.'
+        ],
+        bullets: [
+          'A clear invitation creates information; repeated vague hints create more waiting.',
+          'Look for an alternative when their schedule does not work.',
+          'Do not reserve your time for a plan that has never been confirmed.'
+        ]
+      },
+      {
+        heading: 'Sign six: you are constantly repairing the conversation',
+        paragraphs: [
+          'Every conversation has quiet patches. The warning sign is feeling that you must rescue each one. You send a meme after a short reply, change the topic when they do not respond, apologise for being boring, and draft a new opener before they have shown any interest in continuing. This turns texting into a maintenance job instead of a shared activity.',
+          'Pause before you repair the next gap. Ask whether there is an actual message that needs a response or whether you are trying to make the silence less uncomfortable for yourself. If there is no clear next step, you are allowed to let the exchange end. A conversation that only survives through your constant intervention is already telling you something.'
+        ],
+        bullets: [
+          'Do not send a new message just to relieve a few minutes of anxiety.',
+          'Let natural endings happen without treating them as emergencies.',
+          'You can be warm and interested without becoming the conversation manager.'
+        ]
+      },
+      {
+        heading: 'Busy, shy, or losing interest? Use the whole pattern',
+        paragraphs: [
+          'Texting alone cannot tell you exactly why someone is quieter. A busy person may reply slowly but still ask thoughtful questions, remember details, and suggest another time. A shy person may rarely initiate but respond warmly and become more expressive when the pressure is low. Someone losing interest may remain polite while consistently reducing effort and avoiding any clear next step.',
+          'Do not diagnose their intentions from a single response. Instead, compare warmth with action over several exchanges. You can also ask directly when the relationship is established enough for that conversation: "I have noticed I am usually starting our chats. Are you still interested in keeping this going?" Their answer matters, but their behaviour afterward matters more.'
+        ],
+        bullets: [
+          'Slow replies can still contain care, curiosity, and follow-through.',
+          'A direct question is healthier than building a theory from punctuation.',
+          'Judge the pattern after you communicate your need, not only before.'
+        ]
+      },
+      {
+        heading: 'What to text when the conversation feels one-sided',
+        paragraphs: [
+          'If you want to give the connection one fair chance, send a message that is honest and easy to answer. Avoid an accusation such as "Why do I always have to text first?" when you have not yet said what you want. A calm observation gives the other person room to be clear without forcing them to defend themselves.',
+          'Choose the version that matches your situation. If you are still getting to know each other, make a light invitation. If the pattern has continued for a while, name it directly. If you are already tired of carrying the connection, close the loop instead of writing a message designed to make them chase you.'
+        ],
+        bullets: [
+          'Light: "I have enjoyed our chats. Want to continue this over coffee this week?"',
+          'Direct: "I have noticed I am usually starting our conversations. Are you still interested in keeping in touch?"',
+          'Boundary: "I do not want to keep carrying the conversation, so I am going to step back. Wishing you well."'
+        ]
+      },
+      {
+        heading: 'When to stop texting first',
+        paragraphs: [
+          'You do not need proof that the other person is a bad person before you stop investing. If you have made one clear, respectful attempt and the pattern remains closed, vague, or absent, you can step back. Archive the chat, mute the notifications, and make plans that do not depend on a message arriving. Stopping is not a tactic to provoke them. It is a boundary around your own attention.',
+          'If they return later, look for changed effort rather than feeling relieved that they noticed you were gone. A genuine restart includes a question, an acknowledgement, or a concrete plan. A low-effort "hey" is not an obligation to resume the same one-sided dynamic. You can answer if you want to, ask for more clarity, or leave the conversation where it ended.'
+        ],
+        bullets: [
+          'Step back because the pattern does not work for you, not to create scarcity.',
+          'Give more weight to changed behaviour than to a temporary burst of attention.',
+          'A connection can be pleasant and still not be mutual enough to continue.'
+        ]
+      },
+      {
+        heading: 'A quick checklist before your next message',
+        paragraphs: [
+          'Before you send another text, look at the last several exchanges and answer honestly: who has initiated, who has asked questions, who has remembered details, and who has made plans easier? Then ask whether your next message creates a genuine opening or simply prevents the chat from going quiet. If it is the second one, waiting is probably the more useful move.',
+          'You are allowed to want consistency without demanding constant access. The healthiest texting habit is not keeping every conversation alive. It is choosing conversations where interest can be expressed freely by both people. Make one clear move, leave room for a response, and let the pattern give you the answer.'
+        ],
+        bullets: [
+          'Pattern: am I reacting to several exchanges, not one delayed reply?',
+          'Clarity: have I said what I want instead of hoping they infer it?',
+          'Self-respect: would I still feel good about sending this if there is no reply?'
+        ]
+      }
+    ]
+  },
   {
     slug: 'what-to-text-when-they-stop-replying',
     title: 'What to Text When They Stop Replying: A Calm Follow-Up Guide',
