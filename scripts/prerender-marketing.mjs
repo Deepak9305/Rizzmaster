@@ -76,6 +76,7 @@ const renderLegalPage = (page) => {
 };
 
 const setArticleMetadata = (html, post) => {
+  html = html.replace('A better follow-up is clear, calm, and gives the other person room to choose.', escapeHtml(post.imageCaption || 'A better follow-up is clear, calm, and gives the other person room to choose.'));
   const title = `${post.title} | Rizz Master`;
   const canonical = `https://rizzmaster.online/blog/${post.slug}`;
   const metadata = {
