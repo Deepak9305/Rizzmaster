@@ -1,29 +1,47 @@
 <svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
-  <title id="title">Turning a dry text into a conversation</title>
-  <desc id="desc">A low-energy message meter rises toward a colorful conversation hook.</desc>
+  <title id="title">How to reply to a dry text</title>
+  <desc id="desc">A short low-energy reply becomes a more inviting exchange after one specific conversation hook is added.</desc>
   <defs>
-    <linearGradient id="bg" x1="80" y1="40" x2="1510" y2="870" gradientUnits="userSpaceOnUse"><stop stop-color="#07131E"/><stop offset="0.5" stop-color="#102B37"/><stop offset="1" stop-color="#10101D"/></linearGradient>
-    <linearGradient id="bar" x1="300" y1="590" x2="1280" y2="590" gradientUnits="userSpaceOnUse"><stop stop-color="#38BDF8"/><stop offset="0.52" stop-color="#2DD4BF"/><stop offset="1" stop-color="#FBBF24"/></linearGradient>
-    <filter id="glow" x="-50%" y="-100%" width="200%" height="300%"><feGaussianBlur stdDeviation="26"/></filter>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="900" gradientUnits="userSpaceOnUse"><stop stop-color="#06151D"/><stop offset="0.5" stop-color="#102F3A"/><stop offset="1" stop-color="#111022"/></linearGradient>
+    <linearGradient id="bar" x1="260" y1="0" x2="1350" y2="0" gradientUnits="userSpaceOnUse"><stop stop-color="#38BDF8"/><stop offset="0.46" stop-color="#2DD4BF"/><stop offset="1" stop-color="#FBBF24"/></linearGradient>
+    <linearGradient id="bubble" x1="940" y1="250" x2="1350" y2="600" gradientUnits="userSpaceOnUse"><stop stop-color="#2DD4BF"/><stop offset="1" stop-color="#0EA5E9"/></linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" stroke="#FFFFFF" stroke-opacity="0.035"/></pattern>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="36"/></filter>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="0" dy="25" stdDeviation="22" flood-color="#000000" flood-opacity="0.48"/></filter>
   </defs>
-  <rect width="1600" height="900" rx="32" fill="url(#bg)"/>
-  <circle cx="1190" cy="270" r="220" fill="#22D3EE" fill-opacity="0.12" filter="url(#glow)"/>
-  <path d="M130 700C330 520 470 590 640 675C820 765 1090 760 1500 420" stroke="#2DD4BF" stroke-opacity="0.22" stroke-width="4"/>
-  <g transform="translate(170 190)">
-    <rect width="420" height="190" rx="34" fill="#0B111C" stroke="#38BDF8" stroke-opacity="0.58" stroke-width="3"/>
-    <circle cx="62" cy="60" r="20" fill="#38BDF8" fill-opacity="0.2" stroke="#38BDF8" stroke-width="3"/>
-    <rect x="105" y="48" width="170" height="12" rx="6" fill="#BAE6FD" fill-opacity="0.8"/><rect x="105" y="78" width="95" height="12" rx="6" fill="#BAE6FD" fill-opacity="0.3"/>
-    <text x="42" y="144" fill="#FFFFFF" font-family="Arial,sans-serif" font-size="34" font-weight="800">k</text><text x="89" y="144" fill="#FFFFFF" fill-opacity="0.38" font-family="Arial,sans-serif" font-size="25">low signal</text>
+  <rect width="1600" height="900" rx="36" fill="url(#bg)"/>
+  <rect width="1600" height="900" rx="36" fill="url(#grid)"/>
+  <circle cx="1120" cy="365" r="320" fill="#22D3EE" fill-opacity="0.13" filter="url(#glow)"/>
+  <circle cx="330" cy="560" r="260" fill="#0EA5E9" fill-opacity="0.1" filter="url(#glow)"/>
+  <text x="800" y="78" text-anchor="middle" fill="#A5F3FC" fill-opacity="0.92" font-family="Arial,sans-serif" font-size="18" font-weight="900" letter-spacing="6">A DRY TEXT IS A SMALL OPENING</text>
+  <text x="800" y="116" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.48" font-family="Arial,sans-serif" font-size="17" letter-spacing="2">Add one real hook. Then let the reply tell you what is there.</text>
+  <g filter="url(#shadow)">
+    <rect x="135" y="188" width="480" height="390" rx="34" fill="#0B1722" stroke="#38BDF8" stroke-opacity="0.46" stroke-width="3"/>
+    <text x="180" y="246" fill="#BAE6FD" font-family="Arial,sans-serif" font-size="16" font-weight="900" letter-spacing="4">THE DRY REPLY</text>
+    <rect x="180" y="278" width="200" height="84" rx="25" fill="#142632" stroke="#64748B" stroke-opacity="0.5" stroke-width="2"/>
+    <text x="216" y="330" fill="#FFFFFF" fill-opacity="0.9" font-family="Arial,sans-serif" font-size="34" font-weight="800">k</text>
+    <path d="M214 362L198 388L252 362" fill="#142632" stroke="#64748B" stroke-opacity="0.5" stroke-width="2"/>
+    <text x="180" y="430" fill="#FFFFFF" fill-opacity="0.52" font-family="Arial,sans-serif" font-size="18">Low signal does not always mean</text>
+    <text x="180" y="458" fill="#FFFFFF" fill-opacity="0.52" font-family="Arial,sans-serif" font-size="18">low interest. Read the context first.</text>
+    <rect x="180" y="500" width="312" height="3" rx="2" fill="#38BDF8" fill-opacity="0.24"/>
+    <text x="180" y="538" fill="#7DD3FC" font-family="Arial,sans-serif" font-size="13" font-weight="900" letter-spacing="3">PAUSE  |  NOTICE  |  RESPOND</text>
   </g>
-  <text x="800" y="500" text-anchor="middle" fill="#A5F3FC" font-family="Arial,sans-serif" font-size="20" font-weight="700" letter-spacing="5">ADD ONE REAL HOOK</text>
-  <rect x="230" y="560" width="1140" height="34" rx="17" fill="#07131E" stroke="#FFFFFF" stroke-opacity="0.14" stroke-width="3"/>
-  <rect x="230" y="560" width="760" height="34" rx="17" fill="url(#bar)"/>
-  <circle cx="990" cy="577" r="20" fill="#FBBF24" stroke="#FEF3C7" stroke-width="4"/>
-  <g transform="translate(1080 240)">
-    <path d="M0 44C0 20 20 0 44 0H350C374 0 394 20 394 44V210C394 234 374 254 350 254H112L35 310V254H44C20 254 0 234 0 210V44Z" fill="#102E35" stroke="#2DD4BF" stroke-width="4"/>
-    <text x="38" y="92" fill="#99F6E4" font-family="Arial,sans-serif" font-size="18" font-weight="800" letter-spacing="3">TRY THIS</text>
-    <text x="38" y="145" fill="#FFFFFF" font-family="Arial,sans-serif" font-size="25" font-weight="700">Best part of your</text><text x="38" y="182" fill="#FFFFFF" font-family="Arial,sans-serif" font-size="25" font-weight="700">day so far?</text>
+  <path d="M650 390H922" stroke="url(#bar)" stroke-width="9" stroke-linecap="round" stroke-dasharray="2 22"/>
+  <circle cx="790" cy="390" r="68" fill="#0B1722" stroke="#67E8F9" stroke-width="3"/>
+  <path d="M760 390H820M790 360V420" stroke="#A5F3FC" stroke-width="8" stroke-linecap="round"/>
+  <text x="790" y="490" text-anchor="middle" fill="#A5F3FC" font-family="Arial,sans-serif" font-size="15" font-weight="900" letter-spacing="3">ADD ONE HOOK</text>
+  <g filter="url(#shadow)">
+    <rect x="950" y="188" width="520" height="390" rx="34" fill="#102B35" stroke="#2DD4BF" stroke-opacity="0.58" stroke-width="3"/>
+    <text x="996" y="246" fill="#99F6E4" font-family="Arial,sans-serif" font-size="16" font-weight="900" letter-spacing="4">THE BETTER REPLY</text>
+    <path d="M996 292C996 266 1018 244 1044 244H1364C1390 244 1412 266 1412 292V408C1412 434 1390 456 1364 456H1110L1034 512V456H1044C1018 456 996 434 996 408V292Z" fill="url(#bubble)"/>
+    <text x="1030" y="324" fill="#062431" font-family="Arial,sans-serif" font-size="24" font-weight="800">Best part of your</text>
+    <text x="1030" y="361" fill="#062431" font-family="Arial,sans-serif" font-size="24" font-weight="800">day so far?</text>
+    <circle cx="1358" cy="368" r="28" fill="#062431" fill-opacity="0.14"/>
+    <path d="M1345 368L1355 378L1374 354" stroke="#062431" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="996" y="542" fill="#FFFFFF" fill-opacity="0.55" font-family="Arial,sans-serif" font-size="17">Specific enough to answer.</text>
   </g>
-  <text x="800" y="790" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.5" font-family="Arial,sans-serif" font-size="18" letter-spacing="6">SHORT REPLY  -&gt;  SPECIFIC QUESTION  -&gt;  ROOM TO ANSWER</text>
+  <rect x="270" y="668" width="1060" height="34" rx="17" fill="#07151D" stroke="#FFFFFF" stroke-opacity="0.12" stroke-width="2"/>
+  <rect x="270" y="668" width="770" height="34" rx="17" fill="url(#bar)"/>
+  <circle cx="1040" cy="685" r="20" fill="#FBBF24" stroke="#FEF3C7" stroke-width="4"/>
+  <text x="800" y="824" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.62" font-family="Arial,sans-serif" font-size="19" font-weight="700" letter-spacing="4">SHORT REPLY  ->  REAL DETAIL  ->  ROOM TO ANSWER</text>
 </svg>
-
