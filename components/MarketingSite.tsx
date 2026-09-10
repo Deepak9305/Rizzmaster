@@ -470,6 +470,7 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
   'what-to-text-after-a-first-date': ['I had a great time tonight - your story about the failed cooking class still has me laughing.'],
   'signs-texting-conversation-losing-momentum': ['You mentioned wanting a quiet weekend. Did you actually get one?', 'I passed a place that reminded me of your terrible food ranking. Still defending that opinion?', 'I have enjoyed talking with you. Want to continue this over coffee this week?'],
   'signs-texting-conversation-becoming-one-sided': ['I have enjoyed our chats. Want to continue this over coffee this week?', 'I have noticed I am usually starting our conversations. Are you still interested in keeping in touch?', 'I do not want to keep carrying the conversation, so I am going to step back. Wishing you well.'],
+  'how-to-tell-if-someone-is-flirting-over-text': ['You are making a strong case for yourself. What is your best argument in person?', 'I cannot tell if you are teasing me or flirting with me. Either way, I am enjoying it.', 'I like this energy. Want to continue it over coffee this week?'],
   'texting-mistakes-new-conversation-feel-forced': ['You mentioned you are trying every ramen place in town. Which one is winning so far?', 'I finally tried that restaurant near my office and the dessert was better than the main course. What is your reliable bad-day meal?', 'I have enjoyed talking with you. Want to continue this over coffee this week?'],
   'how-to-ask-someone-out-over-text': ['I have enjoyed talking with you. Want to grab coffee at that place you mentioned this Saturday?', 'You have made three strong opinions about noodles, so I think you owe me a food tour. Free Thursday?', 'I like talking with you and would like to take you on a date. Are you free next week?'],
   'how-long-should-you-text-before-asking-someone-out': ['I am enjoying this conversation. Want to continue it over coffee this week?', 'You have made a strong case for that bakery. Want to test it together Saturday?', 'This has been fun. Are you free for a drink next week?'],
@@ -486,6 +487,7 @@ const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
   'what-to-text-after-a-first-date': { do: 'Be timely, specific, and clear about enjoying the date.', doNot: 'Wait for a perfect paragraph or edit your personality away.' },
   'signs-texting-conversation-losing-momentum': { do: 'Make one specific, low-pressure move and watch for shared effort.', doNot: 'Stack messages, test their interest, or carry the whole conversation alone.' },
   'signs-texting-conversation-becoming-one-sided': { do: 'Look at the pattern, communicate clearly once, and leave room for shared effort.', doNot: 'Keep rescuing the chat, run silent tests, or treat every quiet patch as a personal verdict.' },
+  'how-to-tell-if-someone-is-flirting-over-text': { do: 'Respond to the energy you actually feel and communicate clearly when the tone matters.', doNot: 'Treat one emoji as proof, escalate pressure, or ignore a boundary because the attention feels flattering.' },
   'texting-mistakes-new-conversation-feel-forced': { do: 'Share one real detail, ask one natural question, and give the other person room to participate.', doNot: 'Perform constantly, stack questions, or fill every pause to prevent the chat from going quiet.' },
   'how-to-ask-someone-out-over-text': { do: 'Show interest, suggest a real plan, and make the answer easy.', doNot: 'Hide the invitation behind disclaimers, pressure, or a vague "sometime".' },
   'how-long-should-you-text-before-asking-someone-out': { do: 'Watch for shared effort, then make a clear invitation when there is a natural bridge.', doNot: 'Use a rigid day count or keep texting forever to avoid a real answer.' },
@@ -582,6 +584,11 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'signs-texting-conversation-losing-momentum', label: 'Signs a conversation is losing momentum' },
     { slug: 'reply-to-dry-texts', label: 'How to reply to dry texts' },
     { slug: 'what-to-text-when-they-stop-replying', label: 'What to text when they stop replying' }
+  ],
+  'how-to-tell-if-someone-is-flirting-over-text': [
+    { slug: 'how-to-ask-someone-out-over-text', label: 'How to ask someone out over text' },
+    { slug: 'texting-mistakes-new-conversation-feel-forced', label: 'Avoid forced texting' },
+    { slug: 'signs-texting-conversation-becoming-one-sided', label: 'Read one-sided effort' }
   ],
   'texting-mistakes-new-conversation-feel-forced': [
     { slug: 'what-to-text-after-getting-someones-number', label: 'What to text after getting their number' },

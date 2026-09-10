@@ -25,6 +25,195 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'how-to-tell-if-someone-is-flirting-over-text',
+    title: 'How to Tell If Someone Is Flirting Over Text: Signs and What to Say Next',
+    description: 'Learn how to tell if someone is flirting over text, separate friendly banter from genuine interest, and respond naturally when the feeling is mutual.',
+    excerpt: 'Flirting over text is usually a pattern of personal attention, playful energy, and effort to keep the connection going. One emoji is not proof; repeated behaviour is better evidence.',
+    date: '2026-09-10',
+    updatedAt: '2026-09-10',
+    readingTime: '10 min read',
+    category: 'Texting advice',
+    keywords: [
+      'how to tell if someone is flirting over text',
+      'signs someone likes you over text',
+      'is he flirting over text',
+      'is she flirting or just being friendly',
+      'flirty text examples',
+      'how to know if someone is interested over text',
+      'signs of flirting through text',
+      'what to say when someone flirts with you over text',
+      'how to respond to flirting over text',
+      'friendly vs flirty texting'
+    ],
+    image: '/blog/how-to-tell-if-someone-is-flirting-over-text-editorial.svg',
+    imageAlt: 'Editorial illustration of a friendly text exchange becoming a clear, mutual flirtation',
+    imageCaption: 'Flirting is easier to read when personal attention, playful tone, and consistent effort appear together.',
+    resources: [
+      { label: 'The Gottman Institute: Pay attention to bids for connection', url: 'https://www.gottman.com/blog/want-to-improve-your-relationship-start-paying-more-attention-to-bids/' },
+      { label: 'The Gottman Institute: Improve relationship communication', url: 'https://www.gottman.com/improve-communication-relationship/' },
+      { label: 'loveisrespect: What are my boundaries?', url: 'https://www.loveisrespect.org/resources/what-are-my-boundaries/' }
+    ],
+    sections: [
+      {
+        heading: 'Text flirting is a pattern, not one mysterious emoji',
+        paragraphs: [
+          'It is easy to overanalyse a heart emoji, a fast reply, or the difference between "hey" and "heyyy." Text strips away voice, facial expression, and timing context, so a single message rarely proves that someone is flirting. The same person may use playful language with friends, reply warmly when they are bored, or send an affectionate emoji without intending a romantic signal.',
+          'A more reliable reading comes from several behaviours appearing together: they look for reasons to talk, remember details, ask about your life, create playful tension, and make effort to continue the exchange. None of these guarantees attraction. They do show that the conversation has personal energy worth responding to. Read the pattern before deciding what a particular line means.'
+        ],
+        bullets: [
+          'One emoji is a clue at most, not a conclusion.',
+          'Consistency and effort usually tell you more than response speed.',
+          'The best way to learn is to respond warmly and see whether the energy stays mutual.'
+        ]
+      },
+      {
+        heading: 'Sign one: they keep finding reasons to start or continue the chat',
+        paragraphs: [
+          'Someone who is interested often creates small openings to stay connected. They send you a photo of something you discussed, return to an inside joke, ask for your opinion, or message after a conversation has naturally ended. The reason does not need to be dramatic. A simple "I saw that place you mentioned" can show that you stayed on their mind and that they wanted another turn with you.',
+          'Initiation alone is not proof of flirting because some people are naturally social. Notice whether their messages are specifically about you and whether they make it easy for you to contribute. A stream of generic forwards is different from remembering your story and asking what happened next. Personal effort is the meaningful part.'
+        ],
+        bullets: [
+          'They bring back a detail instead of sending only generic check-ins.',
+          'They start conversations even when they do not need information from you.',
+          'They give the chat a reason to continue without making you do all the work.'
+        ]
+      },
+      {
+        heading: 'Sign two: the teasing feels personal, warm, and easy to return',
+        paragraphs: [
+          'Playful teasing can be a form of flirting when it is affectionate, specific, and mutual. They notice your strong coffee opinion, joke about your competitive streak, or challenge your music choice in a way that invites you to tease them back. The tone creates a small shared world rather than making you feel embarrassed or tested.',
+          'The difference between flirting and being mean is important. Good teasing leaves both people with room to laugh and change direction. Insults about your body, identity, boundaries, or insecurities are not romantic signals that you need to decode. If a joke makes you uncomfortable, you do not need to reward it because the person may be interested.'
+        ],
+        bullets: [
+          'Good teasing is specific and gives you a comfortable way to play back.',
+          'A flirtatious joke should create warmth, not make you defend yourself.',
+          'Interest never excuses disrespect or pressure.'
+        ]
+      },
+      {
+        heading: 'Sign three: they ask questions that go beyond polite small talk',
+        paragraphs: [
+          'Friendly conversation can include questions, but flirting often adds a little more personal curiosity. They ask what makes you laugh, what your ideal weekend looks like, what you are looking forward to, or what kind of date you actually enjoy. They are not merely collecting facts. They are trying to understand your personality and imagine how the two of you might get along.',
+          'Look at whether they answer their own questions too. Genuine curiosity usually feels like an exchange, not an interrogation. If they ask what your comfort meal is and then tell you theirs, they are giving you a way to know them back. That balance matters more than the exact subject of the question.'
+        ],
+        bullets: [
+          'They ask about preferences, stories, and personality rather than only logistics.',
+          'They remember your answer and use it later.',
+          'They share something about themselves instead of making you perform all the vulnerability.'
+        ]
+      },
+      {
+        heading: 'Sign four: they notice details and bring them back later',
+        paragraphs: [
+          'Remembering a detail does not automatically mean romance, but it is a strong sign of attention. They ask how your interview went, remember the name of your favourite band, or refer to the story you told during your first conversation. That kind of callback shows that your messages were not just background noise to them.',
+          'Do not expect perfect memory. People forget details, especially in busy chats. Look for a repeated willingness to pay attention. If they consistently remember the small things and use them to create another playful or personal exchange, that is more meaningful than a single compliment copied into a dozen conversations.'
+        ],
+        bullets: [
+          'They follow up on something that mattered to you.',
+          'They use your details to make the next conversation more personal.',
+          'Attention is a better signal than a constant online status.'
+        ]
+      },
+      {
+        heading: 'Sign five: the conversation has a little tension, not only information',
+        paragraphs: [
+          'Flirting often adds a playful question beneath the literal one. They may ask who would win in a debate, suggest that you owe them a rematch, or say that you seem like trouble in a clearly lighthearted way. The exchange feels a little more charged because it creates room for imagination and personality rather than only exchanging updates.',
+          'Healthy tension still leaves you comfortable. It does not rely on sexual assumptions, jealousy, guilt, or pressure to prove attraction. If the person jumps from a normal conversation to explicit comments that you did not invite, that is not evidence of better flirting. It is a boundary question. You can slow the conversation down or say clearly what you are not comfortable with.'
+        ],
+        bullets: [
+          'Playful tension invites imagination without demanding a performance.',
+          'The tone should feel fun to both people, not confusing or unsafe.',
+          'You can enjoy flirting and still set a limit on topics or pace.'
+        ]
+      },
+      {
+        heading: 'Sign six: they match your energy and make the exchange easy',
+        paragraphs: [
+          'When interest is mutual, the conversation often feels easier to sustain. They respond to your humour, add their own detail, and give you enough to work with. If you send a playful message, they may play back. If you shift to a serious topic, they can meet you there. Matching does not mean copying your exact wording or replying instantly. It means participating in the tone rather than leaving you to create it alone.',
+          'This is why effort matters more than a checklist of phrases. Someone can use flirty words and still be inconsistent, dismissive, or uninterested in your actual life. Another person can be shy with compliments while showing clear care through questions, callbacks, and plans. Read the whole exchange instead of waiting for one perfect line.'
+        ],
+        bullets: [
+          'They build on what you send instead of only reacting to it.',
+          'Their effort remains present across more than one conversation.',
+          'A shy style can still be interested when follow-through is consistent.'
+        ]
+      },
+      {
+        heading: 'Sign seven: they create a path toward spending time together',
+        paragraphs: [
+          'Text flirting becomes easier to interpret when it eventually points toward a real next step. They mention a place you should try together, ask when you are free, or help turn a shared interest into a simple plan. A person can be playful over text without wanting a date, so look for follow-through instead of treating suggestive jokes as a promise.',
+          'If you are enjoying the exchange, make one clear invitation rather than waiting for an indefinite collection of hints. "You have convinced me that your favourite cafe is worth testing. Free Saturday?" gives the other person a comfortable way to say yes, suggest another time, or decline. The guide on asking someone out over text covers how to make that move without making it heavy.'
+        ],
+        bullets: [
+          'Interest becomes more useful when it can lead to a clear, mutual plan.',
+          'Look for a real day or an alternative, not only "we should do that sometime."',
+          'A date invitation is a way to get clarity, not a test you must pass.'
+        ]
+      },
+      {
+        heading: 'Friendly or flirty? Compare warmth with initiative',
+        paragraphs: [
+          'Friendly texting can be warm, funny, and frequent. Flirting is more likely when that warmth comes with selective attention and initiative directed toward you. Ask: do they talk to everyone this way, or do they remember details about you? Do they keep the conversation going because they enjoy your company, or only because they need a favour? Do they respond when you make a small opening, or do they leave you to carry the energy?',
+          'You may not be able to tell from the outside, and that is normal. Rather than trying to solve their feelings privately, offer a small signal of interest and watch the response. A warm reply that adds effort gives you something to build on. A vague or uncomfortable reaction gives you useful information without requiring a dramatic confession.'
+        ],
+        bullets: [
+          'Compare their behaviour with their normal communication style when you can.',
+          'Notice selective attention and follow-through, not only affectionate language.',
+          'A small honest signal is usually safer than an elaborate interpretation.'
+        ]
+      },
+      {
+        heading: 'What to say when the flirting feels mutual',
+        paragraphs: [
+          'You do not need to match every flirt with a bigger flirt. The easiest response is to acknowledge the energy and add something real. A light tease, a specific compliment, or a clear invitation can all work. Keep the message close to your personality so that the conversation still feels like you when it moves offline.',
+          'Try a reply that gives the other person room to choose how far to take it. "You are making a strong case for yourself. What is your best argument in person?" is playful without being explicit. "I like this energy. Want to continue it over coffee this week?" is more direct. If you want more examples for a particular tone, use Rizz Master as a drafting tool and edit the result before sending.'
+        ],
+        bullets: [
+          'Playful: "You are getting dangerously confident about that opinion."',
+          'Warm: "I like talking with you. You make an ordinary day more fun."',
+          'Direct: "This feels a little flirty in the best way. Want to meet this week?"'
+        ]
+      },
+      {
+        heading: 'What to say when you are not sure',
+        paragraphs: [
+          'Uncertainty does not require a high-stakes question such as "Do you like me?" You can gently name what you are noticing and see whether they clarify. "I cannot tell if you are teasing me or flirting with me" can be playful when the conversation already feels comfortable. If you want less ambiguity, ask a direct but low-pressure question: "Are you interested in getting to know each other as more than friends?"',
+          'Be ready for an answer that is different from the one you hoped for. Clarity is useful even when it closes a possibility. If the person gives mixed signals and avoids a simple answer, stop trying to extract certainty from more texting. Consistent behaviour and a willingness to be clear are part of interest too.'
+        ],
+        bullets: [
+          'Use curiosity instead of accusation when naming the tone.',
+          'Ask directly when ambiguity is starting to cost you peace of mind.',
+          'Do not keep escalating messages to force a clearer answer.'
+        ]
+      },
+      {
+        heading: 'If you do not want the flirting',
+        paragraphs: [
+          'You do not owe flirtation in return because someone is being charming. If you want to keep the relationship friendly, make the tone clear without overexplaining: "You are fun to talk to, but I want to keep this platonic." If a message crosses a boundary, you can be more direct: "I am not comfortable with that kind of comment. Please stop."',
+          'A respectful person may be disappointed, but they will not make you manage their reaction or keep negotiating your boundary. If they continue after you have been clear, reduce contact, block them, or use the safety tools available on the platform. The right response to unwanted attention is not a better explanation.'
+        ],
+        bullets: [
+          'Clear: say what you do and do not want.',
+          'Brief: you do not need to build a case for your boundary.',
+          'Firm: repeated pressure is a reason to end the conversation, not to soften your no.'
+        ]
+      },
+      {
+        heading: 'A simple flirting-over-text checklist',
+        paragraphs: [
+          'Before you decide that someone is flirting, look for a combination of personal attention, playful warmth, consistent effort, and a willingness to move the connection forward. Then ask what you want. You may want to flirt back, suggest a date, keep things friendly, or simply enjoy the conversation without assigning it a label yet.',
+          'Texting is a useful place to notice interest, but it is not a mind-reading tool. Send one honest signal, leave room for the other person to respond, and let their pattern guide your next move. The best flirtation feels mutual, specific, and easy to stop when either person wants to slow down.'
+        ],
+        bullets: [
+          'Pattern: am I reading repeated behaviour rather than one message?',
+          'Mutuality: are both people adding warmth and effort?',
+          'Clarity: have I communicated what I want when it matters?',
+          'Respect: can either person slow down or say no without pressure?'
+        ]
+      }
+    ]
+  },
+  {
     slug: 'texting-mistakes-new-conversation-feel-forced',
     title: '7 Texting Mistakes That Make a New Conversation Feel Forced',
     description: 'Learn why a new texting conversation feels forced, which common texting mistakes drain the energy, and what to say instead to keep things natural.',
