@@ -25,6 +25,187 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'texting-boundaries-while-dating',
+    title: 'Texting Boundaries While Dating: How to Set Limits Without Sounding Rude',
+    description: 'Learn how to set healthy texting boundaries while dating, with clear examples for response times, privacy, flirting, plans, and saying no respectfully.',
+    excerpt: 'Good texting boundaries are not walls or tests. They are clear signals about your time, privacy, pace, and comfort so both people can make informed choices.',
+    date: '2026-09-11',
+    updatedAt: '2026-09-11',
+    readingTime: '11 min read',
+    category: 'Dating advice',
+    keywords: [
+      'texting boundaries while dating',
+      'how to set boundaries over text',
+      'dating boundary text examples',
+      'how to say no politely over text',
+      'healthy texting boundaries',
+      'texting expectations when dating',
+      'how to set texting boundaries',
+      'dating boundaries examples',
+      'how to communicate boundaries while dating',
+      'slow texting pace dating'
+    ],
+    image: '/blog/texting-boundaries-while-dating-editorial.svg',
+    imageAlt: 'Editorial illustration of two people setting clear and respectful texting boundaries while dating',
+    imageCaption: 'A healthy texting boundary makes your pace and comfort clear without trying to control the other person.',
+    resources: [
+      { label: 'loveisrespect: What are my boundaries?', url: 'https://www.loveisrespect.org/resources/what-are-my-boundaries/' },
+      { label: 'Planned Parenthood: How do I talk about consent?', url: 'https://www.plannedparenthood.org/learn/relationships/sexual-consent/how-do-i-talk-about-consent' },
+      { label: 'The Gottman Institute: Pay attention to bids for connection', url: 'https://www.gottman.com/blog/want-to-improve-your-relationship-start-paying-more-attention-to-bids/' }
+    ],
+    sections: [
+      {
+        heading: 'Texting boundaries are not rules for controlling someone',
+        paragraphs: [
+          'Texting boundaries while dating are simple statements about what works for you. They can cover when you are available, how quickly you usually reply, what you are comfortable discussing, how much personal information you share, and what kind of contact you want after a date. A boundary is not a demand that the other person behave exactly as you would. It is information that helps both people decide whether the connection fits.',
+          'For example, "I do not check my phone much during work, so I may reply in the evening" explains your rhythm. "You need to answer within ten minutes or I am done" tries to manage another person through pressure. The first gives context and reduces confusion. The second turns communication into a test. Healthy dating leaves room for two different schedules and preferences.'
+        ],
+        bullets: [
+          'A boundary says what you are comfortable with and what you will do if it is not respected.',
+          'It is different from a silent test, punishment, or attempt to control response times.',
+          'Clear boundaries make compatibility easier to see earlier.'
+        ]
+      },
+      {
+        heading: 'Start by deciding what you actually need',
+        paragraphs: [
+          'Before you send a boundary message, identify the situation that keeps bothering you. Are you anxious because someone expects instant replies? Do you feel rushed into sexual conversation? Are they asking for private details before trust has developed? Are plans being changed at the last minute without a proper conversation? The clearer the problem, the easier it is to write a calm message that addresses it.',
+          'You do not need a perfect set of dating rules before meeting someone. Choose the few limits that protect your time, privacy, safety, and emotional energy. Your boundaries can change as you learn more about a person. Changing your mind is allowed, and a previous yes does not remove your right to say no later. The important part is communicating the change rather than expecting the other person to guess.'
+        ],
+        bullets: [
+          'Name the behaviour, feeling, or risk that prompted the boundary.',
+          'Separate a personal preference from a non-negotiable safety limit.',
+          'Keep the first message focused on one issue instead of presenting a contract.'
+        ]
+      },
+      {
+        heading: 'Set a response-time boundary without playing games',
+        paragraphs: [
+          'People date with different schedules. Some reply throughout the day, while others prefer one focused conversation in the evening. A slow reply is not automatically disinterest, and a fast reply is not automatically care. What matters is whether the rhythm is communicated well enough that neither person has to keep guessing or monitoring the phone.',
+          'If you are not always available, say so early: "I am enjoying talking with you. I am usually offline during work, so I may reply later, but I will get back to you when I can." If you need more consistency, describe the effect and the choice you will make: "I prefer plans to be confirmed the day before. If we cannot do that, I will assume this week does not work and we can try another time." This is clearer than delaying replies to teach someone a lesson.'
+        ],
+        bullets: [
+          'Try: "I am not a constant texter, but I do like to keep plans clear."',
+          'Try: "No need to reply immediately. I usually answer when I have time to focus."',
+          'Avoid: fake delays, read-receipt tests, and rules you never communicate.'
+        ]
+      },
+      {
+        heading: 'Protect your privacy while trust is still developing',
+        paragraphs: [
+          'Dating by text can create a false sense of closeness. Someone may know your daily routine before they have earned access to your private life. You are allowed to keep your home address, workplace details, financial information, passwords, live location, and intimate photos private. A person who is genuinely interested can get to know you without demanding proof of trust on their timeline.',
+          'Use a brief answer when you do not want to share something yet: "I keep that private until I know someone better." You do not need to invent a story or apologise for the limit. If you decide to share later, do it because you feel comfortable, not because repeated asking wore you down. For a first meeting, choose a public place, tell someone you trust where you will be, and keep your own transport or exit option when possible.'
+        ],
+        bullets: [
+          'Do not share passwords, financial details, or identifying documents with a dating contact.',
+          'Avoid sending intimate content under pressure or as a condition of continued attention.',
+          'Privacy is part of a healthy pace, not evidence that you are hiding something.'
+        ]
+      },
+      {
+        heading: 'Make your boundaries around flirting and sexual topics clear',
+        paragraphs: [
+          'Flirting can be fun, but the fact that two people are dating does not mean every topic is automatically welcome. You can enjoy playful messages and still not want sexual comments, photos, voice calls, or late-night conversations. Consent and comfort apply to digital communication too. A respectful person listens when you slow the pace and does not treat hesitation as an invitation to negotiate harder.',
+          'Try being specific about the change you want: "I am happy to flirt, but I am not comfortable sending photos like that." Or: "I would rather talk about that in person after we know each other better." If the other person says they were only joking, you can still repeat the limit. Intent does not cancel impact, and you do not have to prove that your discomfort is reasonable before asking for a different tone.'
+        ],
+        bullets: [
+          'A clear no, pause, or change of subject should be accepted without guilt.',
+          'Do not use sexual access as a test of attraction or commitment.',
+          'If someone keeps pushing after a clear limit, end the exchange or block them.'
+        ]
+      },
+      {
+        heading: 'Use direct language when you do not want to make plans',
+        paragraphs: [
+          'A boundary is kinder when it is clear. If you do not want to meet yet, you can say that without leaving a false promise: "I am not ready to meet, but I am open to talking for now." If you are not interested at all, a short message is enough: "Thanks for talking, but I do not feel a romantic connection. I am going to leave it here. I wish you well." You are not responsible for making rejection painless by keeping the door half open.',
+          'If you do want to meet but need a safer pace, suggest a concrete alternative: "I would be more comfortable with a short coffee in a busy place before making evening plans." A reasonable person may have a different preference, but they can accept your choice. If they ridicule the location, pressure you to keep the plan secret, or become angry because you set a limit, treat that reaction as useful information.'
+        ],
+        bullets: [
+          'Not yet: "I would like to keep talking before we plan a date."',
+          'Different plan: "I prefer a daytime coffee for a first meeting."',
+          'No: "I am going to pass, but I appreciate the invitation."'
+        ]
+      },
+      {
+        heading: 'Set expectations for plans, cancellations, and last-minute messages',
+        paragraphs: [
+          'Texting boundaries also protect your calendar. If someone repeatedly makes vague plans, cancels shortly before meeting, or appears only when they want something, you can decide what you will accept. You do not have to keep a whole evening open for "maybe". Tell them what confirmation you need and then follow through with your own plan if it does not happen.',
+          'A useful message might be: "I would like to see you. Please confirm by Thursday evening so I know whether to keep Saturday free. If I do not hear from you, I will make other plans." This is not an ultimatum when you genuinely intend to make other plans. The boundary becomes credible because your action does not depend on winning an argument.'
+        ],
+        bullets: [
+          'Ask for a day, time, and place instead of treating vague interest as a booking.',
+          'Give one reasonable confirmation point, then release the time if it passes.',
+          'Repeated unreliability is compatibility information, not a puzzle you must solve.'
+        ]
+      },
+      {
+        heading: 'How to say no politely over text',
+        paragraphs: [
+          'Many people avoid boundaries because they think a respectful no must include a long explanation. It does not. A good message is brief, honest, and complete. You can acknowledge the invitation, state your decision, and stop there. Adding a detailed excuse often creates more openings for someone to persuade you or wait for the excuse to disappear.',
+          'Use the level of detail that feels safe. "I cannot make it tonight" is enough when you simply do not want to go. "I do not want to continue this conversation" is enough when the interaction has crossed a line. If you are worried about the person’s reaction, you do not owe them a teaching moment. Prioritise distance, platform safety tools, and support from someone you trust.'
+        ],
+        bullets: [
+          'Polite decline: "Thank you, but I am going to pass."',
+          'Slower pace: "I like talking with you, but I am not ready for that yet."',
+          'Firm stop: "I have said no. Please do not ask again."'
+        ]
+      },
+      {
+        heading: 'Respecting someone else\'s texting boundary',
+        paragraphs: [
+          'Setting boundaries is only half of healthy communication. When the other person says they are busy, does not want a topic, needs a slower pace, or changes their mind, the respectful response is to accept the information without bargaining. You can be disappointed and still behave well. A boundary is not a personal insult, and someone does not owe you access because the conversation was warm earlier.',
+          'A simple response can keep the door open without pressure: "Thanks for telling me. I understand. Let me know if and when you want to continue." If the boundary means the connection is not compatible, accept that too. Do not send a better argument, recruit friends to persuade them, or turn a no into a debate about your intentions. Care shows up in what you stop doing as much as in what you say.'
+        ],
+        bullets: [
+          'A pause is not a challenge to overcome.',
+          'Do not ask the same question in a new wording after the answer is clear.',
+          'When a limit changes the connection, accept the mismatch without punishment.'
+        ]
+      },
+      {
+        heading: 'What to do when someone ignores your boundary',
+        paragraphs: [
+          'A single misunderstanding can often be corrected. Repeatedly ignoring a clear boundary is different. If you said you do not want sexual messages and they keep sending them, or you explained that you are unavailable at work and they punish you for not replying, the issue is no longer a wording problem. You have communicated; now you can choose the level of contact that protects you.',
+          'You might repeat the limit once, then reduce contact, unmatch, block, or report the account. Keep screenshots if messages become threatening, coercive, or harassing, and tell someone you trust. Do not meet someone in person to resolve pressure that already feels unsafe online. Dating advice should never encourage you to stay available to prove that you are kind.'
+        ],
+        bullets: [
+          'Notice patterns: guilt, anger, repeated asking, threats, or punishment for saying no.',
+          'Use block and report tools when someone will not respect a clear limit.',
+          'Seek support if the messages become threatening or make you feel unsafe.'
+        ]
+      },
+      {
+        heading: 'Boundary text examples you can adapt',
+        paragraphs: [
+          'The best boundary message sounds like something you would actually say. Keep the tone warm when the situation is low-stakes, and be firmer when someone has already crossed a line. You can be direct without being cruel. The goal is not to make the other person agree with your boundary; it is to make your position clear enough that your next action is understandable.',
+          'Edit these examples for your situation rather than copying them as a performance. If the message needs a paragraph of justification to feel acceptable, shorten it. A boundary works better when it is easy to understand and easy for you to enforce.'
+        ],
+        bullets: [
+          'Availability: "I am enjoying this, but I am usually offline during the day. I will reply when I am free."',
+          'Privacy: "I do not share my address this early. We can meet somewhere public instead."',
+          'Topic: "I am not comfortable discussing that over text. Let us change the subject."',
+          'Pace: "I would like to keep getting to know each other before we make this more serious."',
+          'Reliability: "Please confirm by tomorrow. If not, I will assume the plan is off."',
+          'Ending: "This is not working for me, so I am going to stop here. Take care."'
+        ]
+      },
+      {
+        heading: 'A five-question check before you send a boundary',
+        paragraphs: [
+          'Before pressing send, ask whether the message is specific, honest, and proportionate to the situation. You do not need to sound perfectly calm to deserve a boundary, but a short pause can help you send what you mean instead of a message designed to trigger reassurance. If you are very angry or frightened, prioritise safety and distance before trying to write the perfect explanation.',
+          'Healthy boundaries make dating more straightforward. They show the other person how to communicate with you, reveal whether your needs are compatible, and keep attention from turning into access. The right person may not share every preference, but they will be able to hear a clear limit without trying to punish you for having one.'
+        ],
+        bullets: [
+          'Is this describing my limit rather than secretly testing their feelings?',
+          'Have I said what I want or do not want in plain language?',
+          'Do I know what I will do if the boundary is ignored?',
+          'Am I sharing more private detail than the situation requires?',
+          'Would I respect the same boundary if the other person sent it to me?'
+        ]
+      }
+    ]
+  },
+  {
     slug: 'how-to-tell-if-someone-is-flirting-over-text',
     title: 'How to Tell If Someone Is Flirting Over Text: Signs and What to Say Next',
     description: 'Learn how to tell if someone is flirting over text, separate friendly banter from genuine interest, and respond naturally when the feeling is mutual.',
