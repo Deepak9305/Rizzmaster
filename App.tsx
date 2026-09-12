@@ -1184,7 +1184,9 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
     // Guests see the premium modal first so they understand what they're getting
     window.history.pushState({ view: currentView, premium: true }, '');
-    setShowRewardedAdOffer(allowRewardedAd && canUseNativeAdMob() && !profileRef.current?.is_premium);
+    // The offer belongs to the native credit-exhaustion flow. Do not hide it
+    // just because AdMob has not finished registering in the WebView yet.
+    setShowRewardedAdOffer(allowRewardedAd && !IS_WEB_PLATFORM && !profileRef.current?.is_premium);
     setRewardedAdStatus('idle');
     setIsRewardedAdLoading(false);
     rewardedAdAttemptRef.current = null;
@@ -1666,7 +1668,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       currentProfile.is_premium ||
       (currentProfile.credits || 0) >= rewardedAdRequiredCredits ||
       !showRewardedAdOffer ||
-      !canUseNativeAdMob() ||
       rewardedAdInProgressRef.current ||
       rewardedAdStatus === 'pending'
     ) {
@@ -1678,6 +1679,12 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     setRewardedAdStatus('loading');
 
     try {
+      if (!canUseNativeAdMob()) {
+        setRewardedAdStatus('error');
+        showToast('Rewarded ads are unavailable in this app build. Please update and try again.', 'error');
+        return;
+      }
+
       let ssv: RewardVideoSsv | undefined;
       if (!isGuest && currentProfile.id !== 'guest_user') {
         const attempt = await createRewardedAdAttempt(rewardedAdRequiredCredits);
@@ -2527,7 +2534,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                     onRestore={handleRestorePurchases}
                     isGuest={isGuest}
                     userId={profile?.id || null}
-                    showRewardedAd={showRewardedAdOffer && canUseNativeAdMob() && !profile?.is_premium}
+                    showRewardedAd={showRewardedAdOffer && !IS_WEB_PLATFORM && !profile?.is_premium}
                     onWatchRewardedAd={handleWatchRewardedAd}
                     isRewardAdLoading={isRewardedAdLoading}
                     rewardStatus={rewardedAdStatus}

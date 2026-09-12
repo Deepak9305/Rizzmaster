@@ -148,8 +148,14 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
                     <div className="w-14 h-14 mx-auto mb-3 bg-yellow-500/10 rounded-full flex items-center justify-center text-2xl border border-yellow-500/20 animate-pulse-glow">
                         👑
                     </div>
-                    <h2 className="text-xl md:text-2xl font-bold text-white mb-1">Unlock God Mode</h2>
-                    <p className="text-xs text-white/40">Everything unlocked. No limits. No ads.</p>
+                    <h2 className="text-xl md:text-2xl font-bold text-white mb-1">
+                        {showRewardedAd ? 'Keep the conversation going' : 'Unlock God Mode'}
+                    </h2>
+                    <p className="text-xs text-white/40">
+                        {showRewardedAd
+                            ? 'Get unlimited access with Premium, or watch one short ad for +5 credits.'
+                            : 'Everything unlocked. No limits. No ads.'}
+                    </p>
                 </div>
 
                 {/* Urgency banner */}
