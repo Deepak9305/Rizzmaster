@@ -52,6 +52,7 @@ const IS_WEB_PLATFORM = !Capacitor.isNativePlatform();
 const SILENT_PREMIUM_RESTORE_WAIT_MS = 45000;
 const SILENT_PREMIUM_RESTORE_RETRY_MS = 60000;
 const SILENT_PREMIUM_RESTORE_MAX_ATTEMPTS = 2;
+const REWARDED_STATUS_POLL_ATTEMPTS = 20;
 
 // --- AD CONFIGURATION ---
 const USE_TEST_ADS = false; // Set to true for testing with Google test ads
@@ -1720,7 +1721,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
       setRewardedAdStatus('pending');
       let latestStatus: RewardedAdStatus = 'pending';
-      for (let poll = 0; poll < 8; poll += 1) {
+      for (let poll = 0; poll < REWARDED_STATUS_POLL_ATTEMPTS; poll += 1) {
         await wait(1500);
         const status = await getRewardedAdStatus(attemptId);
         latestStatus = status.status;

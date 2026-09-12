@@ -4,6 +4,7 @@ import {
     RewardAdPluginEvents,
     RewardInterstitialAdPluginEvents,
     AdMobRewardInterstitialItem,
+    AdMobRewardItem,
     AdmobConsentDebugGeography,
     AdmobConsentStatus
 } from '@capacitor-community/admob';
@@ -21,6 +22,13 @@ export type RewardVideoSsv = {
     userId: string;
     customData: string;
 };
+
+const REWARDED_ITEM = 'rizz_credits';
+const REWARDED_AMOUNT = 5;
+
+const isExpectedReward = (info: Partial<AdMobRewardItem> | null | undefined) => (
+    Number(info?.amount) === REWARDED_AMOUNT && info?.type === REWARDED_ITEM
+);
 
 const getRewardVideoSsvKey = (ssv?: RewardVideoSsv) => (
     ssv ? `${ssv.userId}:${ssv.customData}` : ''
@@ -74,6 +82,7 @@ export const AdMobService = {
     INTERSTITIAL_SHOW_TIMEOUT_MS: 30000,
     INTERSTITIAL_POST_SHOW_TIMEOUT_MS: 45000,
     REWARDED_POST_SHOW_TIMEOUT_MS: 90000,
+    REWARDED_DISMISS_GRACE_MS: 2000,
     INTERSTITIAL_STALE_AFTER_MS: 20 * 60 * 1000,
     REWARDED_STALE_AFTER_MS: 50 * 60 * 1000,
     POST_PREPARE_SHOW_DELAY_MS: 1200,
@@ -679,6 +688,7 @@ export const AdMobService = {
                 let dismissListener: any = null;
                 let failedListener: any = null;
                 let failedShowListener: any = null;
+                let dismissGraceTimer: ReturnType<typeof setTimeout> | null = null;
 
                 let timeout: ReturnType<typeof setTimeout> | null = setTimeout(() => {
                     console.warn('[AdMob] Reward video show timeout');
@@ -690,6 +700,7 @@ export const AdMobService = {
                     resolved = true;
                     this.cleanupListeners([showedListener, rewardListener, dismissListener, failedListener, failedShowListener]);
                     if (timeout) clearTimeout(timeout);
+                    if (dismissGraceTimer) clearTimeout(dismissGraceTimer);
                     this.rewardVideoReady = false;
                     this.rewardVideoPreparedAt = 0;
                     this.isRewardVideoShowing = false;
@@ -714,12 +725,20 @@ export const AdMobService = {
                                 amount: Number.isFinite(Number(info?.amount)) ? Number(info.amount) : null,
                                 type: typeof info?.type === 'string' ? info.type : null,
                             });
-                            earned = true;
+                            earned = isExpectedReward(info);
+                            if (!earned) {
+                                console.warn('[AdMob] Reward video returned an unexpected reward configuration.');
+                            }
                         });
 
                         dismissListener = await AdMob.addListener(RewardAdPluginEvents.Dismissed, () => {
                             console.log('[AdMob] Reward video dismissed');
-                            cleanupAndResolve(earned);
+                            // Some mediation adapters can dispatch dismiss
+                            // before the native reward callback. Give the
+                            // plugin result/event a brief chance to arrive.
+                            dismissGraceTimer = setTimeout(() => {
+                                cleanupAndResolve(earned);
+                            }, this.REWARDED_DISMISS_GRACE_MS);
                         });
 
                         failedListener = await AdMob.addListener(RewardAdPluginEvents.FailedToLoad, (error) => {
@@ -745,7 +764,15 @@ export const AdMobService = {
                         }
 
                         try {
-                            await AdMob.showRewardVideoAd();
+                            // The plugin resolves this call from the native
+                            // onUserEarnedReward callback. Use its result as
+                            // the source of truth if the JS event delivery is
+                            // delayed or missed by the WebView bridge.
+                            const rewardItem = await AdMob.showRewardVideoAd({ adId }) as AdMobRewardItem;
+                            if (isExpectedReward(rewardItem)) {
+                                earned = true;
+                            }
+                            cleanupAndResolve(earned);
                         } catch (error) {
                             console.error('AdMob showRewardVideoAd threw:', error);
                             this.invalidateRewardVideo();
