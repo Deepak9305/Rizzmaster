@@ -29,10 +29,23 @@ html.native-app {
 html.native-app body,
 html.native-app #root {
   width: 100%;
-  min-height: 100%;
-  height: auto;
+  height: 100%;
+  min-height: 0;
   overflow-x: hidden;
-  overflow-y: visible;
+}
+
+html.native-app #root {
+  overflow-y: hidden;
+  overscroll-behavior-y: none;
+}
+
+html.native-app .web-app-root {
+  height: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 .web-premium-scroll {
