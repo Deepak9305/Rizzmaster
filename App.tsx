@@ -2414,7 +2414,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
             )}
           </div>
         ) : currentView === 'COACH' ? (
-          <div className="animate-slide-in-right-view fixed inset-0 z-[100] bg-black">
+          <div className={`${IS_WEB_PLATFORM ? 'animate-slide-in-right-view' : 'native-coach-shell'} fixed inset-0 z-[100] bg-black`}>
             <Suspense fallback={null}>
               <RizzCoach
                 key={profile?.id || 'guest_user'}

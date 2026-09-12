@@ -156,7 +156,7 @@ const COACH_VIBES = [
 const MAX_STORED_MESSAGES = 50; // cap to avoid localStorage bloat
 
 const TypingIndicator = React.memo(({ icon, colors }: { icon?: React.ReactNode, colors?: any }) => (
-    <div style={{ display: 'flex', justifyContent: 'flex-start', animation: 'coachEntrance 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both' }}>
+    <div className="coach-typing-indicator" style={{ display: 'flex', justifyContent: 'flex-start', animation: 'coachEntrance 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both' }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem' }}>
             <div style={{
                 width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
@@ -191,6 +191,7 @@ const MessageBubble = React.memo(({ msg, onReport, icon, colors }: MsgProps) => 
 
     return (
         <div
+            className="coach-message-bubble"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             style={{
@@ -532,7 +533,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
             <div style={{
                 position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column',
                 height: '100dvh', minHeight: 0, overflow: 'hidden',
-                background: '#050505', zIndex: 100,
+                background: '#050505', zIndex: 100, isolation: 'isolate',
             }} className="app-surface coach-screen">
                 <AuroraBackground colors={currentTheme.colors} />
 

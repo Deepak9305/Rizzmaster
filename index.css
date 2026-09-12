@@ -13,6 +13,12 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
 .web-premium-scroll {
   scrollbar-color: rgba(251, 191, 36, 0.35) transparent;
   scrollbar-width: thin;
@@ -729,6 +735,15 @@ body {
   height: 100dvh;
   min-height: 0;
   overflow: hidden;
+  position: relative;
+  isolation: isolate;
+}
+
+.native-coach-shell {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  will-change: auto !important;
 }
 
 .coach-header-inner {
@@ -763,11 +778,19 @@ body {
    left in an intermediate state when Android resumes a remote WebView. */
 html.native-app .coach-header,
 html.native-app .coach-messages,
-html.native-app .coach-composer {
+html.native-app .coach-composer,
+html.native-app .coach-message-bubble,
+html.native-app .coach-typing-indicator {
   animation: none !important;
   opacity: 1 !important;
   transform: none !important;
   will-change: auto !important;
+}
+
+html.native-app .coach-avatar > div:first-child {
+  animation: none !important;
+  opacity: 0.6 !important;
+  transform: none !important;
 }
 
 .app-modal :is(button, input, textarea):focus-visible,
