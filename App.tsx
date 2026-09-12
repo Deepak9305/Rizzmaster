@@ -48,8 +48,6 @@ import NoInternetOverlay from './components/NoInternetOverlay';
 
 const DAILY_CREDITS = 5;
 const IS_WEB_PLATFORM = !Capacitor.isNativePlatform();
-const INTERSTITIAL_PRELOAD_RETRY_MS = 15000;
-const INTERSTITIAL_REFRESH_INTERVAL_MS = 8 * 60 * 1000;
 const SILENT_PREMIUM_RESTORE_WAIT_MS = 45000;
 const SILENT_PREMIUM_RESTORE_RETRY_MS = 60000;
 const SILENT_PREMIUM_RESTORE_MAX_ATTEMPTS = 2;
@@ -971,7 +969,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   }, [showToast, isGuest, handleExitGuestMode]);
 
 
-  // Interstitial ads are now preloaded strictly sequentially (startup -> show -> preload next)
+  // Initialize native services without requesting an ad before a user reaches an ad trigger.
 
   // Initialize Native Services
   useEffect(() => {
@@ -999,9 +997,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
       // AdMob
       if (canUseNativeAdMob()) {
-        runAdTask('Initial AdMob init', AdMobService.initialize().then(() => {
-          return AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'));
-        }));
+        runAdTask('Initial AdMob init', AdMobService.initialize());
       }
 
       // In-App Purchases
@@ -2029,7 +2025,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         .catch(e => console.warn("[AdMob] Deferred interstitial failed:", e))
         .finally(() => {
           adTransitionInProgressRef.current = false;
-          runAdTask('Post-show preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
         });
       }
     }
