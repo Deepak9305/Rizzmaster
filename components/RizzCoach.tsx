@@ -531,22 +531,22 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
         <>
             <div style={{
                 position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column',
+                height: '100dvh', minHeight: 0, overflow: 'hidden',
                 background: '#050505', zIndex: 100,
-                willChange: 'transform',
-            }} className="app-surface">
+            }} className="app-surface coach-screen">
                 <AuroraBackground colors={currentTheme.colors} />
 
                 {/* Header */}
-                <div style={{
+                <div className="coach-header" style={{
                     flexShrink: 0, position: 'relative', zIndex: 10,
-                    paddingTop: !isPremium ? 'calc(env(safe-area-inset-top) + 44px)' : 'calc(env(safe-area-inset-top) + 0.75rem)',
+                    paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)',
                     background: 'rgba(5,5,5,0.75)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
                     animation: 'coachStaggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both',
                     willChange: 'transform, opacity',
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', maxWidth: '672px', margin: '0 auto' }}>
+                    <div className="coach-header-inner" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 3vw, 1rem)', width: '100%', maxWidth: '672px', margin: '0 auto', padding: '0 1rem', boxSizing: 'border-box' }}>
                         {/* Back */}
-                        <button onClick={onClose} aria-label="Go back"
+                        <button className="coach-back-button" onClick={onClose} aria-label="Go back"
                             style={{
                                 width: '36px', height: '36px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)',
                                 background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -561,7 +561,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                         </button>
 
                         {onOpenWebMenu && (
-                            <button onClick={onOpenWebMenu} aria-label="Open navigation menu"
+                            <button className="coach-menu-button" onClick={onOpenWebMenu} aria-label="Open navigation menu"
                                 style={{
                                     width: '36px', height: '36px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)',
                                     background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -575,7 +575,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                         )}
 
                         {/* Pulsing avatar */}
-                        <div style={{ position: 'relative', flexShrink: 0 }}>
+                        <div className="coach-avatar" style={{ position: 'relative', flexShrink: 0 }}>
                             <div style={{
                                 position: 'absolute', inset: '-4px', borderRadius: '50%',
                                 background: `linear-gradient(135deg, ${currentTheme.colors.primary}, ${currentTheme.colors.secondary})`,
@@ -594,7 +594,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                         </div>
 
                         {/* Identity & Dropdown */}
-                        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                        <div className="coach-identity" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                             <div style={{ fontSize: '15px', fontWeight: 900, color: 'white', letterSpacing: '-0.02em', lineHeight: 1 }}>Rizz AI</div>
                             <button
                                 onClick={() => setShowVibeDropdown(!showVibeDropdown)}
@@ -744,12 +744,12 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                 )}
 
                 {/* Messages */}
-                <div ref={scrollRef} style={{
-                    flex: 1, overflowY: 'auto', position: 'relative', zIndex: 10, padding: '1rem 1.25rem 0',
+                <div ref={scrollRef} className="coach-messages" style={{
+                    flex: '1 1 auto', minHeight: 0, minWidth: 0, overflowY: 'auto', position: 'relative', zIndex: 10, padding: '1rem 1rem 0',
                     animation: 'coachStaggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both',
                     willChange: 'transform, opacity',
                 }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', maxWidth: '672px', margin: '0 auto', paddingBottom: '0.5rem' }}>
+                    <div className="coach-messages-inner" style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', width: '100%', maxWidth: '672px', margin: '0 auto', paddingBottom: '0.5rem' }}>
                         {messages.map((msg, i) => (
                             <MessageBubble
                                 key={i}
@@ -764,9 +764,9 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                 </div>
 
                 {/* Input Container Wrapper */}
-                <div style={{
+                <div className="coach-composer" style={{
                     flexShrink: 0, position: 'relative', zIndex: 10,
-                    padding: '0 0 env(safe-area-inset-bottom)',
+                    padding: '0 0 max(env(safe-area-inset-bottom, 0px), 8px)',
                     borderTop: '1px solid rgba(255,255,255,0.06)',
                     animation: 'coachStaggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both',
                     willChange: 'transform, opacity',

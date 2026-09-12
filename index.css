@@ -723,6 +723,53 @@ body {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 24px 80px rgba(0, 0, 0, 0.3), 0 0 36px rgba(226, 24, 144, 0.08);
 }
 
+/* Coach is a viewport-owned surface. Explicit flex bounds prevent the message
+   history from pushing the header or composer off-screen in Android WebViews. */
+.coach-screen {
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.coach-header-inner {
+  min-width: 0;
+}
+
+.coach-messages {
+  min-height: 0;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.coach-messages-inner {
+  min-width: 0;
+}
+
+@media (max-width: 420px) {
+  .coach-header-inner {
+    padding-inline: 0.75rem !important;
+  }
+
+  .coach-identity {
+    flex-basis: 0;
+  }
+
+  .coach-identity button {
+    max-width: min(130px, 100%);
+  }
+}
+
+/* Avoid first-paint opacity/transform layers on native devices. They can be
+   left in an intermediate state when Android resumes a remote WebView. */
+html.native-app .coach-header,
+html.native-app .coach-messages,
+html.native-app .coach-composer {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  will-change: auto !important;
+}
+
 .app-modal :is(button, input, textarea):focus-visible,
 .app-surface :is(button, input, textarea):focus-visible {
   outline: 2px solid rgba(255, 124, 179, 0.9);
