@@ -1662,13 +1662,14 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     return null;
   }, []);
 
-  const handleWatchRewardedAd = useCallback(async () => {
+  const handleWatchRewardedAd = useCallback(async (requiredCreditsOverride?: 1 | 2) => {
     const currentProfile = profileRef.current;
+    const requiredCredits = requiredCreditsOverride ?? rewardedAdRequiredCredits;
+    const openedFromPremiumModal = showPremiumModal;
     if (
       !currentProfile ||
       currentProfile.is_premium ||
-      (currentProfile.credits || 0) >= rewardedAdRequiredCredits ||
-      !showRewardedAdOffer ||
+      (currentProfile.credits || 0) >= requiredCredits ||
       rewardedAdInProgressRef.current ||
       rewardedAdStatus === 'pending'
     ) {
@@ -1688,7 +1689,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
       let ssv: RewardVideoSsv | undefined;
       if (!isGuest && currentProfile.id !== 'guest_user') {
-        const attempt = await createRewardedAdAttempt(rewardedAdRequiredCredits);
+        const attempt = await createRewardedAdAttempt(requiredCredits);
         rewardedAdAttemptRef.current = attempt.attemptId;
         ssv = {
           userId: currentProfile.id,
@@ -1708,7 +1709,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         setShowRewardedAdOffer(false);
         setRewardedAdStatus('success');
         showToast('5 credits added. You can continue generating.', 'success');
-        handleBackNavigation();
+        if (openedFromPremiumModal) handleBackNavigation();
         return;
       }
 
@@ -1732,7 +1733,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
             setShowRewardedAdOffer(false);
             setRewardedAdStatus('success');
             showToast('5 credits added. You can continue generating.', 'success');
-            handleBackNavigation();
+            if (openedFromPremiumModal) handleBackNavigation();
           } else {
             showToast('Reward verified. Your credits will appear after the next profile refresh.', 'info');
           }
@@ -1756,7 +1757,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       rewardedAdInProgressRef.current = false;
       setIsRewardedAdLoading(false);
     }
-  }, [handleBackNavigation, isGuest, rewardedAdRequiredCredits, rewardedAdStatus, showRewardedAdOffer, showToast, syncProfile, updateCredits]);
+  }, [handleBackNavigation, isGuest, rewardedAdRequiredCredits, rewardedAdStatus, showPremiumModal, showToast, syncProfile, updateCredits]);
 
   const handleRestorePurchases = useCallback(async () => {
     if (!profileRef.current) return;
@@ -2745,10 +2746,11 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                       {!IS_WEB_PLATFORM && !profile?.is_premium && (
                         <button
                           type="button"
-                          onClick={() => handleCreditsExhausted(1)}
-                          className="w-full min-h-[58px] rounded-2xl border border-amber-300/30 bg-amber-300/10 px-2 py-3 text-xs font-bold text-amber-200 transition hover:bg-amber-300/20 active:scale-[0.98] flex flex-col items-center justify-center"
+                          onClick={() => handleWatchRewardedAd(1)}
+                          disabled={isRewardedAdLoading || rewardedAdStatus === 'pending'}
+                          className="w-full min-h-[58px] rounded-2xl border border-amber-300/30 bg-amber-300/10 px-2 py-3 text-xs font-bold text-amber-200 transition hover:bg-amber-300/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 flex flex-col items-center justify-center"
                         >
-                          <span>Watch an ad</span>
+                          <span>{isRewardedAdLoading ? 'Opening ad...' : 'Watch an ad'}</span>
                           <span className="text-[10px] uppercase tracking-wide text-amber-200/70">+5 credits</span>
                         </button>
                       )}
