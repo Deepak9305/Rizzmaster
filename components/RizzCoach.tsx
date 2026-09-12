@@ -532,8 +532,13 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
     return (
         <>
             <div style={{
-                position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column',
-                height: '100dvh', minHeight: 0, overflow: 'hidden',
+                // The native screen already lives inside a fixed app shell. Using an
+                // absolute child avoids the nested fixed/100dvh layout bug in some
+                // Android WebViews while keeping the browser screen viewport-owned.
+                position: IS_NATIVE_COACH ? 'absolute' : 'fixed', inset: 0,
+                display: 'flex', flexDirection: 'column',
+                height: IS_NATIVE_COACH ? '100%' : '100dvh',
+                width: '100%', minHeight: 0, maxHeight: '100%', overflow: 'hidden',
                 background: '#050505', zIndex: 100, isolation: 'isolate',
             }} className={`app-surface coach-screen${IS_NATIVE_COACH ? ' native-coach-screen' : ''}`}>
                 <AuroraBackground colors={currentTheme.colors} />
@@ -543,8 +548,8 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                     flexShrink: 0, position: 'relative', zIndex: 10,
                     paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)',
                     background: 'rgba(5,5,5,0.75)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-                    animation: 'coachStaggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both',
-                    willChange: 'transform, opacity',
+                    animation: IS_NATIVE_COACH ? 'none' : 'coachStaggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both',
+                    willChange: IS_NATIVE_COACH ? 'auto' : 'transform, opacity',
                 }}>
                     <div className="coach-header-inner" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 3vw, 1rem)', width: '100%', maxWidth: '672px', margin: '0 auto', padding: '0 1rem', boxSizing: 'border-box' }}>
                         {/* Back */}
@@ -748,8 +753,8 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                 {/* Messages */}
                 <div ref={scrollRef} className="coach-messages" style={{
                     flex: '1 1 auto', minHeight: 0, minWidth: 0, overflowY: 'auto', position: 'relative', zIndex: 10, padding: '1rem 1rem 0',
-                    animation: 'coachStaggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both',
-                    willChange: 'transform, opacity',
+                    animation: IS_NATIVE_COACH ? 'none' : 'coachStaggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both',
+                    willChange: IS_NATIVE_COACH ? 'auto' : 'transform, opacity',
                 }}>
                     <div className="coach-messages-inner" style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', width: '100%', maxWidth: '672px', margin: '0 auto', paddingBottom: '0.5rem' }}>
                         {messages.map((msg, i) => (
@@ -770,8 +775,8 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                     flexShrink: 0, position: 'relative', zIndex: 10,
                     padding: '0 0 max(env(safe-area-inset-bottom, 0px), 8px)',
                     borderTop: '1px solid rgba(255,255,255,0.06)',
-                    animation: 'coachStaggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both',
-                    willChange: 'transform, opacity',
+                    animation: IS_NATIVE_COACH ? 'none' : 'coachStaggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both',
+                    willChange: IS_NATIVE_COACH ? 'auto' : 'transform, opacity',
                 }}>
 
                     {/* Quick-Tap Prompts */}

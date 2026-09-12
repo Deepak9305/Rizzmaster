@@ -19,6 +19,15 @@ body,
   min-height: 100%;
 }
 
+html.native-app,
+html.native-app body,
+html.native-app #root {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  overflow: hidden;
+}
+
 .web-premium-scroll {
   scrollbar-color: rgba(251, 191, 36, 0.35) transparent;
   scrollbar-width: thin;
@@ -740,10 +749,37 @@ body,
 }
 
 .native-coach-shell {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
   animation: none !important;
   opacity: 1 !important;
   transform: none !important;
   will-change: auto !important;
+}
+
+.native-coach-screen {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+}
+
+.native-coach-screen .coach-header {
+  flex: 0 0 auto;
+}
+
+.native-coach-screen .coach-messages {
+  flex: 1 1 0%;
+  height: auto;
+}
+
+.native-coach-screen .coach-composer {
+  flex: 0 0 auto;
 }
 
 .coach-header-inner {
