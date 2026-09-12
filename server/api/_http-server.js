@@ -56,6 +56,7 @@ export const handleApiRequest = async (req, res, { routePath } = {}) => {
   }
 
   try {
+    req.rawQuery = (req.url || '').split('?')[1] || '';
     const rawBody = await readBody(req);
     req.rawBody = rawBody;
     const parsedBody = parseRequestBody(rawBody);

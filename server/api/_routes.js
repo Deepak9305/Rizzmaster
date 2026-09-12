@@ -16,4 +16,7 @@ export const routes = {
   '/api/dodo-checkout': () => import('./dodo-checkout.js'),
   '/api/dodo-portal': () => import('./dodo-portal.js'),
   '/api/dodo-webhook': () => import('./dodo-webhook.js'),
+  '/api/rewarded-ad/attempt': () => import('./rewarded-ad-attempt.js'),
+  '/api/rewarded-ad/status': () => import('./rewarded-ad-status.js'),
+  '/api/admob/reward-ssv': () => import('./admob-reward-ssv.js'),
 };

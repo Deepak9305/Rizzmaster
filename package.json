@@ -10,6 +10,7 @@
     "build": "tsc && vite build && node scripts/prerender-marketing.mjs",
     "preview": "vite preview",
     "test:dodo": "node --test tests/dodo-billing.test.mjs",
+    "test:rewarded": "node --test tests/rewarded-ad.test.mjs",
     "verify:native-config": "node scripts/verify-native-config.js",
     "db:export-supabase": "node scripts/export-supabase-data.mjs",
     "db:import-cloudsql": "node scripts/import-cloudsql-data.mjs"

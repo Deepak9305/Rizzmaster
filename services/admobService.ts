@@ -17,6 +17,15 @@ type PrepareOptions = {
     timeoutMs?: number;
 };
 
+export type RewardVideoSsv = {
+    userId: string;
+    customData: string;
+};
+
+const getRewardVideoSsvKey = (ssv?: RewardVideoSsv) => (
+    ssv ? `${ssv.userId}:${ssv.customData}` : ''
+);
+
 export type InterstitialShowReason =
     | 'shown'
     | 'not_initialized'
@@ -53,6 +62,7 @@ export const AdMobService = {
     lastInterstitialAdId: null as string | null,
     rewardVideoPreparedAt: 0,
     lastRewardVideoAdId: null as string | null,
+    lastRewardVideoSsvKey: '',
     rewardInterstitialPreparedAt: 0,
     lastRewardInterstitialAdId: null as string | null,
 
@@ -105,12 +115,14 @@ export const AdMobService = {
         this.rewardVideoPromise = null;
         this.rewardVideoPreparedAt = 0;
         this.lastRewardVideoAdId = null;
+        this.lastRewardVideoSsvKey = '';
     },
 
-    hasFreshRewardVideo(adId?: string) {
+    hasFreshRewardVideo(adId?: string, ssv?: RewardVideoSsv) {
         if (!this.rewardVideoReady) return false;
         if (!this.lastRewardVideoAdId) return false;
         if (adId && this.lastRewardVideoAdId !== adId) return false;
+        if (getRewardVideoSsvKey(ssv) !== this.lastRewardVideoSsvKey) return false;
         return Date.now() - this.rewardVideoPreparedAt < this.REWARDED_STALE_AFTER_MS;
     },
 
@@ -585,8 +597,10 @@ export const AdMobService = {
         }
     },
 
-    async prepareRewardVideo(adId: string): Promise<boolean> {
+    async prepareRewardVideo(adId: string, ssv?: RewardVideoSsv): Promise<boolean> {
         if (!canUseNativeAdMob()) return false;
+
+        const ssvKey = getRewardVideoSsvKey(ssv);
 
         const initialized = await this.ensureInitialized('Reward video prepare');
         if (!initialized) {
@@ -594,11 +608,14 @@ export const AdMobService = {
             return false;
         }
 
-        if (this.lastRewardVideoAdId && this.lastRewardVideoAdId !== adId) {
+        if (
+            (this.lastRewardVideoAdId && this.lastRewardVideoAdId !== adId) ||
+            this.lastRewardVideoSsvKey !== ssvKey
+        ) {
             this.invalidateRewardVideo();
         }
-        if (this.hasFreshRewardVideo(adId)) return true;
-        if (this.rewardVideoReady && !this.hasFreshRewardVideo(adId)) {
+        if (this.hasFreshRewardVideo(adId, ssv)) return true;
+        if (this.rewardVideoReady && !this.hasFreshRewardVideo(adId, ssv)) {
             console.log('[AdMob] Cached reward video went stale, refreshing it before show');
             this.invalidateRewardVideo();
         }
@@ -606,6 +623,7 @@ export const AdMobService = {
 
         this.rewardVideoPreparing = true;
         this.lastRewardVideoAdId = adId;
+        this.lastRewardVideoSsvKey = ssvKey;
         this.rewardVideoPromise = (async (): Promise<boolean> => {
             let prepared = false;
             try {
@@ -613,7 +631,7 @@ export const AdMobService = {
                     label: 'Reward Video',
                     loadedEvent: RewardAdPluginEvents.Loaded,
                     failedEvent: RewardAdPluginEvents.FailedToLoad,
-                    prepareAction: () => AdMob.prepareRewardVideoAd({ adId, isTesting: false }),
+                    prepareAction: () => AdMob.prepareRewardVideoAd({ adId, isTesting: false, ssv }),
                     timeoutMs: this.REWARDED_PREPARE_TIMEOUT_MS,
                 });
                 this.rewardVideoReady = prepared;
@@ -639,7 +657,7 @@ export const AdMobService = {
         return this.rewardVideoPromise;
     },
 
-    async showRewardVideo(adId: string, onShow?: () => void): Promise<boolean> {
+    async showRewardVideo(adId: string, ssv?: RewardVideoSsv, onShow?: () => void): Promise<boolean> {
         if (!canUseNativeAdMob()) return false;
         if (this.isRewardVideoShowing) return false;
         this.isRewardVideoShowing = true;
@@ -692,7 +710,10 @@ export const AdMobService = {
                         });
 
                         rewardListener = await AdMob.addListener(RewardAdPluginEvents.Rewarded, (info) => {
-                            console.log('[AdMob] User earned reward:', info);
+                            console.log('[AdMob] Reward video reward event received.', {
+                                amount: Number.isFinite(Number(info?.amount)) ? Number(info.amount) : null,
+                                type: typeof info?.type === 'string' ? info.type : null,
+                            });
                             earned = true;
                         });
 
@@ -712,10 +733,10 @@ export const AdMobService = {
                             cleanupAndResolve(false);
                         });
 
-                        if (!this.hasFreshRewardVideo(adId)) {
+                        if (!this.hasFreshRewardVideo(adId, ssv)) {
                             console.warn('[AdMob] Ad not ready, attempting JIT prepare...');
-                            const prepared = await this.prepareRewardVideo(adId);
-                            if (!prepared || !this.hasFreshRewardVideo(adId)) {
+                            const prepared = await this.prepareRewardVideo(adId, ssv);
+                            if (!prepared || !this.hasFreshRewardVideo(adId, ssv)) {
                                 console.error('[AdMob] JIT Prepare failed: Ad not ready.');
                                 cleanupAndResolve(false);
                                 return;

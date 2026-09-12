@@ -35,7 +35,7 @@ interface RizzCoachProps {
     onUpdateCredits: (newAmountOrUpdater: number | ((prev: number) => number)) => void;
     isPremium: boolean;
     onGoPremium?: () => void;
-    onCreditsExhausted?: () => void;
+    onCreditsExhausted?: (requiredCredits?: 1 | 2) => void;
     onOpenWebMenu?: () => void;
     onLoginRequired?: () => void;
     shadowNotes: string;
@@ -372,10 +372,10 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
         const trimmed = textareaRef.current?.value.trim() || '';
         if ((!trimmed && !image) || loading) return;
 
-        const cost = image ? 2 : 1;
+        const cost: 1 | 2 = image ? 2 : 1;
         if (!isPremium && credits < cost) {
             onClose();
-            setTimeout(() => onCreditsExhausted ? onCreditsExhausted() : onGoPremium && onGoPremium(), 300);
+            setTimeout(() => onCreditsExhausted ? onCreditsExhausted(cost) : onGoPremium && onGoPremium(), 300);
             return;
         }
 
@@ -409,8 +409,8 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
             }]);
 
             // Image costs 2 credits, text costs 1
-            const cost = hadImage ? 2 : 1;
-            if (!isPremium) onUpdateCredits((prev) => prev - cost);
+            const responseCost: 1 | 2 = hadImage ? 2 : 1;
+            if (!isPremium) onUpdateCredits((prev) => prev - responseCost);
         } catch (err: any) {
             console.error('Coach error:', err);
             if (err.message === 'LOGIN_REQUIRED') {
@@ -419,7 +419,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
             }
             if (err.message === 'INSUFFICIENT_CREDITS') {
                 onClose();
-                setTimeout(() => onCreditsExhausted ? onCreditsExhausted() : onGoPremium && onGoPremium(), 300);
+                setTimeout(() => onCreditsExhausted ? onCreditsExhausted(cost) : onGoPremium && onGoPremium(), 300);
                 return;
             }
             if (

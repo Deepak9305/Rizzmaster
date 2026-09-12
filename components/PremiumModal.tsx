@@ -8,6 +8,10 @@ interface PremiumModalProps {
     onRestore: () => void;
     isGuest?: boolean;
     userId?: string | null;
+    showRewardedAd?: boolean;
+    onWatchRewardedAd?: () => void;
+    isRewardAdLoading?: boolean;
+    rewardStatus?: 'idle' | 'loading' | 'pending' | 'success' | 'error';
 }
 
 // Only list features that are ACTUALLY gated behind premium
@@ -20,7 +24,17 @@ const FEATURES = [
     { icon: '🔥', label: 'Early Access to New Features', sub: 'First to get everything we ship.' },
 ];
 
-const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onRestore, isGuest = false, userId = null }) => {
+const PremiumModal: React.FC<PremiumModalProps> = ({
+    onClose,
+    onUpgrade,
+    onRestore,
+    isGuest = false,
+    userId = null,
+    showRewardedAd = false,
+    onWatchRewardedAd,
+    isRewardAdLoading = false,
+    rewardStatus = 'idle',
+}) => {
     const [selectedPlan, setSelectedPlan] = useState<'WEEKLY' | 'MONTHLY'>('WEEKLY');
     const [prices, setPrices] = useState({ weekly: '$4.99', monthly: '$15.99' });
     const hasNativePurchases = canUseNativeIap();
@@ -85,6 +99,49 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onResto
                 >
                     ✕
                 </button>
+
+                {showRewardedAd && onWatchRewardedAd && (
+                    <div className="mb-5 rounded-2xl border border-amber-400/25 bg-amber-400/5 p-4">
+                        <div className="flex items-start gap-3">
+                            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-amber-400/20 bg-amber-400/10 text-lg text-amber-300">
+                                +5
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <div className="text-sm font-bold text-white">Need a few more credits?</div>
+                                <p className="mt-1 text-[11px] leading-relaxed text-white/45">
+                                    Watch one short ad and get 5 credits instantly. The option returns whenever you run out again.
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={onWatchRewardedAd}
+                            disabled={isRewardAdLoading || rewardStatus === 'pending'}
+                            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-amber-300/35 bg-amber-300/10 px-3 py-2.5 text-xs font-bold text-amber-200 transition hover:bg-amber-300/20 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            {isRewardAdLoading || rewardStatus === 'pending'
+                                ? 'Verifying your reward...'
+                                : rewardStatus === 'error'
+                                    ? 'Try a rewarded ad again'
+                                    : 'Watch an ad for +5 credits'}
+                        </button>
+                        {rewardStatus === 'pending' && (
+                            <p className="mt-2 text-center text-[10px] text-white/40">
+                                Your reward is being confirmed. It will appear as soon as AdMob sends verification.
+                            </p>
+                        )}
+                        {rewardStatus === 'error' && (
+                            <p className="mt-2 text-center text-[10px] text-rose-300/75">
+                                The ad did not complete verification. No credits were added.
+                            </p>
+                        )}
+                        {rewardStatus === 'success' && (
+                            <p className="mt-2 text-center text-[10px] text-emerald-300/80">
+                                5 credits added. You can continue generating.
+                            </p>
+                        )}
+                    </div>
+                )}
 
                 {/* Hero */}
                 <div className="text-center mb-5">

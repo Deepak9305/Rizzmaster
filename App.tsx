@@ -15,7 +15,7 @@ import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Keyboard } from '@capacitor/keyboard';
 import { StatusBar, Style } from '@capacitor/status-bar';
-import { AdMobService } from './services/admobService';
+import { AdMobService, type RewardVideoSsv } from './services/admobService';
 import { OneSignalService } from './services/oneSignalService';
 import IAPService from './services/iapService';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
@@ -34,6 +34,7 @@ import {
 } from './services/nativeCapabilities';
 import ForceUpdateGate from './components/ForceUpdateGate';
 import { loadUpdateGateConfig, type UpdateGateConfig } from './services/updateGateService';
+import { createRewardedAdAttempt, getRewardedAdStatus, type RewardedAdStatus } from './services/rewardedAdService';
 
 // Lazy Load Heavy Components / Modals
 const PremiumModal = lazy(() => import('./components/PremiumModal'));
@@ -416,6 +417,8 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const sessionChannelRef = useRef<BroadcastChannel | null>(null);
+  const rewardedAdAttemptRef = useRef<string | null>(null);
+  const rewardedAdInProgressRef = useRef(false);
 
   // Splash State
   const [showSplash, setShowSplash] = useState(true);
@@ -439,6 +442,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
   // Modals & Flags
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showRewardedAdOffer, setShowRewardedAdOffer] = useState(false);
+  const [rewardedAdStatus, setRewardedAdStatus] = useState<'idle' | 'loading' | 'pending' | 'success' | 'error'>('idle');
+  const [isRewardedAdLoading, setIsRewardedAdLoading] = useState(false);
+  const [rewardedAdRequiredCredits, setRewardedAdRequiredCredits] = useState<1 | 2>(1);
   const [showSavedModal, setShowSavedModal] = useState(false);
   const [showWebMenu, setShowWebMenu] = useState(false);
   const [showWebPremiumModal, setShowWebPremiumModal] = useState(false);
@@ -822,6 +829,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     // If guest taps Upgrade, close the modal and send them to sign-in/sign-up
     if (!currentProfile || currentProfile.id === 'guest_user' || isGuest) {
       setShowPremiumModal(false);
+      setShowRewardedAdOffer(false);
+      setRewardedAdStatus('idle');
+      setIsRewardedAdLoading(false);
+      rewardedAdAttemptRef.current = null;
       setLoginReason('premium');
       handleExitGuestMode();
       return false;
@@ -1078,6 +1089,12 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       setCurrentView(state.view || getViewFromLocation());
       setShowPremiumModal(!!state.premium);
       setShowSavedModal(!!state.saved);
+      if (!state.premium) {
+        setShowRewardedAdOffer(false);
+        setRewardedAdStatus('idle');
+        setIsRewardedAdLoading(false);
+        rewardedAdAttemptRef.current = null;
+      }
     };
 
     if (!window.history.state) {
@@ -1147,14 +1164,19 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       setCurrentView('HOME');
       setShowPremiumModal(false);
       setShowSavedModal(false);
+      setShowRewardedAdOffer(false);
+      setRewardedAdStatus('idle');
+      setIsRewardedAdLoading(false);
+      rewardedAdAttemptRef.current = null;
       window.history.replaceState({ view: 'HOME' }, '', '/');
     }
 
 
   }, [currentView, loading]);
 
-  const handleOpenPremium = useCallback(() => {
+  const handleOpenPremium = useCallback((allowRewardedAd = false) => {
     if (IS_WEB_PLATFORM) {
+      setShowRewardedAdOffer(false);
       setWebPremiumReason('premium');
       setShowWebPremiumModal(true);
       return;
@@ -1162,17 +1184,22 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
     // Guests see the premium modal first so they understand what they're getting
     window.history.pushState({ view: currentView, premium: true }, '');
+    setShowRewardedAdOffer(allowRewardedAd && canUseNativeAdMob() && !profileRef.current?.is_premium);
+    setRewardedAdStatus('idle');
+    setIsRewardedAdLoading(false);
+    rewardedAdAttemptRef.current = null;
     setShowPremiumModal(true);
   }, [currentView]);
 
-  const handleCreditsExhausted = useCallback(() => {
+  const handleCreditsExhausted = useCallback((requiredCredits: 1 | 2 = 1) => {
     if (IS_WEB_PLATFORM) {
       setWebPremiumReason('credits');
       setShowWebPremiumModal(true);
       return;
     }
 
-    handleOpenPremium();
+    setRewardedAdRequiredCredits(requiredCredits);
+    handleOpenPremium(true);
   }, [handleOpenPremium]);
 
   useEffect(() => {
@@ -1580,6 +1607,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       setCurrentView('HOME');
       setShowPremiumModal(false);
       setShowSavedModal(false);
+      setShowRewardedAdOffer(false);
+      setRewardedAdStatus('idle');
+      setIsRewardedAdLoading(false);
+      rewardedAdAttemptRef.current = null;
       showToast("Successfully logged out 👋", 'success');
       window.history.replaceState({ view: 'HOME' }, '', '/');
     }
@@ -1627,6 +1658,97 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     }
     return null;
   }, []);
+
+  const handleWatchRewardedAd = useCallback(async () => {
+    const currentProfile = profileRef.current;
+    if (
+      !currentProfile ||
+      currentProfile.is_premium ||
+      (currentProfile.credits || 0) >= rewardedAdRequiredCredits ||
+      !showRewardedAdOffer ||
+      !canUseNativeAdMob() ||
+      rewardedAdInProgressRef.current ||
+      rewardedAdStatus === 'pending'
+    ) {
+      return;
+    }
+
+    rewardedAdInProgressRef.current = true;
+    setIsRewardedAdLoading(true);
+    setRewardedAdStatus('loading');
+
+    try {
+      let ssv: RewardVideoSsv | undefined;
+      if (!isGuest && currentProfile.id !== 'guest_user') {
+        const attempt = await createRewardedAdAttempt(rewardedAdRequiredCredits);
+        rewardedAdAttemptRef.current = attempt.attemptId;
+        ssv = {
+          userId: currentProfile.id,
+          customData: attempt.customData || attempt.attemptId,
+        };
+      }
+
+      const earned = await AdMobService.showRewardVideo(getAdId('REWARD'), ssv);
+      if (!earned) {
+        setRewardedAdStatus('error');
+        showToast('The rewarded ad could not be completed. No credits were added.', 'error');
+        return;
+      }
+
+      if (isGuest || currentProfile.id === 'guest_user') {
+        updateCredits((previous) => previous + 5);
+        setShowRewardedAdOffer(false);
+        setRewardedAdStatus('success');
+        showToast('5 credits added. You can continue generating.', 'success');
+        handleBackNavigation();
+        return;
+      }
+
+      const attemptId = rewardedAdAttemptRef.current;
+      if (!attemptId) {
+        setRewardedAdStatus('error');
+        showToast('Reward verification could not be started. No credits were added.', 'error');
+        return;
+      }
+
+      setRewardedAdStatus('pending');
+      let latestStatus: RewardedAdStatus = 'pending';
+      for (let poll = 0; poll < 8; poll += 1) {
+        await wait(1500);
+        const status = await getRewardedAdStatus(attemptId);
+        latestStatus = status.status;
+
+        if (status.status === 'granted') {
+          const syncedProfile = await syncProfile();
+          if (syncedProfile) {
+            setShowRewardedAdOffer(false);
+            setRewardedAdStatus('success');
+            showToast('5 credits added. You can continue generating.', 'success');
+            handleBackNavigation();
+          } else {
+            showToast('Reward verified. Your credits will appear after the next profile refresh.', 'info');
+          }
+          return;
+        }
+        if (status.status === 'rejected' || status.status === 'expired') break;
+      }
+
+      if (latestStatus === 'pending') {
+        setRewardedAdStatus('pending');
+        showToast('Reward verification is still pending. Your credits will appear shortly.', 'info');
+      } else {
+        setRewardedAdStatus('error');
+        showToast('The reward could not be verified. No credits were added.', 'error');
+      }
+    } catch (error) {
+      console.warn('[AdMob] Rewarded credit flow failed:', error instanceof Error ? error.message : error);
+      setRewardedAdStatus('error');
+      showToast('Reward verification is temporarily unavailable. No credits were added.', 'error');
+    } finally {
+      rewardedAdInProgressRef.current = false;
+      setIsRewardedAdLoading(false);
+    }
+  }, [handleBackNavigation, isGuest, rewardedAdRequiredCredits, rewardedAdStatus, showRewardedAdOffer, showToast, syncProfile, updateCredits]);
 
   const handleRestorePurchases = useCallback(async () => {
     if (!profileRef.current) return;
@@ -1933,11 +2055,11 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     }
     setInputError(null);
 
-    const cost = (mode === InputMode.CHAT && image) ? 2 : 1;
+    const cost: 1 | 2 = (mode === InputMode.CHAT && image) ? 2 : 1;
 
     // Guests are rate-limited server-side (5 req/min by IP) but still adhere to client-side credit limits
     if (!currentProfile.is_premium && (currentProfile.credits || 0) < cost) {
-      handleCreditsExhausted();
+      handleCreditsExhausted(cost);
       return;
     }
 
@@ -2105,7 +2227,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       }
       if (error.message === 'INSUFFICIENT_CREDITS') {
          refundOptimisticCredits();
-         handleCreditsExhausted();
+         handleCreditsExhausted(cost);
          if (shouldSyncSignedInProfile) {
            syncProfile().catch(() => {});
          }
@@ -2405,6 +2527,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                     onRestore={handleRestorePurchases}
                     isGuest={isGuest}
                     userId={profile?.id || null}
+                    showRewardedAd={showRewardedAdOffer && canUseNativeAdMob() && !profile?.is_premium}
+                    onWatchRewardedAd={handleWatchRewardedAd}
+                    isRewardAdLoading={isRewardedAdLoading}
+                    rewardStatus={rewardedAdStatus}
                   />
                 )}
                 <SavedModal
@@ -2437,7 +2563,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                   </button>
 
                   {!profile?.is_premium && (
-                    <button onClick={handleOpenPremium} className="web-app-premium-button hidden md:flex px-4 py-2 bg-gradient-to-r from-yellow-600 to-yellow-400 text-black text-xs font-bold rounded-full items-center gap-1 hover:brightness-110 transition-all active:scale-95">
+                    <button onClick={() => handleOpenPremium()} className="web-app-premium-button hidden md:flex px-4 py-2 bg-gradient-to-r from-yellow-600 to-yellow-400 text-black text-xs font-bold rounded-full items-center gap-1 hover:brightness-110 transition-all active:scale-95">
                       <span>👑</span> Go Premium
                     </button>
                   )}
@@ -2603,7 +2729,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                       )}
                     </button>
     ) : (
-                    <button onClick={handleOpenPremium} className="w-full bg-gradient-to-r from-yellow-500 to-amber-600 text-black py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base shadow-xl hover:brightness-110 active:scale-[0.98] transition-all flex flex-col items-center justify-center animate-pulse">
+                    <button onClick={() => handleOpenPremium()} className="w-full bg-gradient-to-r from-yellow-500 to-amber-600 text-black py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base shadow-xl hover:brightness-110 active:scale-[0.98] transition-all flex flex-col items-center justify-center animate-pulse">
                       Go Unlimited
                     </button>
                   )}
