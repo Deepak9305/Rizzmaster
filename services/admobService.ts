@@ -23,11 +23,11 @@ export type RewardVideoSsv = {
     customData: string;
 };
 
-const REWARDED_ITEM = 'rizz_credits';
-const REWARDED_AMOUNT = 5;
-
-const isExpectedReward = (info: Partial<AdMobRewardItem> | null | undefined) => (
-    Number(info?.amount) === REWARDED_AMOUNT && info?.type === REWARDED_ITEM
+// Android mediation adapters do not consistently preserve the configured reward
+// type in the JS bridge. A positive native reward callback is authoritative for
+// this fixed ad unit; the server still grants only its configured 5-credit item.
+const didEarnReward = (info: Partial<AdMobRewardItem> | null | undefined) => (
+    Number(info?.amount) > 0
 );
 
 const getRewardVideoSsvKey = (ssv?: RewardVideoSsv) => (
@@ -725,9 +725,9 @@ export const AdMobService = {
                                 amount: Number.isFinite(Number(info?.amount)) ? Number(info.amount) : null,
                                 type: typeof info?.type === 'string' ? info.type : null,
                             });
-                            earned = isExpectedReward(info);
+                            earned = didEarnReward(info);
                             if (!earned) {
-                                console.warn('[AdMob] Reward video returned an unexpected reward configuration.');
+                                console.warn('[AdMob] Reward video callback did not include a positive reward amount.');
                             }
                         });
 
@@ -769,7 +769,7 @@ export const AdMobService = {
                             // the source of truth if the JS event delivery is
                             // delayed or missed by the WebView bridge.
                             const rewardItem = await AdMob.showRewardVideoAd({ adId }) as AdMobRewardItem;
-                            if (isExpectedReward(rewardItem)) {
+                            if (didEarnReward(rewardItem)) {
                                 earned = true;
                             }
                             cleanupAndResolve(earned);
