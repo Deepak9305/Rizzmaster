@@ -31,7 +31,6 @@ export default async function handler(req, res) {
   const signature = typeof query.signature === 'string' ? query.signature : '';
   const keyId = typeof query.key_id === 'string' ? query.key_id : '';
 
-  if (!isUuid(attemptId)) return reject(res, 'SSV_ATTEMPT_INVALID');
   if (!transactionId) return reject(res, 'SSV_TRANSACTION_INVALID');
   if (!isValidRewardPayload({ adUnit, rewardItem, rewardAmount })) return reject(res, 'SSV_REWARD_MISMATCH');
 
@@ -45,6 +44,16 @@ export default async function handler(req, res) {
     return reject(res, verification.code || 'SSV_SIGNATURE_INVALID');
   }
 
+  // AdMob's dashboard URL verification uses a signed sample callback rather
+  // than a live app attempt. A verified callback without a valid attempt is
+  // safe to acknowledge because the grant RPC is never called.
+  if (!isUuid(attemptId)) {
+    console.info('[AdMob SSV] Verified callback acknowledged without an app attempt.', {
+      code: 'SSV_VERIFICATION_ONLY',
+    });
+    return json(res, 200, { ok: true, status: 'verification_only' });
+  }
+
   try {
     const { data: attempt, error: attemptError } = await supabaseAdmin
       .from('rewarded_ad_attempts')
@@ -52,8 +61,18 @@ export default async function handler(req, res) {
       .eq('id', attemptId)
       .maybeSingle();
     if (attemptError) throw attemptError;
-    if (!attempt) return reject(res, 'SSV_ATTEMPT_NOT_FOUND');
-    if (userId && userId !== attempt.user_id) return reject(res, 'SSV_USER_MISMATCH');
+    if (!attempt) {
+      console.warn('[AdMob SSV] Verified callback did not match an app attempt.', {
+        code: 'SSV_ATTEMPT_NOT_FOUND',
+      });
+      return json(res, 200, { ok: true, status: 'ignored' });
+    }
+    if (userId && userId !== attempt.user_id) {
+      console.warn('[AdMob SSV] Verified callback user did not match the app attempt.', {
+        code: 'SSV_USER_MISMATCH',
+      });
+      return json(res, 200, { ok: true, status: 'rejected', code: 'SSV_USER_MISMATCH' });
+    }
 
     const { data: result, error: grantError } = await supabaseAdmin.rpc('admin_grant_rewarded_ad', {
       p_attempt_id: attemptId,
