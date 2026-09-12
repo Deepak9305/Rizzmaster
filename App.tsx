@@ -443,7 +443,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
   // Modals & Flags
   const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [showRewardedAdOffer, setShowRewardedAdOffer] = useState(false);
   const [rewardedAdStatus, setRewardedAdStatus] = useState<'idle' | 'loading' | 'pending' | 'success' | 'error'>('idle');
   const [isRewardedAdLoading, setIsRewardedAdLoading] = useState(false);
   const [rewardedAdRequiredCredits, setRewardedAdRequiredCredits] = useState<1 | 2>(1);
@@ -830,7 +829,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     // If guest taps Upgrade, close the modal and send them to sign-in/sign-up
     if (!currentProfile || currentProfile.id === 'guest_user' || isGuest) {
       setShowPremiumModal(false);
-      setShowRewardedAdOffer(false);
       setRewardedAdStatus('idle');
       setIsRewardedAdLoading(false);
       rewardedAdAttemptRef.current = null;
@@ -1091,7 +1089,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       setShowPremiumModal(!!state.premium);
       setShowSavedModal(!!state.saved);
       if (!state.premium) {
-        setShowRewardedAdOffer(false);
         setRewardedAdStatus('idle');
         setIsRewardedAdLoading(false);
         rewardedAdAttemptRef.current = null;
@@ -1165,7 +1162,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       setCurrentView('HOME');
       setShowPremiumModal(false);
       setShowSavedModal(false);
-      setShowRewardedAdOffer(false);
       setRewardedAdStatus('idle');
       setIsRewardedAdLoading(false);
       rewardedAdAttemptRef.current = null;
@@ -1175,9 +1171,8 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
   }, [currentView, loading]);
 
-  const handleOpenPremium = useCallback((allowRewardedAd = false) => {
+  const handleOpenPremium = useCallback(() => {
     if (IS_WEB_PLATFORM) {
-      setShowRewardedAdOffer(false);
       setWebPremiumReason('premium');
       setShowWebPremiumModal(true);
       return;
@@ -1185,9 +1180,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
     // Guests see the premium modal first so they understand what they're getting
     window.history.pushState({ view: currentView, premium: true }, '');
-    // The offer belongs to the native credit-exhaustion flow. Do not hide it
-    // just because AdMob has not finished registering in the WebView yet.
-    setShowRewardedAdOffer(allowRewardedAd && !IS_WEB_PLATFORM && !profileRef.current?.is_premium);
     setRewardedAdStatus('idle');
     setIsRewardedAdLoading(false);
     rewardedAdAttemptRef.current = null;
@@ -1202,7 +1194,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     }
 
     setRewardedAdRequiredCredits(requiredCredits);
-    handleOpenPremium(true);
+    handleOpenPremium();
   }, [handleOpenPremium]);
 
   useEffect(() => {
@@ -1610,7 +1602,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       setCurrentView('HOME');
       setShowPremiumModal(false);
       setShowSavedModal(false);
-      setShowRewardedAdOffer(false);
       setRewardedAdStatus('idle');
       setIsRewardedAdLoading(false);
       rewardedAdAttemptRef.current = null;
@@ -1706,7 +1697,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
       if (isGuest || currentProfile.id === 'guest_user') {
         updateCredits((previous) => previous + 5);
-        setShowRewardedAdOffer(false);
         setRewardedAdStatus('success');
         showToast('5 credits added. You can continue generating.', 'success');
         if (openedFromPremiumModal) handleBackNavigation();
@@ -1735,7 +1725,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         if (status.status === 'granted') {
           const syncedProfile = await syncProfile();
           if (syncedProfile) {
-            setShowRewardedAdOffer(false);
             setRewardedAdStatus('success');
             showToast('5 credits added. You can continue generating.', 'success');
             if (openedFromPremiumModal) handleBackNavigation();
@@ -2541,10 +2530,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                     onRestore={handleRestorePurchases}
                     isGuest={isGuest}
                     userId={profile?.id || null}
-                    showRewardedAd={showRewardedAdOffer && !IS_WEB_PLATFORM && !profile?.is_premium}
-                    onWatchRewardedAd={handleWatchRewardedAd}
-                    isRewardAdLoading={isRewardedAdLoading}
-                    rewardStatus={rewardedAdStatus}
                   />
                 )}
                 <SavedModal
