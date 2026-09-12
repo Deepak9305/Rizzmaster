@@ -472,6 +472,7 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
   'signs-texting-conversation-becoming-one-sided': ['I have enjoyed our chats. Want to continue this over coffee this week?', 'I have noticed I am usually starting our conversations. Are you still interested in keeping in touch?', 'I do not want to keep carrying the conversation, so I am going to step back. Wishing you well.'],
   'how-to-tell-if-someone-is-flirting-over-text': ['You are making a strong case for yourself. What is your best argument in person?', 'I cannot tell if you are teasing me or flirting with me. Either way, I am enjoying it.', 'I like this energy. Want to continue it over coffee this week?'],
   'texting-boundaries-while-dating': ['I like talking with you, but I am usually offline during work. I will reply when I am free.', 'I am not comfortable sharing that yet. I would rather get to know each other first.', 'I am enjoying this, but I want to keep the pace slower. Is that something you are comfortable with?'],
+  'how-to-connect-emotionally-while-dating': ['I have enjoyed getting to know you. What has been on your mind lately?', 'I like how easy it feels to talk with you. What helps you feel cared for in a relationship?', 'I want to keep getting to know you. Want to do something low-key together this weekend?'],
   'texting-mistakes-new-conversation-feel-forced': ['You mentioned you are trying every ramen place in town. Which one is winning so far?', 'I finally tried that restaurant near my office and the dessert was better than the main course. What is your reliable bad-day meal?', 'I have enjoyed talking with you. Want to continue this over coffee this week?'],
   'how-to-ask-someone-out-over-text': ['I have enjoyed talking with you. Want to grab coffee at that place you mentioned this Saturday?', 'You have made three strong opinions about noodles, so I think you owe me a food tour. Free Thursday?', 'I like talking with you and would like to take you on a date. Are you free next week?'],
   'how-long-should-you-text-before-asking-someone-out': ['I am enjoying this conversation. Want to continue it over coffee this week?', 'You have made a strong case for that bakery. Want to test it together Saturday?', 'This has been fun. Are you free for a drink next week?'],
@@ -490,6 +491,7 @@ const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
   'signs-texting-conversation-becoming-one-sided': { do: 'Look at the pattern, communicate clearly once, and leave room for shared effort.', doNot: 'Keep rescuing the chat, run silent tests, or treat every quiet patch as a personal verdict.' },
   'how-to-tell-if-someone-is-flirting-over-text': { do: 'Respond to the energy you actually feel and communicate clearly when the tone matters.', doNot: 'Treat one emoji as proof, escalate pressure, or ignore a boundary because the attention feels flattering.' },
   'texting-boundaries-while-dating': { do: 'Name your limit clearly, explain only what is useful, and follow through with the action you control.', doNot: 'Use silent tests, apologise for having needs, or keep negotiating after a clear no.' },
+  'how-to-connect-emotionally-while-dating': { do: 'Offer genuine curiosity, share in layers, and look for consistent mutual effort.', doNot: 'Force vulnerability, treat intensity as intimacy, or carry the entire emotional connection alone.' },
   'texting-mistakes-new-conversation-feel-forced': { do: 'Share one real detail, ask one natural question, and give the other person room to participate.', doNot: 'Perform constantly, stack questions, or fill every pause to prevent the chat from going quiet.' },
   'how-to-ask-someone-out-over-text': { do: 'Show interest, suggest a real plan, and make the answer easy.', doNot: 'Hide the invitation behind disclaimers, pressure, or a vague "sometime".' },
   'how-long-should-you-text-before-asking-someone-out': { do: 'Watch for shared effort, then make a clear invitation when there is a natural bridge.', doNot: 'Use a rigid day count or keep texting forever to avoid a real answer.' },
@@ -596,6 +598,11 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'how-to-tell-if-someone-is-flirting-over-text', label: 'Read flirting over text' },
     { slug: 'how-to-ask-someone-out-over-text', label: 'Ask someone out clearly' },
     { slug: 'what-to-text-after-getting-someones-number', label: 'Start a new conversation' }
+  ],
+  'how-to-connect-emotionally-while-dating': [
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy dating boundaries' },
+    { slug: 'how-to-tell-if-someone-is-flirting-over-text', label: 'Read signs of mutual interest' },
+    { slug: 'what-to-text-after-a-first-date', label: 'What to text after a first date' }
   ],
   'texting-mistakes-new-conversation-feel-forced': [
     { slug: 'what-to-text-after-getting-someones-number', label: 'What to text after getting their number' },

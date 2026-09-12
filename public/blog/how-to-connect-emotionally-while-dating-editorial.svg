@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">How to connect emotionally while dating</title>
+  <desc id="desc">A neon editorial illustration of two people building emotional closeness through curiosity, honesty, shared experiences, and mutual care.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#080b1e"/>
+      <stop offset="0.48" stop-color="#17132d"/>
+      <stop offset="1" stop-color="#28131f"/>
+    </linearGradient>
+    <linearGradient id="sunset" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff4c9e"/>
+      <stop offset="0.5" stop-color="#d96ce9"/>
+      <stop offset="1" stop-color="#ffc857"/>
+    </linearGradient>
+    <linearGradient id="cyanPink" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#62ddff"/>
+      <stop offset="1" stop-color="#ff649c"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="45%" r="60%">
+      <stop offset="0" stop-color="#ff5ba9" stop-opacity="0.25"/>
+      <stop offset="0.52" stop-color="#8c55d6" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#0b0d20" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="#ffffff" stroke-opacity="0.05"/>
+    </pattern>
+    <filter id="glowLarge" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="14" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowSmall" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="900" rx="38" fill="url(#bg)"/>
+  <rect width="1600" height="900" rx="38" fill="url(#grid)" opacity="0.45"/>
+  <ellipse cx="800" cy="420" rx="690" ry="445" fill="url(#glow)"/>
+  <path d="M80 730 C310 560 455 812 710 663 S1122 488 1520 640" fill="none" stroke="#ff4c9e" stroke-opacity="0.2" stroke-width="2"/>
+  <path d="M48 780 C310 620 470 856 730 711 S1148 535 1548 686" fill="none" stroke="#62ddff" stroke-opacity="0.13" stroke-width="2"/>
+
+  <g fill="#ffffff" opacity="0.68">
+    <circle cx="148" cy="148" r="3"/><circle cx="318" cy="244" r="2"/><circle cx="1400" cy="144" r="3"/>
+    <circle cx="1504" cy="302" r="2"/><circle cx="1190" cy="106" r="2"/><circle cx="446" cy="104" r="2"/>
+  </g>
+  <g fill="#ffc857" filter="url(#glowSmall)">
+    <path d="M1270 184 l5 14 14 5 -14 5 -5 14 -5-14 -14-5 14-5z"/>
+    <path d="M345 585 l4 11 11 4 -11 4 -4 11 -4-11 -11-4 11-4z"/>
+  </g>
+
+  <g font-family="Trebuchet MS, Arial, sans-serif">
+    <text x="110" y="112" fill="#ff94c9" font-size="20" font-weight="700" letter-spacing="6">REAL CLOSENESS</text>
+    <text x="110" y="173" fill="#ffffff" font-size="49" font-weight="700">Be curious. Be honest.</text>
+    <text x="110" y="228" fill="#ffffff" font-size="49" font-weight="700">Let trust take its time.</text>
+    <text x="110" y="270" fill="#b9b4c8" font-size="19" letter-spacing="0.5">Emotional intimacy is built by two people, one moment at a time.</text>
+
+    <g transform="translate(106 374)">
+      <rect width="350" height="245" rx="26" fill="#0d182b" fill-opacity="0.86" stroke="#62ddff" stroke-opacity="0.6" stroke-width="2"/>
+      <rect x="21" y="21" width="308" height="40" rx="20" fill="#62ddff" fill-opacity="0.11"/>
+      <circle cx="43" cy="41" r="8" fill="#62ddff"/>
+      <text x="65" y="48" fill="#9eeaff" font-size="16" font-weight="700" letter-spacing="2.8">YOUR INNER WORLD</text>
+      <text x="28" y="108" fill="#f1fbff" font-size="19">Share in layers.</text>
+      <text x="28" y="146" fill="#f1fbff" font-size="19">Name what matters.</text>
+      <text x="28" y="184" fill="#f1fbff" font-size="19">Stay open and real.</text>
+      <path d="M28 210 H322" stroke="#ffffff" stroke-opacity="0.1"/>
+      <text x="28" y="232" fill="#8de2f7" font-size="14" letter-spacing="1.3">TRUST EARNS MORE ACCESS</text>
+    </g>
+
+    <g transform="translate(1144 374)">
+      <rect width="350" height="245" rx="26" fill="#241328" fill-opacity="0.88" stroke="#ff638f" stroke-opacity="0.67" stroke-width="2"/>
+      <rect x="21" y="21" width="308" height="40" rx="20" fill="#ff4c9e" fill-opacity="0.12"/>
+      <circle cx="43" cy="41" r="8" fill="#ff638f"/>
+      <text x="65" y="48" fill="#ffb0d0" font-size="16" font-weight="700" letter-spacing="2.8">SHARED CARE</text>
+      <text x="28" y="108" fill="#fff3f7" font-size="19">Listen with attention.</text>
+      <text x="28" y="146" fill="#fff3f7" font-size="19">Follow through gently.</text>
+      <text x="28" y="184" fill="#fff3f7" font-size="19">Make room for no.</text>
+      <path d="M28 210 H322" stroke="#ffffff" stroke-opacity="0.1"/>
+      <text x="28" y="232" fill="#ff9fc3" font-size="14" letter-spacing="1.3">CLOSENESS STAYS MUTUAL</text>
+    </g>
+
+    <g transform="translate(515 330)">
+      <path d="M285 0 V42" stroke="url(#sunset)" stroke-width="4" stroke-linecap="round" filter="url(#glowSmall)"/>
+      <path d="M285 388 V346" stroke="url(#sunset)" stroke-width="4" stroke-linecap="round" filter="url(#glowSmall)"/>
+      <rect width="570" height="388" rx="34" fill="#090c1e" fill-opacity="0.95" stroke="url(#sunset)" stroke-width="3"/>
+      <rect x="22" y="22" width="526" height="55" rx="18" fill="#ffffff" fill-opacity="0.04"/>
+      <circle cx="53" cy="50" r="8" fill="#ff4c9e"/>
+      <text x="79" y="57" fill="#ffb4d3" font-size="16" font-weight="700" letter-spacing="3">THE CONNECTION LOOP</text>
+      <circle cx="505" cy="50" r="9" fill="#ffc857"/>
+
+      <g transform="translate(38 113)">
+        <path d="M0 0 H322 Q340 0 340 18 V70 Q340 88 322 88 H0 Q-18 88 -18 70 V18 Q-18 0 0 0Z" fill="#14243c" stroke="#62ddff" stroke-opacity="0.65" stroke-width="2"/>
+        <text x="21" y="36" fill="#eafaff" font-size="18">What has been on your mind?</text>
+        <text x="21" y="66" fill="#8ee4f8" font-size="14" font-weight="700" letter-spacing="1.4">CURIOSITY</text>
+      </g>
+      <g transform="translate(190 220)">
+        <path d="M0 0 H304 Q322 0 322 18 V70 Q322 88 304 88 H0 Q-18 88 -18 70 V18 Q-18 0 0 0Z" fill="#3a1b39" stroke="#ff638f" stroke-opacity="0.78" stroke-width="2"/>
+        <text x="21" y="36" fill="#fff1f6" font-size="18">I feel safe telling you.</text>
+        <text x="21" y="66" fill="#ffb7d1" font-size="14" font-weight="700" letter-spacing="1.4">HONESTY</text>
+      </g>
+      <g transform="translate(183 338)">
+        <circle cx="0" cy="0" r="5" fill="#62ddff"/><circle cx="22" cy="0" r="5" fill="#d96ce9"/><circle cx="44" cy="0" r="5" fill="#ffc857"/>
+        <text x="72" y="6" fill="#c9c3d4" font-size="15" letter-spacing="1.4">LISTEN  |  SHARE  |  REPEAT</text>
+      </g>
+    </g>
+
+    <g transform="translate(581 760)">
+      <rect width="438" height="60" rx="30" fill="#ff4c9e" fill-opacity="0.1" stroke="#ff638f" stroke-opacity="0.57"/>
+      <circle cx="34" cy="30" r="13" fill="url(#cyanPink)" filter="url(#glowSmall)"/>
+      <path d="M34 21 V39 M25 30 H43" stroke="#150c20" stroke-width="3" stroke-linecap="round"/>
+      <text x="62" y="36" fill="#ffffff" font-size="16" font-weight="700">Closeness is built, not rushed.</text>
+    </g>
+
+    <text x="800" y="866" text-anchor="middle" fill="#8f899f" font-size="16" font-weight="700" letter-spacing="4">BE PRESENT  |  STAY CURIOUS  |  KEEP IT MUTUAL</text>
+  </g>
+</svg>
