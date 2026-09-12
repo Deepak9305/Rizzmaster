@@ -262,7 +262,7 @@ const MessageBubble = React.memo(({ msg, onReport, icon, colors }: MsgProps) => 
 });
 
 const AuroraBackground = React.memo(({ colors }: { colors: any }) => (
-    <div aria-hidden style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+    <div aria-hidden className="coach-aurora-background" style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
         <div style={{
             position: 'absolute', width: '70%', height: '70%', top: '-15%', left: '-15%', borderRadius: '50%',
             background: `radial-gradient(circle, ${colors.background} 0%, transparent 70%)`,

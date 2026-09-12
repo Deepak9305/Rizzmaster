@@ -794,3 +794,55 @@ body {
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 12px 34px rgba(0, 0, 0, 0.24);
   }
 }
+
+/* Native WebView performance profile. Keep the visual system, but avoid large
+   backdrop-filter and continuously animated layers on Android hardware. */
+.native-app .web-app-backdrop {
+  background: linear-gradient(180deg, #05030b 0%, #08030e 52%, #04030a 100%);
+}
+
+.native-app .web-app-backdrop::before,
+.native-app .web-app-backdrop::after {
+  display: none;
+}
+
+.native-app .glass,
+.native-app .app-card,
+.native-app .web-app-topbar,
+.native-app .web-app-tabs,
+.native-app .web-app-credits,
+.native-app [style*="backdrop-filter"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.native-app .web-app-topbar,
+.native-app .web-app-tabs {
+  background: rgba(8, 6, 16, 0.96);
+}
+
+.native-app .web-app-topbar,
+.native-app .web-app-tabs,
+.native-app .web-app-panel,
+.native-app .web-app-result-card,
+.native-app .web-app-empty-state {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 10px 30px rgba(0, 0, 0, 0.22) !important;
+}
+
+.native-app .native-splash-orb,
+.native-app .coach-aurora-background,
+.native-app [style*="filter"] {
+  display: none !important;
+}
+
+.native-app .rizz-gradient,
+.native-app .animate-text-shimmer,
+.native-app .animate-shimmer,
+.native-app .animate-pulse-glow,
+.native-app .animate-float {
+  animation: none !important;
+}
+
+.native-app .web-app-empty-state > span {
+  filter: none !important;
+}

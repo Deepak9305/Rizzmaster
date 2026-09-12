@@ -147,6 +147,22 @@ const LOADING_MESSAGES = [
   "Cooking..."
 ];
 
+// Keep rotating status text isolated so generation progress does not re-render
+// the entire app shell every 1.5 seconds.
+const LoadingMessage: React.FC = React.memo(() => {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((current) => (current + 1) % LOADING_MESSAGES.length);
+    }, 1500);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  return <>{LOADING_MESSAGES[index]}</>;
+});
+
 // --- VIBE CONFIGURATION ---
 // Define which vibes are PRO only
 const VIBES_CHAT = [
@@ -320,8 +336,8 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ isAppReady, onComplete }) =
 
   return (
     <div className={`fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center overflow-hidden transition-all duration-[800ms] ${isExiting ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100'}`}>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-rose-900/20 rounded-full blur-[100px] animate-pulse-glow" />
-      <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-amber-900/10 rounded-full blur-[80px] animate-float" />
+      <div className="native-splash-orb absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-rose-900/20 rounded-full blur-[100px] animate-pulse-glow" />
+      <div className="native-splash-orb absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-amber-900/10 rounded-full blur-[80px] animate-float" />
 
       <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-4xl px-4">
         <div className="relative mb-12">
@@ -419,7 +435,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
   // Loading State
   const [loading, setLoading] = useState(false);
-  const [loadingMsg, setLoadingMsg] = useState("Cooking...");
 
   const [result, setResult] = useState<RizzOrBioResponse | null>(null);
   const [inputError, setInputError] = useState<string | null>(null);
@@ -679,15 +694,17 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     };
   }, [showToast]);
 
-  // Sync profile ref
+  // Sync the ref without coupling notification updates to every profile refresh.
   useEffect(() => {
     profileRef.current = profile;
+  }, [profile]);
 
+  useEffect(() => {
     // Link OneSignal External ID when profile is loaded
     if (canUseNativeOneSignal() && profile?.id) {
       OneSignalService.setExternalId(profile.id);
     }
-  }, [profile]);
+  }, [profile?.id]);
 
   // --- INTERSTITIAL AD ACTIVE TIME TRACKING ---
   // We use refs here because we need these values to be immediately available
@@ -695,6 +712,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const activeTimeMs = useRef<number>(0);
   const lastAdActiveTime = useRef<number>(-120000); // Bug 6 fix: pre-subtract 1 cooldown so the first ad can show immediately
   const backgroundTimestamp = useRef<number | null>(null);
+  const foregroundStartedAt = useRef<number | null>(null);
   const adTransitionInProgressRef = useRef<boolean>(false); // Bug 3 fix: prevents double-fire from both nav handlers
 
   const INTERSTITIAL_COOLDOWN_MS = 2 * 60 * 1000; // 2 minutes (Cooldown between ads)
@@ -704,13 +722,9 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   useEffect(() => {
     if (!canUseNativeAppEvents()) return;
 
-    // Start tracking active time immediately
-    const interval = setInterval(() => {
-      // If we are not in the background, increment active time
-      if (backgroundTimestamp.current === null) {
-        activeTimeMs.current += 1000;
-      }
-    }, 1000);
+    // Track the current foreground segment with timestamps instead of a 1-second
+    // interval. This avoids waking the WebView continuously while the app is idle.
+    foregroundStartedAt.current = Date.now();
 
     // Initial setup listener for App state to handle background/foreground
     let cancelled = false;
@@ -733,6 +747,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
           }
           // We are no longer in the background
           backgroundTimestamp.current = null;
+          foregroundStartedAt.current = now;
 
           // Record usage and refresh notification schedule
           await NotificationService.recordUsage();
@@ -743,9 +758,12 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         }
       } else {
         // App went to BACKGROUND — flush session time to Supabase
+        const sessionTimeMs = activeTimeMs.current + (
+          foregroundStartedAt.current === null
+            ? 0
+            : Math.max(0, now - foregroundStartedAt.current)
+        );
         backgroundTimestamp.current = now;
-
-        const sessionTimeMs = activeTimeMs.current;
         if (sessionTimeMs > 0) {
           const currentProfile = profileRef.current;
           if (supabase && currentProfile && currentProfile.id !== 'guest_user') {
@@ -758,6 +776,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
           // Reset so we don't double-count on next foreground
           activeTimeMs.current = 0;
         }
+        foregroundStartedAt.current = null;
       }
     }).then(listener => {
       // If the effect has already torn down (e.g. StrictMode double-invoke or fast refresh)
@@ -772,7 +791,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
     return () => {
       cancelled = true;
-      clearInterval(interval);
       if (appStateListener) appStateListener.remove();
     };
   }, []);
@@ -1281,21 +1299,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       sessionChannelRef.current = null;
     };
   }, []);
-
-  useEffect(() => {
-    let interval: any;
-    if (loading) {
-      let i = 0;
-      setLoadingMsg(LOADING_MESSAGES[0]);
-      interval = setInterval(() => {
-        i = (i + 1) % LOADING_MESSAGES.length;
-        setLoadingMsg(LOADING_MESSAGES[i]);
-      }, 1500);
-    }
-    return () => clearInterval(interval);
-  }, [loading]);
-
-
 
   const createProfile = useCallback(async (userId: string, email?: string | null, accessToken?: string | null) => {
     if (!supabase) return { data: null, error: new Error('Supabase is not configured.') as any };
@@ -1966,7 +1969,11 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       const nextAdOffset = Math.floor(Math.random() * 3) + 3; 
       const targetGen = isFirstAd ? 3 : lastAdGen + nextAdOffset;
 
-      const now = activeTimeMs.current;
+      const now = activeTimeMs.current + (
+        foregroundStartedAt.current === null
+          ? 0
+          : Math.max(0, Date.now() - foregroundStartedAt.current)
+      );
       const cooldownPassed = isFirstAd || (now - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS);
       
       if (genCount >= targetGen && cooldownPassed) {
@@ -1985,7 +1992,11 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       const recordShownInterstitial = () => {
         if (accountedForShownInterstitial || adGenerationToRecord === null) return;
         accountedForShownInterstitial = true;
-        lastAdActiveTime.current = activeTimeMs.current;
+        lastAdActiveTime.current = activeTimeMs.current + (
+          foregroundStartedAt.current === null
+            ? 0
+            : Math.max(0, Date.now() - foregroundStartedAt.current)
+        );
         localStorage.setItem('rizz_last_ad_gen_count', adGenerationToRecord.toString());
       };
 
@@ -2581,7 +2592,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                       {loading ? (
                         <span className="flex items-center justify-center gap-2 animate-pulse">
                           <svg className={`animate-spin h-5 w-5 ${profile?.is_premium ? 'text-black' : 'text-white'}`} viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                          {loadingMsg}
+                          <LoadingMessage />
                         </span>
                       ) : (
                         profile?.is_premium ? "Get Rizz (VIP)" : `Get Rizz (${(mode === InputMode.CHAT && image) ? 2 : 1} ⚡)`
