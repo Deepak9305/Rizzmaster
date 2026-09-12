@@ -2735,10 +2735,21 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                         profile?.is_premium ? "Get Rizz (VIP)" : `Get Rizz (${(mode === InputMode.CHAT && image) ? 2 : 1} ⚡)`
                       )}
                     </button>
-    ) : (
-                    <button onClick={() => handleOpenPremium()} className="w-full bg-gradient-to-r from-yellow-500 to-amber-600 text-black py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base shadow-xl hover:brightness-110 active:scale-[0.98] transition-all flex flex-col items-center justify-center animate-pulse">
-                      Go Unlimited
-                    </button>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      <button onClick={() => handleOpenPremium()} className="w-full bg-gradient-to-r from-yellow-500 to-amber-600 text-black py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base shadow-xl hover:brightness-110 active:scale-[0.98] transition-all flex flex-col items-center justify-center animate-pulse">
+                        Go Unlimited
+                      </button>
+                      {!IS_WEB_PLATFORM && !profile?.is_premium && (
+                        <button
+                          type="button"
+                          onClick={() => handleCreditsExhausted(1)}
+                          className="w-full rounded-xl border border-amber-300/30 bg-amber-300/10 px-3 py-2.5 text-xs font-bold text-amber-200 transition hover:bg-amber-300/20 active:scale-[0.98]"
+                        >
+                          Watch an ad for +5 credits
+                        </button>
+                      )}
+                    </div>
                   )}
                   {!profile?.is_premium && (
                     <p

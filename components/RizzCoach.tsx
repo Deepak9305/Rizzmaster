@@ -154,6 +154,7 @@ const COACH_VIBES = [
 ];
 
 const MAX_STORED_MESSAGES = 50; // cap to avoid localStorage bloat
+const IS_NATIVE_COACH = Capacitor.isNativePlatform();
 
 const TypingIndicator = React.memo(({ icon, colors }: { icon?: React.ReactNode, colors?: any }) => (
     <div className="coach-typing-indicator" style={{ display: 'flex', justifyContent: 'flex-start', animation: 'coachEntrance 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both' }}>
@@ -534,7 +535,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                 position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column',
                 height: '100dvh', minHeight: 0, overflow: 'hidden',
                 background: '#050505', zIndex: 100, isolation: 'isolate',
-            }} className="app-surface coach-screen">
+            }} className={`app-surface coach-screen${IS_NATIVE_COACH ? ' native-coach-screen' : ''}`}>
                 <AuroraBackground colors={currentTheme.colors} />
 
                 {/* Header */}

@@ -780,14 +780,20 @@ html.native-app .coach-header,
 html.native-app .coach-messages,
 html.native-app .coach-composer,
 html.native-app .coach-message-bubble,
-html.native-app .coach-typing-indicator {
+html.native-app .coach-typing-indicator,
+.native-coach-screen .coach-header,
+.native-coach-screen .coach-messages,
+.native-coach-screen .coach-composer,
+.native-coach-screen .coach-message-bubble,
+.native-coach-screen .coach-typing-indicator {
   animation: none !important;
   opacity: 1 !important;
   transform: none !important;
   will-change: auto !important;
 }
 
-html.native-app .coach-avatar > div:first-child {
+html.native-app .coach-avatar > div:first-child,
+.native-coach-screen .coach-avatar > div:first-child {
   animation: none !important;
   opacity: 0.6 !important;
   transform: none !important;
