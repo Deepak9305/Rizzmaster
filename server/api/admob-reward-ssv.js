@@ -14,7 +14,10 @@ const json = (res, statusCode, payload) => {
   res.send(JSON.stringify(payload));
 };
 
-const reject = (res, code) => json(res, 400, { error: 'Invalid rewarded ad callback.', code });
+const reject = (res, code, context = {}) => {
+  console.warn('[AdMob SSV] Callback rejected.', { code, ...context });
+  return json(res, 400, { error: 'Invalid rewarded ad callback.', code });
+};
 
 export default async function handler(req, res) {
   if (applyCors(req, res)) return;
@@ -41,8 +44,19 @@ export default async function handler(req, res) {
     return json(res, 200, { ok: true, status: 'verification_only' });
   }
 
-  if (!transactionId) return reject(res, 'SSV_TRANSACTION_INVALID');
-  if (!isValidRewardPayload({ adUnit, rewardItem, rewardAmount })) return reject(res, 'SSV_REWARD_MISMATCH');
+  if (!transactionId) {
+    return reject(res, 'SSV_TRANSACTION_INVALID', {
+      hasTransactionId: false,
+      hasCustomData: true,
+    });
+  }
+  if (!isValidRewardPayload({ adUnit, rewardItem, rewardAmount })) {
+    return reject(res, 'SSV_REWARD_MISMATCH', {
+      adUnitMatchesNumericSuffix: adUnit === '6580197977',
+      rewardItemMatches: rewardItem === 'rizz_credits',
+      rewardAmountMatches: rewardAmount === '5',
+    });
+  }
 
   const verification = await verifyAdMobSsvSignature({
     canonicalQuery: buildCanonicalSsvQuery(req.rawQuery || ''),

@@ -1713,24 +1713,41 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       setRewardedAdStatus('pending');
       let latestStatus: RewardedAdStatus = 'pending';
       for (let poll = 0; poll < REWARDED_STATUS_POLL_ATTEMPTS; poll += 1) {
-        await wait(1500);
-        // Prefer AdMob SSV. If its callback has not arrived after a short
-        // delay, use the one-time server fallback after the native SDK has
-        // already confirmed the configured reward item and amount.
-        const status = poll === 5
-          ? await completeRewardedAdAttempt(attemptId)
-          : await getRewardedAdStatus(attemptId);
+        await wait(poll === 0 ? 250 : 1500);
+
+        let status;
+        try {
+          // Submit native completion immediately after the SDK reward event,
+          // then retry while polling in case the first request races the
+          // server's minimum-watch-time check or hits a transient failure.
+          const shouldSubmitNativeCompletion = poll === 0 || poll === 4 || poll === 9;
+          status = shouldSubmitNativeCompletion
+            ? await completeRewardedAdAttempt(attemptId)
+            : await getRewardedAdStatus(attemptId);
+        } catch (pollError) {
+          const responseStatus = Number((pollError as { status?: number })?.status || 0);
+          if (responseStatus === 409 || responseStatus >= 500 || responseStatus === 0) {
+            console.warn('[AdMob] Reward confirmation retry scheduled.', { poll, responseStatus });
+            continue;
+          }
+          throw pollError;
+        }
         latestStatus = status.status;
 
         if (status.status === 'granted') {
-          const syncedProfile = await syncProfile();
-          if (syncedProfile) {
-            setRewardedAdStatus('success');
-            showToast('5 credits added. You can continue generating.', 'success');
-            if (openedFromPremiumModal) handleBackNavigation();
-          } else {
-            showToast('Reward verified. Your credits will appear after the next profile refresh.', 'info');
+          const grantedCredits = Number(status.credits);
+          if (Number.isFinite(grantedCredits) && profileRef.current) {
+            const creditedProfile = { ...profileRef.current, credits: grantedCredits };
+            profileRef.current = creditedProfile;
+            setProfile(creditedProfile);
           }
+          const syncedProfile = await syncProfile();
+          setRewardedAdStatus('success');
+          showToast(
+            syncedProfile ? '5 credits added. You can continue generating.' : '5 credits added. Your balance is ready.',
+            'success',
+          );
+          if (openedFromPremiumModal) handleBackNavigation();
           return;
         }
         if (status.status === 'rejected' || status.status === 'expired') break;

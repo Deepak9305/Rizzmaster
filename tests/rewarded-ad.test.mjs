@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   REWARDED_AD_UNIT_ID,
+  REWARDED_SSV_AD_UNIT_ID,
   REWARDED_ITEM,
   buildCanonicalSsvQuery,
   isRewardEligible,
@@ -31,6 +32,11 @@ test('SSV canonical query preserves encoded content and removes only signature f
 test('SSV payload must match the configured reward', () => {
   assert.equal(isValidRewardPayload({
     adUnit: REWARDED_AD_UNIT_ID,
+    rewardItem: REWARDED_ITEM,
+    rewardAmount: '5',
+  }), true);
+  assert.equal(isValidRewardPayload({
+    adUnit: REWARDED_SSV_AD_UNIT_ID,
     rewardItem: REWARDED_ITEM,
     rewardAmount: '5',
   }), true);

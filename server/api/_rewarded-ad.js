@@ -1,6 +1,9 @@
 import { createVerify } from 'node:crypto';
 
 export const REWARDED_AD_UNIT_ID = 'ca-app-pub-7381421031784616/6580197977';
+// AdMob SSV sends only the numeric suffix, while the native SDK loads ads
+// with the full ca-app-pub identifier.
+export const REWARDED_SSV_AD_UNIT_ID = '6580197977';
 export const REWARDED_ITEM = 'rizz_credits';
 export const REWARDED_AMOUNT = 5;
 export const REWARDED_ATTEMPT_TTL_MS = 15 * 60 * 1000;
@@ -23,7 +26,7 @@ export const isRewardEligible = ({ isPremium, credits, requiredCredits }) => (
 );
 
 export const isValidRewardPayload = ({ adUnit, rewardItem, rewardAmount }) => (
-  adUnit === REWARDED_AD_UNIT_ID &&
+  (adUnit === REWARDED_AD_UNIT_ID || adUnit === REWARDED_SSV_AD_UNIT_ID) &&
   rewardItem === REWARDED_ITEM &&
   String(rewardAmount) === String(REWARDED_AMOUNT)
 );
