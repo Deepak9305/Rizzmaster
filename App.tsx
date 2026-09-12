@@ -969,7 +969,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   }, [showToast, isGuest, handleExitGuestMode]);
 
 
-  // Initialize native services without requesting an ad before a user reaches an ad trigger.
+  // Initialize native services without requesting an ad before a user is close to an ad trigger.
 
   // Initialize Native Services
   useEffect(() => {
@@ -1942,6 +1942,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     }
 
     let shouldShowAd = false;
+    let shouldPreloadInterstitial = false;
     let adGenerationToRecord: number | null = null;
     if (!currentProfile.is_premium && canUseNativeAdMob()) {
       const today = new Date().toDateString();
@@ -1976,11 +1977,19 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         shouldShowAd = true;
         adGenerationToRecord = genCount;
         console.log(`[AdMob] Will trigger concurrent interstitial at gen ${genCount}...`);
+      } else if (genCount + 1 >= targetGen && cooldownPassed) {
+        // Warm the ad one generation before the trigger so it is ready without
+        // creating requests for users who never reach the ad threshold.
+        shouldPreloadInterstitial = true;
       }
     }
     // --------------------------------------------------
 
     setLoading(true);
+
+    if (shouldPreloadInterstitial) {
+      runAdTask('Eligible interstitial preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
+    }
 
     // Fire the ad concurrently so the API generation happens in the background while the user watches the ad!
     if (shouldShowAd) {
