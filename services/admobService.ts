@@ -235,7 +235,11 @@ export const AdMobService = {
                 }, resolvedTimeoutMs);
 
                 try {
+                    // The native plugin resolves prepareInterstitial/prepareReward* only
+                    // after the ad is loaded. Accept that result as well as the event so
+                    // a bridge event-ordering race cannot turn a loaded ad into not_ready.
                     await prepareAction();
+                    settle(true);
                 } catch (error) {
                     settle(false, error);
                 }
