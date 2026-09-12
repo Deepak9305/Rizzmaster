@@ -31,6 +31,16 @@ export default async function handler(req, res) {
   const signature = typeof query.signature === 'string' ? query.signature : '';
   const keyId = typeof query.key_id === 'string' ? query.key_id : '';
 
+  // AdMob's dashboard verification can call the endpoint without a live app
+  // attempt or with placeholder callback fields. Acknowledge that probe, but
+  // never grant credits unless custom_data identifies a real app attempt.
+  if (!isUuid(attemptId)) {
+    console.info('[AdMob SSV] Non-app verification callback acknowledged.', {
+      code: 'SSV_VERIFICATION_ONLY',
+    });
+    return json(res, 200, { ok: true, status: 'verification_only' });
+  }
+
   if (!transactionId) return reject(res, 'SSV_TRANSACTION_INVALID');
   if (!isValidRewardPayload({ adUnit, rewardItem, rewardAmount })) return reject(res, 'SSV_REWARD_MISMATCH');
 
@@ -42,16 +52,6 @@ export default async function handler(req, res) {
   if (!verification.ok) {
     console.warn('[AdMob SSV] Signature verification rejected.', { code: verification.code });
     return reject(res, verification.code || 'SSV_SIGNATURE_INVALID');
-  }
-
-  // AdMob's dashboard URL verification uses a signed sample callback rather
-  // than a live app attempt. A verified callback without a valid attempt is
-  // safe to acknowledge because the grant RPC is never called.
-  if (!isUuid(attemptId)) {
-    console.info('[AdMob SSV] Verified callback acknowledged without an app attempt.', {
-      code: 'SSV_VERIFICATION_ONLY',
-    });
-    return json(res, 200, { ok: true, status: 'verification_only' });
   }
 
   try {
