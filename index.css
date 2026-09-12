@@ -19,13 +19,20 @@ body,
   min-height: 100%;
 }
 
-html.native-app,
-html.native-app body,
-html.native-app #root {
+html.native-app {
   width: 100%;
   height: 100%;
   min-height: 100%;
-  overflow: hidden;
+  overflow-x: hidden;
+}
+
+html.native-app body,
+html.native-app #root {
+  width: 100%;
+  min-height: 100%;
+  height: auto;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 
 .web-premium-scroll {
@@ -942,9 +949,15 @@ html.native-app .coach-avatar > div:first-child,
 }
 
 .native-app .native-splash-orb,
-.native-app .coach-aurora-background,
-.native-app [style*="filter"] {
+.native-app .coach-aurora-background {
   display: none !important;
+}
+
+.native-app .coach-header,
+.native-app .coach-composer {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(5, 5, 5, 0.98) !important;
 }
 
 .native-app .rizz-gradient,

@@ -50,3 +50,12 @@ export const getRewardedAdStatus = (attemptId: string) => request<{
   credits: number;
   expiresAt: string;
 }>('/api/rewarded-ad/status?attemptId=' + encodeURIComponent(attemptId));
+
+export const completeRewardedAdAttempt = (attemptId: string) => request<{
+  attemptId: string;
+  status: RewardedAdStatus;
+  credits: number;
+}>('/api/rewarded-ad/complete', {
+  method: 'POST',
+  body: JSON.stringify({ attemptId }),
+});

@@ -34,7 +34,7 @@ import {
 } from './services/nativeCapabilities';
 import ForceUpdateGate from './components/ForceUpdateGate';
 import { loadUpdateGateConfig, type UpdateGateConfig } from './services/updateGateService';
-import { createRewardedAdAttempt, getRewardedAdStatus, type RewardedAdStatus } from './services/rewardedAdService';
+import { completeRewardedAdAttempt, createRewardedAdAttempt, getRewardedAdStatus, type RewardedAdStatus } from './services/rewardedAdService';
 
 // Lazy Load Heavy Components / Modals
 const PremiumModal = lazy(() => import('./components/PremiumModal'));
@@ -1724,7 +1724,12 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       let latestStatus: RewardedAdStatus = 'pending';
       for (let poll = 0; poll < REWARDED_STATUS_POLL_ATTEMPTS; poll += 1) {
         await wait(1500);
-        const status = await getRewardedAdStatus(attemptId);
+        // Prefer AdMob SSV. If its callback has not arrived after a short
+        // delay, use the one-time server fallback after the native SDK has
+        // already confirmed the configured reward item and amount.
+        const status = poll === 5
+          ? await completeRewardedAdAttempt(attemptId)
+          : await getRewardedAdStatus(attemptId);
         latestStatus = status.status;
 
         if (status.status === 'granted') {
