@@ -544,6 +544,11 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'how-to-tell-if-someone-is-emotionally-available': [
+    { slug: 'how-to-connect-emotionally-while-dating', label: 'How to build emotional closeness' },
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy dating boundaries' },
+    { slug: 'signs-texting-conversation-becoming-one-sided', label: 'Spot one-sided effort early' }
+  ],
   'what-to-text-when-they-stop-replying': [
     { slug: 'reply-to-dry-texts', label: 'How to reply to dry texts' },
     { slug: 'what-to-text-after-a-first-date', label: 'What to text after a first date' },
