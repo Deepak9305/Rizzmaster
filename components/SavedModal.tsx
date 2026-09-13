@@ -65,4 +65,4 @@ const SavedModal: React.FC<SavedModalProps> = ({
   );
 };
 
-export default SavedModal;
+export default React.memo(SavedModal);

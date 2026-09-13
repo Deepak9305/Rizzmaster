@@ -349,16 +349,20 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
 
     // Persist coach history in localStorage whenever messages change (images stripped to save space)
     useEffect(() => {
-        try {
-            const toStore = messages.slice(-MAX_STORED_MESSAGES).map(m => ({
-                ...m,
-                content: m.image && !m.content.includes(PHOTO_ATTACHMENT_NOTE)
-                    ? `${m.content}\n${PHOTO_ATTACHMENT_NOTE}`
-                    : m.content,
-                image: null,
-            }));
-            localStorage.setItem(COACH_STORAGE_KEY, JSON.stringify(toStore));
-        } catch { } // Fail silently if quota is exceeded
+        const timer = window.setTimeout(() => {
+            try {
+                const toStore = messages.slice(-MAX_STORED_MESSAGES).map(m => ({
+                    ...m,
+                    content: m.image && !m.content.includes(PHOTO_ATTACHMENT_NOTE)
+                        ? `${m.content}\n${PHOTO_ATTACHMENT_NOTE}`
+                        : m.content,
+                    image: null,
+                }));
+                localStorage.setItem(COACH_STORAGE_KEY, JSON.stringify(toStore));
+            } catch { } // Fail silently if quota is exceeded
+        }, 150);
+
+        return () => window.clearTimeout(timer);
     }, [messages, COACH_STORAGE_KEY]);
 
     const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -901,4 +905,4 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
     );
 };
 
-export default RizzCoach;
+export default React.memo(RizzCoach);

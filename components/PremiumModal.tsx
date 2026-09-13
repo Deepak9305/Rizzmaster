@@ -29,6 +29,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
 }) => {
     const [selectedPlan, setSelectedPlan] = useState<'WEEKLY' | 'MONTHLY'>('WEEKLY');
     const [prices, setPrices] = useState({ weekly: '$4.99', monthly: '$15.99' });
+    const [isSubscribing, setIsSubscribing] = useState(false);
     const hasNativePurchases = canUseNativeIap();
 
     useEffect(() => {
@@ -49,14 +50,21 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
         }
     }, [hasNativePurchases]);
 
-    const handleSubscribe = () => {
+    const handleSubscribe = async () => {
+        if (isSubscribing) return;
+
         // Guests must sign up first — check before native platform
         if (isGuest) {
             onUpgrade(selectedPlan);
             return;
         }
         if (hasNativePurchases) {
-            IAPService.purchase(selectedPlan, userId);
+            setIsSubscribing(true);
+            try {
+                await IAPService.purchase(selectedPlan, userId);
+            } finally {
+                setIsSubscribing(false);
+            }
         } else {
             onUpgrade(selectedPlan);
         }
@@ -138,6 +146,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
                             <button
                                 key={plan}
                                 onClick={() => setSelectedPlan(plan)}
+                                disabled={isSubscribing}
                                 className={`p-3 rounded-xl border transition-all flex flex-col items-center justify-center text-center relative ${
                                     isSelected
                                         ? 'bg-yellow-500/10 border-yellow-500 text-white shadow-[0_0_15px_rgba(234,179,8,0.2)]'
@@ -162,10 +171,13 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
                 {/* CTA */}
                 <button
                     onClick={handleSubscribe}
+                    disabled={isSubscribing}
                     className="w-full py-3 bg-gradient-to-r from-yellow-600 to-amber-500 text-black font-bold rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-lg flex flex-col items-center leading-tight mb-4 animate-shimmer bg-[length:200%_100%]"
                 >
                     <span className="text-sm">
-                        {hasNativePurchases ? '🔓 Subscribe & Upgrade' : '🔓 Sign Up to Unlock'}
+                        {isSubscribing
+                            ? 'Connecting to Google Play...'
+                            : hasNativePurchases ? '🔓 Subscribe & Upgrade' : '🔓 Sign Up to Unlock'}
                     </span>
                     <span className="text-[10px] opacity-80 uppercase mt-0.5">
                         {hasNativePurchases

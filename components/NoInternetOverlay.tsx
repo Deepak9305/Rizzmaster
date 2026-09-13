@@ -39,4 +39,4 @@ const NoInternetOverlay: React.FC<NoInternetOverlayProps> = ({ isVisible, onRetr
     );
 };
 
-export default NoInternetOverlay;
+export default React.memo(NoInternetOverlay);

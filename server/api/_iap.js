@@ -63,7 +63,6 @@ const getIapAccountBindingSecret = () => {
       503
     );
   }
-  return secret;
 };
 
 export const getIapAccountBinding = (userId) => {
@@ -86,6 +85,37 @@ const bindingsMatch = (left, right) => {
     return false;
   }
   return crypto.timingSafeEqual(Buffer.from(left), Buffer.from(right));
+};
+
+const md5 = (value) => crypto.createHash("md5").update(value).digest("hex");
+
+const md5ToUuid = (value) => {
+  const hash = md5(value);
+  return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-3${hash.slice(13, 16)}-8${hash.slice(17, 20)}-${hash.slice(20)}`;
+};
+
+const getGoogleAccountBindingCandidates = (appUserId) => {
+  const currentBinding = getIapAccountBinding(appUserId);
+  const legacyUserId = appUserId.trim();
+
+  return [
+    { version: "current_raw", value: currentBinding },
+    { version: "current_legacy_md5", value: md5(currentBinding) },
+    { version: "current_uuid", value: md5ToUuid(currentBinding) },
+    { version: "legacy_user_raw", value: legacyUserId },
+    { version: "legacy_user_md5", value: md5(legacyUserId) },
+    { version: "legacy_user_uuid", value: md5ToUuid(legacyUserId) },
+  ];
+};
+
+export const getGoogleAccountBindingMatch = (verifiedExternalAccountId, appUserId) => {
+  if (typeof verifiedExternalAccountId !== "string" || !verifiedExternalAccountId.trim()) {
+    return null;
+  }
+
+  return getGoogleAccountBindingCandidates(appUserId).find(({ value }) => (
+    bindingsMatch(verifiedExternalAccountId.trim(), value)
+  ))?.version || null;
 };
 
 const logIap = (level, message, metadata = {}) => {
@@ -516,8 +546,10 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
   }
 
   const verifiedExternalAccountId = readGoogleExternalAccountId(payload);
-  const expectedExternalAccountId = getIapAccountBinding(appUserId);
-  if (verifiedExternalAccountId && !bindingsMatch(verifiedExternalAccountId, expectedExternalAccountId)) {
+  const accountBindingVersion = verifiedExternalAccountId
+    ? getGoogleAccountBindingMatch(verifiedExternalAccountId, appUserId)
+    : null;
+  if (verifiedExternalAccountId && !accountBindingVersion) {
     logIap("warn", "Google Play verification failure", {
       platform: "android",
       productId,
@@ -635,6 +667,7 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
     ...diagnostics,
     googleSubscriptionState: state || null,
     googleHasExternalAccountId: Boolean(verifiedExternalAccountId),
+    accountBindingVersion,
     hasExpiryTime: Boolean(expiresAt),
   });
 

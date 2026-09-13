@@ -174,6 +174,14 @@ const getIapErrorMessage = (error: any, fallback = "Purchase failed") => {
     return fallback;
 };
 
+const delay = (milliseconds: number) => new Promise(resolve => setTimeout(resolve, milliseconds));
+
+const throwIfStoreError = (error: any) => {
+    if (error && (error.isError || error.code || error.message)) {
+        throw error;
+    }
+};
+
 export const IAP_CONFIG = {
     WEEKLY: {
         alias: 'weekly_sub',
@@ -194,6 +202,8 @@ export const IAP_CONFIG = {
 class IAPService {
     isInitialized = false;
     products: any[] = [];
+    initializationPromise: Promise<void> | null = null;
+    purchaseInProgress = false;
 
     // Callbacks to update UI/DB
     onSuccess: ((purchaseData: any) => boolean | void | Promise<boolean | void>) | null = null;
@@ -213,13 +223,15 @@ class IAPService {
             return;
         }
 
-        if (this.isInitialized) return;
+        if (this.isInitialized || this.initializationPromise) return;
 
         const CdvPurchase = getCdvPurchase();
         if (!CdvPurchase) return; // Safety check
 
         const { store, Platform } = CdvPurchase;
         store.applicationUsername = () => this.currentAccountBinding || undefined;
+        // Keep Google Play's account ID format stable across old and new app builds.
+        store.obfuscator = 'legacy';
 
         // 1. Prepare Registration List
         const productsToRegister: any[] = [];
@@ -399,32 +411,70 @@ class IAPService {
         });
 
         // 3. Initialize Store
-        store.initialize().then(() => {
-            this.isInitialized = true;
-            console.log("IAP: Store initialized");
-            store.update();
-        });
+        this.initializationPromise = Promise.resolve(store.initialize())
+            .then(async (errors: any[]) => {
+                if (Array.isArray(errors) && errors.length > 0) {
+                    logIapJson("IAP: Store initialization returned errors", {
+                        errors: errors.map(error => ({
+                            code: error?.code || null,
+                            message: getIapErrorMessage(error, "Store initialization failed"),
+                            platform: error?.platform || null,
+                            productId: error?.productId || null,
+                        })),
+                    });
+                    this.onError?.("Google Play Billing could not connect. Please check Play Store and try again.");
+                    return;
+                }
+
+                this.isInitialized = true;
+                console.log("IAP: Store initialized");
+                try {
+                    await store.update();
+                } catch (error) {
+                    logIapJson("IAP: Initial store refresh failed", {
+                        code: (error as any)?.code || null,
+                        message: getIapErrorMessage(error, "Store refresh failed"),
+                    });
+                }
+                this.products = Array.isArray(store.products) ? store.products : [];
+            })
+            .catch((error: any) => {
+                this.isInitialized = false;
+                logIapJson("IAP: Store initialization failed", {
+                    code: error?.code || null,
+                    message: getIapErrorMessage(error, "Store initialization failed"),
+                });
+                this.onError?.("Google Play Billing could not connect. Please check Play Store and try again.");
+            });
     }
 
-    async purchase(plan: 'WEEKLY' | 'MONTHLY', ownerUserId?: string | null) {
+    async purchase(plan: 'WEEKLY' | 'MONTHLY', ownerUserId?: string | null): Promise<boolean> {
         if (!canUseNativeIap()) {
             console.warn("IAP: Cannot purchase on web.");
-            return;
+            return false;
         }
 
         const normalizedOwnerUserId = typeof ownerUserId === 'string' ? ownerUserId.trim() : '';
         if (!normalizedOwnerUserId) {
             console.warn("IAP: Cannot purchase without a logged-in app account owner.");
             this.onError?.("Please sign in again before subscribing.");
-            return;
+            return false;
         }
+
+        if (this.purchaseInProgress) {
+            this.onError?.("A purchase is already in progress.");
+            return false;
+        }
+
+        this.purchaseInProgress = true;
 
         let accountBinding: string;
         try {
             accountBinding = await this.getAccountBinding(normalizedOwnerUserId);
         } catch (error) {
             this.onError?.(getIapErrorMessage(error, "Could not prepare your account for purchase."));
-            return;
+            this.purchaseInProgress = false;
+            return false;
         }
 
         const CdvPurchase = getCdvPurchase();
@@ -438,7 +488,6 @@ class IAPService {
         this.activeIntent = 'purchase';
         this.currentUserId = normalizedOwnerUserId;
         this.currentAccountBinding = accountBinding;
-        const orderData = { applicationUsername: accountBinding };
 
         logIapJson("IAP: Attempting purchase", {
             productId,
@@ -447,35 +496,54 @@ class IAPService {
             ownerUserId: normalizedOwnerUserId,
         });
 
-        if (!this.isInitialized) {
-            console.warn("IAP: Store not initialized yet. Aborting purchase.");
+        let product: any;
+        try {
+            product = await this.waitForProduct(store, productId, basePlanId);
+        } catch (error) {
+            logIapJson("IAP: Failed while waiting for the selected product", {
+                code: (error as any)?.code || null,
+                message: getIapErrorMessage(error, "Billing plan unavailable"),
+                productId,
+                basePlanId,
+            });
             this.pendingPlan = null;
             this.activeIntent = null;
-            if (this.onError) {
-                this.onError("Store not ready. Please try again in a moment.");
-            }
-            return;
+            this.purchaseInProgress = false;
+            this.onError?.("Billing plan unavailable. Open Google Play, check your connection, then try again.");
+            return false;
         }
 
-        const product = store.get(productId);
+        if (!this.isInitialized || !product) {
+            console.warn("IAP: Store or selected product did not become ready.");
+            this.pendingPlan = null;
+            this.activeIntent = null;
+            this.purchaseInProgress = false;
+            if (this.onError) {
+                this.onError("Billing plan unavailable. Open Google Play, check your connection, then try again.");
+            }
+            return false;
+        }
 
         if (product && product.canPurchase) {
             try {
+                let orderError: any;
                 if (basePlanId) {
                     const offer = getExactAndroidOffer(product, basePlanId);
                     if (offer) {
-                        await offer.order(orderData);
+                        orderError = await offer.order();
                     } else {
                         throw new Error("The selected subscription plan is unavailable. Please refresh the store and try again.");
                     }
                 } else {
                     const offer = product.getOffer();
                     if (offer) {
-                        await offer.order(orderData);
+                        orderError = await offer.order();
                     } else {
-                        await store.order(productId, orderData);
+                        throw new Error("The selected subscription plan is unavailable. Please refresh the store and try again.");
                     }
                 }
+                throwIfStoreError(orderError);
+                return true;
             } catch (err: any) {
                 logIapJson("IAP: Order failed", {
                     code: err?.code,
@@ -488,14 +556,22 @@ class IAPService {
                 this.pendingPlan = null;
                 this.activeIntent = null;
                 if (this.onError) this.onError(getIapErrorMessage(err));
+                return false;
+            } finally {
+                this.purchaseInProgress = false;
             }
         } else {
             this.pendingPlan = null;
             this.activeIntent = null;
-            store.update();
-            if (this.onError) {
-                this.onError("Product unavailable. Retrying connection...");
+            this.purchaseInProgress = false;
+
+            if (product) {
+                this.onError?.("This Play account may already own Premium. Restoring the subscription now.");
+                await this.restore(normalizedOwnerUserId);
+            } else {
+                this.onError?.("Billing plan unavailable. Open Google Play, check your connection, then try again.");
             }
+            return false;
         }
     }
 
@@ -555,6 +631,42 @@ class IAPService {
         this.currentUserId = null;
         this.currentAccountBinding = null;
         this.lastApprovedTransaction = null;
+        this.purchaseInProgress = false;
+    }
+
+    private async waitForProduct(store: any, productId: string, basePlanId: string | null): Promise<any | null> {
+        const deadline = Date.now() + 10000;
+        let refreshed = false;
+
+        while (Date.now() < deadline) {
+            if (this.initializationPromise && !this.isInitialized) {
+                await this.initializationPromise;
+            }
+
+            if (this.isInitialized && !refreshed) {
+                refreshed = true;
+                try {
+                    await store.update();
+                } catch (error) {
+                    logIapJson("IAP: Store refresh failed before purchase", {
+                        code: (error as any)?.code || null,
+                        message: getIapErrorMessage(error, "Store refresh failed"),
+                    });
+                }
+            }
+
+            this.products = Array.isArray(store.products) ? store.products : this.products;
+            const product = store.get(productId) || this.products.find((item: any) => item?.id === productId);
+            const hasRequestedOffer = !basePlanId || Boolean(getExactAndroidOffer(product, basePlanId));
+
+            if (product && hasRequestedOffer) {
+                return product;
+            }
+
+            await delay(250);
+        }
+
+        return null;
     }
 
     private async getAccountBinding(ownerUserId: string): Promise<string> {
