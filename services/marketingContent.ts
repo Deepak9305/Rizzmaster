@@ -45,7 +45,8 @@ export const BLOG_POSTS: BlogPost[] = [
       'questions to ask about emotional availability',
       'emotionally available vs emotionally unavailable'
     ],
-    imageAlt: 'Illustration of two people building trust through an open and balanced conversation',
+    image: '/blog/emotionally-available-before-attachment-hero.jpg',
+    imageAlt: 'Two people having a calm, attentive conversation while getting to know each other',
     imageCaption: 'Emotional availability shows up in consistent, respectful behaviour more than in intense early chemistry.',
     resources: [
       { label: 'The Gottman Institute: An introduction to emotional bids and trust', url: 'https://www.gottman.com/blog/an-introduction-to-emotional-bids-and-trust/' },
