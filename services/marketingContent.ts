@@ -4,6 +4,9 @@ export interface BlogSection {
   heading: string;
   paragraphs: string[];
   bullets?: string[];
+  image?: string;
+  imageAlt?: string;
+  imageCaption?: string;
 }
 
 export interface BlogPost {
@@ -168,6 +171,9 @@ export const BLOG_POSTS: BlogPost[] = [
           'Strong chemistry is not evidence that two people can build a stable relationship. You can feel unusually understood, have effortless conversation, or experience intense physical attraction with someone who cannot offer consistency. Sometimes uncertainty makes chemistry feel stronger because your attention becomes focused on winning clarity. This is why the best way to assess an emotionally available partner is to watch what happens after the exciting beginning, when ordinary effort is required.',
           'Try asking yourself two separate questions: "Do I feel drawn to this person?" and "Do their choices support the type of relationship I want?" Both answers matter, but one cannot replace the other. A calmer connection may feel less dramatic at first while offering more honesty, safety, and mutual effort. Do not reject excitement; just make it prove itself through time and behaviour.'
         ],
+        image: '/blog/emotional-availability-consistency.jpg',
+        imageAlt: 'Two people walking side by side and talking comfortably after a date',
+        imageCaption: 'A steady connection makes room for ordinary effort after the first rush of chemistry.',
         bullets: [
           'Do not treat anxiety, uncertainty, or constant pursuit as proof of a special bond.',
           'Give attraction time to meet real-life consistency before making large emotional investments.',
@@ -196,6 +202,9 @@ export const BLOG_POSTS: BlogPost[] = [
           'If their answer is vague, believe the limit rather than treating it as a puzzle. You can choose a lighter connection if that genuinely works for you, or you can step back before attachment makes the cost higher. Boundaries are not a strategy for making an unavailable person chase you. They are a way to keep your choices connected to reality. A person who is emotionally available may not give you everything you want, but they will usually make it possible to understand what is and is not on the table.',
           'Also check whether the pattern is simply a mismatch in communication style. One person may prefer frequent messages while another prefers fewer, longer conversations. Different styles can work when both people explain their needs and make reasonable adjustments. The issue is not that someone dates differently from you. The issue is whether there is enough mutual willingness to understand the difference and create a rhythm that respects both people.'
         ],
+        image: '/blog/mixed-signals-boundaries.jpg',
+        imageAlt: 'A person calmly reflecting at a cafe table with a phone set aside',
+        imageCaption: 'A pause can create enough space to choose a clear conversation instead of chasing an uncertain signal.',
         bullets: [
           'State one concrete need instead of hinting and hoping it is discovered.',
           'Judge the response by clarity and behaviour, not reassurance alone.',

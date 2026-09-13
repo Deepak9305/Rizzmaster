@@ -47,6 +47,10 @@ const renderBullets = (bullets = []) => bullets.length
   ? `<ul class="mt-6 space-y-3 rounded-2xl border border-pink-300/10 bg-pink-300/[0.04] p-5 text-sm leading-7 text-white/65">${bullets.map((bullet) => `<li>${escapeHtml(bullet)}</li>`).join('')}</ul>`
   : '';
 
+const renderSectionImage = (section) => section.image
+  ? `<figure class="my-8 overflow-hidden rounded-3xl border border-white/10 bg-black/20"><img src="${escapeAttribute(section.image)}" alt="${escapeAttribute(section.imageAlt || section.heading)}" loading="lazy" decoding="async" class="aspect-[16/9] w-full object-cover"><figcaption class="border-t border-white/10 px-5 py-3 text-xs leading-5 text-white/35">${escapeHtml(section.imageCaption || '')}</figcaption></figure>`
+  : '';
+
 const renderResources = (post) => post.resources?.length
   ? `<section class="rounded-3xl border border-amber-300/15 bg-amber-300/[0.04] p-5 md:p-6"><p class="text-xs font-black uppercase tracking-[0.2em] text-amber-200/80">Further reading</p><p class="mt-3 text-sm leading-6 text-white/50">For more perspective on communication, boundaries, and healthy relationship patterns:</p><div class="mt-4 flex flex-col gap-2">${post.resources.map((resource) => `<a href="${escapeAttribute(resource.url)}" target="_blank" rel="noreferrer" class="text-sm font-bold text-amber-100/80">${escapeHtml(resource.label)} -&gt;</a>`).join('')}</div></section>`
   : '';
@@ -58,7 +62,7 @@ const renderRelated = (post, posts) => posts
   .join('');
 
 const renderArticle = (post, posts) => {
-  const articleSections = post.sections.map((section) => `<section><h2 class="text-2xl font-bold tracking-tight text-white md:text-3xl">${escapeHtml(section.heading)}</h2>${section.paragraphs.map((paragraph) => `<p class="mt-5 text-base leading-8 text-white/60">${escapeHtml(paragraph)}</p>`).join('')}${renderBullets(section.bullets)}</section>`).join('');
+  const articleSections = post.sections.map((section) => `<section><h2 class="text-2xl font-bold tracking-tight text-white md:text-3xl">${escapeHtml(section.heading)}</h2>${section.paragraphs.map((paragraph) => `<p class="mt-5 text-base leading-8 text-white/60">${escapeHtml(paragraph)}</p>`).join('')}${renderSectionImage(section)}${renderBullets(section.bullets)}</section>`).join('');
   const internalLinks = posts
     .filter((candidate) => candidate.slug !== post.slug)
     .slice(0, 3)
