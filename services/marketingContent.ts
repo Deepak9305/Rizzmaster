@@ -25,6 +25,212 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'how-to-tell-if-someone-is-emotionally-available',
+    title: 'How to Tell If Someone Is Emotionally Available Before You Get Attached',
+    description: 'Learn how to tell if someone is emotionally available by looking at communication, consistency, boundaries, vulnerability, and how they handle repair while dating.',
+    excerpt: 'Emotional availability is less about constant attention and more about a person\'s capacity to communicate clearly, make room for closeness, respect boundaries, and follow through over time.',
+    date: '2026-09-13',
+    updatedAt: '2026-09-13',
+    readingTime: '11 min read',
+    category: 'Dating advice',
+    keywords: [
+      'how to tell if someone is emotionally available',
+      'signs someone is emotionally available',
+      'emotionally available partner',
+      'how to know if someone is ready for a relationship',
+      'emotional availability in dating',
+      'signs of emotional maturity in a relationship',
+      'how to spot an emotionally unavailable person',
+      'green flags when dating someone new',
+      'questions to ask about emotional availability',
+      'emotionally available vs emotionally unavailable'
+    ],
+    imageAlt: 'Illustration of two people building trust through an open and balanced conversation',
+    imageCaption: 'Emotional availability shows up in consistent, respectful behaviour more than in intense early chemistry.',
+    resources: [
+      { label: 'The Gottman Institute: An introduction to emotional bids and trust', url: 'https://www.gottman.com/blog/an-introduction-to-emotional-bids-and-trust/' },
+      { label: 'American Psychological Association: How to keep your relationship healthy', url: 'https://www.apa.org/topics/healthy-relationships' },
+      { label: 'Planned Parenthood: Healthy relationships and communication', url: 'https://www.plannedparenthood.org/learn/relationships/healthy-relationships' }
+    ],
+    sections: [
+      {
+        heading: 'Emotional availability is a capacity, not constant access',
+        paragraphs: [
+          'Knowing how to tell if someone is emotionally available can save you from confusing intensity with readiness. An emotionally available person is not someone who replies instantly, shares every feeling on demand, or never needs time alone. They are someone who generally has the capacity to notice their emotions, communicate about them, make room for another person, and participate in the relationship honestly. Their availability is visible in patterns, not in one unusually deep conversation or a perfect first date.',
+          'Everyone has stressful weeks, fears, blind spots, and moments when they communicate badly. The useful question is not whether a person is flawless. It is whether they can be reachable and accountable when closeness becomes real. If you express a need, set a boundary, or mention that something hurt, do they become curious and responsive, or do they disappear, mock you, and make you regret speaking? Those moments reveal more than early chemistry does.'
+        ],
+        bullets: [
+          'Look for repeated behaviour instead of trying to decode one message or date.',
+          'Separate a temporary lack of time from a consistent lack of emotional capacity.',
+          'Notice whether closeness feels mutual, clear, and safe enough to develop.'
+        ]
+      },
+      {
+        heading: '1. They communicate with reasonable clarity',
+        paragraphs: [
+          'One of the clearest signs someone is emotionally available is that they do not make you build the entire relationship out of guesses. They can tell you when they are busy, what they are looking for, and whether their interest has changed. They may not have every answer immediately, but they do not use permanent ambiguity as a way to keep access to you without offering honesty in return. A simple message such as, "I like getting to know you, but I can only meet next week," gives you information without promising more than they can give.',
+          'Clarity does not have to sound formal or intense. It can be as ordinary as confirming plans, explaining a delay, or saying that they need a quiet evening. Emotionally available dating leaves room for two people to make informed choices. If you are always interpreting hot-and-cold behaviour, trying to earn a reply, or waiting for someone to define what they will not define, the uncertainty itself is useful information.'
+        ],
+        bullets: [
+          'They express interest without creating promises they cannot keep.',
+          'They tell you when their schedule or feelings change.',
+          'They do not punish reasonable questions about pace or intention.'
+        ]
+      },
+      {
+        heading: '2. They can name feelings and needs without turning them into weapons',
+        paragraphs: [
+          'Emotional availability includes emotional vocabulary. A person does not need to describe every feeling perfectly, but they should be able to move beyond "fine" or "nothing" when a meaningful issue is happening. They might say, "I felt overwhelmed and pulled back," "I am excited but nervous about this," or "I need a little time before we talk about it." Naming an emotion gives both people something workable. It is different from expecting a partner to guess what is happening behind silence.',
+          'Pay attention to how feelings are used. Healthy emotional honesty explains an experience; it does not force you to surrender a boundary. "I feel disappointed, can we find another time?" leaves room for your choice. "If you cared, you would cancel everything for me" turns emotion into pressure. The goal is not to find someone who never feels strongly. It is to find someone who can own their feelings without making you responsible for regulating all of them.'
+        ],
+        bullets: [
+          'They can say what they feel, even if they need time to find the words.',
+          'They ask for support directly instead of creating tests or silent punishments.',
+          'They respect the difference between sharing a feeling and controlling your response.'
+        ]
+      },
+      {
+        heading: '3. They show genuine curiosity about your inner world',
+        paragraphs: [
+          'A relationship cannot become close if one person is always the audience and the other is always the performer. An emotionally available partner wants to know how you think, what matters to you, what you are learning, and how experiences affect you. They remember details, ask follow-up questions, and allow the conversation to move away from their favourite subject. Their curiosity feels like attention, not an interrogation designed to collect personal information.',
+          'You can test this gently by sharing something with a little meaning: a difficult day, a goal you care about, or a preference that matters to you. You are not looking for a perfect response. You are looking for some combination of attention, respect, and follow-through. Do they ask what you need? Do they remember the detail later? Do they dismiss it, immediately compete with it, or turn it into a joke at your expense? Curiosity is one of the everyday ways people show that your inner world matters.'
+        ],
+        bullets: [
+          'They ask questions that go beyond appearance, status, or convenience.',
+          'They listen without immediately redirecting every topic to themselves.',
+          'They respond to small attempts at closeness with care and interest.'
+        ]
+      },
+      {
+        heading: '4. Their actions generally match their words',
+        paragraphs: [
+          'Words can create hope quickly, especially when someone speaks confidently about the future. Behaviour gives you a more reliable picture. Does the person who says they want to see you make reasonable plans? Does the person who says they value honesty tell you the truth when it is uncomfortable? Does their affection remain respectful when you say no or ask to slow down? Emotional availability is easier to trust when promises and ordinary actions line up over time.',
+          'This does not mean every plan must happen exactly as expected. People get sick, work runs late, and life changes. The important distinction is between an occasional failure followed by communication and a pattern of grand promises followed by low effort. A repair attempt matters: "I dropped the ball, I am sorry, and here is what I can realistically do" is more meaningful than a new burst of charm that never becomes dependable behaviour.'
+        ],
+        bullets: [
+          'They follow through or communicate early when they cannot.',
+          'Their effort does not disappear once they feel they have secured your attention.',
+          'They let consistent behaviour, not grand declarations, build trust.'
+        ]
+      },
+      {
+        heading: '5. They respect your boundaries and the pace of the relationship',
+        paragraphs: [
+          'A person can be affectionate, expressive, and still be emotionally unavailable if they treat your limits as obstacles. Healthy dating leaves room for both people to decide how quickly to share personal information, define the relationship, become physically intimate, or combine their lives. Someone who is ready for a relationship may want closeness, but they do not need to pressure you into proving your interest by abandoning your comfort.',
+          'Notice what happens after a small boundary. You might say that you cannot meet tonight, prefer not to discuss a private topic yet, or want to keep physical intimacy at a slower pace. A respectful person can feel disappointed without punishing you. They may ask a question, accept the answer, and decide whether the pace works for them. A person who uses guilt, anger, repeated persuasion, or withdrawal to override your no is showing a serious problem, regardless of how romantic their words sound.'
+        ],
+        bullets: [
+          'They accept a no without an argument designed to change your mind.',
+          'They ask for consent and respect privacy, time, and physical boundaries.',
+          'They can discuss different needs without turning the difference into a character attack.'
+        ]
+      },
+      {
+        heading: '6. They can handle small conflict and repair',
+        paragraphs: [
+          'You cannot assess emotional maturity only when everything is easy. Disagreement, disappointment, and miscommunication eventually appear in every connection. The useful sign is not that someone avoids all friction. It is that they can return to the issue without denying it happened. They might say, "I was defensive earlier. Can we try that conversation again?" or, "I understand why that landed badly, even though I meant it differently." This kind of repair creates room for trust to recover.',
+          'Be careful with apologies that are only emotional performances. A sincere repair identifies the behaviour, recognises the effect, and includes a reasonable change. You are also responsible for looking at your own part; emotional availability is mutual. But accountability must not become a one-person job. If every conflict ends with you apologising for having a reaction while the other person avoids responsibility, the relationship is teaching you to silence yourself rather than building safety.'
+        ],
+        bullets: [
+          'They can discuss a problem without threatening the relationship every time.',
+          'They take responsibility for their part instead of explaining why you are not allowed to be hurt.',
+          'Their behaviour changes after a meaningful repair conversation.'
+        ]
+      },
+      {
+        heading: '7. They have enough room in their life for a relationship',
+        paragraphs: [
+          'A person can genuinely like you and still not be available for the kind of relationship you want. Work, family responsibilities, health, grief, another relationship, or a major transition may leave little capacity for dating. That does not make them a bad person, and it does not make your needs excessive. It means attraction and readiness are different questions. Ask whether their actual life has room for regular contact, shared plans, and the level of consistency you need.',
+          'Look at the shape of the connection rather than accepting a vague promise that things will eventually become easier. If months pass with no space for dates, no clear movement, and no honest conversation about the limitation, you are allowed to treat the current pattern as the answer. An emotionally available person may have constraints, but they can discuss them honestly and collaborate on a realistic pace instead of asking you to wait indefinitely for potential.'
+        ],
+        bullets: [
+          'They can describe what they realistically have capacity for right now.',
+          'They make some consistent space rather than offering only last-minute access.',
+          'They do not ask you to organise your life around an undefined future.'
+        ]
+      },
+      {
+        heading: '8. They can talk about the past without being trapped in it',
+        paragraphs: [
+          'You do not need someone with a spotless relationship history. People can leave relationships with lessons, grief, regret, or unresolved feelings. A helpful sign is perspective: they can describe what happened without making every former partner a villain, and they can identify what they learned about their own choices. They do not need to disclose their entire history on the first date, but they should eventually be able to talk about the past with enough honesty to understand how it may affect the present.',
+          'Be cautious if a previous relationship occupies the emotional centre of the new one. Constant comparison, ongoing secret contact, revenge dating, or a refusal to acknowledge any personal responsibility can make it difficult for someone to meet you as you are. You are not a rehabilitation project or proof that they have finally won. A person may still be healing and date respectfully, but they must be honest about their capacity and avoid using your attachment as a substitute for processing what came before.'
+        ],
+        bullets: [
+          'They can reflect on patterns without assigning all responsibility to an ex.',
+          'They are honest about unfinished commitments or ongoing contact that affects the relationship.',
+          'They do not use you to provoke, replace, or compete with someone from their past.'
+        ]
+      },
+      {
+        heading: 'Chemistry can be real and still not mean readiness',
+        paragraphs: [
+          'Strong chemistry is not evidence that two people can build a stable relationship. You can feel unusually understood, have effortless conversation, or experience intense physical attraction with someone who cannot offer consistency. Sometimes uncertainty makes chemistry feel stronger because your attention becomes focused on winning clarity. This is why the best way to assess an emotionally available partner is to watch what happens after the exciting beginning, when ordinary effort is required.',
+          'Try asking yourself two separate questions: "Do I feel drawn to this person?" and "Do their choices support the type of relationship I want?" Both answers matter, but one cannot replace the other. A calmer connection may feel less dramatic at first while offering more honesty, safety, and mutual effort. Do not reject excitement; just make it prove itself through time and behaviour.'
+        ],
+        bullets: [
+          'Do not treat anxiety, uncertainty, or constant pursuit as proof of a special bond.',
+          'Give attraction time to meet real-life consistency before making large emotional investments.',
+          'Choose the relationship pattern you can live with, not only the potential you can imagine.'
+        ]
+      },
+      {
+        heading: 'Questions to ask when you are getting to know someone',
+        paragraphs: [
+          'You do not need to interview someone about emotional availability. Bring one question into a natural conversation, answer it yourself, and notice whether the discussion becomes more honest. The response is only part of the evidence. Someone can learn the right language from a podcast or a previous relationship; their follow-through shows whether the language reflects a real capacity.',
+          'The goal is not to find a perfect answer or pressure someone into defining the relationship before they are ready. It is to understand whether your expectations can meet in the present. You can also answer these questions for yourself, because knowing your own needs makes it easier to recognise compatibility instead of negotiating against your own limits.'
+        ],
+        bullets: [
+          'What does a healthy relationship look like to you in everyday life?',
+          'How do you usually handle conflict when you care about someone?',
+          'What kind of pace feels comfortable as two people get closer?',
+          'How do you like to communicate when work or life becomes overwhelming?',
+          'What are you genuinely available for right now?',
+          'What have you learned from your previous relationships?'
+        ]
+      },
+      {
+        heading: 'What to do when the signs are mixed',
+        paragraphs: [
+          'Mixed signals usually become less confusing when you stop trying to average the best moments with the worst pattern. Write down what you need, what the person has consistently offered, and what you are currently hoping will change. Then name the gap without making a diagnosis: "I enjoy seeing you, but I need more reliable plans to keep dating. Is that something you can offer now?" A direct question gives the other person a fair chance to answer and gives you information you can act on.',
+          'If their answer is vague, believe the limit rather than treating it as a puzzle. You can choose a lighter connection if that genuinely works for you, or you can step back before attachment makes the cost higher. Boundaries are not a strategy for making an unavailable person chase you. They are a way to keep your choices connected to reality. A person who is emotionally available may not give you everything you want, but they will usually make it possible to understand what is and is not on the table.',
+          'Also check whether the pattern is simply a mismatch in communication style. One person may prefer frequent messages while another prefers fewer, longer conversations. Different styles can work when both people explain their needs and make reasonable adjustments. The issue is not that someone dates differently from you. The issue is whether there is enough mutual willingness to understand the difference and create a rhythm that respects both people.'
+        ],
+        bullets: [
+          'State one concrete need instead of hinting and hoping it is discovered.',
+          'Judge the response by clarity and behaviour, not reassurance alone.',
+          'Step back when the relationship repeatedly asks you to accept less than you can honestly handle.'
+        ]
+      },
+      {
+        heading: 'The green flags that matter most',
+        paragraphs: [
+          'The strongest green flags are often quiet. You can ask a question without fearing punishment. You can say no without needing a courtroom defence. Plans are not perfect, but they are understandable. A vulnerable moment is met with respect instead of being stored as ammunition. When something goes wrong, both people can return to the conversation and make a realistic adjustment. This may feel less cinematic than a sudden declaration of certainty, but it creates the conditions in which closeness can grow.',
+          'Emotional availability is best judged over time and in ordinary situations. Look for enough capacity, not a fantasy of complete emotional fluency. The person you want may still be learning how to communicate, as long as they are honest about the learning and responsible for participating in it. You should not have to coach someone into basic respect, chase them for every sign of care, or abandon your needs to prove that you are easy to love.'
+        ],
+        bullets: [
+          'Clarity: You generally know where you stand and what they can offer.',
+          'Curiosity: They care about your inner world, not only your availability.',
+          'Consistency: Their ordinary actions support their words.',
+          'Boundaries: Your no, privacy, time, and pace are respected.',
+          'Repair: They can take responsibility and change behaviour after conflict.',
+          'Mutuality: You are building closeness together rather than carrying it alone.'
+        ]
+      },
+      {
+        heading: 'Choose evidence over potential',
+        paragraphs: [
+          'When you are attracted to someone, it is natural to focus on who they could become with enough time, care, or patience. But a healthy relationship has to be built with the person who is available now. Ask whether their present behaviour gives you enough honesty, space, effort, and respect to feel secure while you get to know them. If it does, keep learning each other slowly. If it does not, the answer is not always to become more understanding; sometimes it is to take the information seriously.',
+          'The right question is not, "How can I make this person open up?" It is, "Can we meet each other with enough openness to build something mutual?" Emotional availability cannot be forced, negotiated into existence, or proven by a single intense night. It is demonstrated in the small choices that let two people be honest, maintain boundaries, repair mistakes, and keep choosing each other with clear eyes.'
+        ],
+        bullets: [
+          'Let time reveal whether early promises become dependable habits.',
+          'Keep your standards connected to your actual needs, not to fear of losing the person.',
+          'Choose reciprocal emotional effort over a relationship you have to manage alone.'
+        ]
+      }
+    ]
+  },
+  {
     slug: 'how-to-connect-emotionally-while-dating',
     title: 'How to Connect Emotionally While Dating: 9 Ways to Build Real Closeness',
     description: 'Learn how to connect emotionally while dating through better questions, active listening, honest sharing, consistent effort, and healthy boundaries.',
