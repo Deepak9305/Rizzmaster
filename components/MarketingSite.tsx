@@ -37,6 +37,32 @@ const setMeta = (name: string, content: string, property = false) => {
   tag.setAttribute('content', content);
 };
 
+const ADSENSE_CLIENT = 'ca-pub-7381421031784616';
+const ADSENSE_SCRIPT_ID = 'rizzmaster-adsense-script';
+
+const useEditorialAds = (enabled: boolean) => {
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+
+    if (!enabled) {
+      document.getElementById(ADSENSE_SCRIPT_ID)?.remove();
+      return undefined;
+    }
+
+    let script = document.getElementById(ADSENSE_SCRIPT_ID) as HTMLScriptElement | null;
+    if (!script) {
+      script = document.createElement('script');
+      script.id = ADSENSE_SCRIPT_ID;
+      script.async = true;
+      script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`;
+      script.crossOrigin = 'anonymous';
+      document.head.appendChild(script);
+    }
+
+    return () => document.getElementById(ADSENSE_SCRIPT_ID)?.remove();
+  }, [enabled]);
+};
+
 const updateSeo = (route: MarketingRoute) => {
   const post = route.kind === 'article' ? getBlogPost(route.slug) : undefined;
   const legalPage = route.kind === 'privacy' || route.kind === 'terms' || route.kind === 'support'
@@ -65,8 +91,10 @@ const updateSeo = (route: MarketingRoute) => {
             ? 'Get help with Rizz Master, subscriptions, credits, account deletion, and feature requests.'
             : 'Rizz Master helps you create flirty replies, dating bios, openers, and conversation starters in seconds.');
   const keywords = post?.keywords.join(', ') || 'dating advice, texting advice, dating app openers, dating bios, AI dating assistant';
+  const isIndexableRoute = route.kind === 'home' || route.kind === 'blog' || Boolean(post) || Boolean(legalPage);
 
   document.title = title;
+  setMeta('robots', isIndexableRoute ? 'index,follow' : 'noindex,nofollow');
   setMeta('description', description);
   setMeta('keywords', keywords);
   setMeta('og:title', title, true);
@@ -746,6 +774,8 @@ const NotFoundPage: React.FC<{ navigate: (path: string) => void }> = ({ navigate
 const MarketingSite: React.FC = () => {
   const [pathname, setPathname] = useState(() => typeof window === 'undefined' ? '/' : window.location.pathname);
   const route = useMemo(() => getRoute(pathname), [pathname]);
+  const article = route.kind === 'article' ? getBlogPost(route.slug) : undefined;
+  useEditorialAds(route.kind === 'blog' || Boolean(article));
 
   useEffect(() => {
     const onPopState = () => setPathname(window.location.pathname);
@@ -768,8 +798,6 @@ const MarketingSite: React.FC = () => {
       else window.scrollTo({ top: 0, behavior: 'auto' });
     }, 0);
   };
-
-  const article = route.kind === 'article' ? getBlogPost(route.slug) : undefined;
 
   return <div className="marketing-site min-h-screen overflow-x-hidden bg-[#050407] text-white"><MarketingNav navigate={navigate} />{route.kind === 'home' ? <HomePage navigate={navigate} /> : route.kind === 'blog' ? <BlogIndexPage navigate={navigate} /> : article ? <ArticlePage post={article} navigate={navigate} /> : route.kind === 'privacy' || route.kind === 'terms' || route.kind === 'support' ? <LegalPage kind={route.kind} navigate={navigate} /> : <><NotFoundPage navigate={navigate} /><MarketingFooter navigate={navigate} /></>}</div>;
 };
