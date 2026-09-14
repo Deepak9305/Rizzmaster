@@ -544,6 +544,11 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'love-bombing-vs-genuine-interest': [
+    { slug: 'how-to-tell-if-someone-is-emotionally-available', label: 'Spot emotional availability' },
+    { slug: 'how-to-connect-emotionally-while-dating', label: 'Build emotional closeness' },
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy dating boundaries' }
+  ],
   'how-to-tell-if-someone-is-emotionally-available': [
     { slug: 'how-to-connect-emotionally-while-dating', label: 'How to build emotional closeness' },
     { slug: 'texting-boundaries-while-dating', label: 'Set healthy dating boundaries' },

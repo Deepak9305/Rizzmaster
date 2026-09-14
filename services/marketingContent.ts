@@ -28,6 +28,216 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'love-bombing-vs-genuine-interest',
+    title: 'Love Bombing vs Genuine Interest: How to Tell the Difference Early',
+    description: 'Learn how to tell love bombing apart from genuine interest by looking at pacing, boundaries, consistency, communication, and control while dating.',
+    excerpt: 'Genuine interest can feel exciting, but it leaves room for your boundaries, friendships, routines, and choices. Love bombing is not defined by affection alone; the warning sign is intense attention paired with pressure, entitlement, or control.',
+    date: '2026-09-14',
+    updatedAt: '2026-09-14',
+    readingTime: '12 min read',
+    category: 'Dating advice',
+    keywords: [
+      'love bombing vs genuine interest',
+      'signs of love bombing',
+      'how to tell if someone genuinely likes you',
+      'genuine interest vs love bombing',
+      'early dating red flags',
+      'love bombing in dating',
+      'is intense attention a red flag',
+      'healthy dating pace',
+      'how to spot emotional manipulation',
+      'love bombing boundaries'
+    ],
+    image: '/blog/love-bombing-vs-genuine-interest-hero.jpg',
+    imageAlt: 'Two people having a warm, unhurried conversation at an outdoor market',
+    imageCaption: 'Genuine interest can feel exciting while still leaving room for pace, boundaries, and choice.',
+    resources: [
+      { label: 'The National Domestic Violence Hotline: Signs of love bombing', url: 'https://www.thehotline.org/resources/signs-of-love-bombing/' },
+      { label: 'loveisrespect: Signs of love bombing', url: 'https://www.loveisrespect.org/resources/signs-of-love-bombing/' },
+      { label: 'The National Domestic Violence Hotline: Healthy relationships', url: 'https://www.thehotline.org/resources/healthy-relationships/' },
+      { label: 'One Love Foundation: A comprehensive guide to love bombing', url: 'https://www.joinonelove.org/learn/a-comprehensive-guide-to-love-bombing/' }
+    ],
+    sections: [
+      {
+        heading: 'Love bombing is not the same as liking someone a lot',
+        paragraphs: [
+          'A new connection can be thrilling. Someone may send thoughtful messages, plan an excellent date, compliment you often, or talk openly about what they want. Strong chemistry is not automatically a warning sign. The useful question is not, "Are they very interested?" It is, "What happens to my freedom, pace, and boundaries while they show that interest?"',
+          'Love bombing is a term used for overwhelming affection, attention, gifts, promises, or contact that can be part of manipulation or emotional abuse. Intensity alone does not prove bad intent, and one grand gesture does not tell you what a person is like. The concern is a repeated pattern in which affection creates pressure, expectation, entitlement, or control. Genuine interest invites closeness. Love bombing can make closeness feel like a debt you must repay.'
+        ],
+        bullets: [
+          'Genuine interest is enthusiastic but still respects your right to choose the pace.',
+          'Love bombing often makes ordinary boundaries feel like a test of your feelings.',
+          'The difference becomes clearer after you say no, ask for time, or keep your normal routine.'
+        ]
+      },
+      {
+        heading: '1. Watch the pace, not just the intensity',
+        paragraphs: [
+          'Early dating does not have one correct timeline. Some people know quickly that they want to keep exploring a connection, while others need more time. A healthy pace is the one that allows both people to stay informed and comfortable. Interest can be fast without being careless if the person leaves room for your answer and does not treat early excitement as a commitment.',
+          'A warning sign appears when someone tries to skip the getting-to-know-you stage. They may declare that you are their perfect match after very little real-life experience, push for exclusivity before you have discussed it, or make immediate future plans that assume you will agree. Their certainty may sound romantic, but it can also make it harder for you to notice whether their everyday behaviour is actually compatible with yours.'
+        ],
+        bullets: [
+          'Healthy: "I am enjoying this. Would you like to see each other again next week?"',
+          'Pressuring: "I know you are the one, so why are you not ready to make this official?"',
+          'Ask yourself whether the pace feels mutual or whether you are mainly trying to catch up.'
+        ]
+      },
+      {
+        heading: '2. Notice whether attention leaves room for your life',
+        paragraphs: [
+          'Genuine interest adds warmth to your life without demanding that it replace everything else. You should still be able to see friends, answer work messages, rest, exercise, study, and spend time alone. A person who likes you can miss you without treating your availability as proof of loyalty. They understand that a strong connection has to fit into two real lives, not one person abandoning theirs.',
+          'Love bombing often becomes easier to spot when attention is framed as access. Someone may want constant updates, expect instant replies, become upset when you are busy, or describe your independent plans as rejection. Sometimes the pressure is disguised as devotion: "I just want to talk all day because I care so much." The feeling may be flattering, but the effect is still a shrinking of your space.'
+        ],
+        image: '/blog/love-bombing-healthy-pace.jpg',
+        imageAlt: 'A person cooking dinner while their phone rests face down nearby',
+        imageCaption: 'A healthy connection can grow alongside your routines instead of asking you to give them up.',
+        bullets: [
+          'Your friendships and routines remain welcome rather than treated as competition.',
+          'They can wait for a reply without creating a punishment or emergency.',
+          'You feel more like yourself as the connection grows, not less like yourself.'
+        ]
+      },
+      {
+        heading: '3. Test a small boundary',
+        paragraphs: [
+          'You do not need to run a dramatic test or deliberately provoke someone. Simply state a normal preference and watch what follows. You might say that you cannot meet tonight, that you prefer to take physical intimacy slowly, or that you keep Sundays for family. A respectful person may feel disappointed, but they can accept your answer, suggest another option, and continue treating you with care.',
+          'A person using affection as leverage may respond with guilt, anger, mockery, relentless persuasion, or sudden withdrawal. They may say you are cold, accuse you of playing games, or insist that a real connection would not need limits. This response tells you something important: the issue is not whether they wanted more time with you. It is whether they believe your no is allowed to remain a no.'
+        ],
+        bullets: [
+          'State a simple limit without overexplaining or apologizing for having it.',
+          'Look for acceptance and adjustment, not a performance of hurt designed to change your mind.',
+          'A boundary is useful information about compatibility, not a challenge the other person must defeat.'
+        ]
+      },
+      {
+        heading: '4. Compare words with ordinary behaviour',
+        paragraphs: [
+          'Grand language is easy at the beginning because it has not yet been tested by ordinary life. Someone can call you exceptional, promise complete honesty, and describe a future together before you have seen how they handle a late train, a changed plan, or a difference of opinion. Genuine interest becomes credible through small, repeatable actions: they show up, communicate changes, remember what matters to you, and repair mistakes without needing a new dramatic speech.',
+          'Do not dismiss the positive words, but give them the right weight. Let behaviour accumulate before you make high-stakes decisions. If the compliments are huge while the follow-through is inconsistent, you may be responding to a story about the relationship rather than the relationship itself. This is especially important when the intensity makes you feel obligated to overlook things you would normally question.'
+        ],
+        bullets: [
+          'Look for reliable follow-through on small plans, not only impressive promises.',
+          'Notice whether an apology changes behaviour or only resets the emotional high.',
+          'Give trust in proportion to evidence rather than in proportion to chemistry.'
+        ]
+      },
+      {
+        heading: '5. Look for curiosity instead of instant certainty',
+        paragraphs: [
+          'Genuine interest is curious. The person wants to learn how you think, what you value, and what kind of relationship would work for you. They can be excited about you while accepting that they do not know you fully yet. Their questions are invitations, not an attempt to collect personal information that can later be used to pressure you.',
+          'Love bombing can sound certain before there has been enough time for real understanding. Someone may project an ideal version of you onto the connection and become frustrated when your actual preferences do not match it. If they seem more attached to the role you play in their fantasy than to your real answers, slow down. Being admired is not the same as being known.'
+        ],
+        bullets: [
+          'Healthy: they ask, listen, remember, and update their assumptions.',
+          'Concerning: they tell you who you are while ignoring what you actually say.',
+          'You should be able to correct a misunderstanding without being punished for it.'
+        ]
+      },
+      {
+        heading: '6. Notice how gifts, favours, and grand gestures are used',
+        paragraphs: [
+          'A thoughtful gift is not automatically love bombing. People express interest differently, and generosity can be sincere. Focus on the conditions attached to the gesture. Does the person give because they want to be kind, or do they later use the money, time, or effort as evidence that you owe them access, sex, loyalty, constant attention, or a faster commitment?',
+          'The size of a gift is less important than your ability to decline it freely. You should not have to accept expensive plans to prove you are interested. You should also be able to say that a gesture feels too much without becoming responsible for managing the giver\'s anger. Healthy generosity leaves both people with choice. Manipulative generosity turns kindness into a running account of debts.'
+        ],
+        bullets: [
+          'You can say no to a gift, favour, or expensive date without retaliation.',
+          'They do not keep a scorecard of everything they have done for you.',
+          'Their care is still present when the gesture is small, private, or inconvenient.'
+        ]
+      },
+      {
+        heading: '7. Pay attention to the shift after you slow things down',
+        paragraphs: [
+          'One of the clearest moments to observe is what happens when you reduce the speed. You might take longer to reply, decline a last-minute plan, ask for a weekend to yourself, or say that you want to keep dating without making promises yet. A secure connection may become less intense for a moment, but it remains respectful. The person adjusts because they want a relationship that works for both people.',
+          'In a love-bombing pattern, the attention can switch suddenly to coldness, blame, or punishment when you stop matching the desired pace. The same person who called you perfect may accuse you of wasting their time. The point is not to label them from one awkward reaction. It is to notice whether affection is consistently conditional on compliance.'
+        ],
+        bullets: [
+          'A change in pace should lead to a conversation, not a campaign to make you feel guilty.',
+          'Watch for hot-and-cold cycles that repeat after every boundary.',
+          'You are allowed to slow down without proving that your interest is real.'
+        ]
+      },
+      {
+        heading: '8. Healthy interest can handle disappointment',
+        paragraphs: [
+          'Disappointment is normal. The way someone handles it is more informative than whether they feel it. A person can wish you had stayed longer and still say, "I understand. Let us find another time." They can want reassurance without demanding that you cancel your plans. This kind of response keeps both people visible: their feelings matter, and your choice still stands.',
+          'Control often enters through the management of disappointment. The other person may turn a small no into a character judgment, repeatedly ask for explanations, or make you responsible for restoring their mood. Over time, you may start saying yes simply to avoid the reaction. That is not the same as freely choosing closeness. Notice when peace depends on you becoming smaller.'
+        ],
+        image: '/blog/love-bombing-boundaries.jpg',
+        imageAlt: 'Two adults having a calm conversation in a quiet bookstore lounge',
+        imageCaption: 'Respectful interest makes space for honest conversations when expectations and boundaries differ.',
+        bullets: [
+          'They can hear disappointment without converting it into punishment.',
+          'They ask for a future option instead of demanding access right now.',
+          'You do not have to regulate their feelings by abandoning your own decision.'
+        ]
+      },
+      {
+        heading: '9. Do not diagnose from one romantic gesture',
+        paragraphs: [
+          'Labels can help you notice a pattern, but they can also make you ignore context. A person may be naturally expressive, culturally generous, socially anxious, or simply excited after meeting someone they like. They might make an intense compliment and then respond respectfully when you say it feels fast. That single moment deserves a conversation, not an automatic verdict.',
+          'Look at the whole pattern across time and situations. Are you free to disagree? Can you keep your friends? Does the person accept a slower pace? Do they respect privacy and consent? Are promises matched by behaviour? These questions are more useful than trying to decide whether someone fits a label after one date. You can choose distance because something feels wrong even if you cannot prove intent.'
+        ],
+        bullets: [
+          'Separate an awkward moment from a repeated pattern of pressure or control.',
+          'Use your discomfort as information without needing a courtroom-level case.',
+          'You can step back from a connection that feels unsafe or exhausting.'
+        ]
+      },
+      {
+        heading: 'Questions to ask yourself after an intense start',
+        paragraphs: [
+          'After a fast or unusually emotional beginning, take a quiet moment away from the other person\'s messages. Excitement can make every interaction feel urgent, while distance helps you notice how the connection affects your body and choices. You do not need to distrust every good feeling. You do need enough space to hear your own opinion.',
+          'Write down what has actually happened rather than only what has been promised. A short note can reveal whether the relationship is becoming more mutual or whether you are mostly responding to pressure. If the connection is healthy, a pause for reflection will not destroy it.'
+        ],
+        bullets: [
+          'Do I feel energised, or do I feel anxious about keeping their attention?',
+          'Can I say no, disagree, or take time without fearing a major reaction?',
+          'Am I being known as I am, or rewarded for matching an ideal image?',
+          'Have their ordinary actions earned the level of trust they are requesting?',
+          'Are my friends, routines, privacy, and financial choices still mine?',
+          'If the intensity disappeared tomorrow, would the basic compatibility still be there?'
+        ]
+      },
+      {
+        heading: 'What to say if the attention feels overwhelming',
+        paragraphs: [
+          'You do not need a perfect speech. A clear sentence is enough. Try, "I like getting to know you, but I want to take this more slowly," or, "I am not available for constant messaging. I will reply when I have time." If gifts or future promises feel too large, say, "That is generous, but it feels like more than I am comfortable accepting right now."',
+          'Then watch what happens. A compatible person may ask what pace would feel better and give you room to answer. If the person argues with the boundary, demands reassurance, threatens to leave, or changes from intense affection to punishment, you have useful information. You are not required to keep explaining a limit to someone who is committed to misunderstanding it.'
+        ],
+        bullets: [
+          'Keep the message short, specific, and about your choice.',
+          'Do not promise a future commitment just to make the current pressure stop.',
+          'Use the communication style that feels safest, including text or a supported exit.'
+        ]
+      },
+      {
+        heading: 'When the pattern includes control or fear',
+        paragraphs: [
+          'Intense attention becomes more serious when it is paired with monitoring, isolation, threats, intimidation, coercion, financial control, pressure around sex, or repeated attempts to override your choices. You do not have to wait for the situation to become physical before taking it seriously. If you feel afraid of the person\'s reaction, prioritise safety over getting them to agree with your decision.',
+          'Tell a trusted friend what is happening, save important messages if doing so is safe, and consider contacting a qualified local relationship-abuse service for confidential guidance. The National Domestic Violence Hotline and loveisrespect provide educational resources and support options, but local services may be better placed to help with your specific location. If you are in immediate danger, contact your local emergency service. Do not confront someone alone if you believe they may retaliate.'
+        ],
+        bullets: [
+          'Control and fear matter even when the person is also affectionate or apologetic.',
+          'Choose a safe exit plan rather than trying to win an argument about the label.',
+          'Support is available, and asking for it does not require you to make a public accusation.'
+        ]
+      },
+      {
+        heading: 'Choose the pattern that respects your freedom',
+        paragraphs: [
+          'The best way to tell love bombing from genuine interest is to look past the emotional volume and study what the connection makes possible. Genuine interest gives you more information, not less. You can ask questions, keep your life, change your mind, and let trust grow at a pace you can actually sustain. The person may be excited, but they do not need to rush your consent to feel secure.',
+          'Love bombing is not defined by flowers, compliments, fast replies, or an intense first week. The warning sign is affection used alongside pressure, entitlement, boundary violations, or control. If you notice that pattern, you are allowed to step back before you have a complete explanation. A relationship worth building will not require you to trade away your judgment, privacy, friendships, or freedom in exchange for attention.'
+        ],
+        bullets: [
+          'Let consistency earn trust and let boundaries reveal compatibility.',
+          'Keep your support network and routines active while a new connection develops.',
+          'The right person can be enthusiastic about you without trying to own your time.'
+        ]
+      }
+    ]
+  },
+  {
     slug: 'how-to-tell-if-someone-is-emotionally-available',
     title: 'How to Tell If Someone Is Emotionally Available Before You Get Attached',
     description: 'Learn how to tell if someone is emotionally available by looking at communication, consistency, boundaries, vulnerability, and how they handle repair while dating.',
