@@ -4,6 +4,7 @@ import {
     RewardAdPluginEvents,
     RewardInterstitialAdPluginEvents,
     AdMobRewardInterstitialItem,
+    AdMobRewardItem,
     AdmobConsentDebugGeography,
     AdmobConsentStatus
 } from '@capacitor-community/admob';
@@ -16,6 +17,22 @@ type PrepareOptions = {
     prepareAction: () => Promise<unknown>;
     timeoutMs?: number;
 };
+
+export type RewardVideoSsv = {
+    userId: string;
+    customData: string;
+};
+
+// Android mediation adapters do not consistently preserve the configured reward
+// type in the JS bridge. A positive native reward callback is authoritative for
+// this fixed ad unit; the server still grants only its configured 5-credit item.
+const didEarnReward = (info: Partial<AdMobRewardItem> | null | undefined) => (
+    Number(info?.amount) > 0
+);
+
+const getRewardVideoSsvKey = (ssv?: RewardVideoSsv) => (
+    ssv ? `${ssv.userId}:${ssv.customData}` : ''
+);
 
 export type InterstitialShowReason =
     | 'shown'
@@ -53,6 +70,7 @@ export const AdMobService = {
     lastInterstitialAdId: null as string | null,
     rewardVideoPreparedAt: 0,
     lastRewardVideoAdId: null as string | null,
+    lastRewardVideoSsvKey: '',
     rewardInterstitialPreparedAt: 0,
     lastRewardInterstitialAdId: null as string | null,
 
@@ -64,6 +82,7 @@ export const AdMobService = {
     INTERSTITIAL_SHOW_TIMEOUT_MS: 30000,
     INTERSTITIAL_POST_SHOW_TIMEOUT_MS: 45000,
     REWARDED_POST_SHOW_TIMEOUT_MS: 90000,
+    REWARDED_DISMISS_GRACE_MS: 2000,
     INTERSTITIAL_STALE_AFTER_MS: 20 * 60 * 1000,
     REWARDED_STALE_AFTER_MS: 50 * 60 * 1000,
     POST_PREPARE_SHOW_DELAY_MS: 1200,
@@ -105,12 +124,14 @@ export const AdMobService = {
         this.rewardVideoPromise = null;
         this.rewardVideoPreparedAt = 0;
         this.lastRewardVideoAdId = null;
+        this.lastRewardVideoSsvKey = '';
     },
 
-    hasFreshRewardVideo(adId?: string) {
+    hasFreshRewardVideo(adId?: string, ssv?: RewardVideoSsv) {
         if (!this.rewardVideoReady) return false;
         if (!this.lastRewardVideoAdId) return false;
         if (adId && this.lastRewardVideoAdId !== adId) return false;
+        if (getRewardVideoSsvKey(ssv) !== this.lastRewardVideoSsvKey) return false;
         return Date.now() - this.rewardVideoPreparedAt < this.REWARDED_STALE_AFTER_MS;
     },
 
@@ -235,7 +256,11 @@ export const AdMobService = {
                 }, resolvedTimeoutMs);
 
                 try {
+                    // The native plugin resolves prepareInterstitial/prepareReward* only
+                    // after the ad is loaded. Accept that result as well as the event so
+                    // a bridge event-ordering race cannot turn a loaded ad into not_ready.
                     await prepareAction();
+                    settle(true);
                 } catch (error) {
                     settle(false, error);
                 }
@@ -581,8 +606,10 @@ export const AdMobService = {
         }
     },
 
-    async prepareRewardVideo(adId: string): Promise<boolean> {
+    async prepareRewardVideo(adId: string, ssv?: RewardVideoSsv): Promise<boolean> {
         if (!canUseNativeAdMob()) return false;
+
+        const ssvKey = getRewardVideoSsvKey(ssv);
 
         const initialized = await this.ensureInitialized('Reward video prepare');
         if (!initialized) {
@@ -590,11 +617,14 @@ export const AdMobService = {
             return false;
         }
 
-        if (this.lastRewardVideoAdId && this.lastRewardVideoAdId !== adId) {
+        if (
+            (this.lastRewardVideoAdId && this.lastRewardVideoAdId !== adId) ||
+            this.lastRewardVideoSsvKey !== ssvKey
+        ) {
             this.invalidateRewardVideo();
         }
-        if (this.hasFreshRewardVideo(adId)) return true;
-        if (this.rewardVideoReady && !this.hasFreshRewardVideo(adId)) {
+        if (this.hasFreshRewardVideo(adId, ssv)) return true;
+        if (this.rewardVideoReady && !this.hasFreshRewardVideo(adId, ssv)) {
             console.log('[AdMob] Cached reward video went stale, refreshing it before show');
             this.invalidateRewardVideo();
         }
@@ -602,6 +632,7 @@ export const AdMobService = {
 
         this.rewardVideoPreparing = true;
         this.lastRewardVideoAdId = adId;
+        this.lastRewardVideoSsvKey = ssvKey;
         this.rewardVideoPromise = (async (): Promise<boolean> => {
             let prepared = false;
             try {
@@ -609,7 +640,7 @@ export const AdMobService = {
                     label: 'Reward Video',
                     loadedEvent: RewardAdPluginEvents.Loaded,
                     failedEvent: RewardAdPluginEvents.FailedToLoad,
-                    prepareAction: () => AdMob.prepareRewardVideoAd({ adId, isTesting: false }),
+                    prepareAction: () => AdMob.prepareRewardVideoAd({ adId, isTesting: false, ssv }),
                     timeoutMs: this.REWARDED_PREPARE_TIMEOUT_MS,
                 });
                 this.rewardVideoReady = prepared;
@@ -635,7 +666,7 @@ export const AdMobService = {
         return this.rewardVideoPromise;
     },
 
-    async showRewardVideo(adId: string, onShow?: () => void): Promise<boolean> {
+    async showRewardVideo(adId: string, ssv?: RewardVideoSsv, onShow?: () => void): Promise<boolean> {
         if (!canUseNativeAdMob()) return false;
         if (this.isRewardVideoShowing) return false;
         this.isRewardVideoShowing = true;
@@ -657,6 +688,7 @@ export const AdMobService = {
                 let dismissListener: any = null;
                 let failedListener: any = null;
                 let failedShowListener: any = null;
+                let dismissGraceTimer: ReturnType<typeof setTimeout> | null = null;
 
                 let timeout: ReturnType<typeof setTimeout> | null = setTimeout(() => {
                     console.warn('[AdMob] Reward video show timeout');
@@ -668,6 +700,7 @@ export const AdMobService = {
                     resolved = true;
                     this.cleanupListeners([showedListener, rewardListener, dismissListener, failedListener, failedShowListener]);
                     if (timeout) clearTimeout(timeout);
+                    if (dismissGraceTimer) clearTimeout(dismissGraceTimer);
                     this.rewardVideoReady = false;
                     this.rewardVideoPreparedAt = 0;
                     this.isRewardVideoShowing = false;
@@ -688,13 +721,24 @@ export const AdMobService = {
                         });
 
                         rewardListener = await AdMob.addListener(RewardAdPluginEvents.Rewarded, (info) => {
-                            console.log('[AdMob] User earned reward:', info);
-                            earned = true;
+                            console.log('[AdMob] Reward video reward event received.', {
+                                amount: Number.isFinite(Number(info?.amount)) ? Number(info.amount) : null,
+                                type: typeof info?.type === 'string' ? info.type : null,
+                            });
+                            earned = didEarnReward(info);
+                            if (!earned) {
+                                console.warn('[AdMob] Reward video callback did not include a positive reward amount.');
+                            }
                         });
 
                         dismissListener = await AdMob.addListener(RewardAdPluginEvents.Dismissed, () => {
                             console.log('[AdMob] Reward video dismissed');
-                            cleanupAndResolve(earned);
+                            // Some mediation adapters can dispatch dismiss
+                            // before the native reward callback. Give the
+                            // plugin result/event a brief chance to arrive.
+                            dismissGraceTimer = setTimeout(() => {
+                                cleanupAndResolve(earned);
+                            }, this.REWARDED_DISMISS_GRACE_MS);
                         });
 
                         failedListener = await AdMob.addListener(RewardAdPluginEvents.FailedToLoad, (error) => {
@@ -708,10 +752,10 @@ export const AdMobService = {
                             cleanupAndResolve(false);
                         });
 
-                        if (!this.hasFreshRewardVideo(adId)) {
+                        if (!this.hasFreshRewardVideo(adId, ssv)) {
                             console.warn('[AdMob] Ad not ready, attempting JIT prepare...');
-                            const prepared = await this.prepareRewardVideo(adId);
-                            if (!prepared || !this.hasFreshRewardVideo(adId)) {
+                            const prepared = await this.prepareRewardVideo(adId, ssv);
+                            if (!prepared || !this.hasFreshRewardVideo(adId, ssv)) {
                                 console.error('[AdMob] JIT Prepare failed: Ad not ready.');
                                 cleanupAndResolve(false);
                                 return;
@@ -720,7 +764,15 @@ export const AdMobService = {
                         }
 
                         try {
-                            await AdMob.showRewardVideoAd();
+                            // The plugin resolves this call from the native
+                            // onUserEarnedReward callback. Use its result as
+                            // the source of truth if the JS event delivery is
+                            // delayed or missed by the WebView bridge.
+                            const rewardItem = await AdMob.showRewardVideoAd({ adId }) as AdMobRewardItem;
+                            if (didEarnReward(rewardItem)) {
+                                earned = true;
+                            }
+                            cleanupAndResolve(earned);
                         } catch (error) {
                             console.error('AdMob showRewardVideoAd threw:', error);
                             this.invalidateRewardVideo();

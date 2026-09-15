@@ -207,8 +207,22 @@ const loadLegacyPremiumSubscriptions = async (client, userId) => {
     .limit(10);
 
   if (error) {
+    // Premium reconciliation is a best-effort refresh. A transient Supabase
+    // gateway error must not make login or a post-reward profile refresh fail.
+    const message = error.message || 'Failed to load premium subscriptions';
+    const isTransientGatewayError =
+      /gateway timeout|timeout|temporarily unavailable|upstream/i.test(message) ||
+      Number(error.status || error.statusCode) >= 500;
+    if (isTransientGatewayError) {
+      console.warn('[Profiles] Skipping premium reconciliation after transient subscription read failure.', {
+        userId,
+        code: error.code || null,
+        status: error.status || error.statusCode || null,
+      });
+      return [];
+    }
     throw new AppDataError(
-      error.message || 'Failed to load premium subscriptions',
+      message,
       'PROFILE_BOOTSTRAP_FAILED',
       500
     );

@@ -8,14 +8,12 @@ import { InputMode, RizzResponse, BioResponse, SavedItem, UserProfile, RizzOrBio
 import { supabase } from './services/supabaseClient';
 import RizzCard from './components/RizzCard';
 import Footer from './components/Footer';
-import WebAppMenu from './components/WebAppMenu';
 import { createDodoPortalSession } from './services/dodoBillingService';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
-import { Keyboard } from '@capacitor/keyboard';
 import { StatusBar, Style } from '@capacitor/status-bar';
-import { AdMobService } from './services/admobService';
+import { AdMobService, type RewardVideoSsv } from './services/admobService';
 import { OneSignalService } from './services/oneSignalService';
 import IAPService from './services/iapService';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
@@ -27,13 +25,13 @@ import {
   canUseNativeCamera,
   canUseNativeGoogleAuth,
   canUseNativeIap,
-  canUseNativeKeyboard,
   canUseNativeNetwork,
   canUseNativeOneSignal,
   canUseNativeStatusBar,
 } from './services/nativeCapabilities';
 import ForceUpdateGate from './components/ForceUpdateGate';
 import { loadUpdateGateConfig, type UpdateGateConfig } from './services/updateGateService';
+import { completeRewardedAdAttempt, createRewardedAdAttempt, getRewardedAdStatus, type RewardedAdStatus } from './services/rewardedAdService';
 
 // Lazy Load Heavy Components / Modals
 const PremiumModal = lazy(() => import('./components/PremiumModal'));
@@ -43,16 +41,16 @@ const RizzCoach = lazy(() => import('./components/RizzCoach'));
 const LoginPage = lazy(() => import('./components/LoginPage'));
 const OnboardingFlow = lazy(() => import('./components/OnboardingFlow'));
 const WebPremiumModal = lazy(() => import('./components/WebPremiumModal'));
+const WebAppMenu = lazy(() => import('./components/WebAppMenu'));
 import ErrorBoundary from './components/ErrorBoundary';
 import NoInternetOverlay from './components/NoInternetOverlay';
 
 const DAILY_CREDITS = 5;
 const IS_WEB_PLATFORM = !Capacitor.isNativePlatform();
-const INTERSTITIAL_PRELOAD_RETRY_MS = 15000;
-const INTERSTITIAL_REFRESH_INTERVAL_MS = 8 * 60 * 1000;
 const SILENT_PREMIUM_RESTORE_WAIT_MS = 45000;
 const SILENT_PREMIUM_RESTORE_RETRY_MS = 60000;
 const SILENT_PREMIUM_RESTORE_MAX_ATTEMPTS = 2;
+const REWARDED_STATUS_POLL_ATTEMPTS = 20;
 
 // --- AD CONFIGURATION ---
 const USE_TEST_ADS = false; // Set to true for testing with Google test ads
@@ -146,6 +144,22 @@ const LOADING_MESSAGES = [
   "Polishing the charm...",
   "Cooking..."
 ];
+
+// Keep rotating status text isolated so generation progress does not re-render
+// the entire app shell every 1.5 seconds.
+const LoadingMessage: React.FC = React.memo(() => {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((current) => (current + 1) % LOADING_MESSAGES.length);
+    }, 1500);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  return <>{LOADING_MESSAGES[index]}</>;
+});
 
 // --- VIBE CONFIGURATION ---
 // Define which vibes are PRO only
@@ -281,7 +295,7 @@ interface SplashScreenProps {
   onComplete: () => void;
 }
 
-const SplashScreen: React.FC<SplashScreenProps> = ({ isAppReady, onComplete }) => {
+const SplashScreen: React.FC<SplashScreenProps> = React.memo(({ isAppReady, onComplete }) => {
   const [progress, setProgress] = useState(0);
   const [isExiting, setIsExiting] = useState(false);
 
@@ -320,8 +334,8 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ isAppReady, onComplete }) =
 
   return (
     <div className={`fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center overflow-hidden transition-all duration-[800ms] ${isExiting ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100'}`}>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-rose-900/20 rounded-full blur-[100px] animate-pulse-glow" />
-      <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-amber-900/10 rounded-full blur-[80px] animate-float" />
+      <div className="native-splash-orb absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-rose-900/20 rounded-full blur-[100px] animate-pulse-glow" />
+      <div className="native-splash-orb absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-amber-900/10 rounded-full blur-[80px] animate-float" />
 
       <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-4xl px-4">
         <div className="relative mb-12">
@@ -349,30 +363,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ isAppReady, onComplete }) =
       </div>
     </div>
   );
-};
-
-const AdLoadingOverlay: React.FC<{ mode: 'hidden' | 'interstitial' }> = ({ mode }) => {
-  if (mode === 'hidden') return null;
-
-  return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center animate-fade-in pointer-events-none">
-      {/* Semi-transparent backdrop to ensure viewability signals pass through if needed */}
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
-
-      {/* Minimal Loader Content */}
-      <div className="relative flex flex-col items-center pointer-events-auto">
-        <div className="h-12 w-12 relative mb-6">
-          <div className="absolute inset-0 rounded-full border-2 border-white/5" />
-          <div className="absolute inset-0 rounded-full border-2 border-white/80 border-t-transparent animate-spin" style={{ animationDuration: '1s' }} />
-        </div>
-
-        <h3 className="text-xs font-medium tracking-[0.3em] text-white/60 uppercase text-center px-4">
-          Preparing Ad
-        </h3>
-      </div>
-    </div>
-  );
-};
+});
 
 interface AppProps {
   onNavigateToPath?: (path: string) => void;
@@ -402,6 +393,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const sessionChannelRef = useRef<BroadcastChannel | null>(null);
+  const rewardedAdAttemptRef = useRef<string | null>(null);
+  const rewardedAdInProgressRef = useRef(false);
+  const loadingRef = useRef(false);
+  const savedItemsRef = useRef<SavedItem[]>([]);
 
   // Splash State
   const [showSplash, setShowSplash] = useState(true);
@@ -412,33 +407,34 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   // App State
   const [currentView, setCurrentView] = useState<ViewState>(() => getViewFromLocation());
   const [mode, setMode] = useState<InputMode>(InputMode.CHAT);
-  const [inputText, setInputText] = useState('');
   const [image, setImage] = useState<string | null>(null);
   const [selectedVibe, setSelectedVibe] = useState<string | null>(null);
   const [responseLength, setResponseLength] = useState<ResponseLength>('medium');
 
   // Loading State
   const [loading, setLoading] = useState(false);
-  const [loadingMsg, setLoadingMsg] = useState("Cooking...");
 
   const [result, setResult] = useState<RizzOrBioResponse | null>(null);
   const [inputError, setInputError] = useState<string | null>(null);
 
   // Modals & Flags
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [rewardedAdStatus, setRewardedAdStatus] = useState<'idle' | 'loading' | 'pending' | 'success' | 'error'>('idle');
+  const [isRewardedAdLoading, setIsRewardedAdLoading] = useState(false);
+  const [rewardedAdRequiredCredits, setRewardedAdRequiredCredits] = useState<1 | 2>(1);
   const [showSavedModal, setShowSavedModal] = useState(false);
   const [showWebMenu, setShowWebMenu] = useState(false);
   const [showWebPremiumModal, setShowWebPremiumModal] = useState(false);
   const [webPremiumReason, setWebPremiumReason] = useState<'credits' | 'premium'>('premium');
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
   const [isSessionBlocked, setIsSessionBlocked] = useState(false);
-  const [isAdLoading, setIsAdLoading] = useState<'hidden' | 'interstitial'>('hidden');
   const [isProfileLoadingHung, setIsProfileLoadingHung] = useState(false);
   const [profileLoadError, setProfileLoadError] = useState<string | null>(null);
   const [isOffline, setIsOffline] = useState(false);
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const lastOfflineStatusRef = useRef(false);
-  const keyboardVisibleRef = useRef(false);
+
+  loadingRef.current = loading;
+  savedItemsRef.current = savedItems;
 
   // Custom Personas State
   const [customPersonas, setCustomPersonas] = useState<CustomPersona[]>([]);
@@ -450,6 +446,21 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   // Guest Mode State
   const [isGuest, setIsGuest] = useState(false);
   const [loginReason, setLoginReason] = useState<'premium' | undefined>(undefined);
+
+  const generationInputsRef = useRef({
+    mode,
+    image,
+    selectedVibe,
+    responseLength,
+    customPersonas,
+  });
+  generationInputsRef.current = {
+    mode,
+    image,
+    selectedVibe,
+    responseLength,
+    customPersonas,
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -499,14 +510,16 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     }
 
     // Provide a mock guest profile
-    setProfile({
+    const guestProfile = {
       id: 'guest_user',
       email: 'guest@rizzmaster.local',
       credits: guestCredits, // Dynamically loaded
       is_premium: false,
       last_daily_reset: new Date().toISOString(),
       shadow_notes: guestNotes
-    } as any);
+    } as UserProfile;
+    profileRef.current = guestProfile;
+    setProfile(guestProfile);
     showToast(`Entered Guest Mode! ⚡ (${guestCredits} Credits)`, "info");
   }, [showToast]);
 
@@ -517,6 +530,8 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     setIsSessionBlocked(false);
     setIsProfileLoadingHung(false);
     setProfileLoadError(null);
+    profileRef.current = null;
+    authUserIdRef.current = null;
     setProfile(null);
     setSession(null);
     setCurrentView('HOME');
@@ -549,62 +564,29 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   }, [profile?.id]);
 
   const saveCustomPersonas = useCallback((newPersonas: CustomPersona[]) => {
-    if (!profile?.id) return;
+    const profileId = profileRef.current?.id;
+    if (!profileId) return;
     setCustomPersonas(newPersonas);
-    localStorage.setItem(`rizz_custom_personas_${profile.id}`, JSON.stringify(newPersonas));
-  }, [profile?.id]);
+    localStorage.setItem(`rizz_custom_personas_${profileId}`, JSON.stringify(newPersonas));
+  }, []);
 
   // Ref to track state for event listeners without re-binding
   const stateRef = useRef({
     currentView,
     showPremiumModal,
-    showSavedModal
+    showSavedModal,
+    showOnboarding,
   });
 
   // Keep stateRef in sync
   useEffect(() => {
-    stateRef.current = { currentView, showPremiumModal, showSavedModal };
-  }, [currentView, showPremiumModal, showSavedModal]);
+    stateRef.current = { currentView, showPremiumModal, showSavedModal, showOnboarding };
+  }, [currentView, showPremiumModal, showSavedModal, showOnboarding]);
 
   const isPublicInfoView =
     currentView === 'PRIVACY' ||
     currentView === 'TERMS' ||
     currentView === 'SUPPORT';
-
-  useEffect(() => {
-    keyboardVisibleRef.current = isKeyboardVisible;
-  }, [isKeyboardVisible]);
-
-  useEffect(() => {
-    if (!canUseNativeKeyboard()) return;
-
-    let cancelled = false;
-    const listenerHandles: Array<{ remove: () => Promise<void> | void }> = [];
-    const updateKeyboardVisibility = (visible: boolean) => {
-      keyboardVisibleRef.current = visible;
-      setIsKeyboardVisible(prev => (prev === visible ? prev : visible));
-    };
-
-    void Promise.all([
-      Keyboard.addListener('keyboardWillShow', () => updateKeyboardVisibility(true)),
-      Keyboard.addListener('keyboardDidShow', () => updateKeyboardVisibility(true)),
-      Keyboard.addListener('keyboardWillHide', () => updateKeyboardVisibility(false)),
-      Keyboard.addListener('keyboardDidHide', () => updateKeyboardVisibility(false)),
-    ]).then((handles) => {
-      if (cancelled) {
-        handles.forEach(handle => void handle.remove());
-        return;
-      }
-      listenerHandles.push(...handles);
-    }).catch((error) => {
-      console.warn('[Keyboard] Failed to attach listeners:', error);
-    });
-
-    return () => {
-      cancelled = true;
-      listenerHandles.forEach(handle => void handle.remove());
-    };
-  }, []);
 
   // Handle Status Bar Visibility on Scroll
   useEffect(() => {
@@ -679,15 +661,17 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     };
   }, [showToast]);
 
-  // Sync profile ref
+  // Sync the ref without coupling notification updates to every profile refresh.
   useEffect(() => {
     profileRef.current = profile;
+  }, [profile]);
 
+  useEffect(() => {
     // Link OneSignal External ID when profile is loaded
     if (canUseNativeOneSignal() && profile?.id) {
       OneSignalService.setExternalId(profile.id);
     }
-  }, [profile]);
+  }, [profile?.id]);
 
   // --- INTERSTITIAL AD ACTIVE TIME TRACKING ---
   // We use refs here because we need these values to be immediately available
@@ -695,6 +679,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const activeTimeMs = useRef<number>(0);
   const lastAdActiveTime = useRef<number>(-120000); // Bug 6 fix: pre-subtract 1 cooldown so the first ad can show immediately
   const backgroundTimestamp = useRef<number | null>(null);
+  const foregroundStartedAt = useRef<number | null>(null);
   const adTransitionInProgressRef = useRef<boolean>(false); // Bug 3 fix: prevents double-fire from both nav handlers
 
   const INTERSTITIAL_COOLDOWN_MS = 2 * 60 * 1000; // 2 minutes (Cooldown between ads)
@@ -704,13 +689,9 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   useEffect(() => {
     if (!canUseNativeAppEvents()) return;
 
-    // Start tracking active time immediately
-    const interval = setInterval(() => {
-      // If we are not in the background, increment active time
-      if (backgroundTimestamp.current === null) {
-        activeTimeMs.current += 1000;
-      }
-    }, 1000);
+    // Track the current foreground segment with timestamps instead of a 1-second
+    // interval. This avoids waking the WebView continuously while the app is idle.
+    foregroundStartedAt.current = Date.now();
 
     // Initial setup listener for App state to handle background/foreground
     let cancelled = false;
@@ -733,6 +714,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
           }
           // We are no longer in the background
           backgroundTimestamp.current = null;
+          foregroundStartedAt.current = now;
 
           // Record usage and refresh notification schedule
           await NotificationService.recordUsage();
@@ -743,9 +725,12 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         }
       } else {
         // App went to BACKGROUND — flush session time to Supabase
+        const sessionTimeMs = activeTimeMs.current + (
+          foregroundStartedAt.current === null
+            ? 0
+            : Math.max(0, now - foregroundStartedAt.current)
+        );
         backgroundTimestamp.current = now;
-
-        const sessionTimeMs = activeTimeMs.current;
         if (sessionTimeMs > 0) {
           const currentProfile = profileRef.current;
           if (supabase && currentProfile && currentProfile.id !== 'guest_user') {
@@ -758,6 +743,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
           // Reset so we don't double-count on next foreground
           activeTimeMs.current = 0;
         }
+        foregroundStartedAt.current = null;
       }
     }).then(listener => {
       // If the effect has already torn down (e.g. StrictMode double-invoke or fast refresh)
@@ -772,7 +758,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
     return () => {
       cancelled = true;
-      clearInterval(interval);
       if (appStateListener) appStateListener.remove();
     };
   }, []);
@@ -795,17 +780,20 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     }
   }, [initializeNotifications]);
 
-  const handleOnboardingComplete = () => {
+  const handleOnboardingComplete = useCallback(() => {
     localStorage.setItem('rizz_onboarding_completed', 'true');
     setShowOnboarding(false);
     initializeNotifications();
-  };
+  }, [initializeNotifications]);
 
   const handleUpgrade = useCallback(async (purchaseData?: any): Promise<boolean> => {
     const currentProfile = profileRef.current;
     // If guest taps Upgrade, close the modal and send them to sign-in/sign-up
-    if (!currentProfile || currentProfile.id === 'guest_user' || isGuest) {
+    if (!currentProfile || currentProfile.id === 'guest_user' || isGuestRef.current) {
       setShowPremiumModal(false);
+      setRewardedAdStatus('idle');
+      setIsRewardedAdLoading(false);
+      rewardedAdAttemptRef.current = null;
       setLoginReason('premium');
       handleExitGuestMode();
       return false;
@@ -950,10 +938,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       showToast(getErrorMessage(err, "Purchase verification failed. Please try again or contact support."), "error");
       return false;
     }
-  }, [showToast, isGuest, handleExitGuestMode]);
+  }, [showToast, handleExitGuestMode]);
 
 
-  // Interstitial ads are now preloaded strictly sequentially (startup -> show -> preload next)
+  // Initialize native services without requesting an ad before a user is close to an ad trigger.
 
   // Initialize Native Services
   useEffect(() => {
@@ -981,9 +969,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
       // AdMob
       if (canUseNativeAdMob()) {
-        runAdTask('Initial AdMob init', AdMobService.initialize().then(() => {
-          return AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'));
-        }));
+        runAdTask('Initial AdMob init', AdMobService.initialize());
       }
 
       // In-App Purchases
@@ -1064,6 +1050,11 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       setCurrentView(state.view || getViewFromLocation());
       setShowPremiumModal(!!state.premium);
       setShowSavedModal(!!state.saved);
+      if (!state.premium) {
+        setRewardedAdStatus('idle');
+        setIsRewardedAdLoading(false);
+        rewardedAdAttemptRef.current = null;
+      }
     };
 
     if (!window.history.state) {
@@ -1112,16 +1103,16 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
   // Navigation Wrappers
   const handleViewNavigation = useCallback(async (view: ViewState) => {
-    if (loading) return;
-    if (view === currentView) return;
+    if (loadingRef.current) return;
+    if (view === stateRef.current.currentView) return;
 
     window.history.pushState({ view }, '', getPathForView(view));
     setCurrentView(view);
-  }, [currentView, loading, isGuest, showToast, handleExitGuestMode]);
+  }, []);
 
   const handleBackNavigation = useCallback(() => {
-    if (loading) {
-      window.history.pushState({ view: currentView }, '');
+    if (loadingRef.current) {
+      window.history.pushState({ view: stateRef.current.currentView }, '');
       return;
     }
     // Navigate back immediately — don't block on the ad
@@ -1133,11 +1124,14 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       setCurrentView('HOME');
       setShowPremiumModal(false);
       setShowSavedModal(false);
+      setRewardedAdStatus('idle');
+      setIsRewardedAdLoading(false);
+      rewardedAdAttemptRef.current = null;
       window.history.replaceState({ view: 'HOME' }, '', '/');
     }
 
 
-  }, [currentView, loading]);
+  }, []);
 
   const handleOpenPremium = useCallback(() => {
     if (IS_WEB_PLATFORM) {
@@ -1147,17 +1141,21 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     }
 
     // Guests see the premium modal first so they understand what they're getting
-    window.history.pushState({ view: currentView, premium: true }, '');
+    window.history.pushState({ view: stateRef.current.currentView, premium: true }, '');
+    setRewardedAdStatus('idle');
+    setIsRewardedAdLoading(false);
+    rewardedAdAttemptRef.current = null;
     setShowPremiumModal(true);
-  }, [currentView]);
+  }, []);
 
-  const handleCreditsExhausted = useCallback(() => {
+  const handleCreditsExhausted = useCallback((requiredCredits: 1 | 2 = 1) => {
     if (IS_WEB_PLATFORM) {
       setWebPremiumReason('credits');
       setShowWebPremiumModal(true);
       return;
     }
 
+    setRewardedAdRequiredCredits(requiredCredits);
     handleOpenPremium();
   }, [handleOpenPremium]);
 
@@ -1169,9 +1167,9 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   }, [isGuest, loginReason, profile, session]);
 
   const handleOpenSaved = useCallback(() => {
-    window.history.pushState({ view: currentView, saved: true }, '');
+    window.history.pushState({ view: stateRef.current.currentView, saved: true }, '');
     setShowSavedModal(true);
-  }, [currentView]);
+  }, []);
 
   useEffect(() => {
     if (!supabase) {
@@ -1282,134 +1280,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     };
   }, []);
 
-  useEffect(() => {
-    let interval: any;
-    if (loading) {
-      let i = 0;
-      setLoadingMsg(LOADING_MESSAGES[0]);
-      interval = setInterval(() => {
-        i = (i + 1) % LOADING_MESSAGES.length;
-        setLoadingMsg(LOADING_MESSAGES[i]);
-      }, 1500);
-    }
-    return () => clearInterval(interval);
-  }, [loading]);
-
-
-
-  const createProfile = useCallback(async (userId: string, email?: string | null, accessToken?: string | null) => {
-    if (!supabase) return { data: null, error: new Error('Supabase is not configured.') as any };
-    try {
-      const repaired = await fetchServerProfile('POST', accessToken);
-      return { data: repaired.profile, error: null };
-    } catch (error) {
-      console.warn('[Profile] Server profile creation failed:', error);
-      return { data: null, error: error as any };
-    }
-  }, []);
-
-
   const handleReclaimSession = useCallback(() => {
     setIsSessionBlocked(false);
     sessionChannelRef.current?.postMessage({ type: 'NEW_SESSION_STARTED' });
   }, []);
-
-  const loadUserData = useCallback(async (userId: string, email?: string | null) => {
-    if (!supabase) return;
-    setIsProfileLoadingHung(false);
-
-    try {
-      const repaired = await fetchServerProfile('POST');
-      let profileData = repaired.profile;
-
-      if (Array.isArray(repaired.savedItems)) {
-        setSavedItems(repaired.savedItems as SavedItem[]);
-      } else {
-        const { data: savedData, error: savedError } = await supabase
-          .from('saved_items')
-          .select('*')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false });
-
-        if (savedError) {
-          console.warn('[Profile] Saved items load failed:', savedError.message);
-          setSavedItems([]);
-        } else if (savedData) {
-          setSavedItems(savedData as SavedItem[]);
-        }
-      }
-
-      if (profileData) {
-        // New user — create their profile
-        // Delegate daily credits reset and streak tracking to the backend RPC
-        try {
-          const { data: claimData, error: claimError } = await supabase.rpc('claim_daily_credits_and_streak');
-          if (claimError) {
-            console.error("Failed to claim daily credits and streak:", claimError);
-          } else if (claimData) {
-            if (claimData.profile) {
-              profileData = claimData.profile;
-            }
-            if (claimData.streak_msg && claimData.streak_msg.trim()) {
-              // Show the streak toast after a brief delay so splash is gone
-              setTimeout(() => showToast(claimData.streak_msg, 'success'), 1500);
-            }
-          }
-        } catch (err) {
-          console.error("Daily claim error:", err);
-        }
-      }
-
-      if (profileData) {
-        profileData = normalizeDailyCreditProfile(profileData as UserProfile);
-        setProfile(profileData as UserProfile);
-        profileRef.current = profileData as UserProfile;
-
-        // --- DAU ACTIVITY LOG (silent, fire-and-forget) ---
-        Promise.resolve(supabase.from('user_activity_log')
-          .upsert(
-            [{ user_id: userId, active_date: new Date().toISOString().slice(0, 10) }],
-            { onConflict: 'user_id,active_date', ignoreDuplicates: true }
-          ))
-          .then(({ error }) => {
-            if (error) {
-              console.warn('[Analytics] Activity log insert failed:', error.message);
-            }
-          })
-          .catch((e: unknown) => console.warn('[Analytics] Activity log insert error:', e));
-
-        // --- DATA MIGRATION: Sync legacy local notes to Supabase ---
-        if (!profileData.shadow_notes) {
-          try {
-            const localNotes = localStorage.getItem(`rizz_coach_shadow_notes_${userId}`) || localStorage.getItem('rizz_coach_shadow_notes');
-            if (localNotes && localNotes.trim()) {
-              console.log("Migrating local shadow notes to cloud...");
-              const { data: migratedProfile } = await supabase
-                .from('profiles')
-                .update({ shadow_notes: localNotes })
-                .eq('id', userId)
-                .select()
-                .single();
-
-              if (migratedProfile) {
-                const normalizedProfile = normalizeDailyCreditProfile(migratedProfile as UserProfile);
-                setProfile(normalizedProfile);
-                profileRef.current = normalizedProfile;
-              }
-            }
-          } catch (err) {
-            console.warn("Migration check failed:", err);
-          }
-        } else {
-          // Keep local state in sync so the coach remembers vibes across offline sessions
-          localStorage.setItem(`rizz_coach_shadow_notes_${userId}`, profileData.shadow_notes);
-        }
-      }
-
-    } catch (e) {
-      console.error("Error loading user data", e);
-    }
-  }, [showToast]);
 
   async function loadUserDataSafe(userId: string, email?: string | null, accessToken?: string | null) {
     if (!supabase) return;
@@ -1574,17 +1448,19 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       setIsProfileLoadingHung(false);
       setProfileLoadError(null);
       setResult(null);
-      setInputText('');
       setImage(null);
       setInputError(null);
       setSelectedVibe(null);
       setCurrentView('HOME');
       setShowPremiumModal(false);
       setShowSavedModal(false);
+      setRewardedAdStatus('idle');
+      setIsRewardedAdLoading(false);
+      rewardedAdAttemptRef.current = null;
       showToast("Successfully logged out 👋", 'success');
       window.history.replaceState({ view: 'HOME' }, '', '/');
     }
-  }, [showToast, isGuest, handleExitGuestMode]);
+  }, [showToast, handleExitGuestMode]);
 
 
 
@@ -1629,6 +1505,123 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     return null;
   }, []);
 
+  const handleWatchRewardedAd = useCallback(async (requiredCreditsOverride?: 1 | 2) => {
+    const currentProfile = profileRef.current;
+    const requiredCredits = requiredCreditsOverride ?? rewardedAdRequiredCredits;
+    const openedFromPremiumModal = showPremiumModal;
+    if (
+      !currentProfile ||
+      currentProfile.is_premium ||
+      (currentProfile.credits || 0) >= requiredCredits ||
+      rewardedAdInProgressRef.current ||
+      rewardedAdStatus === 'pending'
+    ) {
+      return;
+    }
+
+    rewardedAdInProgressRef.current = true;
+    setIsRewardedAdLoading(true);
+    setRewardedAdStatus('loading');
+
+    try {
+      if (!canUseNativeAdMob()) {
+        setRewardedAdStatus('error');
+        showToast('Rewarded ads are unavailable in this app build. Please update and try again.', 'error');
+        return;
+      }
+
+      let ssv: RewardVideoSsv | undefined;
+      if (!isGuest && currentProfile.id !== 'guest_user') {
+        const attempt = await createRewardedAdAttempt(requiredCredits);
+        rewardedAdAttemptRef.current = attempt.attemptId;
+        ssv = {
+          userId: currentProfile.id,
+          customData: attempt.customData || attempt.attemptId,
+        };
+      }
+
+      const earned = await AdMobService.showRewardVideo(getAdId('REWARD'), ssv);
+      if (!earned) {
+        setRewardedAdStatus('error');
+        showToast('The rewarded ad could not be completed. No credits were added.', 'error');
+        return;
+      }
+
+      if (isGuest || currentProfile.id === 'guest_user') {
+        updateCredits((previous) => previous + 5);
+        setRewardedAdStatus('success');
+        showToast('5 credits added. You can continue generating.', 'success');
+        if (openedFromPremiumModal) handleBackNavigation();
+        return;
+      }
+
+      const attemptId = rewardedAdAttemptRef.current;
+      if (!attemptId) {
+        setRewardedAdStatus('error');
+        showToast('Reward verification could not be started. No credits were added.', 'error');
+        return;
+      }
+
+      setRewardedAdStatus('pending');
+      let latestStatus: RewardedAdStatus = 'pending';
+      for (let poll = 0; poll < REWARDED_STATUS_POLL_ATTEMPTS; poll += 1) {
+        await wait(poll === 0 ? 250 : 1500);
+
+        let status;
+        try {
+          // Submit native completion immediately after the SDK reward event,
+          // then retry while polling in case the first request races the
+          // server's minimum-watch-time check or hits a transient failure.
+          const shouldSubmitNativeCompletion = poll === 0 || poll === 4 || poll === 9;
+          status = shouldSubmitNativeCompletion
+            ? await completeRewardedAdAttempt(attemptId)
+            : await getRewardedAdStatus(attemptId);
+        } catch (pollError) {
+          const responseStatus = Number((pollError as { status?: number })?.status || 0);
+          if (responseStatus === 409 || responseStatus >= 500 || responseStatus === 0) {
+            console.warn('[AdMob] Reward confirmation retry scheduled.', { poll, responseStatus });
+            continue;
+          }
+          throw pollError;
+        }
+        latestStatus = status.status;
+
+        if (status.status === 'granted') {
+          const grantedCredits = Number(status.credits);
+          if (Number.isFinite(grantedCredits) && profileRef.current) {
+            const creditedProfile = { ...profileRef.current, credits: grantedCredits };
+            profileRef.current = creditedProfile;
+            setProfile(creditedProfile);
+          }
+          const syncedProfile = await syncProfile();
+          setRewardedAdStatus('success');
+          showToast(
+            syncedProfile ? '5 credits added. You can continue generating.' : '5 credits added. Your balance is ready.',
+            'success',
+          );
+          if (openedFromPremiumModal) handleBackNavigation();
+          return;
+        }
+        if (status.status === 'rejected' || status.status === 'expired') break;
+      }
+
+      if (latestStatus === 'pending') {
+        setRewardedAdStatus('pending');
+        showToast('Reward verification is still pending. Your credits will appear shortly.', 'info');
+      } else {
+        setRewardedAdStatus('error');
+        showToast('The reward could not be verified. No credits were added.', 'error');
+      }
+    } catch (error) {
+      console.warn('[AdMob] Rewarded credit flow failed:', error instanceof Error ? error.message : error);
+      setRewardedAdStatus('error');
+      showToast('Reward verification is temporarily unavailable. No credits were added.', 'error');
+    } finally {
+      rewardedAdInProgressRef.current = false;
+      setIsRewardedAdLoading(false);
+    }
+  }, [handleBackNavigation, isGuest, rewardedAdRequiredCredits, rewardedAdStatus, showPremiumModal, showToast, syncProfile, updateCredits]);
+
   const handleRestorePurchases = useCallback(async () => {
     if (!profileRef.current) return;
     if (canUseNativeIap()) {
@@ -1643,11 +1636,13 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     if (!currentProfile) return;
 
     const isGuestUser = currentProfile.id === 'guest_user';
-    const exists = savedItems.find(item => item.content === content);
+    const currentItems = savedItemsRef.current;
+    const exists = currentItems.find(item => item.content === content);
 
     if (exists) {
-      const originalItems = [...savedItems];
-      const newItems = savedItems.filter(item => item.id !== exists.id);
+      const originalItems = currentItems;
+      const newItems = currentItems.filter(item => item.id !== exists.id);
+      savedItemsRef.current = newItems;
       setSavedItems(newItems);
       showToast("Removed from saved", 'info');
 
@@ -1655,6 +1650,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         const { error } = await supabase.from('saved_items').delete().eq('id', exists.id);
         if (error) {
           console.error("Delete saved item failed:", error);
+          savedItemsRef.current = originalItems;
           setSavedItems(originalItems);
           showToast("Failed to remove gem", "error");
         }
@@ -1669,7 +1665,9 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         created_at: new Date().toISOString()
       };
 
-      setSavedItems(prev => [newItem, ...prev]);
+      const newItems = [newItem, ...currentItems];
+      savedItemsRef.current = newItems;
+      setSavedItems(newItems);
       showToast("Saved to your gems", 'success');
 
       if (!isGuestUser && supabase) {
@@ -1681,19 +1679,24 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
         if (error || !data) {
           console.error("Save item error:", error);
-          setSavedItems(prev => prev.filter(item => item.id !== tempId));
+          const rolledBackItems = savedItemsRef.current.filter(item => item.id !== tempId);
+          savedItemsRef.current = rolledBackItems;
+          setSavedItems(rolledBackItems);
           showToast("Failed to save gem", "error");
         } else {
-          setSavedItems(prev => prev.map(item => item.id === tempId ? (data as SavedItem) : item));
+          const updatedItems = savedItemsRef.current.map(item => item.id === tempId ? (data as SavedItem) : item);
+          savedItemsRef.current = updatedItems;
+          setSavedItems(updatedItems);
         }
       }
     }
-  }, [savedItems, showToast]);
+  }, [showToast]);
 
   const handleDeleteSaved = useCallback(async (id: string) => {
     const isGuestUser = profileRef.current?.id === 'guest_user';
-    const originalItems = [...savedItems];
-    const newItems = savedItems.filter(item => item.id !== id);
+    const originalItems = savedItemsRef.current;
+    const newItems = originalItems.filter(item => item.id !== id);
+    savedItemsRef.current = newItems;
     setSavedItems(newItems);
     showToast("Item deleted", 'info');
 
@@ -1701,18 +1704,19 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       const { error } = await supabase.from('saved_items').delete().eq('id', id);
       if (error) {
         console.error("Delete saved item error:", error);
+        savedItemsRef.current = originalItems;
         setSavedItems(originalItems);
         showToast("Failed to delete gem", "error");
       }
     }
-  }, [savedItems, showToast]);
+  }, [showToast]);
 
   const handleDeleteAccount = useCallback(async () => {
     // Confirmation is handled by the InfoPages UI — no window.confirm needed here.
     const currentProfile = profileRef.current;
     if (!currentProfile) return;
 
-    if (currentProfile.id === 'guest_user' || isGuest) {
+    if (currentProfile.id === 'guest_user' || isGuestRef.current) {
       localStorage.removeItem('rizzmaster_guest_shadow_notes');
       localStorage.removeItem('rizzmaster_guest_credits');
       localStorage.removeItem('rizzmaster_guest_last_reset');
@@ -1723,6 +1727,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
     if (!supabase) return;
 
+    loadingRef.current = true;
     setLoading(true);
 
     try {
@@ -1778,9 +1783,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       console.error("Delete Account Critical Error:", err);
       showToast(err.message || 'Failed to delete account.', 'error');
     } finally {
+      loadingRef.current = false;
       setLoading(false);
     }
-  }, [showToast, isGuest, handleExitGuestMode]);
+  }, [showToast, handleExitGuestMode]);
 
   const handleSaveWrapper = useCallback((content: string, type: 'tease' | 'smooth' | 'chaotic' | 'bio') => {
     toggleSave(content, type);
@@ -1826,9 +1832,9 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         showToast('Failed to load image. Please try another file.', 'error');
       };
       reader.readAsDataURL(file);
-      if (inputError) setInputError(null);
+      setInputError(null);
     }
-  }, [inputError, showToast]);
+  }, [showToast]);
 
 
   const handleCameraCapture = useCallback(async () => {
@@ -1856,7 +1862,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
       if (photo.dataUrl) {
         setImage(photo.dataUrl);
-        if (inputError) setInputError(null);
+        setInputError(null);
       }
     } catch (e: any) {
       // Don't show toast if user cancelled
@@ -1865,7 +1871,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         showToast('Failed to open camera.', 'error');
       }
     }
-  }, [inputError, showToast]);
+  }, [showToast]);
 
   const handleGalleryCapture = useCallback(async () => {
     if (!canUseNativeCamera()) {
@@ -1884,7 +1890,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
       if (photo.dataUrl) {
         setImage(photo.dataUrl);
-        if (inputError) setInputError(null);
+        setInputError(null);
       }
     } catch (e: any) {
       // Don't show toast if user cancelled
@@ -1893,7 +1899,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         showToast('Failed to open gallery.', 'error');
       }
     }
-  }, [inputError, showToast]);
+  }, [showToast]);
 
   const handleVibeClick = useCallback((vibe: { label: string, isPro: boolean }) => {
     const isPremium = profileRef.current?.is_premium;
@@ -1910,39 +1916,46 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   // Active Time tracking handles the grace period now (see useEffect above)
 
   const handleGenerate = useCallback(async (textToProcess?: string) => {
-    if (loading) return;
+    if (loadingRef.current) return;
+
+    const {
+      mode: activeMode,
+      image: activeImage,
+      selectedVibe: activeVibe,
+      responseLength: activeResponseLength,
+      customPersonas: activePersonas,
+    } = generationInputsRef.current;
     
-    const currentProfile = profileRef.current || profile;
+    const currentProfile = profileRef.current;
     if (!currentProfile) {
       console.error("handleGenerate: currentProfile is null.");
       return;
     }
 
+    const finalProcessText = typeof textToProcess === 'string'
+      ? textToProcess
+      : (textareaRef.current?.value || '');
 
-    const text = typeof textToProcess === 'string' ? textToProcess : inputText;
-
-    // Fix uncontrolled component state mismatch by relying on the passed textToProcess string directly when available
-    const finalProcessText = (typeof textToProcess === 'string' ? textToProcess : (textareaRef.current?.value || inputText));
-
-    if (mode === InputMode.CHAT && !finalProcessText.trim() && !image) {
+    if (activeMode === InputMode.CHAT && !finalProcessText.trim() && !activeImage) {
       setInputError("Give me some context! Paste the chat or upload a screenshot.");
       return;
     }
-    if (mode === InputMode.BIO && !text.trim()) {
+    if (activeMode === InputMode.BIO && !finalProcessText.trim()) {
       setInputError("I can't write a bio for a ghost! Tell me about your hobbies, job, or vibes.");
       return;
     }
     setInputError(null);
 
-    const cost = (mode === InputMode.CHAT && image) ? 2 : 1;
+    const cost: 1 | 2 = (activeMode === InputMode.CHAT && activeImage) ? 2 : 1;
 
     // Guests are rate-limited server-side (5 req/min by IP) but still adhere to client-side credit limits
     if (!currentProfile.is_premium && (currentProfile.credits || 0) < cost) {
-      handleCreditsExhausted();
+      handleCreditsExhausted(cost);
       return;
     }
 
     let shouldShowAd = false;
+    let shouldPreloadInterstitial = false;
     let adGenerationToRecord: number | null = null;
     if (!currentProfile.is_premium && canUseNativeAdMob()) {
       const today = new Date().toDateString();
@@ -1966,18 +1979,31 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       const nextAdOffset = Math.floor(Math.random() * 3) + 3; 
       const targetGen = isFirstAd ? 3 : lastAdGen + nextAdOffset;
 
-      const now = activeTimeMs.current;
+      const now = activeTimeMs.current + (
+        foregroundStartedAt.current === null
+          ? 0
+          : Math.max(0, Date.now() - foregroundStartedAt.current)
+      );
       const cooldownPassed = isFirstAd || (now - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS);
       
       if (genCount >= targetGen && cooldownPassed) {
         shouldShowAd = true;
         adGenerationToRecord = genCount;
         console.log(`[AdMob] Will trigger concurrent interstitial at gen ${genCount}...`);
+      } else if (genCount + 1 >= targetGen && cooldownPassed) {
+        // Warm the ad one generation before the trigger so it is ready without
+        // creating requests for users who never reach the ad threshold.
+        shouldPreloadInterstitial = true;
       }
     }
     // --------------------------------------------------
 
+    loadingRef.current = true;
     setLoading(true);
+
+    if (shouldPreloadInterstitial) {
+      runAdTask('Eligible interstitial preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
+    }
 
     // Fire the ad concurrently so the API generation happens in the background while the user watches the ad!
     if (shouldShowAd) {
@@ -1985,12 +2011,17 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       const recordShownInterstitial = () => {
         if (accountedForShownInterstitial || adGenerationToRecord === null) return;
         accountedForShownInterstitial = true;
-        lastAdActiveTime.current = activeTimeMs.current;
+        lastAdActiveTime.current = activeTimeMs.current + (
+          foregroundStartedAt.current === null
+            ? 0
+            : Math.max(0, Date.now() - foregroundStartedAt.current)
+        );
         localStorage.setItem('rizz_last_ad_gen_count', adGenerationToRecord.toString());
       };
 
       const isForeground = backgroundTimestamp.current === null;
       const isVisible = typeof document === 'undefined' || document.visibilityState === 'visible';
+      const { showOnboarding, showPremiumModal, showSavedModal } = stateRef.current;
       const hasUiConflict = showOnboarding || showPremiumModal || showSavedModal;
 
       if (!isForeground || !isVisible || hasUiConflict || adTransitionInProgressRef.current) {
@@ -2018,14 +2049,13 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         .catch(e => console.warn("[AdMob] Deferred interstitial failed:", e))
         .finally(() => {
           adTransitionInProgressRef.current = false;
-          runAdTask('Post-show preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
         });
       }
     }
 
     // --- GENERATION START ---
     const shouldManageLocalCredits = !currentProfile.is_premium;
-    const shouldSyncSignedInProfile = !isGuest && currentProfile.id !== 'guest_user';
+    const shouldSyncSignedInProfile = !isGuestRef.current && currentProfile.id !== 'guest_user';
     let skipFinalProfileSync = !shouldSyncSignedInProfile;
     let creditsAdjustedOptimistically = false;
     const refundOptimisticCredits = () => {
@@ -2041,13 +2071,15 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         creditsAdjustedOptimistically = true;
       }
 
-      const customInstruction = selectedVibe?.startsWith('custom:') ? customPersonas.find(p => p.id === selectedVibe.split(':')[1])?.instruction : undefined;
+      const customInstruction = activeVibe?.startsWith('custom:')
+        ? activePersonas.find(p => p.id === activeVibe.split(':')[1])?.instruction
+        : undefined;
 
       let res;
-      if (mode === InputMode.CHAT) {
-        res = await generateRizz(finalProcessText, image || undefined, selectedVibe || undefined, responseLength, customInstruction);
+      if (activeMode === InputMode.CHAT) {
+        res = await generateRizz(finalProcessText, activeImage || undefined, activeVibe || undefined, activeResponseLength, customInstruction);
       } else {
-        res = await generateBio(finalProcessText, selectedVibe || undefined, responseLength, customInstruction);
+        res = await generateBio(finalProcessText, activeVibe || undefined, activeResponseLength, customInstruction);
       }
 
       if ('potentialStatus' in res && (res.potentialStatus === 'Error' || res.potentialStatus === 'Blocked')) {
@@ -2090,7 +2122,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       }
       if (error.message === 'INSUFFICIENT_CREDITS') {
          refundOptimisticCredits();
-         handleCreditsExhausted();
+         handleCreditsExhausted(cost);
          if (shouldSyncSignedInProfile) {
            syncProfile().catch(() => {});
          }
@@ -2120,17 +2152,17 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       showToast('The wingman tripped! Try again.', 'error');
       refundOptimisticCredits();
     } finally {
+      loadingRef.current = false;
       setLoading(false);
       // Don't call syncProfile for guests — they have no Supabase session
       if (shouldSyncSignedInProfile && !skipFinalProfileSync) {
         await syncProfile().catch(() => null);
       }
     }
-  }, [mode, inputText, image, selectedVibe, responseLength, showToast, handleCreditsExhausted, updateCredits, customPersonas, profile, isGuest, syncProfile, loading, showOnboarding, showPremiumModal, showSavedModal]);
+  }, [showToast, handleCreditsExhausted, updateCredits, syncProfile]);
 
   const isSaved = useCallback((content: string) => savedItems.some(item => item.content === content), [savedItems]);
   const clear = useCallback(() => {
-    setInputText('');
     setImage(null);
     setResult(null);
     setInputError(null);
@@ -2148,14 +2180,66 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     // Always sync to local storage for offline persistence
     localStorage.setItem(`rizz_coach_shadow_notes_${currentProfile.id}`, newNotes);
 
-    if (!isGuest && currentProfile.id !== 'guest_user' && supabase) {
+    if (!isGuestRef.current && currentProfile.id !== 'guest_user' && supabase) {
       Promise.resolve(supabase.from('profiles')
         .update({ shadow_notes: newNotes })
         .eq('id', currentProfile.id))
         .then(({ error }) => { if (error) console.error("Shadow Notes Sync Error:", error); })
         .catch((e: unknown) => console.warn('[ShadowNotes] Sync error:', e));
     }
-  }, [isGuest]);
+  }, []);
+
+  const handleSplashComplete = useCallback(() => {
+    setShowSplash(false);
+  }, []);
+
+  const handleRetryNetwork = useCallback(async () => {
+    const status = await Network.getStatus();
+    setIsOffline(!status.connected);
+    if (status.connected) showToast("We're back online! 📡", "success");
+  }, [showToast]);
+
+  const handleCoachGoPremium = useCallback(() => {
+    handleBackNavigation();
+    handleOpenPremium();
+  }, [handleBackNavigation, handleOpenPremium]);
+
+  const handleCoachOpenWebMenu = useCallback(() => {
+    setShowWebMenu(true);
+  }, []);
+
+  const handleCoachLoginRequired = useCallback(() => {
+    setLoginReason('premium');
+    handleExitGuestMode();
+  }, [handleExitGuestMode]);
+
+  const handleAddPersona = useCallback(() => {
+    const currentProfile = profileRef.current;
+    const personas = generationInputsRef.current.customPersonas;
+    const limit = currentProfile?.is_premium ? 3 : 1;
+
+    if (personas.length >= limit) {
+      if (!currentProfile?.is_premium) {
+        showToast("Free users can only have 1 custom persona. Upgrade to get 3!", "info");
+        handleOpenPremium();
+      } else {
+        showToast("Pro users can have up to 3 custom personas.", "info");
+      }
+      return;
+    }
+
+    setEditingPersona(null);
+    setPersonaName('');
+    setPersonaInstruction('');
+    setShowPersonaModal(true);
+  }, [handleOpenPremium, showToast]);
+
+  const handleEditPersona = useCallback((persona: CustomPersona) => {
+    setEditingPersona(persona);
+    setPersonaName(persona.name);
+    setPersonaInstruction(persona.instruction);
+    setShowPersonaModal(true);
+  }, []);
 
   if (updateGateConfig?.blocked) {
     return <ForceUpdateGate config={updateGateConfig} />;
@@ -2167,35 +2251,30 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       {showSplash && (
         <SplashScreen
           isAppReady={isAuthReady}
-          onComplete={() => setShowSplash(false)}
+          onComplete={handleSplashComplete}
         />
       )}
-
-      {/* Optimized Ad Loading UI */}
-      <AdLoadingOverlay mode={isAdLoading} />
 
       {/* No Internet Overlay */}
       <NoInternetOverlay
         isVisible={isOffline}
-        onRetry={async () => {
-          const status = await Network.getStatus();
-          setIsOffline(!status.connected);
-          if (status.connected) showToast("We're back online! 📡", "success");
-        }}
+        onRetry={handleRetryNetwork}
       />
 
-      {IS_WEB_PLATFORM && onNavigateToPath && (
-        <WebAppMenu
-          isOpen={showWebMenu}
-          onClose={() => setShowWebMenu(false)}
-          onOpenRizz={() => { void handleViewNavigation('HOME'); }}
-          onOpenCoach={() => { void handleViewNavigation('COACH'); }}
-          onOpenSaved={handleOpenSaved}
-          onNavigateToPath={onNavigateToPath}
-          onLogout={() => { void handleLogout(); }}
-        />
+      {IS_WEB_PLATFORM && onNavigateToPath && showWebMenu && (
+        <Suspense fallback={null}>
+          <WebAppMenu
+            isOpen
+            onClose={() => setShowWebMenu(false)}
+            onOpenRizz={() => { void handleViewNavigation('HOME'); }}
+            onOpenCoach={() => { void handleViewNavigation('COACH'); }}
+            onOpenSaved={handleOpenSaved}
+            onNavigateToPath={onNavigateToPath}
+            onLogout={() => { void handleLogout(); }}
+          />
+        </Suspense>
       )}
-      {IS_WEB_PLATFORM && (
+      {IS_WEB_PLATFORM && showWebPremiumModal && (
         <Suspense fallback={null}>
           <WebPremiumModal
             isOpen={showWebPremiumModal}
@@ -2277,7 +2356,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
             )}
           </div>
         ) : currentView === 'COACH' ? (
-          <div className="animate-slide-in-right-view fixed inset-0 z-[100] bg-black">
+          <div className={`${IS_WEB_PLATFORM ? 'animate-slide-in-right-view' : 'native-coach-shell'} fixed inset-0 z-[100] bg-black`}>
             <Suspense fallback={null}>
               <RizzCoach
                 key={profile?.id || 'guest_user'}
@@ -2287,38 +2366,15 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                 credits={profile?.credits || 0}
                 onUpdateCredits={updateCredits}
                 isPremium={profile?.is_premium || false}
-                onGoPremium={() => { handleBackNavigation(); handleOpenPremium(); }}
+                onGoPremium={handleCoachGoPremium}
                 onCreditsExhausted={handleCreditsExhausted}
-                onOpenWebMenu={IS_WEB_PLATFORM && onNavigateToPath ? () => setShowWebMenu(true) : undefined}
-                onLoginRequired={() => {
-                  setLoginReason('premium');
-                  handleExitGuestMode();
-                }}
+                onOpenWebMenu={IS_WEB_PLATFORM && onNavigateToPath ? handleCoachOpenWebMenu : undefined}
+                onLoginRequired={handleCoachLoginRequired}
                 shadowNotes={profile?.shadow_notes || ''}
                 onUpdateShadowNotes={updateShadowNotes}
                 customPersonas={customPersonas}
-                onAddPersona={() => {
-                  const limit = profile?.is_premium ? 3 : 1;
-                  if (customPersonas.length >= limit) {
-                    if (!profile?.is_premium) {
-                      showToast("Free users can only have 1 custom persona. Upgrade to get 3!", "info");
-                      handleOpenPremium();
-                    } else {
-                      showToast("Pro users can have up to 3 custom personas.", "info");
-                    }
-                    return;
-                  }
-                  setEditingPersona(null);
-                  setPersonaName('');
-                  setPersonaInstruction('');
-                  setShowPersonaModal(true);
-                }}
-                onEditPersona={(persona) => {
-                  setEditingPersona(persona);
-                  setPersonaName(persona.name);
-                  setPersonaInstruction(persona.instruction);
-                  setShowPersonaModal(true);
-                }}
+                onAddPersona={handleAddPersona}
+                onEditPersona={handleEditPersona}
               />
               {showPersonaModal && (
                 <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
@@ -2422,7 +2478,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                   </button>
 
                   {!profile?.is_premium && (
-                    <button onClick={handleOpenPremium} className="web-app-premium-button hidden md:flex px-4 py-2 bg-gradient-to-r from-yellow-600 to-yellow-400 text-black text-xs font-bold rounded-full items-center gap-1 hover:brightness-110 transition-all active:scale-95">
+                    <button onClick={() => handleOpenPremium()} className="web-app-premium-button hidden md:flex px-4 py-2 bg-gradient-to-r from-yellow-600 to-yellow-400 text-black text-xs font-bold rounded-full items-center gap-1 hover:brightness-110 transition-all active:scale-95">
                       <span>👑</span> Go Premium
                     </button>
                   )}
@@ -2455,8 +2511,8 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
               {/* Main Mode Selection */}
               <div className="web-app-tabs flex gap-3 mb-6 max-w-lg mx-auto w-full select-none">
-                <button onClick={() => { setMode(InputMode.CHAT); setInputText(''); if (textareaRef.current) textareaRef.current.value = ''; setImage(null); setResult(null); setInputError(null); }} className={`flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 ${mode === InputMode.CHAT ? 'rizz-gradient text-white shadow-lg shadow-rose-500/20 shadow-purple-500/20' : 'bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10'}`}>Chat Reply</button>
-                <button onClick={() => { setMode(InputMode.BIO); setInputText(''); if (textareaRef.current) textareaRef.current.value = ''; setImage(null); setResult(null); setInputError(null); }} className={`flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 ${mode === InputMode.BIO ? 'rizz-gradient text-white shadow-lg shadow-rose-500/20 shadow-purple-500/20' : 'bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10'}`}>Profile Bio</button>
+                <button onClick={() => { setMode(InputMode.CHAT); if (textareaRef.current) textareaRef.current.value = ''; setImage(null); setResult(null); setInputError(null); }} className={`flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 ${mode === InputMode.CHAT ? 'rizz-gradient text-white shadow-lg shadow-rose-500/20 shadow-purple-500/20' : 'bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10'}`}>Chat Reply</button>
+                <button onClick={() => { setMode(InputMode.BIO); if (textareaRef.current) textareaRef.current.value = ''; setImage(null); setResult(null); setInputError(null); }} className={`flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 ${mode === InputMode.BIO ? 'rizz-gradient text-white shadow-lg shadow-rose-500/20 shadow-purple-500/20' : 'bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10'}`}>Profile Bio</button>
                 <button onClick={() => { handleViewNavigation('COACH'); }} className="flex-1 py-3.5 rounded-2xl font-medium text-[13px] md:text-base transition-all duration-300 bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 flex items-center justify-center gap-1.5">Rizz AI</button>
               </div>
 
@@ -2473,7 +2529,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                     </div>
                     <textarea
                       ref={textareaRef}
-                      defaultValue={inputText}
+                      defaultValue=""
                       onChange={() => { if (inputError) setInputError(null); }}
                       placeholder={mode === InputMode.CHAT ? "Paste chat. Get Rizz." : "Hobbies, job, vibes..."}
                       className="web-app-textarea w-full h-32 md:h-40 bg-black/40 border border-white/10 rounded-2xl p-4 text-sm md:text-base focus:ring-2 focus:ring-rose-500/50 focus:outline-none resize-none transition-all placeholder:text-white/20"
@@ -2581,16 +2637,30 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                       {loading ? (
                         <span className="flex items-center justify-center gap-2 animate-pulse">
                           <svg className={`animate-spin h-5 w-5 ${profile?.is_premium ? 'text-black' : 'text-white'}`} viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                          {loadingMsg}
+                          <LoadingMessage />
                         </span>
                       ) : (
                         profile?.is_premium ? "Get Rizz (VIP)" : `Get Rizz (${(mode === InputMode.CHAT && image) ? 2 : 1} ⚡)`
                       )}
                     </button>
-    ) : (
-                    <button onClick={handleOpenPremium} className="w-full bg-gradient-to-r from-yellow-500 to-amber-600 text-black py-3.5 md:py-4 rounded-2xl font-bold text-sm md:text-base shadow-xl hover:brightness-110 active:scale-[0.98] transition-all flex flex-col items-center justify-center animate-pulse">
-                      Go Unlimited
-                    </button>
+                  ) : (
+                    <div className={`grid gap-2 ${IS_WEB_PLATFORM ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                      <button onClick={() => handleOpenPremium()} className="w-full min-h-[58px] bg-gradient-to-r from-yellow-500 to-amber-600 text-black px-2 py-3 rounded-2xl font-bold text-sm md:text-base shadow-xl hover:brightness-110 active:scale-[0.98] transition-all flex flex-col items-center justify-center animate-pulse">
+                        <span>Go Premium</span>
+                        <span className="text-[10px] uppercase tracking-wide opacity-70">Unlimited access</span>
+                      </button>
+                      {!IS_WEB_PLATFORM && !profile?.is_premium && (
+                        <button
+                          type="button"
+                          onClick={() => handleWatchRewardedAd(1)}
+                          disabled={isRewardedAdLoading || rewardedAdStatus === 'pending'}
+                          className="w-full min-h-[58px] rounded-2xl border border-amber-300/30 bg-amber-300/10 px-2 py-3 text-xs font-bold text-amber-200 transition hover:bg-amber-300/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 flex flex-col items-center justify-center"
+                        >
+                          <span>{isRewardedAdLoading ? 'Opening ad...' : 'Watch an ad'}</span>
+                          <span className="text-[10px] uppercase tracking-wide text-amber-200/70">+5 credits</span>
+                        </button>
+                      )}
+                    </div>
                   )}
                   {!profile?.is_premium && (
                     <p

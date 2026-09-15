@@ -17,6 +17,13 @@ export const resizeImage = async (dataUrl: string, maxDimension: number = 800): 
             let width = img.width;
             let height = img.height;
 
+            // Avoid a second JPEG encode when an already-compressed image is
+            // within the model's size limit.
+            if (width <= maxDimension && height <= maxDimension && /^data:image\/jpe?g;/i.test(dataUrl)) {
+                resolve(dataUrl);
+                return;
+            }
+
             // Calculate new dimensions while maintaining aspect ratio
             if (width > height) {
                 if (width > maxDimension) {

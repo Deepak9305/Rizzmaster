@@ -57,11 +57,11 @@ const Footer: React.FC<FooterProps> = ({ className = "", onNavigate, onWebNaviga
 
         {/* Version Indicator */}
         <div className="text-[9px] text-white/10 font-mono select-none">
-          v1.2.0 (Mobile)
+          v1.2.2 (Mobile)
         </div>
       </div>
     </footer>
   );
 };
 
-export default Footer;
+export default React.memo(Footer);

@@ -1,8 +1,9 @@
-import React, { startTransition, useEffect, useState } from 'react';
-import App from '../App';
+import React, { lazy, startTransition, Suspense, useCallback, useEffect, useState } from 'react';
 import { isMarketingPath, normalizeMarketingPath } from '../services/marketingRoutes';
-import MarketingSite from './MarketingSite';
-import BillingReturnPage from './BillingReturnPage';
+
+const App = lazy(() => import('../App'));
+const MarketingSite = lazy(() => import('./MarketingSite'));
+const BillingReturnPage = lazy(() => import('./BillingReturnPage'));
 
 const getPathname = () => normalizeMarketingPath(window.location.pathname);
 const isBillingReturnPath = (pathname: string) => pathname.toLowerCase() === '/billing/return';
@@ -32,23 +33,33 @@ const WebRouter: React.FC = () => {
     }
   }, [isBillingReturnPage, isMarketingPage]);
 
-  const navigate = (path: string) => {
+  const navigate = useCallback((path: string) => {
     const nextPathname = normalizeMarketingPath(path);
-    if (nextPathname === pathname) return;
+    if (nextPathname === getPathname()) return;
 
     window.history.pushState({}, '', nextPathname);
     startTransition(() => setPathname(nextPathname));
-  };
+  }, []);
 
   return (
     <>
       {hasVisitedApp && (
         <div hidden={isMarketingPage || isBillingReturnPage}>
-          <App onNavigateToPath={navigate} />
+          <Suspense fallback={null}>
+            <App onNavigateToPath={navigate} />
+          </Suspense>
         </div>
       )}
-      {isMarketingPage && <MarketingSite />}
-      {isBillingReturnPage && <BillingReturnPage onContinue={() => navigate('/')} />}
+      {isMarketingPage && (
+        <Suspense fallback={<div className="min-h-screen bg-black" />}>
+          <MarketingSite />
+        </Suspense>
+      )}
+      {isBillingReturnPage && (
+        <Suspense fallback={<div className="min-h-screen bg-black" />}>
+          <BillingReturnPage onContinue={() => navigate('/')} />
+        </Suspense>
+      )}
     </>
   );
 };

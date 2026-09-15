@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { LEGAL_LINKS } from '../services/legalLinks';
 import { BLOG_POSTS, getBlogPost, PLAY_STORE_URL, type BlogPost } from '../services/marketingContent';
+import { MARKETING_LEGAL_PAGES, type MarketingLegalPageKey } from '../services/marketingLegal';
 import { MARKETING_HOME_PATH, normalizeMarketingPath } from '../services/marketingRoutes';
 
 type MarketingRoute =
@@ -38,6 +39,9 @@ const setMeta = (name: string, content: string, property = false) => {
 
 const updateSeo = (route: MarketingRoute) => {
   const post = route.kind === 'article' ? getBlogPost(route.slug) : undefined;
+  const legalPage = route.kind === 'privacy' || route.kind === 'terms' || route.kind === 'support'
+    ? MARKETING_LEGAL_PAGES[route.kind]
+    : undefined;
   const title = post
     ? `${post.title} | Rizz Master`
     : route.kind === 'blog'
@@ -50,6 +54,7 @@ const updateSeo = (route: MarketingRoute) => {
             ? 'Support | Rizz Master'
             : 'Rizz Master | Never run out of replies again';
   const description = post?.description
+    || legalPage?.intro
     || (route.kind === 'blog'
       ? 'Practical texting, dating app, opener, and profile advice for better conversations.'
       : route.kind === 'privacy'
@@ -464,8 +469,14 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
   'best-dating-app-bio-ideas-for-guys': ['Ideal Sunday: long walk, new coffee shop, and pretending I will meal prep.'],
   'what-to-text-after-a-first-date': ['I had a great time tonight - your story about the failed cooking class still has me laughing.'],
   'signs-texting-conversation-losing-momentum': ['You mentioned wanting a quiet weekend. Did you actually get one?', 'I passed a place that reminded me of your terrible food ranking. Still defending that opinion?', 'I have enjoyed talking with you. Want to continue this over coffee this week?'],
+  'signs-texting-conversation-becoming-one-sided': ['I have enjoyed our chats. Want to continue this over coffee this week?', 'I have noticed I am usually starting our conversations. Are you still interested in keeping in touch?', 'I do not want to keep carrying the conversation, so I am going to step back. Wishing you well.'],
+  'how-to-tell-if-someone-is-flirting-over-text': ['You are making a strong case for yourself. What is your best argument in person?', 'I cannot tell if you are teasing me or flirting with me. Either way, I am enjoying it.', 'I like this energy. Want to continue it over coffee this week?'],
+  'texting-boundaries-while-dating': ['I like talking with you, but I am usually offline during work. I will reply when I am free.', 'I am not comfortable sharing that yet. I would rather get to know each other first.', 'I am enjoying this, but I want to keep the pace slower. Is that something you are comfortable with?'],
+  'how-to-connect-emotionally-while-dating': ['I have enjoyed getting to know you. What has been on your mind lately?', 'I like how easy it feels to talk with you. What helps you feel cared for in a relationship?', 'I want to keep getting to know you. Want to do something low-key together this weekend?'],
+  'texting-mistakes-new-conversation-feel-forced': ['You mentioned you are trying every ramen place in town. Which one is winning so far?', 'I finally tried that restaurant near my office and the dessert was better than the main course. What is your reliable bad-day meal?', 'I have enjoyed talking with you. Want to continue this over coffee this week?'],
   'how-to-ask-someone-out-over-text': ['I have enjoyed talking with you. Want to grab coffee at that place you mentioned this Saturday?', 'You have made three strong opinions about noodles, so I think you owe me a food tour. Free Thursday?', 'I like talking with you and would like to take you on a date. Are you free next week?'],
-  'how-long-should-you-text-before-asking-someone-out': ['I am enjoying this conversation. Want to continue it over coffee this week?', 'You have made a strong case for that bakery. Want to test it together Saturday?', 'This has been fun. Are you free for a drink next week?']
+  'how-long-should-you-text-before-asking-someone-out': ['I am enjoying this conversation. Want to continue it over coffee this week?', 'You have made a strong case for that bakery. Want to test it together Saturday?', 'This has been fun. Are you free for a drink next week?'],
+  'what-to-text-after-getting-someones-number': ['Hey, it is Alex from the bookstore. What should I read next?', 'Good meeting you at the concert. I listened to the band you recommended and I understand the obsession now.', 'I enjoyed talking with you last night. Want to continue it over coffee this week?']
 };
 
 const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
@@ -477,8 +488,14 @@ const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
   'best-dating-app-bio-ideas-for-guys': { do: 'Share specific details that make the next message obvious.', doNot: 'Fill the bio with broad labels, rules, or complaints.' },
   'what-to-text-after-a-first-date': { do: 'Be timely, specific, and clear about enjoying the date.', doNot: 'Wait for a perfect paragraph or edit your personality away.' },
   'signs-texting-conversation-losing-momentum': { do: 'Make one specific, low-pressure move and watch for shared effort.', doNot: 'Stack messages, test their interest, or carry the whole conversation alone.' },
+  'signs-texting-conversation-becoming-one-sided': { do: 'Look at the pattern, communicate clearly once, and leave room for shared effort.', doNot: 'Keep rescuing the chat, run silent tests, or treat every quiet patch as a personal verdict.' },
+  'how-to-tell-if-someone-is-flirting-over-text': { do: 'Respond to the energy you actually feel and communicate clearly when the tone matters.', doNot: 'Treat one emoji as proof, escalate pressure, or ignore a boundary because the attention feels flattering.' },
+  'texting-boundaries-while-dating': { do: 'Name your limit clearly, explain only what is useful, and follow through with the action you control.', doNot: 'Use silent tests, apologise for having needs, or keep negotiating after a clear no.' },
+  'how-to-connect-emotionally-while-dating': { do: 'Offer genuine curiosity, share in layers, and look for consistent mutual effort.', doNot: 'Force vulnerability, treat intensity as intimacy, or carry the entire emotional connection alone.' },
+  'texting-mistakes-new-conversation-feel-forced': { do: 'Share one real detail, ask one natural question, and give the other person room to participate.', doNot: 'Perform constantly, stack questions, or fill every pause to prevent the chat from going quiet.' },
   'how-to-ask-someone-out-over-text': { do: 'Show interest, suggest a real plan, and make the answer easy.', doNot: 'Hide the invitation behind disclaimers, pressure, or a vague "sometime".' },
-  'how-long-should-you-text-before-asking-someone-out': { do: 'Watch for shared effort, then make a clear invitation when there is a natural bridge.', doNot: 'Use a rigid day count or keep texting forever to avoid a real answer.' }
+  'how-long-should-you-text-before-asking-someone-out': { do: 'Watch for shared effort, then make a clear invitation when there is a natural bridge.', doNot: 'Use a rigid day count or keep texting forever to avoid a real answer.' },
+  'what-to-text-after-getting-someones-number': { do: 'Identify yourself, mention a real connection, and give them an easy opening.', doNot: 'Lead with pressure, a generic hello, or repeated messages across platforms.' }
 };
 
 const ArticleQuickAnswer: React.FC<{ post: BlogPost }> = ({ post }) => (
@@ -527,6 +544,16 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'love-bombing-vs-genuine-interest': [
+    { slug: 'how-to-tell-if-someone-is-emotionally-available', label: 'Spot emotional availability' },
+    { slug: 'how-to-connect-emotionally-while-dating', label: 'Build emotional closeness' },
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy dating boundaries' }
+  ],
+  'how-to-tell-if-someone-is-emotionally-available': [
+    { slug: 'how-to-connect-emotionally-while-dating', label: 'How to build emotional closeness' },
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy dating boundaries' },
+    { slug: 'signs-texting-conversation-becoming-one-sided', label: 'Spot one-sided effort early' }
+  ],
   'what-to-text-when-they-stop-replying': [
     { slug: 'reply-to-dry-texts', label: 'How to reply to dry texts' },
     { slug: 'what-to-text-after-a-first-date', label: 'What to text after a first date' },
@@ -567,6 +594,31 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'what-to-text-when-they-stop-replying', label: 'What to text when they stop replying' },
     { slug: 'what-to-text-after-a-first-date', label: 'What to text after a first date' }
   ],
+  'signs-texting-conversation-becoming-one-sided': [
+    { slug: 'signs-texting-conversation-losing-momentum', label: 'Signs a conversation is losing momentum' },
+    { slug: 'reply-to-dry-texts', label: 'How to reply to dry texts' },
+    { slug: 'what-to-text-when-they-stop-replying', label: 'What to text when they stop replying' }
+  ],
+  'how-to-tell-if-someone-is-flirting-over-text': [
+    { slug: 'how-to-ask-someone-out-over-text', label: 'How to ask someone out over text' },
+    { slug: 'texting-mistakes-new-conversation-feel-forced', label: 'Avoid forced texting' },
+    { slug: 'signs-texting-conversation-becoming-one-sided', label: 'Read one-sided effort' }
+  ],
+  'texting-boundaries-while-dating': [
+    { slug: 'how-to-tell-if-someone-is-flirting-over-text', label: 'Read flirting over text' },
+    { slug: 'how-to-ask-someone-out-over-text', label: 'Ask someone out clearly' },
+    { slug: 'what-to-text-after-getting-someones-number', label: 'Start a new conversation' }
+  ],
+  'how-to-connect-emotionally-while-dating': [
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy dating boundaries' },
+    { slug: 'how-to-tell-if-someone-is-flirting-over-text', label: 'Read signs of mutual interest' },
+    { slug: 'what-to-text-after-a-first-date', label: 'What to text after a first date' }
+  ],
+  'texting-mistakes-new-conversation-feel-forced': [
+    { slug: 'what-to-text-after-getting-someones-number', label: 'What to text after getting their number' },
+    { slug: 'reply-to-dry-texts', label: 'How to reply to dry texts' },
+    { slug: 'signs-texting-conversation-becoming-one-sided', label: 'Signs the conversation is one-sided' }
+  ],
   'how-to-ask-someone-out-over-text': [
     { slug: 'what-to-text-after-a-first-date', label: 'What to text after a first date' },
     { slug: 'signs-texting-conversation-losing-momentum', label: 'Signs a conversation is losing momentum' },
@@ -576,6 +628,11 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'how-to-ask-someone-out-over-text', label: 'How to ask someone out over text' },
     { slug: 'signs-texting-conversation-losing-momentum', label: 'Signs a conversation is losing momentum' },
     { slug: 'what-to-text-after-a-first-date', label: 'What to text after a first date' }
+  ],
+  'what-to-text-after-getting-someones-number': [
+    { slug: 'best-tinder-openers-for-guys', label: 'Better dating app openers' },
+    { slug: 'how-long-should-you-text-before-asking-someone-out', label: 'When to ask someone out' },
+    { slug: 'how-to-ask-someone-out-over-text', label: 'How to ask someone out over text' }
   ]
 };
 
@@ -602,6 +659,25 @@ const ArticleResources: React.FC<{ post: BlogPost }> = ({ post }) => {
   );
 };
 
+const ArticleSectionImage: React.FC<{ section: BlogPost['sections'][number] }> = ({ section }) => {
+  if (!section.image) return null;
+
+  return (
+    <figure className="my-8 overflow-hidden rounded-3xl border border-white/10 bg-black/20">
+      <img
+        src={section.image}
+        alt={section.imageAlt || section.heading}
+        loading="lazy"
+        decoding="async"
+        className="aspect-[16/9] w-full object-cover"
+      />
+      <figcaption className="border-t border-white/10 px-5 py-3 text-xs leading-5 text-white/35">
+        {section.imageCaption}
+      </figcaption>
+    </figure>
+  );
+};
+
 const ArticlePage: React.FC<{ post: BlogPost; navigate: (path: string) => void }> = ({ post, navigate }) => {
   const middleIndex = Math.ceil(post.sections.length / 2);
 
@@ -612,7 +688,7 @@ const ArticlePage: React.FC<{ post: BlogPost; navigate: (path: string) => void }
         <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-white/35"><span className="text-pink-300/80">{post.category}</span><span>•</span><span>{post.readingTime}</span><span>•</span><time dateTime={post.date}>{new Date(`${post.date}T12:00:00`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</time></div>
         <h1 className="mt-6 text-4xl font-black leading-[1.05] tracking-[-0.04em] text-white md:text-6xl">{post.title}</h1>
         <p className="mt-7 text-lg leading-8 text-white/55">{post.description}</p>
-        {post.image && <figure className="mt-9 overflow-hidden rounded-3xl border border-pink-300/15 bg-black/20 shadow-[0_24px_80px_rgba(236,72,153,0.12)]"><img src={post.image} alt={post.imageAlt || post.title} className="aspect-[16/9] w-full object-cover" loading="eager" decoding="async" /><figcaption className="border-t border-white/10 px-5 py-3 text-xs text-white/35">A better follow-up is clear, calm, and gives the other person room to choose.</figcaption></figure>}
+        {post.image && <figure className="mt-9 overflow-hidden rounded-3xl border border-pink-300/15 bg-black/20 shadow-[0_24px_80px_rgba(236,72,153,0.12)]"><img src={post.image} alt={post.imageAlt || post.title} className="aspect-[16/9] w-full object-cover" loading="eager" decoding="async" /><figcaption className="border-t border-white/10 px-5 py-3 text-xs text-white/35">{post.imageCaption || 'A better follow-up is clear, calm, and gives the other person room to choose.'}</figcaption></figure>}
         <div className="mt-10 space-y-5">
           <ArticleQuickAnswer post={post} />
           <ArticleExampleBox examples={ARTICLE_EXAMPLES[post.slug]} />
@@ -627,7 +703,7 @@ Output:
         <div className="mt-12 space-y-12">
           {post.sections.map((section, index) => <React.Fragment key={section.heading}>
             {index === middleIndex && <ArticleCta navigate={navigate} compact />}
-            <section><h2 className="text-2xl font-bold tracking-tight text-white md:text-3xl">{section.heading}</h2>{section.paragraphs.map((paragraph) => <p key={paragraph} className="mt-5 text-base leading-8 text-white/60">{paragraph}</p>)}{section.bullets && <ul className="mt-6 space-y-3 rounded-2xl border border-pink-300/10 bg-pink-300/[0.04] p-5 text-sm leading-7 text-white/65">{section.bullets.map((bullet) => <li key={bullet} className="flex gap-3"><span className="mt-1 text-pink-300">&#10022;</span><span>{bullet}</span></li>)}</ul>}</section>
+            <section><h2 className="text-2xl font-bold tracking-tight text-white md:text-3xl">{section.heading}</h2>{section.paragraphs.map((paragraph) => <p key={paragraph} className="mt-5 text-base leading-8 text-white/60">{paragraph}</p>)}<ArticleSectionImage section={section} />{section.bullets && <ul className="mt-6 space-y-3 rounded-2xl border border-pink-300/10 bg-pink-300/[0.04] p-5 text-sm leading-7 text-white/65">{section.bullets.map((bullet) => <li key={bullet} className="flex gap-3"><span className="mt-1 text-pink-300">&#10022;</span><span>{bullet}</span></li>)}</ul>}</section>
           </React.Fragment>)}
         </div>
         <ArticleCta navigate={navigate} />
@@ -640,14 +716,28 @@ Output:
 
 const ArticleCta: React.FC<{ navigate: (path: string) => void; compact?: boolean }> = ({ navigate, compact = false }) => <div className={`relative overflow-hidden rounded-3xl border border-pink-300/15 bg-gradient-to-br from-pink-500/15 to-purple-500/10 ${compact ? 'my-2 p-6' : 'mt-16 p-7 md:p-9'}`}><div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-pink-400/20 blur-3xl" /><p className="relative text-xs font-bold uppercase tracking-[0.22em] text-pink-200/75">Need a second opinion?</p><h2 className="relative mt-3 text-2xl font-bold text-white">Turn the situation into a send-ready reply.</h2><p className="relative mt-3 max-w-xl text-sm leading-6 text-white/50">Rizz Master helps you find the right words without losing your personality.</p><div className="relative mt-6 flex flex-col gap-3 sm:flex-row"><PlayStoreButton /><button onClick={() => navigate(MARKETING_HOME_PATH)} className="rounded-2xl px-5 py-3.5 text-sm font-bold text-white/60 transition-colors hover:text-white">Explore Rizz Master &#8594;</button></div></div>;
 
-const LegalPage: React.FC<{ kind: 'privacy' | 'terms' | 'support'; navigate: (path: string) => void }> = ({ kind, navigate }) => {
-  const content = {
-    privacy: { eyebrow: 'Your data matters', title: 'Privacy Policy', intro: 'Rizz Master is built to help with everyday conversations while keeping data collection focused on running the product.', sections: [['What we collect', 'We may process account details, saved items, profile preferences, purchase state, and the text or image context you choose to submit for generation. We only use this information to provide, secure, and improve the service.'], ['Generated content', 'Inputs are processed to generate responses. Only items you explicitly save are intended to remain in your account history. Review the full hosted policy linked below for the current details.'], ['Your choices', 'You can request account help, data questions, or deletion through Support.']], link: LEGAL_LINKS.privacy },
-    terms: { eyebrow: 'Use it thoughtfully', title: 'Terms of Service', intro: 'Rizz Master is an AI dating assistant for entertainment and communication support - not a substitute for your judgment.', sections: [['Using the service', 'You are responsible for the messages you send and the way you use AI-generated suggestions. Content may be imperfect, so review it before sharing.'], ['Respectful conduct', 'Do not use the service to create harmful, illegal, abusive, or harassing content. Access may be limited when the service is misused.'], ['Purchases', 'Android subscriptions are billed through Google Play. Web subscriptions are billed through Dodo Payments and can be managed from the web billing portal.']], link: LEGAL_LINKS.terms },
-    support: { eyebrow: 'We are here to help', title: 'Support Center', intro: 'Questions about credits, subscriptions, account access, or a feature idea? Send us a note and we will help you find the next step.', sections: [['Contact support', 'Email rizzmasterhelpteam@gmail.com for bugs, billing questions, account deletion requests, or general help.'], ['Credits and Premium', 'Free credits reset daily. Manage Android subscriptions in Google Play and web subscriptions in the Dodo Payments portal. Premium follows the same signed-in Rizz Master account.'], ['Account deletion', 'Cancel an active web subscription before deleting your account. You can then delete the account from Support inside the app.']], link: LEGAL_LINKS.supportEmail },
-  }[kind];
+const LegalPage: React.FC<{ kind: MarketingLegalPageKey; navigate: (path: string) => void }> = ({ kind, navigate }) => {
+  const content = MARKETING_LEGAL_PAGES[kind];
+
   return <>
-    <main className="marketing-container marketing-page-padding"><button onClick={() => navigate(MARKETING_HOME_PATH)} className="mb-10 inline-flex items-center gap-2 text-sm font-bold text-white/45 transition-colors hover:text-white">&#8592; Back home</button><div className="max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.28em] text-pink-300/80">{content.eyebrow}</p><h1 className="mt-5 text-5xl font-black tracking-[-0.04em] text-white md:text-7xl">{content.title}</h1><p className="mt-6 text-lg leading-8 text-white/55">{content.intro}</p></div><div className="mt-12 max-w-3xl space-y-5">{content.sections.map(([heading, copy]) => <section key={heading} className="marketing-card p-6 md:p-8"><h2 className="text-xl font-bold text-white">{heading}</h2><p className="mt-3 text-sm leading-7 text-white/55">{copy}</p></section>)}</div><a href={content.link} target={kind === 'support' ? undefined : '_blank'} rel={kind === 'support' ? undefined : 'noreferrer'} className="mt-8 inline-flex rounded-2xl border border-white/15 bg-white/[0.05] px-5 py-3.5 text-sm font-bold text-white transition-colors hover:bg-white/10">{kind === 'support' ? 'Email support' : 'Read the full policy ->'}</a></main><MarketingFooter navigate={navigate} />
+    <main className="marketing-container marketing-page-padding">
+      <button onClick={() => navigate(MARKETING_HOME_PATH)} className="mb-10 inline-flex items-center gap-2 text-sm font-bold text-white/45 transition-colors hover:text-white">&#8592; Back home</button>
+      <div className="max-w-3xl">
+        <p className="text-xs font-bold uppercase tracking-[0.28em] text-pink-300/80">{content.eyebrow}</p>
+        <h1 className="mt-5 text-5xl font-black tracking-[-0.04em] text-white md:text-7xl">{content.title}</h1>
+        <p className="mt-6 text-lg leading-8 text-white/55">{content.intro}</p>
+        <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-white/30">Last updated {content.updatedAt}</p>
+      </div>
+      <div className="mt-12 max-w-3xl space-y-5">
+        {content.sections.map((section) => <section key={section.heading} className="marketing-card p-6 md:p-8">
+          <h2 className="text-xl font-bold text-white">{section.heading}</h2>
+          {section.paragraphs?.map((paragraph) => <p key={paragraph} className="mt-3 text-sm leading-7 text-white/55">{paragraph}</p>)}
+          {section.bullets && <ul className="mt-4 space-y-2 text-sm leading-7 text-white/55">{section.bullets.map((bullet) => <li key={bullet} className="flex gap-3"><span className="mt-3 h-1.5 w-1.5 shrink-0 rounded-full bg-pink-300" aria-hidden="true" /><span>{bullet}</span></li>)}</ul>}
+        </section>)}
+      </div>
+      <a href={content.actionHref} className="mt-8 inline-flex rounded-2xl border border-white/15 bg-white/[0.05] px-5 py-3.5 text-sm font-bold text-white transition-colors hover:bg-white/10">{content.actionLabel}</a>
+    </main>
+    <MarketingFooter navigate={navigate} />
   </>;
 };
 

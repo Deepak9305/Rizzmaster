@@ -6,7 +6,13 @@ import { Capacitor } from '@capacitor/core';
 const App = lazy(() => import('./App'));
 const WebRouter = lazy(() => import('./components/WebRouter'));
 
-const shouldRenderWebRouter = typeof window !== 'undefined' && !Capacitor.isNativePlatform();
+const isNativePlatform = Capacitor.isNativePlatform();
+
+// Let CSS select the lightweight compositor path before the first React paint.
+// This matters on Android WebViews where blur-heavy layers are expensive.
+document.documentElement.classList.toggle('native-app', isNativePlatform);
+
+const shouldRenderWebRouter = typeof window !== 'undefined' && !isNativePlatform;
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

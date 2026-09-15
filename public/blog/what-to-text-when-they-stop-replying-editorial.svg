@@ -1,0 +1,71 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">What to text when someone stops replying</title>
+  <desc id="desc">A paused conversation opens into three calm choices: check in, make a plan, or close the loop.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="900" gradientUnits="userSpaceOnUse"><stop stop-color="#12081F"/><stop offset="0.5" stop-color="#2A1235"/><stop offset="1" stop-color="#071B26"/></linearGradient>
+    <linearGradient id="phone" x1="170" y1="160" x2="660" y2="720" gradientUnits="userSpaceOnUse"><stop stop-color="#F472B6"/><stop offset="1" stop-color="#A855F7"/></linearGradient>
+    <linearGradient id="route" x1="800" y1="0" x2="1410" y2="0" gradientUnits="userSpaceOnUse"><stop stop-color="#FDE68A"/><stop offset="0.5" stop-color="#FBBF24"/><stop offset="1" stop-color="#FB7185"/></linearGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="34"/></filter>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="0" dy="26" stdDeviation="24" flood-color="#000000" flood-opacity="0.5"/></filter>
+  </defs>
+  <rect width="1600" height="900" rx="36" fill="url(#bg)"/>
+  <circle cx="380" cy="430" r="300" fill="#EC4899" fill-opacity="0.16" filter="url(#glow)"/>
+  <circle cx="1150" cy="430" r="300" fill="#F59E0B" fill-opacity="0.1" filter="url(#glow)"/>
+  <g fill="#FDE68A">
+    <circle cx="132" cy="160" r="3" fill-opacity="0.72"/><circle cx="710" cy="132" r="4" fill-opacity="0.45"/><circle cx="1450" cy="178" r="3" fill-opacity="0.6"/><circle cx="1462" cy="730" r="4" fill-opacity="0.4"/>
+  </g>
+  <text x="800" y="78" text-anchor="middle" fill="#FDE68A" fill-opacity="0.9" font-family="Arial,sans-serif" font-size="18" font-weight="900" letter-spacing="6">WHEN THE CHAT GOES QUIET</text>
+  <text x="800" y="116" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.48" font-family="Arial,sans-serif" font-size="17" letter-spacing="2">One thoughtful follow-up is enough to create clarity.</text>
+  <g filter="url(#shadow)">
+    <rect x="145" y="175" width="505" height="555" rx="42" fill="#100D20" stroke="url(#phone)" stroke-width="5"/>
+    <rect x="178" y="215" width="439" height="420" rx="30" fill="#0C0A17" stroke="#FFFFFF" stroke-opacity="0.1" stroke-width="2"/>
+    <rect x="330" y="193" width="135" height="10" rx="5" fill="#FFFFFF" fill-opacity="0.18"/>
+    <circle cx="220" cy="260" r="22" fill="#F472B6" fill-opacity="0.25" stroke="#F9A8D4" stroke-width="2"/>
+    <path d="M209 268C214 252 226 252 231 268" stroke="#FBCFE8" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="220" cy="257" r="6" fill="#FBCFE8"/>
+    <text x="260" y="260" fill="#FFFFFF" fill-opacity="0.7" font-family="Arial,sans-serif" font-size="18" font-weight="700">Conversation</text>
+    <rect x="210" y="300" width="300" height="72" rx="22" fill="#30152D" stroke="#F472B6" stroke-opacity="0.5" stroke-width="2"/>
+    <text x="236" y="334" fill="#FFFFFF" fill-opacity="0.88" font-family="Arial,sans-serif" font-size="19" font-weight="700">That story was too good.</text>
+    <text x="236" y="358" fill="#FDA4AF" fill-opacity="0.58" font-family="Arial,sans-serif" font-size="13" letter-spacing="2">YESTERDAY</text>
+    <path d="M242 372L226 397L280 372" fill="#30152D" stroke="#F472B6" stroke-opacity="0.5" stroke-width="2"/>
+    <g transform="translate(225 418)">
+      <circle cx="52" cy="50" r="30" fill="#FDE68A" fill-opacity="0.08" stroke="#FDE68A" stroke-opacity="0.6" stroke-width="3"/>
+      <path d="M52 31V51L66 60" stroke="#FDE68A" stroke-width="5" stroke-linecap="round"/>
+      <path d="M52 14V4M52 96V86M16 50H5M99 50H89" stroke="#FDE68A" stroke-opacity="0.55" stroke-width="3" stroke-linecap="round"/>
+      <text x="108" y="43" fill="#FDE68A" font-family="Arial,sans-serif" font-size="17" font-weight="900" letter-spacing="3">PAUSE</text>
+      <text x="108" y="69" fill="#FFFFFF" fill-opacity="0.42" font-family="Arial,sans-serif" font-size="15">Do not panic.</text>
+    </g>
+    <rect x="210" y="560" width="300" height="42" rx="21" fill="#F472B6" fill-opacity="0.14"/>
+    <text x="360" y="586" text-anchor="middle" fill="#FBCFE8" font-family="Arial,sans-serif" font-size="14" font-weight="900" letter-spacing="3">WAIT FOR CONTEXT</text>
+  </g>
+  <path d="M670 450C760 450 770 280 860 280M670 450C770 450 770 450 860 450M670 450C760 450 770 620 860 620" stroke="url(#route)" stroke-width="6" stroke-linecap="round" stroke-dasharray="2 20"/>
+  <circle cx="735" cy="450" r="45" fill="#130B20" stroke="#FDE68A" stroke-width="3"/>
+  <path d="M715 450L730 465L758 434" stroke="#FDE68A" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <g filter="url(#shadow)">
+    <g transform="translate(860 212)">
+      <rect width="520" height="136" rx="28" fill="#231B35" stroke="#FDE68A" stroke-opacity="0.62" stroke-width="3"/>
+      <circle cx="48" cy="68" r="20" fill="#FDE68A" fill-opacity="0.16" stroke="#FDE68A" stroke-opacity="0.72" stroke-width="2"/>
+      <path d="M38 68H58M48 58V78" stroke="#FDE68A" stroke-width="3" stroke-linecap="round"/>
+      <text x="88" y="48" fill="#FDE68A" font-family="Arial,sans-serif" font-size="15" font-weight="900" letter-spacing="3">CHECK IN</text>
+      <text x="88" y="82" fill="#FFFFFF" font-family="Arial,sans-serif" font-size="19" font-weight="700">How is your week going?</text>
+      <text x="88" y="109" fill="#FFFFFF" fill-opacity="0.42" font-family="Arial,sans-serif" font-size="14">Light and easy to answer.</text>
+    </g>
+    <g transform="translate(860 382)">
+      <rect width="520" height="136" rx="28" fill="#221832" stroke="#FB7185" stroke-opacity="0.62" stroke-width="3"/>
+      <circle cx="48" cy="68" r="20" fill="#FB7185" fill-opacity="0.16" stroke="#FB7185" stroke-opacity="0.72" stroke-width="2"/>
+      <path d="M39 67H57M48 58V76" stroke="#FDA4AF" stroke-width="3" stroke-linecap="round"/>
+      <text x="88" y="48" fill="#FDA4AF" font-family="Arial,sans-serif" font-size="15" font-weight="900" letter-spacing="3">MAKE A PLAN</text>
+      <text x="88" y="82" fill="#FFFFFF" font-family="Arial,sans-serif" font-size="19" font-weight="700">Want to grab coffee this week?</text>
+      <text x="88" y="109" fill="#FFFFFF" fill-opacity="0.42" font-family="Arial,sans-serif" font-size="14">Clear without adding pressure.</text>
+    </g>
+    <g transform="translate(860 552)">
+      <rect width="520" height="136" rx="28" fill="#15162B" stroke="#A78BFA" stroke-opacity="0.55" stroke-width="3"/>
+      <circle cx="48" cy="68" r="20" fill="#A78BFA" fill-opacity="0.16" stroke="#A78BFA" stroke-opacity="0.65" stroke-width="2"/>
+      <path d="M39 62L57 74M57 62L39 74" stroke="#DDD6FE" stroke-width="3" stroke-linecap="round"/>
+      <text x="88" y="48" fill="#DDD6FE" font-family="Arial,sans-serif" font-size="15" font-weight="900" letter-spacing="3">CLOSE THE LOOP</text>
+      <text x="88" y="82" fill="#FFFFFF" font-family="Arial,sans-serif" font-size="19" font-weight="700">I am going to leave this here.</text>
+      <text x="88" y="109" fill="#FFFFFF" fill-opacity="0.42" font-family="Arial,sans-serif" font-size="14">Protect your time and move on.</text>
+    </g>
+  </g>
+  <text x="800" y="824" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.62" font-family="Arial,sans-serif" font-size="19" font-weight="700" letter-spacing="4">ONE MESSAGE  |  THREE HONEST DIRECTIONS  |  NO CHASING</text>
+</svg>

@@ -20,9 +20,16 @@ const FEATURES = [
     { icon: '🔥', label: 'Early Access to New Features', sub: 'First to get everything we ship.' },
 ];
 
-const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onRestore, isGuest = false, userId = null }) => {
+const PremiumModal: React.FC<PremiumModalProps> = ({
+    onClose,
+    onUpgrade,
+    onRestore,
+    isGuest = false,
+    userId = null,
+}) => {
     const [selectedPlan, setSelectedPlan] = useState<'WEEKLY' | 'MONTHLY'>('WEEKLY');
     const [prices, setPrices] = useState({ weekly: '$4.99', monthly: '$15.99' });
+    const [isSubscribing, setIsSubscribing] = useState(false);
     const hasNativePurchases = canUseNativeIap();
 
     useEffect(() => {
@@ -43,14 +50,21 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onResto
         }
     }, [hasNativePurchases]);
 
-    const handleSubscribe = () => {
+    const handleSubscribe = async () => {
+        if (isSubscribing) return;
+
         // Guests must sign up first — check before native platform
         if (isGuest) {
             onUpgrade(selectedPlan);
             return;
         }
         if (hasNativePurchases) {
-            IAPService.purchase(selectedPlan, userId);
+            setIsSubscribing(true);
+            try {
+                await IAPService.purchase(selectedPlan, userId);
+            } finally {
+                setIsSubscribing(false);
+            }
         } else {
             onUpgrade(selectedPlan);
         }
@@ -91,8 +105,12 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onResto
                     <div className="w-14 h-14 mx-auto mb-3 bg-yellow-500/10 rounded-full flex items-center justify-center text-2xl border border-yellow-500/20 animate-pulse-glow">
                         👑
                     </div>
-                    <h2 className="text-xl md:text-2xl font-bold text-white mb-1">Unlock God Mode</h2>
-                    <p className="text-xs text-white/40">Everything unlocked. No limits. No ads.</p>
+                    <h2 className="text-xl md:text-2xl font-bold text-white mb-1">
+                        Unlock God Mode
+                    </h2>
+                    <p className="text-xs text-white/40">
+                        Everything unlocked. No limits. No ads.
+                    </p>
                 </div>
 
                 {/* Urgency banner */}
@@ -128,6 +146,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onResto
                             <button
                                 key={plan}
                                 onClick={() => setSelectedPlan(plan)}
+                                disabled={isSubscribing}
                                 className={`p-3 rounded-xl border transition-all flex flex-col items-center justify-center text-center relative ${
                                     isSelected
                                         ? 'bg-yellow-500/10 border-yellow-500 text-white shadow-[0_0_15px_rgba(234,179,8,0.2)]'
@@ -152,10 +171,13 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ onClose, onUpgrade, onResto
                 {/* CTA */}
                 <button
                     onClick={handleSubscribe}
+                    disabled={isSubscribing}
                     className="w-full py-3 bg-gradient-to-r from-yellow-600 to-amber-500 text-black font-bold rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-lg flex flex-col items-center leading-tight mb-4 animate-shimmer bg-[length:200%_100%]"
                 >
                     <span className="text-sm">
-                        {hasNativePurchases ? '🔓 Subscribe & Upgrade' : '🔓 Sign Up to Unlock'}
+                        {isSubscribing
+                            ? 'Connecting to Google Play...'
+                            : hasNativePurchases ? '🔓 Subscribe & Upgrade' : '🔓 Sign Up to Unlock'}
                     </span>
                     <span className="text-[10px] opacity-80 uppercase mt-0.5">
                         {hasNativePurchases

@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">How to tell if someone is flirting over text</title>
+  <desc id="desc">A neon editorial illustration showing a text conversation moving from friendly to clearly mutual flirting.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#090b1c"/>
+      <stop offset="0.52" stop-color="#17102b"/>
+      <stop offset="1" stop-color="#24101f"/>
+    </linearGradient>
+    <linearGradient id="pinkGold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff3c9b"/>
+      <stop offset="0.55" stop-color="#ff6d8f"/>
+      <stop offset="1" stop-color="#ffc857"/>
+    </linearGradient>
+    <linearGradient id="bluePink" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#65d9ff"/>
+      <stop offset="1" stop-color="#a85cff"/>
+    </linearGradient>
+    <linearGradient id="bubbleLeft" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#13233a"/>
+      <stop offset="1" stop-color="#1d1735"/>
+    </linearGradient>
+    <linearGradient id="bubbleRight" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#481b45"/>
+      <stop offset="1" stop-color="#2a1634"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="45%" r="60%">
+      <stop offset="0" stop-color="#ff4da6" stop-opacity="0.25"/>
+      <stop offset="0.55" stop-color="#8e3dce" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#0b0c1e" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glowPink" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="14" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowSmall" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <pattern id="grid" width="52" height="52" patternUnits="userSpaceOnUse">
+      <path d="M52 0H0V52" fill="none" stroke="#ffffff" stroke-opacity="0.055" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1600" height="900" rx="38" fill="url(#bg)"/>
+  <rect width="1600" height="900" rx="38" fill="url(#grid)" opacity="0.36"/>
+  <ellipse cx="800" cy="430" rx="670" ry="420" fill="url(#halo)"/>
+  <path d="M90 705 C340 575 465 770 698 650 S1115 444 1515 605" fill="none" stroke="#ff4b9b" stroke-opacity="0.2" stroke-width="2"/>
+  <path d="M110 743 C360 613 490 810 720 690 S1125 484 1490 642" fill="none" stroke="#65d9ff" stroke-opacity="0.13" stroke-width="2"/>
+
+  <g fill="#ffffff" opacity="0.7">
+    <circle cx="163" cy="135" r="3"/><circle cx="258" cy="203" r="2"/><circle cx="1368" cy="138" r="3"/>
+    <circle cx="1450" cy="265" r="2"/><circle cx="1230" cy="92" r="2"/><circle cx="394" cy="109" r="2"/>
+  </g>
+  <g fill="#ffcb65" filter="url(#glowSmall)">
+    <path d="M1240 185 l5 13 13 5 -13 5 -5 13 -5-13 -13-5 13-5z"/>
+    <path d="M1410 462 l4 10 10 4 -10 4 -4 10 -4-10 -10-4 10-4z"/>
+  </g>
+
+  <g font-family="Trebuchet MS, Arial, sans-serif">
+    <text x="112" y="112" fill="#ff8ec8" font-size="21" font-weight="700" letter-spacing="6">TEXTING CHEMISTRY</text>
+    <text x="112" y="174" fill="#ffffff" font-size="52" font-weight="700">Read the pattern,</text>
+    <text x="112" y="230" fill="#ffffff" font-size="52" font-weight="700">not one emoji.</text>
+    <text x="112" y="275" fill="#b8b3c7" font-size="20" letter-spacing="0.4">Warmth becomes flirting when attention, playfulness,</text>
+    <text x="112" y="304" fill="#b8b3c7" font-size="20" letter-spacing="0.4">and mutual effort keep showing up together.</text>
+
+    <g transform="translate(112 370)">
+      <rect width="390" height="265" rx="24" fill="#0d1123" fill-opacity="0.78" stroke="#65d9ff" stroke-opacity="0.58" stroke-width="2"/>
+      <rect x="22" y="22" width="346" height="42" rx="21" fill="#65d9ff" fill-opacity="0.11"/>
+      <circle cx="45" cy="43" r="8" fill="#65d9ff"/>
+      <text x="68" y="50" fill="#8ee5ff" font-size="17" font-weight="700" letter-spacing="3">FRIENDLY SIGNALS</text>
+      <g fill="#d8d8e5" font-size="19">
+        <text x="28" y="116">They reply when you ask.</text>
+        <text x="28" y="160">They are warm but general.</text>
+        <text x="28" y="204">The effort stays occasional.</text>
+      </g>
+      <path d="M28 231 H362" stroke="#ffffff" stroke-opacity="0.1"/>
+      <text x="28" y="251" fill="#8ee5ff" font-size="15" letter-spacing="1.5">KINDNESS IS NOT A PROMISE</text>
+    </g>
+
+    <g transform="translate(1098 370)">
+      <rect width="390" height="265" rx="24" fill="#211226" fill-opacity="0.82" stroke="#ff638e" stroke-opacity="0.72" stroke-width="2"/>
+      <rect x="22" y="22" width="346" height="42" rx="21" fill="#ff4d9b" fill-opacity="0.13"/>
+      <circle cx="45" cy="43" r="8" fill="#ff638e"/>
+      <text x="68" y="50" fill="#ff9cc0" font-size="17" font-weight="700" letter-spacing="3">FLIRTY PATTERNS</text>
+      <g fill="#fff0f5" font-size="19">
+        <text x="28" y="116">They remember small details.</text>
+        <text x="28" y="160">They create playful tension.</text>
+        <text x="28" y="204">They make room to meet.</text>
+      </g>
+      <path d="M28 231 H362" stroke="#ffffff" stroke-opacity="0.1"/>
+      <text x="28" y="251" fill="#ff9cc0" font-size="15" letter-spacing="1.5">CONSISTENCY IS THE CLUE</text>
+    </g>
+
+    <g transform="translate(540 355)">
+      <path d="M260 0 C260 0 260 35 260 55" fill="none" stroke="url(#pinkGold)" stroke-width="4" stroke-linecap="round" filter="url(#glowSmall)"/>
+      <path d="M260 335 C260 335 260 300 260 280" fill="none" stroke="url(#pinkGold)" stroke-width="4" stroke-linecap="round" filter="url(#glowSmall)"/>
+      <rect width="520" height="335" rx="30" fill="#0a0c1c" fill-opacity="0.92" stroke="url(#pinkGold)" stroke-width="3"/>
+      <rect x="20" y="20" width="480" height="52" rx="18" fill="#ffffff" fill-opacity="0.04"/>
+      <circle cx="51" cy="46" r="8" fill="#ff4d9b"/>
+      <text x="76" y="53" fill="#ffb0d1" font-size="16" font-weight="700" letter-spacing="3">THE ENERGY CHECK</text>
+      <circle cx="463" cy="46" r="9" fill="#ffc857"/>
+
+      <g transform="translate(34 102)">
+        <path d="M0 0 H298 Q316 0 316 18 V66 Q316 84 298 84 H0 Q-18 84 -18 66 V18 Q-18 0 0 0Z" fill="url(#bubbleLeft)" stroke="#65d9ff" stroke-opacity="0.55" stroke-width="2"/>
+        <text x="18" y="35" fill="#eaf9ff" font-size="18">You remembered my coffee order.</text>
+        <text x="18" y="61" fill="#9fdff1" font-size="14" letter-spacing="1">PERSONAL DETAIL</text>
+      </g>
+      <g transform="translate(170 205)">
+        <path d="M0 0 H294 Q312 0 312 18 V66 Q312 84 294 84 H0 Q-18 84 -18 66 V18 Q-18 0 0 0Z" fill="url(#bubbleRight)" stroke="#ff638e" stroke-opacity="0.68" stroke-width="2"/>
+        <text x="18" y="35" fill="#fff0f6" font-size="18">That is dangerous attention.</text>
+        <text x="18" y="61" fill="#ffb4cf" font-size="14" letter-spacing="1">PLAYFUL REPLY</text>
+      </g>
+      <g transform="translate(210 304)">
+        <circle cx="0" cy="0" r="5" fill="#ff4d9b"/><circle cx="20" cy="0" r="5" fill="#ff8eae"/><circle cx="40" cy="0" r="5" fill="#ffc857"/>
+        <text x="65" y="6" fill="#c9c2d4" font-size="15" letter-spacing="1.2">MUTUAL EFFORT</text>
+      </g>
+    </g>
+
+    <g transform="translate(585 735)">
+      <rect width="430" height="68" rx="34" fill="#ff4d9b" fill-opacity="0.1" stroke="#ff638e" stroke-opacity="0.55"/>
+      <circle cx="36" cy="34" r="15" fill="url(#pinkGold)" filter="url(#glowSmall)"/>
+      <path d="M36 24 V44 M26 34 H46" stroke="#160d21" stroke-width="3" stroke-linecap="round"/>
+      <text x="68" y="30" fill="#ffb1cf" font-size="14" font-weight="700" letter-spacing="2">WHEN IT FEELS MUTUAL</text>
+      <text x="68" y="50" fill="#ffffff" font-size="16">Match the energy and make a clear move.</text>
+    </g>
+
+    <text x="800" y="858" text-anchor="middle" fill="#8e899e" font-size="16" font-weight="700" letter-spacing="4">NOTICE THE PATTERN  |  RESPOND WARMLY  |  KEEP IT MUTUAL</text>
+  </g>
+</svg>

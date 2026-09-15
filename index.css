@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -11,6 +9,41 @@ body {
   overscroll-behavior-y: none;
   /* Mobile: Optimize tap highlight */
   -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+html.native-app {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+html.native-app body,
+html.native-app #root {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow-x: hidden;
+}
+
+html.native-app #root {
+  overflow-y: hidden;
+  overscroll-behavior-y: none;
+}
+
+html.native-app .web-app-root {
+  height: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 .web-premium-scroll {
@@ -723,6 +756,103 @@ body {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 24px 80px rgba(0, 0, 0, 0.3), 0 0 36px rgba(226, 24, 144, 0.08);
 }
 
+/* Coach is a viewport-owned surface. Explicit flex bounds prevent the message
+   history from pushing the header or composer off-screen in Android WebViews. */
+.coach-screen {
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+  isolation: isolate;
+}
+
+.native-coach-shell {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  will-change: auto !important;
+}
+
+.native-coach-screen {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+}
+
+.native-coach-screen .coach-header {
+  flex: 0 0 auto;
+}
+
+.native-coach-screen .coach-messages {
+  flex: 1 1 0%;
+  height: auto;
+}
+
+.native-coach-screen .coach-composer {
+  flex: 0 0 auto;
+}
+
+.coach-header-inner {
+  min-width: 0;
+}
+
+.coach-messages {
+  min-height: 0;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.coach-messages-inner {
+  min-width: 0;
+}
+
+@media (max-width: 420px) {
+  .coach-header-inner {
+    padding-inline: 0.75rem !important;
+  }
+
+  .coach-identity {
+    flex-basis: 0;
+  }
+
+  .coach-identity button {
+    max-width: min(130px, 100%);
+  }
+}
+
+/* Avoid first-paint opacity/transform layers on native devices. They can be
+   left in an intermediate state when Android resumes a remote WebView. */
+html.native-app .coach-header,
+html.native-app .coach-messages,
+html.native-app .coach-composer,
+html.native-app .coach-message-bubble,
+html.native-app .coach-typing-indicator,
+.native-coach-screen .coach-header,
+.native-coach-screen .coach-messages,
+.native-coach-screen .coach-composer,
+.native-coach-screen .coach-message-bubble,
+.native-coach-screen .coach-typing-indicator {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  will-change: auto !important;
+}
+
+html.native-app .coach-avatar > div:first-child,
+.native-coach-screen .coach-avatar > div:first-child {
+  animation: none !important;
+  opacity: 0.6 !important;
+  transform: none !important;
+}
+
 .app-modal :is(button, input, textarea):focus-visible,
 .app-surface :is(button, input, textarea):focus-visible {
   outline: 2px solid rgba(255, 124, 179, 0.9);
@@ -793,4 +923,62 @@ body {
   .app-card {
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 12px 34px rgba(0, 0, 0, 0.24);
   }
+}
+
+/* Native WebView performance profile. Keep the visual system, but avoid large
+   backdrop-filter and continuously animated layers on Android hardware. */
+.native-app .web-app-backdrop {
+  background: linear-gradient(180deg, #05030b 0%, #08030e 52%, #04030a 100%);
+}
+
+.native-app .web-app-backdrop::before,
+.native-app .web-app-backdrop::after {
+  display: none;
+}
+
+.native-app .glass,
+.native-app .app-card,
+.native-app .web-app-topbar,
+.native-app .web-app-tabs,
+.native-app .web-app-credits,
+.native-app [style*="backdrop-filter"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.native-app .web-app-topbar,
+.native-app .web-app-tabs {
+  background: rgba(8, 6, 16, 0.96);
+}
+
+.native-app .web-app-topbar,
+.native-app .web-app-tabs,
+.native-app .web-app-panel,
+.native-app .web-app-result-card,
+.native-app .web-app-empty-state {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 10px 30px rgba(0, 0, 0, 0.22) !important;
+}
+
+.native-app .native-splash-orb,
+.native-app .coach-aurora-background {
+  display: none !important;
+}
+
+.native-app .coach-header,
+.native-app .coach-composer {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(5, 5, 5, 0.98) !important;
+}
+
+.native-app .rizz-gradient,
+.native-app .animate-text-shimmer,
+.native-app .animate-shimmer,
+.native-app .animate-pulse-glow,
+.native-app .animate-float {
+  animation: none !important;
+}
+
+.native-app .web-app-empty-state > span {
+  filter: none !important;
 }

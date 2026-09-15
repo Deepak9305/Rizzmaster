@@ -91,6 +91,12 @@ export const getPlanForProductId = (productId) => {
     .find(([, product]) => product.id === productId)?.[0] || null;
 };
 
+export const canReuseDodoCheckout = (checkout, requestedPlan) => Boolean(
+  checkout?.checkout_url &&
+  ['created', 'redirected'].includes(checkout.status) &&
+  checkout.plan === requestedPlan
+);
+
 export const authenticateBillingRequest = async (req) => {
   const token = getBearerToken(req);
   if (!token) return { token: null, user: null, error: 'Missing authorization token.' };

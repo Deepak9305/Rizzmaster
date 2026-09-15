@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Texting boundaries while dating</title>
+  <desc id="desc">A polished neon illustration showing two people setting clear boundaries around texting pace, privacy, and comfort.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#080b1d"/>
+      <stop offset="0.5" stop-color="#17102b"/>
+      <stop offset="1" stop-color="#281020"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#67d9ff"/>
+      <stop offset="0.5" stop-color="#c05cff"/>
+      <stop offset="1" stop-color="#ffbd54"/>
+    </linearGradient>
+    <linearGradient id="coral" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff4f9d"/>
+      <stop offset="1" stop-color="#ff9a70"/>
+    </linearGradient>
+    <radialGradient id="centerGlow" cx="50%" cy="45%" r="58%">
+      <stop offset="0" stop-color="#ff4fa5" stop-opacity="0.25"/>
+      <stop offset="0.5" stop-color="#8859dc" stop-opacity="0.09"/>
+      <stop offset="1" stop-color="#0b0d20" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="fineGrid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="#ffffff" stroke-opacity="0.05"/>
+    </pattern>
+    <filter id="softGlow" x="-70%" y="-70%" width="240%" height="240%">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="smallGlow" x="-70%" y="-70%" width="240%" height="240%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="900" rx="38" fill="url(#background)"/>
+  <rect width="1600" height="900" rx="38" fill="url(#fineGrid)" opacity="0.45"/>
+  <ellipse cx="800" cy="430" rx="650" ry="440" fill="url(#centerGlow)"/>
+  <path d="M70 690 C310 540 445 790 675 646 S1120 470 1530 625" fill="none" stroke="#ff4f9d" stroke-opacity="0.2" stroke-width="2"/>
+  <path d="M52 750 C330 595 470 840 710 697 S1150 510 1545 665" fill="none" stroke="#69d9ff" stroke-opacity="0.13" stroke-width="2"/>
+
+  <g fill="#ffffff" opacity="0.7">
+    <circle cx="132" cy="144" r="3"/><circle cx="280" cy="252" r="2"/><circle cx="1402" cy="174" r="3"/>
+    <circle cx="1510" cy="322" r="2"/><circle cx="1220" cy="104" r="2"/>
+  </g>
+  <g fill="#ffc85d" filter="url(#smallGlow)">
+    <path d="M1314 176 l5 14 14 5 -14 5 -5 14 -5-14 -14-5 14-5z"/>
+    <path d="M303 594 l4 11 11 4 -11 4 -4 11 -4-11 -11-4 11-4z"/>
+  </g>
+
+  <g font-family="Trebuchet MS, Arial, sans-serif">
+    <text x="112" y="112" fill="#ff94c9" font-size="20" font-weight="700" letter-spacing="6">THE HEALTHY PACE</text>
+    <text x="112" y="173" fill="#ffffff" font-size="50" font-weight="700">Clear limits make</text>
+    <text x="112" y="228" fill="#ffffff" font-size="50" font-weight="700">better conversations.</text>
+    <text x="112" y="270" fill="#b9b4c8" font-size="19" letter-spacing="0.5">Say what works for your time, privacy, and comfort.</text>
+
+    <g transform="translate(108 370)">
+      <rect width="360" height="260" rx="26" fill="#0d1629" fill-opacity="0.85" stroke="#67d9ff" stroke-opacity="0.56" stroke-width="2"/>
+      <rect x="22" y="22" width="316" height="40" rx="20" fill="#67d9ff" fill-opacity="0.11"/>
+      <circle cx="44" cy="42" r="8" fill="#67d9ff"/>
+      <text x="66" y="49" fill="#9ce7ff" font-size="16" font-weight="700" letter-spacing="2.8">YOUR PACE</text>
+      <text x="28" y="111" fill="#f1fbff" font-size="20">Offline during work.</text>
+      <text x="28" y="151" fill="#f1fbff" font-size="20">Private until trust.</text>
+      <text x="28" y="191" fill="#f1fbff" font-size="20">Slow when needed.</text>
+      <path d="M28 220 H332" stroke="#ffffff" stroke-opacity="0.1"/>
+      <text x="28" y="243" fill="#88dff7" font-size="14" letter-spacing="1.4">COMMUNICATE IT ONCE</text>
+    </g>
+
+    <g transform="translate(1132 370)">
+      <rect width="360" height="260" rx="26" fill="#241327" fill-opacity="0.86" stroke="#ff638f" stroke-opacity="0.65" stroke-width="2"/>
+      <rect x="22" y="22" width="316" height="40" rx="20" fill="#ff4f9d" fill-opacity="0.12"/>
+      <circle cx="44" cy="42" r="8" fill="#ff638f"/>
+      <text x="66" y="49" fill="#ffafd0" font-size="16" font-weight="700" letter-spacing="2.8">THEIR CHOICE</text>
+      <text x="28" y="111" fill="#fff3f7" font-size="20">Room to reply later.</text>
+      <text x="28" y="151" fill="#fff3f7" font-size="20">A safe way to say no.</text>
+      <text x="28" y="191" fill="#fff3f7" font-size="20">Respect without pressure.</text>
+      <path d="M28 220 H332" stroke="#ffffff" stroke-opacity="0.1"/>
+      <text x="28" y="243" fill="#ff9fc3" font-size="14" letter-spacing="1.4">LISTEN AND FOLLOW THROUGH</text>
+    </g>
+
+    <g transform="translate(520 330)">
+      <rect width="560" height="370" rx="32" fill="#090c1d" fill-opacity="0.94" stroke="url(#edge)" stroke-width="3"/>
+      <rect x="22" y="22" width="516" height="54" rx="18" fill="#ffffff" fill-opacity="0.04"/>
+      <circle cx="53" cy="49" r="8" fill="#ff4f9d"/>
+      <text x="78" y="56" fill="#ffb3d3" font-size="16" font-weight="700" letter-spacing="3">BOUNDARY, NOT A TEST</text>
+      <circle cx="495" cy="49" r="9" fill="#ffc85d"/>
+
+      <g transform="translate(38 112)">
+        <path d="M0 0 H322 Q340 0 340 18 V70 Q340 88 322 88 H0 Q-18 88 -18 70 V18 Q-18 0 0 0Z" fill="#142239" stroke="#67d9ff" stroke-opacity="0.58" stroke-width="2"/>
+        <text x="20" y="36" fill="#eafaff" font-size="18">I may reply after work.</text>
+        <text x="20" y="66" fill="#8de2f7" font-size="14" font-weight="700" letter-spacing="1.3">MY AVAILABILITY</text>
+      </g>
+      <g transform="translate(182 220)">
+        <path d="M0 0 H302 Q320 0 320 18 V70 Q320 88 302 88 H0 Q-18 88 -18 70 V18 Q-18 0 0 0Z" fill="url(#coral)" fill-opacity="0.2" stroke="#ff638f" stroke-opacity="0.75" stroke-width="2"/>
+        <text x="20" y="36" fill="#fff1f6" font-size="18">That works. Take your time.</text>
+        <text x="20" y="66" fill="#ffb6d1" font-size="14" font-weight="700" letter-spacing="1.3">RESPECTFUL REPLY</text>
+      </g>
+      <g transform="translate(166 332)">
+        <circle cx="0" cy="0" r="5" fill="#67d9ff"/><circle cx="20" cy="0" r="5" fill="#c05cff"/><circle cx="40" cy="0" r="5" fill="#ffc85d"/>
+        <text x="67" y="6" fill="#c7c1d2" font-size="15" letter-spacing="1.2">CLEAR  |  KIND  |  FIRM</text>
+      </g>
+    </g>
+
+    <g transform="translate(564 755)">
+      <rect width="472" height="60" rx="30" fill="#ff4f9d" fill-opacity="0.1" stroke="#ff638f" stroke-opacity="0.55"/>
+      <circle cx="34" cy="30" r="13" fill="url(#edge)" filter="url(#smallGlow)"/>
+      <path d="M34 21 V39 M25 30 H43" stroke="#150c20" stroke-width="3" stroke-linecap="round"/>
+      <text x="62" y="36" fill="#ffffff" font-size="16" font-weight="700">A boundary protects connection.</text>
+    </g>
+
+    <text x="800" y="865" text-anchor="middle" fill="#8f899f" font-size="16" font-weight="700" letter-spacing="4">SAY WHAT YOU NEED  |  RESPECT THEIR ANSWER  |  KEEP IT MUTUAL</text>
+  </g>
+</svg>

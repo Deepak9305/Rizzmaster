@@ -35,7 +35,7 @@ interface RizzCoachProps {
     onUpdateCredits: (newAmountOrUpdater: number | ((prev: number) => number)) => void;
     isPremium: boolean;
     onGoPremium?: () => void;
-    onCreditsExhausted?: () => void;
+    onCreditsExhausted?: (requiredCredits?: 1 | 2) => void;
     onOpenWebMenu?: () => void;
     onLoginRequired?: () => void;
     shadowNotes: string;
@@ -154,9 +154,10 @@ const COACH_VIBES = [
 ];
 
 const MAX_STORED_MESSAGES = 50; // cap to avoid localStorage bloat
+const IS_NATIVE_COACH = Capacitor.isNativePlatform();
 
 const TypingIndicator = React.memo(({ icon, colors }: { icon?: React.ReactNode, colors?: any }) => (
-    <div style={{ display: 'flex', justifyContent: 'flex-start', animation: 'coachEntrance 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both' }}>
+    <div className="coach-typing-indicator" style={{ display: 'flex', justifyContent: 'flex-start', animation: 'coachEntrance 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both' }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem' }}>
             <div style={{
                 width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
@@ -191,6 +192,7 @@ const MessageBubble = React.memo(({ msg, onReport, icon, colors }: MsgProps) => 
 
     return (
         <div
+            className="coach-message-bubble"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             style={{
@@ -262,7 +264,7 @@ const MessageBubble = React.memo(({ msg, onReport, icon, colors }: MsgProps) => 
 });
 
 const AuroraBackground = React.memo(({ colors }: { colors: any }) => (
-    <div aria-hidden style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
+    <div aria-hidden className="coach-aurora-background" style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
         <div style={{
             position: 'absolute', width: '70%', height: '70%', top: '-15%', left: '-15%', borderRadius: '50%',
             background: `radial-gradient(circle, ${colors.background} 0%, transparent 70%)`,
@@ -347,16 +349,20 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
 
     // Persist coach history in localStorage whenever messages change (images stripped to save space)
     useEffect(() => {
-        try {
-            const toStore = messages.slice(-MAX_STORED_MESSAGES).map(m => ({
-                ...m,
-                content: m.image && !m.content.includes(PHOTO_ATTACHMENT_NOTE)
-                    ? `${m.content}\n${PHOTO_ATTACHMENT_NOTE}`
-                    : m.content,
-                image: null,
-            }));
-            localStorage.setItem(COACH_STORAGE_KEY, JSON.stringify(toStore));
-        } catch { } // Fail silently if quota is exceeded
+        const timer = window.setTimeout(() => {
+            try {
+                const toStore = messages.slice(-MAX_STORED_MESSAGES).map(m => ({
+                    ...m,
+                    content: m.image && !m.content.includes(PHOTO_ATTACHMENT_NOTE)
+                        ? `${m.content}\n${PHOTO_ATTACHMENT_NOTE}`
+                        : m.content,
+                    image: null,
+                }));
+                localStorage.setItem(COACH_STORAGE_KEY, JSON.stringify(toStore));
+            } catch { } // Fail silently if quota is exceeded
+        }, 150);
+
+        return () => window.clearTimeout(timer);
     }, [messages, COACH_STORAGE_KEY]);
 
     const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -372,10 +378,10 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
         const trimmed = textareaRef.current?.value.trim() || '';
         if ((!trimmed && !image) || loading) return;
 
-        const cost = image ? 2 : 1;
+        const cost: 1 | 2 = image ? 2 : 1;
         if (!isPremium && credits < cost) {
             onClose();
-            setTimeout(() => onCreditsExhausted ? onCreditsExhausted() : onGoPremium && onGoPremium(), 300);
+            setTimeout(() => onCreditsExhausted ? onCreditsExhausted(cost) : onGoPremium && onGoPremium(), 300);
             return;
         }
 
@@ -409,8 +415,8 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
             }]);
 
             // Image costs 2 credits, text costs 1
-            const cost = hadImage ? 2 : 1;
-            if (!isPremium) onUpdateCredits((prev) => prev - cost);
+            const responseCost: 1 | 2 = hadImage ? 2 : 1;
+            if (!isPremium) onUpdateCredits((prev) => prev - responseCost);
         } catch (err: any) {
             console.error('Coach error:', err);
             if (err.message === 'LOGIN_REQUIRED') {
@@ -419,7 +425,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
             }
             if (err.message === 'INSUFFICIENT_CREDITS') {
                 onClose();
-                setTimeout(() => onCreditsExhausted ? onCreditsExhausted() : onGoPremium && onGoPremium(), 300);
+                setTimeout(() => onCreditsExhausted ? onCreditsExhausted(cost) : onGoPremium && onGoPremium(), 300);
                 return;
             }
             if (
@@ -530,23 +536,28 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
     return (
         <>
             <div style={{
-                position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column',
-                background: '#050505', zIndex: 100,
-                willChange: 'transform',
-            }} className="app-surface">
+                // The native screen already lives inside a fixed app shell. Using an
+                // absolute child avoids the nested fixed/100dvh layout bug in some
+                // Android WebViews while keeping the browser screen viewport-owned.
+                position: IS_NATIVE_COACH ? 'absolute' : 'fixed', inset: 0,
+                display: 'flex', flexDirection: 'column',
+                height: IS_NATIVE_COACH ? '100%' : '100dvh',
+                width: '100%', minHeight: 0, maxHeight: '100%', overflow: 'hidden',
+                background: '#050505', zIndex: 100, isolation: 'isolate',
+            }} className={`app-surface coach-screen${IS_NATIVE_COACH ? ' native-coach-screen' : ''}`}>
                 <AuroraBackground colors={currentTheme.colors} />
 
                 {/* Header */}
-                <div style={{
+                <div className="coach-header" style={{
                     flexShrink: 0, position: 'relative', zIndex: 10,
-                    paddingTop: !isPremium ? 'calc(env(safe-area-inset-top) + 44px)' : 'calc(env(safe-area-inset-top) + 0.75rem)',
+                    paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)',
                     background: 'rgba(5,5,5,0.75)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-                    animation: 'coachStaggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both',
-                    willChange: 'transform, opacity',
+                    animation: IS_NATIVE_COACH ? 'none' : 'coachStaggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both',
+                    willChange: IS_NATIVE_COACH ? 'auto' : 'transform, opacity',
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', maxWidth: '672px', margin: '0 auto' }}>
+                    <div className="coach-header-inner" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 3vw, 1rem)', width: '100%', maxWidth: '672px', margin: '0 auto', padding: '0 1rem', boxSizing: 'border-box' }}>
                         {/* Back */}
-                        <button onClick={onClose} aria-label="Go back"
+                        <button className="coach-back-button" onClick={onClose} aria-label="Go back"
                             style={{
                                 width: '36px', height: '36px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)',
                                 background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -561,7 +572,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                         </button>
 
                         {onOpenWebMenu && (
-                            <button onClick={onOpenWebMenu} aria-label="Open navigation menu"
+                            <button className="coach-menu-button" onClick={onOpenWebMenu} aria-label="Open navigation menu"
                                 style={{
                                     width: '36px', height: '36px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)',
                                     background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -575,7 +586,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                         )}
 
                         {/* Pulsing avatar */}
-                        <div style={{ position: 'relative', flexShrink: 0 }}>
+                        <div className="coach-avatar" style={{ position: 'relative', flexShrink: 0 }}>
                             <div style={{
                                 position: 'absolute', inset: '-4px', borderRadius: '50%',
                                 background: `linear-gradient(135deg, ${currentTheme.colors.primary}, ${currentTheme.colors.secondary})`,
@@ -594,7 +605,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                         </div>
 
                         {/* Identity & Dropdown */}
-                        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                        <div className="coach-identity" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                             <div style={{ fontSize: '15px', fontWeight: 900, color: 'white', letterSpacing: '-0.02em', lineHeight: 1 }}>Rizz AI</div>
                             <button
                                 onClick={() => setShowVibeDropdown(!showVibeDropdown)}
@@ -744,12 +755,12 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                 )}
 
                 {/* Messages */}
-                <div ref={scrollRef} style={{
-                    flex: 1, overflowY: 'auto', position: 'relative', zIndex: 10, padding: '1rem 1.25rem 0',
-                    animation: 'coachStaggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both',
-                    willChange: 'transform, opacity',
+                <div ref={scrollRef} className="coach-messages" style={{
+                    flex: '1 1 auto', minHeight: 0, minWidth: 0, overflowY: 'auto', position: 'relative', zIndex: 10, padding: '1rem 1rem 0',
+                    animation: IS_NATIVE_COACH ? 'none' : 'coachStaggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both',
+                    willChange: IS_NATIVE_COACH ? 'auto' : 'transform, opacity',
                 }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', maxWidth: '672px', margin: '0 auto', paddingBottom: '0.5rem' }}>
+                    <div className="coach-messages-inner" style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', width: '100%', maxWidth: '672px', margin: '0 auto', paddingBottom: '0.5rem' }}>
                         {messages.map((msg, i) => (
                             <MessageBubble
                                 key={i}
@@ -764,12 +775,12 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                 </div>
 
                 {/* Input Container Wrapper */}
-                <div style={{
+                <div className="coach-composer" style={{
                     flexShrink: 0, position: 'relative', zIndex: 10,
-                    padding: '0 0 env(safe-area-inset-bottom)',
+                    padding: '0 0 max(env(safe-area-inset-bottom, 0px), 8px)',
                     borderTop: '1px solid rgba(255,255,255,0.06)',
-                    animation: 'coachStaggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both',
-                    willChange: 'transform, opacity',
+                    animation: IS_NATIVE_COACH ? 'none' : 'coachStaggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both',
+                    willChange: IS_NATIVE_COACH ? 'auto' : 'transform, opacity',
                 }}>
 
                     {/* Quick-Tap Prompts */}
@@ -894,4 +905,4 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
     );
 };
 
-export default RizzCoach;
+export default React.memo(RizzCoach);

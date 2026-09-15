@@ -4,6 +4,9 @@ export interface BlogSection {
   heading: string;
   paragraphs: string[];
   bullets?: string[];
+  image?: string;
+  imageAlt?: string;
+  imageCaption?: string;
 }
 
 export interface BlogPost {
@@ -18,11 +21,1324 @@ export interface BlogPost {
   keywords: string[];
   image?: string;
   imageAlt?: string;
+  imageCaption?: string;
   resources?: Array<{ label: string; url: string }>;
   sections: BlogSection[];
 }
 
 export const BLOG_POSTS: BlogPost[] = [
+  {
+    slug: 'love-bombing-vs-genuine-interest',
+    title: 'Love Bombing vs Genuine Interest: How to Tell the Difference Early',
+    description: 'Learn how to tell love bombing apart from genuine interest by looking at pacing, boundaries, consistency, communication, and control while dating.',
+    excerpt: 'Genuine interest can feel exciting, but it leaves room for your boundaries, friendships, routines, and choices. Love bombing is not defined by affection alone; the warning sign is intense attention paired with pressure, entitlement, or control.',
+    date: '2026-09-14',
+    updatedAt: '2026-09-14',
+    readingTime: '12 min read',
+    category: 'Dating advice',
+    keywords: [
+      'love bombing vs genuine interest',
+      'signs of love bombing',
+      'how to tell if someone genuinely likes you',
+      'genuine interest vs love bombing',
+      'early dating red flags',
+      'love bombing in dating',
+      'is intense attention a red flag',
+      'healthy dating pace',
+      'how to spot emotional manipulation',
+      'love bombing boundaries'
+    ],
+    image: '/blog/love-bombing-vs-genuine-interest-hero.jpg',
+    imageAlt: 'Two people having a warm, unhurried conversation at an outdoor market',
+    imageCaption: 'Genuine interest can feel exciting while still leaving room for pace, boundaries, and choice.',
+    resources: [
+      { label: 'The National Domestic Violence Hotline: Signs of love bombing', url: 'https://www.thehotline.org/resources/signs-of-love-bombing/' },
+      { label: 'loveisrespect: Signs of love bombing', url: 'https://www.loveisrespect.org/resources/signs-of-love-bombing/' },
+      { label: 'The National Domestic Violence Hotline: Healthy relationships', url: 'https://www.thehotline.org/resources/healthy-relationships/' },
+      { label: 'One Love Foundation: A comprehensive guide to love bombing', url: 'https://www.joinonelove.org/learn/a-comprehensive-guide-to-love-bombing/' }
+    ],
+    sections: [
+      {
+        heading: 'Love bombing is not the same as liking someone a lot',
+        paragraphs: [
+          'A new connection can be thrilling. Someone may send thoughtful messages, plan an excellent date, compliment you often, or talk openly about what they want. Strong chemistry is not automatically a warning sign. The useful question is not, "Are they very interested?" It is, "What happens to my freedom, pace, and boundaries while they show that interest?"',
+          'Love bombing is a term used for overwhelming affection, attention, gifts, promises, or contact that can be part of manipulation or emotional abuse. Intensity alone does not prove bad intent, and one grand gesture does not tell you what a person is like. The concern is a repeated pattern in which affection creates pressure, expectation, entitlement, or control. Genuine interest invites closeness. Love bombing can make closeness feel like a debt you must repay.'
+        ],
+        bullets: [
+          'Genuine interest is enthusiastic but still respects your right to choose the pace.',
+          'Love bombing often makes ordinary boundaries feel like a test of your feelings.',
+          'The difference becomes clearer after you say no, ask for time, or keep your normal routine.'
+        ]
+      },
+      {
+        heading: '1. Watch the pace, not just the intensity',
+        paragraphs: [
+          'Early dating does not have one correct timeline. Some people know quickly that they want to keep exploring a connection, while others need more time. A healthy pace is the one that allows both people to stay informed and comfortable. Interest can be fast without being careless if the person leaves room for your answer and does not treat early excitement as a commitment.',
+          'A warning sign appears when someone tries to skip the getting-to-know-you stage. They may declare that you are their perfect match after very little real-life experience, push for exclusivity before you have discussed it, or make immediate future plans that assume you will agree. Their certainty may sound romantic, but it can also make it harder for you to notice whether their everyday behaviour is actually compatible with yours.'
+        ],
+        bullets: [
+          'Healthy: "I am enjoying this. Would you like to see each other again next week?"',
+          'Pressuring: "I know you are the one, so why are you not ready to make this official?"',
+          'Ask yourself whether the pace feels mutual or whether you are mainly trying to catch up.'
+        ]
+      },
+      {
+        heading: '2. Notice whether attention leaves room for your life',
+        paragraphs: [
+          'Genuine interest adds warmth to your life without demanding that it replace everything else. You should still be able to see friends, answer work messages, rest, exercise, study, and spend time alone. A person who likes you can miss you without treating your availability as proof of loyalty. They understand that a strong connection has to fit into two real lives, not one person abandoning theirs.',
+          'Love bombing often becomes easier to spot when attention is framed as access. Someone may want constant updates, expect instant replies, become upset when you are busy, or describe your independent plans as rejection. Sometimes the pressure is disguised as devotion: "I just want to talk all day because I care so much." The feeling may be flattering, but the effect is still a shrinking of your space.'
+        ],
+        image: '/blog/love-bombing-healthy-pace.jpg',
+        imageAlt: 'A person cooking dinner while their phone rests face down nearby',
+        imageCaption: 'A healthy connection can grow alongside your routines instead of asking you to give them up.',
+        bullets: [
+          'Your friendships and routines remain welcome rather than treated as competition.',
+          'They can wait for a reply without creating a punishment or emergency.',
+          'You feel more like yourself as the connection grows, not less like yourself.'
+        ]
+      },
+      {
+        heading: '3. Test a small boundary',
+        paragraphs: [
+          'You do not need to run a dramatic test or deliberately provoke someone. Simply state a normal preference and watch what follows. You might say that you cannot meet tonight, that you prefer to take physical intimacy slowly, or that you keep Sundays for family. A respectful person may feel disappointed, but they can accept your answer, suggest another option, and continue treating you with care.',
+          'A person using affection as leverage may respond with guilt, anger, mockery, relentless persuasion, or sudden withdrawal. They may say you are cold, accuse you of playing games, or insist that a real connection would not need limits. This response tells you something important: the issue is not whether they wanted more time with you. It is whether they believe your no is allowed to remain a no.'
+        ],
+        bullets: [
+          'State a simple limit without overexplaining or apologizing for having it.',
+          'Look for acceptance and adjustment, not a performance of hurt designed to change your mind.',
+          'A boundary is useful information about compatibility, not a challenge the other person must defeat.'
+        ]
+      },
+      {
+        heading: '4. Compare words with ordinary behaviour',
+        paragraphs: [
+          'Grand language is easy at the beginning because it has not yet been tested by ordinary life. Someone can call you exceptional, promise complete honesty, and describe a future together before you have seen how they handle a late train, a changed plan, or a difference of opinion. Genuine interest becomes credible through small, repeatable actions: they show up, communicate changes, remember what matters to you, and repair mistakes without needing a new dramatic speech.',
+          'Do not dismiss the positive words, but give them the right weight. Let behaviour accumulate before you make high-stakes decisions. If the compliments are huge while the follow-through is inconsistent, you may be responding to a story about the relationship rather than the relationship itself. This is especially important when the intensity makes you feel obligated to overlook things you would normally question.'
+        ],
+        bullets: [
+          'Look for reliable follow-through on small plans, not only impressive promises.',
+          'Notice whether an apology changes behaviour or only resets the emotional high.',
+          'Give trust in proportion to evidence rather than in proportion to chemistry.'
+        ]
+      },
+      {
+        heading: '5. Look for curiosity instead of instant certainty',
+        paragraphs: [
+          'Genuine interest is curious. The person wants to learn how you think, what you value, and what kind of relationship would work for you. They can be excited about you while accepting that they do not know you fully yet. Their questions are invitations, not an attempt to collect personal information that can later be used to pressure you.',
+          'Love bombing can sound certain before there has been enough time for real understanding. Someone may project an ideal version of you onto the connection and become frustrated when your actual preferences do not match it. If they seem more attached to the role you play in their fantasy than to your real answers, slow down. Being admired is not the same as being known.'
+        ],
+        bullets: [
+          'Healthy: they ask, listen, remember, and update their assumptions.',
+          'Concerning: they tell you who you are while ignoring what you actually say.',
+          'You should be able to correct a misunderstanding without being punished for it.'
+        ]
+      },
+      {
+        heading: '6. Notice how gifts, favours, and grand gestures are used',
+        paragraphs: [
+          'A thoughtful gift is not automatically love bombing. People express interest differently, and generosity can be sincere. Focus on the conditions attached to the gesture. Does the person give because they want to be kind, or do they later use the money, time, or effort as evidence that you owe them access, sex, loyalty, constant attention, or a faster commitment?',
+          'The size of a gift is less important than your ability to decline it freely. You should not have to accept expensive plans to prove you are interested. You should also be able to say that a gesture feels too much without becoming responsible for managing the giver\'s anger. Healthy generosity leaves both people with choice. Manipulative generosity turns kindness into a running account of debts.'
+        ],
+        bullets: [
+          'You can say no to a gift, favour, or expensive date without retaliation.',
+          'They do not keep a scorecard of everything they have done for you.',
+          'Their care is still present when the gesture is small, private, or inconvenient.'
+        ]
+      },
+      {
+        heading: '7. Pay attention to the shift after you slow things down',
+        paragraphs: [
+          'One of the clearest moments to observe is what happens when you reduce the speed. You might take longer to reply, decline a last-minute plan, ask for a weekend to yourself, or say that you want to keep dating without making promises yet. A secure connection may become less intense for a moment, but it remains respectful. The person adjusts because they want a relationship that works for both people.',
+          'In a love-bombing pattern, the attention can switch suddenly to coldness, blame, or punishment when you stop matching the desired pace. The same person who called you perfect may accuse you of wasting their time. The point is not to label them from one awkward reaction. It is to notice whether affection is consistently conditional on compliance.'
+        ],
+        bullets: [
+          'A change in pace should lead to a conversation, not a campaign to make you feel guilty.',
+          'Watch for hot-and-cold cycles that repeat after every boundary.',
+          'You are allowed to slow down without proving that your interest is real.'
+        ]
+      },
+      {
+        heading: '8. Healthy interest can handle disappointment',
+        paragraphs: [
+          'Disappointment is normal. The way someone handles it is more informative than whether they feel it. A person can wish you had stayed longer and still say, "I understand. Let us find another time." They can want reassurance without demanding that you cancel your plans. This kind of response keeps both people visible: their feelings matter, and your choice still stands.',
+          'Control often enters through the management of disappointment. The other person may turn a small no into a character judgment, repeatedly ask for explanations, or make you responsible for restoring their mood. Over time, you may start saying yes simply to avoid the reaction. That is not the same as freely choosing closeness. Notice when peace depends on you becoming smaller.'
+        ],
+        image: '/blog/love-bombing-boundaries.jpg',
+        imageAlt: 'Two adults having a calm conversation in a quiet bookstore lounge',
+        imageCaption: 'Respectful interest makes space for honest conversations when expectations and boundaries differ.',
+        bullets: [
+          'They can hear disappointment without converting it into punishment.',
+          'They ask for a future option instead of demanding access right now.',
+          'You do not have to regulate their feelings by abandoning your own decision.'
+        ]
+      },
+      {
+        heading: '9. Do not diagnose from one romantic gesture',
+        paragraphs: [
+          'Labels can help you notice a pattern, but they can also make you ignore context. A person may be naturally expressive, culturally generous, socially anxious, or simply excited after meeting someone they like. They might make an intense compliment and then respond respectfully when you say it feels fast. That single moment deserves a conversation, not an automatic verdict.',
+          'Look at the whole pattern across time and situations. Are you free to disagree? Can you keep your friends? Does the person accept a slower pace? Do they respect privacy and consent? Are promises matched by behaviour? These questions are more useful than trying to decide whether someone fits a label after one date. You can choose distance because something feels wrong even if you cannot prove intent.'
+        ],
+        bullets: [
+          'Separate an awkward moment from a repeated pattern of pressure or control.',
+          'Use your discomfort as information without needing a courtroom-level case.',
+          'You can step back from a connection that feels unsafe or exhausting.'
+        ]
+      },
+      {
+        heading: 'Questions to ask yourself after an intense start',
+        paragraphs: [
+          'After a fast or unusually emotional beginning, take a quiet moment away from the other person\'s messages. Excitement can make every interaction feel urgent, while distance helps you notice how the connection affects your body and choices. You do not need to distrust every good feeling. You do need enough space to hear your own opinion.',
+          'Write down what has actually happened rather than only what has been promised. A short note can reveal whether the relationship is becoming more mutual or whether you are mostly responding to pressure. If the connection is healthy, a pause for reflection will not destroy it.'
+        ],
+        bullets: [
+          'Do I feel energised, or do I feel anxious about keeping their attention?',
+          'Can I say no, disagree, or take time without fearing a major reaction?',
+          'Am I being known as I am, or rewarded for matching an ideal image?',
+          'Have their ordinary actions earned the level of trust they are requesting?',
+          'Are my friends, routines, privacy, and financial choices still mine?',
+          'If the intensity disappeared tomorrow, would the basic compatibility still be there?'
+        ]
+      },
+      {
+        heading: 'What to say if the attention feels overwhelming',
+        paragraphs: [
+          'You do not need a perfect speech. A clear sentence is enough. Try, "I like getting to know you, but I want to take this more slowly," or, "I am not available for constant messaging. I will reply when I have time." If gifts or future promises feel too large, say, "That is generous, but it feels like more than I am comfortable accepting right now."',
+          'Then watch what happens. A compatible person may ask what pace would feel better and give you room to answer. If the person argues with the boundary, demands reassurance, threatens to leave, or changes from intense affection to punishment, you have useful information. You are not required to keep explaining a limit to someone who is committed to misunderstanding it.'
+        ],
+        bullets: [
+          'Keep the message short, specific, and about your choice.',
+          'Do not promise a future commitment just to make the current pressure stop.',
+          'Use the communication style that feels safest, including text or a supported exit.'
+        ]
+      },
+      {
+        heading: 'When the pattern includes control or fear',
+        paragraphs: [
+          'Intense attention becomes more serious when it is paired with monitoring, isolation, threats, intimidation, coercion, financial control, pressure around sex, or repeated attempts to override your choices. You do not have to wait for the situation to become physical before taking it seriously. If you feel afraid of the person\'s reaction, prioritise safety over getting them to agree with your decision.',
+          'Tell a trusted friend what is happening, save important messages if doing so is safe, and consider contacting a qualified local relationship-abuse service for confidential guidance. The National Domestic Violence Hotline and loveisrespect provide educational resources and support options, but local services may be better placed to help with your specific location. If you are in immediate danger, contact your local emergency service. Do not confront someone alone if you believe they may retaliate.'
+        ],
+        bullets: [
+          'Control and fear matter even when the person is also affectionate or apologetic.',
+          'Choose a safe exit plan rather than trying to win an argument about the label.',
+          'Support is available, and asking for it does not require you to make a public accusation.'
+        ]
+      },
+      {
+        heading: 'Choose the pattern that respects your freedom',
+        paragraphs: [
+          'The best way to tell love bombing from genuine interest is to look past the emotional volume and study what the connection makes possible. Genuine interest gives you more information, not less. You can ask questions, keep your life, change your mind, and let trust grow at a pace you can actually sustain. The person may be excited, but they do not need to rush your consent to feel secure.',
+          'Love bombing is not defined by flowers, compliments, fast replies, or an intense first week. The warning sign is affection used alongside pressure, entitlement, boundary violations, or control. If you notice that pattern, you are allowed to step back before you have a complete explanation. A relationship worth building will not require you to trade away your judgment, privacy, friendships, or freedom in exchange for attention.'
+        ],
+        bullets: [
+          'Let consistency earn trust and let boundaries reveal compatibility.',
+          'Keep your support network and routines active while a new connection develops.',
+          'The right person can be enthusiastic about you without trying to own your time.'
+        ]
+      }
+    ]
+  },
+  {
+    slug: 'how-to-tell-if-someone-is-emotionally-available',
+    title: 'How to Tell If Someone Is Emotionally Available Before You Get Attached',
+    description: 'Learn how to tell if someone is emotionally available by looking at communication, consistency, boundaries, vulnerability, and how they handle repair while dating.',
+    excerpt: 'Emotional availability is less about constant attention and more about a person\'s capacity to communicate clearly, make room for closeness, respect boundaries, and follow through over time.',
+    date: '2026-09-13',
+    updatedAt: '2026-09-13',
+    readingTime: '11 min read',
+    category: 'Dating advice',
+    keywords: [
+      'how to tell if someone is emotionally available',
+      'signs someone is emotionally available',
+      'emotionally available partner',
+      'how to know if someone is ready for a relationship',
+      'emotional availability in dating',
+      'signs of emotional maturity in a relationship',
+      'how to spot an emotionally unavailable person',
+      'green flags when dating someone new',
+      'questions to ask about emotional availability',
+      'emotionally available vs emotionally unavailable'
+    ],
+    image: '/blog/emotionally-available-before-attachment-hero.jpg',
+    imageAlt: 'Two people having a calm, attentive conversation while getting to know each other',
+    imageCaption: 'Emotional availability shows up in consistent, respectful behaviour more than in intense early chemistry.',
+    resources: [
+      { label: 'The Gottman Institute: An introduction to emotional bids and trust', url: 'https://www.gottman.com/blog/an-introduction-to-emotional-bids-and-trust/' },
+      { label: 'American Psychological Association: How to keep your relationship healthy', url: 'https://www.apa.org/topics/healthy-relationships' },
+      { label: 'Planned Parenthood: Healthy relationships and communication', url: 'https://www.plannedparenthood.org/learn/relationships/healthy-relationships' }
+    ],
+    sections: [
+      {
+        heading: 'Emotional availability is a capacity, not constant access',
+        paragraphs: [
+          'Knowing how to tell if someone is emotionally available can save you from confusing intensity with readiness. An emotionally available person is not someone who replies instantly, shares every feeling on demand, or never needs time alone. They are someone who generally has the capacity to notice their emotions, communicate about them, make room for another person, and participate in the relationship honestly. Their availability is visible in patterns, not in one unusually deep conversation or a perfect first date.',
+          'Everyone has stressful weeks, fears, blind spots, and moments when they communicate badly. The useful question is not whether a person is flawless. It is whether they can be reachable and accountable when closeness becomes real. If you express a need, set a boundary, or mention that something hurt, do they become curious and responsive, or do they disappear, mock you, and make you regret speaking? Those moments reveal more than early chemistry does.'
+        ],
+        bullets: [
+          'Look for repeated behaviour instead of trying to decode one message or date.',
+          'Separate a temporary lack of time from a consistent lack of emotional capacity.',
+          'Notice whether closeness feels mutual, clear, and safe enough to develop.'
+        ]
+      },
+      {
+        heading: '1. They communicate with reasonable clarity',
+        paragraphs: [
+          'One of the clearest signs someone is emotionally available is that they do not make you build the entire relationship out of guesses. They can tell you when they are busy, what they are looking for, and whether their interest has changed. They may not have every answer immediately, but they do not use permanent ambiguity as a way to keep access to you without offering honesty in return. A simple message such as, "I like getting to know you, but I can only meet next week," gives you information without promising more than they can give.',
+          'Clarity does not have to sound formal or intense. It can be as ordinary as confirming plans, explaining a delay, or saying that they need a quiet evening. Emotionally available dating leaves room for two people to make informed choices. If you are always interpreting hot-and-cold behaviour, trying to earn a reply, or waiting for someone to define what they will not define, the uncertainty itself is useful information.'
+        ],
+        bullets: [
+          'They express interest without creating promises they cannot keep.',
+          'They tell you when their schedule or feelings change.',
+          'They do not punish reasonable questions about pace or intention.'
+        ]
+      },
+      {
+        heading: '2. They can name feelings and needs without turning them into weapons',
+        paragraphs: [
+          'Emotional availability includes emotional vocabulary. A person does not need to describe every feeling perfectly, but they should be able to move beyond "fine" or "nothing" when a meaningful issue is happening. They might say, "I felt overwhelmed and pulled back," "I am excited but nervous about this," or "I need a little time before we talk about it." Naming an emotion gives both people something workable. It is different from expecting a partner to guess what is happening behind silence.',
+          'Pay attention to how feelings are used. Healthy emotional honesty explains an experience; it does not force you to surrender a boundary. "I feel disappointed, can we find another time?" leaves room for your choice. "If you cared, you would cancel everything for me" turns emotion into pressure. The goal is not to find someone who never feels strongly. It is to find someone who can own their feelings without making you responsible for regulating all of them.'
+        ],
+        bullets: [
+          'They can say what they feel, even if they need time to find the words.',
+          'They ask for support directly instead of creating tests or silent punishments.',
+          'They respect the difference between sharing a feeling and controlling your response.'
+        ]
+      },
+      {
+        heading: '3. They show genuine curiosity about your inner world',
+        paragraphs: [
+          'A relationship cannot become close if one person is always the audience and the other is always the performer. An emotionally available partner wants to know how you think, what matters to you, what you are learning, and how experiences affect you. They remember details, ask follow-up questions, and allow the conversation to move away from their favourite subject. Their curiosity feels like attention, not an interrogation designed to collect personal information.',
+          'You can test this gently by sharing something with a little meaning: a difficult day, a goal you care about, or a preference that matters to you. You are not looking for a perfect response. You are looking for some combination of attention, respect, and follow-through. Do they ask what you need? Do they remember the detail later? Do they dismiss it, immediately compete with it, or turn it into a joke at your expense? Curiosity is one of the everyday ways people show that your inner world matters.'
+        ],
+        bullets: [
+          'They ask questions that go beyond appearance, status, or convenience.',
+          'They listen without immediately redirecting every topic to themselves.',
+          'They respond to small attempts at closeness with care and interest.'
+        ]
+      },
+      {
+        heading: '4. Their actions generally match their words',
+        paragraphs: [
+          'Words can create hope quickly, especially when someone speaks confidently about the future. Behaviour gives you a more reliable picture. Does the person who says they want to see you make reasonable plans? Does the person who says they value honesty tell you the truth when it is uncomfortable? Does their affection remain respectful when you say no or ask to slow down? Emotional availability is easier to trust when promises and ordinary actions line up over time.',
+          'This does not mean every plan must happen exactly as expected. People get sick, work runs late, and life changes. The important distinction is between an occasional failure followed by communication and a pattern of grand promises followed by low effort. A repair attempt matters: "I dropped the ball, I am sorry, and here is what I can realistically do" is more meaningful than a new burst of charm that never becomes dependable behaviour.'
+        ],
+        bullets: [
+          'They follow through or communicate early when they cannot.',
+          'Their effort does not disappear once they feel they have secured your attention.',
+          'They let consistent behaviour, not grand declarations, build trust.'
+        ]
+      },
+      {
+        heading: '5. They respect your boundaries and the pace of the relationship',
+        paragraphs: [
+          'A person can be affectionate, expressive, and still be emotionally unavailable if they treat your limits as obstacles. Healthy dating leaves room for both people to decide how quickly to share personal information, define the relationship, become physically intimate, or combine their lives. Someone who is ready for a relationship may want closeness, but they do not need to pressure you into proving your interest by abandoning your comfort.',
+          'Notice what happens after a small boundary. You might say that you cannot meet tonight, prefer not to discuss a private topic yet, or want to keep physical intimacy at a slower pace. A respectful person can feel disappointed without punishing you. They may ask a question, accept the answer, and decide whether the pace works for them. A person who uses guilt, anger, repeated persuasion, or withdrawal to override your no is showing a serious problem, regardless of how romantic their words sound.'
+        ],
+        bullets: [
+          'They accept a no without an argument designed to change your mind.',
+          'They ask for consent and respect privacy, time, and physical boundaries.',
+          'They can discuss different needs without turning the difference into a character attack.'
+        ]
+      },
+      {
+        heading: '6. They can handle small conflict and repair',
+        paragraphs: [
+          'You cannot assess emotional maturity only when everything is easy. Disagreement, disappointment, and miscommunication eventually appear in every connection. The useful sign is not that someone avoids all friction. It is that they can return to the issue without denying it happened. They might say, "I was defensive earlier. Can we try that conversation again?" or, "I understand why that landed badly, even though I meant it differently." This kind of repair creates room for trust to recover.',
+          'Be careful with apologies that are only emotional performances. A sincere repair identifies the behaviour, recognises the effect, and includes a reasonable change. You are also responsible for looking at your own part; emotional availability is mutual. But accountability must not become a one-person job. If every conflict ends with you apologising for having a reaction while the other person avoids responsibility, the relationship is teaching you to silence yourself rather than building safety.'
+        ],
+        bullets: [
+          'They can discuss a problem without threatening the relationship every time.',
+          'They take responsibility for their part instead of explaining why you are not allowed to be hurt.',
+          'Their behaviour changes after a meaningful repair conversation.'
+        ]
+      },
+      {
+        heading: '7. They have enough room in their life for a relationship',
+        paragraphs: [
+          'A person can genuinely like you and still not be available for the kind of relationship you want. Work, family responsibilities, health, grief, another relationship, or a major transition may leave little capacity for dating. That does not make them a bad person, and it does not make your needs excessive. It means attraction and readiness are different questions. Ask whether their actual life has room for regular contact, shared plans, and the level of consistency you need.',
+          'Look at the shape of the connection rather than accepting a vague promise that things will eventually become easier. If months pass with no space for dates, no clear movement, and no honest conversation about the limitation, you are allowed to treat the current pattern as the answer. An emotionally available person may have constraints, but they can discuss them honestly and collaborate on a realistic pace instead of asking you to wait indefinitely for potential.'
+        ],
+        bullets: [
+          'They can describe what they realistically have capacity for right now.',
+          'They make some consistent space rather than offering only last-minute access.',
+          'They do not ask you to organise your life around an undefined future.'
+        ]
+      },
+      {
+        heading: '8. They can talk about the past without being trapped in it',
+        paragraphs: [
+          'You do not need someone with a spotless relationship history. People can leave relationships with lessons, grief, regret, or unresolved feelings. A helpful sign is perspective: they can describe what happened without making every former partner a villain, and they can identify what they learned about their own choices. They do not need to disclose their entire history on the first date, but they should eventually be able to talk about the past with enough honesty to understand how it may affect the present.',
+          'Be cautious if a previous relationship occupies the emotional centre of the new one. Constant comparison, ongoing secret contact, revenge dating, or a refusal to acknowledge any personal responsibility can make it difficult for someone to meet you as you are. You are not a rehabilitation project or proof that they have finally won. A person may still be healing and date respectfully, but they must be honest about their capacity and avoid using your attachment as a substitute for processing what came before.'
+        ],
+        bullets: [
+          'They can reflect on patterns without assigning all responsibility to an ex.',
+          'They are honest about unfinished commitments or ongoing contact that affects the relationship.',
+          'They do not use you to provoke, replace, or compete with someone from their past.'
+        ]
+      },
+      {
+        heading: 'Chemistry can be real and still not mean readiness',
+        paragraphs: [
+          'Strong chemistry is not evidence that two people can build a stable relationship. You can feel unusually understood, have effortless conversation, or experience intense physical attraction with someone who cannot offer consistency. Sometimes uncertainty makes chemistry feel stronger because your attention becomes focused on winning clarity. This is why the best way to assess an emotionally available partner is to watch what happens after the exciting beginning, when ordinary effort is required.',
+          'Try asking yourself two separate questions: "Do I feel drawn to this person?" and "Do their choices support the type of relationship I want?" Both answers matter, but one cannot replace the other. A calmer connection may feel less dramatic at first while offering more honesty, safety, and mutual effort. Do not reject excitement; just make it prove itself through time and behaviour.'
+        ],
+        image: '/blog/emotional-availability-consistency.jpg',
+        imageAlt: 'Two people walking side by side and talking comfortably after a date',
+        imageCaption: 'A steady connection makes room for ordinary effort after the first rush of chemistry.',
+        bullets: [
+          'Do not treat anxiety, uncertainty, or constant pursuit as proof of a special bond.',
+          'Give attraction time to meet real-life consistency before making large emotional investments.',
+          'Choose the relationship pattern you can live with, not only the potential you can imagine.'
+        ]
+      },
+      {
+        heading: 'Questions to ask when you are getting to know someone',
+        paragraphs: [
+          'You do not need to interview someone about emotional availability. Bring one question into a natural conversation, answer it yourself, and notice whether the discussion becomes more honest. The response is only part of the evidence. Someone can learn the right language from a podcast or a previous relationship; their follow-through shows whether the language reflects a real capacity.',
+          'The goal is not to find a perfect answer or pressure someone into defining the relationship before they are ready. It is to understand whether your expectations can meet in the present. You can also answer these questions for yourself, because knowing your own needs makes it easier to recognise compatibility instead of negotiating against your own limits.'
+        ],
+        bullets: [
+          'What does a healthy relationship look like to you in everyday life?',
+          'How do you usually handle conflict when you care about someone?',
+          'What kind of pace feels comfortable as two people get closer?',
+          'How do you like to communicate when work or life becomes overwhelming?',
+          'What are you genuinely available for right now?',
+          'What have you learned from your previous relationships?'
+        ]
+      },
+      {
+        heading: 'What to do when the signs are mixed',
+        paragraphs: [
+          'Mixed signals usually become less confusing when you stop trying to average the best moments with the worst pattern. Write down what you need, what the person has consistently offered, and what you are currently hoping will change. Then name the gap without making a diagnosis: "I enjoy seeing you, but I need more reliable plans to keep dating. Is that something you can offer now?" A direct question gives the other person a fair chance to answer and gives you information you can act on.',
+          'If their answer is vague, believe the limit rather than treating it as a puzzle. You can choose a lighter connection if that genuinely works for you, or you can step back before attachment makes the cost higher. Boundaries are not a strategy for making an unavailable person chase you. They are a way to keep your choices connected to reality. A person who is emotionally available may not give you everything you want, but they will usually make it possible to understand what is and is not on the table.',
+          'Also check whether the pattern is simply a mismatch in communication style. One person may prefer frequent messages while another prefers fewer, longer conversations. Different styles can work when both people explain their needs and make reasonable adjustments. The issue is not that someone dates differently from you. The issue is whether there is enough mutual willingness to understand the difference and create a rhythm that respects both people.'
+        ],
+        image: '/blog/mixed-signals-boundaries.jpg',
+        imageAlt: 'A person calmly reflecting at a cafe table with a phone set aside',
+        imageCaption: 'A pause can create enough space to choose a clear conversation instead of chasing an uncertain signal.',
+        bullets: [
+          'State one concrete need instead of hinting and hoping it is discovered.',
+          'Judge the response by clarity and behaviour, not reassurance alone.',
+          'Step back when the relationship repeatedly asks you to accept less than you can honestly handle.'
+        ]
+      },
+      {
+        heading: 'The green flags that matter most',
+        paragraphs: [
+          'The strongest green flags are often quiet. You can ask a question without fearing punishment. You can say no without needing a courtroom defence. Plans are not perfect, but they are understandable. A vulnerable moment is met with respect instead of being stored as ammunition. When something goes wrong, both people can return to the conversation and make a realistic adjustment. This may feel less cinematic than a sudden declaration of certainty, but it creates the conditions in which closeness can grow.',
+          'Emotional availability is best judged over time and in ordinary situations. Look for enough capacity, not a fantasy of complete emotional fluency. The person you want may still be learning how to communicate, as long as they are honest about the learning and responsible for participating in it. You should not have to coach someone into basic respect, chase them for every sign of care, or abandon your needs to prove that you are easy to love.'
+        ],
+        bullets: [
+          'Clarity: You generally know where you stand and what they can offer.',
+          'Curiosity: They care about your inner world, not only your availability.',
+          'Consistency: Their ordinary actions support their words.',
+          'Boundaries: Your no, privacy, time, and pace are respected.',
+          'Repair: They can take responsibility and change behaviour after conflict.',
+          'Mutuality: You are building closeness together rather than carrying it alone.'
+        ]
+      },
+      {
+        heading: 'Choose evidence over potential',
+        paragraphs: [
+          'When you are attracted to someone, it is natural to focus on who they could become with enough time, care, or patience. But a healthy relationship has to be built with the person who is available now. Ask whether their present behaviour gives you enough honesty, space, effort, and respect to feel secure while you get to know them. If it does, keep learning each other slowly. If it does not, the answer is not always to become more understanding; sometimes it is to take the information seriously.',
+          'The right question is not, "How can I make this person open up?" It is, "Can we meet each other with enough openness to build something mutual?" Emotional availability cannot be forced, negotiated into existence, or proven by a single intense night. It is demonstrated in the small choices that let two people be honest, maintain boundaries, repair mistakes, and keep choosing each other with clear eyes.'
+        ],
+        bullets: [
+          'Let time reveal whether early promises become dependable habits.',
+          'Keep your standards connected to your actual needs, not to fear of losing the person.',
+          'Choose reciprocal emotional effort over a relationship you have to manage alone.'
+        ]
+      }
+    ]
+  },
+  {
+    slug: 'how-to-connect-emotionally-while-dating',
+    title: 'How to Connect Emotionally While Dating: 9 Ways to Build Real Closeness',
+    description: 'Learn how to connect emotionally while dating through better questions, active listening, honest sharing, consistent effort, and healthy boundaries.',
+    excerpt: 'Emotional connection is built through repeated moments of attention, honesty, safety, and shared effort. You do not have to rush intimacy to make a relationship feel meaningful.',
+    date: '2026-09-12',
+    updatedAt: '2026-09-12',
+    readingTime: '12 min read',
+    category: 'Dating advice',
+    keywords: [
+      'how to connect emotionally while dating',
+      'how to build emotional intimacy',
+      'emotional intimacy in a new relationship',
+      'how to feel closer to someone you are dating',
+      'ways to deepen a romantic connection',
+      'how to connect with someone emotionally',
+      'how to become emotionally available while dating',
+      'questions that build emotional connection',
+      'how to create emotional intimacy without rushing',
+      'signs of emotional connection while dating'
+    ],
+    image: '/blog/how-to-connect-emotionally-while-dating-editorial.svg',
+    imageAlt: 'Editorial illustration of two people building an emotional connection through shared moments and honest conversation',
+    imageCaption: 'Emotional closeness grows when curiosity, honesty, consistency, and respect are repeated by both people.',
+    resources: [
+      { label: 'The Gottman Institute: Turn toward bids for connection', url: 'https://www.gottman.com/blog/want-to-improve-your-relationship-start-paying-more-attention-to-bids/' },
+      { label: 'The Gottman Institute: Improve relationship communication', url: 'https://www.gottman.com/improve-communication-relationship/' },
+      { label: 'Planned Parenthood: How do I talk about consent?', url: 'https://www.plannedparenthood.org/learn/relationships/sexual-consent/how-do-i-talk-about-consent' }
+    ],
+    sections: [
+      {
+        heading: 'Emotional connection grows from repeated small moments',
+        paragraphs: [
+          'Learning how to connect emotionally while dating is not about forcing a deep conversation on the second date. Real closeness usually develops through ordinary moments that happen repeatedly: someone listens when you share a difficult day, remembers what matters to you, follows through on a plan, and makes it safe for you to be honest. Intensity can feel exciting, but it is not the same as intimacy. A connection becomes emotionally meaningful when care remains present after the first rush of chemistry.',
+          'You also do not have to reveal everything immediately to prove that you are emotionally available. Healthy vulnerability has a pace. Share enough to let the other person know you, notice how they handle it, and allow trust to grow before offering more. Emotional intimacy is a shared process, not a performance where one person has to confess their whole history while the other stays protected.'
+        ],
+        bullets: [
+          'Look for consistency rather than one unusually intense conversation.',
+          'Let vulnerability develop in layers as trust earns more access.',
+          'Pay attention to whether both people contribute to the connection.'
+        ]
+      },
+      {
+        heading: '1. Ask questions that invite a real answer',
+        paragraphs: [
+          'Small talk helps people get comfortable, but emotional connection needs room for personality, values, memories, and hopes to appear. Instead of asking only what someone does or where they live, ask questions that invite a story: "What has been making you feel energised lately?" or "What does a genuinely good weekend look like for you?" These questions are open enough to reveal something without demanding an intimate confession.',
+          'The best questions are curious rather than strategic. Do not run through a list to decide whether someone is relationship material before they have had a chance to be themselves. Follow the answer that interests you, share your own response, and let the conversation move naturally. Connection feels different from an interview because you are participating, not collecting evidence.'
+        ],
+        bullets: [
+          'Ask about experiences, preferences, values, and what someone is learning.',
+          'Use one thoughtful follow-up instead of stacking five questions.',
+          'Answer your own question sometimes so curiosity feels mutual.'
+        ]
+      },
+      {
+        heading: '2. Listen for meaning, not just information',
+        paragraphs: [
+          'Active listening is one of the quickest ways to make another person feel seen. It means paying attention to the feeling or meaning beneath the facts, then checking that you understood instead of immediately turning the topic back to yourself. If someone says that work has been exhausting, you might ask, "Is it the workload or the people that have been getting to you?" That small follow-up shows that you are present with their experience.',
+          'Listening does not require perfect advice. Often, a person wants understanding before solutions. You can say, "That sounds like a lot to carry," or ask, "Do you want ideas, or would it help more if I just listened?" This creates emotional safety because the other person does not have to defend their feelings or accept a solution they did not ask for.'
+        ],
+        bullets: [
+          'Reflect the feeling you hear before offering your opinion.',
+          'Remember important details and return to them later.',
+          'Do not compete with their story or make every disclosure about you.'
+        ]
+      },
+      {
+        heading: '3. Share your inner world in manageable layers',
+        paragraphs: [
+          'Emotional availability is not oversharing. It is the willingness to let someone gradually understand your thoughts, feelings, needs, and perspective. Start with something real but proportionate to the trust that exists. You might share why a hobby matters to you, what you find difficult about a current situation, or what helps you feel supported. Then notice whether the other person responds with care and curiosity.',
+          'A good rule is to offer a little more truth than surface-level conversation requires, not your most painful story on demand. If the person responds respectfully, you can continue. If they dismiss, mock, exploit, or immediately redirect your vulnerability toward themselves, slow down. Their response to a small disclosure tells you something about how safe deeper sharing may be.'
+        ],
+        bullets: [
+          'Share feelings and meaning, not only a timeline of events.',
+          'Choose details you are comfortable having remembered later.',
+          'Let trust, not pressure or chemistry alone, set the pace.'
+        ]
+      },
+      {
+        heading: '4. Talk about values before you only talk about chemistry',
+        paragraphs: [
+          'Attraction can start a relationship, but shared values help people understand whether it can work. You do not need to turn a date into a compatibility audit. Bring values into conversation through everyday topics: What does a good work-life balance look like? How do you handle conflict with friends? What kind of life are you hoping to build? What does loyalty mean to you? The answers can reveal how someone thinks, not just what they like.',
+          'Listen for compatibility without expecting identical opinions. Two people can have different interests and still connect deeply when they respect each other and make space for important needs. The more useful question is often not "Do we agree about everything?" but "Can we talk about differences without contempt, avoidance, or pressure?" Emotional intimacy needs curiosity to survive disagreement.'
+        ],
+        bullets: [
+          'Discuss values through natural stories instead of testing the other person.',
+          'Notice how they speak about people they disagree with or depend on.',
+          'Look for respect and flexibility, not a perfect list of matching answers.'
+        ]
+      },
+      {
+        heading: '5. Create shared experiences, not only endless conversation',
+        paragraphs: [
+          'Emotional closeness is built through what people do together as well as what they say. Try an activity that creates a little room for conversation: visit a market, cook a simple meal, take a walk, go to a small event, or compare favourite places in your city. Shared experiences give you new memories, inside jokes, and evidence of how you cooperate when plans change.',
+          'The activity does not need to be expensive or impressive. In fact, low-pressure plans can reveal more than a carefully staged date. Notice whether both people contribute ideas, make the other comfortable, and stay engaged when the experience is not perfect. Connection grows when you can be present together without constantly performing chemistry.'
+        ],
+        bullets: [
+          'Choose an activity that leaves some space to talk and observe each other.',
+          'Keep early plans proportionate to how well you know one another.',
+          'Treat small inconveniences as chances to collaborate, not as relationship tests.'
+        ]
+      },
+      {
+        heading: '6. Be consistent enough to create emotional safety',
+        paragraphs: [
+          'People feel closer when words and behaviour line up. You do not have to be constantly available, but you can be clear about your pace, keep reasonable promises, and communicate when plans change. A message such as "Today is packed, but I have not forgotten about you. I will call tomorrow evening" is often more reassuring than disappearing and returning with an intense explanation.',
+          'Consistency does not mean pretending to feel more than you do. It means allowing the other person to build an accurate picture of your interest and availability. If you are unsure, say that honestly. Mixed signals often create attachment to potential rather than closeness with the real person. Trust grows when both people can make choices based on information that is reasonably clear.'
+        ],
+        bullets: [
+          'Follow through on small commitments or update the person early.',
+          'Communicate a change in interest instead of keeping someone hopeful by default.',
+          'Do not confuse constant contact with dependable care.'
+        ]
+      },
+      {
+        heading: '7. Show appreciation in a specific way',
+        paragraphs: [
+          'Generic compliments can be pleasant, but specific appreciation creates a stronger emotional signal. Tell someone what you noticed and why it mattered: "I liked how you made room for everyone in that conversation," or "You remembered that I was nervous about today, and that meant a lot." This kind of appreciation helps a person feel known rather than evaluated only for appearance or charm.',
+          'Keep appreciation grounded and do not use it to create an obligation. A compliment should not be a hidden request for attention, physical access, or reassurance. Give it because it is true, then let the other person receive it in their own way. You can also appreciate effort that does not directly benefit you, such as how they care for friends or keep a commitment to themselves.'
+        ],
+        bullets: [
+          'Name the action, quality, or moment you genuinely noticed.',
+          'Balance attraction-based compliments with appreciation for character and effort.',
+          'Avoid praise that pressures someone to repeat the behaviour for your approval.'
+        ]
+      },
+      {
+        heading: '8. Make room for boundaries and a slower pace',
+        paragraphs: [
+          'Boundaries support emotional connection because people can be honest without fearing punishment. Ask before moving into a sensitive topic, accept a no without debate, and let the other person have time that is not about you. You can say, "I want to understand, but you do not have to talk about that until you are ready." Respecting a limit does not create distance; it shows that closeness with you does not require surrendering control.',
+          'You can also name your own needs without apologising for them. If you want a slower pace, more reliable plans, or less sexual conversation, say so plainly. The other person may decide that the match is not right, but that is better than building intimacy on resentment or silent self-abandonment. Consent and emotional safety are ongoing, not one-time permissions.'
+        ],
+        bullets: [
+          'Ask before assuming access to private stories, time, bodies, or devices.',
+          'Treat a boundary as information, not a rejection you need to overcome.',
+          'State what you need and what you will do if the limit is not respected.'
+        ]
+      },
+      {
+        heading: '9. Learn how to repair small moments of disconnection',
+        paragraphs: [
+          'No two people communicate perfectly. One person may misread a joke, forget a plan, or become defensive during a difficult conversation. Emotional closeness is not the absence of awkward moments; it is the ability to repair them. Start by naming what happened without exaggeration: "I think I became quiet after that comment because it landed badly for me." Then explain what would help next time and listen to their view.',
+          'A real repair includes changed behaviour, not only a polished apology. Look for accountability, curiosity, and a willingness to make a reasonable adjustment. You can accept a sincere repair without ignoring a repeated pattern. If someone keeps minimising your feelings, refuses every conversation, or uses vulnerability against you, more disclosure will not create the safety that is missing.'
+        ],
+        bullets: [
+          'Describe the specific moment instead of attacking someone\'s entire character.',
+          'Take responsibility for your part without accepting blame for everything.',
+          'Judge repair by follow-through over time, not only by emotional words.'
+        ]
+      },
+      {
+        heading: 'How to connect emotionally without forcing intimacy',
+        paragraphs: [
+          'If you want to feel closer, make one small honest move and see whether it is met. Ask a more meaningful question, share a genuine thought, suggest an experience, or name a need. Then leave room for the other person to choose their level of participation. Emotional connection cannot be extracted through constant questions, accelerated vulnerability, or a demand that someone define the relationship before they know what they feel.',
+          'You can also use a simple check after spending time together: Did I feel able to be myself? Did we both show curiosity? Did the other person respond respectfully when something was vulnerable or inconvenient? Did their actions match their words? These questions are more useful than trying to measure chemistry by message frequency or the intensity of one night.'
+        ],
+        bullets: [
+          'Make small bids for connection and notice whether they are returned.',
+          'Do not manufacture vulnerability to create a shortcut to commitment.',
+          'Let mutual effort, safety, and follow-through guide the next step.'
+        ]
+      },
+      {
+        heading: 'Signs emotional connection is developing',
+        paragraphs: [
+          'Emotional intimacy in a new relationship often feels calmer than people expect. You may notice that conversations can move from playful to serious without either person needing to perform. You remember each other\'s important details, make room for different moods, and feel comfortable saying when something does not work. There is still excitement, but you are not constantly trying to earn the next sign of interest.',
+          'The clearest sign is mutuality. Both people initiate, listen, share, repair, and respect limits. You do not have to carry the emotional work alone or persuade someone to become available. If you are consistently the only person asking deeper questions, offering support, making plans, or repairing disconnection, the issue may not be that you have failed to connect. The effort may simply not be balanced.'
+        ],
+        bullets: [
+          'You can be honest without being mocked, rushed, or punished.',
+          'Both people show curiosity about the other person\'s inner world.',
+          'Closeness feels grounded in trust and behaviour, not only in intensity.'
+        ]
+      },
+      {
+        heading: 'A practical emotional-connection checklist',
+        paragraphs: [
+          'You do not need to complete every step before a connection is real. Use this list as a direction, not a scorecard. Dating is a process of learning whether two people can build something respectful together. The aim is not to make someone attach to you. It is to become more honest about what you offer, what you need, and whether the other person can meet you with similar care.',
+          'Start with one action this week: ask a better question, listen without fixing, share a manageable truth, or make a plan that lets you experience each other in real life. If the response is warm and consistent, keep building. If it is dismissive or one-sided, accept that information early and protect your energy.'
+        ],
+        bullets: [
+          'Curiosity: Do we ask about each other beyond surface facts?',
+          'Safety: Can either person slow down, disagree, or say no?',
+          'Consistency: Do words and actions generally match?',
+          'Mutuality: Are both people contributing to closeness?',
+          'Repair: Can we address small disconnections with respect?'
+        ]
+      }
+    ]
+  },
+  {
+    slug: 'texting-boundaries-while-dating',
+    title: 'Texting Boundaries While Dating: How to Set Limits Without Sounding Rude',
+    description: 'Learn how to set healthy texting boundaries while dating, with clear examples for response times, privacy, flirting, plans, and saying no respectfully.',
+    excerpt: 'Good texting boundaries are not walls or tests. They are clear signals about your time, privacy, pace, and comfort so both people can make informed choices.',
+    date: '2026-09-11',
+    updatedAt: '2026-09-11',
+    readingTime: '11 min read',
+    category: 'Dating advice',
+    keywords: [
+      'texting boundaries while dating',
+      'how to set boundaries over text',
+      'dating boundary text examples',
+      'how to say no politely over text',
+      'healthy texting boundaries',
+      'texting expectations when dating',
+      'how to set texting boundaries',
+      'dating boundaries examples',
+      'how to communicate boundaries while dating',
+      'slow texting pace dating'
+    ],
+    image: '/blog/texting-boundaries-while-dating-editorial.svg',
+    imageAlt: 'Editorial illustration of two people setting clear and respectful texting boundaries while dating',
+    imageCaption: 'A healthy texting boundary makes your pace and comfort clear without trying to control the other person.',
+    resources: [
+      { label: 'loveisrespect: What are my boundaries?', url: 'https://www.loveisrespect.org/resources/what-are-my-boundaries/' },
+      { label: 'Planned Parenthood: How do I talk about consent?', url: 'https://www.plannedparenthood.org/learn/relationships/sexual-consent/how-do-i-talk-about-consent' },
+      { label: 'The Gottman Institute: Pay attention to bids for connection', url: 'https://www.gottman.com/blog/want-to-improve-your-relationship-start-paying-more-attention-to-bids/' }
+    ],
+    sections: [
+      {
+        heading: 'Texting boundaries are not rules for controlling someone',
+        paragraphs: [
+          'Texting boundaries while dating are simple statements about what works for you. They can cover when you are available, how quickly you usually reply, what you are comfortable discussing, how much personal information you share, and what kind of contact you want after a date. A boundary is not a demand that the other person behave exactly as you would. It is information that helps both people decide whether the connection fits.',
+          'For example, "I do not check my phone much during work, so I may reply in the evening" explains your rhythm. "You need to answer within ten minutes or I am done" tries to manage another person through pressure. The first gives context and reduces confusion. The second turns communication into a test. Healthy dating leaves room for two different schedules and preferences.'
+        ],
+        bullets: [
+          'A boundary says what you are comfortable with and what you will do if it is not respected.',
+          'It is different from a silent test, punishment, or attempt to control response times.',
+          'Clear boundaries make compatibility easier to see earlier.'
+        ]
+      },
+      {
+        heading: 'Start by deciding what you actually need',
+        paragraphs: [
+          'Before you send a boundary message, identify the situation that keeps bothering you. Are you anxious because someone expects instant replies? Do you feel rushed into sexual conversation? Are they asking for private details before trust has developed? Are plans being changed at the last minute without a proper conversation? The clearer the problem, the easier it is to write a calm message that addresses it.',
+          'You do not need a perfect set of dating rules before meeting someone. Choose the few limits that protect your time, privacy, safety, and emotional energy. Your boundaries can change as you learn more about a person. Changing your mind is allowed, and a previous yes does not remove your right to say no later. The important part is communicating the change rather than expecting the other person to guess.'
+        ],
+        bullets: [
+          'Name the behaviour, feeling, or risk that prompted the boundary.',
+          'Separate a personal preference from a non-negotiable safety limit.',
+          'Keep the first message focused on one issue instead of presenting a contract.'
+        ]
+      },
+      {
+        heading: 'Set a response-time boundary without playing games',
+        paragraphs: [
+          'People date with different schedules. Some reply throughout the day, while others prefer one focused conversation in the evening. A slow reply is not automatically disinterest, and a fast reply is not automatically care. What matters is whether the rhythm is communicated well enough that neither person has to keep guessing or monitoring the phone.',
+          'If you are not always available, say so early: "I am enjoying talking with you. I am usually offline during work, so I may reply later, but I will get back to you when I can." If you need more consistency, describe the effect and the choice you will make: "I prefer plans to be confirmed the day before. If we cannot do that, I will assume this week does not work and we can try another time." This is clearer than delaying replies to teach someone a lesson.'
+        ],
+        bullets: [
+          'Try: "I am not a constant texter, but I do like to keep plans clear."',
+          'Try: "No need to reply immediately. I usually answer when I have time to focus."',
+          'Avoid: fake delays, read-receipt tests, and rules you never communicate.'
+        ]
+      },
+      {
+        heading: 'Protect your privacy while trust is still developing',
+        paragraphs: [
+          'Dating by text can create a false sense of closeness. Someone may know your daily routine before they have earned access to your private life. You are allowed to keep your home address, workplace details, financial information, passwords, live location, and intimate photos private. A person who is genuinely interested can get to know you without demanding proof of trust on their timeline.',
+          'Use a brief answer when you do not want to share something yet: "I keep that private until I know someone better." You do not need to invent a story or apologise for the limit. If you decide to share later, do it because you feel comfortable, not because repeated asking wore you down. For a first meeting, choose a public place, tell someone you trust where you will be, and keep your own transport or exit option when possible.'
+        ],
+        bullets: [
+          'Do not share passwords, financial details, or identifying documents with a dating contact.',
+          'Avoid sending intimate content under pressure or as a condition of continued attention.',
+          'Privacy is part of a healthy pace, not evidence that you are hiding something.'
+        ]
+      },
+      {
+        heading: 'Make your boundaries around flirting and sexual topics clear',
+        paragraphs: [
+          'Flirting can be fun, but the fact that two people are dating does not mean every topic is automatically welcome. You can enjoy playful messages and still not want sexual comments, photos, voice calls, or late-night conversations. Consent and comfort apply to digital communication too. A respectful person listens when you slow the pace and does not treat hesitation as an invitation to negotiate harder.',
+          'Try being specific about the change you want: "I am happy to flirt, but I am not comfortable sending photos like that." Or: "I would rather talk about that in person after we know each other better." If the other person says they were only joking, you can still repeat the limit. Intent does not cancel impact, and you do not have to prove that your discomfort is reasonable before asking for a different tone.'
+        ],
+        bullets: [
+          'A clear no, pause, or change of subject should be accepted without guilt.',
+          'Do not use sexual access as a test of attraction or commitment.',
+          'If someone keeps pushing after a clear limit, end the exchange or block them.'
+        ]
+      },
+      {
+        heading: 'Use direct language when you do not want to make plans',
+        paragraphs: [
+          'A boundary is kinder when it is clear. If you do not want to meet yet, you can say that without leaving a false promise: "I am not ready to meet, but I am open to talking for now." If you are not interested at all, a short message is enough: "Thanks for talking, but I do not feel a romantic connection. I am going to leave it here. I wish you well." You are not responsible for making rejection painless by keeping the door half open.',
+          'If you do want to meet but need a safer pace, suggest a concrete alternative: "I would be more comfortable with a short coffee in a busy place before making evening plans." A reasonable person may have a different preference, but they can accept your choice. If they ridicule the location, pressure you to keep the plan secret, or become angry because you set a limit, treat that reaction as useful information.'
+        ],
+        bullets: [
+          'Not yet: "I would like to keep talking before we plan a date."',
+          'Different plan: "I prefer a daytime coffee for a first meeting."',
+          'No: "I am going to pass, but I appreciate the invitation."'
+        ]
+      },
+      {
+        heading: 'Set expectations for plans, cancellations, and last-minute messages',
+        paragraphs: [
+          'Texting boundaries also protect your calendar. If someone repeatedly makes vague plans, cancels shortly before meeting, or appears only when they want something, you can decide what you will accept. You do not have to keep a whole evening open for "maybe". Tell them what confirmation you need and then follow through with your own plan if it does not happen.',
+          'A useful message might be: "I would like to see you. Please confirm by Thursday evening so I know whether to keep Saturday free. If I do not hear from you, I will make other plans." This is not an ultimatum when you genuinely intend to make other plans. The boundary becomes credible because your action does not depend on winning an argument.'
+        ],
+        bullets: [
+          'Ask for a day, time, and place instead of treating vague interest as a booking.',
+          'Give one reasonable confirmation point, then release the time if it passes.',
+          'Repeated unreliability is compatibility information, not a puzzle you must solve.'
+        ]
+      },
+      {
+        heading: 'How to say no politely over text',
+        paragraphs: [
+          'Many people avoid boundaries because they think a respectful no must include a long explanation. It does not. A good message is brief, honest, and complete. You can acknowledge the invitation, state your decision, and stop there. Adding a detailed excuse often creates more openings for someone to persuade you or wait for the excuse to disappear.',
+          'Use the level of detail that feels safe. "I cannot make it tonight" is enough when you simply do not want to go. "I do not want to continue this conversation" is enough when the interaction has crossed a line. If you are worried about the person’s reaction, you do not owe them a teaching moment. Prioritise distance, platform safety tools, and support from someone you trust.'
+        ],
+        bullets: [
+          'Polite decline: "Thank you, but I am going to pass."',
+          'Slower pace: "I like talking with you, but I am not ready for that yet."',
+          'Firm stop: "I have said no. Please do not ask again."'
+        ]
+      },
+      {
+        heading: 'Respecting someone else\'s texting boundary',
+        paragraphs: [
+          'Setting boundaries is only half of healthy communication. When the other person says they are busy, does not want a topic, needs a slower pace, or changes their mind, the respectful response is to accept the information without bargaining. You can be disappointed and still behave well. A boundary is not a personal insult, and someone does not owe you access because the conversation was warm earlier.',
+          'A simple response can keep the door open without pressure: "Thanks for telling me. I understand. Let me know if and when you want to continue." If the boundary means the connection is not compatible, accept that too. Do not send a better argument, recruit friends to persuade them, or turn a no into a debate about your intentions. Care shows up in what you stop doing as much as in what you say.'
+        ],
+        bullets: [
+          'A pause is not a challenge to overcome.',
+          'Do not ask the same question in a new wording after the answer is clear.',
+          'When a limit changes the connection, accept the mismatch without punishment.'
+        ]
+      },
+      {
+        heading: 'What to do when someone ignores your boundary',
+        paragraphs: [
+          'A single misunderstanding can often be corrected. Repeatedly ignoring a clear boundary is different. If you said you do not want sexual messages and they keep sending them, or you explained that you are unavailable at work and they punish you for not replying, the issue is no longer a wording problem. You have communicated; now you can choose the level of contact that protects you.',
+          'You might repeat the limit once, then reduce contact, unmatch, block, or report the account. Keep screenshots if messages become threatening, coercive, or harassing, and tell someone you trust. Do not meet someone in person to resolve pressure that already feels unsafe online. Dating advice should never encourage you to stay available to prove that you are kind.'
+        ],
+        bullets: [
+          'Notice patterns: guilt, anger, repeated asking, threats, or punishment for saying no.',
+          'Use block and report tools when someone will not respect a clear limit.',
+          'Seek support if the messages become threatening or make you feel unsafe.'
+        ]
+      },
+      {
+        heading: 'Boundary text examples you can adapt',
+        paragraphs: [
+          'The best boundary message sounds like something you would actually say. Keep the tone warm when the situation is low-stakes, and be firmer when someone has already crossed a line. You can be direct without being cruel. The goal is not to make the other person agree with your boundary; it is to make your position clear enough that your next action is understandable.',
+          'Edit these examples for your situation rather than copying them as a performance. If the message needs a paragraph of justification to feel acceptable, shorten it. A boundary works better when it is easy to understand and easy for you to enforce.'
+        ],
+        bullets: [
+          'Availability: "I am enjoying this, but I am usually offline during the day. I will reply when I am free."',
+          'Privacy: "I do not share my address this early. We can meet somewhere public instead."',
+          'Topic: "I am not comfortable discussing that over text. Let us change the subject."',
+          'Pace: "I would like to keep getting to know each other before we make this more serious."',
+          'Reliability: "Please confirm by tomorrow. If not, I will assume the plan is off."',
+          'Ending: "This is not working for me, so I am going to stop here. Take care."'
+        ]
+      },
+      {
+        heading: 'A five-question check before you send a boundary',
+        paragraphs: [
+          'Before pressing send, ask whether the message is specific, honest, and proportionate to the situation. You do not need to sound perfectly calm to deserve a boundary, but a short pause can help you send what you mean instead of a message designed to trigger reassurance. If you are very angry or frightened, prioritise safety and distance before trying to write the perfect explanation.',
+          'Healthy boundaries make dating more straightforward. They show the other person how to communicate with you, reveal whether your needs are compatible, and keep attention from turning into access. The right person may not share every preference, but they will be able to hear a clear limit without trying to punish you for having one.'
+        ],
+        bullets: [
+          'Is this describing my limit rather than secretly testing their feelings?',
+          'Have I said what I want or do not want in plain language?',
+          'Do I know what I will do if the boundary is ignored?',
+          'Am I sharing more private detail than the situation requires?',
+          'Would I respect the same boundary if the other person sent it to me?'
+        ]
+      }
+    ]
+  },
+  {
+    slug: 'how-to-tell-if-someone-is-flirting-over-text',
+    title: 'How to Tell If Someone Is Flirting Over Text: Signs and What to Say Next',
+    description: 'Learn how to tell if someone is flirting over text, separate friendly banter from genuine interest, and respond naturally when the feeling is mutual.',
+    excerpt: 'Flirting over text is usually a pattern of personal attention, playful energy, and effort to keep the connection going. One emoji is not proof; repeated behaviour is better evidence.',
+    date: '2026-09-10',
+    updatedAt: '2026-09-10',
+    readingTime: '10 min read',
+    category: 'Texting advice',
+    keywords: [
+      'how to tell if someone is flirting over text',
+      'signs someone likes you over text',
+      'is he flirting over text',
+      'is she flirting or just being friendly',
+      'flirty text examples',
+      'how to know if someone is interested over text',
+      'signs of flirting through text',
+      'what to say when someone flirts with you over text',
+      'how to respond to flirting over text',
+      'friendly vs flirty texting'
+    ],
+    image: '/blog/how-to-tell-if-someone-is-flirting-over-text-editorial.svg',
+    imageAlt: 'Editorial illustration of a friendly text exchange becoming a clear, mutual flirtation',
+    imageCaption: 'Flirting is easier to read when personal attention, playful tone, and consistent effort appear together.',
+    resources: [
+      { label: 'The Gottman Institute: Pay attention to bids for connection', url: 'https://www.gottman.com/blog/want-to-improve-your-relationship-start-paying-more-attention-to-bids/' },
+      { label: 'The Gottman Institute: Improve relationship communication', url: 'https://www.gottman.com/improve-communication-relationship/' },
+      { label: 'loveisrespect: What are my boundaries?', url: 'https://www.loveisrespect.org/resources/what-are-my-boundaries/' }
+    ],
+    sections: [
+      {
+        heading: 'Text flirting is a pattern, not one mysterious emoji',
+        paragraphs: [
+          'It is easy to overanalyse a heart emoji, a fast reply, or the difference between "hey" and "heyyy." Text strips away voice, facial expression, and timing context, so a single message rarely proves that someone is flirting. The same person may use playful language with friends, reply warmly when they are bored, or send an affectionate emoji without intending a romantic signal.',
+          'A more reliable reading comes from several behaviours appearing together: they look for reasons to talk, remember details, ask about your life, create playful tension, and make effort to continue the exchange. None of these guarantees attraction. They do show that the conversation has personal energy worth responding to. Read the pattern before deciding what a particular line means.'
+        ],
+        bullets: [
+          'One emoji is a clue at most, not a conclusion.',
+          'Consistency and effort usually tell you more than response speed.',
+          'The best way to learn is to respond warmly and see whether the energy stays mutual.'
+        ]
+      },
+      {
+        heading: 'Sign one: they keep finding reasons to start or continue the chat',
+        paragraphs: [
+          'Someone who is interested often creates small openings to stay connected. They send you a photo of something you discussed, return to an inside joke, ask for your opinion, or message after a conversation has naturally ended. The reason does not need to be dramatic. A simple "I saw that place you mentioned" can show that you stayed on their mind and that they wanted another turn with you.',
+          'Initiation alone is not proof of flirting because some people are naturally social. Notice whether their messages are specifically about you and whether they make it easy for you to contribute. A stream of generic forwards is different from remembering your story and asking what happened next. Personal effort is the meaningful part.'
+        ],
+        bullets: [
+          'They bring back a detail instead of sending only generic check-ins.',
+          'They start conversations even when they do not need information from you.',
+          'They give the chat a reason to continue without making you do all the work.'
+        ]
+      },
+      {
+        heading: 'Sign two: the teasing feels personal, warm, and easy to return',
+        paragraphs: [
+          'Playful teasing can be a form of flirting when it is affectionate, specific, and mutual. They notice your strong coffee opinion, joke about your competitive streak, or challenge your music choice in a way that invites you to tease them back. The tone creates a small shared world rather than making you feel embarrassed or tested.',
+          'The difference between flirting and being mean is important. Good teasing leaves both people with room to laugh and change direction. Insults about your body, identity, boundaries, or insecurities are not romantic signals that you need to decode. If a joke makes you uncomfortable, you do not need to reward it because the person may be interested.'
+        ],
+        bullets: [
+          'Good teasing is specific and gives you a comfortable way to play back.',
+          'A flirtatious joke should create warmth, not make you defend yourself.',
+          'Interest never excuses disrespect or pressure.'
+        ]
+      },
+      {
+        heading: 'Sign three: they ask questions that go beyond polite small talk',
+        paragraphs: [
+          'Friendly conversation can include questions, but flirting often adds a little more personal curiosity. They ask what makes you laugh, what your ideal weekend looks like, what you are looking forward to, or what kind of date you actually enjoy. They are not merely collecting facts. They are trying to understand your personality and imagine how the two of you might get along.',
+          'Look at whether they answer their own questions too. Genuine curiosity usually feels like an exchange, not an interrogation. If they ask what your comfort meal is and then tell you theirs, they are giving you a way to know them back. That balance matters more than the exact subject of the question.'
+        ],
+        bullets: [
+          'They ask about preferences, stories, and personality rather than only logistics.',
+          'They remember your answer and use it later.',
+          'They share something about themselves instead of making you perform all the vulnerability.'
+        ]
+      },
+      {
+        heading: 'Sign four: they notice details and bring them back later',
+        paragraphs: [
+          'Remembering a detail does not automatically mean romance, but it is a strong sign of attention. They ask how your interview went, remember the name of your favourite band, or refer to the story you told during your first conversation. That kind of callback shows that your messages were not just background noise to them.',
+          'Do not expect perfect memory. People forget details, especially in busy chats. Look for a repeated willingness to pay attention. If they consistently remember the small things and use them to create another playful or personal exchange, that is more meaningful than a single compliment copied into a dozen conversations.'
+        ],
+        bullets: [
+          'They follow up on something that mattered to you.',
+          'They use your details to make the next conversation more personal.',
+          'Attention is a better signal than a constant online status.'
+        ]
+      },
+      {
+        heading: 'Sign five: the conversation has a little tension, not only information',
+        paragraphs: [
+          'Flirting often adds a playful question beneath the literal one. They may ask who would win in a debate, suggest that you owe them a rematch, or say that you seem like trouble in a clearly lighthearted way. The exchange feels a little more charged because it creates room for imagination and personality rather than only exchanging updates.',
+          'Healthy tension still leaves you comfortable. It does not rely on sexual assumptions, jealousy, guilt, or pressure to prove attraction. If the person jumps from a normal conversation to explicit comments that you did not invite, that is not evidence of better flirting. It is a boundary question. You can slow the conversation down or say clearly what you are not comfortable with.'
+        ],
+        bullets: [
+          'Playful tension invites imagination without demanding a performance.',
+          'The tone should feel fun to both people, not confusing or unsafe.',
+          'You can enjoy flirting and still set a limit on topics or pace.'
+        ]
+      },
+      {
+        heading: 'Sign six: they match your energy and make the exchange easy',
+        paragraphs: [
+          'When interest is mutual, the conversation often feels easier to sustain. They respond to your humour, add their own detail, and give you enough to work with. If you send a playful message, they may play back. If you shift to a serious topic, they can meet you there. Matching does not mean copying your exact wording or replying instantly. It means participating in the tone rather than leaving you to create it alone.',
+          'This is why effort matters more than a checklist of phrases. Someone can use flirty words and still be inconsistent, dismissive, or uninterested in your actual life. Another person can be shy with compliments while showing clear care through questions, callbacks, and plans. Read the whole exchange instead of waiting for one perfect line.'
+        ],
+        bullets: [
+          'They build on what you send instead of only reacting to it.',
+          'Their effort remains present across more than one conversation.',
+          'A shy style can still be interested when follow-through is consistent.'
+        ]
+      },
+      {
+        heading: 'Sign seven: they create a path toward spending time together',
+        paragraphs: [
+          'Text flirting becomes easier to interpret when it eventually points toward a real next step. They mention a place you should try together, ask when you are free, or help turn a shared interest into a simple plan. A person can be playful over text without wanting a date, so look for follow-through instead of treating suggestive jokes as a promise.',
+          'If you are enjoying the exchange, make one clear invitation rather than waiting for an indefinite collection of hints. "You have convinced me that your favourite cafe is worth testing. Free Saturday?" gives the other person a comfortable way to say yes, suggest another time, or decline. The guide on asking someone out over text covers how to make that move without making it heavy.'
+        ],
+        bullets: [
+          'Interest becomes more useful when it can lead to a clear, mutual plan.',
+          'Look for a real day or an alternative, not only "we should do that sometime."',
+          'A date invitation is a way to get clarity, not a test you must pass.'
+        ]
+      },
+      {
+        heading: 'Friendly or flirty? Compare warmth with initiative',
+        paragraphs: [
+          'Friendly texting can be warm, funny, and frequent. Flirting is more likely when that warmth comes with selective attention and initiative directed toward you. Ask: do they talk to everyone this way, or do they remember details about you? Do they keep the conversation going because they enjoy your company, or only because they need a favour? Do they respond when you make a small opening, or do they leave you to carry the energy?',
+          'You may not be able to tell from the outside, and that is normal. Rather than trying to solve their feelings privately, offer a small signal of interest and watch the response. A warm reply that adds effort gives you something to build on. A vague or uncomfortable reaction gives you useful information without requiring a dramatic confession.'
+        ],
+        bullets: [
+          'Compare their behaviour with their normal communication style when you can.',
+          'Notice selective attention and follow-through, not only affectionate language.',
+          'A small honest signal is usually safer than an elaborate interpretation.'
+        ]
+      },
+      {
+        heading: 'What to say when the flirting feels mutual',
+        paragraphs: [
+          'You do not need to match every flirt with a bigger flirt. The easiest response is to acknowledge the energy and add something real. A light tease, a specific compliment, or a clear invitation can all work. Keep the message close to your personality so that the conversation still feels like you when it moves offline.',
+          'Try a reply that gives the other person room to choose how far to take it. "You are making a strong case for yourself. What is your best argument in person?" is playful without being explicit. "I like this energy. Want to continue it over coffee this week?" is more direct. If you want more examples for a particular tone, use Rizz Master as a drafting tool and edit the result before sending.'
+        ],
+        bullets: [
+          'Playful: "You are getting dangerously confident about that opinion."',
+          'Warm: "I like talking with you. You make an ordinary day more fun."',
+          'Direct: "This feels a little flirty in the best way. Want to meet this week?"'
+        ]
+      },
+      {
+        heading: 'What to say when you are not sure',
+        paragraphs: [
+          'Uncertainty does not require a high-stakes question such as "Do you like me?" You can gently name what you are noticing and see whether they clarify. "I cannot tell if you are teasing me or flirting with me" can be playful when the conversation already feels comfortable. If you want less ambiguity, ask a direct but low-pressure question: "Are you interested in getting to know each other as more than friends?"',
+          'Be ready for an answer that is different from the one you hoped for. Clarity is useful even when it closes a possibility. If the person gives mixed signals and avoids a simple answer, stop trying to extract certainty from more texting. Consistent behaviour and a willingness to be clear are part of interest too.'
+        ],
+        bullets: [
+          'Use curiosity instead of accusation when naming the tone.',
+          'Ask directly when ambiguity is starting to cost you peace of mind.',
+          'Do not keep escalating messages to force a clearer answer.'
+        ]
+      },
+      {
+        heading: 'If you do not want the flirting',
+        paragraphs: [
+          'You do not owe flirtation in return because someone is being charming. If you want to keep the relationship friendly, make the tone clear without overexplaining: "You are fun to talk to, but I want to keep this platonic." If a message crosses a boundary, you can be more direct: "I am not comfortable with that kind of comment. Please stop."',
+          'A respectful person may be disappointed, but they will not make you manage their reaction or keep negotiating your boundary. If they continue after you have been clear, reduce contact, block them, or use the safety tools available on the platform. The right response to unwanted attention is not a better explanation.'
+        ],
+        bullets: [
+          'Clear: say what you do and do not want.',
+          'Brief: you do not need to build a case for your boundary.',
+          'Firm: repeated pressure is a reason to end the conversation, not to soften your no.'
+        ]
+      },
+      {
+        heading: 'A simple flirting-over-text checklist',
+        paragraphs: [
+          'Before you decide that someone is flirting, look for a combination of personal attention, playful warmth, consistent effort, and a willingness to move the connection forward. Then ask what you want. You may want to flirt back, suggest a date, keep things friendly, or simply enjoy the conversation without assigning it a label yet.',
+          'Texting is a useful place to notice interest, but it is not a mind-reading tool. Send one honest signal, leave room for the other person to respond, and let their pattern guide your next move. The best flirtation feels mutual, specific, and easy to stop when either person wants to slow down.'
+        ],
+        bullets: [
+          'Pattern: am I reading repeated behaviour rather than one message?',
+          'Mutuality: are both people adding warmth and effort?',
+          'Clarity: have I communicated what I want when it matters?',
+          'Respect: can either person slow down or say no without pressure?'
+        ]
+      }
+    ]
+  },
+  {
+    slug: 'texting-mistakes-new-conversation-feel-forced',
+    title: '7 Texting Mistakes That Make a New Conversation Feel Forced',
+    description: 'Learn why a new texting conversation feels forced, which common texting mistakes drain the energy, and what to say instead to keep things natural.',
+    excerpt: 'Natural texting is not about performing constant chemistry. It comes from sharing real details, leaving room for a reply, and matching the effort that is actually there.',
+    date: '2026-09-09',
+    updatedAt: '2026-09-09',
+    readingTime: '9 min read',
+    category: 'Texting advice',
+    keywords: [
+      'texting mistakes when dating',
+      'how to stop forcing a conversation',
+      'why does texting feel forced',
+      'how to make texting feel natural',
+      'new conversation feels awkward over text',
+      'how to keep a new text conversation going',
+      'texting mistakes with a new crush',
+      'how to avoid awkward texting',
+      'what to say when texting feels forced',
+      'how to have a natural conversation over text'
+    ],
+    image: '/blog/texting-mistakes-new-conversation-feel-forced-editorial.svg',
+    imageAlt: 'Editorial illustration of a new text conversation becoming easier when both people share the effort',
+    imageCaption: 'A natural conversation needs room for both people to contribute; more messages cannot create mutual interest by themselves.',
+    resources: [
+      { label: 'The Gottman Institute: Pay attention to bids for connection', url: 'https://www.gottman.com/blog/want-to-improve-your-relationship-start-paying-more-attention-to-bids/' },
+      { label: 'The Gottman Institute: Improve relationship communication', url: 'https://www.gottman.com/improve-communication-relationship/' },
+      { label: 'loveisrespect: How can I communicate better?', url: 'https://www.loveisrespect.org/pdf/How_Can_I_Communicate_Better.pdf' }
+    ],
+    sections: [
+      {
+        heading: 'Why a new texting conversation starts to feel forced',
+        paragraphs: [
+          'A new conversation usually feels forced when one or both people are trying to create a result instead of responding to what is actually happening. You may be searching for the perfect opener, filling every pause, or turning each reply into a test of whether the other person is interested. That pressure changes the tone. Instead of two people discovering whether they enjoy talking, the chat becomes a performance with an invisible score.',
+          'The fix is not to become less interested or pretend to be unavailable. It is to make the conversation easier to participate in. Share something specific, ask one question with a point of view, and leave enough space for the other person to add something. A good text opens a door; it does not drag someone through it.'
+        ],
+        bullets: [
+          'Natural texting is responsive, not perfectly scripted.',
+          'One clear opening is more useful than a stream of increasingly clever messages.',
+          'The other person needs room to show interest without being coached into it.'
+        ]
+      },
+      {
+        heading: 'Mistake one: starting with generic messages that give nowhere to go',
+        paragraphs: [
+          'A plain "hey" is not wrong, but it puts all the work of creating a conversation on the next message. The same is true of "how are you?" when there is no context around it. The other person has to invent a topic, and if they are also unsure what you want, the exchange can become a loop of polite answers before it has a chance to develop.',
+          'A better opener gives the message a reason to exist. Refer to a detail from their profile, a moment you shared, or something you already discussed. "You mentioned you are trying every ramen place in town. Which one is winning so far?" is easier to answer because it is personal, specific, and connected to a real interest. You can find more examples in the guide about what to text after getting a new number.'
+        ],
+        bullets: [
+          'Generic: "What is up?"',
+          'Specific: "You said the new cafe is overrated. What should I order there to test your theory?"',
+          'The goal is not a dazzling line. It is a clear reason to reply.'
+        ]
+      },
+      {
+        heading: 'Mistake two: stacking questions until it feels like an interview',
+        paragraphs: [
+          'Questions show curiosity, but a chain of questions can make the other person feel examined. You ask where they are from, what they do, what they like, where they travel, and what they are doing this weekend without offering much about yourself. Even if every question is friendly, the rhythm becomes answer, answer, answer. There is no shared material for the conversation to build on.',
+          'Use a simple exchange pattern instead: ask, respond, and add. If they tell you they like early morning runs, answer with your own relationship to mornings and then ask one natural follow-up. For example: "I respect the discipline, although I am more reliable after coffee. Do you run for the quiet or the training?" That feels like a conversation because your question comes with a little of you attached to it.'
+        ],
+        bullets: [
+          'Share your own answer before asking the next question.',
+          'Choose one interesting thread instead of trying to cover their entire biography.',
+          'Curiosity works better when it feels mutual rather than investigative.'
+        ]
+      },
+      {
+        heading: 'Mistake three: trying too hard to be funny or flirty',
+        paragraphs: [
+          'Humor can make a new conversation warm, but constant performance makes it difficult for the other person to participate. You send a joke after every answer, turn ordinary details into a bit, or keep escalating the flirting because you are worried that a calm message will look boring. The other person may laugh and still have no idea how to talk to you beyond reacting to your next line.',
+          'Let the tone breathe. Use one playful observation, then follow it with something real. If they mention a chaotic family dinner, you can tease the situation and ask what actually happened. If they respond seriously, meet that tone instead of forcing the joke. A good pickup line is only the beginning; the follow-up should make the person feel seen rather than cast as your audience.'
+        ],
+        bullets: [
+          'Use humor to create an opening, not to occupy every turn.',
+          'Match their tone instead of escalating automatically.',
+          'A sincere question after a joke often creates more chemistry than another joke.'
+        ]
+      },
+      {
+        heading: 'Mistake four: sending long explanations before there is enough rapport',
+        paragraphs: [
+          'Long messages can be thoughtful, but early in a conversation they often create pressure. You explain why you took so long to reply, apologise for a joke, give a full backstory to a simple opinion, or send a paragraph because their answer was short. The message asks the other person to process more emotional and conversational weight than the relationship has earned yet.',
+          'Before sending, remove the parts that are only protecting you from being misunderstood. Keep the detail that makes the message interesting and let the other person ask for the rest. If you need three paragraphs to make a simple invitation feel safe, the invitation may be too vague. Clear and warm usually sounds more confident than heavily defended.'
+        ],
+        bullets: [
+          'Keep early messages easy to read and easy to answer.',
+          'Do not apologise for having a normal opinion or taking a reasonable amount of time to reply.',
+          'Let a good detail create the next question instead of explaining everything at once.'
+        ]
+      },
+      {
+        heading: 'Mistake five: replying without giving the conversation a new hook',
+        paragraphs: [
+          'A conversation can stall even when both people are interested because each reply closes the previous topic. They say they had a busy day, you say you did too, and then both people wait for someone else to invent the next subject. The problem is not necessarily a lack of chemistry. The messages simply do not give the exchange anything to grab.',
+          'When you reply, add one small hook: a detail, a preference, a recommendation request, or a playful disagreement. Instead of "Same, work was exhausting," try "Same, but I was rescued by an unnecessarily good sandwich. What is your reliable bad-day meal?" The question is optional; the point is to give the other person a piece of material they can use.'
+        ],
+        bullets: [
+          'Answer the message and add one detail that can be picked up.',
+          'A hook can be a story, opinion, choice, or specific recommendation request.',
+          'Do not add five hooks at once and make the other person choose an assignment.'
+        ]
+      },
+      {
+        heading: 'Mistake six: treating every pause as an emergency',
+        paragraphs: [
+          'A pause is part of texting. People work, sleep, travel, lose notifications, and reach the natural end of a conversation. When you fill every quiet moment with a meme, a second question, or a message asking whether they are bored, the chat begins to feel like it has attendance requirements. That pressure can make a willing person pull back instead of bringing them closer.',
+          'Give the last message room to work. If the conversation ended naturally, return later with a fresh reason to text rather than a complaint about the gap. If they have not replied to a clear question, one calm follow-up is enough. The advice in our guide to what to text when they stop replying can help you choose between a reasonable check-in and chasing silence.'
+        ],
+        bullets: [
+          'Do not measure interest by response speed alone.',
+          'Avoid sending a message only to reduce your own anxiety for a few minutes.',
+          'A healthy conversation can pause without needing a rescue operation.'
+        ]
+      },
+      {
+        heading: 'Mistake seven: ignoring the effort pattern',
+        paragraphs: [
+          'You can use every good texting technique and still end up with a forced conversation if the other person is not contributing. Watch whether they ask anything back, volunteer details, remember what you said, or help move the conversation forward. A short reply once is normal. Repeatedly closed replies, vague plans, and no initiative are information about the current level of interest or availability.',
+          'Do not respond to low effort by doubling your own. Make one clear, low-pressure move and then leave room for their choice. If the conversation still depends on you to start, carry, and revive it, stepping back is more honest than finding a tenth new opener. Read the signs of a one-sided conversation and decide whether the connection is giving enough back to justify more attention.'
+        ],
+        bullets: [
+          'Look for shared curiosity, not identical message lengths.',
+          'Notice whether they create opportunities to know them too.',
+          'You cannot manufacture mutual interest through better wording alone.'
+        ]
+      },
+      {
+        heading: 'How to make texting feel natural again',
+        paragraphs: [
+          'If the chat has become awkward, you do not need to announce that the conversation feels awkward. Change the pattern with one honest, specific message. Refer back to something you both discussed, share a quick moment from your day, or make a simple plan. The message should be easy to answer and should not demand a review of everything that has gone wrong.',
+          'Try: "I just saw the bakery you recommended and now I am annoyed that you were right. What else on your list deserves a test?" Or: "I have enjoyed talking with you. Want to continue this over coffee this week?" Both messages create a clear direction without pretending that the connection is more developed than it is. If you want to ask someone out, keep the invitation warm, specific, and easy to decline.'
+        ],
+        bullets: [
+          'Use a real detail rather than a conversation trick.',
+          'Offer one direction: a question, a shared joke, or a simple plan.',
+          'Allow the other person to respond in their own voice.'
+        ]
+      },
+      {
+        heading: 'When to stop trying to make it work',
+        paragraphs: [
+          'Not every awkward conversation needs to be repaired. If you have made a genuine effort and the other person continues to give closed replies, avoid plans, or leave you responsible for every interaction, the kindest conclusion may be to stop pushing. This is not a judgement about their character. It is recognition that interest, timing, or communication style may not be compatible right now.',
+          'You can step back quietly or send a brief closing message if the situation calls for one: "I do not think our texting rhythm is quite there, so I am going to leave it here. Take care." Do not use a goodbye as a test designed to make them chase you. A boundary works when it reflects your decision even if no reply follows.'
+        ],
+        bullets: [
+          'Stop when the pattern stays one-sided after one clear attempt.',
+          'Do not confuse a sudden reply with a lasting change in effort.',
+          'Leaving a poor fit is better than performing harder for it.'
+        ]
+      },
+      {
+        heading: 'A natural texting checklist',
+        paragraphs: [
+          'Before you send the next message, ask whether it is connected to the actual conversation, whether it gives the other person a comfortable way to participate, and whether you have shared something about yourself too. Then read it once without trying to sound cooler, funnier, or less interested than you are. A message that sounds like you is easier to continue from.',
+          'The best texting conversations are not the ones with nonstop notifications. They are the ones where both people can be curious, relaxed, and clear about the next move. Bring something real, leave some room, and let the response show you whether there is a connection to build.'
+        ],
+        bullets: [
+          'Specific: does this message refer to something real?',
+          'Balanced: have I contributed instead of only asking?',
+          'Open: can they answer naturally without feeling pressured?',
+          'Mutual: am I responding to their effort rather than doing all the work?'
+        ]
+      }
+    ]
+  },
+  {
+    slug: 'signs-texting-conversation-becoming-one-sided',
+    title: 'Signs Your Texting Conversation Is Becoming One-Sided',
+    description: 'Is your texting conversation becoming one-sided? Learn how to spot uneven effort, tell a busy spell from fading interest, and respond without chasing.',
+    excerpt: 'A one-sided conversation is not defined by equal message lengths. It is the repeated feeling that curiosity, initiation, and follow-through only happen when you provide them.',
+    date: '2026-09-08',
+    updatedAt: '2026-09-08',
+    readingTime: '9 min read',
+    category: 'Texting advice',
+    keywords: [
+      'signs texting conversation is one sided',
+      'how to tell if a text conversation is one sided',
+      'one sided texting conversation',
+      'signs someone is losing interest over text',
+      'how to stop carrying a conversation',
+      'what to do when you always text first',
+      'text conversation feels one sided',
+      'how to know if someone is interested over text',
+      'when to stop texting someone',
+      'how to communicate uneven texting effort'
+    ],
+    image: '/blog/signs-texting-conversation-becoming-one-sided-editorial.svg',
+    imageAlt: 'Editorial illustration showing one person carrying a conversation while the other message stream fades',
+    imageCaption: 'Look for a repeated pattern of shared curiosity and follow-through, not perfect symmetry in every message.',
+    resources: [
+      { label: 'The Gottman Institute: Pay attention to bids for connection', url: 'https://www.gottman.com/blog/want-to-improve-your-relationship-start-paying-more-attention-to-bids/' },
+      { label: 'The Gottman Institute: Improve relationship communication', url: 'https://www.gottman.com/improve-communication-relationship/' },
+      { label: 'loveisrespect: What are my boundaries?', url: 'https://www.loveisrespect.org/resources/what-are-my-boundaries/' }
+    ],
+    sections: [
+      {
+        heading: 'One-sided does not mean perfectly unequal every day',
+        paragraphs: [
+          'Texting effort is not a scoreboard. One person may be busier, less comfortable initiating, or better at showing interest in person than over messages. A conversation can also be uneven for a day without being unhealthy. The useful question is not whether both people send the same number of texts. It is whether both people contribute enough curiosity and follow-through for the connection to feel mutual over time.',
+          'A conversation starts to feel one-sided when you are repeatedly opening the chat, asking the questions, introducing new topics, repairing every pause, and trying to turn vague enthusiasm into a real plan. The pattern leaves you feeling responsible for keeping the connection alive. Before you decide what it means, compare several exchanges rather than analysing one short reply.'
+        ],
+        bullets: [
+          'Unequal message length is normal; repeated one-way effort is the useful signal.',
+          'Look at initiation, curiosity, responsiveness, and follow-through together.',
+          'The goal is not a perfect 50/50 split. It is enough mutual effort to feel secure and respected.'
+        ]
+      },
+      {
+        heading: 'Sign one: you always send the first message',
+        paragraphs: [
+          'Being the first person to text is not automatically a problem. Some people are genuinely passive communicators, and an interested person can still appreciate your initiative. The concern is what happens when you stop initiating. If the conversation disappears completely until you restart it, you are learning that the current connection depends almost entirely on your effort.',
+          'Do not turn this into a silent experiment where you stop texting to punish them or measure the exact number of hours before they notice. Simply stop over-functioning for a little while and return to your own routine. If they want contact, they have room to create it. If they do not, the quiet gives you information that another clever opener probably would not.'
+        ],
+        bullets: [
+          'Notice whether they ever begin a conversation without needing a prompt.',
+          'Do not keep initiating just to prevent the chat from disappearing.',
+          'A pause is data, not a challenge to solve with more messages.'
+        ]
+      },
+      {
+        heading: 'Sign two: their replies acknowledge you but do not build anything',
+        paragraphs: [
+          'A reply can be polite without being engaged. Someone may answer your question, react to your joke, or send a quick emoji while giving you no new detail, opinion, or opening. One short reply is easy to explain. A repeated pattern of acknowledgements that close the conversation suggests they are responding to contact rather than actively creating a connection.',
+          'Compare the exchange with the effort you are putting in. If you send a thoughtful story and receive "nice" or "haha" with no follow-up, do not compensate by writing a longer story or asking three more questions. Give them one natural opening and see whether they choose to add something of their own.'
+        ],
+        bullets: [
+          'A response is not the same as participation.',
+          'Look for added detail, a question, a callback, or a clear next step.',
+          'Do not try to earn curiosity by becoming more entertaining on demand.'
+        ]
+      },
+      {
+        heading: 'Sign three: every exchange starts to feel like an interview',
+        paragraphs: [
+          'Healthy early texting often includes questions, but it should not feel like you are conducting an interview while the other person supplies short answers. You ask about their day, interests, weekend, work, and plans; they answer but rarely ask anything back. The conversation may look active in your phone while you are doing all the work required to learn about each other.',
+          'Try sharing a detail without attaching a question. For example: "I finally tried that restaurant near my office and the dessert was better than the main course." This gives them a chance to respond with curiosity, a story, or a recommendation. If they repeatedly make you pull every detail out of them, the problem may not be that your questions are weak. They may simply not be investing at the same level.'
+        ],
+        bullets: [
+          'Offer a detail and watch whether they volunteer something in return.',
+          'Curiosity should move in both directions, even when one person is more talkative.',
+          'Do not confuse access to answers with genuine interest.'
+        ]
+      },
+      {
+        heading: 'Sign four: they do not remember or return to anything you share',
+        paragraphs: [
+          'Conversation feels more mutual when someone remembers a detail and brings it back later. They ask whether your presentation went well, follow up on the book you mentioned, or reference the joke you both enjoyed. Memory is not proof of romantic interest, but a complete absence of callbacks can make the exchange feel disposable and generic.',
+          'Look for attention, not perfect recall. Nobody remembers every detail from a busy chat. The pattern matters: do they ever show that they were listening, or does each conversation reset to the same shallow check-in? If the chat has become repetitive, make one specific callback yourself. Their response will help you distinguish a stale format from a lack of willingness to engage.'
+        ],
+        bullets: [
+          'Specific callbacks are stronger evidence of attention than constant notifications.',
+          'Give the conversation a real detail to return to instead of another generic check-in.',
+          'If substance is repeatedly ignored, stop blaming your prompts.'
+        ]
+      },
+      {
+        heading: 'Sign five: plans stay vague and you are the only one moving them forward',
+        paragraphs: [
+          'A person can enjoy texting and still not be ready or willing to meet. That becomes a one-sided pattern when they repeatedly say they would like to hang out but never choose a time, suggest an alternative, or help turn the idea into a plan. Enthusiasm without follow-through keeps you emotionally invested in a possibility that has no practical shape.',
+          'Make one clear invitation connected to the conversation. Offer a simple activity and a real day: "You convinced me that bakery is worth trying. Want to go Saturday afternoon?" Someone who is interested but busy can usually suggest another time. If you get another vague answer, treat it as a no for now rather than keeping the plan open indefinitely.'
+        ],
+        bullets: [
+          'A clear invitation creates information; repeated vague hints create more waiting.',
+          'Look for an alternative when their schedule does not work.',
+          'Do not reserve your time for a plan that has never been confirmed.'
+        ]
+      },
+      {
+        heading: 'Sign six: you are constantly repairing the conversation',
+        paragraphs: [
+          'Every conversation has quiet patches. The warning sign is feeling that you must rescue each one. You send a meme after a short reply, change the topic when they do not respond, apologise for being boring, and draft a new opener before they have shown any interest in continuing. This turns texting into a maintenance job instead of a shared activity.',
+          'Pause before you repair the next gap. Ask whether there is an actual message that needs a response or whether you are trying to make the silence less uncomfortable for yourself. If there is no clear next step, you are allowed to let the exchange end. A conversation that only survives through your constant intervention is already telling you something.'
+        ],
+        bullets: [
+          'Do not send a new message just to relieve a few minutes of anxiety.',
+          'Let natural endings happen without treating them as emergencies.',
+          'You can be warm and interested without becoming the conversation manager.'
+        ]
+      },
+      {
+        heading: 'Busy, shy, or losing interest? Use the whole pattern',
+        paragraphs: [
+          'Texting alone cannot tell you exactly why someone is quieter. A busy person may reply slowly but still ask thoughtful questions, remember details, and suggest another time. A shy person may rarely initiate but respond warmly and become more expressive when the pressure is low. Someone losing interest may remain polite while consistently reducing effort and avoiding any clear next step.',
+          'Do not diagnose their intentions from a single response. Instead, compare warmth with action over several exchanges. You can also ask directly when the relationship is established enough for that conversation: "I have noticed I am usually starting our chats. Are you still interested in keeping this going?" Their answer matters, but their behaviour afterward matters more.'
+        ],
+        bullets: [
+          'Slow replies can still contain care, curiosity, and follow-through.',
+          'A direct question is healthier than building a theory from punctuation.',
+          'Judge the pattern after you communicate your need, not only before.'
+        ]
+      },
+      {
+        heading: 'What to text when the conversation feels one-sided',
+        paragraphs: [
+          'If you want to give the connection one fair chance, send a message that is honest and easy to answer. Avoid an accusation such as "Why do I always have to text first?" when you have not yet said what you want. A calm observation gives the other person room to be clear without forcing them to defend themselves.',
+          'Choose the version that matches your situation. If you are still getting to know each other, make a light invitation. If the pattern has continued for a while, name it directly. If you are already tired of carrying the connection, close the loop instead of writing a message designed to make them chase you.'
+        ],
+        bullets: [
+          'Light: "I have enjoyed our chats. Want to continue this over coffee this week?"',
+          'Direct: "I have noticed I am usually starting our conversations. Are you still interested in keeping in touch?"',
+          'Boundary: "I do not want to keep carrying the conversation, so I am going to step back. Wishing you well."'
+        ]
+      },
+      {
+        heading: 'When to stop texting first',
+        paragraphs: [
+          'You do not need proof that the other person is a bad person before you stop investing. If you have made one clear, respectful attempt and the pattern remains closed, vague, or absent, you can step back. Archive the chat, mute the notifications, and make plans that do not depend on a message arriving. Stopping is not a tactic to provoke them. It is a boundary around your own attention.',
+          'If they return later, look for changed effort rather than feeling relieved that they noticed you were gone. A genuine restart includes a question, an acknowledgement, or a concrete plan. A low-effort "hey" is not an obligation to resume the same one-sided dynamic. You can answer if you want to, ask for more clarity, or leave the conversation where it ended.'
+        ],
+        bullets: [
+          'Step back because the pattern does not work for you, not to create scarcity.',
+          'Give more weight to changed behaviour than to a temporary burst of attention.',
+          'A connection can be pleasant and still not be mutual enough to continue.'
+        ]
+      },
+      {
+        heading: 'A quick checklist before your next message',
+        paragraphs: [
+          'Before you send another text, look at the last several exchanges and answer honestly: who has initiated, who has asked questions, who has remembered details, and who has made plans easier? Then ask whether your next message creates a genuine opening or simply prevents the chat from going quiet. If it is the second one, waiting is probably the more useful move.',
+          'You are allowed to want consistency without demanding constant access. The healthiest texting habit is not keeping every conversation alive. It is choosing conversations where interest can be expressed freely by both people. Make one clear move, leave room for a response, and let the pattern give you the answer.'
+        ],
+        bullets: [
+          'Pattern: am I reacting to several exchanges, not one delayed reply?',
+          'Clarity: have I said what I want instead of hoping they infer it?',
+          'Self-respect: would I still feel good about sending this if there is no reply?'
+        ]
+      }
+    ]
+  },
   {
     slug: 'what-to-text-when-they-stop-replying',
     title: 'What to Text When They Stop Replying: A Calm Follow-Up Guide',
@@ -45,8 +1361,8 @@ export const BLOG_POSTS: BlogPost[] = [
       'double texting advice',
       'texting anxiety after no reply'
     ],
-    image: '/blog/what-to-text-when-they-stop-replying-hero.svg',
-    imageAlt: 'Editorial illustration of a paused phone conversation and a calm follow-up message',
+    image: '/blog/what-to-text-when-they-stop-replying-editorial.svg',
+    imageAlt: 'Editorial illustration of two message bubbles separated by a pause symbol',
     resources: [
       { label: 'The Gottman Institute: Notice bids for connection', url: 'https://www.gottman.com/blog/want-to-improve-your-relationship-start-paying-more-attention-to-bids/' },
       { label: 'The Gottman Institute: Improve communication', url: 'https://www.gottman.com/improve-communication-relationship/' },
@@ -192,6 +1508,8 @@ export const BLOG_POSTS: BlogPost[] = [
     readingTime: '7 min read',
     category: 'Texting advice',
     keywords: ['how to reply to dry texts', 'dry texting advice', 'what to text back', 'how to keep a conversation going'],
+    image: '/blog/reply-to-dry-texts-editorial.svg',
+    imageAlt: 'Editorial illustration of a low-energy text becoming a specific conversation hook',
     sections: [
       {
         heading: 'What a dry text actually means',
@@ -274,6 +1592,8 @@ export const BLOG_POSTS: BlogPost[] = [
     readingTime: '7 min read',
     category: 'Dating apps',
     keywords: ['best Tinder openers', 'Tinder openers for guys', 'what to say on Tinder', 'dating app conversation starters'],
+    image: '/blog/best-tinder-openers-for-guys-editorial.svg',
+    imageAlt: 'Editorial illustration of layered dating profile cards leading to a specific opener',
     sections: [
       {
         heading: 'Start with something you can actually see',
@@ -356,6 +1676,8 @@ export const BLOG_POSTS: BlogPost[] = [
     readingTime: '7 min read',
     category: 'Texting advice',
     keywords: ['how to reply when she says haha', 'what to say after haha', 'texting after a joke', 'playful text replies'],
+    image: '/blog/reply-when-she-says-haha-editorial.svg',
+    imageAlt: 'Editorial comic illustration of a haha reply turning into a playful prompt',
     sections: [
       {
         heading: 'Read the energy around the haha',
@@ -433,6 +1755,8 @@ export const BLOG_POSTS: BlogPost[] = [
     readingTime: '7 min read',
     category: 'Openers',
     keywords: ['funny pickup lines', 'pickup lines that work', 'funny dating app openers', 'conversation starters'],
+    image: '/blog/funny-pickup-lines-that-work-editorial.svg',
+    imageAlt: 'Editorial illustration of a playful pickup line becoming a real follow-up',
     sections: [
       {
         heading: 'Why playful lines work better than perfect lines',
@@ -510,9 +1834,11 @@ export const BLOG_POSTS: BlogPost[] = [
     readingTime: '8 min read',
     category: 'Dating profiles',
     keywords: ['dating app bio ideas for guys', 'best dating profile bio', 'funny dating bio ideas', 'how to write a dating profile'],
+    image: '/blog/best-dating-app-bio-ideas-for-guys-editorial.svg',
+    imageAlt: 'Editorial illustration of a dating profile built from specific details and an easy opening',
     sections: [
       {
-        heading: 'Give people an opening instead of a résumé',
+        heading: 'Give people an opening instead of a rÃ©sumÃ©',
         paragraphs: [
           '"I like food, travel, and having fun" is true for almost everyone, so it gives a match nowhere to begin. A dating bio works better when it includes one vivid detail: the dish you cook best, the city you would revisit tomorrow, the hobby you are oddly competitive about, or the small routine that makes your weekend feel like yours. Specific details create natural questions and help the right person recognize your personality.',
           'You do not need to list every interest. Choose two or three details that have texture and leave a little room for curiosity. "I am learning to make restaurant-level ramen and still lose at every board game" is more useful than a list of broad labels. The reader can ask about the ramen, challenge the game claim, or share their own obsession. A strong bio makes the next message obvious.'
@@ -587,6 +1913,8 @@ export const BLOG_POSTS: BlogPost[] = [
     readingTime: '7 min read',
     category: 'Dating advice',
     keywords: ['what to text after a first date', 'first date follow up text', 'text after a good date', 'how to ask for a second date'],
+    image: '/blog/what-to-text-after-a-first-date-editorial.svg',
+    imageAlt: 'Editorial illustration of a warm post-date message on a cafe table note',
     sections: [
       {
         heading: 'Send the simple version while the memory is fresh',
@@ -675,6 +2003,8 @@ export const BLOG_POSTS: BlogPost[] = [
       'texting conversation feels one sided',
       'when to stop texting someone'
     ],
+    image: '/blog/signs-texting-conversation-losing-momentum-editorial.svg',
+    imageAlt: 'Editorial illustration of a conversation signal moving from shared effort to a quiet pattern',
     resources: [
       { label: 'The Gottman Institute: Improve relationship communication', url: 'https://www.gottman.com/improve-communication-relationship/' },
       { label: 'The Gottman Institute: Pay attention to bids for connection', url: 'https://www.gottman.com/blog/want-to-improve-your-relationship-start-paying-more-attention-to-bids/' },
@@ -814,8 +2144,8 @@ export const BLOG_POSTS: BlogPost[] = [
       'what to say when asking someone out',
       'asking someone out over text examples'
     ],
-    image: '/blog/how-to-ask-someone-out-over-text-hero.svg',
-    imageAlt: 'Editorial illustration of a phone with a clear date invitation and a coffee plan',
+    image: '/blog/how-to-ask-someone-out-over-text-editorial.svg',
+    imageAlt: 'Editorial illustration of a calendar and a clear low-pressure date invitation',
     resources: [
       { label: 'The Gottman Institute: Improve relationship communication', url: 'https://www.gottman.com/improve-communication-relationship/' },
       { label: 'The Gottman Institute: Ask for what you really want', url: 'https://www.gottman.com/blog/complain-not-getting-didnt-ask-for/' },
@@ -1012,8 +2342,8 @@ export const BLOG_POSTS: BlogPost[] = [
       'how to know when to ask someone out',
       'texting before first date'
     ],
-    image: '/blog/how-long-should-you-text-before-asking-someone-out-hero.svg',
-    imageAlt: 'Editorial illustration of a phone conversation turning into a simple first-date plan',
+    image: '/blog/how-long-should-you-text-before-asking-someone-out-editorial.svg',
+    imageAlt: 'Editorial illustration of a clock and shared-effort timeline before asking for a date',
     resources: [
       { label: 'The Gottman Institute: Improve relationship communication', url: 'https://www.gottman.com/improve-communication-relationship/' },
       { label: 'The Gottman Institute: Ask for what you really want', url: 'https://www.gottman.com/blog/complain-not-getting-didnt-ask-for/' },
@@ -1186,7 +2516,204 @@ export const BLOG_POSTS: BlogPost[] = [
         ]
       }
     ]
+  },
+  {
+    slug: 'what-to-text-after-getting-someones-number',
+    title: "What to Text After Getting Someone's Number: First Message Examples",
+    description: 'Wondering what to text after getting someone\'s number? Use these natural first-message examples, timing tips, and follow-ups to start the conversation without forcing it.',
+    excerpt: 'Send a short message that identifies you, references how you met, and gives the other person an easy reason to reply. The best first text feels like a continuation, not an audition.',
+    date: '2026-09-04',
+    updatedAt: '2026-09-04',
+    readingTime: '9 min read',
+    category: 'Texting advice',
+    keywords: [
+      'what to text after getting someone\'s number',
+      'first text after getting her number',
+      'what to say after getting someone\'s number',
+      'how soon to text after getting a number',
+      'first message after meeting someone',
+      'what to text after getting a number from a girl',
+      'first text after meeting someone in person',
+      'how to start texting after getting a number',
+      'text after getting a number from a dating app',
+      'best first text examples'
+    ],
+    image: '/blog/what-to-text-after-getting-someones-number-hero.svg',
+    imageAlt: 'Editorial illustration of a new contact turning into a relaxed first text conversation',
+    resources: [
+      { label: 'The Gottman Institute: Improve relationship communication', url: 'https://www.gottman.com/improve-communication-relationship/' },
+      { label: 'loveisrespect: Dating basics and healthy boundaries', url: 'https://www.loveisrespect.org/pdf/Dating_Basics.pdf' },
+      { label: 'loveisrespect: What are my boundaries?', url: 'https://www.loveisrespect.org/resources/what-are-my-boundaries/' }
+    ],
+    sections: [
+      {
+        heading: 'The first text should continue the moment',
+        paragraphs: [
+          'Getting a number can feel like the hard part, but the first message often creates more anxiety. You may wonder whether to text immediately, wait until tomorrow, send a joke, or write something impressive. That pressure makes a simple introduction feel like a test. It does not need to be one.',
+          'The best first text after getting someone\'s number is usually short, recognisable, and connected to the moment that gave you a reason to exchange numbers. Remind them who you are, mention something you discussed, and give them an easy opening. Your aim is not to prove that you are fascinating in one message. It is to make continuing the conversation feel natural.'
+        ],
+        bullets: [
+          'Identify yourself if there is any chance they do not have your contact saved.',
+          'Reference a real detail instead of sending a generic hello.',
+          'Leave the message easy to answer without demanding instant attention.'
+        ]
+      },
+      {
+        heading: 'How soon should you text after getting a number?',
+        paragraphs: [
+          'There is no useful three-day rule. If you enjoyed meeting, texting later that day or the next day is usually reasonable. The best timing depends on how you met and what you said when you exchanged numbers. A message a few hours later can keep a good moment alive; a next-day text can feel natural when you met during a busy event or late evening.',
+          'Waiting several days to appear less interested often creates the exact uncertainty you are trying to avoid. Text when you have something genuine to say, not only when a timer tells you that you are allowed to. If you met through an app and have already been chatting, there is even less reason to invent a long pause. The conversation can simply move to the new channel.'
+        ],
+        bullets: [
+          'Same day works when you have a clear callback from meeting.',
+          'The next day works when you want to keep the message relaxed.',
+          'Do not delay only to perform a dating rule or create suspense.'
+        ]
+      },
+      {
+        heading: 'Use the three-part first-text formula',
+        paragraphs: [
+          'A reliable first message has three parts: identification, connection, and an opening. Identification tells them who is texting. Connection reminds them of the shared moment. The opening can be a question, a small opinion, or a simple continuation of the topic. You can fit all three parts into one or two sentences.',
+          'For example: "Hey, it is Alex from the bookstore. I am still thinking about your claim that the movie adaptation was better than the novel. What should I read next?" It works because the person knows who you are, remembers the interaction, and has a specific reason to respond. It is more inviting than "Hey, what is up?" without requiring a clever performance.'
+        ],
+        bullets: [
+          'Identification: make the contact easy to place.',
+          'Connection: use the detail that made the exchange memorable.',
+          'Opening: give them a comfortable way to add something.'
+        ]
+      },
+      {
+        heading: 'First text examples after meeting in person',
+        paragraphs: [
+          'When you met at a party, class, cafe, concert, or social event, use the environment as your natural context. You do not need to pretend that the exchange was more dramatic than it was. A simple reminder plus a small callback shows that you were paying attention and makes the message feel personal.',
+          'Choose an example that matches the energy of the interaction. If the conversation was calm and thoughtful, use a sincere question. If you both joked about something, bring back one light reference. Avoid turning an ordinary shared detail into an inside joke that the other person does not actually remember.'
+        ],
+        bullets: [
+          '"Hey, it is Maya from the cooking class. I tried your shortcut and it actually worked. What should I make next?"',
+          '"Good meeting you at the concert. I listened to the band you recommended and I understand the obsession now."',
+          '"It is Sam from the bookstore. I found the mystery novel you mentioned. Was the ending really that good?"',
+          '"I enjoyed talking with you last night. Did you ever settle the argument about the best late-night food?"'
+        ]
+      },
+      {
+        heading: 'What to text after getting a number from a dating app',
+        paragraphs: [
+          'Moving from a dating app to text does not require a completely new personality. You already have conversation history, so use it. Mention the topic you were discussing, answer a question you left unfinished, or suggest continuing a debate. The new channel should feel like a convenient next step rather than a reset to "hey, how are you?"',
+          'If you met through a dating app but have not talked much, keep the first message especially simple. Confirm that the number belongs to the right person, identify yourself, and ask one question connected to their profile or your short exchange. Avoid sending a long introduction that repeats information they already shared in the app.'
+        ],
+        bullets: [
+          '"Hey, it is Jordan from Hinge. I still need your answer: best comfort meal when the week goes badly?"',
+          '"Moving this conversation here as promised. Are you still defending that terrible movie ranking?"',
+          '"Hey, it is Priya from Bumble. You mentioned a great ramen place. Is it actually worth the queue?"'
+        ]
+      },
+      {
+        heading: 'Do not lead with only a compliment',
+        paragraphs: [
+          'A compliment can be welcome, but it is not always a conversation. "You are beautiful" may be true and still give the other person no clear way to respond. If you want to compliment them, connect it to something specific or pair it with a real opening. "You have a great laugh, and I am still curious about the story behind that travel photo" gives more direction than praise alone.',
+          'Specificity also lowers pressure. A message focused only on appearance can make the interaction feel like an evaluation. Mentioning humour, taste, curiosity, or a shared moment communicates that you noticed a person rather than only a profile or a face. Keep the compliment light enough that they do not need to return one.'
+        ],
+        bullets: [
+          'Use one sincere compliment rather than a string of exaggerated praise.',
+          'Connect the compliment to a question or shared detail.',
+          'Do not make the other person responsible for validating you back.'
+        ]
+      },
+      {
+        heading: 'Choose a question that is easy to answer',
+        paragraphs: [
+          'The first question should create room, not homework. Open-ended does not mean enormous. Ask about a recommendation, a choice, an opinion, or the next part of a story they already started. Questions with a little point of view are often easier to answer than a broad request to describe their entire life.',
+          'For example, "What do you do for fun?" is not wrong, but it asks the other person to invent a full answer. "You mentioned that you like weekend trips. What is the place you would happily visit twice?" gives the conversation a direction. If you need more ideas for hooks, the guide to how to reply to dry texts covers ways to make a message easier to build on.'
+        ],
+        bullets: [
+          'Ask about one detail instead of requesting a complete biography.',
+          'Offer your own small answer so the exchange does not feel like an interview.',
+          'Use a question that can lead naturally to a future plan.'
+        ]
+      },
+      {
+        heading: 'What to say when they reply warmly',
+        paragraphs: [
+          'A warm reply is an invitation to continue, not a signal that you need to send five more messages at once. Match the energy and build on what they gave you. If they answer your question with a story, respond to the story before jumping to another topic. If they ask you something, answer honestly and return the curiosity when it feels natural.',
+          'Keep the conversation balanced. You do not need to turn the first text into a complete interview or immediately ask for a date. Let a few exchanges develop, then suggest meeting when there is a shared topic and enough back-and-forth. Our guide on how long to text before asking someone out explains how to read that transition without relying on a rigid schedule.'
+        ],
+        bullets: [
+          'Respond to the detail they offered instead of ignoring it.',
+          'Share a little about yourself so the effort stays mutual.',
+          'Move toward a plan when the conversation gives you a natural bridge.'
+        ]
+      },
+      {
+        heading: 'What to do when the first reply is short',
+        paragraphs: [
+          'A short reply is not automatically a rejection. They may be working, tired, or unsure how to continue the topic. Read it alongside the timing and the earlier interaction. You can offer one more specific hook, answer your own question with a small detail, or leave the conversation open without forcing a response.',
+          'Do not compensate for a short reply with a longer performance. If you send three questions, two jokes, and a second follow-up, the other person has less room to choose their level of participation. One clear attempt is enough. If the pattern stays closed, our guide to signs a texting conversation is losing momentum can help you recognise when to stop carrying the chat.'
+        ],
+        bullets: [
+          'Give one low-pressure opportunity for the conversation to open up.',
+          'Do not interpret one short message without considering the context.',
+          'Step back when the other person repeatedly contributes very little.'
+        ]
+      },
+      {
+        heading: 'When should you suggest a date?',
+        paragraphs: [
+          'You do not need to keep a new contact in a texting phase for weeks. If the conversation is mutual and you have found a shared interest, suggest a simple plan. A short coffee, casual drink, public walk, or local event lets both people see whether the connection works beyond messages. The invitation can be direct without becoming heavy.',
+          'Try: "I have enjoyed talking with you. Want to continue this over coffee next week?" If you already discussed a place, use it: "You have convinced me that your favourite taco spot is worth testing. Free Thursday?" For more formulas and response options, read the full guide to how to ask someone out over text.'
+        ],
+        bullets: [
+          'Ask when the conversation feels shared and there is a real reason to meet.',
+          'Suggest a simple plan with a day or two instead of saying "sometime".',
+          'Let a yes, no, or vague answer give you useful information.'
+        ]
+      },
+      {
+        heading: 'What not to send after getting a number',
+        paragraphs: [
+          'Avoid opening with a message that creates pressure before any conversation has started. Do not send a sexual comment, a demand for a selfie, a complaint about response time, or a paragraph explaining how nervous you are. Do not use a fake emergency, jealousy bait, or a dramatic line designed to make the other person prove interest.',
+          'Also avoid treating the number as permission to contact someone across every platform. Use the channel they chose to share and respect the pace they set. If they stop responding, do not switch to another account or keep sending messages. Interest has to remain voluntary after the number is exchanged.'
+        ],
+        bullets: [
+          'Skip sexual pressure, guilt, and comments that reduce the person to appearance.',
+          'Do not send repeated messages because the first one is unread.',
+          'Respect the channel, pace, and boundaries the other person communicates.'
+        ]
+      },
+      {
+        heading: 'Keep the first conversation safe and respectful',
+        paragraphs: [
+          'A new number is a starting point, not a shortcut to personal access. Let the other person decide how much they want to share. Do not ask for a home address, private workplace details, or constant location updates. When you eventually meet, choose a public place and make it easy for both people to leave if the connection does not feel right.',
+          'Healthy communication includes the freedom to say no, change a plan, or take a break from texting. The loveisrespect dating basics and boundaries resources in Further Reading offer practical guidance for keeping new connections respectful. Confidence is not pushing past a limit; it is communicating clearly while accepting the answer.'
+        ],
+        bullets: [
+          'Share personal information gradually and only when it feels comfortable.',
+          'Choose a public first meeting and keep the plan proportionate to the connection.',
+          'Treat a boundary or a change of mind as information, not a challenge.'
+        ]
+      },
+      {
+        heading: 'A simple first-text checklist',
+        paragraphs: [
+          'Before you press send, check whether the message answers four questions: who are you, how do you know each other, why are you texting now, and how can they respond? If the answer is clear, the message is probably ready. Remove extra disclaimers and any line that exists only to protect you from the possibility of a no.',
+          'Then send it once and return to your day. You do not need to monitor the typing indicator or judge your worth by the speed of the reply. A good first text opens a door. The other person still gets to decide whether they want to walk through it.'
+        ],
+        bullets: [
+          'Recognisable: they know who is texting.',
+          'Personal: it refers to a real moment or detail.',
+          'Easy: there is a clear, low-pressure opening.',
+          'Respectful: it gives them room to respond at their own pace.'
+        ]
+      },
+      {
+        heading: 'Turn the real moment into a message that sounds like you',
+        paragraphs: [
+          'If you keep rewriting the first text, write down the facts first: where you met, what you talked about, the tone you want, and the question you genuinely want to ask. A reply generator can help you compare a direct, playful, or relaxed version, but the final message should stay close to your actual personality and the moment you shared.',
+          'Rizz Master can turn that context into a few send-ready options without making the message sound copied. Use it to get unstuck, then choose the line that feels honest enough to send and simple enough for the other person to answer. The strongest first text is not the cleverest one. It is the one that makes continuing feel easy.'
+        ]
+      }
+    ]
   }
 ];
 
 export const getBlogPost = (slug: string) => BLOG_POSTS.find((post) => post.slug === slug);
+
