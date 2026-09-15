@@ -2774,6 +2774,9 @@ export const BLOG_POSTS: BlogPost[] = [
           'Your previous relationship will naturally influence what you notice next. It may have taught you what you value, what hurt you, or what you do not want to repeat. That experience becomes useful when you can reflect on it without turning every date into an investigation for the same flaws. If every new person is compared with your ex, or every delayed reply feels like proof that the old pattern is returning, the past may still be driving the present.',
           'You do not have to feel neutral about your ex to date again. You do need enough distance to avoid using a new person as a stand-in. You should be able to say, "That relationship ended, and this person is different," even when a small detail brings up a memory. If you are still hoping a new date will make your ex jealous, apologise, or regret losing you, pause and let that goal be honest information.'
         ],
+        image: '/blog/ready-to-date-again-coffee.jpg',
+        imageAlt: 'Two adults having a relaxed coffee conversation while getting to know each other',
+        imageCaption: 'A new person is not a replacement for an old relationship; a low-pressure date gives both people room to notice what is actually there.',
         bullets: [
           'Reflection asks what you learned; comparison asks a new person to compete.',
           'A new date cannot deliver closure from an old relationship.',
@@ -2822,6 +2825,9 @@ export const BLOG_POSTS: BlogPost[] = [
           'Emotional readiness is only part of the question. Dating takes time, attention, travel, money, and the ability to recover from a disappointing interaction. If your schedule is already overloaded or your main goal is to escape responsibilities, adding dates may create more stress rather than more connection. You do not need unlimited availability, but you need enough space to show up consistently and keep your own life intact.',
           'A healthy beginning does not require abandoning friends, work, sleep, hobbies, or family. In fact, keeping those parts of your life active can help you notice whether a new connection fits rather than consuming every decision. Ask yourself whether you can make a simple plan, communicate if you need to reschedule, and return to your normal routine afterward. If dating immediately becomes the only source of excitement or self-worth, make the pace smaller.'
         ],
+        image: '/blog/ready-to-date-again-routine.jpg',
+        imageAlt: 'Adult leaving a creative class with a notebook and tote bag while keeping an active routine',
+        imageCaption: 'Readiness includes making room for dating without giving up the friendships, interests, and routines that keep your life grounded.',
         bullets: [
           'Start with a number of dates or conversations your week can realistically hold.',
           'Keep existing friendships and routines instead of making dating your whole identity.',
@@ -2926,4 +2932,3 @@ export const BLOG_POSTS: BlogPost[] = [
 ];
 
 export const getBlogPost = (slug: string) => BLOG_POSTS.find((post) => post.slug === slug);
-
