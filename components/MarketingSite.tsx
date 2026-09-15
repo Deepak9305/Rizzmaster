@@ -504,7 +504,8 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
   'texting-mistakes-new-conversation-feel-forced': ['You mentioned you are trying every ramen place in town. Which one is winning so far?', 'I finally tried that restaurant near my office and the dessert was better than the main course. What is your reliable bad-day meal?', 'I have enjoyed talking with you. Want to continue this over coffee this week?'],
   'how-to-ask-someone-out-over-text': ['I have enjoyed talking with you. Want to grab coffee at that place you mentioned this Saturday?', 'You have made three strong opinions about noodles, so I think you owe me a food tour. Free Thursday?', 'I like talking with you and would like to take you on a date. Are you free next week?'],
   'how-long-should-you-text-before-asking-someone-out': ['I am enjoying this conversation. Want to continue it over coffee this week?', 'You have made a strong case for that bakery. Want to test it together Saturday?', 'This has been fun. Are you free for a drink next week?'],
-  'what-to-text-after-getting-someones-number': ['Hey, it is Alex from the bookstore. What should I read next?', 'Good meeting you at the concert. I listened to the band you recommended and I understand the obsession now.', 'I enjoyed talking with you last night. Want to continue it over coffee this week?']
+  'what-to-text-after-getting-someones-number': ['Hey, it is Alex from the bookstore. What should I read next?', 'Good meeting you at the concert. I listened to the band you recommended and I understand the obsession now.', 'I enjoyed talking with you last night. Want to continue it over coffee this week?'],
+  'how-to-know-if-you-are-ready-to-date-again': ['I am enjoying getting to know people again, so I would be up for coffee next week.', 'I am taking dating slowly right now, but I would like to see you again.', 'I am not ready to date seriously yet, but I appreciate the connection and want to be honest about that.']
 };
 
 const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
@@ -523,7 +524,8 @@ const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
   'texting-mistakes-new-conversation-feel-forced': { do: 'Share one real detail, ask one natural question, and give the other person room to participate.', doNot: 'Perform constantly, stack questions, or fill every pause to prevent the chat from going quiet.' },
   'how-to-ask-someone-out-over-text': { do: 'Show interest, suggest a real plan, and make the answer easy.', doNot: 'Hide the invitation behind disclaimers, pressure, or a vague "sometime".' },
   'how-long-should-you-text-before-asking-someone-out': { do: 'Watch for shared effort, then make a clear invitation when there is a natural bridge.', doNot: 'Use a rigid day count or keep texting forever to avoid a real answer.' },
-  'what-to-text-after-getting-someones-number': { do: 'Identify yourself, mention a real connection, and give them an easy opening.', doNot: 'Lead with pressure, a generic hello, or repeated messages across platforms.' }
+  'what-to-text-after-getting-someones-number': { do: 'Identify yourself, mention a real connection, and give them an easy opening.', doNot: 'Lead with pressure, a generic hello, or repeated messages across platforms.' },
+  'how-to-know-if-you-are-ready-to-date-again': { do: 'Check your reasons, choose a pace you can sustain, and communicate honestly.', doNot: 'Use a new person as proof you have healed or ignore discomfort because you fear starting over.' }
 };
 
 const ArticleQuickAnswer: React.FC<{ post: BlogPost }> = ({ post }) => (
@@ -661,6 +663,11 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'best-tinder-openers-for-guys', label: 'Better dating app openers' },
     { slug: 'how-long-should-you-text-before-asking-someone-out', label: 'When to ask someone out' },
     { slug: 'how-to-ask-someone-out-over-text', label: 'How to ask someone out over text' }
+  ],
+  'how-to-know-if-you-are-ready-to-date-again': [
+    { slug: 'how-to-connect-emotionally-while-dating', label: 'Build emotional connection' },
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy dating boundaries' },
+    { slug: 'love-bombing-vs-genuine-interest', label: 'Tell genuine interest from intensity' }
   ]
 };
 
