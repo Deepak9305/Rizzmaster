@@ -18,6 +18,10 @@ const escapeHtml = (value = '') => String(value)
 
 const escapeAttribute = escapeHtml;
 
+const ADSENSE_SCRIPT = '<script id="rizzmaster-adsense-script" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7381421031784616" crossorigin="anonymous"></script>';
+
+const withEditorialAds = (html) => html.replace('</head>', `${ADSENSE_SCRIPT}\n</head>`);
+
 const loadTypeScriptModule = async (sourcePath) => {
   const source = await readFile(sourcePath, 'utf8');
   const transpiled = ts.transpileModule(source, {
@@ -74,6 +78,8 @@ const renderArticle = (post, posts) => {
 
 const renderBlogIndex = (posts) => `<main class="marketing-container marketing-page-padding"><div class="max-w-3xl"><p class="text-xs font-bold uppercase tracking-[0.28em] text-pink-300/80">The Rizz Master blog</p><h1 class="mt-5 text-5xl font-black tracking-[-0.04em] text-white md:text-7xl">Better texts start with a better next move.</h1><p class="mt-6 max-w-2xl text-lg leading-8 text-white/55">Practical texting and dating advice for the conversations you want to handle with a little more confidence.</p></div><div class="mt-16 grid gap-5 md:grid-cols-2">${posts.map((post) => `<article class="rounded-3xl border border-white/10 bg-white/[0.03] p-5"><a href="/blog/${escapeAttribute(post.slug)}">${post.image ? `<img src="${escapeAttribute(post.image)}" alt="${escapeAttribute(post.imageAlt || post.title)}" class="aspect-[16/9] w-full rounded-2xl object-cover">` : ''}<p class="mt-5 text-xs font-bold uppercase tracking-[0.18em] text-pink-300/80">${escapeHtml(post.category)} &bull; ${escapeHtml(post.readingTime)}</p><h2 class="mt-3 text-xl font-bold text-white">${escapeHtml(post.title)}</h2><p class="mt-3 text-sm leading-6 text-white/55">${escapeHtml(post.excerpt)}</p><span class="mt-5 inline-block text-sm font-bold text-pink-200">Read the guide -&gt;</span></a></article>`).join('')}</div></main><footer class="marketing-container border-t border-white/10 py-10 text-sm text-white/45"><a href="/landing">Rizz Master</a> <a href="/privacy" class="ml-4">Privacy</a> <a href="/terms" class="ml-4">Terms</a> <a href="/support" class="ml-4">Support</a></footer>`;
 
+const renderLanding = (posts, playStoreUrl) => `<main><section class="marketing-hero relative overflow-hidden"><div class="marketing-grid absolute inset-0 opacity-60"></div><div class="marketing-container relative grid items-center gap-16 pb-20 pt-16 md:grid-cols-[1.05fr_0.95fr] md:pb-28 md:pt-24"><div class="relative z-10 max-w-2xl"><p class="marketing-kicker mb-6 inline-flex items-center gap-2 rounded-full border border-pink-300/15 bg-pink-300/[0.06] px-3 py-2 text-[11px] font-bold uppercase tracking-[0.2em] text-pink-100/75">AI dating assistant</p><h1 class="max-w-xl text-5xl font-black leading-[0.98] tracking-[-0.06em] text-white sm:text-6xl md:text-7xl">Never run out of <span class="marketing-text-gradient">replies</span> again.</h1><p class="mt-7 max-w-xl text-lg leading-8 text-white/58 md:text-xl">Rizz Master helps you create thoughtful replies, dating bios, openers, and conversation starters when you know what you feel but not what to say.</p><div class="mt-9 flex flex-col gap-3 sm:flex-row"><a href="${escapeAttribute(playStoreUrl)}" target="_blank" rel="noreferrer" class="marketing-cta-primary inline-flex items-center justify-center rounded-2xl px-5 py-3.5 text-sm font-bold text-white">Get it on Google Play</a><a href="/blog" class="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3.5 text-sm font-bold text-white/75">Read dating advice</a></div></div><div class="marketing-card relative min-h-[280px] overflow-hidden p-6 md:min-h-[360px]"><div class="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-pink-500/20 blur-3xl"></div><p class="relative text-xs font-bold uppercase tracking-[0.22em] text-pink-200/75">A better next move</p><div class="relative mt-8 space-y-3"><div class="rounded-2xl rounded-tl-sm border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/50">They said: "haha, maybe"</div><div class="ml-8 rounded-2xl rounded-tr-sm border border-pink-300/20 bg-pink-500/[0.12] px-4 py-3 text-sm leading-6 text-white/85">Keep the maybe. What would make it a yes?</div><div class="mt-8 flex items-center gap-3 text-xs text-white/40"><span class="h-2 w-2 rounded-full bg-pink-300 shadow-[0_0_12px_rgba(244,114,182,0.9)]"></span> Pick a tone. Make it yours.</div></div></div></div></section><section class="marketing-section marketing-container"><div class="max-w-3xl"><p class="text-xs font-bold uppercase tracking-[0.28em] text-pink-300/80">For the moments that matter</p><h2 class="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl md:text-5xl">Less staring. More real conversation.</h2><p class="mt-5 text-base leading-7 text-white/55">Use a little AI support without handing over your personality. Add the situation, choose the energy, and get options you can actually send.</p></div><div class="mt-12 grid gap-4 md:grid-cols-3"><article class="marketing-card p-6"><span class="text-xs font-black tracking-[0.2em] text-pink-300/60">01</span><h3 class="mt-8 text-xl font-bold text-white">Reply with personality</h3><p class="mt-3 text-sm leading-6 text-white/50">Turn dry messages, awkward pauses, and good news into a natural next move.</p></article><article class="marketing-card p-6"><span class="text-xs font-black tracking-[0.2em] text-pink-300/60">02</span><h3 class="mt-8 text-xl font-bold text-white">Build a better profile</h3><p class="mt-3 text-sm leading-6 text-white/50">Find dating bio ideas and openers that show what makes you interesting.</p></article><article class="marketing-card p-6"><span class="text-xs font-black tracking-[0.2em] text-pink-300/60">03</span><h3 class="mt-8 text-xl font-bold text-white">Think through the situation</h3><p class="mt-3 text-sm leading-6 text-white/50">Use Rizz AI Coach to understand the vibe, set a boundary, or decide what to do next.</p></article></div></section><section class="marketing-section marketing-container"><div class="grid gap-4 rounded-[2rem] border border-white/[0.08] bg-gradient-to-br from-pink-500/[0.08] via-white/[0.02] to-purple-500/[0.07] p-6 md:grid-cols-2 md:p-10"><div><p class="text-xs font-bold uppercase tracking-[0.25em] text-pink-300/80">How it works</p><h2 class="mt-4 text-3xl font-black tracking-tight text-white">From overthinking to send-ready in three steps.</h2></div><div class="space-y-5 text-sm leading-7 text-white/55"><p><strong class="text-white">1. Add context.</strong> Paste the message, describe the date, or share what you want to say.</p><p><strong class="text-white">2. Choose your tone.</strong> Go playful, flirty, funny, direct, wholesome, or thoughtful.</p><p><strong class="text-white">3. Make the call.</strong> Use the suggestion as-is, edit it, or let it spark your own words.</p></div></div></section><section class="marketing-section marketing-container"><div class="flex flex-col gap-5 md:flex-row md:items-end md:justify-between"><div class="max-w-2xl"><p class="text-xs font-bold uppercase tracking-[0.25em] text-pink-300/80">From the blog</p><h2 class="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl">Practical advice for modern dating.</h2><p class="mt-4 text-base leading-7 text-white/55">Read clear guides about texting, boundaries, emotional connection, dating apps, and the conversations you keep replaying.</p></div><a href="/blog" class="whitespace-nowrap text-sm font-bold text-pink-200">Explore all guides -&gt;</a></div><div class="mt-10 grid gap-4 md:grid-cols-3">${posts.slice(0, 3).map((post) => `<article class="marketing-card p-5"><p class="text-xs font-bold uppercase tracking-[0.16em] text-pink-300/80">${escapeHtml(post.category)}</p><h3 class="mt-3 text-lg font-bold leading-snug text-white">${escapeHtml(post.title)}</h3><p class="mt-3 text-sm leading-6 text-white/50">${escapeHtml(post.excerpt)}</p><a href="/blog/${escapeAttribute(post.slug)}" class="mt-5 inline-block text-sm font-bold text-pink-200">Read the guide -&gt;</a></article>`).join('')}</div></section><section class="relative overflow-hidden border-y border-white/[0.08] bg-gradient-to-br from-pink-500/10 via-black to-purple-500/10"><div class="marketing-container relative py-20 text-center md:py-28"><p class="text-xs font-bold uppercase tracking-[0.25em] text-pink-300/80">Your next message is closer than you think</p><h2 class="mx-auto mt-5 max-w-2xl text-4xl font-black tracking-tight text-white md:text-6xl">Show up as yourself, just less stuck.</h2><p class="mx-auto mt-5 max-w-lg text-base text-white/50">Get a second opinion for the moments you want to handle well.</p><a href="${escapeAttribute(playStoreUrl)}" target="_blank" rel="noreferrer" class="marketing-cta-primary mt-8 inline-flex rounded-2xl px-5 py-3.5 text-sm font-bold text-white">Try Rizz Master free</a></div></section></main><footer class="marketing-container border-t border-white/10 py-10 text-sm text-white/45"><a href="/blog">Blog</a> <a href="/privacy" class="ml-4">Privacy</a> <a href="/terms" class="ml-4">Terms</a> <a href="/support" class="ml-4">Support</a></footer>`;
+
 const renderLegalPage = (page) => {
   const sections = page.sections.map((section) => `<section class="rounded-3xl border border-white/10 bg-white/[0.03] p-6 md:p-8"><h2 class="text-xl font-bold text-white">${escapeHtml(section.heading)}</h2>${(section.paragraphs || []).map((paragraph) => `<p class="mt-3 text-sm leading-7 text-white/55">${escapeHtml(paragraph)}</p>`).join('')}${section.bullets?.length ? `<ul class="mt-4 space-y-2 text-sm leading-7 text-white/55">${section.bullets.map((bullet) => `<li class="flex gap-3"><span class="mt-3 h-1.5 w-1.5 shrink-0 rounded-full bg-pink-300" aria-hidden="true"></span><span>${escapeHtml(bullet)}</span></li>`).join('')}</ul>` : ''}</section>`).join('');
   return `<main class="marketing-container marketing-page-padding"><a href="/landing" class="mb-10 inline-flex items-center gap-2 text-sm font-bold text-white/45">&lt;- Back home</a><div class="max-w-3xl"><p class="text-xs font-bold uppercase tracking-[0.28em] text-pink-300/80">${escapeHtml(page.eyebrow)}</p><h1 class="mt-5 text-5xl font-black tracking-[-0.04em] text-white md:text-7xl">${escapeHtml(page.title)}</h1><p class="mt-6 text-lg leading-8 text-white/55">${escapeHtml(page.intro)}</p><p class="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-white/30">Last updated ${escapeHtml(page.updatedAt)}</p></div><div class="mt-12 max-w-3xl space-y-5">${sections}</div><a href="${escapeAttribute(page.actionHref)}" class="mt-8 inline-flex rounded-2xl border border-white/15 bg-white/[0.05] px-5 py-3.5 text-sm font-bold text-white">${escapeHtml(page.actionLabel)}</a></main><footer class="marketing-container border-t border-white/10 py-10 text-sm text-white/45"><a href="/landing">Rizz Master</a> <a href="/blog" class="ml-4">Blog</a> <a href="/privacy" class="ml-4">Privacy</a> <a href="/terms" class="ml-4">Terms</a> <a href="/support" class="ml-4">Support</a></footer>`;
@@ -94,6 +100,7 @@ const setArticleMetadata = (html, post) => {
 
   let result = html
     .replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(metadata.title)}</title>`)
+    .replace(/<meta\s+name="robots"[^>]*>/i, '<meta name="robots" content="index,follow" />')
     .replace(/<meta\s+name="description"[^>]*>/i, `<meta name="description" content="${escapeAttribute(metadata.description)}" />`)
     .replace(/<meta\s+property="og:title"[^>]*>/i, `<meta property="og:title" content="${escapeAttribute(metadata.title)}" />`)
     .replace(/<meta\s+property="og:description"[^>]*>/i, `<meta property="og:description" content="${escapeAttribute(metadata.description)}" />`)
@@ -116,18 +123,30 @@ const setArticleMetadata = (html, post) => {
     mainEntityOfPage: canonical
   })}</script>\n</head>`);
 
-  return result;
+  return withEditorialAds(result);
 };
 
 const setIndexMetadata = (html) => html
   .replace(/<title>[\s\S]*?<\/title>/i, '<title>Rizz Master Blog | Better texts, better dates</title>')
+  .replace(/<meta\s+name="robots"[^>]*>/i, '<meta name="robots" content="index,follow" />')
   .replace(/<meta\s+name="description"[^>]*>/i, '<meta name="description" content="Practical texting, dating app, opener, and profile advice for better conversations." />')
   .replace(/<meta\s+property="og:title"[^>]*>/i, '<meta property="og:title" content="Rizz Master Blog | Better texts, better dates" />')
   .replace(/<meta\s+property="og:description"[^>]*>/i, '<meta property="og:description" content="Practical texting, dating app, opener, and profile advice for better conversations." />')
   .replace(/<meta\s+property="og:type"[^>]*>/i, '<meta property="og:type" content="website" />')
   .replace(/<meta\s+property="og:url"[^>]*>/i, '<meta property="og:url" content="https://rizzmaster.online/blog" />')
   .replace(/<div id="root">[\s\S]*?<\/div>\s*<\/body>/i, `<div id="root" data-prerendered="true">${renderBlogIndex(BLOG_POSTS)}</div>\n</body>`)
-  .replace('</head>', '<link rel="canonical" href="https://rizzmaster.online/blog" />\n<script type="application/ld+json">{"@context":"https://schema.org","@type":"CollectionPage","name":"Rizz Master Blog","url":"https://rizzmaster.online/blog"}</script>\n</head>');
+  .replace('</head>', `${ADSENSE_SCRIPT}\n<link rel="canonical" href="https://rizzmaster.online/blog" />\n<script type="application/ld+json">{"@context":"https://schema.org","@type":"CollectionPage","name":"Rizz Master Blog","url":"https://rizzmaster.online/blog"}</script>\n</head>`);
+
+const setLandingMetadata = (html) => html
+  .replace(/<title>[\s\S]*?<\/title>/i, '<title>Rizz Master | AI Dating Assistant for Better Conversations</title>')
+  .replace(/<meta\s+name="robots"[^>]*>/i, '<meta name="robots" content="index,follow" />')
+  .replace(/<meta\s+name="description"[^>]*>/i, '<meta name="description" content="Rizz Master helps you write better replies, dating bios, openers, and handle real dating moments with more confidence." />')
+  .replace(/<meta\s+property="og:title"[^>]*>/i, '<meta property="og:title" content="Rizz Master | AI Dating Assistant for Better Conversations" />')
+  .replace(/<meta\s+property="og:description"[^>]*>/i, '<meta property="og:description" content="Get a second opinion for replies, dating bios, openers, and the conversations you keep replaying." />')
+  .replace(/<meta\s+property="og:type"[^>]*>/i, '<meta property="og:type" content="website" />')
+  .replace(/<meta\s+property="og:url"[^>]*>/i, '<meta property="og:url" content="https://rizzmaster.online/landing" />')
+  .replace(/<div id="root">[\s\S]*?<\/div>\s*<\/body>/i, `<div id="root" data-prerendered="true">${renderLanding(BLOG_POSTS, PLAY_STORE_URL)}</div>\n</body>`)
+  .replace('</head>', '<link rel="canonical" href="https://rizzmaster.online/landing" />\n<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Rizz Master","url":"https://rizzmaster.online/landing","description":"AI dating assistant for replies, dating bios, openers, and conversation coaching."}</script>\n</head>');
 
 const setLegalMetadata = (html, key, page) => {
   const canonical = `https://rizzmaster.online/${key}`;
@@ -140,6 +159,7 @@ const setLegalMetadata = (html, key, page) => {
   }).replaceAll('<', '\\u003c');
   return html
     .replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(page.title)} | Rizz Master</title>`)
+    .replace(/<meta\s+name="robots"[^>]*>/i, '<meta name="robots" content="index,follow" />')
     .replace(/<meta\s+name="description"[^>]*>/i, `<meta name="description" content="${escapeAttribute(page.intro)}" />`)
     .replace(/<meta\s+property="og:title"[^>]*>/i, `<meta property="og:title" content="${escapeAttribute(page.title)} | Rizz Master" />`)
     .replace(/<meta\s+property="og:description"[^>]*>/i, `<meta property="og:description" content="${escapeAttribute(page.intro)}" />`)
@@ -161,10 +181,11 @@ const writePage = async (route, html) => {
   await writeFile(outputPath, html, 'utf8');
 };
 
-const { BLOG_POSTS } = await loadMarketingContent();
+const { BLOG_POSTS, PLAY_STORE_URL } = await loadMarketingContent();
 const { MARKETING_LEGAL_PAGES } = await loadMarketingLegal();
 const shell = await readFile(shellPath, 'utf8');
 
+await writePage('landing', setLandingMetadata(createPageShell(shell, renderLanding(BLOG_POSTS, PLAY_STORE_URL))));
 await writePage('blog', setIndexMetadata(createPageShell(shell, renderBlogIndex(BLOG_POSTS))));
 for (const post of BLOG_POSTS) {
   await writePage(`blog/${post.slug}`, setArticleMetadata(createPageShell(shell, renderArticle(post, BLOG_POSTS)), post));
@@ -174,5 +195,5 @@ for (const [key, page] of Object.entries(MARKETING_LEGAL_PAGES)) {
   await writePage(key, setLegalMetadata(createPageShell(shell, renderLegalPage(page)), key, page));
 }
 
-console.log(`Prerendered ${BLOG_POSTS.length} blog articles, the blog index, and legal pages.`);
+console.log(`Prerendered the landing page, ${BLOG_POSTS.length} blog articles, the blog index, and legal pages.`);
 

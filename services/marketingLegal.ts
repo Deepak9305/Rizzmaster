@@ -21,7 +21,7 @@ export const MARKETING_LEGAL_PAGES: Record<MarketingLegalPageKey, MarketingLegal
     eyebrow: 'Your data matters',
     title: 'Privacy Policy',
     intro: 'This policy explains what Rizz Master processes, why it is needed, and the choices available when you use our web app, Android app, or support channels.',
-    updatedAt: 'September 7, 2026',
+    updatedAt: 'September 15, 2026',
     sections: [
       {
         heading: 'Who we are',
@@ -51,8 +51,8 @@ export const MARKETING_LEGAL_PAGES: Record<MarketingLegalPageKey, MarketingLegal
       {
         heading: 'Cookies and advertising',
         paragraphs: [
-          'This site currently includes an ads.txt declaration, but the current application source does not serve Google AdSense ads. If advertising is enabled, Google and other authorized advertising partners may use cookies, local storage, or similar technologies to measure delivery, prevent fraud, and personalize ads where permitted.',
-          'Before personalized advertising is enabled for visitors in the European Economic Area, the United Kingdom, or Switzerland, the site must present an appropriate consent choice through a Google-certified consent management platform or another legally appropriate mechanism. You can manage Google advertising choices through Google Ads Settings and your browser controls.'
+          'Google AdSense may appear on Rizz Master public editorial pages, such as the blog index and dating advice articles. Google-served ads are not loaded on the AI tool, login, account, Coach, billing, navigation, loading, or error screens. Google and other authorized advertising partners may use cookies, local storage, or similar technologies to measure delivery, prevent fraud, and personalize ads where permitted.',
+          'Before personalized advertising is enabled for visitors in the European Economic Area, the United Kingdom, or Switzerland, the site must present an appropriate consent choice through a Google-certified consent management platform or another legally appropriate mechanism. You can manage Google advertising choices through Google Ads Settings, the site consent controls when available, and your browser controls.'
         ]
       },
       {
@@ -83,7 +83,7 @@ export const MARKETING_LEGAL_PAGES: Record<MarketingLegalPageKey, MarketingLegal
     eyebrow: 'Use it thoughtfully',
     title: 'Terms of Service',
     intro: 'These terms describe the rules for using Rizz Master and the limits that apply to AI-generated suggestions, accounts, and subscriptions.',
-    updatedAt: 'September 7, 2026',
+    updatedAt: 'September 15, 2026',
     sections: [
       {
         heading: 'The service',
@@ -103,7 +103,7 @@ export const MARKETING_LEGAL_PAGES: Record<MarketingLegalPageKey, MarketingLegal
       },
       {
         heading: 'Advertising',
-        paragraphs: ['If advertising is added to public editorial pages, ads must remain clearly distinguishable from site content and navigation. You must not click your own ads, encourage clicks or views, use traffic-exchange services, or use the service to generate artificial ad activity.']
+        paragraphs: ['Google-served advertising may appear only on public editorial pages such as the blog. Ads must remain clearly distinguishable from site content and navigation and are not placed on the AI tool, login, account, Coach, billing, loading, or error screens. You must not click your own ads, encourage clicks or views, use traffic-exchange services, or use the service to generate artificial ad activity.']
       },
       {
         heading: 'Ownership and feedback',
@@ -125,7 +125,7 @@ export const MARKETING_LEGAL_PAGES: Record<MarketingLegalPageKey, MarketingLegal
     eyebrow: 'We are here to help',
     title: 'Support Center',
     intro: 'Get help with account access, credits, AI generation, subscriptions, privacy requests, or a feature idea.',
-    updatedAt: 'September 7, 2026',
+    updatedAt: 'September 15, 2026',
     sections: [
       {
         heading: 'Contact support',
