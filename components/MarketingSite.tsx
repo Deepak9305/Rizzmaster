@@ -144,7 +144,7 @@ const PlayStoreButton: React.FC<{
 }> = ({
   variant = 'primary',
   label = 'Get it on Google Play',
-  supportText = 'Free daily credits · Android app',
+  supportText = 'Free daily credits - Android app',
   compact = false,
   className = ''
 }) => (

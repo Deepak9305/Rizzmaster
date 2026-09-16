@@ -1838,7 +1838,7 @@ export const BLOG_POSTS: BlogPost[] = [
     imageAlt: 'Editorial illustration of a dating profile built from specific details and an easy opening',
     sections: [
       {
-        heading: 'Give people an opening instead of a rÃ©sumÃ©',
+        heading: 'Give people an opening instead of a resume',
         paragraphs: [
           '"I like food, travel, and having fun" is true for almost everyone, so it gives a match nowhere to begin. A dating bio works better when it includes one vivid detail: the dish you cook best, the city you would revisit tomorrow, the hobby you are oddly competitive about, or the small routine that makes your weekend feel like yours. Specific details create natural questions and help the right person recognize your personality.',
           'You do not need to list every interest. Choose two or three details that have texture and leave a little room for curiosity. "I am learning to make restaurant-level ramen and still lose at every board game" is more useful than a list of broad labels. The reader can ask about the ramen, challenge the game claim, or share their own obsession. A strong bio makes the next message obvious.'
