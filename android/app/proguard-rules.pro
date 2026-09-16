@@ -27,7 +27,6 @@
 # ============================================================
 # AdMob Plugin
 # ============================================================
--keep class com.google.android.gms.ads.** { *; }
 -dontwarn com.google.android.gms.ads.**
 -keep class com.getcapacitor.community.admob.** { *; }
 
@@ -43,16 +42,10 @@
 -keep class com.android.vending.billing.** { *; }
 -keep class com.google.android.play.core.** { *; }
 
-# ============================================================
-# Google Play Services  
-# ============================================================
--keep class com.google.android.gms.** { *; }
+# Google Play Services and AndroidX publish their own consumer rules. Avoiding
+# blanket keep rules here lets R8 remove unused classes while preserving the
+# APIs used by the plugins above.
 -dontwarn com.google.android.gms.**
-
-# ============================================================
-# AndroidX
-# ============================================================
--keep class androidx.** { *; }
 -dontwarn androidx.**
 
 # ============================================================

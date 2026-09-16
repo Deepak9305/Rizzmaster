@@ -7,8 +7,8 @@ android {
         applicationId "app.vercel.rizzmaster"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 10020
-        versionName "1.2.2"
+        versionCode 10021
+        versionName "1.2.3"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -17,7 +17,7 @@ android {
         }
     }
 
-    // Required: Bundle format for Play Store
+    // Preserve Play's language/density splits while shipping one universal ABI split.
     bundle {
         language {
             enableSplit = true
