@@ -47,6 +47,7 @@ import NoInternetOverlay from './components/NoInternetOverlay';
 
 const DAILY_CREDITS = 5;
 const IS_WEB_PLATFORM = !Capacitor.isNativePlatform();
+const IS_ANDROID_NATIVE = Capacitor.getPlatform() === 'android';
 const SILENT_PREMIUM_RESTORE_WAIT_MS = 45000;
 const SILENT_PREMIUM_RESTORE_RETRY_MS = 60000;
 const SILENT_PREMIUM_RESTORE_MAX_ATTEMPTS = 2;
@@ -67,6 +68,10 @@ const AD_IDS = {
   APP_OPEN: {
     ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/3419835294' : 'ca-app-pub-7381421031784616/2705366298',
     IOS: 'ca-app-pub-3940256099942544/5662855259' // Test ID
+  },
+  BANNER: {
+    ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/6300978111' : 'ca-app-pub-7381421031784616/7234804095',
+    IOS: ''
   }
 };
 
@@ -1042,6 +1047,68 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       timerIds.forEach(id => clearTimeout(id));
     };
   }, [handleUpgrade, showToast]);
+
+  // The banner is a native overlay supplied by AdMob. Keep it limited to the
+  // two core Android surfaces and inset the WebView after AdMob reports its
+  // device-specific adaptive height.
+  useEffect(() => {
+    const root = document.documentElement;
+    const resetBannerInset = () => root.style.setProperty('--native-banner-height', '0px');
+
+    resetBannerInset();
+    if (!IS_ANDROID_NATIVE || !canUseNativeAdMob()) return;
+
+    const shouldShowBanner = Boolean(
+      profile?.id &&
+      !profile.is_premium &&
+      !showSplash &&
+      !showOnboarding &&
+      !isSessionBlocked &&
+      !isPublicInfoView &&
+      !showPremiumModal &&
+      !showSavedModal &&
+      (currentView === 'HOME' || currentView === 'COACH')
+    );
+
+    let cancelled = false;
+    let sizeListener: { remove: () => Promise<void> } | null = null;
+
+    const syncBanner = async () => {
+      if (!shouldShowBanner) {
+        await AdMobService.setBannerVisibility(null);
+        return;
+      }
+
+      try {
+        sizeListener = await AdMobService.addBannerSizeListener((height) => {
+          if (!cancelled) {
+            root.style.setProperty('--native-banner-height', `${height}px`);
+          }
+        });
+
+        if (cancelled) {
+          if (sizeListener) void sizeListener.remove();
+          return;
+        }
+        const shown = await AdMobService.setBannerVisibility(getAdId('BANNER'));
+        if (!shown && !cancelled) resetBannerInset();
+      } catch (error) {
+        if (!cancelled) {
+          console.warn('[AdMob] Native banner setup failed:', error);
+          resetBannerInset();
+        }
+      }
+    };
+
+    void syncBanner();
+
+    return () => {
+      cancelled = true;
+      resetBannerInset();
+      if (sizeListener) void sizeListener.remove();
+      void AdMobService.setBannerVisibility(null);
+    };
+  }, [currentView, isPublicInfoView, isSessionBlocked, profile?.id, profile?.is_premium, showOnboarding, showPremiumModal, showSavedModal, showSplash]);
 
   // Handle History API for Mobile Back Button support
   useEffect(() => {
