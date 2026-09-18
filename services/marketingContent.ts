@@ -5,6 +5,7 @@ export interface BlogSection {
   paragraphs: string[];
   bullets?: string[];
   image?: string;
+  imageWebp?: string;
   imageAlt?: string;
   imageCaption?: string;
 }
@@ -20,6 +21,7 @@ export interface BlogPost {
   category: string;
   keywords: string[];
   image?: string;
+  imageWebp?: string;
   imageAlt?: string;
   imageCaption?: string;
   resources?: Array<{ label: string; url: string }>;
@@ -27,6 +29,198 @@ export interface BlogPost {
 }
 
 export const BLOG_POSTS: BlogPost[] = [
+  {
+    slug: 'signs-a-first-date-went-well',
+    title: 'How to Tell If a First Date Went Well: 15 Signs of Real Chemistry',
+    description: 'Wondering whether your first date went well? Learn how to read mutual effort, comfortable conversation, follow-through, and real chemistry without overanalyzing every detail.',
+    excerpt: 'A good first date is not always loud or perfectly smooth. Look for mutual curiosity, comfortable honesty, respect for pace, shared effort, and a clear desire to keep getting to know each other.',
+    date: '2026-09-18',
+    updatedAt: '2026-09-18',
+    readingTime: '11 min read',
+    category: 'First date advice',
+    keywords: [
+      'signs a first date went well',
+      'how to know if a first date went well',
+      'signs they liked you after a first date',
+      'first date chemistry signs',
+      'how to tell if someone enjoyed the date',
+      'what to do after a good first date',
+      'how to know if they want a second date',
+      'first date connection signs',
+      'good first date conversation signs',
+      'how to read first date body language'
+    ],
+    image: '/blog/signs-first-date-went-well-hero.jpg',
+    imageWebp: '/blog/signs-first-date-went-well-hero.webp',
+    imageAlt: 'Two people smiling and listening to each other across a cafe table on a first date',
+    imageCaption: 'A good first date usually feels mutual: both people have room to be curious, honest, and comfortable.',
+    resources: [
+      { label: 'The Gottman Institute: Pay attention to bids for connection', url: 'https://www.gottman.com/blog/want-to-improve-your-relationship-start-paying-more-attention-to-bids/' },
+      { label: 'The Gottman Institute: Improve communication in your relationship', url: 'https://www.gottman.com/improve-communication-relationship/' },
+      { label: 'loveisrespect: What are my boundaries?', url: 'https://www.loveisrespect.org/resources/what-are-my-boundaries/' },
+      { label: 'The National Domestic Violence Hotline: Healthy relationships', url: 'https://www.thehotline.org/resources/healthy-relationships/' }
+    ],
+    sections: [
+      {
+        heading: 'A good first date does not have to feel perfect',
+        paragraphs: [
+          'After a first date, it is easy to replay every pause, facial expression, and message. You may wonder whether a laugh was genuine, whether the goodbye lasted long enough, or whether a short reply means the other person changed their mind. That kind of review can make dating feel like an exam you have to grade before you are allowed to relax.',
+          'A better way to judge the date is to look for patterns of mutual effort. Did both of you contribute? Could you be reasonably yourself? Did the other person respect your comfort and choices? Did the conversation give you more information about who they are, rather than only leaving you desperate for approval? Real chemistry is usually a combination of curiosity, ease, attraction, and respect. It does not require a movie-like spark in every minute.'
+        ],
+        bullets: [
+          'A few quiet moments are normal and do not automatically mean the date failed.',
+          'Nervousness can exist alongside genuine interest.',
+          'Judge the overall pattern instead of one awkward sentence or delayed text.'
+        ]
+      },
+      {
+        heading: 'Signs 1 to 3: the conversation had a natural rhythm',
+        paragraphs: [
+          'One of the clearest signs a first date went well is that the conversation did not depend on one person performing. You may have started with ordinary questions, then moved into stories, opinions, humour, or small personal details. The exact topics matter less than the feeling that the exchange had somewhere to go. You were not constantly searching for the next impressive question, and the other person did not make you pull every answer out of them.',
+          'Notice three related signals. First, you both asked questions instead of leaving one person in the role of interviewer. Second, answers created follow-up topics rather than closing the conversation. Third, you both offered details without needing to be prompted. This does not mean every question was perfectly balanced. It means interest moved in both directions enough for the date to feel like a shared experience.'
+        ],
+        bullets: [
+          'Sign 1: You both asked questions and remembered the answers.',
+          'Sign 2: One topic naturally led to another without constant rescue attempts.',
+          'Sign 3: Both of you shared stories, opinions, or small personal details.'
+        ]
+      },
+      {
+        heading: 'Signs 4 to 6: they showed attention, not just politeness',
+        paragraphs: [
+          'Politeness can make a date pleasant, but attention is what makes it feel personal. Someone who is genuinely engaged may follow up on a detail you mentioned, notice when you become more animated, or return to a story later. They may ask how a project went, remember a place you said you wanted to visit, or refer back to a joke from earlier in the date. These small callbacks show that they were present rather than waiting for their turn to talk.',
+          'Attention also includes the small moments that do not look romantic in isolation. They put their phone away for most of the date, listen when you change the subject, and adjust when you say you would rather not discuss something. No single behaviour proves attraction. Together, repeated attention and respect are stronger evidence of a connection worth exploring than a dramatic compliment.'
+        ],
+        image: '/blog/signs-first-date-went-well-bakery.jpg',
+        imageWebp: '/blog/signs-first-date-went-well-bakery.webp',
+        imageAlt: 'Two people sharing a playful moment while choosing pastries at a neighborhood bakery',
+        imageCaption: 'Remembering details and building on each other\'s energy makes a date feel like a conversation, not an interview.',
+        bullets: [
+          'Sign 4: They asked thoughtful follow-up questions about what you shared.',
+          'Sign 5: They remembered a detail or callback from earlier in the date.',
+          'Sign 6: They respected your boundaries, preferences, and attention.'
+        ]
+      },
+      {
+        heading: 'Signs 7 to 9: you felt comfortable being more like yourself',
+        paragraphs: [
+          'A first date can be exciting while still making you feel like you have to manage every impression. A promising sign is that the pressure softened as the date continued. You may have laughed at your own slightly odd story, admitted that you had a different opinion, or let a short silence happen without immediately trying to fill it. Comfort does not mean you were completely relaxed. It means you had enough safety to stop editing every part of yourself.',
+          'Pay attention to whether the other person made room for your actual personality. Did they respond well when you were playful, thoughtful, direct, or a little nervous? Did they show interest in your perspective rather than rewarding only the version of you that agreed with them? Compatibility becomes easier to see when you are not spending the entire date trying to be universally appealing.'
+        ],
+        bullets: [
+          'Sign 7: You could speak naturally instead of monitoring every word.',
+          'Sign 8: You both laughed or played without forcing a performance.',
+          'Sign 9: You could disagree or be imperfect without feeling punished.'
+        ]
+      },
+      {
+        heading: 'Signs 10 to 12: effort and decisions were shared',
+        paragraphs: [
+          'Chemistry is easier to trust when the practical effort is mutual. You may have chosen the place together, checked what worked for both schedules, or adjusted the plan without one person controlling every decision. During the date, both people contributed to keeping the experience comfortable. One person can be more decisive or more talkative, but the other should still have meaningful room to choose.',
+          'Shared effort is especially useful because it is less vulnerable to wishful thinking than a single compliment. Someone can be charming for an evening while still expecting you to do all the planning and emotional work. Look for a pattern of consideration: they ask what you prefer, follow through on what they said, and help create a next step if they want one.'
+        ],
+        image: '/blog/signs-first-date-went-well-walk.jpg',
+        imageWebp: '/blog/signs-first-date-went-well-walk.webp',
+        imageAlt: 'Two people walking together through a city park after a relaxed first date',
+        imageCaption: 'Shared decisions and a little flexibility often reveal more about compatibility than a perfectly planned date.',
+        bullets: [
+          'Sign 10: You both helped shape the plan and respected each other\'s preferences.',
+          'Sign 11: They followed through on practical details instead of leaving everything to you.',
+          'Sign 12: The date could extend or end naturally without pressure.'
+        ]
+      },
+      {
+        heading: 'Signs 13 to 15: the interest continued after goodbye',
+        paragraphs: [
+          'The end of the date often gives you better information than the most exciting middle. If they enjoyed meeting you, they may say so specifically, mention a detail they liked, or suggest seeing you again. They do not need to make a grand promise. A clear, realistic next step such as "I would like to continue this over dinner next week" is more useful than vague enthusiasm that never becomes a plan.',
+          'After the date, look for consistency rather than instant intensity. A thoughtful message later that evening or the next day can be a good sign, but immediate texting is not the only valid style. What matters is whether the follow-through matches the warmth of the date. If they say they want to meet again, do they help make that possible? Interest becomes easier to trust when words and behaviour line up over time.'
+        ],
+        bullets: [
+          'Sign 13: They gave a clear, genuine indication that they enjoyed meeting you.',
+          'Sign 14: They followed up without making you carry the entire conversation.',
+          'Sign 15: They helped turn interest into a realistic second-date plan.'
+        ]
+      },
+      {
+        heading: 'A comfortable goodbye is useful, but it is not a verdict',
+        paragraphs: [
+          'People show interest differently. Someone may be warm and direct at the end of the date. Someone else may need time to process the meeting before sending a message. A hug, kiss, long goodbye, or enthusiastic compliment can be meaningful, but none of these is a contract. Likewise, a brief goodbye does not automatically mean the person disliked you. Context, culture, nerves, personal boundaries, and the setting all matter.',
+          'Read the goodbye together with the rest of the date. If the conversation was mutual, the person respected your pace, and they later follow through, a short goodbye is probably just a short goodbye. If they were distant throughout the date, avoided basic curiosity, and never respond to a respectful follow-up, one flattering moment at the door should not outweigh the larger pattern.'
+        ],
+        bullets: [
+          'Do not use physical affection as the only measure of attraction.',
+          'A person can enjoy the date and still decide that the match is not right.',
+          'Let repeated behaviour carry more weight than one intense moment.'
+        ]
+      },
+      {
+        heading: 'What is not proof that a first date went well?',
+        paragraphs: [
+          'A strong first date can still end without a second one, and a date that feels intense can still reveal poor compatibility. Do not treat constant eye contact, fast replies, expensive effort, physical chemistry, or a long conversation as guarantees. These details can be positive, but they need context. If intensity comes with pressure, jealousy, entitlement, or disregard for your boundaries, it is not the kind of chemistry you need to protect.',
+          'Try not to turn the date into a prediction contest. You do not need to know whether this person will become a partner before you decide whether you would enjoy another hour with them. Ask a smaller question: Did I learn enough to choose a second date honestly? That keeps your attention on fit, safety, and curiosity rather than trying to secure an outcome before trust has had time to grow.'
+        ],
+        bullets: [
+          'Instant intensity is not the same as emotional safety.',
+          'A perfect conversation does not erase a boundary violation.',
+          'A good date is a promising data point, not a guarantee of a relationship.'
+        ]
+      },
+      {
+        heading: 'How you feel afterward can reveal the quality of the date',
+        paragraphs: [
+          'Instead of asking only, "Did they like me?", ask how you felt in the interaction. Do you feel pleasantly curious, or mostly relieved that the date is over? Are you excited to learn more about them, or are you trying to convince yourself to like them because they seemed impressed? Do you feel calm enough to make a choice, or are you already chasing reassurance from their next message?',
+          'Post-date nerves are normal. A promising date can make you feel vulnerable and uncertain. The distinction is whether the uncertainty sits alongside self-respect. You can be excited, disappointed, or undecided without abandoning your preferences. Give yourself a little space before making the next move, especially if you are tempted to send multiple messages just to end the discomfort of waiting.'
+        ],
+        image: '/blog/signs-first-date-went-well-reflection.jpg',
+        imageWebp: '/blog/signs-first-date-went-well-reflection.webp',
+        imageAlt: 'A person calmly reflecting over coffee after a first date while looking at their phone',
+        imageCaption: 'The most useful post-date question is not only whether they liked you, but whether the connection felt good for you too.',
+        bullets: [
+          'Curiosity is usually more useful than an urgent need for reassurance.',
+          'Notice whether you felt respected, heard, and free to make choices.',
+          'You can like someone and still decide to move slowly.'
+        ]
+      },
+      {
+        heading: 'What to text after a good first date',
+        paragraphs: [
+          'If you enjoyed the date, a simple message is usually better than a carefully engineered test. Mention one specific thing you liked, then make your interest clear if you want to meet again. For example: "I had a good time tonight. I am still laughing about your bakery review. I would like to see you again next week if you are up for it." This message is warm, specific, and gives the other person a comfortable way to answer.',
+          'You do not need to send a long review of the date or ask whether they are definitely interested. Send one clear follow-up, then let their response and effort give you information. For more help moving from a good date to a natural message, read our guides on what to text after a first date and how long to text before asking someone out. The aim is clarity, not a perfect line.'
+        ],
+        bullets: [
+          'Say what you enjoyed instead of using a vague "had fun" if you can be specific.',
+          'Suggest a next step only when you genuinely want one.',
+          'Give them space to answer without stacking follow-up messages.'
+        ]
+      },
+      {
+        heading: 'If the signs are mixed, choose a small next step',
+        paragraphs: [
+          'Mixed signals do not always need an immediate final answer. The person may be interested but busy, nervous, or unsure of your interest. You can respond with one low-pressure action: send a warm follow-up, ask a clear question, or suggest a simple second date. Then watch whether they meet you with enough effort. You do not have to solve the entire connection from one evening.',
+          'If the response stays vague, delayed, or one-sided after a clear invitation, let the pattern speak. You can step back without turning the situation into a dramatic rejection. Someone can be a good person and still not be available or compatible with you. Leaving room for their choice also protects your time and makes space for a connection that does not require constant guessing.'
+        ],
+        bullets: [
+          'Make one clear move instead of sending several tests for interest.',
+          'Look for a response that includes effort, not only polite words.',
+          'Do not keep pursuing uncertainty to prove your worth.'
+        ]
+      },
+      {
+        heading: 'A first-date checklist you can actually use',
+        paragraphs: [
+          'Before you decide that a date went well, step back from the most memorable moment and look at the whole experience. Did you both contribute? Did you feel comfortable enough to be honest? Did the other person respect your boundaries and show curiosity about your life? Did the end of the date and the follow-up match the warmth you felt in person? These questions give you a clearer answer than trying to decode every glance.',
+          'A good first date is not a promise that the relationship will work. It is an invitation to collect another honest piece of information. If the answer is yes, send a clear message and see whether the interest becomes mutual effort. If the answer is no, you can appreciate the experience and move on without turning it into a personal failure. The right connection will not require you to ignore what you noticed in order to keep it alive.'
+        ],
+        bullets: [
+          'We both had space to speak, listen, and show personality.',
+          'I felt respected and did not have to override my boundaries.',
+          'Their interest was shown through attention and follow-through.',
+          'I want to know them better, not just win their approval.',
+          'A second date would be a choice I can make calmly.'
+        ]
+      }
+    ]
+  },
   {
     slug: 'love-bombing-vs-genuine-interest',
     title: 'Love Bombing vs Genuine Interest: How to Tell the Difference Early',

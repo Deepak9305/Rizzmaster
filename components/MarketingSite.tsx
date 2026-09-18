@@ -234,7 +234,7 @@ const SectionHeading: React.FC<{ eyebrow: string; title: string; description?: s
 const BlogCard: React.FC<{ post: BlogPost; navigate: (path: string) => void; featured?: boolean }> = ({ post, navigate, featured = false }) => (
   <article className={`marketing-card group relative flex h-full flex-col overflow-hidden p-6 ${featured ? 'md:col-span-2 md:p-8' : ''}`}>
     <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-pink-400/80 via-fuchsia-400/45 to-purple-400/80 opacity-70" />
-    {post.image && <img src={post.image} alt={post.imageAlt || post.title} className={`mb-6 w-full rounded-2xl border border-pink-300/15 object-cover opacity-90 transition-transform duration-500 group-hover:scale-[1.02] ${featured ? 'aspect-[2.7/1] max-h-64 md:max-h-72' : 'aspect-[16/9]'}`} loading="lazy" decoding="async" />}
+    {post.image && <picture><source type="image/webp" srcSet={post.imageWebp} /> <img src={post.image} alt={post.imageAlt || post.title} className={`mb-6 w-full rounded-2xl border border-pink-300/15 object-cover opacity-90 transition-transform duration-500 group-hover:scale-[1.02] ${featured ? 'aspect-[2.7/1] max-h-64 md:max-h-72' : 'aspect-[16/9]'}`} loading="lazy" decoding="async" /></picture>}
     <div className="mb-7 flex items-center justify-between gap-4 text-[11px] font-bold uppercase tracking-[0.18em] text-white/35">
       <span className="rounded-full border border-pink-300/15 bg-pink-300/[0.07] px-2.5 py-1 text-pink-200/85">{post.category}</span>
       <span>{post.readingTime}</span>
@@ -675,6 +675,11 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'how-to-connect-emotionally-while-dating', label: 'Build emotional connection' },
     { slug: 'texting-boundaries-while-dating', label: 'Set healthy dating boundaries' },
     { slug: 'love-bombing-vs-genuine-interest', label: 'Tell genuine interest from intensity' }
+  ],
+  'signs-a-first-date-went-well': [
+    { slug: 'build-real-connection-first-date', label: 'Build real connection on a first date' },
+    { slug: 'what-to-text-after-a-first-date', label: 'What to text after a first date' },
+    { slug: 'how-long-should-you-text-before-asking-someone-out', label: 'When to ask someone out' }
   ]
 };
 
@@ -706,13 +711,7 @@ const ArticleSectionImage: React.FC<{ section: BlogPost['sections'][number] }> =
 
   return (
     <figure className="my-8 overflow-hidden rounded-3xl border border-white/10 bg-black/20">
-      <img
-        src={section.image}
-        alt={section.imageAlt || section.heading}
-        loading="lazy"
-        decoding="async"
-        className="aspect-[16/9] w-full object-cover"
-      />
+      <picture><source type="image/webp" srcSet={section.imageWebp} /><img src={section.image} alt={section.imageAlt || section.heading} loading="lazy" decoding="async" className="aspect-[16/9] w-full object-cover" /></picture>
       <figcaption className="border-t border-white/10 px-5 py-3 text-xs leading-5 text-white/35">
         {section.imageCaption}
       </figcaption>
@@ -730,7 +729,7 @@ const ArticlePage: React.FC<{ post: BlogPost; navigate: (path: string) => void }
         <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-white/35"><span className="text-pink-300/80">{post.category}</span><span>•</span><span>{post.readingTime}</span><span>•</span><time dateTime={post.date}>{new Date(`${post.date}T12:00:00`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</time></div>
         <h1 className="mt-6 text-4xl font-black leading-[1.05] tracking-[-0.04em] text-white md:text-6xl">{post.title}</h1>
         <p className="mt-7 text-lg leading-8 text-white/55">{post.description}</p>
-        {post.image && <figure className="mt-9 overflow-hidden rounded-3xl border border-pink-300/15 bg-black/20 shadow-[0_24px_80px_rgba(236,72,153,0.12)]"><img src={post.image} alt={post.imageAlt || post.title} className="aspect-[16/9] w-full object-cover" loading="eager" decoding="async" /><figcaption className="border-t border-white/10 px-5 py-3 text-xs text-white/35">{post.imageCaption || 'A better follow-up is clear, calm, and gives the other person room to choose.'}</figcaption></figure>}
+        {post.image && <figure className="mt-9 overflow-hidden rounded-3xl border border-pink-300/15 bg-black/20 shadow-[0_24px_80px_rgba(236,72,153,0.12)]"><picture><source type="image/webp" srcSet={post.imageWebp} /><img src={post.image} alt={post.imageAlt || post.title} className="aspect-[16/9] w-full object-cover" loading="eager" decoding="async" /></picture><figcaption className="border-t border-white/10 px-5 py-3 text-xs text-white/35">{post.imageCaption || 'A better follow-up is clear, calm, and gives the other person room to choose.'}</figcaption></figure>}
         <div className="mt-10 space-y-5">
           <ArticleQuickAnswer post={post} />
           <ArticleExampleBox examples={ARTICLE_EXAMPLES[post.slug]} />
