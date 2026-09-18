@@ -52,6 +52,7 @@ const SILENT_PREMIUM_RESTORE_WAIT_MS = 45000;
 const SILENT_PREMIUM_RESTORE_RETRY_MS = 60000;
 const SILENT_PREMIUM_RESTORE_MAX_ATTEMPTS = 2;
 const REWARDED_STATUS_POLL_ATTEMPTS = 20;
+const NATIVE_ADAPTIVE_BANNER_FALLBACK_HEIGHT = 50;
 
 // --- AD CONFIGURATION ---
 const USE_TEST_ADS = false; // Set to true for testing with Google test ads
@@ -1070,6 +1071,13 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       (currentView === 'HOME' || currentView === 'COACH')
     );
 
+    // Reserve the minimum anchored-adaptive height before the native view
+    // reports its device-specific size. This prevents the header from jumping
+    // when a free user's banner finishes loading. Premium users stay at zero.
+    if (shouldShowBanner) {
+      root.style.setProperty('--native-banner-height', `${NATIVE_ADAPTIVE_BANNER_FALLBACK_HEIGHT}px`);
+    }
+
     let cancelled = false;
     let sizeListener: { remove: () => Promise<void> } | null = null;
 
@@ -1082,7 +1090,11 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       try {
         sizeListener = await AdMobService.addBannerSizeListener((height) => {
           if (!cancelled) {
-            root.style.setProperty('--native-banner-height', `${height}px`);
+            if (height > 0) {
+              root.style.setProperty('--native-banner-height', `${height}px`);
+            } else {
+              resetBannerInset();
+            }
           }
         });
 

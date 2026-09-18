@@ -783,14 +783,22 @@ html.native-app .web-app-root {
   will-change: auto !important;
 }
 
+html.native-app,
+html.native-app body,
+html.native-app #root {
+  background-color: #05030b;
+}
+
 /* Native AdMob reserves a top strip above the remote WebView. */
 html.native-app .web-app-shell.safe-top {
   padding-top: calc(env(safe-area-inset-top, 0px) + 1.5rem + var(--native-banner-height));
+  background-color: #05030b;
 }
 
 html.native-app .native-coach-shell {
   top: var(--native-banner-height) !important;
   height: calc(100% - var(--native-banner-height)) !important;
+  background-color: #05030b !important;
 }
 
 .native-coach-screen {
