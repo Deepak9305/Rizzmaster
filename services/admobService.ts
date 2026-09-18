@@ -1,8 +1,5 @@
 import {
     AdMob,
-    BannerAdPluginEvents,
-    BannerAdPosition,
-    BannerAdSize,
     InterstitialAdPluginEvents,
     RewardAdPluginEvents,
     RewardInterstitialAdPluginEvents,
@@ -24,10 +21,6 @@ type PrepareOptions = {
 export type RewardVideoSsv = {
     userId: string;
     customData: string;
-};
-
-type BannerSizeListenerHandle = {
-    remove: () => Promise<void>;
 };
 
 // Android mediation adapters do not consistently preserve the configured reward
@@ -67,10 +60,6 @@ export const AdMobService = {
     rewardInterstitialReady: false,
     rewardInterstitialPreparing: false,
     isRewardInterstitialShowing: false,
-    bannerVisible: false,
-    bannerCreated: false,
-    bannerAdId: null as string | null,
-
     // Internal Promise tracking to avoid redundant fetches and handle race conditions
     initPromise: null as Promise<boolean> | null,
     interstitialPromise: null as Promise<boolean> | null,
@@ -83,9 +72,6 @@ export const AdMobService = {
     lastRewardVideoSsvKey: '',
     rewardInterstitialPreparedAt: 0,
     lastRewardInterstitialAdId: null as string | null,
-    bannerSyncPromise: null as Promise<boolean> | null,
-    bannerDesiredAdId: null as string | null,
-
     // Set this to true to force the GDPR popup to show for everyone during testing/development.
     // Set to false before releasing to the Play Store.
     DEBUG_FORCE_GDPR: false,
@@ -218,110 +204,6 @@ export const AdMobService = {
             console.warn(`[AdMob] ${context} skipped because AdMob failed to initialize.`);
         }
         return initialized;
-    },
-
-    async addBannerSizeListener(onSizeChanged: (height: number) => void): Promise<BannerSizeListenerHandle | null> {
-        if (!canUseNativeAdMob()) return null;
-
-        return AdMob.addListener(BannerAdPluginEvents.SizeChanged, (info) => {
-            const height = Number(info?.height);
-            onSizeChanged(Number.isFinite(height) ? Math.max(0, height) : 0);
-        });
-    },
-
-    async setBannerVisibility(adId: string | null): Promise<boolean> {
-        if (!canUseNativeAdMob()) return false;
-        this.bannerDesiredAdId = adId;
-        if (this.bannerSyncPromise) return this.bannerSyncPromise;
-
-        this.bannerSyncPromise = (async () => {
-            while (true) {
-                const desiredAdId = this.bannerDesiredAdId;
-
-                if (!desiredAdId) {
-                    if (this.bannerCreated && this.bannerVisible) {
-                        try {
-                            await AdMob.hideBanner();
-                        } catch (error) {
-                            // The plugin may already have removed a failed banner.
-                            console.warn('[AdMob] Banner failed to hide:', error);
-                        }
-                    }
-                    this.bannerVisible = false;
-                } else {
-                    const initialized = await this.ensureInitialized('Banner show');
-                    if (!initialized) return false;
-                    if (this.bannerDesiredAdId !== desiredAdId) continue;
-
-                    try {
-                        let needsCreate = !this.bannerCreated || this.bannerAdId !== desiredAdId;
-                        if (this.bannerCreated && this.bannerAdId === desiredAdId) {
-                            if (!this.bannerVisible) {
-                                try {
-                                    await AdMob.resumeBanner();
-                                } catch {
-                                    // A failed load can destroy the plugin's backing
-                                    // view while the JS-side state still exists.
-                                    await AdMob.removeBanner().catch(() => undefined);
-                                    this.bannerCreated = false;
-                                    this.bannerAdId = null;
-                                    needsCreate = true;
-                                }
-                            } else {
-                                needsCreate = false;
-                            }
-                        }
-
-                        if (needsCreate) {
-                            if (this.bannerCreated) {
-                                await AdMob.removeBanner().catch(() => undefined);
-                                this.bannerCreated = false;
-                                this.bannerVisible = false;
-                            }
-
-                            await AdMob.showBanner({
-                                adId: desiredAdId,
-                                // Keep the top inset stable. Adaptive banners can
-                                // report a different height after the first paint,
-                                // which shifts the WebView content underneath.
-                                adSize: BannerAdSize.BANNER,
-                                position: BannerAdPosition.TOP_CENTER,
-                                margin: 0,
-                                isTesting: false,
-                            });
-                            this.bannerCreated = true;
-                            this.bannerAdId = desiredAdId;
-                        }
-
-                        this.bannerVisible = true;
-                    } catch (error) {
-                        console.warn('[AdMob] Banner failed to show:', error);
-                        this.bannerVisible = false;
-                        return false;
-                    }
-                }
-
-                // A route or entitlement change may have happened while the
-                // native bridge was busy. Reconcile the latest desired state.
-                if (this.bannerDesiredAdId === desiredAdId) {
-                    return desiredAdId ? this.bannerVisible : true;
-                }
-            }
-        })();
-
-        try {
-            return await this.bannerSyncPromise;
-        } finally {
-            this.bannerSyncPromise = null;
-        }
-    },
-
-    async showBanner(adId: string): Promise<boolean> {
-        return this.setBannerVisibility(adId);
-    },
-
-    async hideBanner(): Promise<boolean> {
-        return this.setBannerVisibility(null);
     },
 
     async runPrepareWithTimeout(options: PrepareOptions): Promise<boolean> {

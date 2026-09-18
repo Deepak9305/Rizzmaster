@@ -17,10 +17,6 @@ body,
   min-height: 100%;
 }
 
-:root {
-  --native-banner-height: 0px;
-}
-
 html.native-app {
   width: 100%;
   height: 100%;
@@ -789,16 +785,9 @@ html.native-app #root {
   background-color: #05030b;
 }
 
-/* Native AdMob reserves a top strip above the remote WebView. */
-html.native-app .web-app-shell.safe-top {
-  padding-top: calc(env(safe-area-inset-top, 0px) + 1.5rem + var(--native-banner-height));
-  background-color: #05030b;
-}
-
+html.native-app .web-app-shell.safe-top,
 html.native-app .native-coach-shell {
-  top: var(--native-banner-height) !important;
-  height: calc(100% - var(--native-banner-height)) !important;
-  background-color: #05030b !important;
+  background-color: #05030b;
 }
 
 .native-coach-screen {

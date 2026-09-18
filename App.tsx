@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect, useLayoutEffect, lazy, Suspense, useCallback } from 'react';
+import React, { useState, useRef, useEffect, lazy, Suspense, useCallback } from 'react';
 import { generateRizz, generateBio } from './services/rizzService';
 import { NativeBridge } from './services/nativeBridge';
 import { NotificationService } from './services/notificationService';
@@ -47,12 +47,10 @@ import NoInternetOverlay from './components/NoInternetOverlay';
 
 const DAILY_CREDITS = 5;
 const IS_WEB_PLATFORM = !Capacitor.isNativePlatform();
-const IS_ANDROID_NATIVE = Capacitor.getPlatform() === 'android';
 const SILENT_PREMIUM_RESTORE_WAIT_MS = 45000;
 const SILENT_PREMIUM_RESTORE_RETRY_MS = 60000;
 const SILENT_PREMIUM_RESTORE_MAX_ATTEMPTS = 2;
 const REWARDED_STATUS_POLL_ATTEMPTS = 20;
-const NATIVE_BANNER_HEIGHT = 50;
 
 // --- AD CONFIGURATION ---
 const USE_TEST_ADS = false; // Set to true for testing with Google test ads
@@ -70,10 +68,6 @@ const AD_IDS = {
     ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/3419835294' : 'ca-app-pub-7381421031784616/2705366298',
     IOS: 'ca-app-pub-3940256099942544/5662855259' // Test ID
   },
-  BANNER: {
-    ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/6300978111' : 'ca-app-pub-7381421031784616/7234804095',
-    IOS: ''
-  }
 };
 
 const getAdId = (type: keyof typeof AD_IDS) => {
@@ -1048,78 +1042,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       timerIds.forEach(id => clearTimeout(id));
     };
   }, [handleUpgrade, showToast]);
-
-  // The banner is a native overlay supplied by AdMob. Keep it limited to the
-  // two core Android surfaces. Reserve the fixed banner height before paint so
-  // the WebView does not jump when the native ad view appears.
-  useLayoutEffect(() => {
-    const root = document.documentElement;
-    const resetBannerInset = () => root.style.setProperty('--native-banner-height', '0px');
-
-    resetBannerInset();
-    if (!IS_ANDROID_NATIVE || !canUseNativeAdMob()) return;
-
-    const shouldShowBanner = Boolean(
-      profile?.id &&
-      !profile.is_premium &&
-      !showSplash &&
-      !showOnboarding &&
-      !isSessionBlocked &&
-      !isPublicInfoView &&
-      !showPremiumModal &&
-      !showSavedModal &&
-      (currentView === 'HOME' || currentView === 'COACH')
-    );
-
-    // Keep the CSS inset aligned with the fixed native banner from first paint.
-    // Premium users stay at zero and retain only the system safe-area inset.
-    if (shouldShowBanner) {
-      root.style.setProperty('--native-banner-height', `${NATIVE_BANNER_HEIGHT}px`);
-    }
-
-    let cancelled = false;
-    let sizeListener: { remove: () => Promise<void> } | null = null;
-
-    const syncBanner = async () => {
-      if (!shouldShowBanner) {
-        await AdMobService.setBannerVisibility(null);
-        return;
-      }
-
-      try {
-        sizeListener = await AdMobService.addBannerSizeListener((height) => {
-          if (!cancelled) {
-            if (height > 0) {
-              root.style.setProperty('--native-banner-height', `${height}px`);
-            } else {
-              resetBannerInset();
-            }
-          }
-        });
-
-        if (cancelled) {
-          if (sizeListener) void sizeListener.remove();
-          return;
-        }
-        const shown = await AdMobService.setBannerVisibility(getAdId('BANNER'));
-        if (!shown && !cancelled) resetBannerInset();
-      } catch (error) {
-        if (!cancelled) {
-          console.warn('[AdMob] Native banner setup failed:', error);
-          resetBannerInset();
-        }
-      }
-    };
-
-    void syncBanner();
-
-    return () => {
-      cancelled = true;
-      resetBannerInset();
-      if (sizeListener) void sizeListener.remove();
-      void AdMobService.setBannerVisibility(null);
-    };
-  }, [currentView, isPublicInfoView, isSessionBlocked, profile?.id, profile?.is_premium, showOnboarding, showPremiumModal, showSavedModal, showSplash]);
 
   // Handle History API for Mobile Back Button support
   useEffect(() => {
