@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect, lazy, Suspense, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, lazy, Suspense, useCallback } from 'react';
 import { generateRizz, generateBio } from './services/rizzService';
 import { NativeBridge } from './services/nativeBridge';
 import { NotificationService } from './services/notificationService';
@@ -52,7 +52,7 @@ const SILENT_PREMIUM_RESTORE_WAIT_MS = 45000;
 const SILENT_PREMIUM_RESTORE_RETRY_MS = 60000;
 const SILENT_PREMIUM_RESTORE_MAX_ATTEMPTS = 2;
 const REWARDED_STATUS_POLL_ATTEMPTS = 20;
-const NATIVE_ADAPTIVE_BANNER_FALLBACK_HEIGHT = 50;
+const NATIVE_BANNER_HEIGHT = 50;
 
 // --- AD CONFIGURATION ---
 const USE_TEST_ADS = false; // Set to true for testing with Google test ads
@@ -1050,9 +1050,9 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   }, [handleUpgrade, showToast]);
 
   // The banner is a native overlay supplied by AdMob. Keep it limited to the
-  // two core Android surfaces and inset the WebView after AdMob reports its
-  // device-specific adaptive height.
-  useEffect(() => {
+  // two core Android surfaces. Reserve the fixed banner height before paint so
+  // the WebView does not jump when the native ad view appears.
+  useLayoutEffect(() => {
     const root = document.documentElement;
     const resetBannerInset = () => root.style.setProperty('--native-banner-height', '0px');
 
@@ -1071,11 +1071,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       (currentView === 'HOME' || currentView === 'COACH')
     );
 
-    // Reserve the minimum anchored-adaptive height before the native view
-    // reports its device-specific size. This prevents the header from jumping
-    // when a free user's banner finishes loading. Premium users stay at zero.
+    // Keep the CSS inset aligned with the fixed native banner from first paint.
+    // Premium users stay at zero and retain only the system safe-area inset.
     if (shouldShowBanner) {
-      root.style.setProperty('--native-banner-height', `${NATIVE_ADAPTIVE_BANNER_FALLBACK_HEIGHT}px`);
+      root.style.setProperty('--native-banner-height', `${NATIVE_BANNER_HEIGHT}px`);
     }
 
     let cancelled = false;

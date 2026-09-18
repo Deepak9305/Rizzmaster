@@ -281,7 +281,10 @@ export const AdMobService = {
 
                             await AdMob.showBanner({
                                 adId: desiredAdId,
-                                adSize: BannerAdSize.ADAPTIVE_BANNER,
+                                // Keep the top inset stable. Adaptive banners can
+                                // report a different height after the first paint,
+                                // which shifts the WebView content underneath.
+                                adSize: BannerAdSize.BANNER,
                                 position: BannerAdPosition.TOP_CENTER,
                                 margin: 0,
                                 isTesting: false,
