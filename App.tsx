@@ -2058,23 +2058,15 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       }
     };
 
-    // Count the tap before checking credits so a third image attempt can still
-    // show the already-preloaded interstitial before the credit modal opens.
+    // Keep blocked-credit attempts on the existing premium/rewarded flow. An
+    // interstitial is only shown after a generation succeeds.
     if (!currentProfile.is_premium && (currentProfile.credits || 0) < cost) {
-      if (shouldShowAd) {
-        void triggerInterstitial().finally(() => handleCreditsExhausted(cost));
-      } else {
-        handleCreditsExhausted(cost);
-      }
+      handleCreditsExhausted(cost);
       return;
     }
 
     loadingRef.current = true;
     setLoading(true);
-
-    // Fire the ad concurrently so generation keeps its existing flow while
-    // the user watches the interstitial.
-    void triggerInterstitial();
 
     // --- GENERATION START ---
     const shouldManageLocalCredits = !currentProfile.is_premium;
@@ -2122,6 +2114,15 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         creditsAdjustedOptimistically = false;
         skipFinalProfileSync = !shouldSyncSignedInProfile;
         setResult(res);
+
+        // Let the successful result paint before showing the interstitial.
+        // This keeps the ad at a clear transition instead of interrupting the
+        // generation request or a blocked-credit message.
+        if (shouldShowAd) {
+          requestAnimationFrame(() => {
+            void triggerInterstitial();
+          });
+        }
       }
 
     } catch (error: any) {
