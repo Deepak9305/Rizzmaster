@@ -576,6 +576,11 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'how-to-pace-a-new-relationship-without-losing-yourself': [
+    { slug: 'how-to-know-if-you-are-ready-to-date-again', label: 'Know if you are ready to date again' },
+    { slug: 'how-to-connect-emotionally-while-dating', label: 'Build emotional connection' },
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy dating boundaries' }
+  ],
   'love-bombing-vs-genuine-interest': [
     { slug: 'how-to-tell-if-someone-is-emotionally-available', label: 'Spot emotional availability' },
     { slug: 'how-to-connect-emotionally-while-dating', label: 'Build emotional closeness' },

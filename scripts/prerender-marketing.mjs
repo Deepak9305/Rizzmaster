@@ -59,6 +59,14 @@ const renderResources = (post) => post.resources?.length
   ? `<section class="rounded-3xl border border-amber-300/15 bg-amber-300/[0.04] p-5 md:p-6"><p class="text-xs font-black uppercase tracking-[0.2em] text-amber-200/80">Further reading</p><p class="mt-3 text-sm leading-6 text-white/50">For more perspective on communication, boundaries, and healthy relationship patterns:</p><div class="mt-4 flex flex-col gap-2">${post.resources.map((resource) => `<a href="${escapeAttribute(resource.url)}" target="_blank" rel="noreferrer" class="text-sm font-bold text-amber-100/80">${escapeHtml(resource.label)} -&gt;</a>`).join('')}</div></section>`
   : '';
 
+const articleInternalLinks = {
+  'how-to-pace-a-new-relationship-without-losing-yourself': [
+    { slug: 'how-to-know-if-you-are-ready-to-date-again', label: 'Know if you are ready to date again' },
+    { slug: 'how-to-connect-emotionally-while-dating', label: 'Build emotional connection' },
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy dating boundaries' }
+  ]
+};
+
 const renderRelated = (post, posts) => posts
   .filter((candidate) => candidate.slug !== post.slug)
   .slice(0, 3)
@@ -67,10 +75,11 @@ const renderRelated = (post, posts) => posts
 
 const renderArticle = (post, posts) => {
   const articleSections = post.sections.map((section) => `<section><h2 class="text-2xl font-bold tracking-tight text-white md:text-3xl">${escapeHtml(section.heading)}</h2>${section.paragraphs.map((paragraph) => `<p class="mt-5 text-base leading-8 text-white/60">${escapeHtml(paragraph)}</p>`).join('')}${renderSectionImage(section)}${renderBullets(section.bullets)}</section>`).join('');
-  const internalLinks = posts
+  const internalLinks = (articleInternalLinks[post.slug] || posts
     .filter((candidate) => candidate.slug !== post.slug)
     .slice(0, 3)
-    .map((related) => `<a href="/blog/${escapeAttribute(related.slug)}" class="rounded-full border border-white/10 bg-black/20 px-3.5 py-2 text-xs font-bold text-white/65">${escapeHtml(related.title)} -&gt;</a>`)
+    .map((related) => ({ slug: related.slug, label: related.title })))
+    .map((link) => `<a href="/blog/${escapeAttribute(link.slug)}" class="rounded-full border border-white/10 bg-black/20 px-3.5 py-2 text-xs font-bold text-white/65">${escapeHtml(link.label)} -&gt;</a>`)
     .join('');
 
   return `<main class="marketing-container marketing-page-padding"><a href="/blog" class="mb-10 inline-flex items-center gap-2 text-sm font-bold text-white/45">&lt;- Back to the blog</a><article class="mx-auto max-w-3xl"><div class="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-white/35"><span class="text-pink-300/80">${escapeHtml(post.category)}</span><span aria-hidden="true">&bull;</span><span>${escapeHtml(post.readingTime)}</span><span aria-hidden="true">&bull;</span><time datetime="${escapeAttribute(post.date)}">${escapeHtml(dateLabel(post.date))}</time></div><h1 class="mt-6 text-4xl font-black leading-[1.05] tracking-[-0.04em] text-white md:text-6xl">${escapeHtml(post.title)}</h1><p class="mt-7 text-lg leading-8 text-white/55">${escapeHtml(post.description)}</p>${post.image ? `<figure class="mt-9 overflow-hidden rounded-3xl border border-pink-300/15 bg-black/20"><picture>${post.imageWebp ? `<source type="image/webp" srcset="${escapeAttribute(post.imageWebp)}">` : ''}<img src="${escapeAttribute(post.image)}" alt="${escapeAttribute(post.imageAlt || post.title)}" class="aspect-[16/9] w-full object-cover"></picture><figcaption class="border-t border-white/10 px-5 py-3 text-xs text-white/35">${escapeHtml(post.imageCaption || 'A better follow-up is clear, calm, and gives the other person room to choose.')}</figcaption></figure>` : ''}<div class="mt-10 space-y-5"><aside class="relative overflow-hidden rounded-3xl border border-pink-300/20 bg-pink-500/[0.08] p-6"><p class="text-xs font-black uppercase tracking-[0.2em] text-pink-200/80">Quick answer</p><p class="mt-3 text-base leading-7 text-white/75">${escapeHtml(post.excerpt)}</p></aside><nav aria-label="Related dating guides" class="rounded-3xl border border-white/10 bg-white/[0.03] p-5 md:p-6"><p class="text-xs font-black uppercase tracking-[0.2em] text-pink-200/75">Continue reading</p><div class="mt-4 flex flex-wrap gap-2.5">${internalLinks}</div></nav>${renderResources(post)}</div><div class="mt-12 space-y-12">${articleSections}</div><section class="mt-16 rounded-3xl border border-pink-300/15 bg-pink-500/[0.08] p-7"><p class="text-xs font-bold uppercase tracking-[0.22em] text-pink-200/75">Need a second opinion?</p><h2 class="mt-3 text-2xl font-bold text-white">Turn the situation into a send-ready reply.</h2><p class="mt-3 max-w-xl text-sm leading-6 text-white/50">Rizz Master helps you find the right words without losing your personality.</p><a href="https://play.google.com/store/apps/details?id=app.vercel.rizzmaster&amp;pcampaignid=web_share" class="mt-6 inline-flex rounded-2xl bg-pink-500 px-5 py-3.5 text-sm font-bold text-white">Get it on Google Play</a></section><section class="mt-20 border-t border-white/10 pt-12"><p class="text-xs font-black uppercase tracking-[0.2em] text-pink-200/75">Keep reading</p><h2 class="mt-3 text-2xl font-black text-white md:text-3xl">More help for your next text</h2><div class="mt-7 grid gap-4 md:grid-cols-3">${renderRelated(post, posts)}</div></section></article></main><footer class="marketing-container border-t border-white/10 py-10 text-sm text-white/45"><a href="/blog">Blog</a> <a href="/privacy" class="ml-4">Privacy</a> <a href="/terms" class="ml-4">Terms</a> <a href="/support" class="ml-4">Support</a></footer>`;
