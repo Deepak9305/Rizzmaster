@@ -1960,6 +1960,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     let shouldShowAd = false;
     let adGenerationToRecord: number | null = null;
     let successfulGenerationCount: number | null = null;
+    let shouldPreloadInterstitial = false;
     if (!currentProfile.is_premium && canUseNativeAdMob()) {
       const today = new Date().toDateString();
       const lastAdDate = localStorage.getItem('rizz_last_ad_date');
@@ -1979,7 +1980,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       }
 
       // Target the third valid generation first, then choose and persist a
-      // three-to-five-generation interval so show attempts are deterministic.
+      // three-to-five-generation interval so preloading is deterministic.
       let targetGen = parseInt(localStorage.getItem(INTERSTITIAL_NEXT_TARGET_STORAGE_KEY) || '', 10);
       if (lastAdGen === 0) {
         targetGen = 3;
@@ -2002,6 +2003,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         shouldShowAd = true;
         adGenerationToRecord = nextGenerationCount;
         console.log(`[AdMob] Will trigger interstitial at valid generation ${nextGenerationCount}...`);
+      } else if (nextGenerationCount + 1 >= targetGen && cooldownPassed) {
+        // Warm the ad after this generation succeeds, one valid generation
+        // before the show point, instead of preloading for failed attempts.
+        shouldPreloadInterstitial = true;
       }
     }
     // --------------------------------------------------
@@ -2119,6 +2124,11 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
             generation: adGenerationToRecord,
           });
           void triggerInterstitial();
+        } else if (shouldPreloadInterstitial) {
+          runAdTask(
+            'Eligible interstitial preload',
+            AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'))
+          );
         }
       }
 
