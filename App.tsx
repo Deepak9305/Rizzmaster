@@ -941,7 +941,8 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   }, [showToast, handleExitGuestMode]);
 
 
-  // Initialize native services without requesting an ad before a user is close to an ad trigger.
+  // Initialize native services after the first paint so startup work does not
+  // compete with the initial WebView render.
 
   // Initialize Native Services
   useEffect(() => {
@@ -1042,6 +1043,26 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       timerIds.forEach(id => clearTimeout(id));
     };
   }, [handleUpgrade, showToast]);
+
+  // Keep one interstitial ready for the first eligible generation. This runs
+  // only for free users after the app shell is usable; premium users never
+  // make an interstitial request.
+  useEffect(() => {
+    if (
+      !canUseNativeAdMob() ||
+      !isAuthReady ||
+      showOnboarding ||
+      !profile ||
+      profile.is_premium
+    ) {
+      return;
+    }
+
+    runAdTask(
+      'Initial interstitial preload',
+      AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'))
+    );
+  }, [isAuthReady, profile?.id, profile?.is_premium, showOnboarding]);
 
   // Handle History API for Mobile Back Button support
   useEffect(() => {
@@ -1948,14 +1969,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
     const cost: 1 | 2 = (activeMode === InputMode.CHAT && activeImage) ? 2 : 1;
 
-    // Guests are rate-limited server-side (5 req/min by IP) but still adhere to client-side credit limits
-    if (!currentProfile.is_premium && (currentProfile.credits || 0) < cost) {
-      handleCreditsExhausted(cost);
-      return;
-    }
-
     let shouldShowAd = false;
-    let shouldPreloadInterstitial = false;
     let adGenerationToRecord: number | null = null;
     if (!currentProfile.is_premium && canUseNativeAdMob()) {
       const today = new Date().toDateString();
@@ -1989,24 +2003,14 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       if (genCount >= targetGen && cooldownPassed) {
         shouldShowAd = true;
         adGenerationToRecord = genCount;
-        console.log(`[AdMob] Will trigger concurrent interstitial at gen ${genCount}...`);
-      } else if (genCount + 1 >= targetGen && cooldownPassed) {
-        // Warm the ad one generation before the trigger so it is ready without
-        // creating requests for users who never reach the ad threshold.
-        shouldPreloadInterstitial = true;
+        console.log(`[AdMob] Will trigger interstitial at generation tap ${genCount}...`);
       }
     }
     // --------------------------------------------------
 
-    loadingRef.current = true;
-    setLoading(true);
+    const triggerInterstitial = () => {
+      if (!shouldShowAd) return Promise.resolve();
 
-    if (shouldPreloadInterstitial) {
-      runAdTask('Eligible interstitial preload', AdMobService.prepareInterstitial(getAdId('INTERSTITIAL')));
-    }
-
-    // Fire the ad concurrently so the API generation happens in the background while the user watches the ad!
-    if (shouldShowAd) {
       let accountedForShownInterstitial = false;
       const recordShownInterstitial = () => {
         if (accountedForShownInterstitial || adGenerationToRecord === null) return;
@@ -2031,10 +2035,11 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
           hasUiConflict,
           adTransitionInProgress: adTransitionInProgressRef.current,
         });
+        return Promise.resolve();
       } else {
         adTransitionInProgressRef.current = true;
 
-        AdMobService.showInterstitial(getAdId('INTERSTITIAL'), recordShownInterstitial)
+        return AdMobService.showInterstitial(getAdId('INTERSTITIAL'), recordShownInterstitial)
           .then((result) => {
             if (result.shown) {
               recordShownInterstitial();
@@ -2051,7 +2056,25 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
           adTransitionInProgressRef.current = false;
         });
       }
+    };
+
+    // Count the tap before checking credits so a third image attempt can still
+    // show the already-preloaded interstitial before the credit modal opens.
+    if (!currentProfile.is_premium && (currentProfile.credits || 0) < cost) {
+      if (shouldShowAd) {
+        void triggerInterstitial().finally(() => handleCreditsExhausted(cost));
+      } else {
+        handleCreditsExhausted(cost);
+      }
+      return;
     }
+
+    loadingRef.current = true;
+    setLoading(true);
+
+    // Fire the ad concurrently so generation keeps its existing flow while
+    // the user watches the interstitial.
+    void triggerInterstitial();
 
     // --- GENERATION START ---
     const shouldManageLocalCredits = !currentProfile.is_premium;
