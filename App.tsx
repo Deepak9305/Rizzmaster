@@ -46,6 +46,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import NoInternetOverlay from './components/NoInternetOverlay';
 
 const DAILY_CREDITS = 5;
+const INTERSTITIAL_NEXT_TARGET_STORAGE_KEY = 'rizz_next_ad_target';
 const IS_WEB_PLATFORM = !Capacitor.isNativePlatform();
 const SILENT_PREMIUM_RESTORE_WAIT_MS = 45000;
 const SILENT_PREMIUM_RESTORE_RETRY_MS = 60000;
@@ -1044,26 +1045,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     };
   }, [handleUpgrade, showToast]);
 
-  // Keep one interstitial ready for the first eligible generation. This runs
-  // only for free users after the app shell is usable; premium users never
-  // make an interstitial request.
-  useEffect(() => {
-    if (
-      !canUseNativeAdMob() ||
-      !isAuthReady ||
-      showOnboarding ||
-      !profile ||
-      profile.is_premium
-    ) {
-      return;
-    }
-
-    runAdTask(
-      'Initial interstitial preload',
-      AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'))
-    );
-  }, [isAuthReady, profile?.id, profile?.is_premium, showOnboarding]);
-
   // Handle History API for Mobile Back Button support
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
@@ -1969,6 +1950,13 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
     const cost: 1 | 2 = (activeMode === InputMode.CHAT && activeImage) ? 2 : 1;
 
+    // A blocked attempt belongs to the premium/rewarded flow. Do not count it
+    // as a generation or mark an interstitial trigger that will never run.
+    if (!currentProfile.is_premium && (currentProfile.credits || 0) < cost) {
+      handleCreditsExhausted(cost);
+      return;
+    }
+
     let shouldShowAd = false;
     let adGenerationToRecord: number | null = null;
     if (!currentProfile.is_premium && canUseNativeAdMob()) {
@@ -1977,33 +1965,50 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       let genCount = parseInt(localStorage.getItem('rizz_daily_gen_count') || '0');
       let lastAdGen = parseInt(localStorage.getItem('rizz_last_ad_gen_count') || '0');
 
+      // Recover cleanly if an older build left malformed local ad state.
+      if (!Number.isFinite(genCount) || genCount < 0) genCount = 0;
+      if (!Number.isFinite(lastAdGen) || lastAdGen < 0) lastAdGen = 0;
+
       if (lastAdDate !== today) {
         genCount = 0;
         lastAdGen = 0;
         localStorage.setItem('rizz_last_ad_date', today);
         localStorage.setItem('rizz_last_ad_gen_count', '0');
+        localStorage.removeItem(INTERSTITIAL_NEXT_TARGET_STORAGE_KEY);
       }
 
       genCount += 1;
       localStorage.setItem('rizz_daily_gen_count', genCount.toString());
 
-      // Target: 3rd gen for first ad, then random between 3-5 for subsequent ads
-      const isFirstAd = lastAdGen === 0;
-      // Add slight randomness (3, 4, or 5) to prevent users from predicting exactly when the ad will hit
-      const nextAdOffset = Math.floor(Math.random() * 3) + 3; 
-      const targetGen = isFirstAd ? 3 : lastAdGen + nextAdOffset;
+      // Target the third valid generation first, then choose and persist a
+      // three-to-five-generation interval so preloading is deterministic.
+      let targetGen = parseInt(localStorage.getItem(INTERSTITIAL_NEXT_TARGET_STORAGE_KEY) || '', 10);
+      if (lastAdGen === 0) {
+        targetGen = 3;
+      } else if (!Number.isFinite(targetGen) || targetGen <= lastAdGen) {
+        const nextAdOffset = Math.floor(Math.random() * 3) + 3;
+        targetGen = lastAdGen + nextAdOffset;
+      }
+      localStorage.setItem(INTERSTITIAL_NEXT_TARGET_STORAGE_KEY, targetGen.toString());
 
       const now = activeTimeMs.current + (
         foregroundStartedAt.current === null
           ? 0
           : Math.max(0, Date.now() - foregroundStartedAt.current)
       );
-      const cooldownPassed = isFirstAd || (now - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS);
+      const cooldownPassed = lastAdGen === 0 || (now - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS);
       
       if (genCount >= targetGen && cooldownPassed) {
         shouldShowAd = true;
         adGenerationToRecord = genCount;
         console.log(`[AdMob] Will trigger interstitial at generation tap ${genCount}...`);
+      } else if (genCount + 1 >= targetGen && cooldownPassed) {
+        // Warm the ad while the user is active, one valid generation before
+        // the show point, instead of preloading on every app launch.
+        runAdTask(
+          'Eligible interstitial preload',
+          AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'))
+        );
       }
     }
     // --------------------------------------------------
@@ -2021,6 +2026,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
             : Math.max(0, Date.now() - foregroundStartedAt.current)
         );
         localStorage.setItem('rizz_last_ad_gen_count', adGenerationToRecord.toString());
+        localStorage.removeItem(INTERSTITIAL_NEXT_TARGET_STORAGE_KEY);
       };
 
       const isForeground = backgroundTimestamp.current === null;
@@ -2057,13 +2063,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         });
       }
     };
-
-    // Keep blocked-credit attempts on the existing premium/rewarded flow. An
-    // interstitial is only shown after a generation succeeds.
-    if (!currentProfile.is_premium && (currentProfile.credits || 0) < cost) {
-      handleCreditsExhausted(cost);
-      return;
-    }
 
     loadingRef.current = true;
     setLoading(true);
