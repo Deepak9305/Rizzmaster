@@ -993,3 +993,53 @@ html.native-app .coach-avatar > div:first-child,
 .native-app .web-app-empty-state > span {
   filter: none !important;
 }
+
+/* Keep Android WebView interactions responsive on lower-end devices. The
+   browser experience keeps the full motion/blur treatment; native only uses
+   the already-composited surfaces and skips decorative work while scrolling. */
+html.native-app .web-app-shell,
+html.native-app .native-coach-shell {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+html.native-app [class*="backdrop-blur"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html.native-app [class*="blur-"] {
+  filter: none !important;
+}
+
+html.native-app .animate-fade-in,
+html.native-app .animate-fade-in-up,
+html.native-app .animate-scale-in,
+html.native-app .animate-slide-in-right,
+html.native-app .animate-slide-in-right-view,
+html.native-app .animate-slide-in-left-view,
+html.native-app .animate-view-zoom-out,
+html.native-app .animate-blur-in,
+html.native-app .animate-text-shimmer,
+html.native-app .animate-shimmer,
+html.native-app .animate-pulse-glow,
+html.native-app .animate-float,
+html.native-app .animate-pulse {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
+  will-change: auto !important;
+}
+
+/* Coach history can contain up to 50 messages. Let WebView skip painting
+   bubbles outside the viewport without changing their measured scroll size. */
+html.native-app .native-coach-screen .coach-message-bubble {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 72px;
+}
+
+html.native-app .web-app-results-panel {
+  contain: layout style;
+}
