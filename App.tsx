@@ -2115,13 +2115,14 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         skipFinalProfileSync = !shouldSyncSignedInProfile;
         setResult(res);
 
-        // Let the successful result paint before showing the interstitial.
-        // This keeps the ad at a clear transition instead of interrupting the
-        // generation request or a blocked-credit message.
+        // Only show after a successful generation. Invoke the native bridge
+        // directly instead of deferring through requestAnimationFrame, which
+        // can be skipped or delayed by Android WebView frame scheduling.
         if (shouldShowAd) {
-          requestAnimationFrame(() => {
-            void triggerInterstitial();
+          console.log('[AdMob] Starting interstitial after successful generation.', {
+            generation: adGenerationToRecord,
           });
+          void triggerInterstitial();
         }
       }
 

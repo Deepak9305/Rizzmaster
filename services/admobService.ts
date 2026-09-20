@@ -413,7 +413,10 @@ export const AdMobService = {
                         }
 
                         try {
-                            await AdMob.showInterstitial();
+                            // Target the same prepared unit explicitly. Relying on the
+                            // plugin's global "last prepared" ad can lose the show
+                            // race when another full-screen ad was prepared meanwhile.
+                            await AdMob.showInterstitial({ adId });
                         } catch (error) {
                             console.error('AdMob showInterstitial threw:', error);
                             this.interstitialReady = false;
