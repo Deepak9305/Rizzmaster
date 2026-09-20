@@ -1959,6 +1959,8 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
     let shouldShowAd = false;
     let adGenerationToRecord: number | null = null;
+    let successfulGenerationCount: number | null = null;
+    let shouldPreloadInterstitial = false;
     if (!currentProfile.is_premium && canUseNativeAdMob()) {
       const today = new Date().toDateString();
       const lastAdDate = localStorage.getItem('rizz_last_ad_date');
@@ -1977,9 +1979,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         localStorage.removeItem(INTERSTITIAL_NEXT_TARGET_STORAGE_KEY);
       }
 
-      genCount += 1;
-      localStorage.setItem('rizz_daily_gen_count', genCount.toString());
-
       // Target the third valid generation first, then choose and persist a
       // three-to-five-generation interval so preloading is deterministic.
       let targetGen = parseInt(localStorage.getItem(INTERSTITIAL_NEXT_TARGET_STORAGE_KEY) || '', 10);
@@ -1997,18 +1996,17 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
           : Math.max(0, Date.now() - foregroundStartedAt.current)
       );
       const cooldownPassed = lastAdGen === 0 || (now - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS);
+      const nextGenerationCount = genCount + 1;
+      successfulGenerationCount = nextGenerationCount;
       
-      if (genCount >= targetGen && cooldownPassed) {
+      if (nextGenerationCount >= targetGen && cooldownPassed) {
         shouldShowAd = true;
-        adGenerationToRecord = genCount;
-        console.log(`[AdMob] Will trigger interstitial at generation tap ${genCount}...`);
-      } else if (genCount + 1 >= targetGen && cooldownPassed) {
-        // Warm the ad while the user is active, one valid generation before
-        // the show point, instead of preloading on every app launch.
-        runAdTask(
-          'Eligible interstitial preload',
-          AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'))
-        );
+        adGenerationToRecord = nextGenerationCount;
+        console.log(`[AdMob] Will trigger interstitial at valid generation ${nextGenerationCount}...`);
+      } else if (nextGenerationCount + 1 >= targetGen && cooldownPassed) {
+        // Warm the ad after this generation succeeds, one valid generation
+        // before the show point, instead of preloading for failed attempts.
+        shouldPreloadInterstitial = true;
       }
     }
     // --------------------------------------------------
@@ -2114,6 +2112,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         skipFinalProfileSync = !shouldSyncSignedInProfile;
         setResult(res);
 
+        if (successfulGenerationCount !== null) {
+          localStorage.setItem('rizz_daily_gen_count', successfulGenerationCount.toString());
+        }
+
         // Only show after a successful generation. Invoke the native bridge
         // directly instead of deferring through requestAnimationFrame, which
         // can be skipped or delayed by Android WebView frame scheduling.
@@ -2122,6 +2124,11 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
             generation: adGenerationToRecord,
           });
           void triggerInterstitial();
+        } else if (shouldPreloadInterstitial) {
+          runAdTask(
+            'Eligible interstitial preload',
+            AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'))
+          );
         }
       }
 
