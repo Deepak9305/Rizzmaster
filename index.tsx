@@ -2,6 +2,7 @@ import React, { lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import { Capacitor } from '@capacitor/core';
+import { Analytics } from '@vercel/analytics/react';
 
 const App = lazy(() => import('./App'));
 const WebRouter = lazy(() => import('./components/WebRouter'));
@@ -24,6 +25,7 @@ root.render(
   <React.StrictMode>
     <Suspense fallback={<div className="min-h-screen bg-[#050407]" />}>
       {shouldRenderWebRouter ? <WebRouter /> : <App />}
+      {shouldRenderWebRouter && <Analytics />}
     </Suspense>
   </React.StrictMode>
 );
