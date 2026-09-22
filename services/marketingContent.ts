@@ -30,6 +30,222 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'how-to-flirt-without-coming-on-too-strong',
+    title: 'How to Flirt Without Coming On Too Strong: 11 Ways to Show Interest Naturally',
+    description: 'Learn how to flirt without coming on too strong by showing clear interest, reading the other person\'s energy, respecting boundaries, and keeping attraction playful rather than pressuring.',
+    excerpt: 'Good flirting is clear enough to show interest and light enough to leave the other person room to respond. Use specific attention, playful confidence, and mutual pacing instead of pressure or performance.',
+    date: '2026-09-22',
+    updatedAt: '2026-09-22',
+    readingTime: '11 min read',
+    category: 'Dating & Attraction',
+    keywords: [
+      'how to flirt without coming on too strong',
+      'how to flirt without being too much',
+      'how to show interest without seeming desperate',
+      'flirting without coming on too strong',
+      'how to flirt naturally',
+      'how to show romantic interest',
+      'how to flirt with confidence',
+      'subtle flirting signs',
+      'how to flirt without being awkward',
+      'healthy flirting tips'
+    ],
+    image: '/blog/how-to-flirt-without-coming-on-too-strong-hero.jpg',
+    imageWebp: '/blog/how-to-flirt-without-coming-on-too-strong-hero.webp',
+    imageAlt: 'Two adults sharing playful conversation at an outdoor cafe during golden hour',
+    imageCaption: 'Natural flirting shows interest while leaving both people enough room to stay comfortable and choose the next step.',
+    resources: [
+      { label: 'The Gottman Institute: Pay attention to bids for connection', url: 'https://www.gottman.com/blog/want-to-improve-your-relationship-start-paying-more-attention-to-bids/' },
+      { label: 'loveisrespect: What are my boundaries?', url: 'https://www.loveisrespect.org/resources/what-are-my-boundaries/' },
+      { label: 'Planned Parenthood: How do I talk about consent?', url: 'https://www.plannedparenthood.org/learn/relationships/sexual-consent/how-do-i-talk-about-consent' },
+      { label: 'One Love Foundation: 10 signs of a healthy relationship', url: 'https://www.joinonelove.org/learn/10_traits_healthy_relationship/' }
+    ],
+    sections: [
+      {
+        heading: 'Flirting is an invitation, not a performance',
+        paragraphs: [
+          "Wanting to flirt without coming on too strong usually means you care about two things at once: you want the other person to know you are interested, and you do not want them to feel cornered. That is a healthy goal. Good flirting is not about finding a magic line that guarantees attraction. It is a way to create a little more warmth, playfulness, and honesty while giving the other person a genuine choice about whether to join you.",
+          "The easiest way to keep flirting comfortable is to make your interest clear in small steps. Notice something specific. Ask a question. Offer a light compliment. See whether they respond with curiosity, humour, or their own effort. If they meet you there, you can be a little more direct. If they give short answers, turn away, change the subject, or stop engaging, you have useful information. You do not need to push harder to get a better result.",
+          "This approach is more confident than trying to impress someone into liking you. You are not auditioning or trying to control the outcome. You are showing interest, paying attention, and letting mutuality decide what happens next."
+        ],
+        bullets: [
+          'Show interest in small, readable ways before making a bigger move.',
+          'Treat the other person\'s response as information, not a challenge to overcome.',
+          'Aim for mutual enjoyment, not a perfect performance.'
+        ]
+      },
+      {
+        heading: '1. Start with specific attention',
+        paragraphs: [
+          "Generic compliments can be pleasant, but specific attention feels more natural because it shows that you are responding to the actual person in front of you. Instead of reaching for a dramatic line, notice a choice they made, a story they told, or the energy they bring to the conversation. You might say, 'You have a very calm way of explaining chaotic stories,' or, 'That colour really suits you.' The point is not to sound poetic. It is to be present.",
+          "Specific attention also gives the other person an easy way to continue. They can tell you the story behind the choice, explain what they like, or simply accept the compliment. That is less intense than putting them on the spot with a huge statement about their beauty or your instant connection.",
+          "Keep the observation respectful and proportionate to how well you know each other. Early flirting works best when it notices style, humour, taste, confidence, or a shared moment. Avoid analysing someone\'s body, personal history, or emotional state before they have invited that level of attention."
+        ],
+        bullets: [
+          'Comment on a choice, detail, or quality you can genuinely explain.',
+          'Use observations that open the conversation instead of ending it.',
+          'Keep early compliments warm and respectful rather than intensely personal.'
+        ],
+        image: '/blog/how-to-flirt-without-coming-on-too-strong-interest.jpg',
+        imageWebp: '/blog/how-to-flirt-without-coming-on-too-strong-interest.webp',
+        imageAlt: 'Two adults noticing something together at a contemporary art gallery',
+        imageCaption: 'Specific attention feels personal because it responds to the moment instead of using a one-size-fits-all line.'
+      },
+      {
+        heading: '2. Use playful observations instead of generic lines',
+        paragraphs: [
+          "Playfulness creates chemistry when it feels collaborative. A light observation about the situation can be more engaging than a rehearsed pickup line because it gives both people something to work with. If they are intensely comparing menus, you could say, 'I respect the research. I am going to need your final ranking.' If they keep making dry jokes, you might say, 'You have been quietly collecting those all evening, have you not?'",
+          "The best playful comments are easy to correct and easy to ignore. They do not rely on an insult, a stereotype, or a sensitive insecurity. A little teasing can be fun when the other person is clearly enjoying it, but do not use mockery as a shortcut to intimacy. If the joke lands badly, own it quickly: 'That came out sharper than I meant. Sorry.' Then move on without demanding reassurance.",
+          "Notice whether they play back. A smile, a follow-up joke, or a new question suggests that the tone is working. A forced laugh, silence, or change of subject suggests that you should return to straightforward conversation. Flirting does not have to stay at maximum intensity to remain interesting."
+        ],
+        bullets: [
+          'Make the joke about the shared moment, not a vulnerable trait.',
+          'Give the other person an easy way to respond without performing.',
+          'If the tone misses, repair it without making them comfort you.'
+        ]
+      },
+      {
+        heading: '3. Match their energy without copying it',
+        paragraphs: [
+          "Matching energy does not mean mirroring every word, emoji, or gesture. It means noticing the level of openness, pace, and enthusiasm the other person is bringing, then staying in the same general range. If they are relaxed and curious, you can be warm and playful. If they are quiet or distracted, a high-intensity stream of compliments may feel like work rather than chemistry.",
+          "Energy includes practical things too. Someone can enjoy talking with you and still need to leave, answer a message, or take a slower pace. Respecting that moment makes your interest feel safer. You can say, 'I am enjoying this, but I will let you get back to your evening. We can continue another time.' That creates space without pretending you are not interested.",
+          "Look for reciprocity across the whole interaction rather than judging one reply. Some people warm up slowly. Others are expressive in person but brief over text. The useful pattern is whether they keep choosing to participate, ask things back, make time, and respond comfortably when you show a little more interest."
+        ],
+        bullets: [
+          'Match the other person\'s pace and openness, not every surface habit.',
+          'Respect practical signs that they are busy, tired, or ready to leave.',
+          'Judge mutual interest by repeated participation rather than one message.'
+        ],
+        image: '/blog/how-to-flirt-without-coming-on-too-strong-read-the-room.jpg',
+        imageWebp: '/blog/how-to-flirt-without-coming-on-too-strong-read-the-room.webp',
+        imageAlt: 'Two adults sharing a balanced conversation at a cafe table',
+        imageCaption: 'Reading the room means noticing both enthusiasm and limits, then choosing a pace that works for both people.'
+      },
+      {
+        heading: '4. Give a compliment that is easy to receive',
+        paragraphs: [
+          "A good compliment offers appreciation without creating a debt. The other person should be able to smile, say thank you, or disagree without having to manage your feelings. Compliments about someone\'s humour, perspective, style, creativity, or the way they treat people often feel more grounded than a rapid sequence of comments about their appearance.",
+          "Try connecting the compliment to your experience rather than presenting it as an objective verdict. 'I like how curious you are about things' sounds more conversational than 'You are the most interesting person I have ever met.' The first tells them what you enjoy. The second creates an intensity they may not know how to answer.",
+          "Avoid stacking compliments when the other person has not responded to the first one. One sincere observation usually has more impact than five increasingly dramatic ones. If they return a compliment, accept it simply instead of arguing or fishing for more. Comfortable flirting includes being able to receive warmth as well as give it."
+        ],
+        bullets: [
+          'Describe what you appreciate instead of making a grand claim about who they are.',
+          'Leave a pause after the compliment so they can respond naturally.',
+          'Accept a compliment with a simple thank you rather than asking for proof.'
+        ]
+      },
+      {
+        heading: '5. Ask, share, and leave room for a response',
+        paragraphs: [
+          "Flirting becomes uncomfortable when one person is doing all the presenting. A better rhythm is ask, share, and pause. Ask a question that gives the other person room to be specific. Share a little about yourself so it does not feel like an interview. Then leave enough space for them to decide whether they want to keep the conversation moving.",
+          "For example, instead of asking a long list of personal questions, say, 'You mentioned that you like finding new restaurants. What is the best meal you have had recently? I am still trying to beat a tiny noodle shop I found last month.' This creates a topic, gives them a detail to respond to, and offers a small piece of your own personality.",
+          "Pay attention to whether they ask anything back. Questions are not the only sign of interest, but sustained one-sided effort is tiring. If you keep supplying topics, compliments, and invitations while they only react, reduce your effort and let the interaction show you what it can actually support."
+        ],
+        bullets: [
+          'Use open questions, but offer your own answer too.',
+          'Do not fill every pause before the other person has a chance to speak.',
+          'A conversation should create room for both people to reveal interest.'
+        ]
+      },
+      {
+        heading: '6. Make your interest clearer as reciprocity grows',
+        paragraphs: [
+          "Trying to be subtle forever can create its own awkwardness. If the other person is consistently engaged, make your interest a little clearer instead of hiding behind endless jokes. You might say, 'I like talking with you,' or, 'I am enjoying getting to know you. I would like to see you again.' Clear does not mean intense. It simply gives the other person accurate information.",
+          "Increase clarity in proportion to evidence. After one friendly conversation, a low-pressure invitation is enough. After several good dates and mutual effort, you can talk about what you are both looking for. The goal is to avoid two extremes: making a major declaration before there is a foundation, or expecting the other person to decode months of hints.",
+          "If you are nervous, describe your intention and leave the choice open. 'I would like to take you out for coffee sometime. No pressure if you are not feeling it' is direct, but it does not make a no emotionally expensive. That combination of honesty and room is one of the most reliable ways to flirt with confidence."
+        ],
+        bullets: [
+          'Move from playful to direct when mutual effort is consistent.',
+          'Use small statements of interest instead of sudden declarations.',
+          'Make invitations clear enough to answer and relaxed enough to decline.'
+        ]
+      },
+      {
+        heading: '7. Escalate only when comfort and consent are clear',
+        paragraphs: [
+          "Flirting can include closer conversation, more personal questions, or physical contact, but every step should be mutual. Interest is not permission. Do not assume that a smile, a date, or a previous yes means the other person wants the next level of intimacy. Ask when the situation calls for it, and pay attention to the answer rather than trying to persuade them.",
+          "A simple question does not have to sound formal: 'Can I hold your hand?' or, 'Would you like a kiss?' can be warm and confident when asked at the right moment. You can also check in after a change in pace: 'Is this still comfortable?' If they hesitate, say no, pull away, or seem unsure, stop without sulking, bargaining, or asking them to explain more than they want to.",
+          "The same standard applies to digital flirting. Do not pressure someone for private photos, immediate replies, location access, or sexual conversation. Respecting a boundary is not a loss of chemistry. It is evidence that the connection can hold honesty and choice."
+        ],
+        bullets: [
+          'Ask before physical or sexual escalation when there is any uncertainty.',
+          'Treat hesitation as a reason to pause, not an invitation to negotiate.',
+          'Never use guilt, persistence, or a previous yes to override a current no.'
+        ]
+      },
+      {
+        heading: '8. Know the difference between confidence and pressure',
+        paragraphs: [
+          "Confidence says, 'This is what I would like, and you get to decide whether you want it too.' Pressure says, 'I need you to choose this so I can feel okay.' The words can look similar, which is why the difference is usually visible in what happens after the answer. A confident person can hear no, uncertainty, or not yet without turning the moment into a punishment.",
+          "Pressure often appears as repetition, guilt, manufactured urgency, or an attempt to make a reasonable boundary sound dramatic. 'Come on, it is just a drink' may feel small to the person saying it, but repeating it after a clear no changes an invitation into a demand. Likewise, disappearing to provoke anxiety, making someone jealous, or implying that they owe you attention is not stronger flirting. It is a way of taking away choice.",
+          "Before you send another message or make another move, ask yourself whether you are expressing interest or trying to force certainty. If you need reassurance, say that honestly or take a step back. The other person is allowed to be interested and still move at a different pace."
+        ],
+        bullets: [
+          'Confidence communicates a preference and accepts the other person\'s agency.',
+          'Pressure repeats the request after the answer or makes a boundary costly.',
+          'Do not create jealousy or urgency to manufacture attraction.'
+        ]
+      },
+      {
+        heading: '9. Flirt over text without making the conversation performative',
+        paragraphs: [
+          "Texting can make flirting feel higher-stakes because you have time to reread every word. Keep the exchange connected to the person rather than turning it into a contest for the cleverest line. Reference something they actually said, send a playful question, or share a small moment from your day that gives them an opening. 'I just passed a bakery that is clearly trying to ruin my dinner. What is your most defensible dessert choice?' is easier to answer than a string of generic fire emojis.",
+          "Avoid flooding the chat when you are anxious. Multiple follow-ups, constant check-ins, or dramatic messages about a delayed reply usually create pressure instead of attraction. Send one clear message, then let the other person return when they can. A slower response is not automatically rejection, but a repeated pattern of low effort is worth noticing.",
+          "If the conversation has good energy, move toward a real plan rather than trying to keep the spark alive indefinitely on a screen. Text can open the door. It cannot replace observing how you communicate, listen, and respect each other in real life."
+        ],
+        bullets: [
+          'Use details from the conversation so the flirting feels personal.',
+          'Send one clear follow-up instead of escalating anxiety through message volume.',
+          'Use texting to create a next step, not to demand constant reassurance.'
+        ]
+      },
+      {
+        heading: '10. Make a low-pressure invitation',
+        paragraphs: [
+          "A concrete invitation is often less awkward than endless hinting. Keep it specific, simple, and easy to answer. Suggest an activity, a general time, and a place or format: 'I have enjoyed talking with you. Want to grab coffee after work on Thursday?' This gives the other person enough information to make a decision without requiring them to plan the entire date for you.",
+          "Low pressure does not mean pretending you do not care. You can be honest: 'I would like to take you out, but no worries if you are not feeling the same.' Say it once and let the answer stand. If they are interested but busy, they can suggest another time. If they decline without an alternative, accept the information instead of asking for a better reason.",
+          "Keep the first plan proportionate to the relationship. A short coffee, a walk in a public place, or a casual event can give both people a comfortable exit and a real chance to connect. You are not trying to prove that the relationship has a future. You are choosing one next step."
+        ],
+        bullets: [
+          'Suggest a real activity and time instead of asking a vague question.',
+          'Make the invitation easy to decline without guilt.',
+          'Choose a first date that leaves room to learn how you actually fit.'
+        ],
+        image: '/blog/how-to-flirt-without-coming-on-too-strong-clear-invitation.jpg',
+        imageWebp: '/blog/how-to-flirt-without-coming-on-too-strong-clear-invitation.webp',
+        imageAlt: 'Two adults walking together outdoors during golden hour after making a clear plan',
+        imageCaption: 'A clear, low-pressure invitation turns playful interest into a next step both people can choose.'
+      },
+      {
+        heading: '11. Read the answer and respond with dignity',
+        paragraphs: [
+          "The final flirting skill is not a better line. It is knowing what to do with the answer. A yes deserves enthusiasm without immediately demanding more access. A maybe deserves room and a concrete follow-up if they offer one. A no deserves a respectful response and an end to the pursuit. When you respond well, you protect your self-respect and make the interaction safer for everyone involved.",
+          "If the interest is mutual, keep building through consistency rather than jumping straight to maximum intensity. If the person is uncertain, you can say, 'No problem. If you decide you would like to, let me know.' Then return your attention to your own life. If they are not interested, 'Thanks for being honest. I enjoyed meeting you' is enough. You do not need to debate the decision, request a detailed review, or prove that you would be a perfect match.",
+          "Not every good interaction becomes a relationship, and that does not make the flirting a failure. The point was to create a genuine opportunity for connection. When you show interest clearly, respect boundaries, and stay open to the answer, you are already practising the kind of dating confidence that leads to healthier matches."
+        ],
+        bullets: [
+          'A clear yes is an invitation to continue, not a reason to rush.',
+          'A vague answer needs space, not a campaign of follow-ups.',
+          'A no is complete information. Accept it and move forward.'
+        ]
+      },
+      {
+        heading: 'A simple checklist for flirting naturally',
+        paragraphs: [
+          "Before you make the next move, check the basics. Are you responding to the real person rather than performing a character? Have they shown some reciprocal effort? Is your comment specific, respectful, and easy to answer? Are you leaving room for a no without punishment? If the answer to those questions is yes, you probably do not need a more complicated strategy.",
+          "Flirting without coming on too strong is less about being perfectly subtle and more about being emotionally proportionate. Show enough interest to be understood. Slow down enough to notice the response. Be playful without using cruelty. Be direct without making the other person responsible for your confidence. That balance makes attraction feel like a shared possibility instead of a sales pitch.",
+          "When you are ready, make one clear next move and let the other person choose theirs. The right connection will not require you to overpower the room, flood the chat, or keep guessing forever. It will give both people more reasons to participate."
+        ],
+        bullets: [
+          'Be specific instead of overly intense.',
+          'Look for reciprocity before increasing the pace.',
+          'Respect every answer and keep your own life in view.',
+          'Let the next step be mutual, clear, and easy to choose.'
+        ]
+      }
+    ]
+  },
+  {
     slug: 'how-to-pace-a-new-relationship-without-losing-yourself',
     title: 'How to Pace a New Relationship Without Losing Yourself',
     description: 'Learn how to pace a new relationship with steady communication, clear expectations, healthy boundaries, and enough room for both people to stay grounded.',

@@ -60,6 +60,11 @@ const renderResources = (post) => post.resources?.length
   : '';
 
 const articleInternalLinks = {
+  'how-to-flirt-without-coming-on-too-strong': [
+    { slug: 'how-to-connect-emotionally-while-dating', label: 'Build emotional connection while dating' },
+    { slug: 'build-real-connection-first-date', label: 'Build a real connection on a first date' },
+    { slug: 'how-to-tell-if-someone-is-flirting-over-text', label: 'Read the signs of flirting over text' }
+  ],
   'how-to-pace-a-new-relationship-without-losing-yourself': [
     { slug: 'how-to-know-if-you-are-ready-to-date-again', label: 'Know if you are ready to date again' },
     { slug: 'how-to-connect-emotionally-while-dating', label: 'Build emotional connection' },
