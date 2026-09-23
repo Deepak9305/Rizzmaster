@@ -30,6 +30,222 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'do-i-like-them-or-just-like-the-attention',
+    title: 'How to Know If You Like Someone or Just Like the Attention',
+    description: 'Learn how to tell whether you genuinely like someone or mainly enjoy the attention, validation, chemistry, or possibility of being wanted.',
+    excerpt: 'Attraction, loneliness, and validation can feel similar at first. Use curiosity, consistency, compatibility, and your feelings after interaction to work out whether you like the person or mainly like being chosen.',
+    date: '2026-09-23',
+    updatedAt: '2026-09-23',
+    readingTime: '10 min read',
+    category: 'Dating & Attraction',
+    keywords: [
+      'do I like them or just like the attention',
+      'how to know if you really like someone',
+      'signs you like someone romantically',
+      'infatuation vs genuine interest',
+      'do I like them or the idea of them',
+      'how to tell if attraction is real',
+      'how to know if you like someone back',
+      'validation vs genuine interest',
+      'am I attracted to them or lonely',
+      'how to stop leading someone on'
+    ],
+    image: '/blog/do-i-like-them-or-just-like-the-attention-hero.jpg',
+    imageWebp: '/blog/do-i-like-them-or-just-like-the-attention-hero.webp',
+    imageAlt: 'An adult reflecting at a cafe with a phone set aside during golden hour',
+    imageCaption: 'Self-awareness creates space to tell genuine curiosity apart from the temporary lift of being wanted.',
+    resources: [
+      { label: 'The Gottman Institute: Pay attention to bids for connection', url: 'https://www.gottman.com/blog/want-to-improve-your-relationship-start-paying-more-attention-to-bids/' },
+      { label: 'loveisrespect: What makes a healthy relationship?', url: 'https://www.loveisrespect.org/resources/what-is-a-healthy-relationship/' },
+      { label: 'One Love Foundation: 10 signs of a healthy relationship', url: 'https://www.joinonelove.org/learn/10_traits_healthy_relationship/' },
+      { label: 'Planned Parenthood: How do I talk about consent?', url: 'https://www.plannedparenthood.org/learn/relationships/sexual-consent/how-do-i-talk-about-consent' }
+    ],
+    sections: [
+      {
+        heading: 'Attention can feel like attraction at first',
+        paragraphs: [
+          "When someone is interested in you, the feeling can be immediate. Their messages give you a lift. Their compliments make you replay the conversation. You may feel a rush when their name appears on your phone and a drop when they take longer to reply. None of that proves you do not like them. It simply means that being noticed can activate feelings that are separate from knowing whether you actually want a relationship with this person.",
+          "The useful question is not whether the attention feels good. Of course it can feel good. Ask what remains when you remove the flattering parts: are you curious about their inner world, comfortable with their ordinary personality, and interested in making room for their needs? Or do you mainly want the reassurance that they want you? Attraction and validation can overlap, but they are not the same thing.",
+          "You do not need to decide after one conversation. Genuine interest often becomes clearer through small, real interactions. Notice your pattern over time, try a low-pressure next step, and let the answer be more nuanced than an immediate yes or no."
+        ],
+        bullets: [
+          'Enjoying attention is normal and does not automatically mean you are being dishonest.',
+          'Genuine interest includes curiosity about the person beyond how they make you feel.',
+          'Time and ordinary interactions usually reveal more than the first rush of chemistry.'
+        ]
+      },
+      {
+        heading: '1. Notice what you miss when the attention stops',
+        paragraphs: [
+          "Imagine that the person stops complimenting you but remains exactly the same person. Would you still want to talk to them? This thought experiment can separate the person from the emotional reward. If what you miss is their humour, perspective, stories, kindness, or the way they notice details, that points toward interest in who they are. If you mostly miss the notification, the praise, or the proof that you are desirable, validation may be doing more of the work.",
+          "Look at your reaction when communication becomes less intense. Do you feel disappointed because you wanted to hear how their day went, or panicked because their silence changes how you see yourself? The first is information about connection. The second may be an attachment alarm or a need for reassurance. Both feelings deserve care, but they call for different choices.",
+          "Do not use a single quiet day as a verdict. People get busy, and healthy interest does not require constant availability. Look for the broader pattern: when the attention is steady, what do you actually talk about, and what part of the relationship do you choose to maintain?"
+        ],
+        bullets: [
+          'Ask whether you miss their qualities or mainly the feeling of being chosen.',
+          'Separate disappointment about less contact from fear about your own worth.',
+          'Judge the pattern over time instead of treating one delayed reply as proof.'
+        ]
+      },
+      {
+        heading: '2. Ask whether you are curious about the person',
+        paragraphs: [
+          "Real interest usually creates questions that are not just about whether the person likes you. You want to know what they care about, how they see the world, what makes them laugh, and how they handle ordinary problems. You do not have to be fascinated by every detail, but you should feel some desire to understand them rather than only to secure their approval.",
+          "Try writing down three things you know about them that have nothing to do with their attraction to you. What are they working toward? What do they value in friendships? How do they spend a normal weekend? What have they changed their mind about? If those questions feel interesting, follow the curiosity in conversation. If you keep returning to whether they find you attractive, the connection may still be mostly about reassurance.",
+          "Curiosity should also be mutual. Notice whether you listen to their answers or wait for a chance to turn the subject back to yourself. Attraction is not an exam, but genuine interest tends to make attention feel reciprocal rather than purely self-focused."
+        ],
+        bullets: [
+          'Ask questions that reveal values, routines, humour, and perspective.',
+          'Notice whether you enjoy listening, not just being asked about yourself.',
+          'Look for curiosity that continues even when the conversation is not flattering.'
+        ],
+        image: '/blog/do-i-like-them-or-just-like-the-attention-mutual-interest.jpg',
+        imageWebp: '/blog/do-i-like-them-or-just-like-the-attention-mutual-interest.webp',
+        imageAlt: 'Two adults listening to each other during a relaxed cafe conversation',
+        imageCaption: 'Genuine interest becomes easier to recognize when both people are curious, present, and contributing.'
+      },
+      {
+        heading: '3. Separate chemistry from compatibility',
+        paragraphs: [
+          "Chemistry is the spark: excitement, attraction, anticipation, and the sense that a conversation has a charge. Compatibility is quieter. It includes whether your communication styles, values, availability, boundaries, and relationship goals can work together. Chemistry can make you want more information. Compatibility helps you decide whether more investment makes sense.",
+          "Ask yourself whether you like how you interact, not only how intensely you feel. Can you disagree without turning cold or competitive? Do you feel respected when you say no? Are their plans and expectations reasonably compatible with yours? Do you enjoy their company when neither of you is trying to impress the other? These questions do not remove romance. They protect it from being built entirely on projection.",
+          "Do not demand certainty too early. You are not supposed to know whether someone is a perfect long-term match after a few dates. You only need enough information to choose an honest next step. A connection can be exciting and still deserve a slower pace while you learn what is real."
+        ],
+        bullets: [
+          'Chemistry creates momentum; compatibility helps you decide how to use it.',
+          'Notice respect, communication, values, availability, and relationship goals.',
+          'Choose the next step based on the information you have, not a fantasy of certainty.'
+        ]
+      },
+      {
+        heading: '4. Pay attention to how you feel after seeing them',
+        paragraphs: [
+          "Your feelings during an interaction can be loud. The feelings afterward are often more revealing. When you leave a date or finish a call, do you feel grounded, curious, and more like yourself? Or do you feel activated, preoccupied, and desperate to recreate the high? Excitement is not a problem, but a connection that repeatedly leaves you anxious or depleted deserves a closer look.",
+          "Notice the difference between healthy anticipation and emotional hangover. Healthy anticipation can include butterflies while still leaving you able to focus on your work, sleep, friends, and routine. An emotional hangover may look like rereading every message, checking for signs, abandoning plans, or needing the person to respond before you can feel okay again.",
+          "This is not a test you can pass by feeling calm all the time. New attraction can be vulnerable and unsettling. The question is whether the relationship gives you enough respect and clarity to return to yourself. If it consistently makes you smaller, more secretive, or more dependent on external reassurance, slow down before calling the intensity love."
+        ],
+        bullets: [
+          'Track your emotional state after interactions, not only during them.',
+          'Healthy excitement leaves room for sleep, friends, work, and your own interests.',
+          'Repeated anxiety and depletion are reasons to gather more information, not chase more intensity.'
+        ],
+        image: '/blog/do-i-like-them-or-just-like-the-attention-self-check.jpg',
+        imageWebp: '/blog/do-i-like-them-or-just-like-the-attention-self-check.webp',
+        imageAlt: 'An adult journaling at home beside a calendar and a phone with notifications muted',
+        imageCaption: 'A short self-check can show whether a new connection is adding energy to your life or replacing your centre of gravity.'
+      },
+      {
+        heading: '5. Compare the real person with the version in your head',
+        paragraphs: [
+          "Sometimes you like the possibility of someone more than the person you have actually met. A few good conversations can become a complete story in your imagination: the kind of partner they might be, the future you could have, or the way the relationship would prove that you are finally wanted. Imagination is part of dating, but it becomes risky when it outruns the evidence.",
+          "Make two columns. In one, write what you directly know from repeated interactions. In the other, write what you are assuming, hoping, or filling in. You may know that they are thoughtful with friends, communicate reliably, and enjoy similar activities. You may be assuming that they will become more available, share your long-term goals, or change a behaviour that already bothers you. The second column is not useless, but it should not be treated as evidence.",
+          "Ask whether you would still choose to know them if the imagined future disappeared. If yes, keep learning at a reasonable pace. If no, you may be attached to the potential more than the person. That realization is not embarrassing. It is a useful reason to stop making promises on someone else\'s behalf."
+        ],
+        bullets: [
+          'Separate observed behaviour from hopes, predictions, and imagined potential.',
+          'Do not build commitment around traits you are waiting for someone to develop.',
+          'Let the real person earn the meaning you are tempted to assign them.'
+        ]
+      },
+      {
+        heading: '6. Watch what happens on ordinary days',
+        paragraphs: [
+          "Attention is easiest to enjoy when everything is new. To learn whether your interest is real, notice how you feel during ordinary contact. Do you enjoy a simple errand, a quiet meal, or a conversation without a carefully planned date atmosphere? Can you be comfortable when neither person is dressed up, flirting at full volume, or receiving constant praise? Ordinary moments reveal whether there is a relationship underneath the rush.",
+          "Look at your own behaviour too. Do you want to show up consistently, or do you only feel motivated when the other person pulls away? Do you keep your word because you value the connection, or make grand gestures to get another burst of attention? Genuine interest is not always effortless, but it usually has some steady expression in the choices you make when there is no immediate reward.",
+          "This is also where compatibility becomes practical. You may like someone and still discover that the relationship does not fit your schedule, needs, or boundaries. That is not a failure of attraction. It is the information that allows you to choose a connection you can participate in honestly."
+        ],
+        bullets: [
+          'Notice whether you enjoy the person outside high-intensity romantic moments.',
+          'Look for steady effort, not only behaviour triggered by fear of losing attention.',
+          'Allow everyday compatibility to matter as much as exciting chemistry.'
+        ]
+      },
+      {
+        heading: '7. Try a small real-world next step',
+        paragraphs: [
+          "If you are stuck in analysis, choose one small experiment that creates real information. Suggest a simple date, ask a thoughtful question, or make a plan that is not designed to maximise reassurance. Then notice how you feel before, during, and after. Do you want to spend time with this person, or do you mainly want to know that they will say yes? Both answers are useful, but they point to different next steps.",
+          "Keep the invitation proportionate: coffee, a walk in a public place, a casual event, or a short call. You do not need to make a grand romantic gesture to prove that your feelings are genuine. A smaller plan gives you room to observe how you communicate, handle pauses, respect boundaries, and feel when the interaction is not happening through a screen.",
+          "If they say no or remain vague, do not use the uncertainty as a reason to intensify your pursuit. The experiment is about your information too. You are learning whether the connection can become mutual, not trying to manufacture a result."
+        ],
+        bullets: [
+          'Choose one clear, low-pressure action instead of endlessly analysing the feeling.',
+          'Notice your experience before, during, and after the interaction.',
+          'Treat their response as information, not a challenge to overcome.'
+        ],
+        image: '/blog/do-i-like-them-or-just-like-the-attention-next-step.jpg',
+        imageWebp: '/blog/do-i-like-them-or-just-like-the-attention-next-step.webp',
+        imageAlt: 'Two adults walking together in a city park after a relaxed date',
+        imageCaption: 'A small, real-world next step can reveal more than weeks of guessing what the connection might become.'
+      },
+      {
+        heading: '8. Check whether loneliness or scarcity is making the decision',
+        paragraphs: [
+          "Loneliness does not make your feelings fake. It can, however, make one source of attention feel like the only available source of warmth. Scarcity can do something similar. If you have not felt wanted for a while, a person who shows interest may seem uniquely important before you know whether you are compatible.",
+          "Ask yourself whether you would want this person if you already felt connected to friends, proud of your routine, and hopeful about meeting other people. If the answer changes dramatically, the relationship may be carrying a need that it cannot safely carry alone. You can appreciate the attention while rebuilding other sources of support and connection.",
+          "Try not to make major dating decisions from an emotional emergency. Sleep, talk to a trusted friend, return to a normal activity, and give yourself a little distance from the notification cycle. You do not have to reject the person. You just need enough space to choose them because you want them, not because they temporarily quiet a fear."
+        ],
+        bullets: [
+          'Loneliness is a need for connection, not proof that this specific person is the answer.',
+          'A wider support system makes romantic choices clearer and less urgent.',
+          'Give yourself time before turning relief into commitment.'
+        ]
+      },
+      {
+        heading: '9. Do not confuse anxiety with attraction',
+        paragraphs: [
+          "Uncertainty can create a powerful loop: the person is inconsistent, you worry about losing them, they return with attention, and the relief feels like chemistry. The intensity is real, but it may be coming from unpredictability rather than compatibility. A calmer connection can initially feel less exciting simply because your nervous system is not being pushed between hope and fear.",
+          "Pay attention to the story you tell yourself when they are distant. Are you thinking about their qualities and the life you might share, or trying to solve the mystery of why they have not replied? Are you drawn to their actual behaviour, or to the momentary relief that comes when they reassure you? Attraction can include uncertainty, but a relationship should not need confusion to remain compelling.",
+          "If the connection repeatedly triggers anxiety, ask for clarity or take a step back. You can care about someone and still decide that their communication pattern is not healthy for you. Wanting relief is not the same as wanting the relationship."
+        ],
+        bullets: [
+          'Unpredictability can feel intense without being a sign of deep compatibility.',
+          'Notice whether you are learning about the person or trying to solve their distance.',
+          'A calm connection is not automatically boring; it may simply be more secure.'
+        ]
+      },
+      {
+        heading: '10. What to do if you mostly like the attention',
+        paragraphs: [
+          "Realising that you mainly like the attention does not make you cruel or shallow. It gives you a responsibility to stop letting the other person build expectations around a feeling you do not share. You can appreciate their interest without accepting dates, making promises, or keeping the flirtation active just to receive more reassurance.",
+          "Be kind and specific if you need to slow down: 'I have enjoyed talking with you, but I do not feel the kind of romantic interest I would need to keep pursuing this. I do not want to give you the wrong idea.' You do not need to provide a harsh list of reasons or leave the door open if you know you do not want to return. Clarity is more respectful than a soft rejection followed by continued flirting whenever you need a lift.",
+          "Then ask what the attention was giving you. Were you lonely, bored, recovering from rejection, or trying to prove something about yourself? Meet that need in a way that does not make another person responsible for your self-worth."
+        ],
+        bullets: [
+          'Do not accept romantic access only because the validation feels good.',
+          'Give a clear, respectful answer instead of keeping someone hopeful for attention.',
+          'Find other ways to meet the need for connection, confidence, or reassurance.'
+        ]
+      },
+      {
+        heading: '11. What to do if you genuinely like them',
+        paragraphs: [
+          "If your curiosity survives the loss of constant praise, that is a good sign. You do not need to prove the feeling by rushing. Tell the person that you enjoy getting to know them, make a small plan, and keep noticing whether the effort stays mutual. Genuine interest is allowed to be both exciting and measured.",
+          "Use direct language when the moment is right: 'I like spending time with you, and I would like to keep seeing where this goes.' That is clearer than a series of tests and less overwhelming than a declaration about the entire future. Give them room to answer honestly. Their pace may not match yours exactly, and alignment matters more than winning a particular response.",
+          "As the relationship grows, keep checking the difference between liking the person and liking the role they play in your life. Continue learning who they are, protect your own routines, and let trust be built through repeated behaviour. A healthy connection does not require you to stop being a whole person."
+        ],
+        bullets: [
+          'Let genuine interest become clearer through consistency rather than urgency.',
+          'Say what you want without turning the other person\'s answer into a test.',
+          'Keep your own routines and values visible as the relationship develops.'
+        ]
+      },
+      {
+        heading: 'A quick self-check before you decide',
+        paragraphs: [
+          "You may not get a perfect answer from one question, and you do not need one. Look at the pattern. Do you like their actual personality, or mostly their opinion of you? Are you curious about their life when they are not giving you attention? Do you feel more grounded after seeing them? Can you name the compatibility questions you still need to explore? Would you still choose a small next step if there were no guarantee of a flattering response?",
+          "If the answers point toward genuine curiosity and mutual respect, keep going slowly enough to stay honest. If they point mostly toward validation, pause before you make promises. You can be grateful that someone wanted you without deciding that you want a relationship with them.",
+          "The goal is not to eliminate every insecure feeling before dating. It is to notice which feeling is driving your next move. Choose connection when you are interested in the person, not just when you are trying to escape the discomfort of not being chosen."
+        ],
+        bullets: [
+          'I am interested in who they are, not only in how they make me feel about myself.',
+          'I can enjoy the connection without needing constant proof.',
+          'I am willing to learn about compatibility instead of filling gaps with fantasy.',
+          'I can give them a clear answer if my feelings are not mutual.'
+        ]
+      }
+    ]
+  },
+  {
     slug: 'how-to-flirt-without-coming-on-too-strong',
     title: 'How to Flirt Without Coming On Too Strong: 11 Ways to Show Interest Naturally',
     description: 'Learn how to flirt without coming on too strong by showing clear interest, reading the other person\'s energy, respecting boundaries, and keeping attraction playful rather than pressuring.',

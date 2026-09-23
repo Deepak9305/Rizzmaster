@@ -60,6 +60,11 @@ const renderResources = (post) => post.resources?.length
   : '';
 
 const articleInternalLinks = {
+  'do-i-like-them-or-just-like-the-attention': [
+    { slug: 'how-to-tell-if-someone-is-emotionally-available', label: 'Recognize emotional availability' },
+    { slug: 'how-to-connect-emotionally-while-dating', label: 'Build emotional connection while dating' },
+    { slug: 'how-to-pace-a-new-relationship-without-losing-yourself', label: 'Find a healthy relationship pace' }
+  ],
   'how-to-flirt-without-coming-on-too-strong': [
     { slug: 'how-to-connect-emotionally-while-dating', label: 'Build emotional connection while dating' },
     { slug: 'build-real-connection-first-date', label: 'Build a real connection on a first date' },
