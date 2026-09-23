@@ -420,6 +420,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
   // Modals & Flags
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showCreditsExhaustedModal, setShowCreditsExhaustedModal] = useState(false);
   const [rewardedAdStatus, setRewardedAdStatus] = useState<'idle' | 'loading' | 'pending' | 'success' | 'error'>('idle');
   const [isRewardedAdLoading, setIsRewardedAdLoading] = useState(false);
   const [rewardedAdRequiredCredits, setRewardedAdRequiredCredits] = useState<1 | 2>(1);
@@ -575,14 +576,15 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const stateRef = useRef({
     currentView,
     showPremiumModal,
+    showCreditsExhaustedModal,
     showSavedModal,
     showOnboarding,
   });
 
   // Keep stateRef in sync
   useEffect(() => {
-    stateRef.current = { currentView, showPremiumModal, showSavedModal, showOnboarding };
-  }, [currentView, showPremiumModal, showSavedModal, showOnboarding]);
+    stateRef.current = { currentView, showPremiumModal, showCreditsExhaustedModal, showSavedModal, showOnboarding };
+  }, [currentView, showPremiumModal, showCreditsExhaustedModal, showSavedModal, showOnboarding]);
 
   const isPublicInfoView =
     currentView === 'PRIVACY' ||
@@ -1080,7 +1082,12 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       if (backButtonListener) backButtonListener.remove();
 
       backButtonListener = await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
-        const { currentView, showPremiumModal, showSavedModal } = stateRef.current;
+        const { currentView, showPremiumModal, showCreditsExhaustedModal, showSavedModal } = stateRef.current;
+
+        if (showCreditsExhaustedModal) {
+          setShowCreditsExhaustedModal(false);
+          return;
+        }
 
         if (showPremiumModal || showSavedModal) {
           window.history.back();
@@ -1158,8 +1165,11 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     }
 
     setRewardedAdRequiredCredits(requiredCredits);
-    handleOpenPremium();
-  }, [handleOpenPremium]);
+    if (rewardedAdStatus === 'error' || rewardedAdStatus === 'success') {
+      setRewardedAdStatus('idle');
+    }
+    setShowCreditsExhaustedModal(true);
+  }, [rewardedAdStatus]);
 
   useEffect(() => {
     if (!IS_WEB_PLATFORM || loginReason !== 'premium' || !session || !profile || isGuest) return;
@@ -1552,6 +1562,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       if (isGuest || currentProfile.id === 'guest_user') {
         updateCredits((previous) => previous + 5);
         setRewardedAdStatus('success');
+        setShowCreditsExhaustedModal(false);
         showToast('5 credits added. You can continue generating.', 'success');
         if (openedFromPremiumModal) handleBackNavigation();
         return;
@@ -1597,6 +1608,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
           }
           const syncedProfile = await syncProfile();
           setRewardedAdStatus('success');
+          setShowCreditsExhaustedModal(false);
           showToast(
             syncedProfile ? '5 credits added. You can continue generating.' : '5 credits added. Your balance is ready.',
             'success',
@@ -2327,6 +2339,67 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         </button>
       )}
 
+      {!IS_WEB_PLATFORM && showCreditsExhaustedModal && (
+        <div className="fixed inset-0 z-[220] flex items-center justify-center p-4" role="presentation">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            aria-label="Close credits dialog"
+            onClick={() => setShowCreditsExhaustedModal(false)}
+          />
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="credits-exhausted-title"
+            className="relative w-full max-w-md overflow-hidden rounded-3xl border border-amber-300/25 bg-[#100d16] p-6 shadow-2xl shadow-rose-950/40"
+          >
+            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-rose-500 via-amber-300 to-rose-500" />
+            <button
+              type="button"
+              onClick={() => setShowCreditsExhaustedModal(false)}
+              aria-label="Close"
+              className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-lg text-white/60 hover:text-white"
+            >
+              ×
+            </button>
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-amber-300/20 bg-amber-300/10 text-2xl text-amber-200" aria-hidden="true">
+              ⚡
+            </div>
+            <h2 id="credits-exhausted-title" className="pr-10 text-2xl font-black text-white">Need more credits?</h2>
+            <p className="mt-2 text-sm leading-6 text-white/60">
+              This action needs {rewardedAdRequiredCredits} {rewardedAdRequiredCredits === 1 ? 'credit' : 'credits'}; you have {profile?.credits || 0}. Watch an ad for 5 more, or choose Premium for unlimited generations.
+            </p>
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCreditsExhaustedModal(false);
+                  handleOpenPremium();
+                }}
+                className="min-h-14 rounded-2xl bg-gradient-to-r from-yellow-500 to-amber-600 px-3 py-3 text-sm font-extrabold text-black shadow-lg shadow-amber-500/10 transition hover:brightness-110 active:scale-[0.98]"
+              >
+                Go Premium
+              </button>
+              <button
+                type="button"
+                onClick={() => { void handleWatchRewardedAd(rewardedAdRequiredCredits); }}
+                disabled={isRewardedAdLoading || rewardedAdStatus === 'pending'}
+                className="min-h-14 rounded-2xl border border-amber-300/35 bg-amber-300/10 px-3 py-3 text-sm font-extrabold text-amber-100 transition hover:bg-amber-300/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isRewardedAdLoading ? 'Opening ad...' : rewardedAdStatus === 'pending' ? 'Verifying...' : 'Watch ad · +5'}
+              </button>
+            </div>
+            {rewardedAdStatus === 'pending' ? (
+              <p className="mt-4 text-center text-xs text-amber-100/80" role="status">Reward verification is pending. Credits will appear when confirmed.</p>
+            ) : rewardedAdStatus === 'error' ? (
+              <p className="mt-4 text-center text-xs text-rose-200/80" role="status">The ad could not be completed or verified. You can try again.</p>
+            ) : (
+              <p className="mt-4 text-center text-xs text-white/35">Credits are added after the rewarded ad is completed.</p>
+            )}
+          </section>
+        </div>
+      )}
+
       {/* Onboarding Flow: Shows after Splash if not completed */}
       {!showSplash && showOnboarding && !isPublicInfoView && (
         <OnboardingFlow onComplete={handleOnboardingComplete} />
@@ -2683,7 +2756,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                       {!IS_WEB_PLATFORM && !profile?.is_premium && (
                         <button
                           type="button"
-                          onClick={() => handleWatchRewardedAd(1)}
+                          onClick={() => handleWatchRewardedAd(mode === InputMode.CHAT && image ? 2 : 1)}
                           disabled={isRewardedAdLoading || rewardedAdStatus === 'pending'}
                           className="w-full min-h-[58px] rounded-2xl border border-amber-300/30 bg-amber-300/10 px-2 py-3 text-xs font-bold text-amber-200 transition hover:bg-amber-300/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 flex flex-col items-center justify-center"
                         >
