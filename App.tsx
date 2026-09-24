@@ -53,6 +53,13 @@ const SILENT_PREMIUM_RESTORE_RETRY_MS = 60000;
 const SILENT_PREMIUM_RESTORE_MAX_ATTEMPTS = 2;
 const REWARDED_STATUS_POLL_ATTEMPTS = 20;
 
+type RewardedAdPreparationContext = {
+  key: string;
+  attemptId: string | null;
+  ssv?: RewardVideoSsv;
+  expiresAt: number | null;
+};
+
 // --- AD CONFIGURATION ---
 const USE_TEST_ADS = false; // Set to true for testing with Google test ads
 
@@ -395,6 +402,11 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const sessionChannelRef = useRef<BroadcastChannel | null>(null);
   const rewardedAdAttemptRef = useRef<string | null>(null);
+  const rewardedAdPreparationContextRef = useRef<RewardedAdPreparationContext | null>(null);
+  const rewardedAdPreparationPromiseRef = useRef<{
+    key: string;
+    promise: Promise<RewardedAdPreparationContext>;
+  } | null>(null);
   const rewardedAdInProgressRef = useRef(false);
   const loadingRef = useRef(false);
   const savedItemsRef = useRef<SavedItem[]>([]);
@@ -1171,6 +1183,95 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     setShowCreditsExhaustedModal(true);
   }, [rewardedAdStatus]);
 
+  const getRewardedAdPreparationContext = useCallback((
+    profileForReward: UserProfile,
+    requiredCredits: 1 | 2,
+  ): Promise<RewardedAdPreparationContext> => {
+    const isGuestProfile = profileForReward.id === 'guest_user' || isGuestRef.current;
+    const key = `${isGuestProfile ? 'guest' : profileForReward.id}:${requiredCredits}`;
+    const cachedContext = rewardedAdPreparationContextRef.current;
+    if (
+      cachedContext?.key === key &&
+      (cachedContext.expiresAt === null || cachedContext.expiresAt > Date.now() + 30_000)
+    ) {
+      return Promise.resolve(cachedContext);
+    }
+
+    const inFlight = rewardedAdPreparationPromiseRef.current;
+    if (inFlight?.key === key) return inFlight.promise;
+
+    const promise: Promise<RewardedAdPreparationContext> = isGuestProfile
+      ? Promise.resolve({ key, attemptId: null, expiresAt: null })
+      : createRewardedAdAttempt(requiredCredits).then((attempt) => {
+          const parsedExpiry = Date.parse(attempt.expiresAt);
+          return {
+            key,
+            attemptId: attempt.attemptId,
+            ssv: {
+              userId: profileForReward.id,
+              customData: attempt.customData || attempt.attemptId,
+            },
+            expiresAt: Number.isFinite(parsedExpiry) ? parsedExpiry : 0,
+          };
+        });
+
+    rewardedAdPreparationPromiseRef.current = { key, promise };
+    void promise
+      .then((context) => {
+        const activeProfile = profileRef.current;
+        const stillSameIdentity = activeProfile?.id === profileForReward.id &&
+          (isGuestProfile ? (activeProfile.id === 'guest_user' || isGuestRef.current) : !isGuestRef.current);
+        if (rewardedAdPreparationPromiseRef.current?.promise === promise && stillSameIdentity) {
+          rewardedAdPreparationContextRef.current = context;
+          rewardedAdAttemptRef.current = context.attemptId;
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (rewardedAdPreparationPromiseRef.current?.promise === promise) {
+          rewardedAdPreparationPromiseRef.current = null;
+        }
+      });
+
+    return promise;
+  }, []);
+
+  useEffect(() => {
+    if (
+      !showCreditsExhaustedModal ||
+      IS_WEB_PLATFORM ||
+      !profile ||
+      profile.is_premium ||
+      (profile.credits || 0) >= rewardedAdRequiredCredits ||
+      !canUseNativeAdMob()
+    ) {
+      return;
+    }
+
+    let cancelled = false;
+    void getRewardedAdPreparationContext(profile, rewardedAdRequiredCredits)
+      .then((context) => {
+        if (cancelled) return false;
+        return AdMobService.prepareRewardVideo(getAdId('REWARD'), context.ssv);
+      })
+      .then((prepared) => {
+        if (!cancelled && prepared) {
+          console.log('[AdMob] Rewarded ad preloaded for the insufficient-credit offer.');
+        } else if (!cancelled) {
+          console.warn('[AdMob] Rewarded ad preload was not ready; tap will retry.');
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          console.warn('[AdMob] Rewarded ad preload failed; tap will retry.', error instanceof Error ? error.message : 'unknown error');
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [getRewardedAdPreparationContext, profile, rewardedAdRequiredCredits, showCreditsExhaustedModal]);
+
   useEffect(() => {
     if (!IS_WEB_PLATFORM || loginReason !== 'premium' || !session || !profile || isGuest) return;
     setWebPremiumReason('premium');
@@ -1542,25 +1643,22 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         return;
       }
 
-      let ssv: RewardVideoSsv | undefined;
-      if (!isGuest && currentProfile.id !== 'guest_user') {
-        const attempt = await createRewardedAdAttempt(requiredCredits);
-        rewardedAdAttemptRef.current = attempt.attemptId;
-        ssv = {
-          userId: currentProfile.id,
-          customData: attempt.customData || attempt.attemptId,
-        };
-      }
-
-      const earned = await AdMobService.showRewardVideo(getAdId('REWARD'), ssv);
+      const preparationContext = await getRewardedAdPreparationContext(currentProfile, requiredCredits);
+      rewardedAdAttemptRef.current = preparationContext.attemptId;
+      const earned = await AdMobService.showRewardVideo(getAdId('REWARD'), preparationContext.ssv);
       if (!earned) {
         setRewardedAdStatus('error');
         showToast('The rewarded ad could not be completed. No credits were added.', 'error');
         return;
       }
 
+      if (rewardedAdPreparationContextRef.current?.key === preparationContext.key) {
+        rewardedAdPreparationContextRef.current = null;
+      }
+
       if (isGuest || currentProfile.id === 'guest_user') {
         updateCredits((previous) => previous + 5);
+        rewardedAdAttemptRef.current = null;
         setRewardedAdStatus('success');
         setShowCreditsExhaustedModal(false);
         showToast('5 credits added. You can continue generating.', 'success');
@@ -1568,7 +1666,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         return;
       }
 
-      const attemptId = rewardedAdAttemptRef.current;
+      const attemptId = preparationContext.attemptId;
       if (!attemptId) {
         setRewardedAdStatus('error');
         showToast('Reward verification could not be started. No credits were added.', 'error');
@@ -1634,7 +1732,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       rewardedAdInProgressRef.current = false;
       setIsRewardedAdLoading(false);
     }
-  }, [handleBackNavigation, isGuest, rewardedAdRequiredCredits, rewardedAdStatus, showPremiumModal, showToast, syncProfile, updateCredits]);
+  }, [getRewardedAdPreparationContext, handleBackNavigation, isGuest, rewardedAdRequiredCredits, rewardedAdStatus, showPremiumModal, showToast, syncProfile, updateCredits]);
 
   const handleRestorePurchases = useCallback(async () => {
     if (!profileRef.current) return;
