@@ -60,6 +60,12 @@ const renderResources = (post) => post.resources?.length
   : '';
 
 const articleInternalLinks = {
+  'talk-about-what-you-want-in-dating': [
+    { slug: 'how-to-connect-emotionally-while-dating', label: 'Build emotional connection while dating' },
+    { slug: 'how-to-pace-a-new-relationship-without-losing-yourself', label: 'Pace a new relationship' },
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy dating boundaries' },
+    { slug: 'build-real-connection-first-date', label: 'Build a real connection on a first date' }
+  ],
   'do-i-like-them-or-just-like-the-attention': [
     { slug: 'how-to-tell-if-someone-is-emotionally-available', label: 'Recognize emotional availability' },
     { slug: 'how-to-connect-emotionally-while-dating', label: 'Build emotional connection while dating' },
@@ -106,7 +112,7 @@ const renderLegalPage = (page) => {
 
 const setArticleMetadata = (html, post) => {
   html = html.replace('A better follow-up is clear, calm, and gives the other person room to choose.', escapeHtml(post.imageCaption || 'A better follow-up is clear, calm, and gives the other person room to choose.'));
-  const title = `${post.title} | Rizz Master`;
+  const title = `${post.seoTitle || post.title} | Rizz Master`;
   const canonical = `https://rizzmaster.online/blog/${post.slug}`;
   const metadata = {
     title,

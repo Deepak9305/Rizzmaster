@@ -13,6 +13,7 @@ export interface BlogSection {
 export interface BlogPost {
   slug: string;
   title: string;
+  seoTitle?: string;
   description: string;
   excerpt: string;
   date: string;
@@ -29,6 +30,179 @@ export interface BlogPost {
 }
 
 export const BLOG_POSTS: BlogPost[] = [
+  {
+    slug: 'talk-about-what-you-want-in-dating',
+    title: 'How to Talk About What You’re Looking for in Dating Without Rushing the Relationship',
+    seoTitle: 'How to Talk About What You Want in Dating',
+    description: 'Share whether you want something serious, casual, or are unsure—and ask what the other person wants without pushing for an instant label.',
+    excerpt: 'Be honest about the direction you are open to, ask what the other person wants, and treat the conversation as useful information—not a demand for an instant commitment.',
+    date: '2026-09-24',
+    updatedAt: '2026-09-24',
+    readingTime: '12 min read',
+    category: 'Dating & Connection',
+    keywords: [
+      'how to talk about what you are looking for in dating',
+      'how to ask what someone wants in a relationship',
+      'dating intentions conversation',
+      'how to say you want a serious relationship',
+      'how to say you want something casual',
+      'what are you looking for dating answer',
+      'how to talk about relationship goals',
+      'dating while unsure what you want',
+      'when to discuss relationship intentions',
+      'how to discuss dating expectations'
+    ],
+    image: '/blog/talk-about-what-you-want-in-dating-hero.jpg',
+    imageWebp: '/blog/talk-about-what-you-want-in-dating-hero.webp',
+    imageAlt: 'Two adults having a relaxed, attentive conversation over coffee',
+    imageCaption: 'A clear conversation about dating intentions can create understanding without asking either person to promise a future.',
+    resources: [
+      { label: 'The Gottman Institute: How to talk to your partner about the future', url: 'https://www.gottman.com/blog/how-to-talk-to-your-partner-about-your-future/' },
+      { label: 'The Gottman Institute: 5 ways to communicate better in a relationship', url: 'https://www.gottman.com/blog/effective-communication-in-a-relationship-5-ways-to-communicate-better/' },
+      { label: 'Love Is Respect: What is a healthy relationship?', url: 'https://www.loveisrespect.org/resources/what-is-a-healthy-relationship/' },
+      { label: 'Planned Parenthood: How do I talk about consent?', url: 'https://www.plannedparenthood.org/learn/relationships/sexual-consent/how-do-i-talk-about-consent' }
+    ],
+    sections: [
+      {
+        heading: 'Talking about intentions is not the same as asking for commitment',
+        paragraphs: [
+          '“What are you looking for?” can sound like a high-stakes question, especially when you like the person and do not want to scare them off. But an honest answer does not have to define the relationship. You are sharing the direction you are open to and learning whether your expectations are compatible enough to keep dating. It is information, not a proposal or a deadline.',
+          'That distinction matters. Saying “I’m open to a relationship if we connect” does not mean “decide right now whether you will be my partner.” Saying “I’m dating casually” is not a promise that your feelings can never change, but it does describe what you can offer today. A good conversation leaves room for both people to be interested and still take time to learn about each other.',
+          'If you are searching for how to talk about what you want in dating, aim for clarity without certainty you do not have. You can be clear about your present intention while remaining curious about how the connection develops.'
+        ],
+        bullets: [
+          'Share what you are open to now, not a guarantee about the future.',
+          'Ask for information, not an immediate label or commitment.',
+          'Remember that honest intentions help both people make informed choices.'
+        ]
+      },
+      {
+        heading: 'Choose a moment that feels natural and private',
+        paragraphs: [
+          'There is no universal number of dates when everyone must have this conversation. Bring it up when the answer would help you make a real decision: perhaps you are planning to keep seeing each other, intimacy is becoming part of the picture, you want to discuss exclusivity, or you notice your expectations starting to diverge. You do not have to wait until you are deeply attached to ask a reasonable question.',
+          'The setting should make it possible to listen, rather than corner someone. A relaxed walk or an unhurried conversation after a date can work better than sending a serious message in the middle of a tense exchange. Dating-app profiles can also give you a natural starting point: “You mentioned you’re dating intentionally. What does that look like for you?”',
+          'Avoid raising it as a test after a disagreement or as a surprise demand in front of friends. If the moment is not right, you can name that you would like to talk soon and choose a calmer time. The point is not to engineer a perfect atmosphere; it is to make room for an honest answer.'
+        ],
+        bullets: [
+          'Talk when the answer matters to a choice you are making.',
+          'Pick a setting where both of you can respond without an audience or time pressure.',
+          'A natural opening is enough; you do not need a dramatic “relationship talk.”'
+        ]
+      },
+      {
+        heading: 'Start by saying what you are looking for',
+        paragraphs: [
+          'It can feel easier to ask the other person first, but leading with your own answer makes the exchange more mutual. Keep it brief and specific enough to be understood. For example: “I’m enjoying meeting people, and I’m open to a committed relationship if the fit is right. I’m not expecting us to decide that today.” That sentence communicates both interest and pace.',
+          'If you want something casual, say what casual means to you rather than relying on the word alone. You might mean dates without exclusivity, a slower emotional pace, or a connection that is not headed toward long-term partnership. Those are not interchangeable. Be honest about what you can offer and what you are not promising, especially if the other person may interpret the arrangement differently.',
+          'You can also be direct without sounding rehearsed: “I like getting to know you. I’m dating with the hope of finding a relationship, but I want to let it develop naturally.” Or: “I’m looking for something casual and clear right now, and I want to make sure that works for both of us.” Plain language is usually kinder than strategic ambiguity.'
+        ],
+        bullets: [
+          '“I’m dating intentionally, but I want to take time to see if we fit.”',
+          '“I’m open to casual dating right now, and I do not want to imply more.”',
+          '“I’m still working out what I want, so I can be honest about that as we go.”'
+        ],
+        image: '/blog/talk-about-dating-goals-walk.jpg',
+        imageWebp: '/blog/talk-about-dating-goals-walk.webp',
+        imageAlt: 'Two adults walking side by side and talking in a green city park',
+        imageCaption: 'A low-pressure conversation can still be clear: describe your current direction without promising an outcome.'
+      },
+      {
+        heading: 'Ask an open question, then listen for the answer',
+        paragraphs: [
+          'After you have shared your perspective, give the other person room to describe theirs. “What are you hoping to find at this point?” is more useful than “You do want something serious, right?” The second version makes agreement feel like the expected answer. Open questions invite a more accurate response, including one that may not match what you hope to hear.',
+          'If the answer is broad, ask one calm follow-up. “When you say you’re keeping things open, does that mean you are dating non-exclusively, or that you are unsure where you want a relationship to go?” You are not cross-examining them; you are clarifying what their words mean in practice. It is fair to want to understand the arrangement you are considering.',
+          'Listen for the substance, not only the tone. Someone can be warm and still want different things. Someone can be nervous and still be sincere. You do not need to persuade, decode, or award points for the answer. Take it in, ask what you genuinely need to know, and notice whether the conversation feels respectful on both sides.'
+        ],
+        bullets: [
+          'Ask what they want in their own words instead of suggesting the “right” answer.',
+          'Clarify terms like casual, serious, exclusive, and open rather than assuming they mean the same thing to everyone.',
+          'Pay attention to whether both people can answer honestly without pressure.'
+        ]
+      },
+      {
+        heading: 'If you are unsure, say so without making it the other person’s job',
+        paragraphs: [
+          'Not everyone starts dating with a complete plan. You may be open to a relationship but not know whether you want one with this person yet. That is a normal distinction. You can say, “I’m enjoying dating you. I’m not ready to promise where this goes, but I am interested in continuing to get to know each other.” This is more useful than pretending to be certain or hiding behind “let’s see” indefinitely.',
+          'Uncertainty is honest when you also describe what you can offer now. Are you comfortable making plans regularly? Are you dating other people? Do you want to move slowly? Are there limits around time, emotional availability, or intimacy that matter? You do not have to disclose every private detail, but the other person needs enough context to make their own choice.',
+          'If your feelings change, update the conversation. Early uncertainty is not a permanent permission slip to avoid clarity. You can give the connection time while agreeing to check in after a reasonable stretch or a meaningful change. That keeps “I don’t know yet” from becoming an unspoken promise that the other person will wait.'
+        ],
+        bullets: [
+          'Separate “I do not know if we are compatible yet” from “I cannot offer the kind of relationship you want.”',
+          'Describe your present actions and limits, not just your uncertainty.',
+          'Revisit the conversation when your feelings or circumstances change.'
+        ]
+      },
+      {
+        heading: 'Be specific about what serious or casual means to you',
+        paragraphs: [
+          'Labels can hide important differences. Two people can both say they want a serious relationship while imagining very different levels of time, exclusivity, communication, or future planning. Likewise, “casual” might mean one person wants to date without labels while the other assumes emotional closeness and exclusivity are still part of it. Rather than debating which label is correct, compare the expectations underneath it.',
+          'You do not need to negotiate every detail in one sitting. Start with the questions that affect consent and choice: Are either of you seeing other people? What does exclusivity mean to each of you? What kind of contact feels comfortable? Is either person expecting the connection to progress toward partnership? If sex is involved, discuss boundaries and consent directly rather than assuming relationship labels answer those questions.',
+          'A useful follow-up sounds like curiosity, not a checklist: “When you picture casual dating, what feels good about it, and what would you want to be clear about?” Or: “If we keep seeing each other, what would help you feel that we are moving at a pace that works?” Then share your own answer too. Healthy connection depends on mutual clarity, not on guessing the rules.'
+        ],
+        bullets: [
+          'Talk about behaviours and expectations, not labels alone.',
+          'Clarify exclusivity and intimacy rather than assuming they come with a label.',
+          'Share the boundaries that affect what you are choosing together.'
+        ],
+        image: '/blog/dating-goals-honest-conversation.jpg',
+        imageWebp: '/blog/dating-goals-honest-conversation.webp',
+        imageAlt: 'A couple listening to each other across a cafe table during a thoughtful conversation',
+        imageCaption: 'Useful clarity comes from comparing real expectations, not trying to guess what a label means.'
+      },
+      {
+        heading: 'When your goals do not match, do not treat it as a persuasion problem',
+        paragraphs: [
+          'It can hurt to learn that someone wants something different. If you want a committed relationship and they want casual dating, the gap is real even if you have strong chemistry. The most protective response is not to convince them, offer more than you want, or hope that dating you will change their mind. It is to decide whether the arrangement they are actually offering works for you as it is today.',
+          'You might say, “Thanks for being clear. I’m looking for a relationship, so I do not think casual dating would be right for me.” Or, if you are genuinely comfortable with their preference: “I’m open to casual too, as long as we stay clear about exclusivity and check in if anything changes.” Either answer can be respectful. What matters is not agreeing out of fear of losing the person.',
+          'There is no need to make either person the villain when intentions differ. Compatibility is not a verdict on someone’s worth. You can appreciate the honesty, feel disappointed, and still step away. Our guides to emotional connection while dating and pacing a new relationship explore how to build closeness while protecting your own pace.'
+        ],
+        bullets: [
+          'Treat a stated mismatch as information, not an invitation to prove your value.',
+          'Choose based on the relationship available now, not the one you hope they may want later.',
+          'You can leave kindly without shaming the other person or abandoning your needs.'
+        ]
+      },
+      {
+        heading: 'Keep it conversational, not like a relationship interview',
+        paragraphs: [
+          'A conversation about intentions works best as an exchange, not a rapid-fire list of questions. Share something, ask something, listen, and leave room for follow-up later. You are learning about each other, not trying to secure a guarantee. It is fine if the first conversation covers only the broad direction; details can come up as the relationship develops.',
+          'Try to stay with the answer instead of planning your rebuttal while they speak. If you feel defensive, pause and ask what you need to understand. You might say, “I want to make sure I heard you correctly,” or “Can I think about that and come back to it?” Taking time to respond is better than agreeing in the moment and resenting it later.',
+          'If talking about intentions feels vulnerable, start small and use your own voice. “I like you, and I want to keep getting to know you. I also want us to be honest if we are looking for different things.” That communicates care and self-respect without turning the conversation into a performance.'
+        ],
+        bullets: [
+          'Share in turns rather than firing off a checklist.',
+          'Ask for clarification before assuming what an answer means.',
+          'It is okay to take time to think instead of agreeing to avoid discomfort.'
+        ]
+      },
+      {
+        heading: 'Check in again when the connection changes',
+        paragraphs: [
+          'One talk does not settle every future question. Your needs may change as you spend time together, and new decisions can make old assumptions important again. A check-in is useful when you begin acting like a couple, want exclusivity, feel uncertain about where things are going, or notice that one person is investing much more than the other. Bring up the change you have noticed rather than accusing them of failing a hidden test.',
+          'For example: “I’ve really enjoyed the last few weeks, and I’m noticing I’d like to date exclusively. How are you feeling about that?” This states your preference and asks for theirs. If their answer is not what you want, you can take time to decide. A clear request is not pressure; refusing to accept their answer or repeatedly arguing them into agreement would be.',
+          'You can also set a personal point to reassess without making it an ultimatum. “I am happy to keep getting to know each other for now, and I will check in with myself after a few more dates.” That is a boundary you control, not a threat designed to produce a particular response. If you are working out whether your pace is right, our guide to building a real connection on a first date can help.'
+        ],
+        bullets: [
+          'Revisit intentions after meaningful changes, not after every anxious moment.',
+          'Make direct requests and allow the other person to answer freely.',
+          'Use a check-in to make your own decision, not to force a preferred outcome.'
+        ]
+      },
+      {
+        heading: 'Let clarity help you choose your next step',
+        paragraphs: [
+          'The goal of asking what someone wants is not to guarantee that you will hear the perfect answer. It is to make your next choice with fewer assumptions. You may learn that you are aligned, that you need more time, or that continuing would ask one of you to ignore an important need. Each answer is useful because it gives both people the chance to opt in honestly.',
+          'After the conversation, compare words with behaviour over time. Does the person follow through on what they said they could offer? Can you bring up a concern without being mocked or pressured? Do your expectations remain compatible as you learn more? One good talk cannot prove a relationship will work, but ongoing honesty, respect, and consistent effort can help you decide whether it is worth building.',
+          'You can be hopeful without rushing, and direct without demanding certainty. Say what you want, ask what they want, clarify the parts that affect your choices, and let the answer matter. That is how a dating conversation becomes a foundation for connection rather than a test someone has to pass.'
+        ],
+        bullets: [
+          'Use the answer to make a choice, not to predict the entire future.',
+          'Look for respectful follow-through as the relationship develops.',
+          'You deserve a connection where honesty is possible even when the answers differ.'
+        ]
+      }
+    ]
+  },
   {
     slug: 'do-i-like-them-or-just-like-the-attention',
     title: 'How to Know If You Like Someone or Just Like the Attention',

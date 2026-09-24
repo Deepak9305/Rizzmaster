@@ -489,6 +489,7 @@ const BlogIndexPage: React.FC<{ navigate: (path: string) => void }> = ({ navigat
 );
 
 const ARTICLE_EXAMPLES: Record<string, string[]> = {
+  'talk-about-what-you-want-in-dating': ['I’m enjoying getting to know you, and I’m open to a relationship if we’re a good fit. What are you hoping to find?', 'I’m looking for something casual and clear right now. I wanted to say that early so we can see if we’re on the same page.', 'I’m still figuring out what fits me. I like being honest about that and checking in as we get to know each other.'],
   'what-to-text-when-they-stop-replying': ['I am guessing your week got busy. No pressure - how is it going?', 'I enjoyed talking with you. If you are still interested, I would be happy to pick this up later.', 'I am going to stop double-texting, but I enjoyed meeting you. Take care.'],
   'reply-to-dry-texts': ['That was the diplomatic answer. What is the honest version?', 'I am choosing to believe you are saving the good story for later.'],
   'best-tinder-openers-for-guys': ['Important question: was that hike worth the view or the snack break?', 'You seem like you have a strong coffee order. What am I judging?'],
@@ -510,6 +511,7 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
 };
 
 const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
+  'talk-about-what-you-want-in-dating': { do: 'Share your current intentions, ask openly, and clarify what labels mean in practice.', doNot: 'Demand an instant commitment, hide a mismatch, or agree to a setup you do not want.' },
   'what-to-text-when-they-stop-replying': { do: 'Send one calm, specific follow-up, then give the other person room to choose.', doNot: 'Stack messages, guilt-trip them, or treat silence as a challenge to overcome.' },
   'reply-to-dry-texts': { do: 'Offer one specific hook, then give the conversation room.', doNot: 'Stack questions or send three follow-ups to force momentum.' },
   'best-tinder-openers-for-guys': { do: 'Notice one real detail and ask a question with a point of view.', doNot: 'Lead with a generic compliment or an interview question.' },
@@ -576,6 +578,12 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'talk-about-what-you-want-in-dating': [
+    { slug: 'how-to-connect-emotionally-while-dating', label: 'Build emotional connection while dating' },
+    { slug: 'how-to-pace-a-new-relationship-without-losing-yourself', label: 'Pace a new relationship' },
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy dating boundaries' },
+    { slug: 'build-real-connection-first-date', label: 'Build a real connection on a first date' }
+  ],
   'how-to-pace-a-new-relationship-without-losing-yourself': [
     { slug: 'how-to-know-if-you-are-ready-to-date-again', label: 'Know if you are ready to date again' },
     { slug: 'how-to-connect-emotionally-while-dating', label: 'Build emotional connection' },
