@@ -511,6 +511,7 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
 };
 
 const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
+  'chemistry-vs-compatibility': { do: 'Enjoy the attraction while observing mutual effort, shared direction, everyday fit, and respectful repair over time.', doNot: 'Treat an intense spark as proof of compatibility or wait indefinitely for someone to become a better fit.' },
   'talk-about-what-you-want-in-dating': { do: 'Share your current intentions, ask openly, and clarify what labels mean in practice.', doNot: 'Demand an instant commitment, hide a mismatch, or agree to a setup you do not want.' },
   'what-to-text-when-they-stop-replying': { do: 'Send one calm, specific follow-up, then give the other person room to choose.', doNot: 'Stack messages, guilt-trip them, or treat silence as a challenge to overcome.' },
   'reply-to-dry-texts': { do: 'Offer one specific hook, then give the conversation room.', doNot: 'Stack questions or send three follow-ups to force momentum.' },
@@ -578,6 +579,13 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'chemistry-vs-compatibility': [
+    { slug: 'how-to-connect-emotionally-while-dating', label: 'Build emotional connection while dating' },
+    { slug: 'how-to-tell-if-someone-is-emotionally-available', label: 'Recognize emotional availability' },
+    { slug: 'how-to-pace-a-new-relationship-without-losing-yourself', label: 'Pace a new relationship' },
+    { slug: 'talk-about-what-you-want-in-dating', label: 'Talk about what you want in dating' },
+    { slug: 'love-bombing-vs-genuine-interest', label: 'Tell intensity from genuine interest' }
+  ],
   'talk-about-what-you-want-in-dating': [
     { slug: 'how-to-connect-emotionally-while-dating', label: 'Build emotional connection while dating' },
     { slug: 'how-to-pace-a-new-relationship-without-losing-yourself', label: 'Pace a new relationship' },

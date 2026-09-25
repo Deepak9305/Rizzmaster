@@ -60,6 +60,13 @@ const renderResources = (post) => post.resources?.length
   : '';
 
 const articleInternalLinks = {
+  'chemistry-vs-compatibility': [
+    { slug: 'how-to-connect-emotionally-while-dating', label: 'Build emotional connection while dating' },
+    { slug: 'how-to-tell-if-someone-is-emotionally-available', label: 'Recognize emotional availability' },
+    { slug: 'how-to-pace-a-new-relationship-without-losing-yourself', label: 'Pace a new relationship' },
+    { slug: 'talk-about-what-you-want-in-dating', label: 'Talk about what you want in dating' },
+    { slug: 'love-bombing-vs-genuine-interest', label: 'Tell intensity from genuine interest' }
+  ],
   'talk-about-what-you-want-in-dating': [
     { slug: 'how-to-connect-emotionally-while-dating', label: 'Build emotional connection while dating' },
     { slug: 'how-to-pace-a-new-relationship-without-losing-yourself', label: 'Pace a new relationship' },
