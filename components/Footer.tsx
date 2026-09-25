@@ -4,9 +4,10 @@ interface FooterProps {
   className?: string;
   onNavigate: (page: 'PRIVACY' | 'TERMS' | 'SUPPORT') => void;
   onWebNavigate?: (path: '/privacy' | '/terms' | '/support') => void;
+  onOpenPrivacyOptions?: () => void;
 }
 
-const Footer: React.FC<FooterProps> = ({ className = "", onNavigate, onWebNavigate }) => {
+const Footer: React.FC<FooterProps> = ({ className = "", onNavigate, onWebNavigate, onOpenPrivacyOptions }) => {
   const navigate = (page: 'PRIVACY' | 'TERMS' | 'SUPPORT') => {
     const path = `/${page.toLowerCase()}` as '/privacy' | '/terms' | '/support';
     onWebNavigate ? onWebNavigate(path) : onNavigate(page);
@@ -53,6 +54,15 @@ const Footer: React.FC<FooterProps> = ({ className = "", onNavigate, onWebNaviga
           >
             Support
           </button>
+          {onOpenPrivacyOptions && (
+            <button
+              type="button"
+              onClick={onOpenPrivacyOptions}
+              className="px-4 py-2 text-[10px] font-bold text-white/50 bg-white/5 hover:bg-white/10 hover:text-white rounded-lg transition-all uppercase tracking-widest border border-white/5 hover:border-white/20 active:scale-95"
+            >
+              Privacy choices
+            </button>
+          )}
         </div>
 
         {/* Version Indicator */}

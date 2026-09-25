@@ -6,7 +6,7 @@ import {
     AdMobRewardInterstitialItem,
     AdMobRewardItem,
     AdmobConsentDebugGeography,
-    AdmobConsentStatus
+    type AdmobConsentInfo
 } from '@capacitor-community/admob';
 import { canUseNativeAdMob } from './nativeCapabilities';
 
@@ -65,6 +65,9 @@ export const AdMobService = {
     interstitialPromise: null as Promise<boolean> | null,
     rewardVideoPromise: null as Promise<boolean> | null,
     rewardInterstitialPromise: null as Promise<boolean> | null,
+    consentInfo: null as AdmobConsentInfo | null,
+    canRequestAds: false,
+    privacyOptionsRequired: false,
     interstitialPreparedAt: 0,
     lastInterstitialAdId: null as string | null,
     rewardVideoPreparedAt: 0,
@@ -86,6 +89,17 @@ export const AdMobService = {
     POST_PREPARE_SHOW_DELAY_MS: 1200,
     REWARDED_POST_PREPARE_SHOW_DELAY_MS: 1200,
     REWARDED_SHOW_TIMEOUT_MS: 40000,
+
+    applyConsentInfo(consentInfo: AdmobConsentInfo) {
+        this.consentInfo = consentInfo;
+        this.canRequestAds = consentInfo.canRequestAds === true;
+        this.privacyOptionsRequired = consentInfo.privacyOptionsRequirementStatus === 'REQUIRED';
+        return consentInfo;
+    },
+
+    isPrivacyOptionsRequired() {
+        return this.privacyOptionsRequired;
+    },
 
     removeListener(listener: any) {
         try {
@@ -155,6 +169,11 @@ export const AdMobService = {
 
         this.initPromise = (async (): Promise<boolean> => {
             try {
+                // Do not carry a stale consent decision across a failed refresh.
+                this.consentInfo = null;
+                this.canRequestAds = false;
+                this.privacyOptionsRequired = false;
+
                 if (this.DEBUG_FORCE_GDPR) {
                     try {
                         await AdMob.resetConsentInfo();
@@ -163,39 +182,56 @@ export const AdMobService = {
                     }
                 }
 
-                const consentInfo = await AdMob.requestConsentInfo({
+                let consentInfo = await AdMob.requestConsentInfo({
                     debugGeography: this.DEBUG_FORCE_GDPR ? AdmobConsentDebugGeography.EEA : AdmobConsentDebugGeography.DISABLED,
                 });
+                this.applyConsentInfo(consentInfo);
 
-                const needsConsent = consentInfo.status === AdmobConsentStatus.REQUIRED ||
-                    consentInfo.status === AdmobConsentStatus.UNKNOWN;
-                if (consentInfo.isConsentFormAvailable && needsConsent) {
-                    console.log('AdMob: GDPR Consent Required/Unknown. Showing form...');
-                    await AdMob.showConsentForm();
+                if (consentInfo.isConsentFormAvailable) {
+                    // UMP decides whether an EU or US-state message must be shown.
+                    // Do not gate this on canRequestAds: some US privacy messages
+                    // can be shown while ads remain requestable.
+                    console.log('AdMob: Loading required consent/privacy form...');
+                    consentInfo = await AdMob.showConsentForm();
+                    this.applyConsentInfo(consentInfo);
+                }
+
+                if (!consentInfo.canRequestAds) {
+                    console.warn('[AdMob] Ads blocked because UMP has not granted permission to request ads.');
+                    return false;
                 }
 
                 await AdMob.initialize({ testingDevices: [] });
                 this.initialized = true;
-                console.log('AdMob Community Initialized with Advertising ID tracking');
+                console.log('AdMob Community Initialized after UMP consent checks');
                 return true;
             } catch (error) {
                 console.error('AdMob Community initialization failed', error);
-                try {
-                    await AdMob.initialize({ testingDevices: [] });
-                    this.initialized = true;
-                    console.log('AdMob Community Initialized via fallback path');
-                    return true;
-                } catch (innerError) {
-                    console.warn('AdMob: Secondary init fallback also failed:', innerError);
-                    this.initialized = false;
-                    return false;
-                }
+                this.initialized = false;
+                this.canRequestAds = false;
+                return false;
             } finally {
                 this.initPromise = null;
             }
         })();
 
         return this.initPromise;
+    },
+
+    async showPrivacyOptionsForm(): Promise<boolean> {
+        if (!canUseNativeAdMob() || !this.privacyOptionsRequired) return false;
+
+        try {
+            await AdMob.showPrivacyOptionsForm();
+            const consentInfo = await AdMob.requestConsentInfo({
+                debugGeography: this.DEBUG_FORCE_GDPR ? AdmobConsentDebugGeography.EEA : AdmobConsentDebugGeography.DISABLED,
+            });
+            this.applyConsentInfo(consentInfo);
+            return this.canRequestAds;
+        } catch (error) {
+            console.warn('[AdMob] Privacy options form failed:', error);
+            return false;
+        }
     },
 
     async ensureInitialized(context: string): Promise<boolean> {

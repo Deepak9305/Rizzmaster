@@ -433,6 +433,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   // Modals & Flags
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showCreditsExhaustedModal, setShowCreditsExhaustedModal] = useState(false);
+  const [privacyOptionsRequired, setPrivacyOptionsRequired] = useState(false);
   const [rewardedAdStatus, setRewardedAdStatus] = useState<'idle' | 'loading' | 'pending' | 'success' | 'error'>('idle');
   const [isRewardedAdLoading, setIsRewardedAdLoading] = useState(false);
   const [rewardedAdRequiredCredits, setRewardedAdRequiredCredits] = useState<1 | 2>(1);
@@ -985,7 +986,13 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
       // AdMob
       if (canUseNativeAdMob()) {
-        runAdTask('Initial AdMob init', AdMobService.initialize());
+        runAdTask(
+          'Initial AdMob init',
+          AdMobService.initialize().then((initialized) => {
+            setPrivacyOptionsRequired(AdMobService.isPrivacyOptionsRequired());
+            return initialized;
+          })
+        );
       }
 
       // In-App Purchases
@@ -1282,6 +1289,14 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const handleOpenSaved = useCallback(() => {
     window.history.pushState({ view: stateRef.current.currentView, saved: true }, '');
     setShowSavedModal(true);
+  }, []);
+
+  const handleOpenPrivacyOptions = useCallback(async () => {
+    const canRequestAds = await AdMobService.showPrivacyOptionsForm();
+    setPrivacyOptionsRequired(AdMobService.isPrivacyOptionsRequired());
+    if (!canRequestAds) {
+      console.warn('[AdMob] Privacy choices were not accepted or could not be updated.');
+    }
   }, []);
 
   useEffect(() => {
@@ -2924,7 +2939,12 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                 </section>
               </div>
 
-              <Footer className="web-app-footer mt-2 md:mt-4" onNavigate={handleViewNavigation} onWebNavigate={IS_WEB_PLATFORM ? onNavigateToPath : undefined} />
+              <Footer
+                className="web-app-footer mt-2 md:mt-4"
+                onNavigate={handleViewNavigation}
+                onWebNavigate={IS_WEB_PLATFORM ? onNavigateToPath : undefined}
+                onOpenPrivacyOptions={!IS_WEB_PLATFORM && privacyOptionsRequired ? handleOpenPrivacyOptions : undefined}
+              />
             </div>
           )}
       </div>
