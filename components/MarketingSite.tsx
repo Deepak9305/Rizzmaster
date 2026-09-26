@@ -489,6 +489,7 @@ const BlogIndexPage: React.FC<{ navigate: (path: string) => void }> = ({ navigat
 );
 
 const ARTICLE_EXAMPLES: Record<string, string[]> = {
+  'how-to-stop-overthinking-while-dating': ['I have enjoyed getting to know you. Are you still interested in making a plan this week?', 'I am taking dating slowly and prefer clear plans. Would Thursday or Saturday work for you?', 'I am going to step back from guessing here. If you would like to continue, feel free to reach out.'],
   'talk-about-what-you-want-in-dating': ['I’m enjoying getting to know you, and I’m open to a relationship if we’re a good fit. What are you hoping to find?', 'I’m looking for something casual and clear right now. I wanted to say that early so we can see if we’re on the same page.', 'I’m still figuring out what fits me. I like being honest about that and checking in as we get to know each other.'],
   'what-to-text-when-they-stop-replying': ['I am guessing your week got busy. No pressure - how is it going?', 'I enjoyed talking with you. If you are still interested, I would be happy to pick this up later.', 'I am going to stop double-texting, but I enjoyed meeting you. Take care.'],
   'reply-to-dry-texts': ['That was the diplomatic answer. What is the honest version?', 'I am choosing to believe you are saving the good story for later.'],
@@ -511,6 +512,7 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
 };
 
 const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
+  'how-to-stop-overthinking-while-dating': { do: 'Separate facts from assumptions, regulate before reacting, and choose one clear next step.', doNot: 'Decode every pause, send messages to relieve anxiety, or ignore a repeated mismatch.' },
   'chemistry-vs-compatibility': { do: 'Enjoy the attraction while observing mutual effort, shared direction, everyday fit, and respectful repair over time.', doNot: 'Treat an intense spark as proof of compatibility or wait indefinitely for someone to become a better fit.' },
   'talk-about-what-you-want-in-dating': { do: 'Share your current intentions, ask openly, and clarify what labels mean in practice.', doNot: 'Demand an instant commitment, hide a mismatch, or agree to a setup you do not want.' },
   'what-to-text-when-they-stop-replying': { do: 'Send one calm, specific follow-up, then give the other person room to choose.', doNot: 'Stack messages, guilt-trip them, or treat silence as a challenge to overcome.' },
@@ -579,6 +581,13 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'how-to-stop-overthinking-while-dating': [
+    { slug: 'chemistry-vs-compatibility', label: 'Separate chemistry from compatibility' },
+    { slug: 'how-to-connect-emotionally-while-dating', label: 'Build emotional connection' },
+    { slug: 'how-to-tell-if-someone-is-emotionally-available', label: 'Spot emotional availability' },
+    { slug: 'how-to-know-if-you-are-ready-to-date-again', label: 'Check if you are ready to date' },
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy dating boundaries' }
+  ],
   'chemistry-vs-compatibility': [
     { slug: 'how-to-connect-emotionally-while-dating', label: 'Build emotional connection while dating' },
     { slug: 'how-to-tell-if-someone-is-emotionally-available', label: 'Recognize emotional availability' },

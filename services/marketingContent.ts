@@ -31,6 +31,167 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'how-to-stop-overthinking-while-dating',
+    title: 'How to Stop Overthinking While Dating: Stay Present and Read the Signals Clearly',
+    seoTitle: 'How to Stop Overthinking Dating and Read the Signals Clearly',
+    description: 'Learn how to stop overthinking while dating, separate facts from anxious stories, and make calm next moves without ignoring real red flags.',
+    excerpt: 'Dating uncertainty can make every pause, message, and change of tone feel like evidence. A calmer approach is to separate facts from guesses, regulate before reacting, and judge the pattern rather than one moment.',
+    date: '2026-09-26',
+    updatedAt: '2026-09-26',
+    readingTime: '12 min read',
+    category: 'Dating confidence',
+    keywords: [
+      'how to stop overthinking dating',
+      'dating anxiety advice',
+      'how to stop overanalyzing texts',
+      'how to stop overthinking a new relationship',
+      'how to stay present while dating',
+      'signs you are overthinking a relationship',
+      'how to read dating signals clearly',
+      'how to stop worrying about someone you are dating',
+      'how to manage uncertainty in dating',
+      'dating confidence tips'
+    ],
+    image: '/blog/how-to-stop-overthinking-dating-hero.jpg',
+    imageWebp: '/blog/how-to-stop-overthinking-dating-hero.webp',
+    imageAlt: 'A thoughtful adult sitting in a cafe with a phone set aside while reflecting calmly',
+    imageCaption: 'You can stay open to a promising connection without asking every pause to predict the future.',
+    resources: [
+      { label: 'American Psychological Association: Healthy relationships and communication', url: 'https://www.apa.org/topics/healthy-relationships' },
+      { label: 'American Psychological Association: Healthy ways to handle stress', url: 'https://www.apa.org/topics/stress/tips' },
+      { label: 'loveisrespect: What are my boundaries?', url: 'https://www.loveisrespect.org/resources/what-are-my-boundaries/' }
+    ],
+    sections: [
+      {
+        heading: 'Overthinking is not the same as careful reflection',
+        paragraphs: [
+          'A little reflection is useful in dating. You want to notice how you feel, whether effort is mutual, and whether the connection fits what you are looking for. Overthinking starts when reflection stops producing new information but your mind keeps replaying the same question. You read the message again, compare the punctuation with last week, imagine several explanations, and still feel no closer to a decision.',
+          'The goal is not to become careless or pretend that uncertainty does not matter. It is to make your thinking proportionate to the evidence. A delayed reply can be worth noticing, but it is not automatically a rejection. A warm message can be encouraging, but it is not proof of long-term compatibility. Staying grounded lets you enjoy interest without turning possibility into a promise or fear into a fact.'
+        ],
+        bullets: [
+          'Useful reflection helps you choose an action you can stand behind.',
+          'Overthinking repeats the same question while searching for impossible certainty.',
+          'Clear dating decisions come from patterns, boundaries, and direct information.'
+        ]
+      },
+      {
+        heading: 'Why dating uncertainty can feel bigger than it is',
+        paragraphs: [
+          'Early dating contains genuine gaps in information. You do not yet know the other person\'s schedule, communication habits, stress level, or intentions in detail. Your brain naturally tries to fill those gaps, especially when you care about the outcome. A short message can then become a blank screen onto which you project hope, rejection, or a previous relationship experience.',
+          'Uncertainty also makes small signals feel unusually important. If you are waiting for a plan to be confirmed, the time of a reply may seem to answer a much larger question: Do they like me? Am I safe to be interested? Is this going anywhere? Those questions deserve honest attention, but one notification cannot answer all of them. Separate the practical question from the emotional one, then handle each at the right size.'
+        ],
+        image: '/blog/how-to-stop-overthinking-dating-facts.jpg',
+        imageWebp: '/blog/how-to-stop-overthinking-dating-facts.webp',
+        imageAlt: 'Two adults having an attentive conversation over coffee while getting to know each other',
+        imageCaption: 'Real information comes from shared conversation and consistent behaviour, not from decoding every small signal.'
+      },
+      {
+        heading: 'Separate facts from the story your mind adds',
+        paragraphs: [
+          'When you notice yourself spiralling, write down the smallest version of what you actually know. For example: "They replied yesterday, said work was busy, and have not confirmed Saturday." That is different from: "They are losing interest, I said something wrong, and I need to fix it before they disappear." The second version may be possible, but it is a story built around the facts rather than the facts themselves.',
+          'This exercise is not about arguing yourself out of every concern. It gives you a fair starting point. Once you can see the gap between observation and interpretation, you can ask what information would actually help. Maybe you need to send one practical check-in. Maybe you need to wait until the agreed time. Maybe the pattern is already clear enough for you to step back. Each choice is better than trying to solve the entire relationship through guesswork.'
+        ],
+        bullets: [
+          'Fact: what was said or done, with the timing and context.',
+          'Story: the meaning you are assigning to it.',
+          'Need: the information, boundary, or action that would help you decide.',
+          'Next step: one small move that does not depend on controlling their response.'
+        ]
+      },
+      {
+        heading: 'Do not use response speed as a complete verdict',
+        paragraphs: [
+          'Reply speed can be part of a communication pattern, but it is not a universal measure of interest. People have different work schedules, family responsibilities, energy levels, and relationships with their phones. Someone can be interested and inconsistent, or responsive and still not looking for the kind of relationship you want. The meaning comes from the wider pattern: do they return to the conversation, make plans, follow through, and show curiosity about you?',
+          'Look for alignment between words and behaviour over time. If someone says they are busy but reliably suggests another time, that is different from repeatedly cancelling without making space. If messages become shorter for two days but the person is warm and engaged in person, that is different from a long pattern of one-sided effort. A calm reading does not excuse poor treatment. It simply waits for enough evidence to name the pattern accurately.'
+        ],
+        bullets: [
+          'Consider consistency across messages, plans, and real-life behaviour.',
+          'Notice whether the person repairs a missed plan or leaves you to do all the work.',
+          'Ask whether their current level of effort is enough for what you want, even if they have a reason.'
+        ]
+      },
+      {
+        heading: 'Create a small anti-rumination rule for texting',
+        paragraphs: [
+          'A simple rule can protect you from making a fresh decision every few minutes. After sending a message, choose a reasonable time when you will check again. Until then, return to whatever you were doing instead of monitoring the chat. If you need to follow up about a practical plan, send one clear message at the appropriate time. If the message is only meant to reduce your anxiety for a few minutes, wait and revisit it later.',
+          'The rule should be realistic, not a performance of indifference. You do not have to delay replies to seem desirable, and you do not need to pretend that you never want reassurance. The point is to stop the notification loop from deciding your mood. Put your phone down, turn off a preview if that helps, and make a plan for the next hour that would still be worthwhile if no new message arrives.'
+        ],
+        bullets: [
+          'Send the message you mean, not the message most likely to trigger a response.',
+          'Check once at a time you choose instead of reopening the chat continuously.',
+          'Use a follow-up for clarity or logistics, not as a test of whether they care.',
+          'Keep making plans that belong to your life rather than waiting in a holding pattern.'
+        ]
+      },
+      {
+        heading: 'Regulate your body before you send another message',
+        paragraphs: [
+          'Overthinking is not only a thought problem. When you feel rejected or uncertain, your body may become tense, restless, or keyed up. In that state, a message can feel urgent even when nothing time-sensitive is happening. A short reset can create enough space for you to choose rather than react: take a walk, drink water, put both feet on the floor, or breathe slowly while naming what you can see around you.',
+          'You do not need a perfect mindfulness routine. You need a brief interruption between the feeling and the action. Try setting a ten-minute timer before editing a message again. During that time, do something physical or sensory and ask whether the message would still feel necessary if your anxiety were half as loud. If the answer is no, let the urge pass. If the answer is yes, write the clearest version and send it once.'
+        ],
+        image: '/blog/how-to-stop-overthinking-dating-grounding.jpg',
+        imageWebp: '/blog/how-to-stop-overthinking-dating-grounding.webp',
+        imageAlt: 'An adult taking a calm walk through a tree-lined city street with a phone in a pocket',
+        imageCaption: 'A small return to your body and your own routine can make the next dating decision feel less urgent.'
+      },
+      {
+        heading: 'Ask for clarity without making them manage your anxiety',
+        paragraphs: [
+          'Direct communication is healthier than trying to decode someone forever. You can ask a clear, proportionate question without turning it into an accusation or asking the other person to guarantee the future. Say what you have noticed, name what you want to understand, and leave room for an honest answer. For example: "I have enjoyed getting to know you. Are you still interested in making a plan this week?"',
+          'The answer may be reassuring, disappointing, or vague. Your job is not to persuade an unclear answer into becoming the one you hoped for. Listen to the words, then compare them with what happens next. Clarity also includes your own position: you can say that you prefer consistent plans, that you are dating intentionally, or that you do not want to keep guessing. A boundary is useful because it tells you what you will do, not because it forces the other person to behave differently.'
+        ],
+        bullets: [
+          'Describe the pattern without exaggerating it.',
+          'Ask one question that the other person can answer honestly.',
+          'State what you are available for and what you will do if the pattern does not work for you.'
+        ]
+      },
+      {
+        heading: 'Read patterns instead of isolated moments',
+        paragraphs: [
+          'A single quiet day rarely gives you a complete answer. A repeated pattern can. Keep your attention on the behaviours that affect the relationship: who initiates, who makes room, whether plans become real, how disagreements are handled, and whether you feel more secure or more confused as time passes. You are not collecting evidence to build a case against someone. You are learning whether the connection is workable for both of you.',
+          'Patterns can be positive even when communication is not constant. Someone may reply slowly but be thoughtful, dependable, and direct about scheduling. Another person may send affectionate messages all day and still avoid making a plan. Overthinking often focuses on the most vivid signal; wise observation weighs the full set. If your interpretation changes every time a notification arrives, zoom out and review the last few weeks instead.'
+        ],
+        bullets: [
+          'Mutual effort is visible in initiation, planning, and follow-through.',
+          'Emotional safety grows when questions can be asked without punishment or ridicule.',
+          'A healthy pace leaves room for interest, independence, and honest adjustment.',
+          'Repeated confusion is information, even when no single moment looks dramatic.'
+        ]
+      },
+      {
+        heading: 'Choose a next step you can respect',
+        paragraphs: [
+          'Once you have separated facts from assumptions and looked at the pattern, choose the smallest honest next step. That might be enjoying the next date without trying to predict the relationship. It might be asking whether you are both open to continuing. It might be stepping back because the level of effort does not meet your needs. None of these choices requires you to know exactly how the story ends.',
+          'A useful decision is one you can respect even if the other person responds differently than you hope. Send the invitation because you genuinely want to see them, not because it will prove your worth. Decline the situation because you are protecting your time, not because you want them to chase you. Dating confidence is not certainty that you will be chosen. It is the ability to choose your own actions with honesty.'
+        ],
+        image: '/blog/how-to-stop-overthinking-dating-next-step.jpg',
+        imageWebp: '/blog/how-to-stop-overthinking-dating-next-step.webp',
+        imageAlt: 'Two adults having a relaxed conversation outside a cafe at dusk while making a simple plan',
+        imageCaption: 'A clear next step can be warm and low-pressure without asking the connection to promise the future.'
+      },
+      {
+        heading: 'When overthinking is pointing to a bigger mismatch',
+        paragraphs: [
+          'Sometimes the answer is not to become calmer so you can tolerate more uncertainty. Sometimes your anxiety is reacting to a relationship that is genuinely unclear, inconsistent, or misaligned with what you need. If you repeatedly ask for basic clarity and receive avoidance, if plans depend on you carrying all the effort, or if you feel pressured to ignore a boundary, take that pattern seriously. You can care about someone and still decide that the situation does not work for you.',
+          'It is also worth noticing when overthinking follows you across situations and makes ordinary dating feel impossible. A trusted friend, therapist, or qualified mental-health professional can help you understand the pattern without turning it into a character flaw. Support is especially important if worry is affecting sleep, work, appetite, or your ability to enjoy daily life. Dating advice can offer a starting point, but you deserve care that fits your actual experience.'
+        ],
+        bullets: [
+          'Do not label a clear mismatch as a personal failure to be more relaxed.',
+          'Do not accept repeated confusion as the price of being chosen.',
+          'Get extra support when worry is persistent, intense, or affecting everyday functioning.'
+        ]
+      },
+      {
+        heading: 'A calmer dating mindset leaves room for both hope and evidence',
+        paragraphs: [
+          'You do not have to choose between being hopeful and being discerning. Let yourself enjoy the connection that is actually happening, while allowing consistent behaviour to earn deeper trust. When a message feels loaded, return to the facts. When your body feels urgent, pause before acting. When a pattern becomes clear, believe the information and choose a boundary or invitation that reflects your values.',
+          'The aim is not to stop caring. It is to stop handing every unknown the power to direct your next move. Stay present, ask for useful clarity, keep your life moving, and let the other person show you who they are through time and action. A good connection will not require you to abandon your judgment in order to keep it.'
+        ]
+      }
+    ]
+  },
+  {
     slug: 'chemistry-vs-compatibility',
     title: 'Chemistry vs. Compatibility: How to Tell If a Connection Has Long-Term Potential',
     seoTitle: 'Chemistry vs. Compatibility: What Matters for Long-Term Dating?',
