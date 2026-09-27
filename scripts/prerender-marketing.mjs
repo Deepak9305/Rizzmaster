@@ -87,6 +87,12 @@ const articleInternalLinks = {
     { slug: 'how-to-know-if-you-are-ready-to-date-again', label: 'Know if you are ready to date again' },
     { slug: 'how-to-connect-emotionally-while-dating', label: 'Build emotional connection' },
     { slug: 'texting-boundaries-while-dating', label: 'Set healthy dating boundaries' }
+  ],
+  'keep-dating-fun-when-you-want-something-serious': [
+    { slug: 'chemistry-vs-compatibility', label: 'Separate chemistry from compatibility' },
+    { slug: 'build-real-connection-first-date', label: 'Build connection on a first date' },
+    { slug: 'talk-about-what-you-want-in-dating', label: 'Talk about what you want in dating' },
+    { slug: 'how-to-know-if-you-are-ready-to-date-again', label: 'Check if you are ready to date' }
   ]
 };
 

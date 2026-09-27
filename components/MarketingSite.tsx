@@ -508,7 +508,8 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
   'how-long-should-you-text-before-asking-someone-out': ['I am enjoying this conversation. Want to continue it over coffee this week?', 'You have made a strong case for that bakery. Want to test it together Saturday?', 'This has been fun. Are you free for a drink next week?'],
   'what-to-text-after-getting-someones-number': ['Hey, it is Alex from the bookstore. What should I read next?', 'Good meeting you at the concert. I listened to the band you recommended and I understand the obsession now.', 'I enjoyed talking with you last night. Want to continue it over coffee this week?'],
   'how-to-know-if-you-are-ready-to-date-again': ['I am enjoying getting to know people again, so I would be up for coffee next week.', 'I am taking dating slowly right now, but I would like to see you again.', 'I am not ready to date seriously yet, but I appreciate the connection and want to be honest about that.'],
-  'build-real-connection-first-date': ['I have enjoyed talking with you. Want to continue this over coffee next week?', 'You mentioned that bookstore earlier. I would like to see your favourite section sometime.', 'I liked getting to know you, but I do not think the connection is right for me. I wanted to be clear rather than disappear.']
+  'build-real-connection-first-date': ['I have enjoyed talking with you. Want to continue this over coffee next week?', 'You mentioned that bookstore earlier. I would like to see your favourite section sometime.', 'I liked getting to know you, but I do not think the connection is right for me. I wanted to be clear rather than disappear.'],
+  'keep-dating-fun-when-you-want-something-serious': ['I am enjoying getting to know you. Want to try that market you mentioned this weekend?', 'I am looking for something meaningful, but I also want dating to feel easy and fun. How are you feeling about the pace?', 'I have had a good time with you. Want to make a simple plan for next week?']
 };
 
 const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
@@ -532,7 +533,8 @@ const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
   'how-long-should-you-text-before-asking-someone-out': { do: 'Watch for shared effort, then make a clear invitation when there is a natural bridge.', doNot: 'Use a rigid day count or keep texting forever to avoid a real answer.' },
   'what-to-text-after-getting-someones-number': { do: 'Identify yourself, mention a real connection, and give them an easy opening.', doNot: 'Lead with pressure, a generic hello, or repeated messages across platforms.' },
   'how-to-know-if-you-are-ready-to-date-again': { do: 'Check your reasons, choose a pace you can sustain, and communicate honestly.', doNot: 'Use a new person as proof you have healed or ignore discomfort because you fear starting over.' },
-  'build-real-connection-first-date': { do: 'Stay curious, share the conversation, and communicate interest without rushing the pace.', doNot: 'Perform for approval, interrogate the other person, or treat intensity as proof of compatibility.' }
+  'build-real-connection-first-date': { do: 'Stay curious, share the conversation, and communicate interest without rushing the pace.', doNot: 'Perform for approval, interrogate the other person, or treat intensity as proof of compatibility.' },
+  'keep-dating-fun-when-you-want-something-serious': { do: 'Know what you want, choose shared experiences, and let clarity grow from mutual effort.', doNot: 'Turn every date into an interview, force certainty early, or abandon your life to prove interest.' }
 };
 
 const ArticleQuickAnswer: React.FC<{ post: BlogPost }> = ({ post }) => (
@@ -710,6 +712,12 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'build-real-connection-first-date', label: 'Build real connection on a first date' },
     { slug: 'what-to-text-after-a-first-date', label: 'What to text after a first date' },
     { slug: 'how-long-should-you-text-before-asking-someone-out', label: 'When to ask someone out' }
+  ],
+  'keep-dating-fun-when-you-want-something-serious': [
+    { slug: 'chemistry-vs-compatibility', label: 'Separate chemistry from compatibility' },
+    { slug: 'build-real-connection-first-date', label: 'Build connection on a first date' },
+    { slug: 'talk-about-what-you-want-in-dating', label: 'Talk about what you want in dating' },
+    { slug: 'how-to-know-if-you-are-ready-to-date-again', label: 'Check if you are ready to date' }
   ]
 };
 

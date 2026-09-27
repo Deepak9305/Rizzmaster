@@ -31,6 +31,184 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'keep-dating-fun-when-you-want-something-serious',
+    title: 'How to Keep Dating Fun When You Want a Serious Relationship',
+    seoTitle: 'How to Keep Dating Fun While Looking for a Serious Relationship',
+    description: 'Learn how to enjoy dating while looking for a serious relationship, stay intentional without pressure, and build connection at a healthy pace.',
+    excerpt: 'Wanting a serious relationship does not mean every date needs to feel like an interview. Keep dating enjoyable by staying curious, choosing simple shared experiences, protecting your life outside dating, and letting clarity grow from consistent effort.',
+    date: '2026-09-27',
+    updatedAt: '2026-09-27',
+    readingTime: '11 min read',
+    category: 'Dating & Connection',
+    keywords: [
+      'how to keep dating fun',
+      'dating for a serious relationship',
+      'how to enjoy dating',
+      'how to make dating fun',
+      'serious dating advice',
+      'how to date with intention',
+      'dating without pressure',
+      'how to find a serious relationship',
+      'healthy dating mindset',
+      'fun date ideas for a new relationship'
+    ],
+    image: '/blog/dating-fun-serious-relationship-hero.jpg',
+    imageWebp: '/blog/dating-fun-serious-relationship-hero.webp',
+    imageAlt: 'Two adults laughing together while walking through a sunny weekend market on a relaxed date',
+    imageCaption: 'A serious intention can still leave room for curiosity, laughter, and an ordinary good time.',
+    resources: [
+      { label: 'American Psychological Association: Building healthy relationships', url: 'https://www.apa.org/topics/healthy-relationships' },
+      { label: 'The Gottman Institute: Turn toward bids for connection', url: 'https://www.gottman.com/blog/turn-toward-instead-of-away/' },
+      { label: 'loveisrespect: What are my boundaries?', url: 'https://www.loveisrespect.org/resources/what-are-my-boundaries/' }
+    ],
+    sections: [
+      {
+        heading: 'Serious intentions do not require serious pressure',
+        paragraphs: [
+          'If you want a long-term relationship, it makes sense to date with some intention. You may care about values, emotional availability, lifestyle, communication, and whether the other person wants a similar kind of partnership. The problem begins when every date becomes a high-stakes evaluation. You stop noticing whether you enjoyed the afternoon and start scanning for proof that this person could be your future partner. That pressure makes it harder to be present, playful, and honest.',
+          'A serious relationship is built through repeated experiences, not solved in one perfect evening. The healthiest mindset is to hold two ideas at once: you can be clear about what you want, and you can let each connection develop at a human pace. A date is not a promise or a job interview. It is a chance to learn whether spending more time together feels mutual, comfortable, and worth exploring.'
+        ],
+        bullets: [
+          'Know what kind of relationship you are open to without demanding certainty immediately.',
+          'Treat each date as useful information, not a verdict on your future.',
+          'Let enjoyment and compatibility matter together.'
+        ]
+      },
+      {
+        heading: '1. Define what serious means to you',
+        paragraphs: [
+          'People use serious to mean different things. For one person it means dating one person at a time. For another it means emotional consistency, a clear intention to build a partnership, or simply being open to something that could become committed. Before asking someone else for clarity, define your own version in plain language. What are you hoping to build? What pace feels comfortable? Which values or behaviours are essential, and which preferences are flexible?',
+          'This private definition stops you from judging every new person against an imaginary checklist. You can look for a compatible direction without expecting a stranger to demonstrate the finished relationship on a second date. If you want help thinking through compatibility, our chemistry versus compatibility guide can help you separate attraction from everyday fit.'
+        ],
+        image: '/blog/dating-fun-serious-relationship-intention.jpg',
+        imageWebp: '/blog/dating-fun-serious-relationship-intention.webp',
+        imageAlt: 'A confident adult choosing an outfit before a casual date in a warm bedroom',
+        imageCaption: 'Dating with intention starts with knowing what you want, not with trying to control the outcome.',
+        bullets: [
+          'Write down the relationship qualities you need to feel secure and respected.',
+          'Separate non-negotiable values from preferences about style, hobbies, or timing.',
+          'Revisit your definition as you learn more about yourself.'
+        ]
+      },
+      {
+        heading: '2. Choose dates that create a shared experience',
+        paragraphs: [
+          'A serious relationship is not built only through serious conversations. Shared enjoyment gives people a more natural way to notice each other. Try a market, a small exhibition, a bookshop, a casual walk, a low-key class, or a cafe near somewhere you can explore. These settings create small moments to react to together. You learn how someone handles a change of plan, what catches their attention, and whether humour or quiet feels comfortable between you.',
+          'The best activity is one that supports conversation without making conversation the only task. Keep the first plan simple, public, and easy to shorten. You do not need an expensive experience to create a memorable date. A new bakery and a walk can tell you more about shared rhythm than an elaborate evening where both people are focused on performing. The related first-date connection guide has more ideas for creating that kind of shared ease.'
+        ],
+        image: '/blog/dating-fun-serious-relationship-shared.jpg',
+        imageWebp: '/blog/dating-fun-serious-relationship-shared.webp',
+        imageAlt: 'Two adults cooking together in a bright kitchen while getting to know each other',
+        imageCaption: 'A shared activity gives the date something real to respond to, so connection does not depend on perfect questions.',
+        bullets: [
+          'Pick an activity that gives both people something to notice or try.',
+          'Avoid plans that are expensive, overly long, or difficult to leave.',
+          'Choose curiosity over impressive logistics.'
+        ]
+      },
+      {
+        heading: '3. Keep conversation curious instead of evaluative',
+        paragraphs: [
+          'When you want a serious relationship, it is tempting to ask a rapid series of questions about work, family, goals, past relationships, and future plans. Those topics can matter, but the order and tone matter too. A date feels lighter when you respond to the answer instead of immediately moving to the next category. Ask what they enjoyed about a recent trip, what helps them recover after a difficult week, or what they have been making time for lately. Then share your answer as well.',
+          'Good curiosity moves in both directions. You should not have to carry the conversation, but you also do not need to test the other person with hidden questions. Notice how they listen, whether they make room for your perspective, and whether the exchange becomes more natural as the date continues. Emotional connection grows through attention and reciprocity, not through collecting enough facts to eliminate uncertainty.'
+        ],
+        bullets: [
+          'Ask open questions that invite stories rather than correct answers.',
+          'Offer your own perspective so the other person does not feel examined.',
+          'Follow the detail that creates energy instead of forcing a prepared list.'
+        ]
+      },
+      {
+        heading: '4. Keep a playful lane in the conversation',
+        paragraphs: [
+          'Playfulness is not a sign that you are avoiding commitment. It is one of the ways people experience ease together. Trade unusual opinions, compare comfort shows, invent a ridiculous food ranking, or tell a story that does not make you look perfectly polished. Light moments make room for personality, and personality gives you better information than a sequence of carefully approved answers.',
+          'You do not need to be constantly funny. Playfulness can be as simple as noticing something together or letting a small mistake become a shared joke. The goal is not to entertain someone into liking you. It is to make the interaction spacious enough that both people can relax. If every conversation feels heavy, ask whether you are trying to secure the future before you have had time to enjoy the present.'
+        ],
+        bullets: [
+          'Use humour to create warmth, not to dismiss a serious concern.',
+          'Share specific, slightly imperfect details instead of polished labels.',
+          'Let quiet moments exist without treating them as evidence of failure.'
+        ]
+      },
+      {
+        heading: '5. Date with intention, then release the outcome',
+        paragraphs: [
+          'Intentional dating means making choices that support what you want. It might mean asking someone out instead of texting indefinitely, saying when you are looking for a relationship, or declining a connection that repeatedly ignores your boundaries. It does not mean trying to control whether a particular person chooses you. That part belongs to two people, and sometimes the answer will be no even when you handled the situation well.',
+          'A useful question after a date is not only, “Did they like me?” Ask, “Did I like how I felt around them? Did we both contribute? Did their actions match the kind of relationship I want?” This turns dating into a process of mutual discovery. You stay open to attraction while also protecting your time, standards, and self-respect. That balance makes dating feel less like chasing and more like choosing.'
+        ],
+        image: '/blog/dating-fun-serious-relationship-next-step.jpg',
+        imageWebp: '/blog/dating-fun-serious-relationship-next-step.webp',
+        imageAlt: 'Two adults at a cafe deciding together whether to continue a relaxed evening walk',
+        imageCaption: 'A good next step is a shared choice, not a test you have to pass alone.',
+        bullets: [
+          'Make clear invitations instead of waiting for perfect certainty.',
+          'Judge mutual fit by patterns of effort, not one exciting moment.',
+          'Let a respectful no be information rather than a personal defeat.'
+        ]
+      },
+      {
+        heading: '6. Do not turn every date into a relationship review',
+        paragraphs: [
+          'It is healthy to check in with yourself, but constant analysis can drain the fun from a promising connection. You do not need to decide after every date whether this person is your future partner. Give yourself a smaller question: would I like to see them again? Do I feel safe, respected, and curious? Is there enough mutual effort to learn more? Those questions are specific enough to guide you without demanding a life plan.',
+          'Save bigger conversations for moments when there is enough context to make them useful. If you have been seeing someone consistently, you can talk about communication, exclusivity, intentions, or what a relationship would look like in practice. Our guide on talking about what you are looking for in dating covers that kind of conversation without turning it into a demand for instant commitment.'
+        ],
+        bullets: [
+          'Use a next-step question instead of a forever question.',
+          'Do not use anxiety as a reason to force a label early.',
+          'Talk about direction when the pattern of interaction gives the conversation a foundation.'
+        ]
+      },
+      {
+        heading: '7. Protect the life you had before the date',
+        paragraphs: [
+          'Dating becomes more enjoyable when it adds to your life rather than replacing it. Keep seeing friends, making plans, exercising, resting, working on your interests, and spending time away from your phone. A full life gives you more to share and reduces the temptation to make one new person responsible for your excitement, reassurance, or sense of progress.',
+          'This is not a strategy for seeming unavailable. It is a way to stay connected to yourself while you get to know someone else. Healthy interest can coexist with ordinary commitments. You can reply when you have time, make plans that fit your schedule, and communicate changes without apologising for having a life. If you are rebuilding your confidence after a difficult relationship, our guide on knowing if you are ready to date again offers a useful self-check.'
+        ],
+        bullets: [
+          'Keep at least a few plans that have nothing to do with dating.',
+          'Do not cancel your routines to prove interest.',
+          'Let a relationship become part of your life gradually.'
+        ]
+      },
+      {
+        heading: '8. Let standards make dating easier, not narrower',
+        paragraphs: [
+          'Standards are helpful when they describe how you want to be treated. Look for honesty, consistency, respect, accountability, and a willingness to communicate. Standards become exhausting when they turn into a demand that every person fit a narrow script immediately. Someone can be a good match without sharing every hobby, and a strong first impression can still be a poor fit if their behaviour becomes dismissive or controlling.',
+          'Try separating a preference from a pattern. A preference might be wanting someone who enjoys weekend trips. A pattern is whether they respect your time and follow through. A preference can stay flexible; a pattern tells you whether a relationship is likely to feel safe and reciprocal. When you know the difference, you can stay open-minded without talking yourself into a connection that repeatedly makes you feel small or uncertain.'
+        ],
+        bullets: [
+          'Prioritise respect and consistency over surface-level performance.',
+          'Stay curious about differences that do not violate your values.',
+          'Do not lower a boundary simply because the chemistry feels strong.'
+        ]
+      },
+      {
+        heading: '9. Move from fun to clarity when the pattern is ready',
+        paragraphs: [
+          'A serious relationship usually grows through a series of small honest conversations. You can say that you are enjoying the connection, ask how the other person is experiencing it, and share what you are open to next. Clarity does not have to sound like an ultimatum. It can sound like, “I like where this is going and I am interested in dating each other more intentionally. How are you feeling about it?”',
+          'Their answer gives you useful information, especially when you compare it with their behaviour. Someone may need time to think, and that is different from avoiding every conversation while accepting all the benefits of closeness. Keep the tone warm, but take the answer seriously. A relationship becomes more enjoyable when both people can talk about direction without using pressure, guessing games, or withdrawal to get reassurance.'
+        ],
+        bullets: [
+          'Choose a calm moment rather than raising the topic during conflict.',
+          'Explain what you are open to instead of demanding a perfect label.',
+          'Look for alignment between what they say and what they consistently do.'
+        ]
+      },
+      {
+        heading: 'A serious relationship should still feel like a life you enjoy',
+        paragraphs: [
+          'You do not have to choose between casual fun and serious intention. The better goal is dating that feels honest, curious, and proportionate to the stage you are in. Make plans you would genuinely enjoy, ask questions because you want to know the answer, and give each person enough room to show who they are. Keep your standards clear, but do not make uncertainty carry the emotional weight of a commitment that has not happened yet.',
+          'The right connection will not remove every nervous feeling. It will give those feelings somewhere healthy to go: a conversation, a clear plan, a slower pace, or a respectful decision to move on. Serious dating works best when it leaves room for laughter, ordinary pleasures, and the freedom to be a real person while you build something together.'
+        ],
+        bullets: [
+          'Stay open to enjoyment while paying attention to compatibility.',
+          'Choose mutual effort over intensity that you have to maintain alone.',
+          'Let clarity grow from repeated honest experiences.'
+        ]
+      }
+    ]
+  },
+  {
     slug: 'how-to-stop-overthinking-while-dating',
     title: 'How to Stop Overthinking While Dating: Stay Present and Read the Signals Clearly',
     seoTitle: 'How to Stop Overthinking Dating and Read the Signals Clearly',
