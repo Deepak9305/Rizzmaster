@@ -93,6 +93,13 @@ const articleInternalLinks = {
     { slug: 'build-real-connection-first-date', label: 'Build connection on a first date' },
     { slug: 'talk-about-what-you-want-in-dating', label: 'Talk about what you want in dating' },
     { slug: 'how-to-know-if-you-are-ready-to-date-again', label: 'Check if you are ready to date' }
+  ],
+  'how-to-build-trust-in-a-new-relationship': [
+    { slug: 'how-to-pace-a-new-relationship-without-losing-yourself', label: 'Pace a new relationship' },
+    { slug: 'how-to-connect-emotionally-while-dating', label: 'Build emotional connection while dating' },
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy dating boundaries' },
+    { slug: 'talk-about-what-you-want-in-dating', label: 'Talk about what you want in dating' },
+    { slug: 'chemistry-vs-compatibility', label: 'Separate chemistry from compatibility' }
   ]
 };
 
