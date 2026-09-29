@@ -31,6 +31,187 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'how-to-handle-jealousy-in-a-new-relationship',
+    title: 'How to Handle Jealousy in a New Relationship Without Becoming Controlling',
+    seoTitle: 'How to Handle Jealousy in a New Relationship',
+    description: 'Learn how to handle jealousy in a new relationship by separating feelings from facts, asking for reassurance clearly, and setting boundaries without control.',
+    excerpt: 'Jealousy is a feeling, not a verdict. You can notice what triggered it, ask for clarity, and decide what you need without checking phones, setting tests, or limiting another person\'s freedom.',
+    date: '2026-09-29',
+    updatedAt: '2026-09-29',
+    readingTime: '11 min read',
+    category: 'Dating confidence',
+    keywords: [
+      'how to handle jealousy in a new relationship',
+      'jealous in a new relationship',
+      'healthy jealousy in relationships',
+      'how to stop being controlling in a relationship',
+      'how to ask for reassurance in a relationship',
+      'dating jealousy advice',
+      'how to communicate insecurity without accusation',
+      'boundaries around flirting in a relationship',
+      'how to build trust without control',
+      'jealousy and insecurity in dating'
+    ],
+    image: '/blog/jealousy-new-relationship-hero.png',
+    imageWebp: '/blog/jealousy-new-relationship-hero.webp',
+    imageAlt: 'Two partners having a calm and honest conversation in a bright cafe',
+    imageCaption: 'Jealousy becomes easier to handle when you can talk about the feeling without turning it into a demand for control.',
+    resources: [
+      { label: 'The Gottman Institute: Why do we get jealous in relationships?', url: 'https://www.gottman.com/blog/why-do-we-get-jealous-in-relationships/' },
+      { label: 'American Psychological Association: Healthy relationships', url: 'https://www.apa.org/topics/marriage-relationships/healthy-relationships' },
+      { label: 'loveisrespect: Is there disrespectful behavior in my relationship?', url: 'https://www.loveisrespect.org/resources/is-there-disrespectful-behavior-in-my-relationship/' },
+      { label: 'loveisrespect: Warning signs of dating abuse', url: 'https://www.loveisrespect.org/dating-basics-for-healthy-relationships/warning-signs-of-abuse/' }
+    ],
+    sections: [
+      {
+        heading: 'Jealousy is a feeling, not a verdict',
+        paragraphs: [
+          'Jealousy can arrive before you have enough information to know what is happening. Your partner mentions a new colleague, takes longer to reply, laughs with someone else, or keeps part of their social life private, and your mind fills in the most threatening explanation. The feeling is real. The explanation may still be a guess.',
+          'Handling jealousy in a new relationship starts with keeping those two things separate. You can say, "I feel unsettled right now," without concluding, "That means you are doing something wrong." This small distinction gives you room to respond with honesty instead of turning a moment of fear into an accusation, a test, or a restriction.'
+        ],
+        bullets: [
+          'Treat jealousy as information about your emotional state, not automatic proof of betrayal.',
+          'Name what you know, what you are assuming, and what you still need to understand.',
+          'Give yourself time to choose a response that you will respect later.'
+        ]
+      },
+      {
+        heading: '1. Find the trigger before you investigate the story',
+        paragraphs: [
+          'A trigger is the moment that activates the fear. It might be a delayed message, a change in plans, a person your partner seems close to, or a memory from a previous relationship. The trigger matters, but it is only the beginning of the investigation. Ask what happened in observable terms before you decide what it means.',
+          'For example, "They followed a new person and did not mention it" is a fact you can discuss. "They are definitely replacing me" is a conclusion. Writing down the exact event, the story your mind added, and the evidence for each part can lower the emotional temperature enough to make a useful next move.'
+        ],
+        image: '/blog/jealousy-new-relationship-pause.png',
+        imageWebp: '/blog/jealousy-new-relationship-pause.webp',
+        imageAlt: 'An adult sitting by a cafe window and pausing before reacting to a difficult feeling',
+        imageCaption: 'A pause helps you respond to what happened instead of reacting to the story fear created around it.',
+        bullets: [
+          'Describe the action without loaded words such as always, never, or obviously.',
+          'Ask whether the same event would feel different if you already felt secure.',
+          'Look for repeated behavior rather than treating one ambiguous moment as a pattern.'
+        ]
+      },
+      {
+        heading: '2. Separate a vulnerable question from a hidden accusation',
+        paragraphs: [
+          'Jealousy often wants to ask a question that already contains its verdict. "Why are you flirting with them?" may really mean, "I am afraid I am losing my place with you, and I need context." The first version invites a defense. The second gives your partner a chance to understand what is happening inside you.',
+          'You do not have to disguise the feeling or pretend to be completely calm. Try stating the observation, your emotion, and the information you are asking for: "I noticed you two have been talking a lot, and I felt insecure because I do not know what that connection means to you. Can you help me understand it?" A clear question is more likely to create clarity than a demand that they prove innocence.'
+        ],
+        bullets: [
+          'Start with what you noticed, not a claim about your partner\'s motives.',
+          'Use I statements to describe your experience without making them manage your entire fear.',
+          'Ask one answerable question instead of opening a case against their character.'
+        ]
+      },
+      {
+        heading: '3. Regulate before you check, test, or send the message',
+        paragraphs: [
+          'When jealousy is intense, checking can feel like the fastest route to relief. You may want to look through a phone, inspect social media activity, send a message designed to make your partner jealous, or ask the same question until the answer sounds reassuring enough. These actions can reduce uncertainty for a minute, but they teach your nervous system that control is the only way to feel safe.',
+          'Create a short pause between the feeling and the behavior. Put your phone down, take a walk, write the message without sending it, or talk to a trusted friend who will not inflame the situation. Then ask what action would create real information: a direct conversation, a boundary, a request for consistency, or the decision to wait and observe the pattern.'
+        ],
+        bullets: [
+          'Do not make an important relationship decision at the peak of panic.',
+          'Choose a grounding action that gives your body time to settle.',
+          'Do not use surveillance or jealousy games as substitutes for a conversation.'
+        ]
+      },
+      {
+        heading: '4. Ask for reassurance without demanding constant access',
+        paragraphs: [
+          'Reassurance is a reasonable relationship need. Control begins when reassurance becomes a requirement that another person surrender privacy, friendships, time, or freedom in order to keep you calm. You can ask for something specific without making your partner responsible for preventing every uncomfortable feeling.',
+          'A useful request is concrete and possible to follow through on: "I am feeling a little disconnected this week. Could we make a plan for some time together tonight?" A controlling demand sounds different: "If you cared about me, you would stop talking to them and answer every message immediately." The first request creates an opportunity for care. The second tries to remove your partner\'s choices.'
+        ],
+        image: '/blog/jealousy-new-relationship-conversation.png',
+        imageWebp: '/blog/jealousy-new-relationship-conversation.webp',
+        imageAlt: 'Two partners having an open conversation at a kitchen table with calm body language',
+        imageCaption: 'Specific reassurance requests make room for care without asking one person to give up their independence.',
+        bullets: [
+          'Ask for a plan, a check-in, or a clear explanation when that is what you need.',
+          'Let reassurance support trust instead of becoming a ritual you must repeat all day.',
+          'Keep responsibility for your emotions shared but not transferred completely to your partner.'
+        ]
+      },
+      {
+        heading: '5. Talk about boundaries around flirting and outside connections',
+        paragraphs: [
+          'A boundary conversation is not a list of people your partner is forbidden to speak to. It is a chance to define what respect and commitment mean in this particular relationship. Different couples may have different expectations about private messages, dating-app use, physical affection with friends, or how they respond when someone openly flirts with them.',
+          'Make the conversation mutual and specific. You might say, "I do not want us to police each other\'s friendships, but I would like us to talk about what we each consider crossing a line." Then listen to the answer. A healthy agreement protects both people and leaves room for ordinary social life. It does not isolate one person, require passwords, or make autonomy a sign of disloyalty.'
+        ],
+        bullets: [
+          'Describe the behavior that concerns you instead of labeling the entire person.',
+          'Agree on standards you are both willing to follow.',
+          'Remember that a boundary describes what you will do; it is not a tool for controlling someone else.'
+        ]
+      },
+      {
+        heading: '6. Notice when the evidence points to a real problem',
+        paragraphs: [
+          'Managing jealousy does not mean talking yourself out of every concern. Sometimes the other person is being dishonest, hiding important information, breaking an agreement, or repeatedly creating situations that leave you confused. The goal is not to become so self-aware that you ignore what is happening in front of you.',
+          'Look for patterns such as lies that change when you ask follow-up questions, secretive behavior paired with blame, contempt for reasonable questions, pressure to accept a relationship arrangement you did not agree to, or repeated promises without changed behavior. You do not need to prove a case beyond all doubt before deciding that a connection does not feel safe or compatible.'
+        ],
+        bullets: [
+          'A calm request for clarity should not regularly be met with ridicule or punishment.',
+          'Repeated dishonesty is different from an anxious interpretation of one unclear moment.',
+          'Your choice may be to step back, seek support, or leave rather than investigate harder.'
+        ]
+      },
+      {
+        heading: '7. Keep your own life large enough for trust to grow',
+        paragraphs: [
+          'Jealousy becomes louder when a new relationship becomes your only source of connection, excitement, or reassurance. Keep seeing friends, protecting your routines, investing in work or study, and making plans that exist independently of the relationship. A full life does not make you less committed. It keeps one person from becoming the measure of your entire security.',
+          'Independence also gives you better information. When you are not waiting for one reply to decide whether your day is good, you can notice the relationship more clearly. You can enjoy closeness without abandoning your preferences, and you can recognise a mismatch without feeling that losing the connection means losing yourself.'
+        ],
+        image: '/blog/jealousy-new-relationship-space.png',
+        imageWebp: '/blog/jealousy-new-relationship-space.webp',
+        imageAlt: 'Two partners walking through a bookshop and garden while enjoying their own interests',
+        imageCaption: 'Trust is easier to practise when both people can stay connected to their own interests and relationships.',
+        bullets: [
+          'Keep commitments to your friends, rest, work, and interests outside dating.',
+          'Notice whether you are choosing closeness or abandoning yourself to prevent loss.',
+          'Let your partner have a life that is connected to yours without being identical to it.'
+        ]
+      },
+      {
+        heading: '8. Repair the moment if jealousy came out as control',
+        paragraphs: [
+          'You may realise after an argument that your fear came out as an accusation, a demand, or a request to inspect something private. Taking responsibility does not mean declaring that your feelings were wrong. It means naming the behavior you regret and making a different request for next time.',
+          'A useful repair sounds like: "I was scared and turned that into a demand to see your messages. That was not respectful of your privacy. What I was trying to ask is whether we are still on the same page about our boundaries. Can we talk about that when we are both calm?" Your partner also has responsibility for how they respond. Repair is mutual when both people can acknowledge impact and change what they do.'
+        ],
+        bullets: [
+          'Apologise for the controlling action without apologising for having an emotion.',
+          'Say what you will try next time instead of making a vague promise to do better.',
+          'Notice whether repair leads to changed behavior rather than another temporary promise.'
+        ]
+      },
+      {
+        heading: '9. Know when jealousy has crossed into control or danger',
+        paragraphs: [
+          'There is a difference between feeling jealous and using jealousy to restrict another person. Repeated phone checks, location demands, monitoring, isolation from friends, accusations without evidence, threats, humiliation, and punishment for ordinary independence are controlling behaviors. They should not be romanticised as proof that someone cares deeply.',
+          'If a partner uses jealousy to control you, the solution is not to become more transparent until they are satisfied. Reach out to someone you trust and use a reputable support resource. If you feel afraid of what will happen when you disagree or set a limit, prioritise your safety and get help from a local service. A healthy relationship can hold discomfort without requiring one person to surrender their freedom.'
+        ],
+        bullets: [
+          'Possessiveness is not the same thing as devotion.',
+          'Privacy and independence are compatible with commitment.',
+          'Fear, threats, and isolation are safety concerns, not communication puzzles to solve alone.'
+        ]
+      },
+      {
+        heading: 'A simple jealousy reset checklist',
+        paragraphs: [
+          'When jealousy returns, use a short sequence instead of trying to solve the entire relationship at once. Ask: What happened? What am I telling myself it means? What do I need to know? What request would be fair? What boundary do I control? Then choose the smallest honest next step, whether that is waiting until you are regulated, asking one direct question, or stepping away from a pattern that keeps hurting you.',
+          'You do not have to eliminate jealousy before you can have a healthy relationship. You need to practise what you do with it. Feel the emotion, check the evidence, communicate clearly, and leave room for both people to make choices. Trust grows when reassurance is matched by consistent behavior, personal freedom, and the confidence that you can respond to the truth even when it is difficult.'
+        ],
+        bullets: [
+          'Pause before acting on the first frightening interpretation.',
+          'Ask for clarity or reassurance in a specific, respectful way.',
+          'Use agreed boundaries instead of surveillance or tests.',
+          'Watch patterns of honesty, repair, and mutual freedom over time.',
+          'Get support when jealousy becomes control, fear, or isolation.'
+        ]
+      }
+    ]
+  },
+  {
     slug: 'how-to-build-trust-in-a-new-relationship',
     title: 'How to Build Trust in a New Relationship Without Rushing It',
     seoTitle: 'How to Build Trust in a New Relationship Without Rushing It',
