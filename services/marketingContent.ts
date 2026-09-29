@@ -1781,7 +1781,7 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         heading: 'If the signs are mixed, choose a small next step',
         paragraphs: [
-          'Mixed signals do not always need an immediate final answer. The person may be interested but busy, nervous, or unsure of your interest. You can respond with one low-pressure action: send a warm follow-up, ask a clear question, or suggest a simple second date. Then watch whether they meet you with enough effort. You do not have to solve the entire connection from one evening.',
+          'Mixed signals do not always need to be resolved immediately. The person may be interested but busy, nervous, or unsure of your interest. You can respond with one low-pressure action: send a warm follow-up, ask a clear question, or suggest a simple second date. Then watch whether they meet you with enough effort. You do not have to solve the entire connection from one evening.',
           'If the response stays vague, delayed, or one-sided after a clear invitation, let the pattern speak. You can step back without turning the situation into a dramatic rejection. Someone can be a good person and still not be available or compatible with you. Leaving room for their choice also protects your time and makes space for a connection that does not require constant guessing.'
         ],
         bullets: [
