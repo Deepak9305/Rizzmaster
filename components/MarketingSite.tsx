@@ -791,9 +791,6 @@ const ArticlePage: React.FC<{ post: BlogPost; navigate: (path: string) => void }
           <ArticleExampleBox examples={ARTICLE_EXAMPLES[post.slug]} />
           <ArticleDoDont post={post} />
           <ArticleInternalLinks post={post} navigate={navigate} />
-Exit code: 0
-Wall time: 1 seconds
-Output:
           {post.slug === 'what-to-text-when-they-stop-replying' && <figure className="overflow-hidden rounded-3xl border border-amber-300/15 bg-black/20"><img src="/blog/what-to-text-when-they-stop-replying-follow-up.svg" alt="Three calm follow-up directions: check in, make a plan, or close the conversation" className="aspect-[3/2] w-full object-cover" loading="lazy" decoding="async" /><figcaption className="border-t border-white/10 px-5 py-3 text-xs text-white/35">Choose the message that matches what you actually want, not the one most likely to provoke a reply.</figcaption></figure>}
           <ArticleResources post={post} />
         </div>
