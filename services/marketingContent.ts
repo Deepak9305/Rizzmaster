@@ -31,6 +31,222 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'dating-app-red-flags-before-first-date',
+    title: 'Dating App Red Flags to Notice Before the First Date: 11 Signs to Slow Down',
+    seoTitle: 'Dating App Red Flags Before the First Date',
+    description: 'Learn which dating app red flags deserve a pause before you meet, how to protect your privacy, and how to step back without second-guessing yourself.',
+    excerpt: 'A good match does not need instant trust. Notice pressure, inconsistency, boundary testing, money requests, and the uneasy feeling you keep explaining away before you move a new connection offline.',
+    date: '2026-09-30',
+    updatedAt: '2026-09-30',
+    readingTime: '11 min read',
+    category: 'Dating apps',
+    keywords: [
+      'dating app red flags before first date',
+      'dating app safety tips',
+      'red flags in online dating',
+      'how to spot a dating scam',
+      'dating app safety before meeting',
+      'online dating warning signs',
+      'how to know if a dating profile is fake',
+      'safe first date advice',
+      'when to stop talking to a dating app match',
+      'how to set boundaries on dating apps'
+    ],
+    image: '/blog/dating-app-red-flags-hero.png',
+    imageWebp: '/blog/dating-app-red-flags-hero.webp',
+    imageAlt: 'A person thoughtfully reviewing a dating app conversation in a bright cafe',
+    imageCaption: 'A promising profile can still be worth reviewing slowly before you give a new match more access to your life.',
+    resources: [
+      { label: 'Federal Trade Commission: What to know about romance scams', url: 'https://consumer.ftc.gov/articles/what-know-about-romance-scams' },
+      { label: 'RAINN: Tips for safer dating online and in person', url: 'https://rainn.org/strategies-to-reduce-risk-increase-safety/tips-for-safer-dating-online-and-in-person/' },
+      { label: 'loveisrespect: Is there disrespectful behavior in my relationship?', url: 'https://www.loveisrespect.org/resources/is-there-disrespectful-behavior-in-my-relationship/' }
+    ],
+    sections: [
+      {
+        heading: 'A match is a starting point, not a trust exercise',
+        paragraphs: [
+          'Dating apps make it easy to feel familiar with someone before you have enough information to know them well. A few funny messages, attractive photos, and a steady stream of notifications can create a sense of momentum. Momentum is enjoyable, but it is not the same as reliability.',
+          'Dating app red flags are not a reason to inspect every sentence for hidden meaning. They are patterns that tell you to slow down, ask a clearer question, protect your information, or leave the conversation. You do not need courtroom-level proof to decide that a match is asking for more access than you want to give.'
+        ],
+        bullets: [
+          'Look for repeated behavior instead of judging one awkward message in isolation.',
+          'Treat your comfort as useful information, not an obstacle to chemistry.',
+          'Let trust grow from consistent actions before you move the connection offline.'
+        ]
+      },
+      {
+        heading: '1. They want instant trust before offering basic consistency',
+        paragraphs: [
+          'A match may talk as though you already share a special bond while avoiding ordinary questions about their life. They can be intensely affectionate, make big promises, or call you their ideal person before you have had a normal conversation about work, interests, or what you are both looking for. Fast intensity can feel flattering, but it can also make it harder to notice what is missing.',
+          'Pay attention to whether the warmth is matched by simple, verifiable consistency. Do they answer reasonable questions? Do their details stay broadly coherent? Can they make a plan and follow through? You are allowed to enjoy attention while still waiting for behavior to earn confidence.'
+        ],
+        bullets: [
+          'Slow the pace when the emotional language is much bigger than the actual history between you.',
+          'Ask grounded questions and see whether the person responds with openness rather than charm alone.',
+          'Do not treat fast certainty as proof that the connection is unusually genuine.'
+        ]
+      },
+      {
+        heading: '2. They push you off the app before you feel ready',
+        paragraphs: [
+          'Moving to another messaging app is not automatically a problem. Some people prefer texting once a conversation feels promising. The warning sign is pressure: they insist on leaving the dating app immediately, become irritated when you want to keep talking there, or use a new platform to make the conversation feel more private and urgent than you chose.',
+          'Keep the pace that lets you make clear decisions. You can say, "I prefer to chat here a little longer before sharing my number." A respectful person may be disappointed, but they can accept the boundary. If someone tries to make you feel suspicious, boring, or rude for protecting your contact details, that reaction is useful information.'
+        ],
+        image: '/blog/dating-app-red-flags-verify.png',
+        imageWebp: '/blog/dating-app-red-flags-verify.webp',
+        imageAlt: 'Two people having a thoughtful conversation at a cafe with a phone on the table',
+        imageCaption: 'You can keep a new conversation at a pace that protects your contact details and leaves room to decide.',
+        bullets: [
+          'Keep communication on the app until you feel comfortable choosing another channel.',
+          'Do not share your home address, workplace details, or live location to prove interest.',
+          'Notice whether a request becomes pressure when you say not yet.'
+        ]
+      },
+      {
+        heading: '3. Their story changes when you ask ordinary questions',
+        paragraphs: [
+          'One imperfect memory is normal. People mistype a detail, forget what they said, or describe the same event differently in a short chat. A pattern of changing names, jobs, locations, relationship status, or timelines deserves more care. So does a profile that stays vague whenever a straightforward question would make the person easier to understand.',
+          'You do not need to become an investigator. Ask one calm follow-up and observe the response. Someone who made a harmless mistake can usually clarify it without attacking you. Someone who is hiding important information may change the subject, accuse you of being distrustful, or provide a new story that creates even more confusion.'
+        ],
+        bullets: [
+          'Compare the overall story with the profile, but do not demand private documents from a stranger.',
+          'Use a simple follow-up instead of collecting contradictions to win an argument.',
+          'If the explanation keeps changing, treat the lack of clarity as information.'
+        ]
+      },
+      {
+        heading: '4. They treat a small boundary like a personal insult',
+        paragraphs: [
+          'A boundary can be ordinary: you are not available to message all day, you do not want sexual jokes yet, you prefer a public first meeting, or you are not ready to share another account. A healthy match does not have to love every preference, but they should be able to hear it without trying to punish you for having it.',
+          'Watch what happens after you say no, not only how charming the person is when you say yes. Sulking, guilt, mockery, repeated requests, and accusations that you are not interested can turn a small request into a test of obedience. That pattern matters before the first date because respect rarely becomes easier when someone receives more access.'
+        ],
+        bullets: [
+          'State the limit plainly and avoid arguing for your right to have it.',
+          'Give one clarification if useful, then watch whether the person adjusts.',
+          'A boundary that requires repeated defense is already giving you useful information.'
+        ]
+      },
+      {
+        heading: '5. They turn the conversation sexual and ignore your pace',
+        paragraphs: [
+          'Flirting can be welcome, but consent includes the timing, topic, and level of detail that feels right to you. A match who keeps making sexual comments after you redirect the conversation, asks for intimate photos, or frames your discomfort as a lack of attraction is asking you to manage their behavior for them.',
+          'You do not owe a stranger access to your body, images, fantasies, or private history. You can end a conversation without persuading the other person that your reason is serious enough. If the messages become threatening, coercive, or humiliating, save what you need for a report, block the account, and reach out to someone you trust.'
+        ],
+        bullets: [
+          'Say what you are comfortable discussing and stop engaging if the limit is ignored.',
+          'Never send intimate material because someone says you would do it if you trusted them.',
+          'Pressure disguised as chemistry is still pressure.'
+        ]
+      },
+      {
+        heading: '6. They keep plans vague or push for a private first meeting',
+        paragraphs: [
+          'A first meeting should give both people a simple way to arrive, leave, and change their mind. Be cautious when a match avoids making a clear plan, repeatedly cancels without proposing another time, insists on picking you up, or pushes for a home visit before you have met in public. A person can be spontaneous without making your safety depend on their convenience.',
+          'Choose a location where other people are around and where you can leave on your own. Tell a friend where you are going, arrange your own transport, and keep the first meeting short enough that you do not feel trapped by the effort you made to get there. Safety planning is compatible with being open to a good date.'
+        ],
+        image: '/blog/dating-app-red-flags-first-date.png',
+        imageWebp: '/blog/dating-app-red-flags-first-date.webp',
+        imageAlt: 'Two adults meeting for a first date in a bright public cafe during the day',
+        imageCaption: 'A public first meeting gives both people space to enjoy the date and leave comfortably if the fit is not right.',
+        bullets: [
+          'Choose a public place and make your own way there and home.',
+          'Share the plan with a friend and arrange a check-in that feels practical.',
+          'Do not let money already spent, travel time, or a promise create an obligation to stay.'
+        ]
+      },
+      {
+        heading: '7. They ask for money, financial help, or sensitive information',
+        paragraphs: [
+          'A request for money is a serious dating app red flag, especially before you have met in person. The story may involve an emergency, travel problem, medical bill, investment opportunity, locked account, or a promise that they will repay you. Romance scammers often use urgency and emotional closeness to make a request feel like a test of whether you care.',
+          'Do not send cash, gift cards, cryptocurrency, banking details, passwords, one-time codes, or copies of identity documents to an online love interest. Pause and discuss the situation with someone outside the conversation. If you think you have been targeted, stop sending money, contact your financial institution quickly, report the account to the dating platform, and use the FTC reporting guidance.'
+        ],
+        bullets: [
+          'A person you have only met online should never need your money to prove that the relationship is real.',
+          'Do not click unfamiliar payment or investment links sent through a dating chat.',
+          'Urgency is a reason to slow down and get outside perspective.'
+        ]
+      },
+      {
+        heading: '8. They punish caution with guilt, pressure, or silence',
+        paragraphs: [
+          'Some people respond to a reasonable question by making you feel cruel for asking it. They may say you have ruined the mood, claim that past partners trusted them more, threaten to disappear, or stop replying until you apologise. This creates a choice that is not really a choice: give up your boundary or risk losing the connection.',
+          'You do not have to repair a relationship that became conditional on your silence. A respectful match can explain themselves, disagree, or decide that your comfort levels do not fit. They do not need to make you ashamed for wanting more information before meeting.'
+        ],
+        bullets: [
+          'Notice whether you are apologising for asking for ordinary respect.',
+          'Do not chase someone who withdraws to make you surrender a clear limit.',
+          'A mismatch in pace is enough reason to stop without proving who is right.'
+        ]
+      },
+      {
+        heading: '9. They want access to your life before earning trust',
+        paragraphs: [
+          'A new match may ask where you live, where you work, when you are usually alone, or which places you visit every week. Curiosity is normal, but a stranger does not need a map of your routines to decide whether they like you. The same applies to requests for your social accounts, private photos, financial situation, or information about your family.',
+          'Share in layers. Give enough to have a real conversation without handing over details that could expose your home, workplace, friends, or daily schedule. You can keep social profiles private, remove location information from public posts, and say that you prefer to share more after meeting and building trust.'
+        ],
+        bullets: [
+          'Keep your address, routine, workplace access, and travel plans private at first.',
+          'Check what your public social profiles reveal before sharing them.',
+          'Interest in you does not create an entitlement to your personal information.'
+        ]
+      },
+      {
+        heading: '10. They refuse reasonable identity or safety checks while demanding yours',
+        paragraphs: [
+          'You are not required to conduct a formal background check on every match. You can still choose a reasonable level of verification before meeting: a brief video call, a consistent public profile, or a plan that makes sense when you ask basic questions. The concern is not that someone prefers privacy. It is that they demand proof from you while refusing every proportionate step that would help you feel comfortable.',
+          'Keep verification mutual and limited. Do not send a stranger your passport, driving licence, work badge, or private records because they offered to send theirs. The goal is enough information to make a safer decision, not a false promise of certainty.'
+        ],
+        bullets: [
+          'Choose a check that matches the stage of the connection and protects both people’s privacy.',
+          'Be wary of profiles that use stolen-looking photos, avoid live conversation, or cannot explain basic details.',
+          'Verification can reduce uncertainty, but it cannot replace your judgment and boundaries.'
+        ]
+      },
+      {
+        heading: '11. You keep explaining away the same uneasy feeling',
+        paragraphs: [
+          'An uneasy feeling is not always proof that someone is dangerous. It can come from old experiences, ordinary uncertainty, or the vulnerability of meeting someone new. It is still a reason to pause. You do not have to label the person as bad before you choose more distance.',
+          'Ask what the feeling is pointing to. Are you confused because their story changes? Tense because they keep pushing? Drained because you are doing all the reassuring? If the same concern returns after you ask a clear question and set a fair boundary, stop trying to talk yourself out of it. You can end the match with a short message, unmatch, or report the account if the behavior violates the platform rules.'
+        ],
+        image: '/blog/dating-app-red-flags-step-back.png',
+        imageWebp: '/blog/dating-app-red-flags-step-back.webp',
+        imageAlt: 'An adult leaving a cafe and walking calmly toward a bright public street',
+        imageCaption: 'Stepping back can be a confident decision when the connection repeatedly makes you feel pressured or unsafe.',
+        bullets: [
+          'You can leave because the connection does not feel right, even without a perfect explanation.',
+          'Do not keep chatting to collect enough evidence to satisfy someone else.',
+          'Your future self benefits from the boundary you are willing to keep today.'
+        ]
+      },
+      {
+        heading: 'What to do when you notice a red flag',
+        paragraphs: [
+          'You do not need to confront every match with a list of charges. Choose the response that protects your time and safety. If the issue is mild and you still feel curious, ask one direct question or set one clear limit. If the person responds respectfully, you can decide whether you want to continue slowly. If they argue, pressure, threaten, or repeat the behavior, you have your answer.',
+          'A short exit is enough: "I do not think this is a fit, so I am going to leave the conversation here. Take care." You can also stop replying, unmatch, block, and report. If the person knows where you live or work, has threatened you, or keeps contacting you through new accounts, tell someone you trust and contact local support or emergency services if you feel in immediate danger.'
+        ],
+        bullets: [
+          'Save relevant messages before blocking if you may need to report the account.',
+          'Tell a friend what happened so you are not carrying the decision alone.',
+          'Choose the smallest action that gives you more safety and less access to the person.'
+        ]
+      },
+      {
+        heading: 'A safer first-date checklist',
+        paragraphs: [
+          'Before you meet, ask whether the plan gives you freedom to arrive, leave, and change your mind. A good first date does not require you to ignore your instincts in order to appear relaxed. It gives both people enough room to be curious without turning caution into a performance of distrust.',
+          'Use this checklist as a practical reset: confirm the public location, arrange your own transport, tell a friend the plan, keep your phone charged, avoid sharing your home address, and decide what you will do if you want to leave early. Then notice how you feel when the plan is set. Relief is useful information too.'
+        ],
+        bullets: [
+          'Meet in a public place during a time that feels comfortable to you.',
+          'Share the location and expected timing with a trusted person.',
+          'Keep control of your transport, money, phone, and personal belongings.',
+          'Do not drink more than you want to or accept pressure to go somewhere else.',
+          'Leave when you want to leave, even if the other person seems disappointed.'
+        ]
+      }
+    ]
+  },
+  {
     slug: 'how-to-handle-jealousy-in-a-new-relationship',
     title: 'How to Handle Jealousy in a New Relationship Without Becoming Controlling',
     seoTitle: 'How to Handle Jealousy in a New Relationship',

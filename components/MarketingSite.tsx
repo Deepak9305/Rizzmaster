@@ -489,6 +489,7 @@ const BlogIndexPage: React.FC<{ navigate: (path: string) => void }> = ({ navigat
 );
 
 const ARTICLE_EXAMPLES: Record<string, string[]> = {
+  'dating-app-red-flags-before-first-date': ['I prefer to chat here a little longer before sharing my number.', 'I am happy to meet, but I would like to choose a public place and make my own way there.', 'I do not think this is a fit, so I am going to leave the conversation here. Take care.'],
   'how-to-stop-overthinking-while-dating': ['I have enjoyed getting to know you. Are you still interested in making a plan this week?', 'I am taking dating slowly and prefer clear plans. Would Thursday or Saturday work for you?', 'I am going to step back from guessing here. If you would like to continue, feel free to reach out.'],
   'talk-about-what-you-want-in-dating': ['I’m enjoying getting to know you, and I’m open to a relationship if we’re a good fit. What are you hoping to find?', 'I’m looking for something casual and clear right now. I wanted to say that early so we can see if we’re on the same page.', 'I’m still figuring out what fits me. I like being honest about that and checking in as we get to know each other.'],
   'what-to-text-when-they-stop-replying': ['I am guessing your week got busy. No pressure - how is it going?', 'I enjoyed talking with you. If you are still interested, I would be happy to pick this up later.', 'I am going to stop double-texting, but I enjoyed meeting you. Take care.'],
@@ -515,6 +516,7 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
 };
 
 const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
+  'dating-app-red-flags-before-first-date': { do: 'Slow down, protect your information, choose public plans, and let consistent behavior earn trust.', doNot: 'Ignore pressure, send money or private details, or keep explaining away the same uneasy pattern.' },
   'how-to-stop-overthinking-while-dating': { do: 'Separate facts from assumptions, regulate before reacting, and choose one clear next step.', doNot: 'Decode every pause, send messages to relieve anxiety, or ignore a repeated mismatch.' },
   'chemistry-vs-compatibility': { do: 'Enjoy the attraction while observing mutual effort, shared direction, everyday fit, and respectful repair over time.', doNot: 'Treat an intense spark as proof of compatibility or wait indefinitely for someone to become a better fit.' },
   'talk-about-what-you-want-in-dating': { do: 'Share your current intentions, ask openly, and clarify what labels mean in practice.', doNot: 'Demand an instant commitment, hide a mismatch, or agree to a setup you do not want.' },
@@ -729,6 +731,13 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'texting-boundaries-while-dating', label: 'Set healthy dating boundaries' },
     { slug: 'talk-about-what-you-want-in-dating', label: 'Talk about what you want in dating' },
     { slug: 'chemistry-vs-compatibility', label: 'Separate chemistry from compatibility' }
+  ],
+  'dating-app-red-flags-before-first-date': [
+    { slug: 'texting-boundaries-while-dating', label: 'Set boundaries while texting' },
+    { slug: 'love-bombing-vs-genuine-interest', label: 'Tell intensity from genuine interest' },
+    { slug: 'how-to-tell-if-someone-is-emotionally-available', label: 'Recognize emotional availability' },
+    { slug: 'how-to-ask-someone-out-over-text', label: 'Ask someone out safely' },
+    { slug: 'how-to-stop-overthinking-while-dating', label: 'Separate facts from anxious stories' }
   ],
   'how-to-handle-jealousy-in-a-new-relationship': [
     { slug: 'how-to-build-trust-in-a-new-relationship', label: 'Build trust without rushing' },

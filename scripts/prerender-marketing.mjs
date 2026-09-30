@@ -101,6 +101,13 @@ const articleInternalLinks = {
     { slug: 'talk-about-what-you-want-in-dating', label: 'Talk about what you want in dating' },
     { slug: 'chemistry-vs-compatibility', label: 'Separate chemistry from compatibility' }
   ],
+  'dating-app-red-flags-before-first-date': [
+    { slug: 'texting-boundaries-while-dating', label: 'Set boundaries while texting' },
+    { slug: 'love-bombing-vs-genuine-interest', label: 'Tell intensity from genuine interest' },
+    { slug: 'how-to-tell-if-someone-is-emotionally-available', label: 'Recognize emotional availability' },
+    { slug: 'how-to-ask-someone-out-over-text', label: 'Ask someone out safely' },
+    { slug: 'how-to-stop-overthinking-while-dating', label: 'Separate facts from anxious stories' }
+  ],
   'how-to-handle-jealousy-in-a-new-relationship': [
     { slug: 'how-to-build-trust-in-a-new-relationship', label: 'Build trust without rushing' },
     { slug: 'how-to-stop-overthinking-while-dating', label: 'Separate facts from anxious stories' },
