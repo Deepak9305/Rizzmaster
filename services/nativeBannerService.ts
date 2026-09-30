@@ -5,9 +5,10 @@ import { canUseNativeAdMob } from './nativeCapabilities';
 
 export type BannerMode = 'visible' | 'hidden' | 'removed';
 export const BANNER_HEIGHT = 50;
-export const BANNER_BOTTOM_MARGIN = 8;
 export const BANNER_CONTENT_GAP = 16;
-export const BANNER_SLOT_HEIGHT = BANNER_HEIGHT + BANNER_BOTTOM_MARGIN + BANNER_CONTENT_GAP;
+export const getBannerSlotHeight = (bottomMargin: number) => (
+    BANNER_HEIGHT + bottomMargin + BANNER_CONTENT_GAP
+);
 
 // A single native banner is shared by the app. Serialize show/hide/remove so
 // a slow consent response cannot display it over a newer modal or premium session.
@@ -26,6 +27,7 @@ export class NativeBannerController {
 
     constructor(
         private readonly adId: string,
+        private readonly bottomMargin: number,
         private readonly reserve: (height: number) => void,
         private readonly consentReady: (required: boolean) => void,
     ) {}
@@ -148,9 +150,9 @@ export class NativeBannerController {
                     this.scheduleRetry();
                     return;
                 }
-                // Reserve the entire dock synchronously BEFORE the native overlay
-                // can appear. BANNER is exactly 50 dp; it never changes on load.
-                this.reserve(BANNER_SLOT_HEIGHT);
+                // Reserve scroll-only room before the native overlay appears.
+                // The WebView keeps its full height, so the header is not squeezed.
+                this.reserve(getBannerSlotHeight(this.bottomMargin));
                 if (this.attached) {
                     if (!this.visible) {
                         this.visible = true;
@@ -172,7 +174,7 @@ export class NativeBannerController {
                             adId: this.adId,
                             adSize: BannerAdSize.BANNER,
                             position: BannerAdPosition.BOTTOM_CENTER,
-                            margin: BANNER_BOTTOM_MARGIN,
+                            margin: this.bottomMargin,
                             isTesting: false,
                         });
                         // Native show resolves on view creation, not on load;

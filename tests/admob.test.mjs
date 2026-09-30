@@ -287,11 +287,11 @@ function setupBanner(options = {}) {
     return { remove: async () => callbacks.delete(event) };
   };
   plugin.showBanner = async params => {
-    assert.equal(slots.at(-1), 74, 'Space must be reserved before the native overlay');
+    assert.equal(slots.at(-1), 122, 'Scroll room must include the banner, navigation inset, and safe gap');
     assert.equal(params.adId, 'ca-app-pub-7381421031784616/7234804095');
     assert.equal(params.adSize, 'BANNER');
     assert.equal(params.position, 'BOTTOM_CENTER');
-    assert.equal(params.margin, 8);
+    assert.equal(params.margin, 56);
     assert.equal(params.isTesting, false);
     calls.push('banner-request');
     if (options.showBanner) await options.showBanner();
@@ -311,7 +311,7 @@ function setupBanner(options = {}) {
     setTimeout: (callback, ms) => { const id = nextTimer++; timers.set(id, { callback, ms }); return id; },
     clearTimeout: id => timers.delete(id),
   });
-  const controller = new NativeBannerController('ca-app-pub-7381421031784616/7234804095', height => slots.push(height), () => {});
+  const controller = new NativeBannerController('ca-app-pub-7381421031784616/7234804095', 56, height => slots.push(height), () => {});
   return { controller, service, calls, callbacks, slots, timers, bannerEvents };
 }
 
@@ -334,7 +334,7 @@ test('keyboard, modal and background suspension resumes a banner without a new r
     await controller.setMode('hidden');
     assert.equal(slots.at(-1), 0);
     await controller.setMode('visible');
-    assert.equal(slots.at(-1), 74);
+    assert.equal(slots.at(-1), 122);
   }
   assert.equal(calls.filter(call => call === 'banner-request').length, 1);
   assert.equal(calls.filter(call => call === 'banner-resume').length, 3);

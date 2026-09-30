@@ -3,6 +3,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { Keyboard } from '@capacitor/keyboard';
 import type { PluginListenerHandle } from '@capacitor/core';
 import { NativeBannerController, type BannerMode } from '../services/nativeBannerService';
+import { getBannerBottomMargin } from '../services/bottomNavigationInset';
 import { canUseNativeAdMob, canUseNativeAppEvents, canUseNativeKeyboard } from '../services/nativeCapabilities';
 
 interface NativeBannerProps {
@@ -30,24 +31,34 @@ const NativeBanner: React.FC<NativeBannerProps> = ({ adId, enabled, suspended, o
     const [foreground, setForeground] = useState(() => document.visibilityState !== 'hidden');
     const [keyboardOpen, setKeyboardOpen] = useState(false);
     const [editing, setEditing] = useState(false);
+    const [bottomMargin, setBottomMargin] = useState<number | null>(null);
     const native = canUseNativeAdMob();
     const mode: BannerMode = !enabled ? 'removed' : suspended || !foreground || keyboardOpen || (!canUseNativeKeyboard() && editing) ? 'hidden' : 'visible';
 
     useEffect(() => {
         if (!native) return;
+        let cancelled = false;
+        void getBannerBottomMargin().then(margin => {
+            if (!cancelled) setBottomMargin(margin);
+        });
+        return () => { cancelled = true; };
+    }, [native]);
+
+    useEffect(() => {
+        if (!native || bottomMargin === null) return;
         slotObserver = setSlotHeight;
         consentObserver = onConsentReady;
-        controller ??= new NativeBannerController(adId, reserveSlot, required => consentObserver?.(required));
+        controller ??= new NativeBannerController(adId, bottomMargin, reserveSlot, required => consentObserver?.(required));
         return () => {
             slotObserver = null;
             consentObserver = null;
             void controller?.setMode('removed');
         };
-    }, [adId, native, onConsentReady]);
+    }, [adId, bottomMargin, native, onConsentReady]);
 
     useEffect(() => {
-        if (native) void controller?.setMode(mode);
-    }, [mode, native]);
+        if (native && bottomMargin !== null) void controller?.setMode(mode);
+    }, [bottomMargin, mode, native]);
 
     useEffect(() => {
         if (!native) return;
