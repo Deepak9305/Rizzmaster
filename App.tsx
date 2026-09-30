@@ -14,8 +14,7 @@ import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { AdMobService, type RewardVideoSsv } from './services/admobService';
-import { ForegroundSessionClock } from './services/foregroundSessionClock';
-import NativeBanner from './components/NativeBanner';
+import { AdForegroundClock } from './services/adForegroundClock';
 import { OneSignalService } from './services/oneSignalService';
 import IAPService from './services/iapService';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
@@ -49,6 +48,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import NoInternetOverlay from './components/NoInternetOverlay';
 
 const DAILY_CREDITS = 5;
+const INTERSTITIAL_NEXT_TARGET_STORAGE_KEY = 'rizz_next_ad_target';
 const IS_WEB_PLATFORM = !Capacitor.isNativePlatform();
 const SILENT_PREMIUM_RESTORE_WAIT_MS = 45000;
 const SILENT_PREMIUM_RESTORE_RETRY_MS = 60000;
@@ -66,13 +66,17 @@ type RewardedAdPreparationContext = {
 const USE_TEST_ADS = false; // Set to true for testing with Google test ads
 
 const AD_IDS = {
-  BANNER: {
-    ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/6300978111' : 'ca-app-pub-7381421031784616/7234804095',
-    IOS: 'ca-app-pub-3940256099942544/2934735716' // Test ID until an iOS unit is configured
+  INTERSTITIAL: {
+    ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/1033173712' : 'ca-app-pub-7381421031784616/5183026259',
+    IOS: 'ca-app-pub-3940256099942544/4411468910' // Test ID
   },
   REWARD: {
     ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/5224354917' : 'ca-app-pub-7381421031784616/6580197977',
     IOS: 'ca-app-pub-3940256099942544/1712485313' // Test ID
+  },
+  APP_OPEN: {
+    ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/3419835294' : 'ca-app-pub-7381421031784616/2705366298',
+    IOS: 'ca-app-pub-3940256099942544/5662855259' // Test ID
   },
 };
 
@@ -432,7 +436,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showCreditsExhaustedModal, setShowCreditsExhaustedModal] = useState(false);
   const [privacyOptionsRequired, setPrivacyOptionsRequired] = useState(false);
-  const [isPrivacyFormOpen, setIsPrivacyFormOpen] = useState(false);
   const [rewardedAdStatus, setRewardedAdStatus] = useState<'idle' | 'loading' | 'pending' | 'success' | 'error'>('idle');
   const [isRewardedAdLoading, setIsRewardedAdLoading] = useState(false);
   const [rewardedAdRequiredCredits, setRewardedAdRequiredCredits] = useState<1 | 2>(1);
@@ -688,9 +691,12 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     }
   }, [profile?.id]);
 
-  // Track foreground session time for analytics without waking the WebView.
-  const foregroundSessionClock = useRef(new ForegroundSessionClock());
+  // --- INTERSTITIAL AD ACTIVE TIME TRACKING ---
+  // We use refs here because we need these values to be immediately available
+  // in background/foreground event listeners and intervals without causing re-renders.
+  const adForegroundClock = useRef(new AdForegroundClock());
   const backgroundTimestamp = useRef<number | null>(null);
+  const adTransitionInProgressRef = useRef<boolean>(false); // Bug 3 fix: prevents double-fire from both nav handlers
 
   // Track Active Time (Foreground)
   useEffect(() => {
@@ -698,7 +704,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
     // Track the current foreground segment with timestamps instead of a 1-second
     // interval. This avoids waking the WebView continuously while the app is idle.
-    foregroundSessionClock.current.start(Date.now());
+    adForegroundClock.current.start(Date.now());
 
     // Initial setup listener for App state to handle background/foreground
     let cancelled = false;
@@ -712,7 +718,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       if (isActive) {
         // App came to FOREGROUND
         if (backgroundTimestamp.current !== null) {
-          foregroundSessionClock.current.start(now);
+          adForegroundClock.current.start(now);
           // We are no longer in the background
           backgroundTimestamp.current = null;
 
@@ -725,7 +731,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         }
       } else {
         // App went to BACKGROUND — flush session time to Supabase
-        const sessionTimeMs = foregroundSessionClock.current.pause(now);
+        const sessionTimeMs = adForegroundClock.current.pause(now);
         backgroundTimestamp.current = now;
         if (sessionTimeMs > 0) {
           const currentProfile = profileRef.current;
@@ -1287,13 +1293,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   }, []);
 
   const handleOpenPrivacyOptions = useCallback(async () => {
-    setIsPrivacyFormOpen(true);
-    try {
-      const canRequestAds = await AdMobService.showPrivacyOptionsForm();
-      setPrivacyOptionsRequired(AdMobService.isPrivacyOptionsRequired());
-      if (!canRequestAds) console.warn('[AdMob] Privacy permission remains unavailable.');
-    } finally {
-      setIsPrivacyFormOpen(false);
+    const canRequestAds = await AdMobService.showPrivacyOptionsForm();
+    setPrivacyOptionsRequired(AdMobService.isPrivacyOptionsRequired());
+    if (!canRequestAds) {
+      console.warn('[AdMob] Privacy choices were not accepted or could not be updated.');
     }
   }, []);
 
@@ -1359,6 +1362,8 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
             console.error("Auth State Load Error:", e);
             setIsProfileLoadingHung(true);
           });
+        // NOTE: App Open Ad is triggered by the useEffect watching [session, profile, isAuthReady]
+        // after the profile has actually loaded, not here where profile is not yet available.
       } else {
         if (isGuestRef.current) {
           return;
@@ -2036,6 +2041,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     setSelectedVibe(prev => prev === vibe.label ? null : vibe.label);
   }, [handleOpenPremium, showToast]);
 
+  // Active Time tracking handles the grace period now (see useEffect above)
 
   const handleGenerate = useCallback(async (textToProcess?: string) => {
     if (loadingRef.current) return;
@@ -2070,11 +2076,108 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
     const cost: 1 | 2 = (activeMode === InputMode.CHAT && activeImage) ? 2 : 1;
 
-    // Insufficient credits belong to the premium/rewarded flow.
+    // A blocked attempt belongs to the premium/rewarded flow. Do not count it
+    // as a generation or mark an interstitial trigger that will never run.
     if (!currentProfile.is_premium && (currentProfile.credits || 0) < cost) {
       handleCreditsExhausted(cost);
       return;
     }
+
+    let shouldShowAd = false;
+    let adGenerationToRecord: number | null = null;
+    let successfulGenerationCount: number | null = null;
+    let shouldPreloadInterstitial = false;
+    if (!currentProfile.is_premium && canUseNativeAdMob()) {
+      const today = new Date().toDateString();
+      const lastAdDate = localStorage.getItem('rizz_last_ad_date');
+      let genCount = parseInt(localStorage.getItem('rizz_daily_gen_count') || '0');
+      let lastAdGen = parseInt(localStorage.getItem('rizz_last_ad_gen_count') || '0');
+
+      // Recover cleanly if an older build left malformed local ad state.
+      if (!Number.isFinite(genCount) || genCount < 0) genCount = 0;
+      if (!Number.isFinite(lastAdGen) || lastAdGen < 0) lastAdGen = 0;
+
+      if (lastAdDate !== today) {
+        genCount = 0;
+        lastAdGen = 0;
+        localStorage.setItem('rizz_last_ad_date', today);
+        localStorage.setItem('rizz_last_ad_gen_count', '0');
+        localStorage.removeItem(INTERSTITIAL_NEXT_TARGET_STORAGE_KEY);
+      }
+
+      // Target the third valid generation first, then choose and persist a
+      // three-to-five-generation interval so preloading is deterministic.
+      let targetGen = parseInt(localStorage.getItem(INTERSTITIAL_NEXT_TARGET_STORAGE_KEY) || '', 10);
+      if (lastAdGen === 0) {
+        targetGen = 3;
+      } else if (!Number.isFinite(targetGen) || targetGen <= lastAdGen) {
+        const nextAdOffset = Math.floor(Math.random() * 3) + 3;
+        targetGen = lastAdGen + nextAdOffset;
+      }
+      localStorage.setItem(INTERSTITIAL_NEXT_TARGET_STORAGE_KEY, targetGen.toString());
+
+      const cooldownPassed = lastAdGen === 0 || adForegroundClock.current.canShowAd(Date.now());
+      const nextGenerationCount = genCount + 1;
+      successfulGenerationCount = nextGenerationCount;
+      
+      if (nextGenerationCount >= targetGen && cooldownPassed) {
+        shouldShowAd = true;
+        adGenerationToRecord = nextGenerationCount;
+        console.log(`[AdMob] Will trigger interstitial at valid generation ${nextGenerationCount}...`);
+      } else if (nextGenerationCount + 1 >= targetGen && cooldownPassed) {
+        // Warm the ad after this generation succeeds, one valid generation
+        // before the show point, instead of preloading for failed attempts.
+        shouldPreloadInterstitial = true;
+      }
+    }
+    // --------------------------------------------------
+
+    const triggerInterstitial = () => {
+      if (!shouldShowAd) return Promise.resolve();
+
+      let accountedForShownInterstitial = false;
+      const recordShownInterstitial = () => {
+        if (accountedForShownInterstitial || adGenerationToRecord === null) return;
+        accountedForShownInterstitial = true;
+        adForegroundClock.current.recordAd(Date.now());
+        localStorage.setItem('rizz_last_ad_gen_count', adGenerationToRecord.toString());
+        localStorage.removeItem(INTERSTITIAL_NEXT_TARGET_STORAGE_KEY);
+      };
+
+      const isForeground = backgroundTimestamp.current === null;
+      const isVisible = typeof document === 'undefined' || document.visibilityState === 'visible';
+      const { showOnboarding, showPremiumModal, showSavedModal } = stateRef.current;
+      const hasUiConflict = showOnboarding || showPremiumModal || showSavedModal;
+
+      if (!isForeground || !isVisible || hasUiConflict || adTransitionInProgressRef.current) {
+        console.warn('[AdMob] Skipping interstitial because the app is not in a stable foreground state.', {
+          isForeground,
+          visibilityState: typeof document === 'undefined' ? 'unavailable' : document.visibilityState,
+          hasUiConflict,
+          adTransitionInProgress: adTransitionInProgressRef.current,
+        });
+        return Promise.resolve();
+      } else {
+        adTransitionInProgressRef.current = true;
+
+        return AdMobService.showInterstitial(getAdId('INTERSTITIAL'), recordShownInterstitial)
+          .then((result) => {
+            if (result.shown) {
+              recordShownInterstitial();
+              return;
+            }
+
+            console.warn('[AdMob] Interstitial did not reach the user.', {
+              reason: result.reason,
+              generation: adGenerationToRecord,
+            });
+          })
+        .catch(e => console.warn("[AdMob] Deferred interstitial failed:", e))
+        .finally(() => {
+          adTransitionInProgressRef.current = false;
+        });
+      }
+    };
 
     loadingRef.current = true;
     setLoading(true);
@@ -2126,6 +2229,24 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         skipFinalProfileSync = !shouldSyncSignedInProfile;
         setResult(res);
 
+        if (successfulGenerationCount !== null) {
+          localStorage.setItem('rizz_daily_gen_count', successfulGenerationCount.toString());
+        }
+
+        // Only show after a successful generation. Invoke the native bridge
+        // directly instead of deferring through requestAnimationFrame, which
+        // can be skipped or delayed by Android WebView frame scheduling.
+        if (shouldShowAd) {
+          console.log('[AdMob] Starting interstitial after successful generation.', {
+            generation: adGenerationToRecord,
+          });
+          void triggerInterstitial();
+        } else if (shouldPreloadInterstitial) {
+          runAdTask(
+            'Eligible interstitial preload',
+            AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'))
+          );
+        }
       }
 
     } catch (error: any) {
@@ -2274,12 +2395,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
   return (
     <div className="web-app-root relative min-h-screen overflow-x-hidden">
-      <NativeBanner
-        adId={getAdId('BANNER')}
-        enabled={Boolean(profile && !profile.is_premium && (session || isGuest) && !updateGateConfig?.blocked)}
-        suspended={showSplash || showOnboarding || currentView !== 'HOME' || isSessionBlocked || isOffline || showPremiumModal || showSavedModal || showCreditsExhaustedModal || showPersonaModal || isRewardedAdLoading || isPrivacyFormOpen}
-        onConsentReady={setPrivacyOptionsRequired}
-      />
 
       {showSplash && (
         <SplashScreen

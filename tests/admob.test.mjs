@@ -47,10 +47,15 @@ function setup(options = {}) {
       calls.push('sdk-init');
       if (options.initialize) await options.initialize();
     },
+    prepareInterstitial: async () => {
+      calls.push('interstitial-request');
+      if (options.prepare) await options.prepare();
+    },
     prepareRewardVideoAd: async () => {
       calls.push('reward-request');
       if (options.prepareReward) await options.prepareReward();
     },
+    showInterstitial: async () => { calls.push('interstitial-show'); },
     showRewardVideoAd: async () => { calls.push('reward-show'); return { amount: 5 }; },
     showPrivacyOptionsForm: async () => options.privacyForm?.(),
     addListener: async (event, listener) => {
@@ -62,7 +67,9 @@ function setup(options = {}) {
   const { AdMobService: service } = loadTs('../services/admobService.ts', {
     '@capacitor-community/admob': {
       AdMob: plugin,
+      InterstitialAdPluginEvents: events,
       RewardAdPluginEvents: events,
+      RewardInterstitialAdPluginEvents: events,
       AdmobConsentDebugGeography: { EEA: 1, DISABLED: 0 },
     },
     './nativeCapabilities': { canUseNativeAdMob: () => options.native !== false },
@@ -70,21 +77,22 @@ function setup(options = {}) {
   });
   service.CONSENT_REFRESH_TIMEOUT_MS = 10;
   service.NATIVE_CONSENT_TIMEOUT_MS = 10;
-  service.INIT_WAIT_TIMEOUT_MS = 250;
+  service.INIT_WAIT_TIMEOUT_MS = 50;
   service.PREPARE_TIMEOUT_MS = 20;
-  service.REWARDED_POST_PREPARE_SHOW_DELAY_MS = 0;
-  service.REWARDED_PREPARE_TIMEOUT_MS = 20;
-  return { service, calls, listeners, plugin };
+  service.INTERSTITIAL_SHOW_TIMEOUT_MS = 10;
+  service.POST_PREPARE_SHOW_DELAY_MS = 0;
+  return { service, calls, listeners };
 }
 
 test('concurrent ad requests share consent gathering and SDK initialization', async () => {
   const { service, calls } = setup();
   assert.deepEqual(await Promise.all([
-    service.prepareRewardVideo('reward'), service.prepareRewardVideo('reward'), service.initialize(),
+    service.prepareInterstitial('interstitial'), service.prepareRewardVideo('reward'), service.initialize(),
   ]), [true, true, true]);
   assert.equal(calls.filter(call => call === 'consent-refresh').length, 1);
   assert.equal(calls.filter(call => call === 'sdk-init').length, 1);
-  assert.equal(calls.filter(call => call === 'reward-request').length, 1);
+  assert.ok(calls.includes('interstitial-request'));
+  assert.ok(calls.includes('reward-request'));
 });
 
 test('form failure allows requests only when current native UMP permission allows them', async () => {
@@ -93,8 +101,8 @@ test('form failure allows requests only when current native UMP permission allow
     form: () => { throw new Error('Form download failed'); },
     nativeConsent: () => allowed,
   });
-  assert.equal(await service.prepareRewardVideo('reward'), true);
-  assert.ok(calls.includes('reward-request'));
+  assert.equal(await service.prepareInterstitial('interstitial'), true);
+  assert.ok(calls.includes('interstitial-request'));
 });
 
 test('a pre-form permission cannot override a current native denial', async () => {
@@ -103,9 +111,9 @@ test('a pre-form permission cannot override a current native denial', async () =
     form: () => { throw new Error('Form failed after a changed choice'); },
     nativeConsent: () => denied,
   });
-  assert.equal(await service.prepareRewardVideo('reward'), false);
+  assert.equal(await service.prepareInterstitial('interstitial'), false);
   assert.equal(calls.includes('sdk-init'), false);
-  assert.equal(calls.includes('reward-request'), false);
+  assert.equal(calls.includes('interstitial-request'), false);
 });
 
 test('a failed refresh recovers using previous-session permission held by native UMP', async () => {
@@ -122,15 +130,17 @@ test('an older APK can recover a form failure through a fresh consent response',
     refresh: () => ({ ...allowed, isConsentFormAvailable: ++refreshes === 1 }),
     form: () => { throw new Error('Form failed'); },
   });
-  assert.equal(await service.prepareRewardVideo('reward'), true);
+  assert.equal(await service.prepareInterstitial('interstitial'), true);
   assert.equal(refreshes, 2);
 });
 
-test('unverified or missing consent permission blocks rewarded requests', async () => {
+test('unverified or missing consent permission blocks both ad formats', async () => {
   for (const refresh of [() => denied, () => ({ ...allowed, canRequestAds: undefined }), () => { throw new Error('Offline'); }]) {
     const { service, calls } = setup({ refresh });
+    assert.equal(await service.prepareInterstitial('interstitial'), false);
     assert.equal(await service.prepareRewardVideo('reward'), false);
     assert.equal(calls.includes('sdk-init'), false);
+    assert.equal(calls.includes('interstitial-request'), false);
     assert.equal(calls.includes('reward-request'), false);
   }
 });
@@ -138,20 +148,20 @@ test('unverified or missing consent permission blocks rewarded requests', async 
 test('a native consent refresh that never settles does not lock future retries', async () => {
   let hung = true;
   const { service } = setup({ refresh: () => hung ? pending() : allowed });
-  assert.equal(await service.prepareRewardVideo('reward'), false);
+  assert.equal(await service.prepareInterstitial('interstitial'), false);
   assert.equal(service.initPromise, null);
   hung = false;
-  assert.equal(await service.prepareRewardVideo('reward'), true);
+  assert.equal(await service.prepareInterstitial('interstitial'), true);
 });
 
 test('a stalled SDK initialization releases the request and permits a retry', async () => {
   let hung = true;
   const { service, calls } = setup({ initialize: () => hung ? pending() : Promise.resolve() });
-  assert.equal(await service.prepareRewardVideo('reward'), false);
-  assert.equal(calls.includes('reward-request'), false);
+  assert.equal(await service.prepareInterstitial('interstitial'), false);
+  assert.equal(calls.includes('interstitial-request'), false);
   assert.equal(service.initPromise, null);
   hung = false;
-  assert.equal(await service.prepareRewardVideo('reward'), true);
+  assert.equal(await service.prepareInterstitial('interstitial'), true);
 });
 
 test('readiness timeout does not launch another form while the first is open', async () => {
@@ -161,7 +171,7 @@ test('readiness timeout does not launch another form while the first is open', a
     form: () => new Promise(resolve => { dismiss = resolve; }),
   });
   service.INIT_WAIT_TIMEOUT_MS = 5;
-  assert.equal(await service.prepareRewardVideo('reward'), false);
+  assert.equal(await service.prepareInterstitial('interstitial'), false);
   assert.equal(await service.prepareRewardVideo('reward'), false);
   assert.equal(calls.filter(call => call === 'consent-form').length, 1);
   dismiss(allowed);
@@ -177,11 +187,11 @@ test('privacy changes block pending requests and invalidate a cached permission'
   assert.equal(await service.initialize(), true);
   service.privacyOptionsRequired = true;
   const privacy = service.showPrivacyOptionsForm();
-  assert.equal(await service.prepareRewardVideo('reward'), false);
+  assert.equal(await service.prepareInterstitial('interstitial'), false);
   dismiss();
   assert.equal(await privacy, false);
   assert.equal(service.canRequestAds, false);
-  assert.equal(calls.includes('reward-request'), false);
+  assert.equal(calls.includes('interstitial-request'), false);
 });
 
 test('an initialized SDK cannot bypass an in-flight consent form on a later refresh', async () => {
@@ -197,8 +207,8 @@ test('an initialized SDK cannot bypass an in-flight consent form on a later refr
   service.INIT_WAIT_TIMEOUT_MS = 5;
   const retry = service.initialize();
   await delay(0);
-  assert.equal(await service.prepareRewardVideo('reward'), false);
-  assert.equal(calls.includes('reward-request'), false);
+  assert.equal(await service.prepareInterstitial('interstitial'), false);
+  assert.equal(calls.includes('interstitial-request'), false);
   dismiss(allowed);
   assert.equal(await retry, true);
 });
@@ -207,12 +217,21 @@ test('listener registration is bounded and late listeners are removed', async ()
   let register;
   let removed = false;
   const { service, calls } = setup({ listener: () => new Promise(resolve => { register = resolve; }) });
-  service.REWARDED_PREPARE_TIMEOUT_MS = 5;
-  assert.equal(await service.prepareRewardVideo('reward'), false);
+  service.PREPARE_TIMEOUT_MS = 5;
+  assert.equal(await service.prepareInterstitial('interstitial'), false);
   register({ remove: () => { removed = true; } });
   await delay(0);
   assert.equal(removed, true);
-  assert.equal(calls.includes('reward-request'), false);
+  assert.equal(calls.includes('interstitial-request'), false);
+});
+
+test('an interstitial cannot appear after its show attempt timed out', async () => {
+  const { service, calls } = setup({ prepare: () => delay(25) });
+  service.PREPARE_TIMEOUT_MS = 100;
+  const result = await service.showInterstitial('interstitial');
+  assert.equal(result.reason, 'timeout_before_show');
+  await delay(40);
+  assert.equal(calls.includes('interstitial-show'), false);
 });
 
 test('a rewarded ad cannot appear after its show attempt timed out', async () => {
@@ -228,20 +247,20 @@ test('a rewarded ad cannot appear after its show attempt timed out', async () =>
 test('permission changing during listener registration prevents the actual request', async () => {
   let register;
   const { service, calls } = setup({ listener: () => new Promise(resolve => { register = resolve; }) });
-  service.REWARDED_PREPARE_TIMEOUT_MS = 100;
-  const prepare = service.prepareRewardVideo('reward');
+  service.PREPARE_TIMEOUT_MS = 100;
+  const prepare = service.prepareInterstitial('interstitial');
   await delay(0);
   service.canRequestAds = false;
   register({ remove() {} });
   await delay(0);
   register({ remove() {} });
   assert.equal(await prepare, false);
-  assert.equal(calls.includes('reward-request'), false);
+  assert.equal(calls.includes('interstitial-request'), false);
 });
 
 test('ordinary web or an APK without AdMob never invokes native ad APIs', async () => {
   const { service, calls } = setup({ native: false });
-  assert.equal(await service.prepareRewardVideo('reward'), false);
+  assert.equal(await service.prepareInterstitial('interstitial'), false);
   assert.equal(await service.prepareRewardVideo('reward'), false);
   assert.equal(calls.length, 0);
 });
@@ -264,184 +283,35 @@ test('remote and bundled UI both use native AdMob; a browser cannot use it', () 
   assert.equal(web.canUseNativeAdMob(), false);
 });
 
-const { ForegroundSessionClock } = loadTs('../services/foregroundSessionClock.ts');
-test('foreground analytics counts each segment once and excludes background time', () => {
-  const clock = new ForegroundSessionClock();
+const { AdForegroundClock } = loadTs('../services/adForegroundClock.ts');
+test('short foreground sessions accumulate cooldown without counting background time', () => {
+  const clock = new AdForegroundClock();
   clock.start(0);
+  clock.recordAd(300_000);
+  assert.equal(clock.pause(310_000), 310_000);
+  clock.start(370_000);
+  assert.equal(clock.canShowAd(380_000), false);
+  assert.equal(clock.pause(400_000), 30_000);
+  assert.equal(clock.pause(400_000), 0);
+  clock.start(460_000);
+  assert.equal(clock.canShowAd(539_999), false);
+  assert.equal(clock.canShowAd(540_000), true);
+});
+
+test('long inactivity resets both time origins and preserves a two-minute grace', () => {
+  const clock = new AdForegroundClock();
+  clock.start(0);
+  clock.recordAd(300_000);
+  clock.pause(310_000);
+  clock.start(2_110_000);
+  assert.equal(clock.canShowAd(2_229_999), false);
+  assert.equal(clock.canShowAd(2_230_000), true);
+});
+
+test('duplicate foreground events neither lose time nor double-count analytics', () => {
+  const clock = new AdForegroundClock();
+  clock.start(0);
+  assert.equal(clock.canShowAd(0), true);
   clock.start(1_000);
   assert.equal(clock.pause(2_000), 2_000);
-  assert.equal(clock.pause(3_000), 0);
-  clock.start(30_000);
-  assert.equal(clock.pause(31_000), 1_000);
-});
-
-function setupBanner(options = {}) {
-  const { service, calls, plugin } = setup(options);
-  const callbacks = new Map();
-  const timers = new Map();
-  const slots = [];
-  let nextTimer = 1;
-  const bannerEvents = { Loaded: 'banner-loaded', FailedToLoad: 'banner-failed', AdImpression: 'banner-impression' };
-  plugin.addListener = async (event, callback) => {
-    callbacks.set(event, callback);
-    return { remove: async () => callbacks.delete(event) };
-  };
-  plugin.showBanner = async params => {
-    assert.equal(slots.at(-1), 122, 'Scroll room must include the banner, navigation inset, and safe gap');
-    assert.equal(params.adId, 'ca-app-pub-7381421031784616/7234804095');
-    assert.equal(params.adSize, 'BANNER');
-    assert.equal(params.position, 'BOTTOM_CENTER');
-    assert.equal(params.margin, 56);
-    assert.equal(params.isTesting, false);
-    calls.push('banner-request');
-    if (options.showBanner) await options.showBanner();
-    if (!options.noLoad) callbacks.get(bannerEvents.Loaded)?.();
-  };
-  plugin.hideBanner = async () => calls.push('banner-hide');
-  plugin.resumeBanner = async () => calls.push('banner-resume');
-  plugin.removeBanner = async () => calls.push('banner-remove');
-  const { NativeBannerController } = loadTs('../services/nativeBannerService.ts', {
-    '@capacitor-community/admob': {
-      AdMob: plugin, BannerAdPluginEvents: bannerEvents,
-      BannerAdPosition: { BOTTOM_CENTER: 'BOTTOM_CENTER' }, BannerAdSize: { BANNER: 'BANNER' },
-    },
-    './admobService': { AdMobService: service },
-    './nativeCapabilities': { canUseNativeAdMob: () => options.native !== false },
-  }, {
-    setTimeout: (callback, ms) => { const id = nextTimer++; timers.set(id, { callback, ms }); return id; },
-    clearTimeout: id => timers.delete(id),
-  });
-  const controller = new NativeBannerController('ca-app-pub-7381421031784616/7234804095', 56, height => slots.push(height), () => {});
-  return { controller, service, calls, callbacks, slots, timers, bannerEvents };
-}
-
-test('banner and rewarded requests share a single consent and SDK initialization', async t => {
-  const { controller, service, calls, timers } = setupBanner();
-  t.after(() => controller.dispose());
-  await Promise.all([controller.setMode('visible'), service.prepareRewardVideo('reward')]);
-  assert.equal(calls.filter(call => call === 'consent-refresh').length, 1);
-  assert.equal(calls.filter(call => call === 'sdk-init').length, 1);
-  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
-  assert.ok(calls.includes('reward-request'));
-  assert.equal(timers.size, 0, 'A loaded banner must not retain its load watchdog');
-});
-
-test('keyboard, modal and background suspension resumes a banner without a new request', async t => {
-  const { controller, calls, slots } = setupBanner();
-  t.after(() => controller.dispose());
-  await controller.setMode('visible');
-  for (let i = 0; i < 3; i++) {
-    await controller.setMode('hidden');
-    assert.equal(slots.at(-1), 0);
-    await controller.setMode('visible');
-    assert.equal(slots.at(-1), 122);
-  }
-  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
-  assert.equal(calls.filter(call => call === 'banner-resume').length, 3);
-});
-
-test('premium or logout during slow consent prevents a late banner request', async t => {
-  let resolveConsent;
-  const { controller, calls } = setupBanner({ refresh: () => new Promise(resolve => { resolveConsent = resolve; }) });
-  t.after(() => controller.dispose());
-  const visible = controller.setMode('visible');
-  await delay(0);
-  const removed = controller.setMode('removed');
-  resolveConsent(allowed);
-  await Promise.all([visible, removed]);
-  assert.equal(calls.includes('banner-request'), false);
-  assert.ok(calls.includes('banner-remove'));
-});
-
-test('a hide arriving while a native banner is being created wins over the old show', async t => {
-  let finishShow;
-  const { controller, calls, slots } = setupBanner({ showBanner: () => new Promise(resolve => { finishShow = resolve; }) });
-  t.after(() => controller.dispose());
-  const show = controller.setMode('visible');
-  while (!finishShow) await delay(0);
-  const hide = controller.setMode('hidden');
-  finishShow();
-  await Promise.all([show, hide]);
-  assert.equal(calls.at(-1), 'banner-hide');
-  assert.equal(slots.at(-1), 0);
-});
-
-test('concurrent visibility updates do not duplicate a banner request', async t => {
-  const { controller, calls } = setupBanner();
-  t.after(() => controller.dispose());
-  await Promise.all([controller.setMode('visible'), controller.setMode('visible'), controller.setMode('visible')]);
-  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
-});
-
-test('consent denial blocks banners and logout cancels the retry', async t => {
-  const { controller, calls, timers, slots } = setupBanner({ refresh: () => denied });
-  t.after(() => controller.dispose());
-  await controller.setMode('visible');
-  assert.equal(calls.includes('banner-request'), false);
-  assert.equal(slots.at(-1), 0);
-  assert.equal(timers.size, 1);
-  await controller.setMode('removed');
-  assert.equal(timers.size, 0);
-});
-
-test('no-fill schedules one delayed retry and a later native success recovers', async t => {
-  const { controller, calls, callbacks, bannerEvents, timers } = setupBanner();
-  t.after(() => controller.dispose());
-  await controller.setMode('visible');
-  callbacks.get(bannerEvents.FailedToLoad)({ code: 3 });
-  assert.equal(timers.size, 1);
-  await controller.setMode('visible');
-  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
-  const [id, retry] = [...timers][0];
-  assert.equal(retry.ms, 30_000);
-  timers.delete(id);
-  retry.callback();
-  await controller.setMode('visible');
-  assert.equal(calls.filter(call => call === 'banner-request').length, 2);
-  assert.equal(timers.size, 0);
-});
-
-test('a banner whose load callback never arrives is removed before retry', async t => {
-  const { controller, calls, timers } = setupBanner({ noLoad: true });
-  t.after(() => controller.dispose());
-  await controller.setMode('visible');
-  const [id, watchdog] = [...timers][0];
-  assert.equal(watchdog.ms, 45_000);
-  timers.delete(id);
-  watchdog.callback();
-  await controller.setMode('visible');
-  assert.equal(calls.at(-1), 'banner-remove');
-  assert.equal([...timers.values()][0].ms, 30_000);
-});
-
-test('browser sessions never reserve space or call native banner APIs', async () => {
-  const { controller, calls, slots } = setupBanner({ native: false });
-  await controller.setMode('visible');
-  await controller.dispose();
-  assert.deepEqual(calls, []);
-  assert.deepEqual(slots, []);
-});
-
-test('a cached banner is destroyed when updated privacy permission blocks ads', async t => {
-  let blocked = false;
-  const { controller, service, calls, slots } = setupBanner({ refresh: () => blocked ? denied : allowed });
-  t.after(() => controller.dispose());
-  await controller.setMode('visible');
-  await controller.setMode('hidden');
-  blocked = true;
-  service.canRequestAds = false;
-  await controller.setMode('visible');
-  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
-  assert.equal(calls.includes('banner-resume'), false);
-  assert.equal(calls.at(-1), 'banner-remove');
-  assert.equal(slots.at(-1), 0);
-});
-
-test('an initial premium or logged-out state never initializes or requests ads', async () => {
-  const { controller, calls } = setupBanner();
-  await controller.setMode('removed');
-  assert.equal(calls.includes('consent-refresh'), false);
-  assert.equal(calls.includes('sdk-init'), false);
-  assert.equal(calls.includes('banner-request'), false);
-  await controller.dispose();
 });

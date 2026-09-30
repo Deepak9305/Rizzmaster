@@ -46,23 +46,6 @@ html.native-app .web-app-root {
   overscroll-behavior-y: contain;
 }
 
-/* The native banner sits over the WebView. Preserve the viewport height and
-   add scroll room at the end instead of compressing the whole app upward. */
-html.native-app.native-banner-active .web-app-root {
-  padding-bottom: var(--native-banner-height);
-}
-
-.native-banner-dock {
-  position: fixed;
-  bottom: 0;
-  inset-inline: 0;
-  height: var(--native-banner-height);
-  background: #05030b;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  pointer-events: none;
-  z-index: 40;
-}
-
 .web-premium-scroll {
   scrollbar-color: rgba(251, 191, 36, 0.35) transparent;
   scrollbar-width: thin;

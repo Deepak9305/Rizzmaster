@@ -37,7 +37,6 @@ export const getNativeAdMobDiagnostics = () => ({
   native: isNativeShellApp(),
   adMobAvailable: canUseNativeAdMob(),
   consentStateAvailable: hasCapacitorPlugin('AdConsentState'),
-  bottomNavigationInsetAvailable: hasCapacitorPlugin('BottomNavigationInset'),
   appEventsAvailable: hasCapacitorPlugin('App'),
   uiOrigin: typeof location === 'undefined' ? 'unknown' : location.origin,
 });

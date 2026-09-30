@@ -9,7 +9,6 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(android.os.Bundle savedInstanceState) {
         registerPlugin(AdMob.class);
         registerPlugin(AdConsentStatePlugin.class);
-        registerPlugin(BottomNavigationInsetPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }
