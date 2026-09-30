@@ -9,6 +9,7 @@ import {
     type AdmobConsentInfo
 } from '@capacitor-community/admob';
 import { canUseNativeAdMob } from './nativeCapabilities';
+import { readNativeConsentInfo } from './adConsentState';
 
 type PrepareOptions = {
     label: string;
@@ -68,6 +69,7 @@ export const AdMobService = {
     consentInfo: null as AdmobConsentInfo | null,
     canRequestAds: false,
     privacyOptionsRequired: false,
+    privacyOptionsInProgress: false,
     interstitialPreparedAt: 0,
     lastInterstitialAdId: null as string | null,
     rewardVideoPreparedAt: 0,
@@ -89,8 +91,14 @@ export const AdMobService = {
     POST_PREPARE_SHOW_DELAY_MS: 1200,
     REWARDED_POST_PREPARE_SHOW_DELAY_MS: 1200,
     REWARDED_SHOW_TIMEOUT_MS: 40000,
+    CONSENT_REFRESH_TIMEOUT_MS: 15000,
+    NATIVE_CONSENT_TIMEOUT_MS: 3000,
+    INIT_WAIT_TIMEOUT_MS: 90000,
 
     applyConsentInfo(consentInfo: AdmobConsentInfo) {
+        if (typeof consentInfo.canRequestAds !== 'boolean') {
+            throw new Error('Native AdMob consent response lacks canRequestAds; this APK needs an AdMob plugin update.');
+        }
         this.consentInfo = consentInfo;
         this.canRequestAds = consentInfo.canRequestAds === true;
         this.privacyOptionsRequired = consentInfo.privacyOptionsRequirementStatus === 'REQUIRED';
@@ -162,14 +170,58 @@ export const AdMobService = {
         return Date.now() - this.rewardInterstitialPreparedAt < this.REWARDED_STALE_AFTER_MS;
     },
 
+    async withNativeTimeout<T>(label: string, operation: Promise<T>, timeoutMs: number): Promise<T> {
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        try {
+            return await Promise.race([
+                operation,
+                new Promise<never>((_, reject) => {
+                    timer = setTimeout(() => reject(new Error(`${label} timed out after ${timeoutMs}ms`)), timeoutMs);
+                }),
+            ]);
+        } finally {
+            if (timer) clearTimeout(timer);
+        }
+    },
+
+    async refreshConsentInfo(): Promise<AdmobConsentInfo> {
+        return this.withNativeTimeout('UMP consent refresh', AdMob.requestConsentInfo({
+            debugGeography: this.DEBUG_FORCE_GDPR ? AdmobConsentDebugGeography.EEA : AdmobConsentDebugGeography.DISABLED,
+        }), this.CONSENT_REFRESH_TIMEOUT_MS);
+    },
+
+    async recoverConsentInfo(): Promise<AdmobConsentInfo | null> {
+        try {
+            const nativeInfo = await this.withNativeTimeout(
+                'Native UMP state read', readNativeConsentInfo(), this.NATIVE_CONSENT_TIMEOUT_MS,
+            );
+            if (nativeInfo) return this.applyConsentInfo(nativeInfo);
+        } catch (error) {
+            console.warn('[AdMob] Native UMP state read failed:', error);
+        }
+        // Existing APKs lack AdConsentState. Refresh once to obtain an authoritative
+        // result instead of trusting a pre-form snapshot or stored consent string.
+        try {
+            return this.applyConsentInfo(await this.refreshConsentInfo());
+        } catch (error) {
+            console.warn('[AdMob] Could not verify UMP permission; ads remain blocked:', error);
+            this.canRequestAds = false;
+            return null;
+        }
+    },
+
     async initialize(): Promise<boolean> {
-        if (!canUseNativeAdMob()) return false;
-        if (this.initialized) return true;
+        if (!canUseNativeAdMob()) {
+            console.warn('[AdMob] Initialization skipped: native AdMob plugin is unavailable.');
+            return false;
+        }
+        if (this.privacyOptionsInProgress) return false;
         if (this.initPromise) return this.initPromise;
+        if (this.initialized && this.canRequestAds) return true;
 
         this.initPromise = (async (): Promise<boolean> => {
             try {
-                // Do not carry a stale consent decision across a failed refresh.
+                // Only UMP's current native permission can authorize an ad request.
                 this.consentInfo = null;
                 this.canRequestAds = false;
                 this.privacyOptionsRequired = false;
@@ -182,26 +234,32 @@ export const AdMobService = {
                     }
                 }
 
-                let consentInfo = await AdMob.requestConsentInfo({
-                    debugGeography: this.DEBUG_FORCE_GDPR ? AdmobConsentDebugGeography.EEA : AdmobConsentDebugGeography.DISABLED,
-                });
-                this.applyConsentInfo(consentInfo);
-
-                if (consentInfo.isConsentFormAvailable) {
-                    // UMP decides whether an EU or US-state message must be shown.
-                    // Do not gate this on canRequestAds: some US privacy messages
-                    // can be shown while ads remain requestable.
-                    console.log('AdMob: Loading required consent/privacy form...');
-                    consentInfo = await AdMob.showConsentForm();
-                    this.applyConsentInfo(consentInfo);
+                let consentInfo: AdmobConsentInfo | null;
+                try {
+                    consentInfo = this.applyConsentInfo(await this.refreshConsentInfo());
+                    if (consentInfo.isConsentFormAvailable) {
+                        // Native loadAndShowConsentFormIfRequired decides whether
+                        // an EU or US-state message must actually be presented.
+                        console.log('AdMob: Loading required consent/privacy form...');
+                        consentInfo = this.applyConsentInfo(await AdMob.showConsentForm());
+                    }
+                } catch (error) {
+                    console.warn('[AdMob] Consent gathering failed; checking current UMP permission:', error);
+                    consentInfo = await this.recoverConsentInfo();
                 }
 
-                if (!consentInfo.canRequestAds) {
+                console.log('[AdMob] UMP permission result', {
+                    status: consentInfo?.status ?? 'unavailable',
+                    canRequestAds: consentInfo?.canRequestAds === true,
+                    privacyOptionsRequired: this.privacyOptionsRequired,
+                });
+                if (!consentInfo?.canRequestAds) {
                     console.warn('[AdMob] Ads blocked because UMP has not granted permission to request ads.');
                     return false;
                 }
 
-                await AdMob.initialize({ testingDevices: [] });
+                await this.withNativeTimeout('AdMob SDK initialization',
+                    AdMob.initialize({ testingDevices: [] }), this.CONSENT_REFRESH_TIMEOUT_MS);
                 this.initialized = true;
                 console.log('AdMob Community Initialized after UMP consent checks');
                 return true;
@@ -219,23 +277,35 @@ export const AdMobService = {
     },
 
     async showPrivacyOptionsForm(): Promise<boolean> {
-        if (!canUseNativeAdMob() || !this.privacyOptionsRequired) return false;
+        if (!canUseNativeAdMob() || !this.privacyOptionsRequired || this.privacyOptionsInProgress || this.initPromise) return false;
 
+        this.privacyOptionsInProgress = true;
+        this.canRequestAds = false;
+        this.invalidateInterstitial();
+        this.invalidateRewardVideo();
+        this.invalidateRewardInterstitial();
         try {
             await AdMob.showPrivacyOptionsForm();
-            const consentInfo = await AdMob.requestConsentInfo({
-                debugGeography: this.DEBUG_FORCE_GDPR ? AdmobConsentDebugGeography.EEA : AdmobConsentDebugGeography.DISABLED,
-            });
-            this.applyConsentInfo(consentInfo);
+            await this.recoverConsentInfo();
             return this.canRequestAds;
         } catch (error) {
             console.warn('[AdMob] Privacy options form failed:', error);
-            return false;
+            await this.recoverConsentInfo();
+            return this.canRequestAds;
+        } finally {
+            this.privacyOptionsInProgress = false;
         }
     },
 
     async ensureInitialized(context: string): Promise<boolean> {
-        const initialized = await this.initialize();
+        let initialized = false;
+        try {
+            // Bound callers' waiting time without launching another consent form
+            // while a user is still considering the first one.
+            initialized = await this.withNativeTimeout('AdMob readiness', this.initialize(), this.INIT_WAIT_TIMEOUT_MS);
+        } catch (error) {
+            console.warn(`[AdMob] ${context} readiness failed:`, error);
+        }
         if (!initialized) {
             console.warn(`[AdMob] ${context} skipped because AdMob failed to initialize.`);
         }
@@ -268,28 +338,36 @@ export const AdMobService = {
                 resolve(success);
             };
 
+            // Include bridge listener registration in the timeout; a missing
+            // callback here must not hold a prepare promise forever.
+            timeout = setTimeout(() => {
+                console.warn(`[AdMob] ${label} prepare timed out after ${resolvedTimeoutMs}ms`);
+                settle(false);
+            }, resolvedTimeoutMs);
+
             void (async () => {
                 try {
                     loadedListener = await AdMob.addListener(loadedEvent, () => {
                         console.log(`[AdMob] ${label} loaded successfully`);
                         settle(true);
                     });
+                    if (settled) { cleanup(); return; }
 
                     failedListener = await AdMob.addListener(failedEvent, (info) => {
                         console.error(`[AdMob] ${label} failed to load:`, info);
                         settle(false);
                     });
+                    if (settled) { cleanup(); return; }
                 } catch (error) {
                     settle(false, error);
                     return;
                 }
 
-                timeout = setTimeout(() => {
-                    console.warn(`[AdMob] ${label} prepare timed out after ${resolvedTimeoutMs}ms`);
-                    settle(false);
-                }, resolvedTimeoutMs);
-
                 try {
+                    if (!this.canRequestAds || this.privacyOptionsInProgress) {
+                        settle(false);
+                        return;
+                    }
                     // The native plugin resolves prepareInterstitial/prepareReward* only
                     // after the ad is loaded. Accept that result as well as the event so
                     // a bridge event-ordering race cannot turn a loaded ad into not_ready.
@@ -430,11 +508,16 @@ export const AdMobService = {
                             this.interstitialPreparedAt = 0;
                             cleanupAndResolve({ shown: false, reason: 'failed_to_show' });
                         });
+                        if (resolved) {
+                            this.cleanupListeners([showedListener, dismissListener, failedShowListener]);
+                            return;
+                        }
 
                         if (!this.hasFreshInterstitial(adId)) {
                             console.warn('[AdMob] Interstitial not ready, attempting JIT prepare...');
                             preparedJustInTime = true;
                             const prepared = await this.prepareInterstitial(adId);
+                            if (resolved) return;
                             if (!prepared || !this.hasFreshInterstitial(adId)) {
                                 console.error('[AdMob] JIT Prepare failed: Ad not ready after preparation.');
                                 cleanupAndResolve({ shown: false, reason: 'not_ready' });
@@ -446,6 +529,10 @@ export const AdMobService = {
                             await this.sleep(this.POST_PREPARE_SHOW_DELAY_MS);
                         } else {
                             await this.sleep(250);
+                        }
+                        if (resolved || !this.canRequestAds || this.privacyOptionsInProgress) {
+                            cleanupAndResolve({ shown: false, reason: 'not_ready' });
+                            return;
                         }
 
                         try {
@@ -788,16 +875,25 @@ export const AdMobService = {
                             this.invalidateRewardVideo();
                             cleanupAndResolve(false);
                         });
+                        if (resolved) {
+                            this.cleanupListeners([showedListener, rewardListener, dismissListener, failedListener, failedShowListener]);
+                            return;
+                        }
 
                         if (!this.hasFreshRewardVideo(adId, ssv)) {
                             console.warn('[AdMob] Ad not ready, attempting JIT prepare...');
                             const prepared = await this.prepareRewardVideo(adId, ssv);
+                            if (resolved) return;
                             if (!prepared || !this.hasFreshRewardVideo(adId, ssv)) {
                                 console.error('[AdMob] JIT Prepare failed: Ad not ready.');
                                 cleanupAndResolve(false);
                                 return;
                             }
                             await new Promise(resolveDelay => setTimeout(resolveDelay, this.REWARDED_POST_PREPARE_SHOW_DELAY_MS));
+                        }
+                        if (resolved || !this.canRequestAds || this.privacyOptionsInProgress) {
+                            cleanupAndResolve(false);
+                            return;
                         }
 
                         try {

@@ -14,6 +14,7 @@ import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { AdMobService, type RewardVideoSsv } from './services/admobService';
+import { AdForegroundClock } from './services/adForegroundClock';
 import { OneSignalService } from './services/oneSignalService';
 import IAPService from './services/iapService';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
@@ -28,6 +29,7 @@ import {
   canUseNativeNetwork,
   canUseNativeOneSignal,
   canUseNativeStatusBar,
+  getNativeAdMobDiagnostics,
 } from './services/nativeCapabilities';
 import ForceUpdateGate from './components/ForceUpdateGate';
 import { loadUpdateGateConfig, type UpdateGateConfig } from './services/updateGateService';
@@ -692,22 +694,17 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   // --- INTERSTITIAL AD ACTIVE TIME TRACKING ---
   // We use refs here because we need these values to be immediately available
   // in background/foreground event listeners and intervals without causing re-renders.
-  const activeTimeMs = useRef<number>(0);
-  const lastAdActiveTime = useRef<number>(-120000); // Bug 6 fix: pre-subtract 1 cooldown so the first ad can show immediately
+  const adForegroundClock = useRef(new AdForegroundClock());
   const backgroundTimestamp = useRef<number | null>(null);
-  const foregroundStartedAt = useRef<number | null>(null);
   const adTransitionInProgressRef = useRef<boolean>(false); // Bug 3 fix: prevents double-fire from both nav handlers
-
-  const INTERSTITIAL_COOLDOWN_MS = 2 * 60 * 1000; // 2 minutes (Cooldown between ads)
-  const INACTIVITY_RESET_MS = 30 * 60 * 1000; // 30 minutes of background time to reset
 
   // Track Active Time (Foreground)
   useEffect(() => {
-    if (!canUseNativeAppEvents()) return;
+    if (!Capacitor.isNativePlatform()) return;
 
     // Track the current foreground segment with timestamps instead of a 1-second
     // interval. This avoids waking the WebView continuously while the app is idle.
-    foregroundStartedAt.current = Date.now();
+    adForegroundClock.current.start(Date.now());
 
     // Initial setup listener for App state to handle background/foreground
     let cancelled = false;
@@ -715,22 +712,15 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
     // Using a separate listener specifically for the vital time tracking
     // to keep it decoupled from the ad refresh logic below.
-    CapacitorApp.addListener('appStateChange', async ({ isActive }) => {
+    const handleAppStateChange = async ({ isActive }: { isActive: boolean }) => {
       const now = Date.now();
 
       if (isActive) {
         // App came to FOREGROUND
         if (backgroundTimestamp.current !== null) {
-          const timeInBackground = now - backgroundTimestamp.current;
-
-          if (timeInBackground >= INACTIVITY_RESET_MS) {
-            // Reset active time and ad tracking to grant a new grace period
-            activeTimeMs.current = 0;
-            lastAdActiveTime.current = 0;
-          }
+          adForegroundClock.current.start(now);
           // We are no longer in the background
           backgroundTimestamp.current = null;
-          foregroundStartedAt.current = now;
 
           // Record usage and refresh notification schedule
           await NotificationService.recordUsage();
@@ -741,11 +731,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         }
       } else {
         // App went to BACKGROUND — flush session time to Supabase
-        const sessionTimeMs = activeTimeMs.current + (
-          foregroundStartedAt.current === null
-            ? 0
-            : Math.max(0, now - foregroundStartedAt.current)
-        );
+        const sessionTimeMs = adForegroundClock.current.pause(now);
         backgroundTimestamp.current = now;
         if (sessionTimeMs > 0) {
           const currentProfile = profileRef.current;
@@ -756,25 +742,34 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                 else console.log(`[Analytics] Flushed ${Math.round(sessionTimeMs / 1000)}s of session time.`);
               });
           }
-          // Reset so we don't double-count on next foreground
-          activeTimeMs.current = 0;
         }
-        foregroundStartedAt.current = null;
       }
-    }).then(listener => {
-      // If the effect has already torn down (e.g. StrictMode double-invoke or fast refresh)
-      // before addListener resolved, remove it now — otherwise it leaks and double-counts
-      // session time on the next background event.
-      if (cancelled) {
-        listener.remove();
-        return;
-      }
-      appStateListener = listener;
-    });
+    };
+    const handleVisibilityChange = () => {
+      void handleAppStateChange({ isActive: document.visibilityState !== 'hidden' });
+    };
+
+    if (canUseNativeAppEvents()) {
+      CapacitorApp.addListener('appStateChange', handleAppStateChange).then(listener => {
+        // Remove a listener that resolved after teardown (including StrictMode).
+        if (cancelled) {
+          listener.remove();
+          return;
+        }
+        appStateListener = listener;
+      }).catch(error => {
+        if (cancelled) return;
+        console.warn('[AdMob] App-state listener failed; using document visibility:', error);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+      });
+    } else {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
 
     return () => {
       cancelled = true;
       if (appStateListener) appStateListener.remove();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
   // --- END ACTIVE TIME TRACKING ---
@@ -962,6 +957,23 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
   // Initialize Native Services
   useEffect(() => {
+    const diagnostics = getNativeAdMobDiagnostics();
+    console.log('[AdMob] Native capabilities', diagnostics);
+    if (!diagnostics.native) return;
+    if (!diagnostics.adMobAvailable) {
+      console.error('[AdMob] This native shell has no AdMob plugin; no ad requests can be made.');
+      return;
+    }
+    const timer = setTimeout(() => {
+      runAdTask('Initial AdMob init', AdMobService.initialize().then((initialized) => {
+        setPrivacyOptionsRequired(AdMobService.isPrivacyOptionsRequired());
+        return initialized;
+      }));
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
     if (!canUseNativeAppEvents()) return;
 
     const timerIds: ReturnType<typeof setTimeout>[] = [];
@@ -982,17 +994,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         }
       } else if (!runtimeConfig.googleClientId) {
         console.warn('[Startup] GoogleAuth initialization skipped because VITE_GOOGLE_CLIENT_ID is missing.');
-      }
-
-      // AdMob
-      if (canUseNativeAdMob()) {
-        runAdTask(
-          'Initial AdMob init',
-          AdMobService.initialize().then((initialized) => {
-            setPrivacyOptionsRequired(AdMobService.isPrivacyOptionsRequired());
-            return initialized;
-          })
-        );
       }
 
       // In-App Purchases
@@ -2115,12 +2116,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       }
       localStorage.setItem(INTERSTITIAL_NEXT_TARGET_STORAGE_KEY, targetGen.toString());
 
-      const now = activeTimeMs.current + (
-        foregroundStartedAt.current === null
-          ? 0
-          : Math.max(0, Date.now() - foregroundStartedAt.current)
-      );
-      const cooldownPassed = lastAdGen === 0 || (now - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS);
+      const cooldownPassed = lastAdGen === 0 || adForegroundClock.current.canShowAd(Date.now());
       const nextGenerationCount = genCount + 1;
       successfulGenerationCount = nextGenerationCount;
       
@@ -2143,11 +2139,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       const recordShownInterstitial = () => {
         if (accountedForShownInterstitial || adGenerationToRecord === null) return;
         accountedForShownInterstitial = true;
-        lastAdActiveTime.current = activeTimeMs.current + (
-          foregroundStartedAt.current === null
-            ? 0
-            : Math.max(0, Date.now() - foregroundStartedAt.current)
-        );
+        adForegroundClock.current.recordAd(Date.now());
         localStorage.setItem('rizz_last_ad_gen_count', adGenerationToRecord.toString());
         localStorage.removeItem(INTERSTITIAL_NEXT_TARGET_STORAGE_KEY);
       };

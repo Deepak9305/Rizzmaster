@@ -56,6 +56,8 @@ The project uses a localized Tailwind build process rather than a CDN.
 
 *Note: `npm run verify:native-config` compares the generated Android `server_url` against `capacitor.config.json`. In the current wrapper setup, Android is expected to load `https://rizzmaster.online` directly.*
 
+AdMob regression checks: `npm run test:admob`. The Android `AdConsentState` bridge reads UMP's current `canRequestAds` after consent errors; it requires rebuilding and releasing the APK/AAB. Existing APKs use one bounded consent refresh retry and continue to block ads if permission cannot be verified. Website deployment alone cannot add a missing native plugin. Runtime logs under `[AdMob] Native capabilities` identify the platform, UI origin, and plugin availability; `[AdMob] UMP permission result` identifies consent blocking. Slow internet does not select bundled assets as a fallback.
+
 ### 4. Security Enhancements
 - **Double-Spend Guards:** The credit system uses backend RPC checks with row locking so concurrent requests cannot spend below zero.
 - **Stable AI Endpoints:** The app uses stable `llama-3.3-70b-versatile` and `llama-3.2-90b-vision-preview` models through Groq to prevent model deprecation failures.
