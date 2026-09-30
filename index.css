@@ -46,6 +46,37 @@ html.native-app .web-app-root {
   overscroll-behavior-y: contain;
 }
 
+/* Native AdMob is drawn above the WebView. Shrink the scroll viewport instead
+   of covering the last controls; loading never changes this fixed 50dp ad slot. */
+html.native-app.native-banner-active #root {
+  height: calc(100% - var(--native-banner-height) - var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
+}
+
+html.native-app.native-banner-active .web-app-root,
+html.native-app.native-banner-active .web-app-shell {
+  min-height: 100%;
+}
+
+.native-banner-dock {
+  position: fixed;
+  bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  inset-inline: 0;
+  height: var(--native-banner-height);
+  background: #05030b;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+  z-index: 40;
+}
+
+@media (max-width: 640px) {
+  html.native-app.native-banner-active .web-app-title {
+    font-size: clamp(2.6rem, 13vw, 3.7rem);
+  }
+  html.native-app.native-banner-active .web-app-heading { margin-bottom: 0.75rem; }
+  html.native-app.native-banner-active .web-app-textarea { height: 6rem; min-height: 6rem; }
+  html.native-app.native-banner-active .web-app-generate-button { min-height: 3.5rem; }
+}
+
 .web-premium-scroll {
   scrollbar-color: rgba(251, 191, 36, 0.35) transparent;
   scrollbar-width: thin;

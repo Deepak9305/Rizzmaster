@@ -58,6 +58,10 @@ The project uses a localized Tailwind build process rather than a CDN.
 
 AdMob regression checks: `npm run test:admob`. The Android `AdConsentState` bridge reads UMP's current `canRequestAds` after consent errors; it requires rebuilding and releasing the APK/AAB. Existing APKs use one bounded consent refresh retry and continue to block ads if permission cannot be verified. Website deployment alone cannot add a missing native plugin. Runtime logs under `[AdMob] Native capabilities` identify the platform, UI origin, and plugin availability; `[AdMob] UMP permission result` identifies consent blocking. Slow internet does not select bundled assets as a fallback.
 
+Android monetization uses a bottom banner (`ca-app-pub-7381421031784616/7234804095`) and optional rewarded video only. Interstitials, their generation counters, and app-open configuration have been removed. The 320 × 50 dp banner starts on the free user's main screen, including guest sessions, after UMP permits requests; it does not wait for a generation. Premium users and ordinary browsers never request it.
+
+The banner reserves a 74 px footer plus the system safe inset, leaving 16 px between the scroll viewport and the ad and 8 dp below the ad. Native banner APIs overlay the WebView, so this reservation must remain in place. Typing, modals, Coach, offline state, and backgrounding suspend the banner; returning resumes the same view without another request. Logout/premium removal destroys it. Failed loads retry with backoff; loaded banners use SDK/AdMob refresh settings. `[AdMob] Requesting bottom banner`, `Bottom banner loaded`, `Bottom banner impression`, and failure logs distinguish requesting from loading and displaying. Use test ads/device registration for device validation; simulated browser checks do not confirm live fill or revenue.
+
 ### 4. Security Enhancements
 - **Double-Spend Guards:** The credit system uses backend RPC checks with row locking so concurrent requests cannot spend below zero.
 - **Stable AI Endpoints:** The app uses stable `llama-3.3-70b-versatile` and `llama-3.2-90b-vision-preview` models through Groq to prevent model deprecation failures.
