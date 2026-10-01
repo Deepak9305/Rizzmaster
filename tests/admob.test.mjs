@@ -598,7 +598,7 @@ test('no-fill schedules one delayed retry and a later native success recovers', 
   await controller.setMode('visible');
   assert.equal(calls.filter(call => call === 'banner-request').length, 1);
   const [id, retry] = [...timers][0];
-  assert.equal(retry.ms, 30_000);
+  assert.equal(retry.ms, 60_000);
   timers.delete(id);
   retry.callback();
   await controller.setMode('visible');
@@ -616,7 +616,7 @@ test('a banner whose load callback never arrives is removed before retry', async
   watchdog.callback();
   await controller.setMode('visible');
   assert.equal(calls.at(-1), 'banner-remove');
-  assert.equal([...timers.values()][0].ms, 30_000);
+  assert.equal([...timers.values()][0].ms, 60_000);
 });
 
 test('an unfinished banner load pauses its watchdog while hidden and reuses its request on return', async t => {
@@ -653,7 +653,7 @@ test('stalled native listener cleanup cannot wedge the banner retry queue', asyn
   });
   t.after(() => controller.dispose());
   await controller.setMode('visible');
-  const retry = [...timers.values()].find(timer => timer.ms === 30_000);
+  const retry = [...timers.values()].find(timer => timer.ms === 60_000);
   assert.ok(retry, 'Cleanup must settle and schedule recovery');
   fail = false;
   timers.clear();
@@ -875,7 +875,7 @@ test('a hung banner bridge call releases the queue for logout and later retries'
   t.after(() => controller.dispose());
   await controller.setMode('visible');
   assert.equal(calls.at(-1), 'banner-remove');
-  assert.equal([...timers.values()][0].ms, 30_000);
+  assert.equal([...timers.values()][0].ms, 60_000);
   await controller.setMode('removed');
   assert.equal(timers.size, 0);
   hung = false;

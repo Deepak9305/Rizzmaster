@@ -7,6 +7,10 @@ export type BannerMode = 'visible' | 'hidden' | 'removed';
 export const BANNER_WIDTH = 320;
 export const BANNER_HEIGHT = 50;
 export const BANNER_POSITION = BannerAdPosition.TOP_CENTER;
+// Keep manual recovery comfortably outside AdMob's one-minute request
+// guidance. Normal banner refresh remains owned by the Google Mobile Ads SDK.
+export const BANNER_RETRY_INITIAL_MS = 60_000;
+export const BANNER_RETRY_MAX_MS = 300_000;
 export const getBannerSlotHeight = () => BANNER_HEIGHT;
 
 // A single native banner is shared by the app. Serialize show/hide/remove so
@@ -87,8 +91,9 @@ export class NativeBannerController {
 
     private scheduleRetry() {
         if (this.disposed || this.desired !== 'visible' || this.retryTimer) return;
-        // No tight no-fill loops and no manual refreshing of a loaded ad.
-        const waitMs = Math.min(30_000 * 2 ** this.retryCount++, 300_000);
+        // No tight no-fill loops, no manual refreshing of a loaded ad, and no
+        // recovery request inside AdMob's recommended 60-second interval.
+        const waitMs = Math.min(BANNER_RETRY_INITIAL_MS * 2 ** this.retryCount++, BANNER_RETRY_MAX_MS);
         this.retryTimer = setTimeout(() => {
             this.retryTimer = null;
             void this.reconcile();
