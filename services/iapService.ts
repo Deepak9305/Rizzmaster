@@ -176,6 +176,22 @@ const getIapErrorMessage = (error: any, fallback = "Purchase failed") => {
 
 const delay = (milliseconds: number) => new Promise(resolve => setTimeout(resolve, milliseconds));
 
+const withTimeout = <T>(promise: Promise<T>, milliseconds: number, message: string) => new Promise<T>((resolve, reject) => {
+    const timeoutId = setTimeout(() => reject(new Error(message)), milliseconds);
+    promise.then(
+        value => {
+            clearTimeout(timeoutId);
+            resolve(value);
+        },
+        error => {
+            clearTimeout(timeoutId);
+            reject(error);
+        }
+    );
+});
+
+const IAP_INITIALIZATION_TIMEOUT_MS = 15000;
+
 const getStoreInitializationMessage = (error: any) => /class not found/i.test(getIapErrorMessage(error, ''))
     ? 'Purchases are unavailable in this app version. Please update Rizz Master from Google Play.'
     : 'Google Play Billing could not connect. Please restart the app and check Google Play.';
@@ -285,8 +301,20 @@ class IAPService {
                 ownerUserId: this.currentUserId,
             });
 
+            const receiptCandidates = [
+                receipt,
+                receipt?.sourceReceipt,
+                this.lastApprovedTransaction,
+            ].filter(Boolean);
+            const firstReceiptCandidateValue = (paths: Array<Array<string | number>>) => {
+                for (const candidate of receiptCandidates) {
+                    const value = firstReceiptValue(candidate, paths);
+                    if (value) return value;
+                }
+                return '';
+            };
             const purchaseToken = getGooglePurchaseToken(receipt, this.lastApprovedTransaction);
-            const transactionId = firstReceiptValue(receipt, [
+            const transactionId = firstReceiptCandidateValue([
                 ['transactionId'],
                 ['orderId'],
                 ['transaction', 'transactionId'],
@@ -295,21 +323,25 @@ class IAPService {
                 ['transactions', 0, 'orderId'],
                 ['nativePurchase', 'orderId'],
                 ['payload', 'orderId'],
-            ]);
-            const productId = firstReceiptValue(receipt, [
+            ]) || purchaseToken;
+            const productId = firstReceiptCandidateValue([
                 ['id'],
                 ['productId'],
                 ['transaction', 'products', 0, 'id'],
                 ['transactions', 0, 'products', 0, 'id'],
                 ['transactions', 0, 'productId'],
             ]);
-            const basePlanId = firstReceiptValue(receipt, [
+            const basePlanId = firstReceiptCandidateValue([
                 ['basePlanId'],
+                ['base_plan_id'],
                 ['offerId'],
+                ['offer_id'],
                 ['transaction', 'offerId'],
+                ['transaction', 'products', 0, 'offerId'],
                 ['transactions', 0, 'offerId'],
+                ['transactions', 0, 'products', 0, 'offerId'],
             ]) || null;
-            const expiresAt = firstReceiptValue(receipt, [
+            const expiresAt = firstReceiptCandidateValue([
                 ['expiresAt'],
                 ['expiryDate'],
                 ['expirationDate'],
@@ -355,9 +387,9 @@ class IAPService {
                 basePlanId: expectedBasePlanId,
                 purchaseToken,
                 transactionId,
-                orderId: firstReceiptValue(receipt, [['orderId'], ['transaction', 'orderId'], ['transactions', 0, 'orderId']]),
+                orderId: firstReceiptCandidateValue([['orderId'], ['transaction', 'orderId'], ['transactions', 0, 'orderId']]),
                 expiresAt,
-                rawReceipt: receipt
+                rawReceipt: receipt?.sourceReceipt || receipt
             };
 
             try {
@@ -419,7 +451,11 @@ class IAPService {
 
         // 3. Initialize Store
         this.initializationError = null;
-        this.initializationPromise = Promise.resolve().then(() => store.initialize())
+        this.initializationPromise = withTimeout(
+            Promise.resolve().then(() => store.initialize()),
+            IAP_INITIALIZATION_TIMEOUT_MS,
+            'Google Play Billing initialization timed out.'
+        )
             .then(async (errors: any[]) => {
                 if (Array.isArray(errors) && errors.length > 0) {
                     this.isInitialized = false;

@@ -22,7 +22,7 @@ function setup(options = {}) {
       store, ProductType: { PAID_SUBSCRIPTION: 'subscription' },
       Platform: { GOOGLE_PLAY: 'google-play' }, ErrorCode: { PAYMENT_CANCELLED: 6777006 },
     } },
-    console: { log() {}, warn() {}, error() {} }, setTimeout,
+    console: { log() {}, warn() {}, error() {} }, setTimeout, clearTimeout,
     require(name) {
       if (name === 'cordova-plugin-purchase') return {};
       if (name === '@capacitor/core') return { Capacitor: { getPlatform: () => 'android' } };
@@ -88,4 +88,13 @@ test('restore reports a returned store error instead of silently accepting it', 
   assert.deepEqual(calls, ['accountBinding', 'restorePurchases']);
   assert.equal(service.activeIntent, null);
   assert.equal(errors.at(-1), 'Play Store unavailable');
+});
+
+test('billing initialization timeout does not leave purchase waiting forever', async () => {
+  const { service, errors } = setup({ initialize: () => new Promise(() => {}) });
+  const purchase = service.purchase('WEEKLY', 'account');
+  await new Promise(resolve => setTimeout(resolve, 15_100));
+  assert.equal(await purchase, false);
+  assert.equal(service.purchaseInProgress, false);
+  assert.match(errors.at(-1), /Google Play Billing could not connect/);
 });
