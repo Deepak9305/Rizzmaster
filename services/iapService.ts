@@ -452,9 +452,14 @@ class IAPService {
                 activeIntent: this.activeIntent,
             });
             if (error && error.code !== CdvPurchase.ErrorCode.PAYMENT_CANCELLED) {
-                if (this.onError) this.onError(/class not found/i.test(getIapErrorMessage(error, ''))
-                    ? getStoreInitializationMessage(error)
-                    : `Store Error: ${getIapErrorMessage(error)}`);
+                // Store errors can happen during the background startup refresh.
+                // Keep those in logs and surface them only for an active purchase
+                // or restore request.
+                if (this.onError && (this.purchaseInProgress || this.activeIntent)) {
+                    this.onError(/class not found/i.test(getIapErrorMessage(error, ''))
+                        ? getStoreInitializationMessage(error)
+                        : `Store Error: ${getIapErrorMessage(error)}`);
+                }
             }
         });
 
@@ -475,7 +480,6 @@ class IAPService {
                             productId: error?.productId || null,
                         })),
                     });
-                    this.onError?.(this.initializationError);
                     return;
                 }
 
@@ -498,7 +502,6 @@ class IAPService {
                     code: error?.code || null,
                     message: getIapErrorMessage(error, "Store initialization failed"),
                 });
-                this.onError?.(this.initializationError);
             });
     }
 

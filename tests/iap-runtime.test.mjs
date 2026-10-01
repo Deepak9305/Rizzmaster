@@ -55,11 +55,11 @@ test('missing plugin initialization blocks purchase and restore before account b
   assert.ok(errors.every(message => message.includes('update Rizz Master')));
 });
 
-test('a synchronous initialization exception is contained and reported', async () => {
+test('a synchronous initialization exception is contained without a startup warning', async () => {
   const { service, errors } = setup({ initialize() { throw new Error('Offline'); } });
   await service.initializationPromise;
   assert.equal(service.isInitialized, false);
-  assert.match(errors[0], /restart the app/);
+  assert.equal(errors.length, 0);
 });
 
 test('purchase waits for initialization and orders only the selected base plan', async () => {
