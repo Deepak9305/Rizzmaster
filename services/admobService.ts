@@ -1,22 +1,12 @@
 import {
     AdMob,
-    InterstitialAdPluginEvents,
     RewardAdPluginEvents,
-    RewardInterstitialAdPluginEvents,
-    AdMobRewardInterstitialItem,
     AdMobRewardItem,
     AdmobConsentDebugGeography,
     type AdmobConsentInfo
 } from '@capacitor-community/admob';
 import { canUseNativeAdMob } from './nativeCapabilities';
-
-type PrepareOptions = {
-    label: string;
-    loadedEvent: any;
-    failedEvent: any;
-    prepareAction: () => Promise<unknown>;
-    timeoutMs?: number;
-};
+import { readNativeConsentInfo } from './adConsentState';
 
 export type RewardVideoSsv = {
     userId: string;
@@ -34,63 +24,44 @@ const getRewardVideoSsvKey = (ssv?: RewardVideoSsv) => (
     ssv ? `${ssv.userId}:${ssv.customData}` : ''
 );
 
-export type InterstitialShowReason =
-    | 'shown'
-    | 'not_initialized'
-    | 'already_showing'
-    | 'not_ready'
-    | 'failed_to_show'
-    | 'timeout_before_show'
-    | 'timeout_after_show'
-    | 'plugin_error';
-
-export type InterstitialShowResult = {
-    shown: boolean;
-    reason: InterstitialShowReason;
-};
-
 export const AdMobService = {
     initialized: false,
-    interstitialReady: false,
-    interstitialPreparing: false,
-    isInterstitialShowing: false,
     rewardVideoReady: false,
     rewardVideoPreparing: false,
     isRewardVideoShowing: false,
-    rewardInterstitialReady: false,
-    rewardInterstitialPreparing: false,
-    isRewardInterstitialShowing: false,
+    rewardVideoDisplayStarted: false,
     // Internal Promise tracking to avoid redundant fetches and handle race conditions
     initPromise: null as Promise<boolean> | null,
-    interstitialPromise: null as Promise<boolean> | null,
     rewardVideoPromise: null as Promise<boolean> | null,
-    rewardInterstitialPromise: null as Promise<boolean> | null,
+    rewardVideoVersion: 0,
+    rewardVideoPendingVersion: 0,
+    rewardVideoPendingAdId: null as string | null,
+    rewardVideoPendingSsvKey: '',
+    activeRewardVideoAdId: null as string | null,
+    activeRewardVideoSsvKey: '',
     consentInfo: null as AdmobConsentInfo | null,
     canRequestAds: false,
     privacyOptionsRequired: false,
-    interstitialPreparedAt: 0,
-    lastInterstitialAdId: null as string | null,
+    privacyOptionsInProgress: false,
     rewardVideoPreparedAt: 0,
     lastRewardVideoAdId: null as string | null,
     lastRewardVideoSsvKey: '',
-    rewardInterstitialPreparedAt: 0,
-    lastRewardInterstitialAdId: null as string | null,
     // Set this to true to force the GDPR popup to show for everyone during testing/development.
     // Set to false before releasing to the Play Store.
     DEBUG_FORCE_GDPR: false,
-    PREPARE_TIMEOUT_MS: 25000,
     REWARDED_PREPARE_TIMEOUT_MS: 35000,
-    INTERSTITIAL_SHOW_TIMEOUT_MS: 30000,
-    INTERSTITIAL_POST_SHOW_TIMEOUT_MS: 45000,
     REWARDED_POST_SHOW_TIMEOUT_MS: 90000,
     REWARDED_DISMISS_GRACE_MS: 2000,
-    INTERSTITIAL_STALE_AFTER_MS: 20 * 60 * 1000,
     REWARDED_STALE_AFTER_MS: 50 * 60 * 1000,
-    POST_PREPARE_SHOW_DELAY_MS: 1200,
-    REWARDED_POST_PREPARE_SHOW_DELAY_MS: 1200,
     REWARDED_SHOW_TIMEOUT_MS: 40000,
+    CONSENT_REFRESH_TIMEOUT_MS: 15000,
+    NATIVE_CONSENT_TIMEOUT_MS: 3000,
+    INIT_WAIT_TIMEOUT_MS: 90000,
 
     applyConsentInfo(consentInfo: AdmobConsentInfo) {
+        if (typeof consentInfo.canRequestAds !== 'boolean') {
+            throw new Error('Native AdMob consent response lacks canRequestAds; this APK needs an AdMob plugin update.');
+        }
         this.consentInfo = consentInfo;
         this.canRequestAds = consentInfo.canRequestAds === true;
         this.privacyOptionsRequired = consentInfo.privacyOptionsRequirementStatus === 'REQUIRED';
@@ -103,7 +74,9 @@ export const AdMobService = {
 
     removeListener(listener: any) {
         try {
-            if (listener && typeof listener.remove === 'function') listener.remove();
+            if (listener && typeof listener.remove === 'function') {
+                void Promise.resolve(listener.remove()).catch(() => {});
+            }
         } catch { }
     },
 
@@ -115,25 +88,12 @@ export const AdMobService = {
         return new Promise(resolve => setTimeout(resolve, ms));
     },
 
-    invalidateInterstitial() {
-        this.interstitialReady = false;
-        this.interstitialPreparing = false;
-        this.interstitialPromise = null;
-        this.interstitialPreparedAt = 0;
-        this.lastInterstitialAdId = null;
-    },
-
-    hasFreshInterstitial(adId?: string) {
-        if (!this.interstitialReady) return false;
-        if (!this.lastInterstitialAdId) return false;
-        if (adId && this.lastInterstitialAdId !== adId) return false;
-        return Date.now() - this.interstitialPreparedAt < this.INTERSTITIAL_STALE_AFTER_MS;
-    },
-
     invalidateRewardVideo() {
+        ++this.rewardVideoVersion;
         this.rewardVideoReady = false;
-        this.rewardVideoPreparing = false;
-        this.rewardVideoPromise = null;
+        // Keep an in-flight load serialized until its bounded wait settles.
+        // Its completion must not restore a cache invalidated by privacy or
+        // replace the metadata of a newer reward context.
         this.rewardVideoPreparedAt = 0;
         this.lastRewardVideoAdId = null;
         this.lastRewardVideoSsvKey = '';
@@ -147,29 +107,58 @@ export const AdMobService = {
         return Date.now() - this.rewardVideoPreparedAt < this.REWARDED_STALE_AFTER_MS;
     },
 
-    invalidateRewardInterstitial() {
-        this.rewardInterstitialReady = false;
-        this.rewardInterstitialPreparing = false;
-        this.rewardInterstitialPromise = null;
-        this.rewardInterstitialPreparedAt = 0;
-        this.lastRewardInterstitialAdId = null;
+    async withNativeTimeout<T>(label: string, operation: Promise<T>, timeoutMs: number): Promise<T> {
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        try {
+            return await Promise.race([
+                operation,
+                new Promise<never>((_, reject) => {
+                    timer = setTimeout(() => reject(new Error(`${label} timed out after ${timeoutMs}ms`)), timeoutMs);
+                }),
+            ]);
+        } finally {
+            if (timer) clearTimeout(timer);
+        }
     },
 
-    hasFreshRewardInterstitial(adId?: string) {
-        if (!this.rewardInterstitialReady) return false;
-        if (!this.lastRewardInterstitialAdId) return false;
-        if (adId && this.lastRewardInterstitialAdId !== adId) return false;
-        return Date.now() - this.rewardInterstitialPreparedAt < this.REWARDED_STALE_AFTER_MS;
+    async refreshConsentInfo(): Promise<AdmobConsentInfo> {
+        return this.withNativeTimeout('UMP consent refresh', AdMob.requestConsentInfo({
+            debugGeography: this.DEBUG_FORCE_GDPR ? AdmobConsentDebugGeography.EEA : AdmobConsentDebugGeography.DISABLED,
+        }), this.CONSENT_REFRESH_TIMEOUT_MS);
+    },
+
+    async recoverConsentInfo(): Promise<AdmobConsentInfo | null> {
+        try {
+            const nativeInfo = await this.withNativeTimeout(
+                'Native UMP state read', readNativeConsentInfo(), this.NATIVE_CONSENT_TIMEOUT_MS,
+            );
+            if (nativeInfo) return this.applyConsentInfo(nativeInfo);
+        } catch (error) {
+            console.warn('[AdMob] Native UMP state read failed:', error);
+        }
+        // Existing APKs lack AdConsentState. Refresh once to obtain an authoritative
+        // result instead of trusting a pre-form snapshot or stored consent string.
+        try {
+            return this.applyConsentInfo(await this.refreshConsentInfo());
+        } catch (error) {
+            console.warn('[AdMob] Could not verify UMP permission; ads remain blocked:', error);
+            this.canRequestAds = false;
+            return null;
+        }
     },
 
     async initialize(): Promise<boolean> {
-        if (!canUseNativeAdMob()) return false;
-        if (this.initialized) return true;
+        if (!canUseNativeAdMob()) {
+            console.warn('[AdMob] Initialization skipped: native AdMob plugin is unavailable.');
+            return false;
+        }
+        if (this.privacyOptionsInProgress) return false;
         if (this.initPromise) return this.initPromise;
+        if (this.initialized && this.canRequestAds) return true;
 
         this.initPromise = (async (): Promise<boolean> => {
             try {
-                // Do not carry a stale consent decision across a failed refresh.
+                // Only UMP's current native permission can authorize an ad request.
                 this.consentInfo = null;
                 this.canRequestAds = false;
                 this.privacyOptionsRequired = false;
@@ -182,26 +171,32 @@ export const AdMobService = {
                     }
                 }
 
-                let consentInfo = await AdMob.requestConsentInfo({
-                    debugGeography: this.DEBUG_FORCE_GDPR ? AdmobConsentDebugGeography.EEA : AdmobConsentDebugGeography.DISABLED,
-                });
-                this.applyConsentInfo(consentInfo);
-
-                if (consentInfo.isConsentFormAvailable) {
-                    // UMP decides whether an EU or US-state message must be shown.
-                    // Do not gate this on canRequestAds: some US privacy messages
-                    // can be shown while ads remain requestable.
-                    console.log('AdMob: Loading required consent/privacy form...');
-                    consentInfo = await AdMob.showConsentForm();
-                    this.applyConsentInfo(consentInfo);
+                let consentInfo: AdmobConsentInfo | null;
+                try {
+                    consentInfo = this.applyConsentInfo(await this.refreshConsentInfo());
+                    if (consentInfo.isConsentFormAvailable) {
+                        // Native loadAndShowConsentFormIfRequired decides whether
+                        // an EU or US-state message must actually be presented.
+                        console.log('AdMob: Loading required consent/privacy form...');
+                        consentInfo = this.applyConsentInfo(await AdMob.showConsentForm());
+                    }
+                } catch (error) {
+                    console.warn('[AdMob] Consent gathering failed; checking current UMP permission:', error);
+                    consentInfo = await this.recoverConsentInfo();
                 }
 
-                if (!consentInfo.canRequestAds) {
+                console.log('[AdMob] UMP permission result', {
+                    status: consentInfo?.status ?? 'unavailable',
+                    canRequestAds: consentInfo?.canRequestAds === true,
+                    privacyOptionsRequired: this.privacyOptionsRequired,
+                });
+                if (!consentInfo?.canRequestAds) {
                     console.warn('[AdMob] Ads blocked because UMP has not granted permission to request ads.');
                     return false;
                 }
 
-                await AdMob.initialize({ testingDevices: [] });
+                await this.withNativeTimeout('AdMob SDK initialization',
+                    AdMob.initialize({ testingDevices: [] }), this.CONSENT_REFRESH_TIMEOUT_MS);
                 this.initialized = true;
                 console.log('AdMob Community Initialized after UMP consent checks');
                 return true;
@@ -219,467 +214,88 @@ export const AdMobService = {
     },
 
     async showPrivacyOptionsForm(): Promise<boolean> {
-        if (!canUseNativeAdMob() || !this.privacyOptionsRequired) return false;
+        if (!canUseNativeAdMob() || !this.privacyOptionsRequired || this.privacyOptionsInProgress || this.initPromise) return false;
 
+        this.privacyOptionsInProgress = true;
+        this.canRequestAds = false;
+        this.invalidateRewardVideo();
         try {
             await AdMob.showPrivacyOptionsForm();
-            const consentInfo = await AdMob.requestConsentInfo({
-                debugGeography: this.DEBUG_FORCE_GDPR ? AdmobConsentDebugGeography.EEA : AdmobConsentDebugGeography.DISABLED,
-            });
-            this.applyConsentInfo(consentInfo);
+            await this.recoverConsentInfo();
             return this.canRequestAds;
         } catch (error) {
             console.warn('[AdMob] Privacy options form failed:', error);
-            return false;
+            await this.recoverConsentInfo();
+            return this.canRequestAds;
+        } finally {
+            this.privacyOptionsInProgress = false;
         }
     },
 
     async ensureInitialized(context: string): Promise<boolean> {
-        const initialized = await this.initialize();
+        let initialized = false;
+        try {
+            // Bound callers' waiting time without launching another consent form
+            // while a user is still considering the first one.
+            initialized = await this.withNativeTimeout('AdMob readiness', this.initialize(), this.INIT_WAIT_TIMEOUT_MS);
+        } catch (error) {
+            console.warn(`[AdMob] ${context} readiness failed:`, error);
+        }
         if (!initialized) {
             console.warn(`[AdMob] ${context} skipped because AdMob failed to initialize.`);
         }
         return initialized;
     },
 
-    async runPrepareWithTimeout(options: PrepareOptions): Promise<boolean> {
-        const { label, loadedEvent, failedEvent, prepareAction, timeoutMs } = options;
-        const resolvedTimeoutMs = timeoutMs ?? this.PREPARE_TIMEOUT_MS;
-
-        let loadedListener: any = null;
-        let failedListener: any = null;
-        let timeout: ReturnType<typeof setTimeout> | null = null;
-
-        return new Promise<boolean>((resolve) => {
-            let settled = false;
-
-            const cleanup = () => {
-                if (timeout) clearTimeout(timeout);
-                this.cleanupListeners([loadedListener, failedListener]);
-            };
-
-            const settle = (success: boolean, error?: unknown) => {
-                if (settled) return;
-                settled = true;
-                cleanup();
-                if (error) {
-                    console.error(`[AdMob] ${label} prepare failed:`, error);
-                }
-                resolve(success);
-            };
-
-            void (async () => {
-                try {
-                    loadedListener = await AdMob.addListener(loadedEvent, () => {
-                        console.log(`[AdMob] ${label} loaded successfully`);
-                        settle(true);
-                    });
-
-                    failedListener = await AdMob.addListener(failedEvent, (info) => {
-                        console.error(`[AdMob] ${label} failed to load:`, info);
-                        settle(false);
-                    });
-                } catch (error) {
-                    settle(false, error);
-                    return;
-                }
-
-                timeout = setTimeout(() => {
-                    console.warn(`[AdMob] ${label} prepare timed out after ${resolvedTimeoutMs}ms`);
-                    settle(false);
-                }, resolvedTimeoutMs);
-
-                try {
-                    // The native plugin resolves prepareInterstitial/prepareReward* only
-                    // after the ad is loaded. Accept that result as well as the event so
-                    // a bridge event-ordering race cannot turn a loaded ad into not_ready.
-                    await prepareAction();
-                    settle(true);
-                } catch (error) {
-                    settle(false, error);
-                }
-            })();
-        });
-    },
-
-    async prepareInterstitial(adId: string): Promise<boolean> {
-        if (!canUseNativeAdMob()) return false;
-
-        const initialized = await this.ensureInitialized('Interstitial prepare');
-        if (!initialized) {
-            this.invalidateInterstitial();
-            return false;
-        }
-
-        if (this.lastInterstitialAdId && this.lastInterstitialAdId !== adId) {
-            this.invalidateInterstitial();
-        }
-        if (this.hasFreshInterstitial(adId)) return true;
-        if (this.interstitialReady && !this.hasFreshInterstitial(adId)) {
-            console.log('[AdMob] Cached interstitial went stale, refreshing it before show');
-            this.interstitialReady = false;
-            this.interstitialPreparedAt = 0;
-        }
-        if (this.interstitialPromise) return this.interstitialPromise;
-
-        this.interstitialPreparing = true;
-        this.lastInterstitialAdId = adId;
-        this.interstitialPromise = (async (): Promise<boolean> => {
-            let prepared = false;
-            try {
-                prepared = await this.runPrepareWithTimeout({
-                    label: 'Interstitial',
-                    loadedEvent: InterstitialAdPluginEvents.Loaded,
-                    failedEvent: InterstitialAdPluginEvents.FailedToLoad,
-                    prepareAction: () => AdMob.prepareInterstitial({ adId, isTesting: false }),
-                });
-                this.interstitialReady = prepared;
-                this.interstitialPreparedAt = prepared ? Date.now() : 0;
-                return prepared;
-            } catch (error) {
-                console.error('AdMob Prepare Interstitial Exception:', error);
-                this.invalidateInterstitial();
-                return false;
-            } finally {
-                if (!prepared) {
-                    this.interstitialReady = false;
-                    this.interstitialPreparedAt = 0;
-                }
-                this.interstitialPreparing = false;
-                this.interstitialPromise = null;
-            }
-        })();
-
-        return this.interstitialPromise;
-    },
-
-    async showInterstitial(adId: string, onShow?: () => void): Promise<InterstitialShowResult> {
-        if (!canUseNativeAdMob()) {
-            return { shown: false, reason: 'plugin_error' };
-        }
-        if (this.isInterstitialShowing) {
-            return { shown: false, reason: 'already_showing' };
-        }
-        this.isInterstitialShowing = true;
-
-        const initialized = await this.ensureInitialized('Interstitial show');
-        if (!initialized) {
-            this.isInterstitialShowing = false;
-            this.invalidateInterstitial();
-            return { shown: false, reason: 'not_initialized' };
-        }
-        console.log(`[AdMob] Attempting to show interstitial: ${adId}`);
-
-        try {
-            return await new Promise<InterstitialShowResult>((resolve) => {
-                let resolved = false;
-                let showed = false;
-                let preparedJustInTime = false;
-                let showedListener: any = null;
-                let dismissListener: any = null;
-                let failedShowListener: any = null;
-
-                let timeout: ReturnType<typeof setTimeout> | null = setTimeout(() => {
-                    console.warn('AdMob Interstitial Timeout: Proceeding automatically.');
-                    cleanupAndResolve({
-                        shown: showed,
-                        reason: showed ? 'timeout_after_show' : 'timeout_before_show',
-                    });
-                }, this.INTERSTITIAL_SHOW_TIMEOUT_MS);
-
-                const cleanupAndResolve = (result: InterstitialShowResult) => {
-                    if (resolved) return;
-                    resolved = true;
-                    this.cleanupListeners([dismissListener, failedShowListener, showedListener]);
-                    if (timeout) clearTimeout(timeout);
-                    this.interstitialReady = false;
-                    this.interstitialPreparedAt = 0;
-                    this.isInterstitialShowing = false;
-                    resolve(result);
-                };
-
-                void (async () => {
-                    try {
-                        showedListener = await AdMob.addListener(InterstitialAdPluginEvents.Showed, () => {
-                            showed = true;
-                            console.log('[AdMob] Interstitial showing, switching to dismissal watchdog');
-                            if (timeout) clearTimeout(timeout);
-                            timeout = setTimeout(() => {
-                                console.warn('[AdMob] Interstitial dismiss event never arrived after show; releasing state.');
-                                cleanupAndResolve({ shown: true, reason: 'timeout_after_show' });
-                            }, this.INTERSTITIAL_POST_SHOW_TIMEOUT_MS);
-                            if (onShow) {
-                                try {
-                                    onShow();
-                                } catch (error) {
-                                    console.warn('[AdMob] Interstitial onShow callback failed:', error);
-                                }
-                            }
-                        });
-
-                        dismissListener = await AdMob.addListener(InterstitialAdPluginEvents.Dismissed, () => {
-                            cleanupAndResolve({
-                                shown: showed,
-                                reason: showed ? 'shown' : 'plugin_error',
-                            });
-                        });
-
-                        failedShowListener = await AdMob.addListener(InterstitialAdPluginEvents.FailedToShow, (info) => {
-                            console.error('[AdMob] Interstitial Failed to Show:', info);
-                            this.interstitialReady = false;
-                            this.interstitialPreparedAt = 0;
-                            cleanupAndResolve({ shown: false, reason: 'failed_to_show' });
-                        });
-
-                        if (!this.hasFreshInterstitial(adId)) {
-                            console.warn('[AdMob] Interstitial not ready, attempting JIT prepare...');
-                            preparedJustInTime = true;
-                            const prepared = await this.prepareInterstitial(adId);
-                            if (!prepared || !this.hasFreshInterstitial(adId)) {
-                                console.error('[AdMob] JIT Prepare failed: Ad not ready after preparation.');
-                                cleanupAndResolve({ shown: false, reason: 'not_ready' });
-                                return;
-                            }
-                        }
-
-                        if (preparedJustInTime) {
-                            await this.sleep(this.POST_PREPARE_SHOW_DELAY_MS);
-                        } else {
-                            await this.sleep(250);
-                        }
-
-                        try {
-                            // Target the same prepared unit explicitly. Relying on the
-                            // plugin's global "last prepared" ad can lose the show
-                            // race when another full-screen ad was prepared meanwhile.
-                            await AdMob.showInterstitial({ adId });
-                        } catch (error) {
-                            console.error('AdMob showInterstitial threw:', error);
-                            this.interstitialReady = false;
-                            this.interstitialPreparedAt = 0;
-                            const message = error instanceof Error ? error.message : String(error);
-                            const isNotReadyError =
-                                message.includes('No Interstitial can be shown') ||
-                                message.includes("Ad wasn't ready") ||
-                                message.includes('not prepared');
-                            cleanupAndResolve({
-                                shown: false,
-                                reason: isNotReadyError ? 'not_ready' : 'plugin_error',
-                            });
-                        }
-                    } catch (error) {
-                        console.error('[AdMob] Interstitial executor error:', error);
-                        this.interstitialReady = false;
-                        this.interstitialPreparedAt = 0;
-                        cleanupAndResolve({ shown: false, reason: 'plugin_error' });
-                    }
-                })();
-            });
-        } catch (error) {
-            console.error('AdMob Interstitial Error', error);
-            this.isInterstitialShowing = false;
-            this.invalidateInterstitial();
-            return { shown: false, reason: 'plugin_error' };
-        }
-    },
-
-    async prepareRewardInterstitial(adId: string): Promise<boolean> {
-        if (!canUseNativeAdMob()) return false;
-
-        const initialized = await this.ensureInitialized('Reward interstitial prepare');
-        if (!initialized) {
-            this.invalidateRewardInterstitial();
-            return false;
-        }
-
-        if (this.lastRewardInterstitialAdId && this.lastRewardInterstitialAdId !== adId) {
-            this.invalidateRewardInterstitial();
-        }
-        if (this.hasFreshRewardInterstitial(adId)) return true;
-        if (this.rewardInterstitialReady && !this.hasFreshRewardInterstitial(adId)) {
-            console.log('[AdMob] Cached reward interstitial went stale, refreshing it before show');
-            this.invalidateRewardInterstitial();
-        }
-        if (this.rewardInterstitialPromise) return this.rewardInterstitialPromise;
-
-        this.rewardInterstitialPreparing = true;
-        this.lastRewardInterstitialAdId = adId;
-        this.rewardInterstitialPromise = (async (): Promise<boolean> => {
-            let prepared = false;
-            try {
-                prepared = await this.runPrepareWithTimeout({
-                    label: 'Reward Interstitial',
-                    loadedEvent: RewardInterstitialAdPluginEvents.Loaded,
-                    failedEvent: RewardInterstitialAdPluginEvents.FailedToLoad,
-                    prepareAction: () => AdMob.prepareRewardInterstitialAd({ adId, isTesting: false }),
-                    timeoutMs: this.REWARDED_PREPARE_TIMEOUT_MS,
-                });
-                this.rewardInterstitialReady = prepared;
-                this.rewardInterstitialPreparedAt = prepared ? Date.now() : 0;
-                if (prepared) {
-                    console.log('AdMob Reward Interstitial Prepared');
-                }
-                return prepared;
-            } catch (error) {
-                console.error('AdMob Prepare Reward Interstitial Error:', error);
-                this.invalidateRewardInterstitial();
-                return false;
-            } finally {
-                if (!prepared) {
-                    this.rewardInterstitialReady = false;
-                    this.rewardInterstitialPreparedAt = 0;
-                }
-                this.rewardInterstitialPreparing = false;
-                this.rewardInterstitialPromise = null;
-            }
-        })();
-
-        return this.rewardInterstitialPromise;
-    },
-
-    async showRewardInterstitial(adId: string, onShow?: () => void): Promise<boolean> {
-        if (!canUseNativeAdMob()) return false;
-        if (this.isRewardInterstitialShowing) return false;
-        this.isRewardInterstitialShowing = true;
-
-        const initialized = await this.ensureInitialized('Reward interstitial show');
-        if (!initialized) {
-            this.isRewardInterstitialShowing = false;
-            this.invalidateRewardInterstitial();
-            return false;
-        }
-        console.log(`[AdMob] Attempting to show reward interstitial: ${adId}`);
-
-        try {
-            return await new Promise<boolean>((resolve) => {
-                let resolved = false;
-                let earned = false;
-                let showedListener: any = null;
-                let rewardListener: any = null;
-                let dismissListener: any = null;
-                let failedListener: any = null;
-                let failedShowListener: any = null;
-
-                let timeout: ReturnType<typeof setTimeout> | null = setTimeout(() => {
-                    console.warn('[AdMob] Reward Interstitial show timeout');
-                    cleanupAndResolve(false);
-                }, this.REWARDED_SHOW_TIMEOUT_MS);
-
-                const cleanupAndResolve = (success: boolean) => {
-                    if (resolved) return;
-                    resolved = true;
-                    this.cleanupListeners([showedListener, rewardListener, dismissListener, failedListener, failedShowListener]);
-                    if (timeout) clearTimeout(timeout);
-                    this.rewardInterstitialReady = false;
-                    this.rewardInterstitialPreparedAt = 0;
-                    this.isRewardInterstitialShowing = false;
-                    console.log(`[AdMob] Reward Interstitial finished. Success: ${success}`);
-                    resolve(success);
-                };
-
-                void (async () => {
-                    try {
-                        showedListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.Showed, () => {
-                            console.log('[AdMob] Reward Interstitial showing, switching to dismissal watchdog');
-                            if (timeout) clearTimeout(timeout);
-                            timeout = setTimeout(() => {
-                                console.warn('[AdMob] Reward Interstitial dismiss event never arrived after show; releasing state.');
-                                cleanupAndResolve(earned);
-                            }, this.REWARDED_POST_SHOW_TIMEOUT_MS);
-                            if (onShow) onShow();
-                        });
-
-                        rewardListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.Rewarded, (info: AdMobRewardInterstitialItem) => {
-                            console.log('[AdMob] User earned reward (Interstitial):', info);
-                            earned = true;
-                        });
-
-                        dismissListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.Dismissed, () => {
-                            console.log('[AdMob] Reward Interstitial dismissed');
-                            cleanupAndResolve(earned);
-                        });
-
-                        failedListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.FailedToLoad, (error) => {
-                            console.error('[AdMob] Reward Interstitial failed to load:', error);
-                            cleanupAndResolve(false);
-                        });
-
-                        failedShowListener = await AdMob.addListener(RewardInterstitialAdPluginEvents.FailedToShow, (error) => {
-                            console.error('[AdMob] Reward Interstitial failed to show:', error);
-                            this.invalidateRewardInterstitial();
-                            cleanupAndResolve(false);
-                        });
-
-                        if (!this.hasFreshRewardInterstitial(adId)) {
-                            console.warn('[AdMob] Ad not ready, attempting JIT prepare...');
-                            const prepared = await this.prepareRewardInterstitial(adId);
-                            if (!prepared || !this.hasFreshRewardInterstitial(adId)) {
-                                console.error('[AdMob] JIT Prepare failed: Ad not ready.');
-                                cleanupAndResolve(false);
-                                return;
-                            }
-                            await new Promise(resolveDelay => setTimeout(resolveDelay, this.REWARDED_POST_PREPARE_SHOW_DELAY_MS));
-                        }
-
-                        try {
-                            await AdMob.showRewardInterstitialAd();
-                        } catch (error) {
-                            console.error('AdMob showRewardInterstitialAd threw:', error);
-                            this.invalidateRewardInterstitial();
-                            cleanupAndResolve(false);
-                        }
-                    } catch (error) {
-                        console.error('[AdMob] Reward Interstitial executor error:', error);
-                        this.invalidateRewardInterstitial();
-                        cleanupAndResolve(false);
-                    }
-                })();
-            });
-        } catch (error) {
-            console.error('[AdMob] Critical Reward Interstitial Error', error);
-            this.isRewardInterstitialShowing = false;
-            this.invalidateRewardInterstitial();
-            return false;
-        }
-    },
-
     async prepareRewardVideo(adId: string, ssv?: RewardVideoSsv): Promise<boolean> {
         if (!canUseNativeAdMob()) return false;
 
         const ssvKey = getRewardVideoSsvKey(ssv);
+        if (this.isRewardVideoShowing && (this.rewardVideoDisplayStarted || this.activeRewardVideoAdId !== adId || this.activeRewardVideoSsvKey !== ssvKey)) return false;
 
         const initialized = await this.ensureInitialized('Reward video prepare');
         if (!initialized) {
             this.invalidateRewardVideo();
             return false;
         }
+        if (this.isRewardVideoShowing && (this.rewardVideoDisplayStarted || this.activeRewardVideoAdId !== adId || this.activeRewardVideoSsvKey !== ssvKey)) return false;
 
-        if (
-            (this.lastRewardVideoAdId && this.lastRewardVideoAdId !== adId) ||
-            this.lastRewardVideoSsvKey !== ssvKey
-        ) {
-            this.invalidateRewardVideo();
+        if (this.rewardVideoPromise) {
+            const pending = this.rewardVideoPromise;
+            if (this.rewardVideoPendingAdId === adId && this.rewardVideoPendingSsvKey === ssvKey && this.rewardVideoPendingVersion === this.rewardVideoVersion) return pending;
+            await pending;
+            return this.prepareRewardVideo(adId, ssv);
         }
         if (this.hasFreshRewardVideo(adId, ssv)) return true;
-        if (this.rewardVideoReady && !this.hasFreshRewardVideo(adId, ssv)) {
-            console.log('[AdMob] Cached reward video went stale, refreshing it before show');
-            this.invalidateRewardVideo();
-        }
-        if (this.rewardVideoPromise) return this.rewardVideoPromise;
 
+        const version = ++this.rewardVideoVersion;
+        this.rewardVideoReady = false;
+        this.rewardVideoPreparedAt = 0;
         this.rewardVideoPreparing = true;
+        this.rewardVideoPendingVersion = version;
+        this.rewardVideoPendingAdId = adId;
+        this.rewardVideoPendingSsvKey = ssvKey;
         this.lastRewardVideoAdId = adId;
         this.lastRewardVideoSsvKey = ssvKey;
-        this.rewardVideoPromise = (async (): Promise<boolean> => {
+        const task = (async (): Promise<boolean> => {
             let prepared = false;
             try {
-                prepared = await this.runPrepareWithTimeout({
-                    label: 'Reward Video',
-                    loadedEvent: RewardAdPluginEvents.Loaded,
-                    failedEvent: RewardAdPluginEvents.FailedToLoad,
-                    prepareAction: () => AdMob.prepareRewardVideoAd({ adId, isTesting: false, ssv }),
-                    timeoutMs: this.REWARDED_PREPARE_TIMEOUT_MS,
-                });
+                // Publish the shared task before any synchronous bridge error
+                // or permission change can run its cleanup.
+                await Promise.resolve();
+                if (!this.canRequestAds || this.privacyOptionsInProgress) return false;
+                // The plugin's prepare promise resolves from this request's
+                // native onAdLoaded callback. Global Loaded events cannot
+                // distinguish two SSV contexts sharing the same ad unit.
+                const nativeLoad = AdMob.prepareRewardVideoAd({ adId, isTesting: false, ssv });
+                void nativeLoad.then(() => {
+                    // A native request can finish after our timeout. If it
+                    // replaced this ad unit's newer cache, discard readiness.
+                    if (version !== this.rewardVideoVersion && this.lastRewardVideoAdId === adId) this.invalidateRewardVideo();
+                }).catch(() => {});
+                await this.withNativeTimeout('Reward video load', nativeLoad, this.REWARDED_PREPARE_TIMEOUT_MS);
+                prepared = version === this.rewardVideoVersion && this.canRequestAds && !this.privacyOptionsInProgress;
+                if (!prepared) return false;
                 this.rewardVideoReady = prepared;
                 this.rewardVideoPreparedAt = prepared ? Date.now() : 0;
                 if (prepared) {
@@ -688,29 +304,34 @@ export const AdMobService = {
                 return prepared;
             } catch (error) {
                 console.error('AdMob Prepare Reward Error:', error);
-                this.invalidateRewardVideo();
                 return false;
             } finally {
-                if (!prepared) {
-                    this.rewardVideoReady = false;
-                    this.rewardVideoPreparedAt = 0;
+                if (this.rewardVideoPendingVersion === version) {
+                    this.rewardVideoPreparing = false;
+                    this.rewardVideoPromise = null;
+                    this.rewardVideoPendingAdId = null;
+                    this.rewardVideoPendingSsvKey = '';
                 }
-                this.rewardVideoPreparing = false;
-                this.rewardVideoPromise = null;
             }
         })();
-
-        return this.rewardVideoPromise;
+        this.rewardVideoPromise = task;
+        return task;
     },
 
     async showRewardVideo(adId: string, ssv?: RewardVideoSsv, onShow?: () => void): Promise<boolean> {
         if (!canUseNativeAdMob()) return false;
         if (this.isRewardVideoShowing) return false;
         this.isRewardVideoShowing = true;
+        this.rewardVideoDisplayStarted = false;
+        this.activeRewardVideoAdId = adId;
+        this.activeRewardVideoSsvKey = getRewardVideoSsvKey(ssv);
 
         const initialized = await this.ensureInitialized('Reward video show');
         if (!initialized) {
             this.isRewardVideoShowing = false;
+            this.rewardVideoDisplayStarted = false;
+            this.activeRewardVideoAdId = null;
+            this.activeRewardVideoSsvKey = '';
             this.invalidateRewardVideo();
             return false;
         }
@@ -720,10 +341,12 @@ export const AdMobService = {
             return await new Promise<boolean>((resolve) => {
                 let resolved = false;
                 let earned = false;
+                let dismissed = false;
+                let showRequested = false;
+                let showed = false;
                 let showedListener: any = null;
                 let rewardListener: any = null;
                 let dismissListener: any = null;
-                let failedListener: any = null;
                 let failedShowListener: any = null;
                 let dismissGraceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -735,41 +358,64 @@ export const AdMobService = {
                 const cleanupAndResolve = (success: boolean) => {
                     if (resolved) return;
                     resolved = true;
-                    this.cleanupListeners([showedListener, rewardListener, dismissListener, failedListener, failedShowListener]);
+                    this.cleanupListeners([showedListener, rewardListener, dismissListener, failedShowListener]);
                     if (timeout) clearTimeout(timeout);
                     if (dismissGraceTimer) clearTimeout(dismissGraceTimer);
                     this.rewardVideoReady = false;
                     this.rewardVideoPreparedAt = 0;
                     this.isRewardVideoShowing = false;
+                    this.rewardVideoDisplayStarted = false;
+                    this.activeRewardVideoAdId = null;
+                    this.activeRewardVideoSsvKey = '';
                     console.log(`[AdMob] Reward video finished. Success: ${success}`);
                     resolve(success);
                 };
 
+                const register = async (event: any, callback: (info: any) => void) => {
+                    if (resolved) return null;
+                    const listener = await AdMob.addListener(event, info => { if (!resolved && showRequested) callback(info); });
+                    if (resolved) {
+                        this.removeListener(listener);
+                        return null;
+                    }
+                    return listener;
+                };
+
                 void (async () => {
                     try {
-                        showedListener = await AdMob.addListener(RewardAdPluginEvents.Showed, () => {
+                        showedListener = await register(RewardAdPluginEvents.Showed, () => {
+                            if (showed) return;
+                            showed = true;
                             console.log('[AdMob] Reward video showing, switching to dismissal watchdog');
                             if (timeout) clearTimeout(timeout);
                             timeout = setTimeout(() => {
                                 console.warn('[AdMob] Reward video dismiss event never arrived after show; releasing state.');
                                 cleanupAndResolve(earned);
                             }, this.REWARDED_POST_SHOW_TIMEOUT_MS);
-                            if (onShow) onShow();
+                            try { onShow?.(); } catch (error) { console.warn('[AdMob] Reward video show observer failed:', error); }
                         });
+                        if (resolved) return;
 
-                        rewardListener = await AdMob.addListener(RewardAdPluginEvents.Rewarded, (info) => {
+                        rewardListener = await register(RewardAdPluginEvents.Rewarded, (info) => {
                             console.log('[AdMob] Reward video reward event received.', {
                                 amount: Number.isFinite(Number(info?.amount)) ? Number(info.amount) : null,
                                 type: typeof info?.type === 'string' ? info.type : null,
                             });
-                            earned = didEarnReward(info);
-                            if (!earned) {
+                            const validReward = didEarnReward(info);
+                            earned ||= validReward;
+                            if (!validReward) {
                                 console.warn('[AdMob] Reward video callback did not include a positive reward amount.');
                             }
+                            if (dismissed && earned) cleanupAndResolve(true);
                         });
+                        if (resolved) return;
 
-                        dismissListener = await AdMob.addListener(RewardAdPluginEvents.Dismissed, () => {
+                        dismissListener = await register(RewardAdPluginEvents.Dismissed, () => {
                             console.log('[AdMob] Reward video dismissed');
+                            if (dismissed) return;
+                            dismissed = true;
+                            if (earned) { cleanupAndResolve(true); return; }
+                            if (timeout) clearTimeout(timeout);
                             // Some mediation adapters can dispatch dismiss
                             // before the native reward callback. Give the
                             // plugin result/event a brief chance to arrive.
@@ -777,45 +423,58 @@ export const AdMobService = {
                                 cleanupAndResolve(earned);
                             }, this.REWARDED_DISMISS_GRACE_MS);
                         });
+                        if (resolved) return;
 
-                        failedListener = await AdMob.addListener(RewardAdPluginEvents.FailedToLoad, (error) => {
-                            console.error('[AdMob] Reward video failed to load:', error);
-                            cleanupAndResolve(false);
-                        });
-
-                        failedShowListener = await AdMob.addListener(RewardAdPluginEvents.FailedToShow, (error) => {
+                        failedShowListener = await register(RewardAdPluginEvents.FailedToShow, (error) => {
                             console.error('[AdMob] Reward video failed to show:', error);
                             this.invalidateRewardVideo();
                             cleanupAndResolve(false);
                         });
+                        if (resolved) {
+                            this.cleanupListeners([showedListener, rewardListener, dismissListener, failedShowListener]);
+                            return;
+                        }
 
                         if (!this.hasFreshRewardVideo(adId, ssv)) {
                             console.warn('[AdMob] Ad not ready, attempting JIT prepare...');
                             const prepared = await this.prepareRewardVideo(adId, ssv);
+                            if (resolved) return;
                             if (!prepared || !this.hasFreshRewardVideo(adId, ssv)) {
                                 console.error('[AdMob] JIT Prepare failed: Ad not ready.');
                                 cleanupAndResolve(false);
                                 return;
                             }
-                            await new Promise(resolveDelay => setTimeout(resolveDelay, this.REWARDED_POST_PREPARE_SHOW_DELAY_MS));
+                        }
+                        if (resolved || !this.canRequestAds || this.privacyOptionsInProgress || !this.hasFreshRewardVideo(adId, ssv)) {
+                            cleanupAndResolve(false);
+                            return;
                         }
 
                         try {
+                            showRequested = true;
+                            this.rewardVideoDisplayStarted = true;
+                            this.rewardVideoReady = false;
+                            this.rewardVideoPreparedAt = 0;
                             // The plugin resolves this call from the native
                             // onUserEarnedReward callback. Use its result as
                             // the source of truth if the JS event delivery is
                             // delayed or missed by the WebView bridge.
                             const rewardItem = await AdMob.showRewardVideoAd({ adId }) as AdMobRewardItem;
+                            if (resolved) return;
                             if (didEarnReward(rewardItem)) {
                                 earned = true;
                             }
-                            cleanupAndResolve(earned);
+                            // Earning a reward is not dismissal. Keep the show
+                            // lock and listeners until the fullscreen ad closes.
+                            if (dismissed && earned) cleanupAndResolve(true);
                         } catch (error) {
+                            if (resolved) return;
                             console.error('AdMob showRewardVideoAd threw:', error);
                             this.invalidateRewardVideo();
                             cleanupAndResolve(false);
                         }
                     } catch (error) {
+                        if (resolved) return;
                         console.error('[AdMob] Reward video executor error:', error);
                         this.invalidateRewardVideo();
                         cleanupAndResolve(false);
@@ -825,6 +484,9 @@ export const AdMobService = {
         } catch (error) {
             console.error('[AdMob] Critical Reward Error', error);
             this.isRewardVideoShowing = false;
+            this.rewardVideoDisplayStarted = false;
+            this.activeRewardVideoAdId = null;
+            this.activeRewardVideoSsvKey = '';
             this.invalidateRewardVideo();
             return false;
         }

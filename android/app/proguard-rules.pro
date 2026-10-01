@@ -29,6 +29,7 @@
 # ============================================================
 -dontwarn com.google.android.gms.ads.**
 -keep class com.getcapacitor.community.admob.** { *; }
+-keep class app.vercel.rizzmaster.AdConsentStatePlugin { *; }
 
 # ============================================================
 # Meta Audience Network

@@ -246,6 +246,7 @@ export default async function handler(req, res) {
         transactionId,
         rawReceipt,
         appUserId: userId,
+        intent,
       });
       logIapApi("info", "verifyStorePurchase succeeded.", {
         requestId,

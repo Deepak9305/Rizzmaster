@@ -26,7 +26,7 @@ const getCdvPurchase = () => {
             initialize: async () => { },
             update: async () => { },
             get: () => null,
-            restore: async () => { },
+            restorePurchases: async () => { },
             products: [],
             error: () => { },
             order: async () => { }
@@ -143,6 +143,15 @@ const getAndroidSubscriptionProductId = () => {
     return IAP_CONFIG.WEEKLY.androidId || IAP_CONFIG.MONTHLY.androidId || '';
 };
 
+const normalizeAndroidBasePlanId = (value: string | null) => {
+    if (!value) return null;
+    const productId = getAndroidSubscriptionProductId();
+    const planId = value.startsWith(`${productId}@`) ? value.split('@')[1] : value;
+    return [IAP_CONFIG.WEEKLY.androidBasePlanId, IAP_CONFIG.MONTHLY.androidBasePlanId].includes(planId)
+        ? planId
+        : null;
+};
+
 const getExactAndroidOffer = (product: any, basePlanId: string) => {
     const offers = Array.isArray(product?.offers) ? product.offers : [];
     const productId = typeof product?.id === 'string' ? product.id : '';
@@ -176,6 +185,26 @@ const getIapErrorMessage = (error: any, fallback = "Purchase failed") => {
 
 const delay = (milliseconds: number) => new Promise(resolve => setTimeout(resolve, milliseconds));
 
+const withTimeout = <T>(promise: Promise<T>, milliseconds: number, message: string) => new Promise<T>((resolve, reject) => {
+    const timeoutId = setTimeout(() => reject(new Error(message)), milliseconds);
+    promise.then(
+        value => {
+            clearTimeout(timeoutId);
+            resolve(value);
+        },
+        error => {
+            clearTimeout(timeoutId);
+            reject(error);
+        }
+    );
+});
+
+const IAP_INITIALIZATION_TIMEOUT_MS = 15000;
+
+const getStoreInitializationMessage = (error: any) => /class not found/i.test(getIapErrorMessage(error, ''))
+    ? 'Purchases are unavailable in this app version. Please update Rizz Master from Google Play.'
+    : 'Google Play Billing could not connect. Please restart the app and check Google Play.';
+
 const throwIfStoreError = (error: any) => {
     if (error && (error.isError || error.code || error.message)) {
         throw error;
@@ -203,6 +232,7 @@ class IAPService {
     isInitialized = false;
     products: any[] = [];
     initializationPromise: Promise<void> | null = null;
+    initializationError: string | null = null;
     purchaseInProgress = false;
 
     // Callbacks to update UI/DB
@@ -280,8 +310,20 @@ class IAPService {
                 ownerUserId: this.currentUserId,
             });
 
+            const receiptCandidates = [
+                receipt,
+                receipt?.sourceReceipt,
+                this.lastApprovedTransaction,
+            ].filter(Boolean);
+            const firstReceiptCandidateValue = (paths: Array<Array<string | number>>) => {
+                for (const candidate of receiptCandidates) {
+                    const value = firstReceiptValue(candidate, paths);
+                    if (value) return value;
+                }
+                return '';
+            };
             const purchaseToken = getGooglePurchaseToken(receipt, this.lastApprovedTransaction);
-            const transactionId = firstReceiptValue(receipt, [
+            const transactionId = firstReceiptCandidateValue([
                 ['transactionId'],
                 ['orderId'],
                 ['transaction', 'transactionId'],
@@ -290,21 +332,25 @@ class IAPService {
                 ['transactions', 0, 'orderId'],
                 ['nativePurchase', 'orderId'],
                 ['payload', 'orderId'],
-            ]);
-            const productId = firstReceiptValue(receipt, [
+            ]) || purchaseToken;
+            const productId = firstReceiptCandidateValue([
                 ['id'],
                 ['productId'],
                 ['transaction', 'products', 0, 'id'],
                 ['transactions', 0, 'products', 0, 'id'],
                 ['transactions', 0, 'productId'],
             ]);
-            const basePlanId = firstReceiptValue(receipt, [
+            const basePlanId = firstReceiptCandidateValue([
                 ['basePlanId'],
+                ['base_plan_id'],
                 ['offerId'],
+                ['offer_id'],
                 ['transaction', 'offerId'],
+                ['transaction', 'products', 0, 'offerId'],
                 ['transactions', 0, 'offerId'],
+                ['transactions', 0, 'products', 0, 'offerId'],
             ]) || null;
-            const expiresAt = firstReceiptValue(receipt, [
+            const expiresAt = firstReceiptCandidateValue([
                 ['expiresAt'],
                 ['expiryDate'],
                 ['expirationDate'],
@@ -325,7 +371,7 @@ class IAPService {
                 : (isAndroid && configuredAndroidProductId ? configuredAndroidProductId : productId);
             const expectedBasePlanId = pendingConfig && isAndroid
                 ? pendingConfig.androidBasePlanId
-                : basePlanId;
+                : (isAndroid ? normalizeAndroidBasePlanId(basePlanId) : basePlanId);
             const intent = this.pendingPlan ? 'purchase' : (this.activeIntent || 'restore');
             const ownerUserId = this.currentUserId || null;
 
@@ -350,9 +396,9 @@ class IAPService {
                 basePlanId: expectedBasePlanId,
                 purchaseToken,
                 transactionId,
-                orderId: firstReceiptValue(receipt, [['orderId'], ['transaction', 'orderId'], ['transactions', 0, 'orderId']]),
+                orderId: firstReceiptCandidateValue([['orderId'], ['transaction', 'orderId'], ['transactions', 0, 'orderId']]),
                 expiresAt,
-                rawReceipt: receipt
+                rawReceipt: receipt?.sourceReceipt || receipt
             };
 
             try {
@@ -406,14 +452,21 @@ class IAPService {
                 activeIntent: this.activeIntent,
             });
             if (error && error.code !== CdvPurchase.ErrorCode.PAYMENT_CANCELLED) {
-                if (this.onError) this.onError(`Store Error: ${getIapErrorMessage(error)}`);
+                if (this.onError) this.onError(/class not found/i.test(getIapErrorMessage(error, ''))
+                    ? getStoreInitializationMessage(error)
+                    : `Store Error: ${getIapErrorMessage(error)}`);
             }
         });
 
         // 3. Initialize Store
-        this.initializationPromise = Promise.resolve(store.initialize())
-            .then(async (errors: any[]) => {
+        this.initializationError = null;
+        // Keep observing the real initialization after the UI's bounded wait
+        // expires, so a late Play connection can still enable purchases.
+        const storeInitialization = Promise.resolve().then(() => store.initialize())
+            .then((errors: any[]) => {
                 if (Array.isArray(errors) && errors.length > 0) {
+                    this.isInitialized = false;
+                    this.initializationError = getStoreInitializationMessage(errors.find(error => /class not found/i.test(getIapErrorMessage(error, ''))) || errors[0]);
                     logIapJson("IAP: Store initialization returned errors", {
                         errors: errors.map(error => ({
                             code: error?.code || null,
@@ -422,29 +475,30 @@ class IAPService {
                             productId: error?.productId || null,
                         })),
                     });
-                    this.onError?.("Google Play Billing could not connect. Please check Play Store and try again.");
+                    this.onError?.(this.initializationError);
                     return;
                 }
 
                 this.isInitialized = true;
+                this.initializationError = null;
                 console.log("IAP: Store initialized");
-                try {
-                    await store.update();
-                } catch (error) {
-                    logIapJson("IAP: Initial store refresh failed", {
-                        code: (error as any)?.code || null,
-                        message: getIapErrorMessage(error, "Store refresh failed"),
-                    });
-                }
+                // initialize() already loads products and receipts. update() is
+                // a later metadata refresh, not part of store startup.
                 this.products = Array.isArray(store.products) ? store.products : [];
-            })
+            });
+        this.initializationPromise = withTimeout(
+            storeInitialization,
+            IAP_INITIALIZATION_TIMEOUT_MS,
+            'Google Play Billing initialization timed out.'
+        )
             .catch((error: any) => {
                 this.isInitialized = false;
+                this.initializationError = getStoreInitializationMessage(error);
                 logIapJson("IAP: Store initialization failed", {
                     code: error?.code || null,
                     message: getIapErrorMessage(error, "Store initialization failed"),
                 });
-                this.onError?.("Google Play Billing could not connect. Please check Play Store and try again.");
+                this.onError?.(this.initializationError);
             });
     }
 
@@ -467,6 +521,18 @@ class IAPService {
         }
 
         this.purchaseInProgress = true;
+
+        // Startup can run before Cordova has exposed the purchase global.
+        // Retry that deferred setup when the user actually opens billing.
+        if (!this.initializationPromise) {
+            this.initialize(this.onSuccess || (() => false), this.onError || (() => {}));
+        }
+        await this.initializationPromise;
+        if (!this.isInitialized) {
+            this.purchaseInProgress = false;
+            this.onError?.(this.initializationError || 'Google Play Billing is not ready. Please restart the app.');
+            return false;
+        }
 
         let accountBinding: string;
         try {
@@ -585,11 +651,19 @@ class IAPService {
 
         const CdvPurchase = getCdvPurchase();
         try {
+            if (!this.initializationPromise) {
+                this.initialize(this.onSuccess || (() => false), this.onError || (() => {}));
+            }
+            await this.initializationPromise;
+            if (!this.isInitialized) {
+                this.onError?.(this.initializationError || 'Google Play Billing is not ready. Please restart the app.');
+                return;
+            }
             const accountBinding = await this.getAccountBinding(normalizedOwnerUserId);
             this.activeIntent = 'restore';
             this.currentUserId = normalizedOwnerUserId;
             this.currentAccountBinding = accountBinding;
-            await CdvPurchase.store.restore();
+            throwIfStoreError(await CdvPurchase.store.restorePurchases());
             await CdvPurchase.store.update();
         } catch (e) {
             logIapJson("IAP: Restore failed", {
@@ -600,6 +674,7 @@ class IAPService {
                 ownerUserId: this.currentUserId,
             });
             this.activeIntent = null;
+            this.onError?.(getIapErrorMessage(e, 'Could not restore purchases. Please try again.'));
         }
     }
 

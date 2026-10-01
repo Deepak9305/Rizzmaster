@@ -32,6 +32,15 @@ export const canUseNativeNotifications = () => (
   hasCapacitorPlugin('LocalNotifications') && hasCapacitorPlugin('Preferences')
 );
 export const canUseNativeAdMob = () => hasCapacitorPlugin('AdMob');
+export const getNativeAdMobDiagnostics = () => ({
+  platform: Capacitor.getPlatform(),
+  native: isNativeShellApp(),
+  adMobAvailable: canUseNativeAdMob(),
+  consentStateAvailable: hasCapacitorPlugin('AdConsentState'),
+  bottomNavigationInsetAvailable: hasCapacitorPlugin('BottomNavigationInset'),
+  appEventsAvailable: hasCapacitorPlugin('App'),
+  uiOrigin: typeof location === 'undefined' ? 'unknown' : location.origin,
+});
 export const canUseNativeIap = () => hasCordovaGlobal('CdvPurchase');
 export const canUseNativeOneSignal = () => hasCordovaGlobal('OneSignal');
 export const canUseNativeAppEvents = () => hasCapacitorPlugin('App');

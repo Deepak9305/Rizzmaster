@@ -14,6 +14,8 @@ import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { AdMobService, type RewardVideoSsv } from './services/admobService';
+import { ForegroundSessionClock } from './services/foregroundSessionClock';
+import NativeBanner from './components/NativeBanner';
 import { OneSignalService } from './services/oneSignalService';
 import IAPService from './services/iapService';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
@@ -28,10 +30,11 @@ import {
   canUseNativeNetwork,
   canUseNativeOneSignal,
   canUseNativeStatusBar,
+  getNativeAdMobDiagnostics,
 } from './services/nativeCapabilities';
 import ForceUpdateGate from './components/ForceUpdateGate';
 import { loadUpdateGateConfig, type UpdateGateConfig } from './services/updateGateService';
-import { completeRewardedAdAttempt, createRewardedAdAttempt, getRewardedAdStatus, type RewardedAdStatus } from './services/rewardedAdService';
+import { createRewardedAdAttempt, getRewardedAdStatus, type RewardedAdStatus } from './services/rewardedAdService';
 
 // Lazy Load Heavy Components / Modals
 const PremiumModal = lazy(() => import('./components/PremiumModal'));
@@ -46,12 +49,12 @@ import ErrorBoundary from './components/ErrorBoundary';
 import NoInternetOverlay from './components/NoInternetOverlay';
 
 const DAILY_CREDITS = 5;
-const INTERSTITIAL_NEXT_TARGET_STORAGE_KEY = 'rizz_next_ad_target';
 const IS_WEB_PLATFORM = !Capacitor.isNativePlatform();
 const SILENT_PREMIUM_RESTORE_WAIT_MS = 45000;
 const SILENT_PREMIUM_RESTORE_RETRY_MS = 60000;
 const SILENT_PREMIUM_RESTORE_MAX_ATTEMPTS = 2;
 const REWARDED_STATUS_POLL_ATTEMPTS = 20;
+const REWARDED_STATUS_POLL_WINDOW_MS = 30_000;
 
 type RewardedAdPreparationContext = {
   key: string;
@@ -64,17 +67,13 @@ type RewardedAdPreparationContext = {
 const USE_TEST_ADS = false; // Set to true for testing with Google test ads
 
 const AD_IDS = {
-  INTERSTITIAL: {
-    ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/1033173712' : 'ca-app-pub-7381421031784616/5183026259',
-    IOS: 'ca-app-pub-3940256099942544/4411468910' // Test ID
+  BANNER: {
+    ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/6300978111' : 'ca-app-pub-7381421031784616/7234804095',
+    IOS: 'ca-app-pub-3940256099942544/2934735716' // Test ID until an iOS unit is configured
   },
   REWARD: {
     ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/5224354917' : 'ca-app-pub-7381421031784616/6580197977',
     IOS: 'ca-app-pub-3940256099942544/1712485313' // Test ID
-  },
-  APP_OPEN: {
-    ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/3419835294' : 'ca-app-pub-7381421031784616/2705366298',
-    IOS: 'ca-app-pub-3940256099942544/5662855259' // Test ID
   },
 };
 
@@ -408,6 +407,8 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     promise: Promise<RewardedAdPreparationContext>;
   } | null>(null);
   const rewardedAdInProgressRef = useRef(false);
+  const rewardedAdIdentityVersionRef = useRef(0);
+  const generationSessionVersionRef = useRef(0);
   const loadingRef = useRef(false);
   const savedItemsRef = useRef<SavedItem[]>([]);
 
@@ -434,6 +435,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showCreditsExhaustedModal, setShowCreditsExhaustedModal] = useState(false);
   const [privacyOptionsRequired, setPrivacyOptionsRequired] = useState(false);
+  const [isPrivacyFormOpen, setIsPrivacyFormOpen] = useState(false);
   const [rewardedAdStatus, setRewardedAdStatus] = useState<'idle' | 'loading' | 'pending' | 'success' | 'error'>('idle');
   const [isRewardedAdLoading, setIsRewardedAdLoading] = useState(false);
   const [rewardedAdRequiredCredits, setRewardedAdRequiredCredits] = useState<1 | 2>(1);
@@ -540,6 +542,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
   const handleExitGuestMode = useCallback(() => {
     IAPService.clearUser();
+    ++generationSessionVersionRef.current;
     isGuestRef.current = false;
     setIsGuest(false);
     setIsSessionBlocked(false);
@@ -550,6 +553,25 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     setProfile(null);
     setSession(null);
     setCurrentView('HOME');
+    loadingRef.current = false;
+    setLoading(false);
+    setSavedItems([]);
+    setResult(null);
+    setImage(null);
+    setInputError(null);
+    setSelectedVibe(null);
+    setCustomPersonas([]);
+    setEditingPersona(null);
+    setPersonaName('');
+    setPersonaInstruction('');
+    setShowPremiumModal(false);
+    setShowCreditsExhaustedModal(false);
+    setShowSavedModal(false);
+    setShowPersonaModal(false);
+    setShowWebMenu(false);
+    setShowWebPremiumModal(false);
+    if (textareaRef.current) textareaRef.current.value = '';
+    window.history.replaceState({ view: 'HOME' }, '', '/');
 
     // Privacy: Wipe all session-based Rizz AI data
     localStorage.removeItem('rizz_coach_messages_v2_guest_user');
@@ -564,6 +586,20 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   useEffect(() => {
     isGuestRef.current = isGuest;
   }, [isGuest]);
+
+  useEffect(() => {
+    ++rewardedAdIdentityVersionRef.current;
+    ++generationSessionVersionRef.current;
+    loadingRef.current = false;
+    setLoading(false);
+    rewardedAdPreparationContextRef.current = null;
+    rewardedAdPreparationPromiseRef.current = null;
+    rewardedAdAttemptRef.current = null;
+    rewardedAdInProgressRef.current = false;
+    AdMobService.invalidateRewardVideo();
+    setRewardedAdStatus('idle');
+    setIsRewardedAdLoading(false);
+  }, [profile?.id, isGuest]);
 
   useEffect(() => {
     if (profile?.id) {
@@ -689,25 +725,17 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     }
   }, [profile?.id]);
 
-  // --- INTERSTITIAL AD ACTIVE TIME TRACKING ---
-  // We use refs here because we need these values to be immediately available
-  // in background/foreground event listeners and intervals without causing re-renders.
-  const activeTimeMs = useRef<number>(0);
-  const lastAdActiveTime = useRef<number>(-120000); // Bug 6 fix: pre-subtract 1 cooldown so the first ad can show immediately
+  // Track foreground session time for analytics without waking the WebView.
+  const foregroundSessionClock = useRef(new ForegroundSessionClock());
   const backgroundTimestamp = useRef<number | null>(null);
-  const foregroundStartedAt = useRef<number | null>(null);
-  const adTransitionInProgressRef = useRef<boolean>(false); // Bug 3 fix: prevents double-fire from both nav handlers
-
-  const INTERSTITIAL_COOLDOWN_MS = 2 * 60 * 1000; // 2 minutes (Cooldown between ads)
-  const INACTIVITY_RESET_MS = 30 * 60 * 1000; // 30 minutes of background time to reset
 
   // Track Active Time (Foreground)
   useEffect(() => {
-    if (!canUseNativeAppEvents()) return;
+    if (!Capacitor.isNativePlatform()) return;
 
     // Track the current foreground segment with timestamps instead of a 1-second
     // interval. This avoids waking the WebView continuously while the app is idle.
-    foregroundStartedAt.current = Date.now();
+    foregroundSessionClock.current.start(Date.now());
 
     // Initial setup listener for App state to handle background/foreground
     let cancelled = false;
@@ -715,22 +743,15 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
     // Using a separate listener specifically for the vital time tracking
     // to keep it decoupled from the ad refresh logic below.
-    CapacitorApp.addListener('appStateChange', async ({ isActive }) => {
+    const handleAppStateChange = async ({ isActive }: { isActive: boolean }) => {
       const now = Date.now();
 
       if (isActive) {
         // App came to FOREGROUND
         if (backgroundTimestamp.current !== null) {
-          const timeInBackground = now - backgroundTimestamp.current;
-
-          if (timeInBackground >= INACTIVITY_RESET_MS) {
-            // Reset active time and ad tracking to grant a new grace period
-            activeTimeMs.current = 0;
-            lastAdActiveTime.current = 0;
-          }
+          foregroundSessionClock.current.start(now);
           // We are no longer in the background
           backgroundTimestamp.current = null;
-          foregroundStartedAt.current = now;
 
           // Record usage and refresh notification schedule
           await NotificationService.recordUsage();
@@ -741,11 +762,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         }
       } else {
         // App went to BACKGROUND — flush session time to Supabase
-        const sessionTimeMs = activeTimeMs.current + (
-          foregroundStartedAt.current === null
-            ? 0
-            : Math.max(0, now - foregroundStartedAt.current)
-        );
+        const sessionTimeMs = foregroundSessionClock.current.pause(now);
         backgroundTimestamp.current = now;
         if (sessionTimeMs > 0) {
           const currentProfile = profileRef.current;
@@ -756,25 +773,34 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                 else console.log(`[Analytics] Flushed ${Math.round(sessionTimeMs / 1000)}s of session time.`);
               });
           }
-          // Reset so we don't double-count on next foreground
-          activeTimeMs.current = 0;
         }
-        foregroundStartedAt.current = null;
       }
-    }).then(listener => {
-      // If the effect has already torn down (e.g. StrictMode double-invoke or fast refresh)
-      // before addListener resolved, remove it now — otherwise it leaks and double-counts
-      // session time on the next background event.
-      if (cancelled) {
-        listener.remove();
-        return;
-      }
-      appStateListener = listener;
-    });
+    };
+    const handleVisibilityChange = () => {
+      void handleAppStateChange({ isActive: document.visibilityState !== 'hidden' });
+    };
+
+    if (canUseNativeAppEvents()) {
+      CapacitorApp.addListener('appStateChange', handleAppStateChange).then(listener => {
+        // Remove a listener that resolved after teardown (including StrictMode).
+        if (cancelled) {
+          listener.remove();
+          return;
+        }
+        appStateListener = listener;
+      }).catch(error => {
+        if (cancelled) return;
+        console.warn('[AdMob] App-state listener failed; using document visibility:', error);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+      });
+    } else {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
 
     return () => {
       cancelled = true;
       if (appStateListener) appStateListener.remove();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
   // --- END ACTIVE TIME TRACKING ---
@@ -962,6 +988,23 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
   // Initialize Native Services
   useEffect(() => {
+    const diagnostics = getNativeAdMobDiagnostics();
+    console.log('[AdMob] Native capabilities', diagnostics);
+    if (!diagnostics.native) return;
+    if (!diagnostics.adMobAvailable) {
+      console.error('[AdMob] This native shell has no AdMob plugin; no ad requests can be made.');
+      return;
+    }
+    const timer = setTimeout(() => {
+      runAdTask('Initial AdMob init', AdMobService.initialize().then((initialized) => {
+        setPrivacyOptionsRequired(AdMobService.isPrivacyOptionsRequired());
+        return initialized;
+      }));
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
     if (!canUseNativeAppEvents()) return;
 
     const timerIds: ReturnType<typeof setTimeout>[] = [];
@@ -982,17 +1025,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         }
       } else if (!runtimeConfig.googleClientId) {
         console.warn('[Startup] GoogleAuth initialization skipped because VITE_GOOGLE_CLIENT_ID is missing.');
-      }
-
-      // AdMob
-      if (canUseNativeAdMob()) {
-        runAdTask(
-          'Initial AdMob init',
-          AdMobService.initialize().then((initialized) => {
-            setPrivacyOptionsRequired(AdMobService.isPrivacyOptionsRequired());
-            return initialized;
-          })
-        );
       }
 
       // In-App Purchases
@@ -1292,10 +1324,13 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   }, []);
 
   const handleOpenPrivacyOptions = useCallback(async () => {
-    const canRequestAds = await AdMobService.showPrivacyOptionsForm();
-    setPrivacyOptionsRequired(AdMobService.isPrivacyOptionsRequired());
-    if (!canRequestAds) {
-      console.warn('[AdMob] Privacy choices were not accepted or could not be updated.');
+    setIsPrivacyFormOpen(true);
+    try {
+      const canRequestAds = await AdMobService.showPrivacyOptionsForm();
+      setPrivacyOptionsRequired(AdMobService.isPrivacyOptionsRequired());
+      if (!canRequestAds) console.warn('[AdMob] Privacy permission remains unavailable.');
+    } finally {
+      setIsPrivacyFormOpen(false);
     }
   }, []);
 
@@ -1361,8 +1396,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
             console.error("Auth State Load Error:", e);
             setIsProfileLoadingHung(true);
           });
-        // NOTE: App Open Ad is triggered by the useEffect watching [session, profile, isAuthReady]
-        // after the profile has actually loaded, not here where profile is not yet available.
       } else {
         if (isGuestRef.current) {
           return;
@@ -1537,8 +1570,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const handleLogout = useCallback(async () => {
     const currentProfile = profileRef.current;
 
-    if (isGuest) {
-      IAPService.clearUser();
+    if (isGuestRef.current || currentProfile?.id === 'guest_user') {
       handleExitGuestMode();
       showToast("Successfully logged out 👋", 'success');
       return;
@@ -1637,19 +1669,22 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     const currentProfile = profileRef.current;
     const requiredCredits = requiredCreditsOverride ?? rewardedAdRequiredCredits;
     const openedFromPremiumModal = showPremiumModal;
+    const pendingAttemptId = rewardedAdStatus === 'pending' ? rewardedAdAttemptRef.current : null;
     if (
       !currentProfile ||
       currentProfile.is_premium ||
       (currentProfile.credits || 0) >= requiredCredits ||
       rewardedAdInProgressRef.current ||
-      rewardedAdStatus === 'pending'
+      (rewardedAdStatus === 'pending' && !pendingAttemptId)
     ) {
       return;
     }
 
     rewardedAdInProgressRef.current = true;
     setIsRewardedAdLoading(true);
-    setRewardedAdStatus('loading');
+    setRewardedAdStatus(pendingAttemptId ? 'pending' : 'loading');
+    const identityVersion = rewardedAdIdentityVersionRef.current;
+    const stillSameUser = () => rewardedAdIdentityVersionRef.current === identityVersion && profileRef.current?.id === currentProfile.id;
 
     try {
       if (!canUseNativeAdMob()) {
@@ -1658,51 +1693,55 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         return;
       }
 
-      const preparationContext = await getRewardedAdPreparationContext(currentProfile, requiredCredits);
-      rewardedAdAttemptRef.current = preparationContext.attemptId;
-      const earned = await AdMobService.showRewardVideo(getAdId('REWARD'), preparationContext.ssv);
-      if (!earned) {
-        setRewardedAdStatus('error');
-        showToast('The rewarded ad could not be completed. No credits were added.', 'error');
-        return;
-      }
-
-      if (rewardedAdPreparationContextRef.current?.key === preparationContext.key) {
-        rewardedAdPreparationContextRef.current = null;
-      }
-
-      if (isGuest || currentProfile.id === 'guest_user') {
-        updateCredits((previous) => previous + 5);
-        rewardedAdAttemptRef.current = null;
-        setRewardedAdStatus('success');
-        setShowCreditsExhaustedModal(false);
-        showToast('5 credits added. You can continue generating.', 'success');
-        if (openedFromPremiumModal) handleBackNavigation();
-        return;
-      }
-
-      const attemptId = preparationContext.attemptId;
+      let attemptId = pendingAttemptId;
       if (!attemptId) {
-        setRewardedAdStatus('error');
-        showToast('Reward verification could not be started. No credits were added.', 'error');
-        return;
+        const preparationContext = await getRewardedAdPreparationContext(currentProfile, requiredCredits);
+        if (!stillSameUser()) return;
+        rewardedAdAttemptRef.current = preparationContext.attemptId;
+        const earned = await AdMobService.showRewardVideo(getAdId('REWARD'), preparationContext.ssv);
+        if (!stillSameUser()) return;
+        if (!earned) {
+          setRewardedAdStatus('error');
+          showToast('The rewarded ad could not be completed. No credits were added.', 'error');
+          return;
+        }
+
+        if (rewardedAdPreparationContextRef.current?.key === preparationContext.key) {
+          rewardedAdPreparationContextRef.current = null;
+        }
+
+        if (isGuest || currentProfile.id === 'guest_user') {
+          updateCredits((previous) => previous + 5);
+          rewardedAdAttemptRef.current = null;
+          setRewardedAdStatus('success');
+          setShowCreditsExhaustedModal(false);
+          showToast('5 credits added. You can continue generating.', 'success');
+          if (openedFromPremiumModal) handleBackNavigation();
+          return;
+        }
+
+        attemptId = preparationContext.attemptId;
+        if (!attemptId) {
+          setRewardedAdStatus('error');
+          showToast('Reward verification could not be started. No credits were added.', 'error');
+          return;
+        }
       }
 
       setRewardedAdStatus('pending');
       let latestStatus: RewardedAdStatus = 'pending';
+      const verificationDeadline = Date.now() + REWARDED_STATUS_POLL_WINDOW_MS;
       for (let poll = 0; poll < REWARDED_STATUS_POLL_ATTEMPTS; poll += 1) {
+        if (Date.now() >= verificationDeadline) break;
         await wait(poll === 0 ? 250 : 1500);
+        if (!stillSameUser()) return;
+        if (Date.now() >= verificationDeadline) break;
 
         let status;
         try {
-          // Submit native completion immediately after the SDK reward event,
-          // then retry while polling in case the first request races the
-          // server's minimum-watch-time check or hits a transient failure.
-          const shouldSubmitNativeCompletion = poll === 0 || poll === 4 || poll === 9;
-          status = shouldSubmitNativeCompletion
-            ? await completeRewardedAdAttempt(attemptId)
-            : await getRewardedAdStatus(attemptId);
+          status = await getRewardedAdStatus(attemptId);
         } catch (pollError) {
+          if (!stillSameUser()) return;
           const responseStatus = Number((pollError as { status?: number })?.status || 0);
           if (responseStatus === 409 || responseStatus >= 500 || responseStatus === 0) {
             console.warn('[AdMob] Reward confirmation retry scheduled.', { poll, responseStatus });
@@ -1710,6 +1749,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
           }
           throw pollError;
         }
+        if (!stillSameUser()) return;
         latestStatus = status.status;
 
         if (status.status === 'granted') {
@@ -1719,13 +1759,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
             profileRef.current = creditedProfile;
             setProfile(creditedProfile);
           }
-          const syncedProfile = await syncProfile();
+          rewardedAdAttemptRef.current = null;
           setRewardedAdStatus('success');
           setShowCreditsExhaustedModal(false);
-          showToast(
-            syncedProfile ? '5 credits added. You can continue generating.' : '5 credits added. Your balance is ready.',
-            'success',
-          );
+          showToast('5 credits added. You can continue generating.', 'success');
           if (openedFromPremiumModal) handleBackNavigation();
           return;
         }
@@ -1736,18 +1773,22 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         setRewardedAdStatus('pending');
         showToast('Reward verification is still pending. Your credits will appear shortly.', 'info');
       } else {
+        rewardedAdAttemptRef.current = null;
         setRewardedAdStatus('error');
         showToast('The reward could not be verified. No credits were added.', 'error');
       }
     } catch (error) {
+      if (!stillSameUser()) return;
       console.warn('[AdMob] Rewarded credit flow failed:', error instanceof Error ? error.message : error);
       setRewardedAdStatus('error');
       showToast('Reward verification is temporarily unavailable. No credits were added.', 'error');
     } finally {
-      rewardedAdInProgressRef.current = false;
-      setIsRewardedAdLoading(false);
+      if (stillSameUser()) {
+        rewardedAdInProgressRef.current = false;
+        setIsRewardedAdLoading(false);
+      }
     }
-  }, [getRewardedAdPreparationContext, handleBackNavigation, isGuest, rewardedAdRequiredCredits, rewardedAdStatus, showPremiumModal, showToast, syncProfile, updateCredits]);
+  }, [getRewardedAdPreparationContext, handleBackNavigation, isGuest, rewardedAdRequiredCredits, rewardedAdStatus, showPremiumModal, showToast, updateCredits]);
 
   const handleRestorePurchases = useCallback(async () => {
     if (!profileRef.current) return;
@@ -2040,7 +2081,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     setSelectedVibe(prev => prev === vibe.label ? null : vibe.label);
   }, [handleOpenPremium, showToast]);
 
-  // Active Time tracking handles the grace period now (see useEffect above)
 
   const handleGenerate = useCallback(async (textToProcess?: string) => {
     if (loadingRef.current) return;
@@ -2075,122 +2115,19 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
     const cost: 1 | 2 = (activeMode === InputMode.CHAT && activeImage) ? 2 : 1;
 
-    // A blocked attempt belongs to the premium/rewarded flow. Do not count it
-    // as a generation or mark an interstitial trigger that will never run.
+    // Insufficient credits belong to the premium/rewarded flow.
     if (!currentProfile.is_premium && (currentProfile.credits || 0) < cost) {
       handleCreditsExhausted(cost);
       return;
     }
 
-    let shouldShowAd = false;
-    let adGenerationToRecord: number | null = null;
-    let successfulGenerationCount: number | null = null;
-    let shouldPreloadInterstitial = false;
-    if (!currentProfile.is_premium && canUseNativeAdMob()) {
-      const today = new Date().toDateString();
-      const lastAdDate = localStorage.getItem('rizz_last_ad_date');
-      let genCount = parseInt(localStorage.getItem('rizz_daily_gen_count') || '0');
-      let lastAdGen = parseInt(localStorage.getItem('rizz_last_ad_gen_count') || '0');
-
-      // Recover cleanly if an older build left malformed local ad state.
-      if (!Number.isFinite(genCount) || genCount < 0) genCount = 0;
-      if (!Number.isFinite(lastAdGen) || lastAdGen < 0) lastAdGen = 0;
-
-      if (lastAdDate !== today) {
-        genCount = 0;
-        lastAdGen = 0;
-        localStorage.setItem('rizz_last_ad_date', today);
-        localStorage.setItem('rizz_last_ad_gen_count', '0');
-        localStorage.removeItem(INTERSTITIAL_NEXT_TARGET_STORAGE_KEY);
-      }
-
-      // Target the third valid generation first, then choose and persist a
-      // three-to-five-generation interval so preloading is deterministic.
-      let targetGen = parseInt(localStorage.getItem(INTERSTITIAL_NEXT_TARGET_STORAGE_KEY) || '', 10);
-      if (lastAdGen === 0) {
-        targetGen = 3;
-      } else if (!Number.isFinite(targetGen) || targetGen <= lastAdGen) {
-        const nextAdOffset = Math.floor(Math.random() * 3) + 3;
-        targetGen = lastAdGen + nextAdOffset;
-      }
-      localStorage.setItem(INTERSTITIAL_NEXT_TARGET_STORAGE_KEY, targetGen.toString());
-
-      const now = activeTimeMs.current + (
-        foregroundStartedAt.current === null
-          ? 0
-          : Math.max(0, Date.now() - foregroundStartedAt.current)
-      );
-      const cooldownPassed = lastAdGen === 0 || (now - lastAdActiveTime.current >= INTERSTITIAL_COOLDOWN_MS);
-      const nextGenerationCount = genCount + 1;
-      successfulGenerationCount = nextGenerationCount;
-      
-      if (nextGenerationCount >= targetGen && cooldownPassed) {
-        shouldShowAd = true;
-        adGenerationToRecord = nextGenerationCount;
-        console.log(`[AdMob] Will trigger interstitial at valid generation ${nextGenerationCount}...`);
-      } else if (nextGenerationCount + 1 >= targetGen && cooldownPassed) {
-        // Warm the ad after this generation succeeds, one valid generation
-        // before the show point, instead of preloading for failed attempts.
-        shouldPreloadInterstitial = true;
-      }
-    }
-    // --------------------------------------------------
-
-    const triggerInterstitial = () => {
-      if (!shouldShowAd) return Promise.resolve();
-
-      let accountedForShownInterstitial = false;
-      const recordShownInterstitial = () => {
-        if (accountedForShownInterstitial || adGenerationToRecord === null) return;
-        accountedForShownInterstitial = true;
-        lastAdActiveTime.current = activeTimeMs.current + (
-          foregroundStartedAt.current === null
-            ? 0
-            : Math.max(0, Date.now() - foregroundStartedAt.current)
-        );
-        localStorage.setItem('rizz_last_ad_gen_count', adGenerationToRecord.toString());
-        localStorage.removeItem(INTERSTITIAL_NEXT_TARGET_STORAGE_KEY);
-      };
-
-      const isForeground = backgroundTimestamp.current === null;
-      const isVisible = typeof document === 'undefined' || document.visibilityState === 'visible';
-      const { showOnboarding, showPremiumModal, showSavedModal } = stateRef.current;
-      const hasUiConflict = showOnboarding || showPremiumModal || showSavedModal;
-
-      if (!isForeground || !isVisible || hasUiConflict || adTransitionInProgressRef.current) {
-        console.warn('[AdMob] Skipping interstitial because the app is not in a stable foreground state.', {
-          isForeground,
-          visibilityState: typeof document === 'undefined' ? 'unavailable' : document.visibilityState,
-          hasUiConflict,
-          adTransitionInProgress: adTransitionInProgressRef.current,
-        });
-        return Promise.resolve();
-      } else {
-        adTransitionInProgressRef.current = true;
-
-        return AdMobService.showInterstitial(getAdId('INTERSTITIAL'), recordShownInterstitial)
-          .then((result) => {
-            if (result.shown) {
-              recordShownInterstitial();
-              return;
-            }
-
-            console.warn('[AdMob] Interstitial did not reach the user.', {
-              reason: result.reason,
-              generation: adGenerationToRecord,
-            });
-          })
-        .catch(e => console.warn("[AdMob] Deferred interstitial failed:", e))
-        .finally(() => {
-          adTransitionInProgressRef.current = false;
-        });
-      }
-    };
-
     loadingRef.current = true;
     setLoading(true);
 
     // --- GENERATION START ---
+    const generationSessionVersion = generationSessionVersionRef.current;
+    const stillSameGenerationSession = () => generationSessionVersionRef.current === generationSessionVersion &&
+      profileRef.current?.id === currentProfile.id;
     const shouldManageLocalCredits = !currentProfile.is_premium;
     const shouldSyncSignedInProfile = !isGuestRef.current && currentProfile.id !== 'guest_user';
     let skipFinalProfileSync = !shouldSyncSignedInProfile;
@@ -2218,6 +2155,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       } else {
         res = await generateBio(finalProcessText, activeVibe || undefined, activeResponseLength, customInstruction);
       }
+      if (!stillSameGenerationSession()) return;
 
       if ('potentialStatus' in res && (res.potentialStatus === 'Error' || res.potentialStatus === 'Blocked')) {
         refundOptimisticCredits();
@@ -2237,27 +2175,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         skipFinalProfileSync = !shouldSyncSignedInProfile;
         setResult(res);
 
-        if (successfulGenerationCount !== null) {
-          localStorage.setItem('rizz_daily_gen_count', successfulGenerationCount.toString());
-        }
-
-        // Only show after a successful generation. Invoke the native bridge
-        // directly instead of deferring through requestAnimationFrame, which
-        // can be skipped or delayed by Android WebView frame scheduling.
-        if (shouldShowAd) {
-          console.log('[AdMob] Starting interstitial after successful generation.', {
-            generation: adGenerationToRecord,
-          });
-          void triggerInterstitial();
-        } else if (shouldPreloadInterstitial) {
-          runAdTask(
-            'Eligible interstitial preload',
-            AdMobService.prepareInterstitial(getAdId('INTERSTITIAL'))
-          );
-        }
       }
 
     } catch (error: any) {
+      if (!stillSameGenerationSession()) return;
       console.error(error);
       if (error.message === 'LOGIN_REQUIRED') {
          setLoginReason(undefined);
@@ -2308,10 +2229,12 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       showToast('The wingman tripped! Try again.', 'error');
       refundOptimisticCredits();
     } finally {
-      loadingRef.current = false;
-      setLoading(false);
+      if (stillSameGenerationSession()) {
+        loadingRef.current = false;
+        setLoading(false);
+      }
       // Don't call syncProfile for guests — they have no Supabase session
-      if (shouldSyncSignedInProfile && !skipFinalProfileSync) {
+      if (stillSameGenerationSession() && shouldSyncSignedInProfile && !skipFinalProfileSync) {
         await syncProfile().catch(() => null);
       }
     }
@@ -2403,6 +2326,12 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
   return (
     <div className="web-app-root relative min-h-screen overflow-x-hidden">
+      <NativeBanner
+        adId={getAdId('BANNER')}
+        enabled={Boolean(profile && !profile.is_premium && (session || isGuest) && !updateGateConfig?.blocked)}
+        suspended={showSplash || showOnboarding || currentView !== 'HOME' || isSessionBlocked || isOffline || showPremiumModal || showSavedModal || showCreditsExhaustedModal || showPersonaModal || isRewardedAdLoading || isPrivacyFormOpen}
+        onConsentReady={setPrivacyOptionsRequired}
+      />
 
       {showSplash && (
         <SplashScreen
@@ -2496,10 +2425,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
               <button
                 type="button"
                 onClick={() => { void handleWatchRewardedAd(rewardedAdRequiredCredits); }}
-                disabled={isRewardedAdLoading || rewardedAdStatus === 'pending'}
+                disabled={isRewardedAdLoading}
                 className="min-h-14 rounded-2xl border border-amber-300/35 bg-amber-300/10 px-3 py-3 text-sm font-extrabold text-amber-100 transition hover:bg-amber-300/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isRewardedAdLoading ? 'Opening ad...' : rewardedAdStatus === 'pending' ? 'Verifying...' : 'Watch ad · +5'}
+                {isRewardedAdLoading ? (rewardedAdStatus === 'pending' ? 'Checking reward...' : 'Opening ad...') : rewardedAdStatus === 'pending' ? 'Check reward' : 'Watch ad · +5'}
               </button>
             </div>
             {rewardedAdStatus === 'pending' ? (
@@ -2675,6 +2604,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
 
 
+              <div className="web-app-sticky-header">
               <nav className="web-app-topbar">
                 <div className="web-app-topbar-leading">
                   {IS_WEB_PLATFORM && onNavigateToPath && (
@@ -2713,6 +2643,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                   </div>
                 </div>
               </nav>
+              <div className="native-banner-slot" aria-hidden="true">
+                <div className="native-banner-anchor">Advertisement</div>
+              </div>
+              </div>
 
               <header className="web-app-heading text-center mb-6 md:mb-8">
                 <div className="inline-block relative">
@@ -2870,10 +2804,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                         <button
                           type="button"
                           onClick={() => handleWatchRewardedAd(mode === InputMode.CHAT && image ? 2 : 1)}
-                          disabled={isRewardedAdLoading || rewardedAdStatus === 'pending'}
+                          disabled={isRewardedAdLoading}
                           className="w-full min-h-[58px] rounded-2xl border border-amber-300/30 bg-amber-300/10 px-2 py-3 text-xs font-bold text-amber-200 transition hover:bg-amber-300/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 flex flex-col items-center justify-center"
                         >
-                          <span>{isRewardedAdLoading ? 'Opening ad...' : 'Watch an ad'}</span>
+                          <span>{isRewardedAdLoading ? (rewardedAdStatus === 'pending' ? 'Checking reward...' : 'Opening ad...') : rewardedAdStatus === 'pending' ? 'Check reward' : 'Watch an ad'}</span>
                           <span className="text-[10px] uppercase tracking-wide text-amber-200/70">+5 credits</span>
                         </button>
                       )}

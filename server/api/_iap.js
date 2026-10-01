@@ -29,9 +29,9 @@ const readEnv = (...keys) => {
   return "";
 };
 
-const assertAllowedGooglePlaySubscription = (productId, basePlanId) => {
+const assertAllowedGooglePlaySubscription = (productId, basePlanId, allowUnknownBasePlan = false) => {
   const allowedBasePlans = GOOGLE_PLAY_SUBSCRIPTIONS.get(productId);
-  if (!allowedBasePlans || !basePlanId || !allowedBasePlans.has(basePlanId)) {
+  if (!allowedBasePlans || (!basePlanId && !allowUnknownBasePlan) || (basePlanId && !allowedBasePlans.has(basePlanId))) {
     throw new PurchaseVerificationError(
       "This Google Play subscription or base plan is not supported.",
       "GOOGLE_PLAY_PRODUCT_MISMATCH",
@@ -472,8 +472,11 @@ const readGoogleBasePlanId = (lineItem) => {
   return nested;
 };
 
-const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, appUserId }) => {
-  assertAllowedGooglePlaySubscription(productId, basePlanId);
+const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, appUserId, intent = "purchase" }) => {
+  // Restored Play purchases do not reliably expose the selected base plan in
+  // the local Capacitor receipt. Google Play is the source of truth for it,
+  // so validate the product first and validate the returned base plan below.
+  assertAllowedGooglePlaySubscription(productId, basePlanId, intent === "restore");
   const { packageName } = getGooglePlayConfig();
   const diagnostics = getGooglePlayDiagnostics();
   logIap("info", "Google Play verification start", {
@@ -596,7 +599,12 @@ const verifyGooglePlayPurchase = async ({ productId, basePlanId, purchaseToken, 
 
   const verifiedBasePlanId = readGoogleBasePlanId(matchingLineItem);
 
-  if (!verifiedBasePlanId || verifiedBasePlanId !== basePlanId) {
+  const allowedBasePlans = GOOGLE_PLAY_SUBSCRIPTIONS.get(productId);
+  if (
+    !verifiedBasePlanId
+    || !allowedBasePlans?.has(verifiedBasePlanId)
+    || (basePlanId && verifiedBasePlanId !== basePlanId)
+  ) {
     logIap("warn", "Google Play verification failure", {
       platform: "android",
       productId,
@@ -822,6 +830,7 @@ export const verifyStorePurchase = async ({
   transactionId,
   rawReceipt,
   appUserId,
+  intent = "purchase",
 }) => {
   const diagnostics = platform === "android" ? getGooglePlayDiagnostics() : null;
   logIap("info", "verifyStorePurchase invoked", {
@@ -833,7 +842,7 @@ export const verifyStorePurchase = async ({
 
   if (platform === "android") {
     try {
-      return await verifyGooglePlayPurchase({ productId, basePlanId, purchaseToken, appUserId });
+      return await verifyGooglePlayPurchase({ productId, basePlanId, purchaseToken, appUserId, intent });
     } catch (error) {
       logIap("error", "verifyStorePurchase failed", {
         platform,
