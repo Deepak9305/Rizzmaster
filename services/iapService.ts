@@ -143,6 +143,15 @@ const getAndroidSubscriptionProductId = () => {
     return IAP_CONFIG.WEEKLY.androidId || IAP_CONFIG.MONTHLY.androidId || '';
 };
 
+const normalizeAndroidBasePlanId = (value: string | null) => {
+    if (!value) return null;
+    const productId = getAndroidSubscriptionProductId();
+    const planId = value.startsWith(`${productId}@`) ? value.split('@')[1] : value;
+    return [IAP_CONFIG.WEEKLY.androidBasePlanId, IAP_CONFIG.MONTHLY.androidBasePlanId].includes(planId)
+        ? planId
+        : null;
+};
+
 const getExactAndroidOffer = (product: any, basePlanId: string) => {
     const offers = Array.isArray(product?.offers) ? product.offers : [];
     const productId = typeof product?.id === 'string' ? product.id : '';
@@ -362,7 +371,7 @@ class IAPService {
                 : (isAndroid && configuredAndroidProductId ? configuredAndroidProductId : productId);
             const expectedBasePlanId = pendingConfig && isAndroid
                 ? pendingConfig.androidBasePlanId
-                : basePlanId;
+                : (isAndroid ? normalizeAndroidBasePlanId(basePlanId) : basePlanId);
             const intent = this.pendingPlan ? 'purchase' : (this.activeIntent || 'restore');
             const ownerUserId = this.currentUserId || null;
 
@@ -451,12 +460,10 @@ class IAPService {
 
         // 3. Initialize Store
         this.initializationError = null;
-        this.initializationPromise = withTimeout(
-            Promise.resolve().then(() => store.initialize()),
-            IAP_INITIALIZATION_TIMEOUT_MS,
-            'Google Play Billing initialization timed out.'
-        )
-            .then(async (errors: any[]) => {
+        // Keep observing the real initialization after the UI's bounded wait
+        // expires, so a late Play connection can still enable purchases.
+        const storeInitialization = Promise.resolve().then(() => store.initialize())
+            .then((errors: any[]) => {
                 if (Array.isArray(errors) && errors.length > 0) {
                     this.isInitialized = false;
                     this.initializationError = getStoreInitializationMessage(errors.find(error => /class not found/i.test(getIapErrorMessage(error, ''))) || errors[0]);
@@ -473,17 +480,17 @@ class IAPService {
                 }
 
                 this.isInitialized = true;
+                this.initializationError = null;
                 console.log("IAP: Store initialized");
-                try {
-                    await store.update();
-                } catch (error) {
-                    logIapJson("IAP: Initial store refresh failed", {
-                        code: (error as any)?.code || null,
-                        message: getIapErrorMessage(error, "Store refresh failed"),
-                    });
-                }
+                // initialize() already loads products and receipts. update() is
+                // a later metadata refresh, not part of store startup.
                 this.products = Array.isArray(store.products) ? store.products : [];
-            })
+            });
+        this.initializationPromise = withTimeout(
+            storeInitialization,
+            IAP_INITIALIZATION_TIMEOUT_MS,
+            'Google Play Billing initialization timed out.'
+        )
             .catch((error: any) => {
                 this.isInitialized = false;
                 this.initializationError = getStoreInitializationMessage(error);
@@ -515,6 +522,11 @@ class IAPService {
 
         this.purchaseInProgress = true;
 
+        // Startup can run before Cordova has exposed the purchase global.
+        // Retry that deferred setup when the user actually opens billing.
+        if (!this.initializationPromise) {
+            this.initialize(this.onSuccess || (() => false), this.onError || (() => {}));
+        }
         await this.initializationPromise;
         if (!this.isInitialized) {
             this.purchaseInProgress = false;
@@ -639,6 +651,9 @@ class IAPService {
 
         const CdvPurchase = getCdvPurchase();
         try {
+            if (!this.initializationPromise) {
+                this.initialize(this.onSuccess || (() => false), this.onError || (() => {}));
+            }
             await this.initializationPromise;
             if (!this.isInitialized) {
                 this.onError?.(this.initializationError || 'Google Play Billing is not ready. Please restart the app.');

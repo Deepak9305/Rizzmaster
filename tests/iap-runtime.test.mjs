@@ -6,8 +6,11 @@ import ts from 'typescript';
 
 function setup(options = {}) {
   const calls = [], errors = [];
-  const listeners = {};
-  for (const event of ['approved', 'verified', 'finished', 'productUpdated', 'updated']) listeners[event] = () => listeners;
+  const listeners = {}, callbacks = {};
+  for (const event of ['approved', 'verified', 'finished', 'productUpdated', 'updated']) listeners[event] = callback => {
+    callbacks[event] = callback;
+    return listeners;
+  };
   const product = { id: 'premium', canPurchase: true, offers: ['weekly', 'monthly'].map(plan => ({
     id: `premium@${plan}`, order: async () => { calls.push(plan); },
   })) };
@@ -26,7 +29,7 @@ function setup(options = {}) {
     require(name) {
       if (name === 'cordova-plugin-purchase') return {};
       if (name === '@capacitor/core') return { Capacitor: { getPlatform: () => 'android' } };
-      if (name === './nativeCapabilities') return { canUseNativeIap: () => true };
+      if (name === './nativeCapabilities') return { canUseNativeIap: () => options.nativeReady !== false };
       if (name === './runtimeConfig') return { getApiUrl: path => path };
       if (name === './supabaseClient') return { supabase: null };
       throw new Error(`Unexpected import ${name}`);
@@ -39,7 +42,7 @@ function setup(options = {}) {
   const service = context.exports.default;
   service.getAccountBinding = async () => { calls.push('accountBinding'); return 'binding'; };
   service.initialize(() => false, message => errors.push(message));
-  return { service, store, calls, errors };
+  return { service, store, calls, errors, callbacks };
 }
 
 test('missing plugin initialization blocks purchase and restore before account binding', async () => {
@@ -91,10 +94,46 @@ test('restore reports a returned store error instead of silently accepting it', 
 });
 
 test('billing initialization timeout does not leave purchase waiting forever', async () => {
-  const { service, errors } = setup({ initialize: () => new Promise(() => {}) });
+  let finish;
+  const { service, errors, calls } = setup({ initialize: () => new Promise(resolve => { finish = resolve; }) });
   const purchase = service.purchase('WEEKLY', 'account');
   await new Promise(resolve => setTimeout(resolve, 15_100));
   assert.equal(await purchase, false);
   assert.equal(service.purchaseInProgress, false);
   assert.match(errors.at(-1), /Google Play Billing could not connect/);
+  finish([]);
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(service.isInitialized, true);
+  assert.equal(service.initializationError, null);
+  assert.equal(await service.purchase('MONTHLY', 'account'), true);
+  assert.ok(calls.includes('monthly'));
+});
+
+test('billing starts on demand if Cordova was not ready at app startup', async () => {
+  const options = { nativeReady: false };
+  const { service, calls } = setup(options);
+  assert.equal(service.initializationPromise, null);
+  options.nativeReady = true;
+  assert.equal(await service.purchase('WEEKLY', 'account'), true);
+  assert.ok(calls.includes('weekly'));
+});
+
+test('restore normalizes library offer IDs and uses the native source receipt', async () => {
+  const { service, callbacks } = setup();
+  await service.initializationPromise;
+  await service.restore('account');
+  const sourceReceipt = { transactions: [{
+    transactionId: 'order-123', products: [{ id: 'premium', offerId: 'premium@monthly@trial' }],
+    nativePurchase: { purchaseToken: 'play-token' },
+  }] };
+  let purchaseData, finished = false;
+  service.onSuccess = async data => { purchaseData = data; return true; };
+  await callbacks.verified({ sourceReceipt, finish: async () => { finished = true; } });
+  assert.equal(purchaseData.intent, 'restore');
+  assert.equal(purchaseData.productId, 'premium');
+  assert.equal(purchaseData.basePlanId, 'monthly');
+  assert.equal(purchaseData.purchaseToken, 'play-token');
+  assert.equal(purchaseData.transactionId, 'order-123');
+  assert.equal(purchaseData.rawReceipt, sourceReceipt);
+  assert.equal(finished, true);
 });
