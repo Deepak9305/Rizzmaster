@@ -16,23 +16,44 @@ const getAccessToken = async () => {
 };
 
 const request = async <T>(path: string, init: RequestInit = {}) => {
-  const token = await getAccessToken();
-  const response = await fetch(getApiUrl(path), {
-    ...init,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      ...(init.body ? { 'Content-Type': 'application/json' } : {}),
-      ...init.headers,
-    },
-  });
-  const payload = await response.json().catch(() => null);
-  if (!response.ok) {
-    const error = new Error(payload?.error || 'Rewarded ad request failed.') as RewardedAdApiError;
-    error.code = payload?.code;
-    error.status = response.status;
-    throw error;
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      (async () => {
+        const token = await getAccessToken();
+        if (controller.signal.aborted) throw new Error('Reward request expired.');
+        const response = await fetch(getApiUrl(path), {
+          ...init,
+          signal: controller.signal,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            ...(init.body ? { 'Content-Type': 'application/json' } : {}),
+            ...init.headers,
+          },
+        });
+        const payload = await response.json().catch(() => null);
+        if (!response.ok || !payload) {
+          const error = new Error(payload?.error || 'Rewarded ad request failed.') as RewardedAdApiError;
+          error.code = payload?.code;
+          error.status = response.ok ? 502 : response.status;
+          throw error;
+        }
+        return payload as T;
+      })(),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => {
+          const error = new Error('Reward verification took too long. Please try again.') as RewardedAdApiError;
+          error.code = 'REWARDED_AD_TIMEOUT';
+          error.status = 0;
+          reject(error);
+          controller.abort();
+        }, 15_000);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
   }
-  return payload as T;
 };
 
 export const createRewardedAdAttempt = (requiredCredits: 1 | 2) => request<{

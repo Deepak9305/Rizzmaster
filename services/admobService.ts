@@ -29,6 +29,7 @@ export const AdMobService = {
     rewardVideoReady: false,
     rewardVideoPreparing: false,
     isRewardVideoShowing: false,
+    rewardVideoDisplayStarted: false,
     // Internal Promise tracking to avoid redundant fetches and handle race conditions
     initPromise: null as Promise<boolean> | null,
     rewardVideoPromise: null as Promise<boolean> | null,
@@ -250,14 +251,14 @@ export const AdMobService = {
         if (!canUseNativeAdMob()) return false;
 
         const ssvKey = getRewardVideoSsvKey(ssv);
-        if (this.isRewardVideoShowing && (this.activeRewardVideoAdId !== adId || this.activeRewardVideoSsvKey !== ssvKey)) return false;
+        if (this.isRewardVideoShowing && (this.rewardVideoDisplayStarted || this.activeRewardVideoAdId !== adId || this.activeRewardVideoSsvKey !== ssvKey)) return false;
 
         const initialized = await this.ensureInitialized('Reward video prepare');
         if (!initialized) {
             this.invalidateRewardVideo();
             return false;
         }
-        if (this.isRewardVideoShowing && (this.activeRewardVideoAdId !== adId || this.activeRewardVideoSsvKey !== ssvKey)) return false;
+        if (this.isRewardVideoShowing && (this.rewardVideoDisplayStarted || this.activeRewardVideoAdId !== adId || this.activeRewardVideoSsvKey !== ssvKey)) return false;
 
         if (this.rewardVideoPromise) {
             const pending = this.rewardVideoPromise;
@@ -321,12 +322,14 @@ export const AdMobService = {
         if (!canUseNativeAdMob()) return false;
         if (this.isRewardVideoShowing) return false;
         this.isRewardVideoShowing = true;
+        this.rewardVideoDisplayStarted = false;
         this.activeRewardVideoAdId = adId;
         this.activeRewardVideoSsvKey = getRewardVideoSsvKey(ssv);
 
         const initialized = await this.ensureInitialized('Reward video show');
         if (!initialized) {
             this.isRewardVideoShowing = false;
+            this.rewardVideoDisplayStarted = false;
             this.activeRewardVideoAdId = null;
             this.activeRewardVideoSsvKey = '';
             this.invalidateRewardVideo();
@@ -338,6 +341,9 @@ export const AdMobService = {
             return await new Promise<boolean>((resolve) => {
                 let resolved = false;
                 let earned = false;
+                let dismissed = false;
+                let showRequested = false;
+                let showed = false;
                 let showedListener: any = null;
                 let rewardListener: any = null;
                 let dismissListener: any = null;
@@ -358,6 +364,7 @@ export const AdMobService = {
                     this.rewardVideoReady = false;
                     this.rewardVideoPreparedAt = 0;
                     this.isRewardVideoShowing = false;
+                    this.rewardVideoDisplayStarted = false;
                     this.activeRewardVideoAdId = null;
                     this.activeRewardVideoSsvKey = '';
                     console.log(`[AdMob] Reward video finished. Success: ${success}`);
@@ -366,7 +373,7 @@ export const AdMobService = {
 
                 const register = async (event: any, callback: (info: any) => void) => {
                     if (resolved) return null;
-                    const listener = await AdMob.addListener(event, info => { if (!resolved) callback(info); });
+                    const listener = await AdMob.addListener(event, info => { if (!resolved && showRequested) callback(info); });
                     if (resolved) {
                         this.removeListener(listener);
                         return null;
@@ -377,13 +384,15 @@ export const AdMobService = {
                 void (async () => {
                     try {
                         showedListener = await register(RewardAdPluginEvents.Showed, () => {
+                            if (showed) return;
+                            showed = true;
                             console.log('[AdMob] Reward video showing, switching to dismissal watchdog');
                             if (timeout) clearTimeout(timeout);
                             timeout = setTimeout(() => {
                                 console.warn('[AdMob] Reward video dismiss event never arrived after show; releasing state.');
                                 cleanupAndResolve(earned);
                             }, this.REWARDED_POST_SHOW_TIMEOUT_MS);
-                            if (onShow) onShow();
+                            try { onShow?.(); } catch (error) { console.warn('[AdMob] Reward video show observer failed:', error); }
                         });
                         if (resolved) return;
 
@@ -392,15 +401,21 @@ export const AdMobService = {
                                 amount: Number.isFinite(Number(info?.amount)) ? Number(info.amount) : null,
                                 type: typeof info?.type === 'string' ? info.type : null,
                             });
-                            earned = didEarnReward(info);
-                            if (!earned) {
+                            const validReward = didEarnReward(info);
+                            earned ||= validReward;
+                            if (!validReward) {
                                 console.warn('[AdMob] Reward video callback did not include a positive reward amount.');
                             }
+                            if (dismissed && earned) cleanupAndResolve(true);
                         });
                         if (resolved) return;
 
                         dismissListener = await register(RewardAdPluginEvents.Dismissed, () => {
                             console.log('[AdMob] Reward video dismissed');
+                            if (dismissed) return;
+                            dismissed = true;
+                            if (earned) { cleanupAndResolve(true); return; }
+                            if (timeout) clearTimeout(timeout);
                             // Some mediation adapters can dispatch dismiss
                             // before the native reward callback. Give the
                             // plugin result/event a brief chance to arrive.
@@ -436,6 +451,10 @@ export const AdMobService = {
                         }
 
                         try {
+                            showRequested = true;
+                            this.rewardVideoDisplayStarted = true;
+                            this.rewardVideoReady = false;
+                            this.rewardVideoPreparedAt = 0;
                             // The plugin resolves this call from the native
                             // onUserEarnedReward callback. Use its result as
                             // the source of truth if the JS event delivery is
@@ -445,7 +464,9 @@ export const AdMobService = {
                             if (didEarnReward(rewardItem)) {
                                 earned = true;
                             }
-                            cleanupAndResolve(earned);
+                            // Earning a reward is not dismissal. Keep the show
+                            // lock and listeners until the fullscreen ad closes.
+                            if (dismissed && earned) cleanupAndResolve(true);
                         } catch (error) {
                             if (resolved) return;
                             console.error('AdMob showRewardVideoAd threw:', error);
@@ -463,6 +484,7 @@ export const AdMobService = {
         } catch (error) {
             console.error('[AdMob] Critical Reward Error', error);
             this.isRewardVideoShowing = false;
+            this.rewardVideoDisplayStarted = false;
             this.activeRewardVideoAdId = null;
             this.activeRewardVideoSsvKey = '';
             this.invalidateRewardVideo();

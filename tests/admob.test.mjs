@@ -51,12 +51,22 @@ function setup(options = {}) {
       calls.push('reward-request');
       if (options.prepareReward) await options.prepareReward(params);
     },
-    showRewardVideoAd: async () => { calls.push('reward-show'); return options.showReward ? options.showReward() : { amount: 5 }; },
+    showRewardVideoAd: async () => {
+      calls.push('reward-show');
+      listeners.get(events.Showed)?.();
+      const result = options.showReward ? await options.showReward() : { amount: 5 };
+      listeners.get(events.Rewarded)?.(result);
+      if (!options.manualDismiss) setTimeout(() => listeners.get(events.Dismissed)?.(), 0);
+      return result;
+    },
     showPrivacyOptionsForm: async () => options.privacyForm?.(),
     addListener: async (event, listener) => {
-      if (options.listener) return options.listener(event, listener);
+      const handle = options.listener ? await options.listener(event, listener) : null;
       listeners.set(event, listener);
-      return { remove: async () => { listeners.delete(event); } };
+      return { remove: async () => {
+        try { await handle?.remove(); }
+        finally { if (listeners.get(event) === listener) listeners.delete(event); }
+      } };
     },
   };
   const { AdMobService: service } = loadTs('../services/admobService.ts', {
@@ -72,6 +82,7 @@ function setup(options = {}) {
   service.NATIVE_CONSENT_TIMEOUT_MS = 10;
   service.INIT_WAIT_TIMEOUT_MS = 250;
   service.REWARDED_PREPARE_TIMEOUT_MS = 20;
+  service.REWARDED_POST_SHOW_TIMEOUT_MS = 250;
   return { service, calls, listeners, plugin, events };
 }
 
@@ -185,6 +196,7 @@ test('a late show rejection cannot invalidate a newer rewarded cache', async () 
   let rejectOldShow;
   const { service } = setup({ showReward: () => new Promise((_, reject) => { rejectOldShow = reject; }) });
   service.REWARDED_SHOW_TIMEOUT_MS = 15;
+  service.REWARDED_POST_SHOW_TIMEOUT_MS = 15;
   assert.equal(await service.showRewardVideo('reward'), false);
   const newer = { userId: 'user', customData: 'newer' };
   assert.equal(await service.prepareRewardVideo('reward', newer), true);
@@ -202,6 +214,67 @@ test('a stale global load failure cannot cancel a currently showing rewarded ad'
   assert.equal(service.isRewardVideoShowing, true);
   finishShow({ amount: 5 });
   assert.equal(await show, true);
+});
+
+test('earning a reward keeps the show locked until dismissal and prevents cache reuse', async () => {
+  const { service, calls, listeners, events } = setup({ manualDismiss: true });
+  let settled = false;
+  const show = service.showRewardVideo('reward').then(result => { settled = true; return result; });
+  while (!calls.includes('reward-show')) await delay(0);
+  await delay(0);
+  assert.equal(settled, false);
+  assert.equal(service.isRewardVideoShowing, true);
+  assert.equal(service.hasFreshRewardVideo('reward'), false);
+  assert.equal(await service.showRewardVideo('reward'), false);
+  assert.equal(await service.prepareRewardVideo('reward'), false);
+  assert.equal(calls.filter(call => call === 'reward-request').length, 1);
+  listeners.get(events.Dismissed)();
+  assert.equal(await show, true);
+  assert.equal(service.isRewardVideoShowing, false);
+  assert.equal(listeners.size, 0);
+  assert.equal(await service.prepareRewardVideo('reward'), true);
+  assert.equal(calls.filter(call => call === 'reward-request').length, 2);
+});
+
+test('dismissal before a delayed valid reward callback still grants the earned result', async () => {
+  const { service, calls, listeners, events } = setup({ showReward: pending, manualDismiss: true });
+  service.REWARDED_DISMISS_GRACE_MS = 100;
+  const show = service.showRewardVideo('reward');
+  while (!calls.includes('reward-show')) await delay(0);
+  listeners.get(events.Dismissed)();
+  await delay(0);
+  listeners.get(events.Rewarded)({ amount: 5 });
+  assert.equal(await show, true);
+  assert.equal(listeners.size, 0);
+});
+
+test('closing without a reward releases the show and does not grant credits', async () => {
+  const { service, calls, listeners, events } = setup({ showReward: pending, manualDismiss: true });
+  service.REWARDED_DISMISS_GRACE_MS = 5;
+  const show = service.showRewardVideo('reward');
+  while (!calls.includes('reward-show')) await delay(0);
+  listeners.get(events.Dismissed)();
+  assert.equal(await show, false);
+  assert.equal(service.isRewardVideoShowing, false);
+  assert.equal(listeners.size, 0);
+});
+
+test('an empty duplicate reward callback cannot undo an already earned reward', async () => {
+  const { service, calls, listeners, events } = setup({ manualDismiss: true });
+  const show = service.showRewardVideo('reward');
+  while (!calls.includes('reward-show')) await delay(0);
+  await delay(0);
+  listeners.get(events.Rewarded)({ amount: 0 });
+  listeners.get(events.Dismissed)();
+  assert.equal(await show, true);
+});
+
+test('a missing dismiss callback releases an earned ad through the bounded watchdog', async () => {
+  const { service, listeners } = setup({ manualDismiss: true });
+  service.REWARDED_POST_SHOW_TIMEOUT_MS = 10;
+  assert.equal(await service.showRewardVideo('reward'), true);
+  assert.equal(service.isRewardVideoShowing, false);
+  assert.equal(listeners.size, 0);
 });
 
 test('form failure allows requests only when current native UMP permission allows them', async () => {
@@ -406,7 +479,11 @@ function setupBanner(options = {}) {
   const bannerEvents = { SizeChanged: 'banner-size', Loaded: 'banner-loaded', FailedToLoad: 'banner-failed', AdImpression: 'banner-impression' };
   plugin.addListener = async (event, callback) => {
     callbacks.set(event, callback);
-    return { remove: async () => callbacks.delete(event) };
+    if (options.bannerListener) await options.bannerListener(event);
+    return { remove: async () => {
+      try { await options.removeBannerListener?.(event); }
+      finally { callbacks.delete(event); }
+    } };
   };
   plugin.showBanner = async params => {
     assert.equal(slots.at(-1), 50, 'Top reservation must match the native banner height');
@@ -424,7 +501,10 @@ function setupBanner(options = {}) {
   };
   plugin.hideBanner = async () => calls.push('banner-hide');
   plugin.resumeBanner = async () => calls.push('banner-resume');
-  plugin.removeBanner = async () => calls.push('banner-remove');
+  plugin.removeBanner = async () => {
+    calls.push('banner-remove');
+    await options.removeBanner?.();
+  };
   const { NativeBannerController } = loadTs('../services/nativeBannerService.ts', {
     '@capacitor-community/admob': {
       AdMob: plugin, BannerAdPluginEvents: bannerEvents,
@@ -537,6 +617,49 @@ test('a banner whose load callback never arrives is removed before retry', async
   await controller.setMode('visible');
   assert.equal(calls.at(-1), 'banner-remove');
   assert.equal([...timers.values()][0].ms, 30_000);
+});
+
+test('an unfinished banner load pauses its watchdog while hidden and reuses its request on return', async t => {
+  const { controller, calls, timers, callbacks, bannerEvents } = setupBanner({ noLoad: true });
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  assert.equal(timers.size, 1);
+  await controller.setMode('hidden');
+  assert.equal(timers.size, 0, 'Hidden time must not count as a stalled visible load');
+  await controller.setMode('visible');
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+  assert.equal(timers.size, 1);
+  callbacks.get(bannerEvents.Loaded)();
+  assert.equal(timers.size, 0);
+});
+
+test('a banner that loads while hidden resumes without starting another load watchdog', async t => {
+  const { controller, calls, timers, callbacks, bannerEvents } = setupBanner({ noLoad: true });
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  await controller.setMode('hidden');
+  callbacks.get(bannerEvents.Loaded)();
+  await controller.setMode('visible');
+  assert.equal(timers.size, 0);
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+});
+
+test('stalled native listener cleanup cannot wedge the banner retry queue', async t => {
+  let fail = true;
+  const { controller, timers, calls } = setupBanner({
+    bannerTimeout: 5,
+    showBanner: () => { if (fail) throw new Error('Native creation failed'); },
+    removeBannerListener: pending,
+  });
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  const retry = [...timers.values()].find(timer => timer.ms === 30_000);
+  assert.ok(retry, 'Cleanup must settle and schedule recovery');
+  fail = false;
+  timers.clear();
+  retry.callback();
+  await controller.setMode('visible');
+  assert.equal(calls.filter(call => call === 'banner-request').length, 2);
 });
 
 test('browser sessions never reserve space or call native banner APIs', async () => {

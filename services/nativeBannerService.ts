@@ -15,6 +15,7 @@ export class NativeBannerController {
     private desired: BannerMode = 'removed';
     private attached = false;
     private visible = false;
+    private loaded = false;
     private disposed = false;
     private listeners: PluginListenerHandle[] = [];
     private running: Promise<void> | null = null;
@@ -45,7 +46,10 @@ export class NativeBannerController {
     setMode(mode: BannerMode): Promise<void> {
         if (this.disposed) return this.running ?? Promise.resolve();
         this.desired = mode;
-        if (mode !== 'visible') this.clearRetry();
+        if (mode !== 'visible') {
+            this.clearRetry();
+            this.clearLoadTimer();
+        }
         return this.reconcile();
     }
 
@@ -63,6 +67,24 @@ export class NativeBannerController {
         this.loadTimer = null;
     }
 
+    private watchLoad() {
+        if (this.loaded || !this.attached || this.desired !== 'visible' || this.loadTimer) return;
+        const version = this.requestVersion;
+        this.loadTimer = setTimeout(() => {
+            if (version !== this.requestVersion || this.desired !== 'visible') return;
+            this.loadTimer = null;
+            this.stalled = true;
+            void this.reconcile();
+        }, 45_000);
+    }
+
+    private async cleanupListeners() {
+        const listeners = this.listeners.splice(0);
+        await Promise.allSettled(listeners.map(listener => this.nativeCall(
+            'listener removal', Promise.resolve().then(() => listener.remove()),
+        )));
+    }
+
     private scheduleRetry() {
         if (this.disposed || this.desired !== 'visible' || this.retryTimer) return;
         // No tight no-fill loops and no manual refreshing of a loaded ad.
@@ -77,16 +99,20 @@ export class NativeBannerController {
         if (this.listeners.length) return;
         const registrations = [
             () => AdMob.addListener(BannerAdPluginEvents.Loaded, () => {
+                if (!this.attached || this.disposed) return;
+                this.loaded = true;
                 this.clearLoadTimer();
                 this.stalled = false;
                 this.retryCount = 0;
                 console.log('[AdMob] Top banner loaded.');
             }),
             () => AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (error: unknown) => {
+                if (!this.attached || this.disposed) return;
                 this.clearLoadTimer();
                 ++this.requestVersion;
                 this.attached = false; // Android destroys a failed banner itself.
                 this.visible = false;
+                this.loaded = false;
                 this.positionDirty = false;
                 this.reserve(0);
                 console.warn('[AdMob] Top banner failed to load:', error);
@@ -103,7 +129,7 @@ export class NativeBannerController {
                 this.listeners.push(listener);
             } catch (error) {
                 expired = true;
-                void pending.then(listener => { if (expired) void listener.remove(); }).catch(() => {});
+                void pending.then(listener => { if (expired) AdMobService.removeListener(listener); }).catch(() => {});
                 throw error;
             }
         }
@@ -114,8 +140,7 @@ export class NativeBannerController {
         this.running = this.drain().catch(async error => {
             console.warn('[AdMob] Top banner operation failed:', error);
             await this.remove().catch(cleanupError => console.warn('[AdMob] Banner cleanup failed:', cleanupError));
-            await Promise.allSettled(this.listeners.map(listener => listener.remove()));
-            this.listeners = [];
+            await this.cleanupListeners();
             this.scheduleRetry();
         }).finally(() => { this.running = null; });
         return this.running;
@@ -127,11 +152,12 @@ export class NativeBannerController {
         ++this.requestVersion;
         // Removal is harmless even if no ad is attached, and also cleans up a
         // native view whose bridge show response did not complete normally.
-        await this.nativeCall('removal', AdMob.removeBanner());
         this.attached = false;
         this.visible = false;
+        this.loaded = false;
         this.positionDirty = false;
         this.reserve(0);
+        await this.nativeCall('removal', AdMob.removeBanner());
     }
 
     private async drain() {
@@ -147,6 +173,7 @@ export class NativeBannerController {
             if (mode === 'removed') {
                 await this.remove();
             } else if (mode === 'hidden') {
+                this.clearLoadTimer();
                 if (this.attached && this.visible) await this.nativeCall('hide', AdMob.hideBanner());
                 this.visible = false;
                 this.reserve(0);
@@ -191,16 +218,12 @@ export class NativeBannerController {
                     }
                 } else {
                     this.reserve(getBannerSlotHeight());
-                    const version = ++this.requestVersion;
+                    ++this.requestVersion;
                     this.attached = true;
                     this.visible = true;
+                    this.loaded = false;
                     try {
-                        this.loadTimer = setTimeout(() => {
-                            if (version !== this.requestVersion) return;
-                            this.loadTimer = null;
-                            this.stalled = true;
-                            void this.reconcile();
-                        }, 45_000);
+                        this.watchLoad();
                         console.log('[AdMob] Requesting top banner.', { adId: this.adId });
                         await this.nativeCall('show', AdMob.showBanner({
                             adId: this.adId,
@@ -217,6 +240,7 @@ export class NativeBannerController {
                         throw error;
                     }
                 }
+                this.watchLoad();
             }
             if (mode === this.desired && (mode !== 'visible' || !this.positionDirty)) return;
         }
@@ -228,7 +252,6 @@ export class NativeBannerController {
         this.clearRetry();
         await this.reconcile();
         this.clearLoadTimer();
-        await Promise.allSettled(this.listeners.map(listener => listener.remove()));
-        this.listeners = [];
+        await this.cleanupListeners();
     }
 }

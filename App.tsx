@@ -34,7 +34,7 @@ import {
 } from './services/nativeCapabilities';
 import ForceUpdateGate from './components/ForceUpdateGate';
 import { loadUpdateGateConfig, type UpdateGateConfig } from './services/updateGateService';
-import { completeRewardedAdAttempt, createRewardedAdAttempt, getRewardedAdStatus, type RewardedAdStatus } from './services/rewardedAdService';
+import { createRewardedAdAttempt, getRewardedAdStatus, type RewardedAdStatus } from './services/rewardedAdService';
 
 // Lazy Load Heavy Components / Modals
 const PremiumModal = lazy(() => import('./components/PremiumModal'));
@@ -54,6 +54,7 @@ const SILENT_PREMIUM_RESTORE_WAIT_MS = 45000;
 const SILENT_PREMIUM_RESTORE_RETRY_MS = 60000;
 const SILENT_PREMIUM_RESTORE_MAX_ATTEMPTS = 2;
 const REWARDED_STATUS_POLL_ATTEMPTS = 20;
+const REWARDED_STATUS_POLL_WINDOW_MS = 30_000;
 
 type RewardedAdPreparationContext = {
   key: string;
@@ -406,6 +407,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     promise: Promise<RewardedAdPreparationContext>;
   } | null>(null);
   const rewardedAdInProgressRef = useRef(false);
+  const rewardedAdIdentityVersionRef = useRef(0);
   const loadingRef = useRef(false);
   const savedItemsRef = useRef<SavedItem[]>([]);
 
@@ -563,6 +565,17 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   useEffect(() => {
     isGuestRef.current = isGuest;
   }, [isGuest]);
+
+  useEffect(() => {
+    ++rewardedAdIdentityVersionRef.current;
+    rewardedAdPreparationContextRef.current = null;
+    rewardedAdPreparationPromiseRef.current = null;
+    rewardedAdAttemptRef.current = null;
+    rewardedAdInProgressRef.current = false;
+    AdMobService.invalidateRewardVideo();
+    setRewardedAdStatus('idle');
+    setIsRewardedAdLoading(false);
+  }, [profile?.id, isGuest]);
 
   useEffect(() => {
     if (profile?.id) {
@@ -1633,19 +1646,22 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     const currentProfile = profileRef.current;
     const requiredCredits = requiredCreditsOverride ?? rewardedAdRequiredCredits;
     const openedFromPremiumModal = showPremiumModal;
+    const pendingAttemptId = rewardedAdStatus === 'pending' ? rewardedAdAttemptRef.current : null;
     if (
       !currentProfile ||
       currentProfile.is_premium ||
       (currentProfile.credits || 0) >= requiredCredits ||
       rewardedAdInProgressRef.current ||
-      rewardedAdStatus === 'pending'
+      (rewardedAdStatus === 'pending' && !pendingAttemptId)
     ) {
       return;
     }
 
     rewardedAdInProgressRef.current = true;
     setIsRewardedAdLoading(true);
-    setRewardedAdStatus('loading');
+    setRewardedAdStatus(pendingAttemptId ? 'pending' : 'loading');
+    const identityVersion = rewardedAdIdentityVersionRef.current;
+    const stillSameUser = () => rewardedAdIdentityVersionRef.current === identityVersion && profileRef.current?.id === currentProfile.id;
 
     try {
       if (!canUseNativeAdMob()) {
@@ -1654,51 +1670,55 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         return;
       }
 
-      const preparationContext = await getRewardedAdPreparationContext(currentProfile, requiredCredits);
-      rewardedAdAttemptRef.current = preparationContext.attemptId;
-      const earned = await AdMobService.showRewardVideo(getAdId('REWARD'), preparationContext.ssv);
-      if (!earned) {
-        setRewardedAdStatus('error');
-        showToast('The rewarded ad could not be completed. No credits were added.', 'error');
-        return;
-      }
-
-      if (rewardedAdPreparationContextRef.current?.key === preparationContext.key) {
-        rewardedAdPreparationContextRef.current = null;
-      }
-
-      if (isGuest || currentProfile.id === 'guest_user') {
-        updateCredits((previous) => previous + 5);
-        rewardedAdAttemptRef.current = null;
-        setRewardedAdStatus('success');
-        setShowCreditsExhaustedModal(false);
-        showToast('5 credits added. You can continue generating.', 'success');
-        if (openedFromPremiumModal) handleBackNavigation();
-        return;
-      }
-
-      const attemptId = preparationContext.attemptId;
+      let attemptId = pendingAttemptId;
       if (!attemptId) {
-        setRewardedAdStatus('error');
-        showToast('Reward verification could not be started. No credits were added.', 'error');
-        return;
+        const preparationContext = await getRewardedAdPreparationContext(currentProfile, requiredCredits);
+        if (!stillSameUser()) return;
+        rewardedAdAttemptRef.current = preparationContext.attemptId;
+        const earned = await AdMobService.showRewardVideo(getAdId('REWARD'), preparationContext.ssv);
+        if (!stillSameUser()) return;
+        if (!earned) {
+          setRewardedAdStatus('error');
+          showToast('The rewarded ad could not be completed. No credits were added.', 'error');
+          return;
+        }
+
+        if (rewardedAdPreparationContextRef.current?.key === preparationContext.key) {
+          rewardedAdPreparationContextRef.current = null;
+        }
+
+        if (isGuest || currentProfile.id === 'guest_user') {
+          updateCredits((previous) => previous + 5);
+          rewardedAdAttemptRef.current = null;
+          setRewardedAdStatus('success');
+          setShowCreditsExhaustedModal(false);
+          showToast('5 credits added. You can continue generating.', 'success');
+          if (openedFromPremiumModal) handleBackNavigation();
+          return;
+        }
+
+        attemptId = preparationContext.attemptId;
+        if (!attemptId) {
+          setRewardedAdStatus('error');
+          showToast('Reward verification could not be started. No credits were added.', 'error');
+          return;
+        }
       }
 
       setRewardedAdStatus('pending');
       let latestStatus: RewardedAdStatus = 'pending';
+      const verificationDeadline = Date.now() + REWARDED_STATUS_POLL_WINDOW_MS;
       for (let poll = 0; poll < REWARDED_STATUS_POLL_ATTEMPTS; poll += 1) {
+        if (Date.now() >= verificationDeadline) break;
         await wait(poll === 0 ? 250 : 1500);
+        if (!stillSameUser()) return;
+        if (Date.now() >= verificationDeadline) break;
 
         let status;
         try {
-          // Submit native completion immediately after the SDK reward event,
-          // then retry while polling in case the first request races the
-          // server's minimum-watch-time check or hits a transient failure.
-          const shouldSubmitNativeCompletion = poll === 0 || poll === 4 || poll === 9;
-          status = shouldSubmitNativeCompletion
-            ? await completeRewardedAdAttempt(attemptId)
-            : await getRewardedAdStatus(attemptId);
+          status = await getRewardedAdStatus(attemptId);
         } catch (pollError) {
+          if (!stillSameUser()) return;
           const responseStatus = Number((pollError as { status?: number })?.status || 0);
           if (responseStatus === 409 || responseStatus >= 500 || responseStatus === 0) {
             console.warn('[AdMob] Reward confirmation retry scheduled.', { poll, responseStatus });
@@ -1706,6 +1726,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
           }
           throw pollError;
         }
+        if (!stillSameUser()) return;
         latestStatus = status.status;
 
         if (status.status === 'granted') {
@@ -1715,13 +1736,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
             profileRef.current = creditedProfile;
             setProfile(creditedProfile);
           }
-          const syncedProfile = await syncProfile();
+          rewardedAdAttemptRef.current = null;
           setRewardedAdStatus('success');
           setShowCreditsExhaustedModal(false);
-          showToast(
-            syncedProfile ? '5 credits added. You can continue generating.' : '5 credits added. Your balance is ready.',
-            'success',
-          );
+          showToast('5 credits added. You can continue generating.', 'success');
           if (openedFromPremiumModal) handleBackNavigation();
           return;
         }
@@ -1732,18 +1750,22 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         setRewardedAdStatus('pending');
         showToast('Reward verification is still pending. Your credits will appear shortly.', 'info');
       } else {
+        rewardedAdAttemptRef.current = null;
         setRewardedAdStatus('error');
         showToast('The reward could not be verified. No credits were added.', 'error');
       }
     } catch (error) {
+      if (!stillSameUser()) return;
       console.warn('[AdMob] Rewarded credit flow failed:', error instanceof Error ? error.message : error);
       setRewardedAdStatus('error');
       showToast('Reward verification is temporarily unavailable. No credits were added.', 'error');
     } finally {
-      rewardedAdInProgressRef.current = false;
-      setIsRewardedAdLoading(false);
+      if (stillSameUser()) {
+        rewardedAdInProgressRef.current = false;
+        setIsRewardedAdLoading(false);
+      }
     }
-  }, [getRewardedAdPreparationContext, handleBackNavigation, isGuest, rewardedAdRequiredCredits, rewardedAdStatus, showPremiumModal, showToast, syncProfile, updateCredits]);
+  }, [getRewardedAdPreparationContext, handleBackNavigation, isGuest, rewardedAdRequiredCredits, rewardedAdStatus, showPremiumModal, showToast, updateCredits]);
 
   const handleRestorePurchases = useCallback(async () => {
     if (!profileRef.current) return;
@@ -2373,10 +2395,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
               <button
                 type="button"
                 onClick={() => { void handleWatchRewardedAd(rewardedAdRequiredCredits); }}
-                disabled={isRewardedAdLoading || rewardedAdStatus === 'pending'}
+                disabled={isRewardedAdLoading}
                 className="min-h-14 rounded-2xl border border-amber-300/35 bg-amber-300/10 px-3 py-3 text-sm font-extrabold text-amber-100 transition hover:bg-amber-300/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isRewardedAdLoading ? 'Opening ad...' : rewardedAdStatus === 'pending' ? 'Verifying...' : 'Watch ad · +5'}
+                {isRewardedAdLoading ? (rewardedAdStatus === 'pending' ? 'Checking reward...' : 'Opening ad...') : rewardedAdStatus === 'pending' ? 'Check reward' : 'Watch ad · +5'}
               </button>
             </div>
             {rewardedAdStatus === 'pending' ? (
@@ -2752,10 +2774,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                         <button
                           type="button"
                           onClick={() => handleWatchRewardedAd(mode === InputMode.CHAT && image ? 2 : 1)}
-                          disabled={isRewardedAdLoading || rewardedAdStatus === 'pending'}
+                          disabled={isRewardedAdLoading}
                           className="w-full min-h-[58px] rounded-2xl border border-amber-300/30 bg-amber-300/10 px-2 py-3 text-xs font-bold text-amber-200 transition hover:bg-amber-300/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 flex flex-col items-center justify-center"
                         >
-                          <span>{isRewardedAdLoading ? 'Opening ad...' : 'Watch an ad'}</span>
+                          <span>{isRewardedAdLoading ? (rewardedAdStatus === 'pending' ? 'Checking reward...' : 'Opening ad...') : rewardedAdStatus === 'pending' ? 'Check reward' : 'Watch an ad'}</span>
                           <span className="text-[10px] uppercase tracking-wide text-amber-200/70">+5 credits</span>
                         </button>
                       )}
