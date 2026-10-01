@@ -60,6 +60,13 @@ const renderResources = (post) => post.resources?.length
   : '';
 
 const articleInternalLinks = {
+  'restart-conversation-after-long-pause': [
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy texting boundaries' },
+    { slug: 'what-to-text-when-they-stop-replying', label: 'Choose a calm follow-up' },
+    { slug: 'signs-texting-conversation-losing-momentum', label: 'Notice when a conversation loses momentum' },
+    { slug: 'how-to-tell-if-someone-is-flirting-over-text', label: 'Read the signs of interest over text' },
+    { slug: 'what-to-text-after-a-first-date', label: 'Text after a first date' }
+  ],
   'chemistry-vs-compatibility': [
     { slug: 'how-to-connect-emotionally-while-dating', label: 'Build emotional connection while dating' },
     { slug: 'how-to-tell-if-someone-is-emotionally-available', label: 'Recognize emotional availability' },
