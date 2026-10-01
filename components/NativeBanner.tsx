@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
 import type { PluginListenerHandle } from '@capacitor/core';
-import { NativeBannerController, type BannerMode, type BannerDimensions } from '../services/nativeBannerService';
+import { NativeBannerController, type BannerMode, BANNER_WIDTH } from '../services/nativeBannerService';
 import { getBannerPlacement, moveNativeBanner } from '../services/bottomNavigationInset';
 import { canUseNativeAdMob, canUseNativeAppEvents } from '../services/nativeCapabilities';
 
@@ -17,7 +17,6 @@ interface NativeBannerProps {
 // between an old owner's removal and a new owner's show call.
 let controller: NativeBannerController | null = null;
 let consentObserver: ((required: boolean) => void) | null = null;
-let bannerSize: BannerDimensions | undefined;
 let dpToCss = 1;
 
 const applyBannerSize = (width: number, height: number) => {
@@ -64,20 +63,30 @@ const NativeBanner: React.FC<NativeBannerProps> = ({ adId, enabled, suspended, o
         let cancelled = false;
         let frame = 0;
         let version = 0;
+        let lastMeasurement = '';
         const measure = async (measurement: number) => {
             const anchor = document.querySelector('.native-banner-anchor');
             if (!(anchor instanceof HTMLElement) || !anchor.getBoundingClientRect().height) return;
-            const placement = await getBannerPlacement(anchor, bannerSize);
+            const key = `${Math.round(anchor.getBoundingClientRect().top * devicePixelRatio)}:${innerWidth}:${devicePixelRatio}`;
+            // The keyboard changes viewport height, not banner geometry. Avoid
+            // bridge traffic and reconciliation for identical measurements.
+            if (key === lastMeasurement) return;
+            const placement = await getBannerPlacement(anchor);
             if (cancelled || measurement !== version) return;
             document.documentElement.style.setProperty('--native-navigation-inset', `${placement.bottomInsetCss}px`);
             dpToCss = placement.dpToCss;
             applyBannerSize(placement.widthDp, placement.heightDp);
-            controller ??= new NativeBannerController(adId, placement.margin, reserveSlot, required => consentObserver?.(required), moveNativeBanner, size => {
-                bannerSize = size;
-                applyBannerSize(size.width, size.height);
-            });
-            await controller.setTopMargin(placement.margin, placement.widthDp);
-            if (!cancelled && measurement === version) await controller.setMode('visible');
+            if (placement.viewportWidthDp < BANNER_WIDTH) {
+                await controller?.setMode('hidden');
+                lastMeasurement = key;
+                return;
+            }
+            controller ??= new NativeBannerController(adId, placement.margin, reserveSlot, required => consentObserver?.(required), moveNativeBanner);
+            await controller.setTopMargin(placement.margin, placement.viewportWidthDp);
+            if (!cancelled && measurement === version) {
+                await controller.setMode('visible');
+                lastMeasurement = key;
+            }
         };
         const schedule = () => {
             const measurement = ++version;

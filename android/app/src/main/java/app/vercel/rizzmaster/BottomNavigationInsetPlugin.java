@@ -104,16 +104,9 @@ public class BottomNavigationInsetPlugin extends Plugin {
             // once, relative to the actual WebView and native parent origins.
             result.put("webViewOffsetDp", (webViewLocation[1] - parentLocation[1] - getAdMobTopInset()) / density);
             result.put("bottomInsetDp", bottomPx / density);
-            // Match the community AdMob plugin's adaptive size calculation,
-            // before requesting the ad so loading cannot displace the form.
-            int widthDp = (int) (getContext().getResources().getDisplayMetrics().widthPixels / density);
+            // Reserve the supported compact size before requesting the ad.
             AdView adView = getBannerView(parent);
-            AdSize cachedSize = adView == null ? null : adView.getAdSize();
-            // A keyboard may change available height, but an already loaded
-            // banner keeps its size until the window width actually changes.
-            AdSize size = cachedSize != null && cachedSize.getWidth() == widthDp
-                ? cachedSize
-                : AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(getContext(), widthDp);
+            AdSize size = AdSize.BANNER;
             result.put("widthDp", size.getWidth());
             result.put("heightDp", size.getHeight());
             result.put("bannerVisible", adView != null && adView.isShown());
@@ -133,7 +126,23 @@ public class BottomNavigationInsetPlugin extends Plugin {
                 ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) container.getLayoutParams();
                 float density = getContext().getResources().getDisplayMetrics().density;
                 params.topMargin = Math.round(margin * density) + getAdMobTopInset();
+                params.bottomMargin = 0;
+                // A fixed-size ad only needs recentering after a width change,
+                // so reuse it rather than making a new request on rotation.
+                int sideMargin = Math.max(0, (parent.getWidth() - AdSize.BANNER.getWidthInPixels(getContext())) / 2);
+                params.leftMargin = sideMargin;
+                params.rightMargin = sideMargin;
                 container.setLayoutParams(params);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+                    getActivity().getWindow().getDecorView().setOnApplyWindowInsetsListener((view, insets) -> {
+                        params.topMargin = Math.round(margin * density) + insets.getSystemWindowInsetTop();
+                        int centeredMargin = Math.max(0, (parent.getWidth() - AdSize.BANNER.getWidthInPixels(getContext())) / 2);
+                        params.leftMargin = centeredMargin;
+                        params.rightMargin = centeredMargin;
+                        container.setLayoutParams(params);
+                        return insets;
+                    });
+                }
                 updated = true;
             }
             JSObject result = new JSObject();

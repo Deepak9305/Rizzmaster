@@ -80,9 +80,9 @@ html.native-app .web-app-topbar :is(.web-app-logout, .web-app-topbar-button, .we
 
 html.native-app.native-banner-enabled .native-banner-slot {
   display: block;
-  width: var(--native-banner-width, 100vw);
-  margin-inline: calc((100% - var(--native-banner-width, 100vw)) / 2);
-  padding-block: 8px;
+  width: 100vw;
+  margin-inline: calc((100% - 100vw) / 2);
+  padding-block: 4px;
   border-block: 1px solid rgba(255, 255, 255, 0.1);
   background: #090611;
 }
@@ -91,8 +91,8 @@ html.native-app.native-banner-enabled .native-banner-slot {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  height: var(--native-banner-height, 90px);
+  width: min(var(--native-banner-width, 320px), 100%);
+  height: var(--native-banner-height, 50px);
   margin-inline: auto;
   color: rgba(244, 232, 247, 0.3);
   font-size: 10px;

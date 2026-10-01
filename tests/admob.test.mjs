@@ -47,11 +47,11 @@ function setup(options = {}) {
       calls.push('sdk-init');
       if (options.initialize) await options.initialize();
     },
-    prepareRewardVideoAd: async () => {
+    prepareRewardVideoAd: async params => {
       calls.push('reward-request');
-      if (options.prepareReward) await options.prepareReward();
+      if (options.prepareReward) await options.prepareReward(params);
     },
-    showRewardVideoAd: async () => { calls.push('reward-show'); return { amount: 5 }; },
+    showRewardVideoAd: async () => { calls.push('reward-show'); return options.showReward ? options.showReward() : { amount: 5 }; },
     showPrivacyOptionsForm: async () => options.privacyForm?.(),
     addListener: async (event, listener) => {
       if (options.listener) return options.listener(event, listener);
@@ -71,10 +71,8 @@ function setup(options = {}) {
   service.CONSENT_REFRESH_TIMEOUT_MS = 10;
   service.NATIVE_CONSENT_TIMEOUT_MS = 10;
   service.INIT_WAIT_TIMEOUT_MS = 250;
-  service.PREPARE_TIMEOUT_MS = 20;
-  service.REWARDED_POST_PREPARE_SHOW_DELAY_MS = 0;
   service.REWARDED_PREPARE_TIMEOUT_MS = 20;
-  return { service, calls, listeners, plugin };
+  return { service, calls, listeners, plugin, events };
 }
 
 test('concurrent ad requests share consent gathering and SDK initialization', async () => {
@@ -85,6 +83,125 @@ test('concurrent ad requests share consent gathering and SDK initialization', as
   assert.equal(calls.filter(call => call === 'consent-refresh').length, 1);
   assert.equal(calls.filter(call => call === 'sdk-init').length, 1);
   assert.equal(calls.filter(call => call === 'reward-request').length, 1);
+});
+
+test('fresh rewarded ads reuse their verified context, while expired ads reload once', async () => {
+  const { service, calls, listeners } = setup();
+  const ssv = { userId: 'user', customData: 'attempt' };
+  assert.equal(await service.prepareRewardVideo('reward', ssv), true);
+  assert.equal(await service.prepareRewardVideo('reward', { ...ssv }), true);
+  assert.equal(calls.filter(call => call === 'reward-request').length, 1);
+  assert.equal(listeners.size, 0, 'Loading uses its request-specific native promise');
+  service.rewardVideoPreparedAt = Date.now() - 51 * 60 * 1000;
+  assert.equal(await service.prepareRewardVideo('reward', ssv), true);
+  assert.equal(calls.filter(call => call === 'reward-request').length, 2);
+});
+
+test('different reward contexts serialize their native loads and never share a ready cache', async () => {
+  const finishes = [];
+  const requests = [];
+  const { service } = setup({ prepareReward: params => {
+    requests.push(params.ssv.customData);
+    return new Promise(resolve => finishes.push(resolve));
+  } });
+  service.REWARDED_PREPARE_TIMEOUT_MS = 250;
+  const firstSsv = { userId: 'user', customData: 'first' };
+  const secondSsv = { userId: 'user', customData: 'second' };
+  const first = service.prepareRewardVideo('reward', firstSsv);
+  while (!finishes.length) await delay(0);
+  const second = service.prepareRewardVideo('reward', secondSsv);
+  await delay(0);
+  assert.deepEqual(requests, ['first']);
+  finishes[0]();
+  assert.equal(await first, true);
+  while (finishes.length < 2) await delay(0);
+  assert.equal(service.hasFreshRewardVideo('reward', firstSsv), false);
+  assert.equal(service.hasFreshRewardVideo('reward', secondSsv), false);
+  finishes[1]();
+  assert.equal(await second, true);
+  assert.equal(service.hasFreshRewardVideo('reward', secondSsv), true);
+});
+
+test('a stalled rewarded load releases the shared task and a later tap can retry', async () => {
+  let hung = true;
+  const { service, calls } = setup({ prepareReward: () => hung ? pending() : Promise.resolve() });
+  service.REWARDED_PREPARE_TIMEOUT_MS = 5;
+  assert.equal(await service.prepareRewardVideo('reward'), false);
+  assert.equal(service.rewardVideoPromise, null);
+  assert.equal(service.rewardVideoPreparing, false);
+  hung = false;
+  assert.equal(await service.prepareRewardVideo('reward'), true);
+  assert.equal(calls.filter(call => call === 'reward-request').length, 2);
+});
+
+test('a late native load invalidates a newer cache for the same ad unit before reuse', async () => {
+  let finishOld;
+  let requests = 0;
+  const { service } = setup({ prepareReward: () => ++requests === 1 ? new Promise(resolve => { finishOld = resolve; }) : Promise.resolve() });
+  service.REWARDED_PREPARE_TIMEOUT_MS = 5;
+  const newer = { userId: 'user', customData: 'newer' };
+  assert.equal(await service.prepareRewardVideo('reward'), false);
+  assert.equal(await service.prepareRewardVideo('reward', newer), true);
+  finishOld();
+  await delay(0);
+  assert.equal(service.hasFreshRewardVideo('reward', newer), false);
+  assert.equal(await service.prepareRewardVideo('reward', newer), true);
+  assert.equal(requests, 3);
+});
+
+test('a newly loaded rewarded ad is shown on the next turn without an artificial delay', async () => {
+  let finishLoad;
+  const { service, calls, listeners } = setup({ prepareReward: () => new Promise(resolve => { finishLoad = resolve; }) });
+  service.REWARDED_PREPARE_TIMEOUT_MS = 250;
+  const show = service.showRewardVideo('reward');
+  while (!finishLoad) await delay(0);
+  finishLoad();
+  await delay(0);
+  assert.ok(calls.includes('reward-show'));
+  assert.equal(await show, true);
+  assert.equal(listeners.size, 0);
+});
+
+test('a preload for another context cannot replace the ad selected for a show', async () => {
+  let finishShow;
+  const { service, calls } = setup({ showReward: () => new Promise(resolve => { finishShow = resolve; }) });
+  const selected = { userId: 'user', customData: 'selected' };
+  await service.prepareRewardVideo('reward', selected);
+  const show = service.showRewardVideo('reward', selected);
+  while (!finishShow) await delay(0);
+  assert.equal(await service.prepareRewardVideo('reward', { ...selected, customData: 'other' }), false);
+  assert.equal(calls.filter(call => call === 'reward-request').length, 1);
+  finishShow({ amount: 5 });
+  assert.equal(await show, true);
+});
+
+test('asynchronous listener cleanup failures do not crash a completed rewarded show', async () => {
+  const { service } = setup({ listener: async () => ({ remove: async () => { throw new Error('Bridge already closed'); } }) });
+  assert.equal(await service.showRewardVideo('reward'), true);
+  await delay(0);
+});
+
+test('a late show rejection cannot invalidate a newer rewarded cache', async () => {
+  let rejectOldShow;
+  const { service } = setup({ showReward: () => new Promise((_, reject) => { rejectOldShow = reject; }) });
+  service.REWARDED_SHOW_TIMEOUT_MS = 15;
+  assert.equal(await service.showRewardVideo('reward'), false);
+  const newer = { userId: 'user', customData: 'newer' };
+  assert.equal(await service.prepareRewardVideo('reward', newer), true);
+  rejectOldShow(new Error('Old native show rejected late'));
+  await delay(0);
+  assert.equal(service.hasFreshRewardVideo('reward', newer), true);
+});
+
+test('a stale global load failure cannot cancel a currently showing rewarded ad', async () => {
+  let finishShow;
+  const { service, listeners, events } = setup({ showReward: () => new Promise(resolve => { finishShow = resolve; }) });
+  const show = service.showRewardVideo('reward');
+  while (!finishShow) await delay(0);
+  listeners.get(events.FailedToLoad)?.({ message: 'Older request failed' });
+  assert.equal(service.isRewardVideoShowing, true);
+  finishShow({ amount: 5 });
+  assert.equal(await show, true);
 });
 
 test('form failure allows requests only when current native UMP permission allows them', async () => {
@@ -203,15 +320,17 @@ test('an initialized SDK cannot bypass an in-flight consent form on a later refr
   assert.equal(await retry, true);
 });
 
-test('listener registration is bounded and late listeners are removed', async () => {
+test('show listener registration is bounded and late listeners are removed without registering more', async () => {
   let register;
   let removed = false;
-  const { service, calls } = setup({ listener: () => new Promise(resolve => { register = resolve; }) });
-  service.REWARDED_PREPARE_TIMEOUT_MS = 5;
-  assert.equal(await service.prepareRewardVideo('reward'), false);
+  let registrations = 0;
+  const { service, calls } = setup({ listener: () => { registrations++; return new Promise(resolve => { register = resolve; }); } });
+  service.REWARDED_SHOW_TIMEOUT_MS = 5;
+  assert.equal(await service.showRewardVideo('reward'), false);
   register({ remove: () => { removed = true; } });
   await delay(0);
   assert.equal(removed, true);
+  assert.equal(registrations, 1);
   assert.equal(calls.includes('reward-request'), false);
 });
 
@@ -219,24 +338,23 @@ test('a rewarded ad cannot appear after its show attempt timed out', async () =>
   const { service, calls } = setup({ prepareReward: () => delay(25) });
   service.REWARDED_PREPARE_TIMEOUT_MS = 100;
   service.REWARDED_SHOW_TIMEOUT_MS = 5;
-  service.REWARDED_POST_PREPARE_SHOW_DELAY_MS = 0;
   assert.equal(await service.showRewardVideo('reward'), false);
   await delay(40);
   assert.equal(calls.includes('reward-show'), false);
 });
 
-test('permission changing during listener registration prevents the actual request', async () => {
-  let register;
-  const { service, calls } = setup({ listener: () => new Promise(resolve => { register = resolve; }) });
+test('permission changing during loading prevents a late rewarded cache from becoming ready', async () => {
+  let finish;
+  const { service } = setup({ prepareReward: () => new Promise(resolve => { finish = resolve; }) });
   service.REWARDED_PREPARE_TIMEOUT_MS = 100;
   const prepare = service.prepareRewardVideo('reward');
-  await delay(0);
+  while (!finish) await delay(0);
   service.canRequestAds = false;
-  register({ remove() {} });
-  await delay(0);
-  register({ remove() {} });
+  service.invalidateRewardVideo();
+  finish();
   assert.equal(await prepare, false);
-  assert.equal(calls.includes('reward-request'), false);
+  assert.equal(service.rewardVideoReady, false);
+  assert.equal(service.rewardVideoPromise, null);
 });
 
 test('ordinary web or an APK without AdMob never invokes native ad APIs', async () => {
@@ -284,7 +402,6 @@ function setupBanner(options = {}) {
   const callbacks = new Map();
   const timers = new Map();
   const slots = [];
-  const sizes = [];
   let nextTimer = 1;
   const bannerEvents = { SizeChanged: 'banner-size', Loaded: 'banner-loaded', FailedToLoad: 'banner-failed', AdImpression: 'banner-impression' };
   plugin.addListener = async (event, callback) => {
@@ -294,14 +411,14 @@ function setupBanner(options = {}) {
   plugin.showBanner = async params => {
     assert.equal(slots.at(-1), 50, 'Top reservation must match the native banner height');
     assert.equal(params.adId, 'ca-app-pub-7381421031784616/7234804095');
-    assert.equal(params.adSize, 'ADAPTIVE_BANNER');
+    assert.equal(params.adSize, 'BANNER');
     assert.equal(params.position, 'TOP_CENTER');
     assert.equal(params.margin, options.requestMargins?.shift() ?? 72);
     assert.equal(params.isTesting, false);
     calls.push('banner-request');
     if (options.showBanner) await options.showBanner();
     if (!options.noLoad) {
-      callbacks.get(bannerEvents.SizeChanged)?.({ width: 392, height: 61 });
+      callbacks.get(bannerEvents.SizeChanged)?.({ width: 320, height: 50 });
       callbacks.get(bannerEvents.Loaded)?.();
     }
   };
@@ -311,7 +428,7 @@ function setupBanner(options = {}) {
   const { NativeBannerController } = loadTs('../services/nativeBannerService.ts', {
     '@capacitor-community/admob': {
       AdMob: plugin, BannerAdPluginEvents: bannerEvents,
-      BannerAdPosition: { TOP_CENTER: 'TOP_CENTER' }, BannerAdSize: { ADAPTIVE_BANNER: 'ADAPTIVE_BANNER' },
+      BannerAdPosition: { TOP_CENTER: 'TOP_CENTER' }, BannerAdSize: { BANNER: 'BANNER' },
     },
     './admobService': { AdMobService: service },
     './nativeCapabilities': { canUseNativeAdMob: () => options.native !== false },
@@ -319,8 +436,8 @@ function setupBanner(options = {}) {
     setTimeout: (callback, ms) => { const id = nextTimer++; timers.set(id, { callback, ms }); return id; },
     clearTimeout: id => timers.delete(id),
   });
-  const controller = new NativeBannerController('ca-app-pub-7381421031784616/7234804095', 72, height => slots.push(height), () => {}, options.moveBanner, size => sizes.push(size));
-  return { controller, service, calls, callbacks, slots, sizes, timers, bannerEvents };
+  const controller = new NativeBannerController('ca-app-pub-7381421031784616/7234804095', 72, height => slots.push(height), () => {}, options.moveBanner);
+  return { controller, service, calls, callbacks, slots, timers, bannerEvents };
 }
 
 test('banner and rewarded requests share a single consent and SDK initialization', async t => {
@@ -497,6 +614,22 @@ test('a size change during native creation moves the view after creation settles
   assert.equal(calls.filter(call => call === 'banner-request').length, 1);
 });
 
+test('another viewport change during native repositioning is applied before the queue settles', async t => {
+  let finishMove;
+  let moves = 0;
+  const { controller, calls } = setupBanner({ moveBanner: () => ++moves === 1 ? new Promise(resolve => { finishMove = resolve; }) : Promise.resolve(true) });
+  t.after(() => controller.dispose());
+  await controller.setTopMargin(72, 392);
+  await controller.setMode('visible');
+  const resize = controller.setTopMargin(72, 872);
+  while (!finishMove) await delay(0);
+  const again = controller.setTopMargin(72, 940);
+  finishMove(true);
+  await Promise.all([resize, again]);
+  assert.equal(moves, 2);
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+});
+
 test('APKs without native repositioning recreate only when the measured position changes', async t => {
   const { controller, calls } = setupBanner({ requestMargins: [72, 90] });
   t.after(() => controller.dispose());
@@ -514,15 +647,17 @@ test('banner placement converts CSS pixels and accounts for native origins once'
       registerPlugin: () => ({ getBannerGeometry: async () => ({ density: 2.75, webViewOffsetDp: -24, bottomInsetDp: 48, widthDp: 392, heightDp: 61 }) }),
     },
     './admobService': { AdMobService: { withNativeTimeout: async (_label, promise) => promise } },
-  }, { window: { devicePixelRatio: 2.75 } });
+    './nativeBannerService': { BANNER_HEIGHT: 50, BANNER_WIDTH: 320 },
+  }, { window: { devicePixelRatio: 2.75, innerWidth: 392 } });
   assert.equal(calculateBannerMargin(69, 2.75, 2.75, 0), 69, 'Fullscreen Android has no extra status offset');
   assert.equal(calculateBannerMargin(93, 2.75, 2.75, -24), 69, 'Android 15 SDK-applied status inset is counted once');
   assert.equal(calculateBannerMargin(69, 3, 2, 0), 104, 'CSS and native densities can differ');
   const placement = await getBannerPlacement({ getBoundingClientRect: () => ({ top: 93 }) });
   assert.equal(placement.margin, 69);
   assert.equal(placement.bottomInsetCss, 48);
-  assert.equal(placement.widthDp, 392);
-  assert.equal(placement.heightDp, 61);
+  assert.equal(placement.widthDp, 320, 'An older APK advertising adaptive geometry cannot enlarge the compact slot');
+  assert.equal(placement.heightDp, 50);
+  assert.equal(placement.viewportWidthDp, 392);
   assert.equal(placement.dpToCss, 1);
 });
 
@@ -533,17 +668,16 @@ test('an older bridge falls back without negative offsets or preventing an ad re
       registerPlugin: () => ({ getBannerGeometry: async () => { throw new Error('Unimplemented'); }, setBannerPosition: async () => { throw new Error('Unimplemented'); } }),
     },
     './admobService': { AdMobService: { withNativeTimeout: async (_label, promise) => promise } },
+    './nativeBannerService': { BANNER_HEIGHT: 50, BANNER_WIDTH: 320 },
   }, { window: { devicePixelRatio: 2.75, innerWidth: 392 } });
   const placement = await getBannerPlacement({ getBoundingClientRect: () => ({ top: 69 }) });
   assert.equal(placement.margin, 69);
-  assert.equal(placement.widthDp, 392);
-  assert.equal(placement.heightDp, 90, 'Reserve the adaptive maximum before an older SDK reports its size');
-  const loaded = await getBannerPlacement({ getBoundingClientRect: () => ({ top: 69 }) }, { width: 392, height: 61 });
-  assert.equal(loaded.heightDp, 61, 'Keep the measured size through keyboard changes');
+  assert.equal(placement.widthDp, 320);
+  assert.equal(placement.heightDp, 50, 'The compact slot needs no loaded-size event');
   assert.equal(await moveNativeBanner(69), false);
 });
 
-test('same-width keyboard viewport updates keep the adaptive banner visible without native calls', async t => {
+test('same-width keyboard viewport updates keep the compact banner visible without native calls', async t => {
   const { controller, calls } = setupBanner();
   t.after(() => controller.dispose());
   await controller.setTopMargin(72, 392);
@@ -556,35 +690,40 @@ test('same-width keyboard viewport updates keep the adaptive banner visible with
   assert.equal(calls.some(call => call.startsWith('banner-')), false);
 });
 
-test('a real width change requests one new adaptive banner and ignores repeated measurements', async t => {
-  const { controller, calls } = setupBanner();
+test('a real width change recenters the compact banner without requesting another ad', async t => {
+  let moves = 0;
+  const { controller, calls } = setupBanner({ moveBanner: async () => { moves++; return true; } });
   t.after(() => controller.dispose());
   await controller.setTopMargin(72, 392);
   await controller.setMode('visible');
   calls.length = 0;
   await controller.setTopMargin(72, 872);
   await controller.setTopMargin(72, 872);
-  assert.equal(calls.filter(call => call === 'banner-remove').length, 1);
-  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+  assert.equal(moves, 1);
+  assert.equal(calls.includes('banner-remove'), false);
+  assert.equal(calls.includes('banner-request'), false);
 });
 
-test('width changes during a modal recreate the adaptive banner only after the modal closes', async t => {
-  const { controller, calls } = setupBanner();
+test('width changes during a modal recenter the cached banner only after the modal closes', async t => {
+  let moves = 0;
+  const { controller, calls } = setupBanner({ moveBanner: async () => { moves++; return true; } });
   t.after(() => controller.dispose());
   await controller.setTopMargin(72, 392);
   await controller.setMode('visible');
   await controller.setMode('hidden');
   calls.length = 0;
   await controller.setTopMargin(72, 872);
+  assert.equal(moves, 0);
   assert.equal(calls.includes('banner-request'), false);
   await controller.setMode('visible');
-  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+  assert.equal(moves, 1);
+  assert.equal(calls.includes('banner-request'), false);
 });
 
-test('a width change during native creation replaces the pending ad at the new adaptive width', async t => {
+test('a width change during native creation recenters the pending compact ad without replacing it', async t => {
   let finishShow;
   let first = true;
-  const { controller, calls } = setupBanner({ showBanner: () => {
+  const { controller, calls } = setupBanner({ moveBanner: async () => true, showBanner: () => {
     if (!first) return Promise.resolve();
     first = false;
     return new Promise(resolve => { finishShow = resolve; });
@@ -596,21 +735,15 @@ test('a width change during native creation replaces the pending ad at the new a
   const resize = controller.setTopMargin(72, 872);
   finishShow();
   await Promise.all([show, resize]);
-  assert.equal(calls.filter(call => call === 'banner-request').length, 2);
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
 });
 
-test('SDK hide, failure and stale size events do not collapse the adaptive reservation', async t => {
-  const { controller, callbacks, bannerEvents, sizes } = setupBanner();
+test('compact banner layout does not subscribe to SDK zero-size hide and removal events', async t => {
+  const { controller, callbacks, bannerEvents, slots } = setupBanner();
   t.after(() => controller.dispose());
   await controller.setMode('visible');
-  assert.equal(sizes.at(-1).height, 61);
-  const count = sizes.length;
-  callbacks.get(bannerEvents.SizeChanged)({ width: 0, height: 0 });
-  callbacks.get(bannerEvents.SizeChanged)({ width: NaN, height: 61 });
-  assert.equal(sizes.length, count);
-  await controller.setMode('removed');
-  callbacks.get(bannerEvents.SizeChanged)({ width: 392, height: 61 });
-  assert.equal(sizes.length, count);
+  assert.equal(callbacks.has(bannerEvents.SizeChanged), false);
+  assert.equal(slots.at(-1), 50);
 });
 
 test('a hung banner bridge call releases the queue for logout and later retries', async t => {
