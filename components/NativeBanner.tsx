@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
-import { Keyboard } from '@capacitor/keyboard';
 import type { PluginListenerHandle } from '@capacitor/core';
-import { NativeBannerController, type BannerMode } from '../services/nativeBannerService';
-import { getBannerBottomMargin } from '../services/bottomNavigationInset';
-import { canUseNativeAdMob, canUseNativeAppEvents, canUseNativeKeyboard } from '../services/nativeCapabilities';
+import { NativeBannerController, type BannerMode, type BannerDimensions } from '../services/nativeBannerService';
+import { getBannerPlacement, moveNativeBanner } from '../services/bottomNavigationInset';
+import { canUseNativeAdMob, canUseNativeAppEvents } from '../services/nativeCapabilities';
 
 interface NativeBannerProps {
     adId: string;
@@ -17,48 +16,89 @@ interface NativeBannerProps {
 // its listeners for the WebView lifetime avoids duplicate callbacks and races
 // between an old owner's removal and a new owner's show call.
 let controller: NativeBannerController | null = null;
-let slotObserver: ((height: number) => void) | null = null;
 let consentObserver: ((required: boolean) => void) | null = null;
+let bannerSize: BannerDimensions | undefined;
+let dpToCss = 1;
+
+const applyBannerSize = (width: number, height: number) => {
+    document.documentElement.style.setProperty('--native-banner-width', `${width * dpToCss}px`);
+    document.documentElement.style.setProperty('--native-banner-height', `${height * dpToCss}px`);
+};
 
 const reserveSlot = (height: number) => {
-    document.documentElement.style.setProperty('--native-banner-height', `${height}px`);
     document.documentElement.classList.toggle('native-banner-active', height > 0);
-    slotObserver?.(height);
 };
 
 const NativeBanner: React.FC<NativeBannerProps> = ({ adId, enabled, suspended, onConsentReady }) => {
-    const [slotHeight, setSlotHeight] = useState(0);
     const [foreground, setForeground] = useState(() => document.visibilityState !== 'hidden');
-    const [keyboardOpen, setKeyboardOpen] = useState(false);
-    const [editing, setEditing] = useState(false);
-    const [bottomMargin, setBottomMargin] = useState<number | null>(null);
     const native = canUseNativeAdMob();
-    const mode: BannerMode = !enabled ? 'removed' : suspended || !foreground || keyboardOpen || (!canUseNativeKeyboard() && editing) ? 'hidden' : 'visible';
+    const mode: BannerMode = !enabled ? 'removed' : suspended || !foreground ? 'hidden' : 'visible';
+
+    useLayoutEffect(() => {
+        if (!native) return;
+        // Reserve space before paint, independently of network/consent/native
+        // view state. Opening the keyboard or a modal must not jump the page.
+        document.documentElement.classList.toggle('native-banner-enabled', enabled);
+        return () => document.documentElement.classList.remove('native-banner-enabled');
+    }, [enabled, native]);
 
     useEffect(() => {
         if (!native) return;
-        let cancelled = false;
-        void getBannerBottomMargin().then(margin => {
-            if (!cancelled) setBottomMargin(margin);
-        });
-        return () => { cancelled = true; };
-    }, [native]);
+        consentObserver = onConsentReady;
+    }, [native, onConsentReady]);
 
     useEffect(() => {
-        if (!native || bottomMargin === null) return;
-        slotObserver = setSlotHeight;
-        consentObserver = onConsentReady;
-        controller ??= new NativeBannerController(adId, bottomMargin, reserveSlot, required => consentObserver?.(required));
+        if (!native) return;
         return () => {
-            slotObserver = null;
             consentObserver = null;
             void controller?.setMode('removed');
         };
-    }, [adId, bottomMargin, native, onConsentReady]);
+    }, [native]);
 
     useEffect(() => {
-        if (native && bottomMargin !== null) void controller?.setMode(mode);
-    }, [bottomMargin, mode, native]);
+        if (!native) return;
+        if (mode !== 'visible') {
+            void controller?.setMode(mode);
+            return;
+        }
+        let cancelled = false;
+        let frame = 0;
+        let version = 0;
+        const measure = async (measurement: number) => {
+            const anchor = document.querySelector('.native-banner-anchor');
+            if (!(anchor instanceof HTMLElement) || !anchor.getBoundingClientRect().height) return;
+            const placement = await getBannerPlacement(anchor, bannerSize);
+            if (cancelled || measurement !== version) return;
+            document.documentElement.style.setProperty('--native-navigation-inset', `${placement.bottomInsetCss}px`);
+            dpToCss = placement.dpToCss;
+            applyBannerSize(placement.widthDp, placement.heightDp);
+            controller ??= new NativeBannerController(adId, placement.margin, reserveSlot, required => consentObserver?.(required), moveNativeBanner, size => {
+                bannerSize = size;
+                applyBannerSize(size.width, size.height);
+            });
+            await controller.setTopMargin(placement.margin, placement.widthDp);
+            if (!cancelled && measurement === version) await controller.setMode('visible');
+        };
+        const schedule = () => {
+            const measurement = ++version;
+            cancelAnimationFrame(frame);
+            frame = requestAnimationFrame(() => { void measure(measurement); });
+        };
+        const header = document.querySelector('.web-app-sticky-header');
+        const observer = new ResizeObserver(schedule);
+        if (header) observer.observe(header);
+        window.addEventListener('resize', schedule);
+        window.visualViewport?.addEventListener('resize', schedule);
+        void document.fonts.ready.then(() => { if (!cancelled) schedule(); });
+        schedule();
+        return () => {
+            cancelled = true;
+            cancelAnimationFrame(frame);
+            observer.disconnect();
+            window.removeEventListener('resize', schedule);
+            window.visualViewport?.removeEventListener('resize', schedule);
+        };
+    }, [adId, mode, native]);
 
     useEffect(() => {
         if (!native) return;
@@ -71,35 +111,21 @@ const NativeBanner: React.FC<NativeBannerProps> = ({ adId, enabled, suspended, o
             }).catch(error => console.warn('[AdMob] Banner lifecycle listener unavailable:', error));
         };
         const onVisibility = () => setForeground(document.visibilityState !== 'hidden');
-        const onFocus = () => {
-            const active = document.activeElement;
-            setEditing(active instanceof HTMLElement && (active.matches('input, textarea, select') || active.isContentEditable));
-        };
         document.addEventListener('visibilitychange', onVisibility);
-        document.addEventListener('focusin', onFocus);
-        document.addEventListener('focusout', onFocus);
         if (canUseNativeAppEvents()) {
             track(CapacitorApp.addListener('appStateChange', ({ isActive }) => setForeground(isActive)));
             void CapacitorApp.getState().then(({ isActive }) => {
                 if (!cancelled) setForeground(isActive);
             }).catch(() => {});
         }
-        if (canUseNativeKeyboard()) {
-            track(Keyboard.addListener('keyboardWillShow', () => setKeyboardOpen(true)));
-            track(Keyboard.addListener('keyboardDidShow', () => setKeyboardOpen(true)));
-            track(Keyboard.addListener('keyboardDidHide', () => { setKeyboardOpen(false); onFocus(); }));
-        }
-        onFocus();
         return () => {
             cancelled = true;
             listeners.forEach(listener => { void listener.remove(); });
             document.removeEventListener('visibilitychange', onVisibility);
-            document.removeEventListener('focusin', onFocus);
-            document.removeEventListener('focusout', onFocus);
         };
     }, [native]);
 
-    return native && slotHeight > 0 ? <div aria-hidden="true" className="native-banner-dock" /> : null;
+    return null;
 };
 
 export default NativeBanner;

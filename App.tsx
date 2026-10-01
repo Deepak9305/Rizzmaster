@@ -2552,6 +2552,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
 
 
+              <div className="web-app-sticky-header">
               <nav className="web-app-topbar">
                 <div className="web-app-topbar-leading">
                   {IS_WEB_PLATFORM && onNavigateToPath && (
@@ -2590,6 +2591,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                   </div>
                 </div>
               </nav>
+              <div className="native-banner-slot" aria-hidden="true">
+                <div className="native-banner-anchor">Advertisement</div>
+              </div>
+              </div>
 
               <header className="web-app-heading text-center mb-6 md:mb-8">
                 <div className="inline-block relative">

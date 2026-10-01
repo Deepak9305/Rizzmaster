@@ -277,25 +277,33 @@ test('foreground analytics counts each segment once and excludes background time
 
 function setupBanner(options = {}) {
   const { service, calls, plugin } = setup(options);
+  if (options.bannerTimeout !== undefined) {
+    const nativeTimeout = service.withNativeTimeout.bind(service);
+    service.withNativeTimeout = (label, promise, ms) => nativeTimeout(label, promise, label.startsWith('Banner ') ? options.bannerTimeout : ms);
+  }
   const callbacks = new Map();
   const timers = new Map();
   const slots = [];
+  const sizes = [];
   let nextTimer = 1;
-  const bannerEvents = { Loaded: 'banner-loaded', FailedToLoad: 'banner-failed', AdImpression: 'banner-impression' };
+  const bannerEvents = { SizeChanged: 'banner-size', Loaded: 'banner-loaded', FailedToLoad: 'banner-failed', AdImpression: 'banner-impression' };
   plugin.addListener = async (event, callback) => {
     callbacks.set(event, callback);
     return { remove: async () => callbacks.delete(event) };
   };
   plugin.showBanner = async params => {
-    assert.equal(slots.at(-1), 122, 'Scroll room must include the banner, navigation inset, and safe gap');
+    assert.equal(slots.at(-1), 50, 'Top reservation must match the native banner height');
     assert.equal(params.adId, 'ca-app-pub-7381421031784616/7234804095');
-    assert.equal(params.adSize, 'BANNER');
-    assert.equal(params.position, 'BOTTOM_CENTER');
-    assert.equal(params.margin, 56);
+    assert.equal(params.adSize, 'ADAPTIVE_BANNER');
+    assert.equal(params.position, 'TOP_CENTER');
+    assert.equal(params.margin, options.requestMargins?.shift() ?? 72);
     assert.equal(params.isTesting, false);
     calls.push('banner-request');
     if (options.showBanner) await options.showBanner();
-    if (!options.noLoad) callbacks.get(bannerEvents.Loaded)?.();
+    if (!options.noLoad) {
+      callbacks.get(bannerEvents.SizeChanged)?.({ width: 392, height: 61 });
+      callbacks.get(bannerEvents.Loaded)?.();
+    }
   };
   plugin.hideBanner = async () => calls.push('banner-hide');
   plugin.resumeBanner = async () => calls.push('banner-resume');
@@ -303,7 +311,7 @@ function setupBanner(options = {}) {
   const { NativeBannerController } = loadTs('../services/nativeBannerService.ts', {
     '@capacitor-community/admob': {
       AdMob: plugin, BannerAdPluginEvents: bannerEvents,
-      BannerAdPosition: { BOTTOM_CENTER: 'BOTTOM_CENTER' }, BannerAdSize: { BANNER: 'BANNER' },
+      BannerAdPosition: { TOP_CENTER: 'TOP_CENTER' }, BannerAdSize: { ADAPTIVE_BANNER: 'ADAPTIVE_BANNER' },
     },
     './admobService': { AdMobService: service },
     './nativeCapabilities': { canUseNativeAdMob: () => options.native !== false },
@@ -311,8 +319,8 @@ function setupBanner(options = {}) {
     setTimeout: (callback, ms) => { const id = nextTimer++; timers.set(id, { callback, ms }); return id; },
     clearTimeout: id => timers.delete(id),
   });
-  const controller = new NativeBannerController('ca-app-pub-7381421031784616/7234804095', 56, height => slots.push(height), () => {});
-  return { controller, service, calls, callbacks, slots, timers, bannerEvents };
+  const controller = new NativeBannerController('ca-app-pub-7381421031784616/7234804095', 72, height => slots.push(height), () => {}, options.moveBanner, size => sizes.push(size));
+  return { controller, service, calls, callbacks, slots, sizes, timers, bannerEvents };
 }
 
 test('banner and rewarded requests share a single consent and SDK initialization', async t => {
@@ -326,7 +334,7 @@ test('banner and rewarded requests share a single consent and SDK initialization
   assert.equal(timers.size, 0, 'A loaded banner must not retain its load watchdog');
 });
 
-test('keyboard, modal and background suspension resumes a banner without a new request', async t => {
+test('modal and background suspension resumes a banner without a new request', async t => {
   const { controller, calls, slots } = setupBanner();
   t.after(() => controller.dispose());
   await controller.setMode('visible');
@@ -334,7 +342,7 @@ test('keyboard, modal and background suspension resumes a banner without a new r
     await controller.setMode('hidden');
     assert.equal(slots.at(-1), 0);
     await controller.setMode('visible');
-    assert.equal(slots.at(-1), 122);
+    assert.equal(slots.at(-1), 50);
   }
   assert.equal(calls.filter(call => call === 'banner-request').length, 1);
   assert.equal(calls.filter(call => call === 'banner-resume').length, 3);
@@ -444,4 +452,177 @@ test('an initial premium or logged-out state never initializes or requests ads',
   assert.equal(calls.includes('sdk-init'), false);
   assert.equal(calls.includes('banner-request'), false);
   await controller.dispose();
+});
+
+test('resizing moves the cached banner instead of loading another ad', async t => {
+  const moved = [];
+  const { controller, calls } = setupBanner({ moveBanner: async margin => { moved.push(margin); return true; } });
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  await controller.setTopMargin(90);
+  await controller.setTopMargin(90);
+  assert.deepEqual(moved, [90]);
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+  assert.equal(calls.filter(call => call === 'banner-resume').length, 1);
+});
+
+test('a size change while suspended does not display the banner until resuming', async t => {
+  const moved = [];
+  const { controller, calls } = setupBanner({ moveBanner: async margin => { moved.push(margin); return true; } });
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  await controller.setMode('hidden');
+  await controller.setTopMargin(90);
+  assert.deepEqual(moved, []);
+  assert.equal(calls.includes('banner-resume'), false);
+  await controller.setMode('visible');
+  assert.deepEqual(moved, [90]);
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+});
+
+test('a size change during native creation moves the view after creation settles', async t => {
+  let finishShow;
+  const moved = [];
+  const { controller, calls } = setupBanner({
+    showBanner: () => new Promise(resolve => { finishShow = resolve; }),
+    moveBanner: async margin => { moved.push(margin); return true; },
+  });
+  t.after(() => controller.dispose());
+  const show = controller.setMode('visible');
+  while (!finishShow) await delay(0);
+  const resize = controller.setTopMargin(90);
+  finishShow();
+  await Promise.all([show, resize]);
+  assert.deepEqual(moved, [90]);
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+});
+
+test('APKs without native repositioning recreate only when the measured position changes', async t => {
+  const { controller, calls } = setupBanner({ requestMargins: [72, 90] });
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  await controller.setTopMargin(90);
+  await controller.setTopMargin(90);
+  assert.equal(calls.filter(call => call === 'banner-request').length, 2);
+  assert.equal(calls.filter(call => call === 'banner-remove').length, 1);
+});
+
+test('banner placement converts CSS pixels and accounts for native origins once', async () => {
+  const { calculateBannerMargin, getBannerPlacement } = loadTs('../services/bottomNavigationInset.ts', {
+    '@capacitor/core': {
+      Capacitor: { getPlatform: () => 'android', isPluginAvailable: () => true },
+      registerPlugin: () => ({ getBannerGeometry: async () => ({ density: 2.75, webViewOffsetDp: -24, bottomInsetDp: 48, widthDp: 392, heightDp: 61 }) }),
+    },
+    './admobService': { AdMobService: { withNativeTimeout: async (_label, promise) => promise } },
+  }, { window: { devicePixelRatio: 2.75 } });
+  assert.equal(calculateBannerMargin(69, 2.75, 2.75, 0), 69, 'Fullscreen Android has no extra status offset');
+  assert.equal(calculateBannerMargin(93, 2.75, 2.75, -24), 69, 'Android 15 SDK-applied status inset is counted once');
+  assert.equal(calculateBannerMargin(69, 3, 2, 0), 104, 'CSS and native densities can differ');
+  const placement = await getBannerPlacement({ getBoundingClientRect: () => ({ top: 93 }) });
+  assert.equal(placement.margin, 69);
+  assert.equal(placement.bottomInsetCss, 48);
+  assert.equal(placement.widthDp, 392);
+  assert.equal(placement.heightDp, 61);
+  assert.equal(placement.dpToCss, 1);
+});
+
+test('an older bridge falls back without negative offsets or preventing an ad request', async () => {
+  const { getBannerPlacement, moveNativeBanner } = loadTs('../services/bottomNavigationInset.ts', {
+    '@capacitor/core': {
+      Capacitor: { getPlatform: () => 'android', isPluginAvailable: () => true },
+      registerPlugin: () => ({ getBannerGeometry: async () => { throw new Error('Unimplemented'); }, setBannerPosition: async () => { throw new Error('Unimplemented'); } }),
+    },
+    './admobService': { AdMobService: { withNativeTimeout: async (_label, promise) => promise } },
+  }, { window: { devicePixelRatio: 2.75, innerWidth: 392 } });
+  const placement = await getBannerPlacement({ getBoundingClientRect: () => ({ top: 69 }) });
+  assert.equal(placement.margin, 69);
+  assert.equal(placement.widthDp, 392);
+  assert.equal(placement.heightDp, 90, 'Reserve the adaptive maximum before an older SDK reports its size');
+  const loaded = await getBannerPlacement({ getBoundingClientRect: () => ({ top: 69 }) }, { width: 392, height: 61 });
+  assert.equal(loaded.heightDp, 61, 'Keep the measured size through keyboard changes');
+  assert.equal(await moveNativeBanner(69), false);
+});
+
+test('same-width keyboard viewport updates keep the adaptive banner visible without native calls', async t => {
+  const { controller, calls } = setupBanner();
+  t.after(() => controller.dispose());
+  await controller.setTopMargin(72, 392);
+  await controller.setMode('visible');
+  calls.length = 0;
+  for (let i = 0; i < 3; i++) {
+    await controller.setTopMargin(72, 392);
+    await controller.setMode('visible');
+  }
+  assert.equal(calls.some(call => call.startsWith('banner-')), false);
+});
+
+test('a real width change requests one new adaptive banner and ignores repeated measurements', async t => {
+  const { controller, calls } = setupBanner();
+  t.after(() => controller.dispose());
+  await controller.setTopMargin(72, 392);
+  await controller.setMode('visible');
+  calls.length = 0;
+  await controller.setTopMargin(72, 872);
+  await controller.setTopMargin(72, 872);
+  assert.equal(calls.filter(call => call === 'banner-remove').length, 1);
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+});
+
+test('width changes during a modal recreate the adaptive banner only after the modal closes', async t => {
+  const { controller, calls } = setupBanner();
+  t.after(() => controller.dispose());
+  await controller.setTopMargin(72, 392);
+  await controller.setMode('visible');
+  await controller.setMode('hidden');
+  calls.length = 0;
+  await controller.setTopMargin(72, 872);
+  assert.equal(calls.includes('banner-request'), false);
+  await controller.setMode('visible');
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+});
+
+test('a width change during native creation replaces the pending ad at the new adaptive width', async t => {
+  let finishShow;
+  let first = true;
+  const { controller, calls } = setupBanner({ showBanner: () => {
+    if (!first) return Promise.resolve();
+    first = false;
+    return new Promise(resolve => { finishShow = resolve; });
+  } });
+  t.after(() => controller.dispose());
+  await controller.setTopMargin(72, 392);
+  const show = controller.setMode('visible');
+  while (!finishShow) await delay(0);
+  const resize = controller.setTopMargin(72, 872);
+  finishShow();
+  await Promise.all([show, resize]);
+  assert.equal(calls.filter(call => call === 'banner-request').length, 2);
+});
+
+test('SDK hide, failure and stale size events do not collapse the adaptive reservation', async t => {
+  const { controller, callbacks, bannerEvents, sizes } = setupBanner();
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  assert.equal(sizes.at(-1).height, 61);
+  const count = sizes.length;
+  callbacks.get(bannerEvents.SizeChanged)({ width: 0, height: 0 });
+  callbacks.get(bannerEvents.SizeChanged)({ width: NaN, height: 61 });
+  assert.equal(sizes.length, count);
+  await controller.setMode('removed');
+  callbacks.get(bannerEvents.SizeChanged)({ width: 392, height: 61 });
+  assert.equal(sizes.length, count);
+});
+
+test('a hung banner bridge call releases the queue for logout and later retries', async t => {
+  let hung = true;
+  const { controller, calls, timers } = setupBanner({ bannerTimeout: 10, showBanner: () => hung ? pending() : Promise.resolve() });
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  assert.equal(calls.at(-1), 'banner-remove');
+  assert.equal([...timers.values()][0].ms, 30_000);
+  await controller.setMode('removed');
+  assert.equal(timers.size, 0);
+  hung = false;
+  await controller.setMode('visible');
+  assert.equal(calls.filter(call => call === 'banner-request').length, 2);
 });
