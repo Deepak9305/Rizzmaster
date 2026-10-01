@@ -408,6 +408,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   } | null>(null);
   const rewardedAdInProgressRef = useRef(false);
   const rewardedAdIdentityVersionRef = useRef(0);
+  const generationSessionVersionRef = useRef(0);
   const loadingRef = useRef(false);
   const savedItemsRef = useRef<SavedItem[]>([]);
 
@@ -541,6 +542,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
   const handleExitGuestMode = useCallback(() => {
     IAPService.clearUser();
+    ++generationSessionVersionRef.current;
     isGuestRef.current = false;
     setIsGuest(false);
     setIsSessionBlocked(false);
@@ -551,6 +553,25 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     setProfile(null);
     setSession(null);
     setCurrentView('HOME');
+    loadingRef.current = false;
+    setLoading(false);
+    setSavedItems([]);
+    setResult(null);
+    setImage(null);
+    setInputError(null);
+    setSelectedVibe(null);
+    setCustomPersonas([]);
+    setEditingPersona(null);
+    setPersonaName('');
+    setPersonaInstruction('');
+    setShowPremiumModal(false);
+    setShowCreditsExhaustedModal(false);
+    setShowSavedModal(false);
+    setShowPersonaModal(false);
+    setShowWebMenu(false);
+    setShowWebPremiumModal(false);
+    if (textareaRef.current) textareaRef.current.value = '';
+    window.history.replaceState({ view: 'HOME' }, '', '/');
 
     // Privacy: Wipe all session-based Rizz AI data
     localStorage.removeItem('rizz_coach_messages_v2_guest_user');
@@ -568,6 +589,9 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
   useEffect(() => {
     ++rewardedAdIdentityVersionRef.current;
+    ++generationSessionVersionRef.current;
+    loadingRef.current = false;
+    setLoading(false);
     rewardedAdPreparationContextRef.current = null;
     rewardedAdPreparationPromiseRef.current = null;
     rewardedAdAttemptRef.current = null;
@@ -1546,8 +1570,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const handleLogout = useCallback(async () => {
     const currentProfile = profileRef.current;
 
-    if (isGuest) {
-      IAPService.clearUser();
+    if (isGuestRef.current || currentProfile?.id === 'guest_user') {
       handleExitGuestMode();
       showToast("Successfully logged out 👋", 'success');
       return;
@@ -2102,6 +2125,9 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     setLoading(true);
 
     // --- GENERATION START ---
+    const generationSessionVersion = generationSessionVersionRef.current;
+    const stillSameGenerationSession = () => generationSessionVersionRef.current === generationSessionVersion &&
+      profileRef.current?.id === currentProfile.id;
     const shouldManageLocalCredits = !currentProfile.is_premium;
     const shouldSyncSignedInProfile = !isGuestRef.current && currentProfile.id !== 'guest_user';
     let skipFinalProfileSync = !shouldSyncSignedInProfile;
@@ -2129,6 +2155,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       } else {
         res = await generateBio(finalProcessText, activeVibe || undefined, activeResponseLength, customInstruction);
       }
+      if (!stillSameGenerationSession()) return;
 
       if ('potentialStatus' in res && (res.potentialStatus === 'Error' || res.potentialStatus === 'Blocked')) {
         refundOptimisticCredits();
@@ -2151,6 +2178,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       }
 
     } catch (error: any) {
+      if (!stillSameGenerationSession()) return;
       console.error(error);
       if (error.message === 'LOGIN_REQUIRED') {
          setLoginReason(undefined);
@@ -2201,10 +2229,12 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       showToast('The wingman tripped! Try again.', 'error');
       refundOptimisticCredits();
     } finally {
-      loadingRef.current = false;
-      setLoading(false);
+      if (stillSameGenerationSession()) {
+        loadingRef.current = false;
+        setLoading(false);
+      }
       // Don't call syncProfile for guests — they have no Supabase session
-      if (shouldSyncSignedInProfile && !skipFinalProfileSync) {
+      if (stillSameGenerationSession() && shouldSyncSignedInProfile && !skipFinalProfileSync) {
         await syncProfile().catch(() => null);
       }
     }
