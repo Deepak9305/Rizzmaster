@@ -13,6 +13,7 @@
     "test:rewarded": "node --test tests/rewarded-ad.test.mjs tests/rewarded-ad-runtime.test.mjs",
     "test:admob": "node --test tests/admob.test.mjs",
     "test:api": "node --test tests/api-http.test.mjs",
+    "test:iap": "node --test tests/iap-runtime.test.mjs tests/iap-account-binding.test.mjs",
     "verify:native-config": "node scripts/verify-native-config.js",
     "db:export-supabase": "node scripts/export-supabase-data.mjs",
     "db:import-cloudsql": "node scripts/import-cloudsql-data.mjs"
