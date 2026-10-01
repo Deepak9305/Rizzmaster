@@ -65,9 +65,6 @@ export default async function handler(req, res) {
   });
   if (!verification.ok) {
     console.warn('[AdMob SSV] Signature verification rejected.', { code: verification.code });
-    if (verification.code === 'SSV_KEY_FETCH_FAILED') {
-      return json(res, 503, { error: 'Reward verification is temporarily unavailable.', code: verification.code });
-    }
     return reject(res, verification.code || 'SSV_SIGNATURE_INVALID');
   }
 

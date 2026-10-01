@@ -60,16 +60,14 @@ const toBase64Buffer = (value) => {
 let publicKeysCache = null;
 let publicKeysCacheExpiresAt = 0;
 let publicKeysRequest = null;
-let publicKeysFetchedAt = 0;
 
-const loadAdMobPublicKeys = async (forceRefresh = false) => {
+const loadAdMobPublicKeys = async () => {
+  if (publicKeysCache && publicKeysCacheExpiresAt > Date.now()) return publicKeysCache;
   if (publicKeysRequest) return publicKeysRequest;
-  if (!forceRefresh && publicKeysCache && publicKeysCacheExpiresAt > Date.now()) return publicKeysCache;
 
   publicKeysRequest = (async () => {
     const response = await fetch(ADMOB_SSV_PUBLIC_KEYS_URL, {
       headers: { Accept: 'application/json' },
-      signal: AbortSignal.timeout(10_000),
     });
     if (!response.ok) throw new Error(`AdMob public key request failed with status ${response.status}`);
     const payload = await response.json();
@@ -78,8 +76,7 @@ const loadAdMobPublicKeys = async (forceRefresh = false) => {
       : [];
     if (!keys.length) throw new Error('AdMob public key response was empty.');
     publicKeysCache = keys;
-    publicKeysFetchedAt = Date.now();
-    publicKeysCacheExpiresAt = publicKeysFetchedAt + (24 * 60 * 60 * 1000);
+    publicKeysCacheExpiresAt = Date.now() + (24 * 60 * 60 * 1000);
     return keys;
   })();
 
@@ -95,29 +92,18 @@ export const verifyAdMobSsvSignature = async ({ canonicalQuery, signature, keyId
     return { ok: false, code: 'SSV_SIGNATURE_INVALID' };
   }
 
-  let publicKey;
   try {
-    let keys = await loadAdMobPublicKeys();
-    publicKey = keys.find((key) => String(key.keyId) === String(keyId));
-    // Key rotation can precede cache expiry. Refresh once, rate limited so
-    // invalid key IDs cannot turn each callback into a network request.
-    if (!publicKey && Date.now() - publicKeysFetchedAt >= 60_000) {
-      keys = await loadAdMobPublicKeys(true);
-      publicKey = keys.find((key) => String(key.keyId) === String(keyId));
-    }
+    const keys = await loadAdMobPublicKeys();
+    const publicKey = keys.find((key) => String(key.keyId) === String(keyId));
     if (!publicKey) return { ok: false, code: 'SSV_KEY_NOT_FOUND' };
-  } catch {
-    return { ok: false, code: 'SSV_KEY_FETCH_FAILED' };
-  }
 
-  try {
     const verifier = createVerify('sha256');
     verifier.update(canonicalQuery, 'utf8');
     verifier.end();
     const ok = verifier.verify({ key: publicKey.pem, dsaEncoding: 'der' }, toBase64Buffer(signature));
     return { ok, code: ok ? null : 'SSV_SIGNATURE_INVALID' };
   } catch {
-    return { ok: false, code: 'SSV_SIGNATURE_INVALID' };
+    return { ok: false, code: 'SSV_KEY_FETCH_FAILED' };
   }
 };
 

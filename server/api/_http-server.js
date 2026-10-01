@@ -18,10 +18,6 @@ const createResponseAdapter = (res) => {
       statusCode = code;
       return this;
     },
-    end(payload) {
-      res.statusCode = statusCode;
-      res.end(payload);
-    },
     json(payload) {
       res.statusCode = statusCode;
       if (!res.hasHeader('Content-Type')) {

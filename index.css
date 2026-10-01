@@ -46,65 +46,6 @@ html.native-app .web-app-root {
   overscroll-behavior-y: contain;
 }
 
-/* The native view occupies a real slot in the same sticky header as the
-   account controls. Its opaque background keeps scrolling content out of
-   the ad area; loading, retrying and keyboard changes never shift the form. */
-.web-app-sticky-header { display: contents; }
-.native-banner-slot { display: none; }
-
-html.native-app .web-app-sticky-header {
-  display: block;
-  position: sticky;
-  top: 4px;
-  z-index: 40;
-  flex-shrink: 0;
-  margin-bottom: 12px;
-  background: #05030b;
-  box-shadow: 0 -4px 0 #05030b;
-}
-
-html.native-app .web-app-shell {
-  padding-top: 4px;
-  padding-bottom: calc(max(env(safe-area-inset-bottom), var(--native-navigation-inset, 48px)) + 16px);
-}
-
-html.native-app .web-app-topbar {
-  min-height: 56px;
-  margin-bottom: 0;
-  padding: 6px 10px;
-}
-
-html.native-app .web-app-topbar :is(.web-app-logout, .web-app-topbar-button, .web-app-credits) {
-  min-height: 44px;
-}
-
-html.native-app.native-banner-enabled .native-banner-slot {
-  display: block;
-  width: 100vw;
-  margin-inline: calc((100% - 100vw) / 2);
-  padding-block: 4px;
-  border-block: 1px solid rgba(255, 255, 255, 0.1);
-  background: #090611;
-}
-
-.native-banner-anchor {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: min(var(--native-banner-width, 320px), 100%);
-  height: var(--native-banner-height, 50px);
-  margin-inline: auto;
-  color: rgba(244, 232, 247, 0.3);
-  font-size: 10px;
-}
-
-@media (max-width: 640px) {
-  html.native-app.native-banner-enabled .web-app-title {
-    font-size: clamp(2.6rem, 12vw, 3.25rem);
-    margin-bottom: 2px;
-  }
-}
-
 .web-premium-scroll {
   scrollbar-color: rgba(251, 191, 36, 0.35) transparent;
   scrollbar-width: thin;

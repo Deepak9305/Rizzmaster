@@ -42,20 +42,7 @@ export default async function handler(req, res) {
         .select('status')
         .maybeSingle();
       if (expireError) throw expireError;
-      if (expired) {
-        status = expired.status;
-      } else {
-        // A verified grant may win the race with expiration. Read the winner
-        // rather than reporting an earned reward as expired.
-        const { data: current, error: currentError } = await supabaseAdmin
-          .from('rewarded_ad_attempts')
-          .select('status')
-          .eq('id', attempt.id)
-          .eq('user_id', auth.user.id)
-          .single();
-        if (currentError || !current) throw currentError || new Error('Reward status could not be read.');
-        status = current.status;
-      }
+      status = expired?.status || 'expired';
     }
 
     const { data: profile, error: profileError } = await supabaseAdmin
