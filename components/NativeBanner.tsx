@@ -1,9 +1,8 @@
 import React, { useEffect, useLayoutEffect, useState } from 'react';
-import { App as CapacitorApp } from '@capacitor/app';
-import type { PluginListenerHandle } from '@capacitor/core';
 import { NativeBannerController, type BannerMode, BANNER_WIDTH } from '../services/nativeBannerService';
 import { getBannerPlacement, moveNativeBanner } from '../services/bottomNavigationInset';
-import { canUseNativeAdMob, canUseNativeAppEvents } from '../services/nativeCapabilities';
+import { canUseNativeAdMob } from '../services/nativeCapabilities';
+import { observeBannerForeground } from '../services/bannerLifecycle';
 
 interface NativeBannerProps {
     adId: string;
@@ -111,27 +110,7 @@ const NativeBanner: React.FC<NativeBannerProps> = ({ adId, enabled, suspended, o
 
     useEffect(() => {
         if (!native) return;
-        let cancelled = false;
-        const listeners: PluginListenerHandle[] = [];
-        const track = (registration: Promise<PluginListenerHandle>) => {
-            void registration.then(listener => {
-                if (cancelled) void listener.remove();
-                else listeners.push(listener);
-            }).catch(error => console.warn('[AdMob] Banner lifecycle listener unavailable:', error));
-        };
-        const onVisibility = () => setForeground(document.visibilityState !== 'hidden');
-        document.addEventListener('visibilitychange', onVisibility);
-        if (canUseNativeAppEvents()) {
-            track(CapacitorApp.addListener('appStateChange', ({ isActive }) => setForeground(isActive)));
-            void CapacitorApp.getState().then(({ isActive }) => {
-                if (!cancelled) setForeground(isActive);
-            }).catch(() => {});
-        }
-        return () => {
-            cancelled = true;
-            listeners.forEach(listener => { void listener.remove(); });
-            document.removeEventListener('visibilitychange', onVisibility);
-        };
+        return observeBannerForeground(setForeground);
     }, [native]);
 
     return null;

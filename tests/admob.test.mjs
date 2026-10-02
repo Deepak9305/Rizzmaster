@@ -476,6 +476,7 @@ function setupBanner(options = {}) {
   const timers = new Map();
   const slots = [];
   let nextTimer = 1;
+  let now = 1_000;
   const bannerEvents = { SizeChanged: 'banner-size', Loaded: 'banner-loaded', FailedToLoad: 'banner-failed', AdImpression: 'banner-impression' };
   plugin.addListener = async (event, callback) => {
     callbacks.set(event, callback);
@@ -513,11 +514,12 @@ function setupBanner(options = {}) {
     './admobService': { AdMobService: service },
     './nativeCapabilities': { canUseNativeAdMob: () => options.native !== false },
   }, {
+    Date: class extends Date { static now() { return now; } },
     setTimeout: (callback, ms) => { const id = nextTimer++; timers.set(id, { callback, ms }); return id; },
     clearTimeout: id => timers.delete(id),
   });
   const controller = new NativeBannerController('ca-app-pub-7381421031784616/7234804095', 72, height => slots.push(height), () => {}, options.moveBanner);
-  return { controller, service, calls, callbacks, slots, timers, bannerEvents };
+  return { controller, service, calls, callbacks, slots, timers, bannerEvents, advance: ms => { now += ms; } };
 }
 
 test('banner and rewarded requests share a single consent and SDK initialization', async t => {
@@ -590,7 +592,7 @@ test('consent denial blocks banners and logout cancels the retry', async t => {
 });
 
 test('no-fill schedules one delayed retry and a later native success recovers', async t => {
-  const { controller, calls, callbacks, bannerEvents, timers } = setupBanner();
+  const { controller, calls, callbacks, bannerEvents, timers, advance } = setupBanner();
   t.after(() => controller.dispose());
   await controller.setMode('visible');
   callbacks.get(bannerEvents.FailedToLoad)({ code: 3 });
@@ -599,6 +601,7 @@ test('no-fill schedules one delayed retry and a later native success recovers', 
   assert.equal(calls.filter(call => call === 'banner-request').length, 1);
   const [id, retry] = [...timers][0];
   assert.equal(retry.ms, 60_000);
+  advance(retry.ms);
   timers.delete(id);
   retry.callback();
   await controller.setMode('visible');
@@ -611,7 +614,7 @@ test('a banner whose load callback never arrives is removed before retry', async
   t.after(() => controller.dispose());
   await controller.setMode('visible');
   const [id, watchdog] = [...timers][0];
-  assert.equal(watchdog.ms, 45_000);
+  assert.equal(watchdog.ms, 90_000);
   timers.delete(id);
   watchdog.callback();
   await controller.setMode('visible');
@@ -646,7 +649,7 @@ test('a banner that loads while hidden resumes without starting another load wat
 
 test('stalled native listener cleanup cannot wedge the banner retry queue', async t => {
   let fail = true;
-  const { controller, timers, calls } = setupBanner({
+  const { controller, timers, calls, advance } = setupBanner({
     bannerTimeout: 5,
     showBanner: () => { if (fail) throw new Error('Native creation failed'); },
     removeBannerListener: pending,
@@ -656,6 +659,7 @@ test('stalled native listener cleanup cannot wedge the banner retry queue', asyn
   const retry = [...timers.values()].find(timer => timer.ms === 60_000);
   assert.ok(retry, 'Cleanup must settle and schedule recovery');
   fail = false;
+  advance(retry.ms);
   timers.clear();
   retry.callback();
   await controller.setMode('visible');
@@ -881,4 +885,160 @@ test('a hung banner bridge call releases the queue for logout and later retries'
   hung = false;
   await controller.setMode('visible');
   assert.equal(calls.filter(call => call === 'banner-request').length, 2);
+});
+
+test('returning before a no-fill deadline waits only the remaining time', async t => {
+  const { controller, calls, callbacks, bannerEvents, timers, advance } = setupBanner();
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  callbacks.get(bannerEvents.FailedToLoad)({ code: 3 });
+  advance(10_000);
+  await controller.setMode('hidden');
+  assert.equal(timers.size, 0, 'Background recovery must not issue requests');
+  advance(20_000);
+  await controller.setMode('visible');
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+  assert.equal([...timers.values()][0].ms, 30_000, 'Do not reset or bypass the deadline');
+  advance(30_000);
+  const [id, retry] = [...timers][0];
+  timers.delete(id);
+  retry.callback();
+  await controller.setMode('visible');
+  assert.equal(calls.filter(call => call === 'banner-request').length, 2);
+  assert.equal(timers.size, 0);
+});
+
+test('returning after a retry deadline requests immediately rather than waiting another minute', async t => {
+  const { controller, calls, callbacks, bannerEvents, timers, advance } = setupBanner();
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  callbacks.get(bannerEvents.FailedToLoad)({ code: 3 });
+  await controller.setMode('hidden');
+  advance(70_000);
+  await controller.setMode('visible');
+  assert.equal(calls.filter(call => call === 'banner-request').length, 2);
+  assert.equal(timers.size, 0);
+});
+
+test('a pending banner failure while hidden retains its recovery deadline', async t => {
+  const { controller, calls, callbacks, bannerEvents, timers, advance } = setupBanner({ noLoad: true });
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  await controller.setMode('hidden');
+  callbacks.get(bannerEvents.FailedToLoad)({ code: 2 });
+  assert.equal(timers.size, 0);
+  advance(20_000);
+  await controller.setMode('visible');
+  assert.equal([...timers.values()][0].ms, 40_000);
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+});
+
+test('repeated failures back off across modal transitions and cap at five minutes', async t => {
+  const { controller, callbacks, bannerEvents, timers, advance } = setupBanner({ noLoad: true });
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  for (const expected of [60_000, 120_000, 240_000, 300_000, 300_000]) {
+    callbacks.get(bannerEvents.FailedToLoad)({ code: 3 });
+    assert.equal([...timers.values()][0].ms, expected);
+    await controller.setMode('hidden');
+    advance(expected);
+    await controller.setMode('visible');
+  }
+  callbacks.get(bannerEvents.Loaded)();
+  callbacks.get(bannerEvents.FailedToLoad)({ code: 3 });
+  assert.equal([...timers.values()][0].ms, 60_000, 'A real loaded callback resets backoff');
+});
+
+test('a slow mediated banner can finish after the old 45-second watchdog without a replacement', async t => {
+  const { controller, calls, callbacks, bannerEvents, timers, advance } = setupBanner({ noLoad: true });
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  assert.equal([...timers.values()][0].ms, 90_000);
+  advance(60_000);
+  callbacks.get(bannerEvents.Loaded)();
+  await controller.setMode('visible');
+  assert.equal(timers.size, 0);
+  assert.equal(calls.includes('banner-remove'), false);
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+});
+
+function setupBannerLifecycle(options = {}) {
+  const changes = [];
+  const handlers = new Map();
+  const document = {
+    visibilityState: 'visible',
+    addEventListener: (event, listener) => handlers.set(event, listener),
+    removeEventListener: (event, listener) => { if (handlers.get(event) === listener) handlers.delete(event); },
+  };
+  let appStateChange;
+  let resolveState;
+  let resolveListener;
+  let removed = 0;
+  const handle = { remove: async () => { removed++; } };
+  const { observeBannerForeground } = loadTs('../services/bannerLifecycle.ts', {
+    '@capacitor/app': { App: {
+      addListener: async (_event, callback) => {
+        appStateChange = callback;
+        return options.lateListener ? new Promise(resolve => { resolveListener = resolve; }) : handle;
+      },
+      getState: () => new Promise(resolve => { resolveState = resolve; }),
+    } },
+    './nativeCapabilities': { canUseNativeAppEvents: () => options.native !== false },
+  }, { document });
+  const stop = observeBannerForeground(value => changes.push(value));
+  return {
+    changes, document, handlers, stop,
+    state: isActive => appStateChange({ isActive }),
+    resolveState: isActive => resolveState({ isActive }),
+    resolveListener: () => resolveListener(handle),
+    removed: () => removed,
+  };
+}
+
+test('a stale initial inactive response cannot hide a banner after a newer native resume', async () => {
+  const lifecycle = setupBannerLifecycle();
+  lifecycle.state(false);
+  lifecycle.state(true);
+  lifecycle.resolveState(false);
+  await delay(0);
+  assert.deepEqual(lifecycle.changes, [true, false, true]);
+  lifecycle.stop();
+});
+
+test('WebView visibility cannot resume a banner while its native Activity is inactive', async () => {
+  const lifecycle = setupBannerLifecycle();
+  lifecycle.state(false);
+  lifecycle.handlers.get('visibilitychange')();
+  assert.equal(lifecycle.changes.at(-1), false);
+  lifecycle.document.visibilityState = 'hidden';
+  lifecycle.state(true);
+  assert.equal(lifecycle.changes.at(-1), false);
+  lifecycle.document.visibilityState = 'visible';
+  lifecycle.handlers.get('visibilitychange')();
+  assert.equal(lifecycle.changes.at(-1), true);
+  lifecycle.stop();
+  await delay(0);
+  assert.equal(lifecycle.removed(), 1);
+  assert.equal(lifecycle.handlers.size, 0);
+});
+
+test('late native lifecycle registration and state resolve safely after owner cleanup', async () => {
+  const lifecycle = setupBannerLifecycle({ lateListener: true });
+  lifecycle.stop();
+  lifecycle.resolveListener();
+  lifecycle.resolveState(false);
+  lifecycle.state(false);
+  await delay(0);
+  assert.deepEqual(lifecycle.changes, [true]);
+  assert.equal(lifecycle.removed(), 1);
+});
+
+test('APKs without native App events still track WebView visibility', () => {
+  const lifecycle = setupBannerLifecycle({ native: false });
+  lifecycle.document.visibilityState = 'hidden';
+  lifecycle.handlers.get('visibilitychange')();
+  lifecycle.document.visibilityState = 'visible';
+  lifecycle.handlers.get('visibilitychange')();
+  assert.deepEqual(lifecycle.changes, [true, false, true]);
+  lifecycle.stop();
 });

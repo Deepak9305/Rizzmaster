@@ -11,6 +11,7 @@ export const BANNER_POSITION = BannerAdPosition.TOP_CENTER;
 // guidance. Normal banner refresh remains owned by the Google Mobile Ads SDK.
 export const BANNER_RETRY_INITIAL_MS = 60_000;
 export const BANNER_RETRY_MAX_MS = 300_000;
+export const BANNER_LOAD_TIMEOUT_MS = 90_000;
 export const getBannerSlotHeight = () => BANNER_HEIGHT;
 
 // A single native banner is shared by the app. Serialize show/hide/remove so
@@ -25,6 +26,7 @@ export class NativeBannerController {
     private running: Promise<void> | null = null;
     private retryTimer: ReturnType<typeof setTimeout> | null = null;
     private retryCount = 0;
+    private retryAt = 0;
     private requestVersion = 0;
     private loadTimer: ReturnType<typeof setTimeout> | null = null;
     private stalled = false;
@@ -53,6 +55,12 @@ export class NativeBannerController {
         if (mode !== 'visible') {
             this.clearRetry();
             this.clearLoadTimer();
+            // Suspend the timer, not its deadline. Returning from a modal or
+            // the background must neither restart nor bypass recovery pacing.
+            if (mode === 'removed') {
+                this.retryAt = 0;
+                this.retryCount = 0;
+            }
         }
         return this.reconcile();
     }
@@ -79,7 +87,7 @@ export class NativeBannerController {
             this.loadTimer = null;
             this.stalled = true;
             void this.reconcile();
-        }, 45_000);
+        }, BANNER_LOAD_TIMEOUT_MS);
     }
 
     private async cleanupListeners() {
@@ -90,14 +98,29 @@ export class NativeBannerController {
     }
 
     private scheduleRetry() {
-        if (this.disposed || this.desired !== 'visible' || this.retryTimer) return;
+        if (this.disposed || this.desired === 'removed') return;
         // No tight no-fill loops, no manual refreshing of a loaded ad, and no
         // recovery request inside AdMob's recommended 60-second interval.
-        const waitMs = Math.min(BANNER_RETRY_INITIAL_MS * 2 ** this.retryCount++, BANNER_RETRY_MAX_MS);
+        if (!this.retryAt || this.retryAt <= Date.now()) {
+            this.retryAt = Date.now() + Math.min(BANNER_RETRY_INITIAL_MS * 2 ** this.retryCount++, BANNER_RETRY_MAX_MS);
+        }
+        this.waitForRetry();
+    }
+
+    private waitForRetry(): boolean {
+        if (!this.retryAt) return false;
+        const waitMs = this.retryAt - Date.now();
+        if (waitMs <= 0) {
+            this.retryAt = 0;
+            this.clearRetry();
+            return false;
+        }
+        if (this.desired !== 'visible' || this.retryTimer) return true;
         this.retryTimer = setTimeout(() => {
             this.retryTimer = null;
             void this.reconcile();
         }, waitMs);
+        return true;
     }
 
     private async registerListeners() {
@@ -109,6 +132,8 @@ export class NativeBannerController {
                 this.clearLoadTimer();
                 this.stalled = false;
                 this.retryCount = 0;
+                this.retryAt = 0;
+                this.clearRetry();
                 console.log('[AdMob] Top banner loaded.');
             }),
             () => AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (error: unknown) => {
@@ -183,7 +208,7 @@ export class NativeBannerController {
                 this.visible = false;
                 this.reserve(0);
             } else {
-                if (this.retryTimer) return;
+                if (this.waitForRetry()) return;
                 const initialized = await AdMobService.ensureInitialized('Top banner');
                 this.consentReady(AdMobService.isPrivacyOptionsRequired());
                 if (this.desired !== 'visible') continue;
