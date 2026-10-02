@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { LEGAL_LINKS } from '../services/legalLinks';
-import { BLOG_POSTS, getBlogPost, PLAY_STORE_URL, type BlogPost } from '../services/marketingContent';
+import { BLOG_POSTS, EDITORIAL_AUTHORS, getBlogPost, PLAY_STORE_URL, type BlogPost } from '../services/marketingContent';
 import { MARKETING_LEGAL_PAGES, type MarketingLegalPageKey } from '../services/marketingLegal';
 import { MARKETING_HOME_PATH, normalizeMarketingPath } from '../services/marketingRoutes';
 
@@ -65,11 +65,12 @@ const useEditorialAds = (enabled: boolean) => {
 
 const updateSeo = (route: MarketingRoute) => {
   const post = route.kind === 'article' ? getBlogPost(route.slug) : undefined;
+  const editorialAuthor = post?.author ? EDITORIAL_AUTHORS[post.author] : undefined;
   const legalPage = route.kind === 'privacy' || route.kind === 'terms' || route.kind === 'support'
     ? MARKETING_LEGAL_PAGES[route.kind]
     : undefined;
   const title = post
-    ? `${post.title} | Rizz Master`
+    ? `${post.seoTitle || post.title} | Rizz Master`
     : route.kind === 'blog'
       ? 'Rizz Master Blog | Better texts, better dates'
       : route.kind === 'privacy'
@@ -118,7 +119,9 @@ const updateSeo = (route: MarketingRoute) => {
     keywords: post.keywords.join(', '),
     articleSection: post.category,
     ...(post.image ? { image: `${LEGAL_LINKS.baseUrl}${post.image}` } : {}),
-    author: { '@type': 'Organization', name: 'Rizz Master' },
+    author: editorialAuthor
+      ? { '@type': 'Organization', name: `${editorialAuthor.name} - ${editorialAuthor.role}`, description: editorialAuthor.bio }
+      : { '@type': 'Organization', name: 'Rizz Master' },
     publisher: { '@type': 'Organization', name: 'Rizz Master' },
     mainEntityOfPage: `${LEGAL_LINKS.baseUrl}/blog/${post.slug}`
   } : {
@@ -499,6 +502,7 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
   'funny-pickup-lines-that-work': ['I had a clever opener ready, but your profile distracted me. What is your best recommendation around here?'],
   'best-dating-app-bio-ideas-for-guys': ['Ideal Sunday: long walk, new coffee shop, and pretending I will meal prep.'],
   'what-to-text-after-a-first-date': ['I had a great time tonight - your story about the failed cooking class still has me laughing.'],
+  'follow-up-after-awkward-first-date': ['I had a good time getting to know you. I think we were both a little nervous at first - want to try again over coffee next week?', 'I liked talking with you, especially the part about your travel story. I would be up for a second date if you are.', 'Thanks for meeting up. I did not feel the connection I am looking for, so I am going to leave it there. I wish you well.'],
   'signs-texting-conversation-losing-momentum': ['You mentioned wanting a quiet weekend. Did you actually get one?', 'I passed a place that reminded me of your terrible food ranking. Still defending that opinion?', 'I have enjoyed talking with you. Want to continue this over coffee this week?'],
   'signs-texting-conversation-becoming-one-sided': ['I have enjoyed our chats. Want to continue this over coffee this week?', 'I have noticed I am usually starting our conversations. Are you still interested in keeping in touch?', 'I do not want to keep carrying the conversation, so I am going to step back. Wishing you well.'],
   'how-to-tell-if-someone-is-flirting-over-text': ['You are making a strong case for yourself. What is your best argument in person?', 'I cannot tell if you are teasing me or flirting with me. Either way, I am enjoying it.', 'I like this energy. Want to continue it over coffee this week?'],
@@ -527,6 +531,7 @@ const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
   'funny-pickup-lines-that-work': { do: 'Use the line as a soft launch into a real conversation.', doNot: 'Treat the opener like a performance that needs a sequel.' },
   'best-dating-app-bio-ideas-for-guys': { do: 'Share specific details that make the next message obvious.', doNot: 'Fill the bio with broad labels, rules, or complaints.' },
   'what-to-text-after-a-first-date': { do: 'Be timely, specific, and clear about enjoying the date.', doNot: 'Wait for a perfect paragraph or edit your personality away.' },
+  'follow-up-after-awkward-first-date': { do: 'Name what you actually want, send one clear message, and leave room for an honest answer.', doNot: 'Force a second date, over-explain the awkward moment, or ignore pressure because you feel obligated to be polite.' },
   'signs-texting-conversation-losing-momentum': { do: 'Make one specific, low-pressure move and watch for shared effort.', doNot: 'Stack messages, test their interest, or carry the whole conversation alone.' },
   'signs-texting-conversation-becoming-one-sided': { do: 'Look at the pattern, communicate clearly once, and leave room for shared effort.', doNot: 'Keep rescuing the chat, run silent tests, or treat every quiet patch as a personal verdict.' },
   'how-to-tell-if-someone-is-flirting-over-text': { do: 'Respond to the energy you actually feel and communicate clearly when the tone matters.', doNot: 'Treat one emoji as proof, escalate pressure, or ignore a boundary because the attention feels flattering.' },
@@ -658,6 +663,13 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'reply-to-dry-texts', label: 'Reply to a short message' },
     { slug: 'reply-when-she-says-haha', label: 'Keep a playful chat moving' },
     { slug: 'best-dating-app-bio-ideas-for-guys', label: 'Refresh your dating profile' }
+  ],
+  'follow-up-after-awkward-first-date': [
+    { slug: 'what-to-text-after-a-first-date', label: 'What to text after a first date' },
+    { slug: 'signs-a-first-date-went-well', label: 'Read the signs a first date went well' },
+    { slug: 'build-real-connection-first-date', label: 'Build real connection on a first date' },
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy dating boundaries' },
+    { slug: 'how-to-ask-someone-out-over-text', label: 'Ask someone out clearly' }
   ],
   'signs-texting-conversation-losing-momentum': [
     { slug: 'reply-to-dry-texts', label: 'How to reply to dry texts' },
@@ -793,6 +805,7 @@ const ArticlePage: React.FC<{ post: BlogPost; navigate: (path: string) => void }
       <article className="mx-auto max-w-3xl">
         <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-white/35"><span className="text-pink-300/80">{post.category}</span><span>•</span><span>{post.readingTime}</span><span>•</span><time dateTime={post.date}>{new Date(`${post.date}T12:00:00`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</time></div>
         <h1 className="mt-6 text-4xl font-black leading-[1.05] tracking-[-0.04em] text-white md:text-6xl">{post.title}</h1>
+        {post.author && <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-white/40">By {EDITORIAL_AUTHORS[post.author].name} <span className="text-white/20">·</span> {EDITORIAL_AUTHORS[post.author].role}</p>}
         <p className="mt-7 text-lg leading-8 text-white/55">{post.description}</p>
         {post.image && <figure className="mt-9 overflow-hidden rounded-3xl border border-pink-300/15 bg-black/20 shadow-[0_24px_80px_rgba(236,72,153,0.12)]"><picture><source type="image/webp" srcSet={post.imageWebp} /><img src={post.image} alt={post.imageAlt || post.title} className="aspect-[16/9] w-full object-cover" loading="eager" decoding="async" /></picture><figcaption className="border-t border-white/10 px-5 py-3 text-xs text-white/35">{post.imageCaption || 'A better follow-up is clear, calm, and gives the other person room to choose.'}</figcaption></figure>}
         <div className="mt-10 space-y-5">

@@ -1,5 +1,26 @@
 export const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=app.vercel.rizzmaster&pcampaignid=web_share';
 
+export interface EditorialAuthor {
+  name: string;
+  role: string;
+  bio: string;
+}
+
+export const EDITORIAL_AUTHORS = {
+  amelia: {
+    name: 'Amelia',
+    role: 'Rizz Master editorial voice',
+    bio: 'A named Rizz Master editorial voice for clear guidance on communication, boundaries, and dating decisions.'
+  },
+  jake: {
+    name: 'Jake',
+    role: 'Rizz Master editorial voice',
+    bio: 'A named Rizz Master editorial voice for practical guidance on confidence, texting, and respectful connection.'
+  }
+} as const;
+
+export type EditorialAuthorId = keyof typeof EDITORIAL_AUTHORS;
+
 export interface BlogSection {
   heading: string;
   paragraphs: string[];
@@ -25,11 +46,128 @@ export interface BlogPost {
   imageWebp?: string;
   imageAlt?: string;
   imageCaption?: string;
+  author?: EditorialAuthorId;
   resources?: Array<{ label: string; url: string }>;
   sections: BlogSection[];
 }
 
 export const BLOG_POSTS: BlogPost[] = [
+  {
+    slug: 'follow-up-after-awkward-first-date',
+    title: 'How to Follow Up After an Awkward First Date Without Forcing a Second One',
+    seoTitle: 'What to Text After an Awkward First Date',
+    description: 'An awkward first date does not need an awkward ending. Learn what to text, when a second date is worth exploring, and how to step back when the interest or respect is not mutual.',
+    excerpt: 'Send one short, honest message that names what you enjoyed, clears up anything you want to clarify, and leaves room for a no. A second date is worth exploring when both people show curiosity and respect; a polite close is the right move when you feel pressured, unsafe, or consistently dismissed.',
+    date: '2026-10-02',
+    updatedAt: '2026-10-02',
+    readingTime: '11 min read',
+    category: 'First date advice',
+    author: 'amelia',
+    keywords: [
+      'how to follow up after an awkward first date',
+      'what to text after an awkward first date',
+      'should I go on a second date if the first date was awkward',
+      'how to recover from an awkward first date',
+      'what to text after a bad first date',
+      'how to ask for a second date after an awkward first date',
+      'how to politely decline a second date',
+      'awkward first date follow up message'
+    ],
+    image: '/blog/follow-up-after-awkward-first-date-hero.png',
+    imageAlt: 'Two coffee cups, a notebook, and a phone on a cafe table after a reflective first date',
+    imageCaption: 'A thoughtful follow-up can create clarity without turning one awkward evening into a verdict on either person.',
+    resources: [
+      { label: 'loveisrespect: Respectful texting in a relationship', url: 'https://www.loveisrespect.org/resources/respectful-texting-in-a-relationship/' },
+      { label: 'loveisrespect: Digital boundaries', url: 'https://www.loveisrespect.org/resources/digital-boundaries/' },
+      { label: 'RAINN: Tips for safer dating online and in person', url: 'https://rainn.org/strategies-to-reduce-risk-increase-safety/tips-for-safer-dating-online-and-in-person/' }
+    ],
+    sections: [
+      {
+        heading: 'First decide what "awkward" actually meant',
+        paragraphs: [
+          'Awkwardness is a description of a moment, not a complete compatibility test. Two people can be nervous, lose the thread of a conversation, misread a joke, or discover that text chemistry does not immediately translate to an in-person rhythm. None of those moments automatically means the date should be repeated or abandoned.',
+          'It helps to separate an uncomfortable pause from a pattern that made you feel small or unsafe. A quiet stretch can be repaired with curiosity. Pressure, insults, boundary testing, contempt, or a request for money deserves a different response. Before you write, name the part that felt awkward and whether you still feel interested in learning more.'
+        ],
+        bullets: [
+          'Nerves or a slow start can be worth giving a little more time.',
+          'A mismatch in humour, pace, or conversation may be useful information without making either person wrong.',
+          'Disrespect, pressure, or fear is a reason to protect your space rather than create a second chance.'
+        ]
+      },
+      {
+        heading: 'Choose the outcome you can honestly invite',
+        paragraphs: [
+          'There are three reasonable reasons to follow up: you enjoyed enough of the date to be curious, you want to clear up one moment before deciding, or you want to close the interaction kindly. Choose one before opening the chat. A message that asks for reassurance, a second date, and an explanation at the same time will feel heavier than you intend.',
+          'You also do not owe a follow-up simply because the other person paid, travelled, or seemed enthusiastic. Gratitude is not consent to another date. If you felt unsafe or your boundaries were ignored, ending contact or using the platform safety tools may be more appropriate than explaining your decision in detail.'
+        ],
+        bullets: [
+          'Send a message you can stand behind if the reply is warm, uncertain, brief, or missing.',
+          'Keep the purpose narrow: reconnect, clarify, or close.',
+          'Do not use a second-date invitation to test whether someone will chase you.'
+        ]
+      },
+      {
+        heading: 'When a second date is worth considering',
+        paragraphs: [
+          'A second date can make sense when the awkwardness came from circumstances rather than a lack of respect. Look for signs that the other person was also trying: they asked questions, noticed when a moment went flat, respected your limits, and showed interest in who you are beyond making a good impression. You are not looking for a perfect first date. You are looking for enough mutual care to make another conversation worthwhile.',
+          'You can also ask whether your curiosity is specific. Maybe you liked their kindness, the way they handled a misunderstanding, or the topic you ran out of time to discuss. Specific curiosity gives you a better reason to try again than the fear that you will not meet anyone else.'
+        ],
+        bullets: [
+          'The date had at least one real point of connection you would like to explore.',
+          'Both people can acknowledge a clumsy moment without turning it into blame.',
+          'A second plan can be simpler, shorter, or better suited to talking.'
+        ]
+      },
+      {
+        heading: 'When the awkwardness is a useful warning',
+        paragraphs: [
+          'Some dates feel awkward because your body is registering a boundary problem before you have a polished explanation. You may have felt rushed, talked over, mocked, pushed to disclose personal information, or pressured to change plans. You do not need to debate whether the other person intended harm before you take distance. Your comfort and safety are enough information to act on.',
+          'If the person continues contacting you after you have said no, keep the response short, save relevant messages, and use the dating service or local support options available to you. RAINN offers practical safety guidance for meeting people online and in person, while loveisrespect explains how digital boundaries can be communicated and respected. These resources are useful when the question is no longer about finding the perfect text and is instead about keeping control of your contact and time.'
+        ],
+        bullets: [
+          'Do not meet again to prove that your discomfort was reasonable.',
+          'You can decline without listing every flaw or defending the decision.',
+          'If you feel threatened, seek help from someone you trust or an appropriate local service.'
+        ]
+      },
+      {
+        heading: 'What to text after an awkward but promising date',
+        paragraphs: [
+          'If you are still curious, make the next message warm and specific. Mention one genuine part of the date, then offer a clear but low-pressure next step. You do not need to write a post-game analysis. The goal is to show interest while giving the other person a comfortable way to answer honestly.',
+          'If the awkward moment is still on your mind, name it lightly without making the other person manage your feelings. A sentence such as "I think we both got a little nervous at the start" creates room for repair. Avoid pretending everything felt perfect, but avoid turning the text into a courtroom either.'
+        ],
+        bullets: [
+          'I had a good time getting to know you. I think we were both a little nervous at first - want to try again over coffee next week?',
+          'I liked talking with you, especially the part about your travel story. I would be up for a second date if you are.',
+          'I felt the first few minutes were a little clumsy, but I enjoyed the rest of the evening. How did it feel for you?'
+        ]
+      },
+      {
+        heading: 'What to text when you do not want a second date',
+        paragraphs: [
+          'Kindness does not require a vague maybe. If you know you are not interested, a brief and direct message is usually easier for both people than disappearing or offering a future plan you do not intend to make. You can thank them for the time without saying the date was wonderful, and you can be clear without giving a detailed critique.',
+          'The other person may be disappointed. That does not mean the message was unkind. A respectful close gives them accurate information and gives you permission to stop performing interest. If you would rather not continue contact, say so plainly and do not keep debating the decision.'
+        ],
+        bullets: [
+          'Thanks for meeting up. I did not feel the connection I am looking for, so I am going to leave it there. I wish you well.',
+          'I appreciate the evening, but I do not think a second date is right for me. Take care.',
+          'I am not comfortable continuing this conversation. Please do not contact me again.'
+        ]
+      },
+      {
+        heading: 'Read the reply for mutual effort, not hidden meaning',
+        paragraphs: [
+          'After you send one clear message, pay attention to how the reply feels in practice. Interest does not have to look like a perfect paragraph. It usually includes some combination of a direct answer, a question back, a concrete plan, or a respectful acknowledgement of what you said. If the person is unsure, they can say that too.',
+          'A vague reply is still information. You can ask once for clarity if you genuinely want it, but you do not need to keep improving the message until the other person becomes available. Likewise, a warm reply does not obligate you to meet again. You can change your mind after the date and after the text; the point of following up is clarity, not a contract.'
+        ],
+        bullets: [
+          'Look for consistency between their words, timing, and willingness to make a respectful plan.',
+          'Treat pressure, guilt, or dismissal as information about fit.',
+          'One honest follow-up is enough. Let the next move be mutual.'
+        ]
+      }
+    ]
+  },
   {
     slug: 'restart-conversation-after-long-pause',
     title: 'How to Restart a Conversation After a Long Pause Without Making It Awkward',
