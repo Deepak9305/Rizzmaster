@@ -792,6 +792,22 @@ const ArticleResources: React.FC<{ post: BlogPost }> = ({ post }) => {
   );
 };
 
+const ArticleFaq: React.FC<{ post: BlogPost }> = ({ post }) => {
+  if (!post.faqs?.length) return null;
+
+  return (
+    <section className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 md:p-6" aria-labelledby="article-faq-heading">
+      <p id="article-faq-heading" className="text-xs font-black uppercase tracking-[0.2em] text-pink-200/75">Common questions</p>
+      <div className="mt-4 divide-y divide-white/10">
+        {post.faqs.map((faq) => <details key={faq.question} className="group py-4 first:pt-0 last:pb-0">
+          <summary className="cursor-pointer list-none pr-6 text-sm font-bold leading-6 text-white/85 marker:hidden group-open:text-pink-100">{faq.question}</summary>
+          <p className="mt-3 text-sm leading-7 text-white/60">{faq.answer}</p>
+        </details>)}
+      </div>
+    </section>
+  );
+};
+
 const ArticleSectionImage: React.FC<{ section: BlogPost['sections'][number] }> = ({ section }) => {
   if (!section.image) return null;
 
@@ -824,6 +840,7 @@ const ArticlePage: React.FC<{ post: BlogPost; navigate: (path: string) => void }
           <ArticleInternalLinks post={post} navigate={navigate} />
           {post.slug === 'what-to-text-when-they-stop-replying' && <figure className="overflow-hidden rounded-3xl border border-amber-300/15 bg-black/20"><img src="/blog/what-to-text-when-they-stop-replying-follow-up.svg" alt="Three calm follow-up directions: check in, make a plan, or close the conversation" className="aspect-[3/2] w-full object-cover" loading="lazy" decoding="async" /><figcaption className="border-t border-white/10 px-5 py-3 text-xs text-white/35">Choose the message that matches what you actually want, not the one most likely to provoke a reply.</figcaption></figure>}
           <ArticleResources post={post} />
+          <ArticleFaq post={post} />
         </div>
         <div className="mt-12 space-y-12">
           {post.sections.map((section, index) => <React.Fragment key={section.heading}>

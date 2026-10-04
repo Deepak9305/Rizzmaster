@@ -55,9 +55,15 @@ const renderSectionImage = (section) => section.image
   ? `<figure class="my-8 overflow-hidden rounded-3xl border border-white/10 bg-black/20"><picture>${section.imageWebp ? `<source type="image/webp" srcset="${escapeAttribute(section.imageWebp)}">` : ''}<img src="${escapeAttribute(section.image)}" alt="${escapeAttribute(section.imageAlt || section.heading)}" loading="lazy" decoding="async" class="aspect-[16/9] w-full object-cover"></picture><figcaption class="border-t border-white/10 px-5 py-3 text-xs leading-5 text-white/35">${escapeHtml(section.imageCaption || '')}</figcaption></figure>`
   : '';
 
-const renderResources = (post) => post.resources?.length
+const renderResourcesOnly = (post) => post.resources?.length
   ? `<section class="rounded-3xl border border-amber-300/15 bg-amber-300/[0.04] p-5 md:p-6"><p class="text-xs font-black uppercase tracking-[0.2em] text-amber-200/80">Further reading</p><p class="mt-3 text-sm leading-6 text-white/50">For more perspective on communication, boundaries, and healthy relationship patterns:</p><div class="mt-4 flex flex-col gap-2">${post.resources.map((resource) => `<a href="${escapeAttribute(resource.url)}" target="_blank" rel="noreferrer" class="text-sm font-bold text-amber-100/80">${escapeHtml(resource.label)} -&gt;</a>`).join('')}</div></section>`
   : '';
+
+const renderFaqs = (post) => post.faqs?.length
+  ? `<section class="rounded-3xl border border-white/10 bg-white/[0.03] p-5 md:p-6" aria-labelledby="article-faq-heading"><p id="article-faq-heading" class="text-xs font-black uppercase tracking-[0.2em] text-pink-200/75">Common questions</p><div class="mt-4 divide-y divide-white/10">${post.faqs.map((faq) => `<details class="group py-4 first:pt-0 last:pb-0"><summary class="cursor-pointer list-none pr-6 text-sm font-bold leading-6 text-white/85 marker:hidden">${escapeHtml(faq.question)}</summary><p class="mt-3 text-sm leading-7 text-white/60">${escapeHtml(faq.answer)}</p></details>`).join('')}</div></section>`
+  : '';
+
+const renderResources = (post) => `${renderResourcesOnly(post)}${renderFaqs(post)}`;
 
 const articleInternalLinks = {
   'respond-to-last-minute-date-cancellation': [

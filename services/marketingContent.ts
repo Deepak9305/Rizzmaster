@@ -48,6 +48,7 @@ export interface BlogPost {
   imageCaption?: string;
   author?: EditorialAuthorId;
   resources?: Array<{ label: string; url: string }>;
+  faqs?: Array<{ question: string; answer: string }>;
   sections: BlogSection[];
 }
 
@@ -81,6 +82,11 @@ export const BLOG_POSTS: BlogPost[] = [
       { label: 'loveisrespect: Respecting your partner\'s boundaries', url: 'https://www.loveisrespect.org/resources/respecting-your-partners-boundaries/' },
       { label: 'RAINN: Tips for safer dating online and in person', url: 'https://rainn.org/strategies-to-reduce-risk-increase-safety/tips-for-safer-dating-online-and-in-person/' }
     ],
+    faqs: [
+      { question: 'Should I respond to a last-minute date cancellation?', answer: 'Yes, if you want clarity or still feel interested. Keep the reply brief, acknowledge the change, and decide whether you want them to suggest a concrete new plan.' },
+      { question: 'What does it mean if someone cancels a date but does not reschedule?', answer: 'It may mean their schedule is difficult, their interest has changed, or they are not ready to make the effort. You do not have to solve which explanation is true; let their next concrete action provide the answer.' },
+      { question: 'How many times should you let someone cancel a date?', answer: 'There is no universal number. Consider your time, how they handled each cancellation, and whether the pattern is improving. One clear boundary is enough when the arrangement no longer feels respectful.' }
+    ],
     sections: [
       {
         heading: 'One cancellation gives you context; a pattern gives you a decision',
@@ -97,7 +103,7 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         heading: 'Choose the response you actually want to send',
         paragraphs: [
-          'Before replying, decide whether you want to reschedule, set a boundary, or close the connection. These are different messages. If you want another chance, you can be warm without doing all the planning. If you feel disappointed and want more reliability, say what you need. If the pattern has already changed how you feel, you are allowed to end it politely.',
+          'Before replying, decide whether you want to reschedule, set a boundary, or close the connection. These are different messages. If another chance appeals to you, stay warm without taking on all the planning. If reliability matters, name it. If the pattern has changed your interest, end it politely.',
           'Do not send a casual "no worries" when you are hoping the person will understand that your time matters. That message may keep the conversation pleasant for a moment, but it hides the information you need them to respond to. Clear communication gives the other person a fair chance to meet the boundary and gives you a fair chance to see what they do.'
         ],
         bullets: [
@@ -133,7 +139,7 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         heading: 'What to text after a second cancellation',
         paragraphs: [
-          'After a repeated cancellation, the question becomes whether you want to keep investing in a plan that has not become reliable. You do not need to build a case against the person. Describe the pattern and the action you are taking. A boundary works best when it is about what you will do with your time, rather than a demand that you control their behaviour.',
+          'After a repeated cancellation, decide whether you want to keep investing in a plan that has not become reliable. Describe the pattern and the action you are taking. A boundary works best when it is about what you will do with your time, rather than a demand that you control their behaviour.',
           'A direct message can still leave the door open if that is what you want. For example, you can say that you will stop making plans for now and that they can reach out if they are ready to follow through. This removes you from the role of chasing without turning the text into a punishment.'
         ],
         bullets: [
@@ -145,8 +151,8 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         heading: 'When to stop making room for the pattern',
         paragraphs: [
-          'You can step away without waiting for a third cancellation. A person who mocks your disappointment, blames you for having expectations, pressures you to stay available, or keeps asking for more chances without changing their behaviour is giving you a clear answer about the kind of connection they can offer.',
-          'If the cancellation is connected to pressure, harassment, money requests, or fear, treat it as a safety concern rather than a scheduling problem. RAINN recommends trusting your instincts, keeping control of your transportation, and using blocking or reporting tools when someone makes you uncomfortable. You do not owe an in-person meeting to someone who has made you feel unsafe.'
+          'There is no requirement to wait for a third cancellation. Mockery, blame, pressure to stay available, or repeated requests for another chance without changed behaviour tell you that the connection is not offering the respect you need.',
+          'If the cancellation is tied to harassment, money requests, or fear, treat it as a safety concern. RAINN recommends trusting your instincts, keeping control of your transportation, and using blocking or reporting tools when someone makes you uncomfortable.'
         ],
         bullets: [
           'You are allowed to value your time before you can prove the other person had bad intentions.',
@@ -157,9 +163,8 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         heading: 'Read the next move instead of chasing an explanation',
         paragraphs: [
-          'After you send a clear response, give the other person space to show what they will do. A respectful reply may include an apology, a direct answer, and a workable plan. An interested person can also say that they are no longer available for dating. Clarity is more useful than a perfectly reassuring message.',
-          'If they respond with another vague promise, turn the conversation back into a test of follow-through. You do not need to debate, remind, or offer more dates. Let them make the next concrete move. If it never comes, you have your answer without sending another message to extract it.',
-          'Healthy boundaries leave room for someone to repair a mistake, while still allowing you to leave when repair does not happen. Your time is part of the connection too.'
+          'After you send a clear response, give the other person room to show what they will do. A respectful reply may include an apology, a direct answer, and a workable plan. They can also say they are no longer available for dating. Clarity is more useful than a perfectly reassuring message.',
+          'If the next reply is another vague promise, stop organising the date. Let them make the concrete move, then judge the behaviour rather than extracting another explanation. A boundary leaves room for repair and gives you a clear exit when repair does not happen.'
         ],
         bullets: [
           'Watch for changed behaviour over time, not just a more convincing explanation.',
