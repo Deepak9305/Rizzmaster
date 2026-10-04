@@ -53,6 +53,123 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'respond-to-last-minute-date-cancellation',
+    title: 'How to Respond When Someone Cancels a Date at the Last Minute Without Chasing Them',
+    seoTitle: 'What to Text When Someone Cancels a Date at the Last Minute',
+    description: 'Learn how to respond to a last-minute date cancellation with empathy, self-respect, and a clear boundary when the pattern keeps repeating.',
+    excerpt: 'Look at the reason, the notice, and what happens next. One genuine cancellation can be handled with warmth; repeated cancellations without ownership or a concrete reschedule are useful information about the effort available to you.',
+    date: '2026-10-05',
+    updatedAt: '2026-10-05',
+    readingTime: '10 min read',
+    category: 'Dating boundaries',
+    author: 'amelia',
+    keywords: [
+      'what to text when someone cancels a date last minute',
+      'how to respond to a last minute date cancellation',
+      'someone keeps cancelling dates',
+      'how to set a boundary after a cancelled date',
+      'should I reschedule after a cancelled date',
+      'last minute cancellation dating advice',
+      'how to respond when someone flakes on a date',
+      'how to stop chasing someone who cancels plans'
+    ],
+    image: '/blog/last-minute-date-cancellation-hero.png',
+    imageAlt: 'A coffee cup, notebook, and phone on a cafe table beside an empty chair after a changed plan',
+    imageCaption: 'A changed plan deserves a clear response that makes room for context while protecting your time.',
+    resources: [
+      { label: 'loveisrespect: Boundaries and expectations', url: 'https://www.loveisrespect.org/resources/boundaries-expectations/' },
+      { label: 'loveisrespect: Respecting your partner\'s boundaries', url: 'https://www.loveisrespect.org/resources/respecting-your-partners-boundaries/' },
+      { label: 'RAINN: Tips for safer dating online and in person', url: 'https://rainn.org/strategies-to-reduce-risk-increase-safety/tips-for-safer-dating-online-and-in-person/' }
+    ],
+    sections: [
+      {
+        heading: 'One cancellation gives you context; a pattern gives you a decision',
+        paragraphs: [
+          'A last-minute cancellation can happen for a serious reason, a difficult day, or a simple failure to plan well. You cannot know which one it is from the cancellation alone. What you can observe is how the person communicates it and whether they take responsibility for the time you set aside.',
+          'Look at the whole exchange. Did they tell you as soon as they knew? Did they offer a brief explanation without making you comfort them? Did they apologise and suggest a specific alternative? A person can have a real reason and still handle the cancellation poorly. The useful question is not whether their excuse sounds perfect. It is whether their behaviour leaves room for respect and mutual effort.'
+        ],
+        bullets: [
+          'A genuine emergency may need compassion and a later check-in.',
+          'A vague message with no ownership tells you less than a clear apology with a concrete plan.',
+          'Repeated cancellations matter even when every individual reason sounds plausible.'
+        ]
+      },
+      {
+        heading: 'Choose the response you actually want to send',
+        paragraphs: [
+          'Before replying, decide whether you want to reschedule, set a boundary, or close the connection. These are different messages. If you want another chance, you can be warm without doing all the planning. If you feel disappointed and want more reliability, say what you need. If the pattern has already changed how you feel, you are allowed to end it politely.',
+          'Do not send a casual "no worries" when you are hoping the person will understand that your time matters. That message may keep the conversation pleasant for a moment, but it hides the information you need them to respond to. Clear communication gives the other person a fair chance to meet the boundary and gives you a fair chance to see what they do.'
+        ],
+        bullets: [
+          'Reschedule when you still feel curious and the cancellation was handled with care.',
+          'Set a boundary when you are open to continuing but need more reliable planning.',
+          'Step away when the pattern has made you feel anxious, unimportant, or pressured.'
+        ]
+      },
+      {
+        heading: 'When rescheduling makes sense',
+        paragraphs: [
+          'A reschedule is reasonable when the person communicates early enough to reduce the disruption, gives a proportionate explanation, and takes initiative afterward. Initiative does not mean they need to write a perfect apology. It means they help repair the plan instead of leaving you to keep the connection alive by yourself.',
+          'You can also make the next plan easier to keep. Choose a shorter meeting, a public place close to both of you, or a time that does not require either person to rearrange an entire day. A smaller plan can show whether the issue was logistics or a lack of interest.'
+        ],
+        bullets: [
+          'They acknowledge the inconvenience without making you argue that it mattered.',
+          'They suggest a realistic day and time instead of saying only "soon."',
+          'Their next few actions match the effort in their message.'
+        ]
+      },
+      {
+        heading: 'What to text when you are open to trying again',
+        paragraphs: [
+          'Keep the message short and let the next step remain mutual. You can accept the explanation without promising unlimited flexibility. If they have not suggested a new plan, you can invite them to do that once. Then stop organising the date for them.',
+          'Your tone can be kind and still have a limit. You are responding to the plan in front of you, not proving that you are easygoing enough to deserve interest.'
+        ],
+        bullets: [
+          'I am sorry your day became difficult. I would still be happy to meet another time if you would like to make a clear plan.',
+          'Thanks for letting me know. I am open to rescheduling - send me a day that works when you have checked your schedule.',
+          'I was disappointed because I had set the time aside, but I hope everything is okay. If you are still interested, suggest a time next week.'
+        ]
+      },
+      {
+        heading: 'What to text after a second cancellation',
+        paragraphs: [
+          'After a repeated cancellation, the question becomes whether you want to keep investing in a plan that has not become reliable. You do not need to build a case against the person. Describe the pattern and the action you are taking. A boundary works best when it is about what you will do with your time, rather than a demand that you control their behaviour.',
+          'A direct message can still leave the door open if that is what you want. For example, you can say that you will stop making plans for now and that they can reach out if they are ready to follow through. This removes you from the role of chasing without turning the text into a punishment.'
+        ],
+        bullets: [
+          'We have had to cancel twice, and I am looking for plans that are more consistent. I am going to leave this here, but I wish you well.',
+          'I am open to meeting when the timing is genuinely workable for you. I am going to stop trying to arrange it for now.',
+          'I do not want to keep making plans that change at the last minute, so I am stepping back from this connection.'
+        ]
+      },
+      {
+        heading: 'When to stop making room for the pattern',
+        paragraphs: [
+          'You can step away without waiting for a third cancellation. A person who mocks your disappointment, blames you for having expectations, pressures you to stay available, or keeps asking for more chances without changing their behaviour is giving you a clear answer about the kind of connection they can offer.',
+          'If the cancellation is connected to pressure, harassment, money requests, or fear, treat it as a safety concern rather than a scheduling problem. RAINN recommends trusting your instincts, keeping control of your transportation, and using blocking or reporting tools when someone makes you uncomfortable. You do not owe an in-person meeting to someone who has made you feel unsafe.'
+        ],
+        bullets: [
+          'You are allowed to value your time before you can prove the other person had bad intentions.',
+          'You do not need to provide a detailed critique to justify ending contact.',
+          'If you feel unsafe, involve someone you trust and use the safety or reporting support available on the dating platform.'
+        ]
+      },
+      {
+        heading: 'Read the next move instead of chasing an explanation',
+        paragraphs: [
+          'After you send a clear response, give the other person space to show what they will do. A respectful reply may include an apology, a direct answer, and a workable plan. An interested person can also say that they are no longer available for dating. Clarity is more useful than a perfectly reassuring message.',
+          'If they respond with another vague promise, turn the conversation back into a test of follow-through. You do not need to debate, remind, or offer more dates. Let them make the next concrete move. If it never comes, you have your answer without sending another message to extract it.',
+          'Healthy boundaries leave room for someone to repair a mistake, while still allowing you to leave when repair does not happen. Your time is part of the connection too.'
+        ],
+        bullets: [
+          'Watch for changed behaviour over time, not just a more convincing explanation.',
+          'A clear no is easier to respect than a half-open door you do not want to keep standing beside.',
+          'One honest boundary is enough. The next move should be mutual.'
+        ]
+      }
+    ]
+  },
+  {
     slug: 'follow-up-after-awkward-first-date',
     title: 'How to Follow Up After an Awkward First Date Without Forcing a Second One',
     seoTitle: 'What to Text After an Awkward First Date',

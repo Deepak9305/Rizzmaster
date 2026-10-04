@@ -60,6 +60,13 @@ const renderResources = (post) => post.resources?.length
   : '';
 
 const articleInternalLinks = {
+  'respond-to-last-minute-date-cancellation': [
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy texting boundaries' },
+    { slug: 'signs-texting-conversation-becoming-one-sided', label: 'Spot one-sided effort' },
+    { slug: 'how-to-stop-overthinking-while-dating', label: 'Stop overthinking the pattern' },
+    { slug: 'how-to-ask-someone-out-over-text', label: 'Make a clear dating plan' },
+    { slug: 'follow-up-after-awkward-first-date', label: 'Follow up after an awkward date' }
+  ],
   'restart-conversation-after-long-pause': [
     { slug: 'texting-boundaries-while-dating', label: 'Set healthy texting boundaries' },
     { slug: 'what-to-text-when-they-stop-replying', label: 'Choose a calm follow-up' },

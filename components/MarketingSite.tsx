@@ -502,6 +502,7 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
   'funny-pickup-lines-that-work': ['I had a clever opener ready, but your profile distracted me. What is your best recommendation around here?'],
   'best-dating-app-bio-ideas-for-guys': ['Ideal Sunday: long walk, new coffee shop, and pretending I will meal prep.'],
   'what-to-text-after-a-first-date': ['I had a great time tonight - your story about the failed cooking class still has me laughing.'],
+  'respond-to-last-minute-date-cancellation': ['Thanks for letting me know. I am open to rescheduling - send me a day that works when you have checked your schedule.', 'We have had to cancel twice, and I am looking for plans that are more consistent. I am going to leave this here, but I wish you well.', 'I am open to meeting when the timing is genuinely workable for you. I am going to stop trying to arrange it for now.'],
   'follow-up-after-awkward-first-date': ['I had a good time getting to know you. I think we were both a little nervous at first - want to try again over coffee next week?', 'I liked talking with you, especially the part about your travel story. I would be up for a second date if you are.', 'Thanks for meeting up. I did not feel the connection I am looking for, so I am going to leave it there. I wish you well.'],
   'signs-texting-conversation-losing-momentum': ['You mentioned wanting a quiet weekend. Did you actually get one?', 'I passed a place that reminded me of your terrible food ranking. Still defending that opinion?', 'I have enjoyed talking with you. Want to continue this over coffee this week?'],
   'signs-texting-conversation-becoming-one-sided': ['I have enjoyed our chats. Want to continue this over coffee this week?', 'I have noticed I am usually starting our conversations. Are you still interested in keeping in touch?', 'I do not want to keep carrying the conversation, so I am going to step back. Wishing you well.'],
@@ -531,6 +532,7 @@ const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
   'funny-pickup-lines-that-work': { do: 'Use the line as a soft launch into a real conversation.', doNot: 'Treat the opener like a performance that needs a sequel.' },
   'best-dating-app-bio-ideas-for-guys': { do: 'Share specific details that make the next message obvious.', doNot: 'Fill the bio with broad labels, rules, or complaints.' },
   'what-to-text-after-a-first-date': { do: 'Be timely, specific, and clear about enjoying the date.', doNot: 'Wait for a perfect paragraph or edit your personality away.' },
+  'respond-to-last-minute-date-cancellation': { do: 'Look at the pattern, say what you want, and let the other person take responsibility for the next concrete plan.', doNot: 'Chase explanations, pretend you are fine when you are not, or keep rearranging your time without shared effort.' },
   'follow-up-after-awkward-first-date': { do: 'Name what you actually want, send one clear message, and leave room for an honest answer.', doNot: 'Force a second date, over-explain the awkward moment, or ignore pressure because you feel obligated to be polite.' },
   'signs-texting-conversation-losing-momentum': { do: 'Make one specific, low-pressure move and watch for shared effort.', doNot: 'Stack messages, test their interest, or carry the whole conversation alone.' },
   'signs-texting-conversation-becoming-one-sided': { do: 'Look at the pattern, communicate clearly once, and leave room for shared effort.', doNot: 'Keep rescuing the chat, run silent tests, or treat every quiet patch as a personal verdict.' },
@@ -663,6 +665,13 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'reply-to-dry-texts', label: 'Reply to a short message' },
     { slug: 'reply-when-she-says-haha', label: 'Keep a playful chat moving' },
     { slug: 'best-dating-app-bio-ideas-for-guys', label: 'Refresh your dating profile' }
+  ],
+  'respond-to-last-minute-date-cancellation': [
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy texting boundaries' },
+    { slug: 'signs-texting-conversation-becoming-one-sided', label: 'Spot one-sided effort' },
+    { slug: 'how-to-stop-overthinking-while-dating', label: 'Stop overthinking the pattern' },
+    { slug: 'how-to-ask-someone-out-over-text', label: 'Make a clear dating plan' },
+    { slug: 'follow-up-after-awkward-first-date', label: 'Follow up after an awkward date' }
   ],
   'follow-up-after-awkward-first-date': [
     { slug: 'what-to-text-after-a-first-date', label: 'What to text after a first date' },
