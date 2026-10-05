@@ -54,6 +54,127 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'what-to-text-when-someone-needs-space',
+    title: 'What to Text When Someone Says They Need Space Without Chasing Them',
+    seoTitle: 'What to Text When Someone Says They Need Space',
+    description: 'Learn how to respect a request for space, ask for the clarity you need, and protect your own time when someone goes quiet without a clear plan.',
+    excerpt: 'Acknowledge the request, clarify what space means once, and agree on the contact you can both reasonably expect. Then give them room without putting your own life on hold. If the silence becomes indefinite or the boundary is used to keep you anxious, you can step back.',
+    date: '2026-10-05',
+    updatedAt: '2026-10-05',
+    readingTime: '10 min read',
+    category: 'Texting boundaries',
+    author: 'jake',
+    keywords: [
+      'what to text when someone needs space',
+      'how to respond when someone says they need space',
+      'how long should you give someone space',
+      'what does it mean when someone needs space',
+      'should I text someone who needs space',
+      'how to give someone space without losing them',
+      'what to say when someone wants a break from texting',
+      'how to set a boundary when someone goes quiet'
+    ],
+ image: '/blog/when-someone-needs-space-hero.jpg',
+    imageAlt: 'Two coffee cups set apart on a table with a notebook and phone between two quiet chairs',
+    imageCaption: 'Giving someone room works best when the request is clear and your own boundaries stay visible too.',
+    resources: [
+      { label: 'loveisrespect: Digital boundaries', url: 'https://www.loveisrespect.org/resources/digital-boundaries/' },
+      { label: 'loveisrespect: Creating boundaries in romantic relationships', url: 'https://www.loveisrespect.org/resources/creating-boundaries-in-romantic-relationships/' },
+      { label: 'RAINN: Tips for safer dating online and in person', url: 'https://rainn.org/strategies-to-reduce-risk-increase-safety/tips-for-safer-dating-online-and-in-person/' }
+    ],
+    faqs: [
+      { question: 'Should I reply when someone says they need space?', answer: 'Yes. Send one calm reply that acknowledges the request and asks what level of contact they mean if that is unclear. After that, give them the room they asked for.' },
+      { question: 'How long should I give someone space?', answer: 'There is no universal timeframe. Ask whether they have a rough idea, then choose a personal limit for how long you are comfortable waiting without a check-in or plan.' },
+      { question: 'What if they never come back after asking for space?', answer: 'Treat the continued silence as information. You can send one final closing message if you want, then stop organising your emotional life around a response that may not come.' }
+    ],
+    sections: [
+      {
+        heading: 'Start with what they actually said',
+        paragraphs: [
+          '“I need space” can mean several things. Someone may feel overwhelmed and want fewer messages, need time to think about the relationship, or be trying to create distance without knowing how to say that directly. You cannot read the exact meaning from four words, so do not build your whole response around the most hopeful or most painful interpretation.',
+          'Pay attention to the rest of the conversation. Did they name a stressor, ask for a pause, or say they are unsure about continuing? Did they offer any idea of when they might check in? The wording gives you context, but only a clear conversation can tell you what kind of space they mean.'
+        ],
+        bullets: [
+          'A request for fewer messages is different from a request to pause the relationship.',
+          'Needing time to think does not automatically mean the connection is over.',
+          'A vague request still deserves a clear response, because uncertainty affects both people.'
+        ]
+      },
+      {
+        heading: 'Clarify the shape of the space once',
+        paragraphs: [
+          'You do not need an interrogation. Ask one or two practical questions that help you respect the request without guessing. “Do you want no contact for a while, or fewer messages?” and “Would you like to check in next week?” are different from demanding a promise that they will return.',
+          'The point is to understand the boundary, not negotiate someone out of having one. If they cannot answer yet, you can acknowledge that and decide what you need for your own comfort. Their uncertainty does not require you to stay indefinitely available.'
+        ],
+        bullets: [
+          'Ask what contact, if any, feels okay during the pause.',
+          'Ask whether they have a rough time to revisit the conversation.',
+          'Share the limit you can follow, such as not continuing daily check-ins without mutual clarity.'
+        ]
+      },
+      {
+        heading: 'Give them room without putting your life on hold',
+        paragraphs: [
+          'Respecting space means changing your behaviour, not waiting beside your phone for proof that you matter. Stop sending check-ins if they asked for quiet. Keep your plans, talk to people you trust, and make decisions about your week that do not depend on a notification arriving.',
+          'This is also a useful point to notice your own reasons for staying in contact. If every message is an attempt to reduce anxiety, another message may provide relief for a few minutes and create more uncertainty afterward. A pause can be respected without turning it into a test of how long you can tolerate not knowing.'
+        ],
+        bullets: [
+          'Mute the chat if seeing it makes it harder to follow the boundary.',
+          'Do not use a public post, a second platform, or a friend to get around the request.',
+          'Choose a personal check-in point so waiting does not become indefinite.'
+        ]
+      },
+      {
+        heading: 'What to text when you can give space',
+        paragraphs: [
+          'A good reply is brief, respectful, and clear about what you will do next. You can show care without promising that you will accept any level of uncertainty forever. If you are comfortable with a check-in, name it. If you prefer them to contact you when they are ready, say that instead.',
+          'The message should make the boundary easier to follow. Avoid adding a long emotional explanation that asks them to reassure you while they are asking for less contact.'
+        ],
+        bullets: [
+          'I hear you. I will give you some room and pause the daily messages. Reach out when you have a better sense of what you need.',
+          'Thanks for telling me. I can give you space this week. Would checking in next Sunday feel helpful, or would you rather contact me when you are ready?',
+          'I care about you, and I also want to respect the pause. I am going to step back from texting for now.'
+        ]
+      },
+      {
+        heading: 'What to text when you need a boundary too',
+        paragraphs: [
+          'You can respect someone’s need for space and still say that an open-ended silence does not work for you. This is where a personal boundary helps. Explain the action you will take rather than demanding that they become certain on your schedule.',
+          'For example, you may be willing to pause contact for a week, but you may not want to remain in a relationship that disappears without a check-in. That is a decision about your participation. It does not punish the other person for needing time.'
+        ],
+        bullets: [
+          'I can give you space, but I am not comfortable leaving this open indefinitely. If I do not hear from you by next week, I will assume you want to end things.',
+          'I understand that you need time. I am going to step back too, and I will not keep holding plans or expectations open without a conversation.',
+          'I respect your request for space. I need more clarity than this arrangement gives me, so I am going to move on.'
+        ]
+      },
+      {
+        heading: 'When space becomes indefinite avoidance',
+        paragraphs: [
+          'A pause becomes difficult when it has no shared meaning and only one person carries the uncertainty. If someone returns only when they want attention, avoids every direct question, or keeps asking for more time without changing the pattern, the request may be functioning as distance rather than a temporary pause.',
+          'You can close the loop without proving what they intended. One final message is enough if sending it would help you feel complete: “I have not heard from you, so I am going to take this as a sign that you do not want to continue. I wish you well.” Then let the absence of a reply remain information.'
+        ],
+        bullets: [
+          'A rough timeframe can change, but it should be revisited with honest communication.',
+          'A return to affectionate messages does not erase a pattern of avoiding clarity.',
+          'You can leave when the arrangement keeps you anxious or keeps your choices suspended.'
+        ]
+      },
+      {
+        heading: 'If the request comes with pressure or fear',
+        paragraphs: [
+          'Sometimes “I need space” is part of a healthy request for privacy. Sometimes the surrounding behaviour includes guilt, threats, harassment, monitoring, or attempts to control where you go and who you contact. Focus on the behaviour around the words. You are entitled to end contact when you feel unsafe.',
+          'If someone ignores your request for no contact, keeps reaching you through new accounts, or threatens you, save the messages and use the platform’s blocking and reporting tools. RAINN’s safer-dating guidance also recommends trusting your instincts and involving someone you trust when a dating situation becomes uncomfortable or unsafe.'
+        ],
+        bullets: [
+          'Do not meet in person to settle a situation that already feels unsafe.',
+          'Tell someone you trust what is happening and keep important messages available.',
+          'A safety concern deserves support and distance, not a more carefully worded text.'
+        ]
+      }
+    ]
+  },
+  {
     slug: 'respond-to-last-minute-date-cancellation',
     title: 'How to Respond When Someone Cancels a Date at the Last Minute Without Chasing Them',
     seoTitle: 'What to Text When Someone Cancels a Date at the Last Minute',
@@ -5509,3 +5630,4 @@ export const BLOG_POSTS: BlogPost[] = [
 ];
 
 export const getBlogPost = (slug: string) => BLOG_POSTS.find((post) => post.slug === slug);
+

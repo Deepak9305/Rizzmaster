@@ -502,6 +502,7 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
   'funny-pickup-lines-that-work': ['I had a clever opener ready, but your profile distracted me. What is your best recommendation around here?'],
   'best-dating-app-bio-ideas-for-guys': ['Ideal Sunday: long walk, new coffee shop, and pretending I will meal prep.'],
   'what-to-text-after-a-first-date': ['I had a great time tonight - your story about the failed cooking class still has me laughing.'],
+  'what-to-text-when-someone-needs-space': ['I hear you. I will give you some room and pause the daily messages. Reach out when you have a better sense of what you need.', 'I can give you space, but I am not comfortable leaving this open indefinitely. If I do not hear from you by next week, I will assume you want to end things.', 'I respect your request for space. I need more clarity than this arrangement gives me, so I am going to move on.'],
   'respond-to-last-minute-date-cancellation': ['Thanks for letting me know. I am open to rescheduling - send me a day that works when you have checked your schedule.', 'We have had to cancel twice, and I am looking for plans that are more consistent. I am going to leave this here, but I wish you well.', 'I am open to meeting when the timing is genuinely workable for you. I am going to stop trying to arrange it for now.'],
   'follow-up-after-awkward-first-date': ['I had a good time getting to know you. I think we were both a little nervous at first - want to try again over coffee next week?', 'I liked talking with you, especially the part about your travel story. I would be up for a second date if you are.', 'Thanks for meeting up. I did not feel the connection I am looking for, so I am going to leave it there. I wish you well.'],
   'signs-texting-conversation-losing-momentum': ['You mentioned wanting a quiet weekend. Did you actually get one?', 'I passed a place that reminded me of your terrible food ranking. Still defending that opinion?', 'I have enjoyed talking with you. Want to continue this over coffee this week?'],
@@ -532,6 +533,7 @@ const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
   'funny-pickup-lines-that-work': { do: 'Use the line as a soft launch into a real conversation.', doNot: 'Treat the opener like a performance that needs a sequel.' },
   'best-dating-app-bio-ideas-for-guys': { do: 'Share specific details that make the next message obvious.', doNot: 'Fill the bio with broad labels, rules, or complaints.' },
   'what-to-text-after-a-first-date': { do: 'Be timely, specific, and clear about enjoying the date.', doNot: 'Wait for a perfect paragraph or edit your personality away.' },
+  'what-to-text-when-someone-needs-space': { do: 'Acknowledge the request, clarify the contact you can both expect, and set a limit you can actually follow.', doNot: 'Send repeated check-ins, use another platform to get around the request, or wait indefinitely without deciding what you need.' },
   'respond-to-last-minute-date-cancellation': { do: 'Look at the pattern, say what you want, and let the other person take responsibility for the next concrete plan.', doNot: 'Chase explanations, pretend you are fine when you are not, or keep rearranging your time without shared effort.' },
   'follow-up-after-awkward-first-date': { do: 'Name what you actually want, send one clear message, and leave room for an honest answer.', doNot: 'Force a second date, over-explain the awkward moment, or ignore pressure because you feel obligated to be polite.' },
   'signs-texting-conversation-losing-momentum': { do: 'Make one specific, low-pressure move and watch for shared effort.', doNot: 'Stack messages, test their interest, or carry the whole conversation alone.' },
@@ -596,6 +598,13 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'what-to-text-when-someone-needs-space': [
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy texting boundaries' },
+    { slug: 'how-to-stop-overthinking-while-dating', label: 'Stop overthinking the silence' },
+    { slug: 'signs-texting-conversation-becoming-one-sided', label: 'Spot one-sided effort' },
+    { slug: 'what-to-text-when-they-stop-replying', label: 'Choose a calm follow-up' },
+    { slug: 'respond-to-last-minute-date-cancellation', label: 'Handle a changed dating plan' }
+  ],
   'how-to-stop-overthinking-while-dating': [
     { slug: 'chemistry-vs-compatibility', label: 'Separate chemistry from compatibility' },
     { slug: 'how-to-connect-emotionally-while-dating', label: 'Build emotional connection' },
@@ -917,3 +926,4 @@ const MarketingSite: React.FC = () => {
 };
 
 export default MarketingSite;
+
