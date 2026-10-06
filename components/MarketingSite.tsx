@@ -502,6 +502,7 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
   'funny-pickup-lines-that-work': ['I had a clever opener ready, but your profile distracted me. What is your best recommendation around here?'],
   'best-dating-app-bio-ideas-for-guys': ['Ideal Sunday: long walk, new coffee shop, and pretending I will meal prep.'],
   'what-to-text-after-a-first-date': ['I had a great time tonight - your story about the failed cooking class still has me laughing.'],
+  'how-to-say-no-to-a-date-without-overexplaining': ['Thanks for asking, but I am not interested in going on a date. I wish you well.', 'I have enjoyed chatting, but I do not feel a romantic connection, so I am going to pass on meeting up.', 'I understand you want more detail, but my decision is final.'],
   'what-to-text-when-someone-needs-space': ['I hear you. I will give you some room and pause the daily messages. Reach out when you have a better sense of what you need.', 'I can give you space, but I am not comfortable leaving this open indefinitely. If I do not hear from you by next week, I will assume you want to end things.', 'I respect your request for space. I need more clarity than this arrangement gives me, so I am going to move on.'],
   'respond-to-last-minute-date-cancellation': ['Thanks for letting me know. I am open to rescheduling - send me a day that works when you have checked your schedule.', 'We have had to cancel twice, and I am looking for plans that are more consistent. I am going to leave this here, but I wish you well.', 'I am open to meeting when the timing is genuinely workable for you. I am going to stop trying to arrange it for now.'],
   'follow-up-after-awkward-first-date': ['I had a good time getting to know you. I think we were both a little nervous at first - want to try again over coffee next week?', 'I liked talking with you, especially the part about your travel story. I would be up for a second date if you are.', 'Thanks for meeting up. I did not feel the connection I am looking for, so I am going to leave it there. I wish you well.'],
@@ -533,6 +534,7 @@ const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
   'funny-pickup-lines-that-work': { do: 'Use the line as a soft launch into a real conversation.', doNot: 'Treat the opener like a performance that needs a sequel.' },
   'best-dating-app-bio-ideas-for-guys': { do: 'Share specific details that make the next message obvious.', doNot: 'Fill the bio with broad labels, rules, or complaints.' },
   'what-to-text-after-a-first-date': { do: 'Be timely, specific, and clear about enjoying the date.', doNot: 'Wait for a perfect paragraph or edit your personality away.' },
+  'how-to-say-no-to-a-date-without-overexplaining': { do: 'Decide what you mean, say it clearly once, and protect your safety when the other person does not respect the answer.', doNot: 'Invent a temporary excuse, write a case they can argue with, or keep replying to pressure.' },
   'what-to-text-when-someone-needs-space': { do: 'Acknowledge the request, clarify the contact you can both expect, and set a limit you can actually follow.', doNot: 'Send repeated check-ins, use another platform to get around the request, or wait indefinitely without deciding what you need.' },
   'respond-to-last-minute-date-cancellation': { do: 'Look at the pattern, say what you want, and let the other person take responsibility for the next concrete plan.', doNot: 'Chase explanations, pretend you are fine when you are not, or keep rearranging your time without shared effort.' },
   'follow-up-after-awkward-first-date': { do: 'Name what you actually want, send one clear message, and leave room for an honest answer.', doNot: 'Force a second date, over-explain the awkward moment, or ignore pressure because you feel obligated to be polite.' },
@@ -598,6 +600,13 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'how-to-say-no-to-a-date-without-overexplaining': [
+    { slug: 'dating-app-red-flags-before-first-date', label: 'Spot dating app red flags' },
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy texting boundaries' },
+    { slug: 'what-to-text-after-getting-someones-number', label: 'Handle the first messages' },
+    { slug: 'follow-up-after-awkward-first-date', label: 'Follow up after an awkward date' },
+    { slug: 'what-to-text-when-someone-needs-space', label: 'Respect a request for space' }
+  ],
   'what-to-text-when-someone-needs-space': [
     { slug: 'texting-boundaries-while-dating', label: 'Set healthy texting boundaries' },
     { slug: 'how-to-stop-overthinking-while-dating', label: 'Stop overthinking the silence' },
