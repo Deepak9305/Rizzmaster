@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, readdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
@@ -284,6 +284,10 @@ const shell = await readFile(shellPath, 'utf8');
 // Render the same web-only React page used in the browser, including examples
 // and the initial catalog. No native project or Capacitor sync is involved.
 const { RIZZLINE_SEO, RIZZLINE_SCHEMA } = await loadTypeScriptModule(join(projectRoot, 'components/rizzline/pageContent.ts'));
+// The tool's CSS is loaded as a route chunk. Include it in the prerendered
+// document too, so the initial frame and JavaScript-disabled page are styled.
+const rizzlineStylesheet = (await readdir(join(distRoot, 'assets'))).find(file => /^RizzlinePage-.*\.css$/.test(file));
+if (!rizzlineStylesheet) throw new Error('Rizzline stylesheet missing from build output');
 const rizzlineSsr = await createServer({
   root: projectRoot,
   configFile: false,
@@ -294,6 +298,7 @@ try {
   const { default: RizzlinePage } = await rizzlineSsr.ssrLoadModule('/components/rizzline/RizzlinePage.tsx');
   const rizzlineBody = `<div class="marketing-site min-h-screen overflow-x-hidden bg-[#050407] text-white"><header class="border-b border-white/10"><nav class="marketing-container flex flex-wrap items-center gap-6 py-6 text-sm" aria-label="Site navigation"><a href="/landing" class="font-bold text-pink-200">Rizz Master</a><a href="/" class="text-white/70">Chat Reply</a><a href="/rizzline" aria-current="page" class="text-white/90">Rizzline</a><a href="/blog" class="text-white/70">Blog</a></nav></header>${renderToStaticMarkup(createElement(RizzlinePage))}<footer class="marketing-container flex flex-wrap gap-6 border-t border-white/10 py-10 text-sm text-white/65"><a href="/landing">Rizz Master</a><a href="/rizzline">Rizzline</a><a href="/blog">Blog</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/support">Support</a></footer></div>`;
   const rizzlineHtml = createPageShell(shell, rizzlineBody)
+    .replace('</head>', `<link rel="stylesheet" href="/assets/${escapeAttribute(rizzlineStylesheet)}" />\n</head>`)
     .replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(RIZZLINE_SEO.title)}</title>`)
     .replace(/<meta\s+name="viewport"[^>]*>/i, '<meta name="viewport" content="width=device-width, initial-scale=1.0" />')
     .replace(/<meta\s+name="robots"[^>]*>/i, '<meta name="robots" content="index,follow" />')

@@ -41,6 +41,7 @@
     "@vercel/analytics": "^2.0.1",
     "cordova-plugin-purchase": "13.18.0",
     "dodopayments": "2.45.1",
+    "lucide-react": "^0.468.0",
     "onesignal-cordova-plugin": "5.5.7",
     "openai": "^4.28.0",
     "pg": "^8.13.1",

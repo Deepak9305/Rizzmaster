@@ -13,6 +13,7 @@ const sanitizer = await server.ssrLoadModule('/components/rizzline/utils/textSan
 const history = await server.ssrLoadModule('/components/rizzline/utils/browseHistory.ts');
 const content = await server.ssrLoadModule('/components/rizzline/pageContent.ts');
 const routes = await server.ssrLoadModule('/services/marketingRoutes.ts');
+const cards = await server.ssrLoadModule('/components/rizzline/cardActions.ts');
 
 test('catalog contains unique, valid lines and accurate category pools', () => {
   assert.ok(catalog.CURATED_PICKUP_LINES.length > 1400);
@@ -68,9 +69,62 @@ test('production route serves an indexable page with canonical, assets and a sit
   assert.match(html, /name="viewport" content="width=device-width, initial-scale=1.0"/);
   assert.match(html, /<h1\b/);
   assert.match(html, /(?:src|href)="\/assets\//);
+  assert.match(html, /rel="stylesheet" href="\/assets\/RizzlinePage-.*\.css"/);
   assert.doesNotMatch(html, /(?:src|href)="\.\/assets\//);
   const sitemap = await readFile(new URL('../public/sitemap.xml', import.meta.url), 'utf8');
   assert.equal((sitemap.match(/<loc>https:\/\/rizzmaster\.online\/rizzline<\/loc>/g) || []).length, 1);
   const config = JSON.parse(await readFile(new URL('../vercel.json', import.meta.url), 'utf8'));
   assert.equal(config.rewrites.find(route => route.source === '/rizzline').destination, '/rizzline/index.html');
+});
+
+test('share card sends a PNG file and respects share cancellation', async () => {
+  const original = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  const received = [];
+  try {
+    Object.defineProperty(globalThis, 'navigator', { configurable: true, value: {
+      canShare: data => data.files[0].type === 'image/png',
+      share: async data => received.push(data),
+    } });
+    const blob = new Blob(['card content'], { type: 'image/png' });
+    assert.equal(await cards.shareCardBlob(blob), 'shared');
+    assert.equal(received[0].files[0].name, 'rizzline-pickup-line.png');
+    assert.equal(await received[0].files[0].text(), 'card content');
+    navigator.share = async () => { throw new DOMException('Cancelled', 'AbortError'); };
+    assert.equal(await cards.shareCardBlob(blob), 'cancelled');
+    navigator.share = async () => { throw new Error('Share failed'); };
+    await assert.rejects(cards.shareCardBlob(blob), /Share failed/);
+  } finally {
+    if (original) Object.defineProperty(globalThis, 'navigator', original);
+    else delete globalThis.navigator;
+  }
+});
+
+test('card export includes the chosen theme and name and fits long catalog lines', async () => {
+  const original = Object.getOwnPropertyDescriptor(globalThis, 'document');
+  const written = [];
+  const colors = [];
+  const ctx = {
+    createLinearGradient: () => ({ addColorStop: (_, color) => colors.push(color) }),
+    fillRect() {}, beginPath() {}, roundRect() {}, stroke() {}, moveTo() {}, lineTo() {},
+    measureText: text => ({ width: text.length * 32 }),
+    fillText: (text, x, y) => written.push({ text, x, y }),
+  };
+  try {
+    let canvas;
+    Object.defineProperty(globalThis, 'document', { configurable: true, value: {
+      fonts: { ready: Promise.resolve() },
+      createElement: () => (canvas = { getContext: () => ctx, toBlob: callback => callback(new Blob(['png'], { type: 'image/png' })) }),
+    } });
+    const longest = catalog.CURATED_PICKUP_LINES.reduce((a, b) => a.text.length > b.text.length ? a : b);
+    const result = await cards.createLineCard(longest.text, longest.category, 'emerald', 'Alex');
+    assert.equal(result.type, 'image/png');
+    assert.equal(canvas.width, 1080);
+    assert.equal(canvas.height, 1350);
+    assert.ok(colors.includes('#123b30'));
+    assert.ok(written.some(item => item.text === '— Alex'));
+    assert.ok(written.every(item => item.y > 50 && item.y < 1300));
+  } finally {
+    if (original) Object.defineProperty(globalThis, 'document', original);
+    else delete globalThis.document;
+  }
 });
