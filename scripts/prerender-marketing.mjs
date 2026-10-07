@@ -66,6 +66,13 @@ const renderFaqs = (post) => post.faqs?.length
 const renderResources = (post) => `${renderResourcesOnly(post)}${renderFaqs(post)}`;
 
 const articleInternalLinks = {
+  'how-to-ask-for-clarity-in-a-situationship': [
+    { slug: 'talk-about-what-you-want-in-dating', label: 'Talk about what you want in dating' },
+    { slug: 'how-to-pace-a-new-relationship-without-losing-yourself', label: 'Pace a new relationship' },
+    { slug: 'chemistry-vs-compatibility', label: 'Separate chemistry from compatibility' },
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy texting boundaries' },
+    { slug: 'how-to-handle-jealousy-in-a-new-relationship', label: 'Handle jealousy without control' }
+  ],
   'respond-to-last-minute-date-cancellation': [
     { slug: 'texting-boundaries-while-dating', label: 'Set healthy texting boundaries' },
     { slug: 'signs-texting-conversation-becoming-one-sided', label: 'Spot one-sided effort' },
@@ -282,4 +289,5 @@ for (const [key, page] of Object.entries(MARKETING_LEGAL_PAGES)) {
 }
 
 console.log(`Prerendered the landing page, ${BLOG_POSTS.length} blog articles, the blog index, and legal pages.`);
+
 
