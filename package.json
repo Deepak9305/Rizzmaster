@@ -9,6 +9,7 @@
     "start:cloud-run": "node cloud-run-server.js",
     "build": "tsc && vite build && node scripts/prerender-marketing.mjs",
     "preview": "vite preview",
+    "test:rizzline": "node --test tests/rizzline.test.mjs",
     "test:dodo": "node --test tests/dodo-billing.test.mjs",
     "test:rewarded": "node --test tests/rewarded-ad.test.mjs tests/rewarded-ad-runtime.test.mjs",
     "test:admob": "node --test tests/admob.test.mjs",

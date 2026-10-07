@@ -1,11 +1,15 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { RIZZLINE_SCHEMA, RIZZLINE_SEO } from './rizzline/pageContent';
+
 import { LEGAL_LINKS } from '../services/legalLinks';
 import { BLOG_POSTS, EDITORIAL_AUTHORS, getBlogPost, PLAY_STORE_URL, type BlogPost } from '../services/marketingContent';
 import { MARKETING_LEGAL_PAGES, type MarketingLegalPageKey } from '../services/marketingLegal';
 import { MARKETING_HOME_PATH, normalizeMarketingPath } from '../services/marketingRoutes';
 
+const RizzlinePage = lazy(() => import('./rizzline/RizzlinePage'));
+
 type MarketingRoute =
-  | { kind: 'home' | 'blog' | 'privacy' | 'terms' | 'support' }
+  | { kind: 'home' | 'blog' | 'privacy' | 'terms' | 'support' | 'rizzline' }
   | { kind: 'article'; slug: string }
   | { kind: 'not-found' };
 
@@ -14,6 +18,7 @@ const getRoute = (pathname: string): MarketingRoute => {
 
   if (path === MARKETING_HOME_PATH) return { kind: 'home' };
   if (path === '/blog') return { kind: 'blog' };
+  if (path === '/rizzline') return { kind: 'rizzline' };
   if (path === '/privacy') return { kind: 'privacy' };
   if (path === '/terms') return { kind: 'terms' };
   if (path === '/support') return { kind: 'support' };
@@ -69,7 +74,7 @@ const updateSeo = (route: MarketingRoute) => {
   const legalPage = route.kind === 'privacy' || route.kind === 'terms' || route.kind === 'support'
     ? MARKETING_LEGAL_PAGES[route.kind]
     : undefined;
-  const title = post
+  const title = route.kind === 'rizzline' ? RIZZLINE_SEO.title : post
     ? `${post.seoTitle || post.title} | Rizz Master`
     : route.kind === 'blog'
       ? 'Rizz Master Blog | Better texts, better dates'
@@ -80,7 +85,7 @@ const updateSeo = (route: MarketingRoute) => {
           : route.kind === 'support'
             ? 'Support | Rizz Master'
             : 'Rizz Master | Never run out of replies again';
-  const description = post?.description
+  const description = (route.kind === 'rizzline' ? RIZZLINE_SEO.description : post?.description)
     || legalPage?.intro
     || (route.kind === 'blog'
       ? 'Practical texting, dating app, opener, and profile advice for better conversations.'
@@ -91,25 +96,35 @@ const updateSeo = (route: MarketingRoute) => {
           : route.kind === 'support'
             ? 'Get help with Rizz Master, subscriptions, credits, account deletion, and feature requests.'
             : 'Rizz Master helps you create flirty replies, dating bios, openers, and conversation starters in seconds.');
-  const keywords = post?.keywords.join(', ') || 'dating advice, texting advice, dating app openers, dating bios, AI dating assistant';
-  const isIndexableRoute = route.kind === 'home' || route.kind === 'blog' || Boolean(post) || Boolean(legalPage);
+  const keywords = route.kind === 'rizzline' ? 'pickup lines, rizz lines, funny pickup lines, smooth pickup lines, romantic pickup lines, cheesy pickup lines, nerdy pickup lines' : post?.keywords.join(', ') || 'dating advice, texting advice, dating app openers, dating bios, AI dating assistant';
+  const isIndexableRoute = route.kind === 'home' || route.kind === 'blog' || route.kind === 'rizzline' || Boolean(post) || Boolean(legalPage);
 
   document.title = title;
+  if (route.kind === 'rizzline') setMeta('viewport', 'width=device-width, initial-scale=1.0');
   setMeta('robots', isIndexableRoute ? 'index,follow' : 'noindex,nofollow');
   setMeta('description', description);
   setMeta('keywords', keywords);
   setMeta('og:title', title, true);
   setMeta('og:description', description, true);
   setMeta('og:type', post ? 'article' : 'website', true);
-  setMeta('og:url', `${LEGAL_LINKS.baseUrl}${window.location.pathname}`, true);
-  if (post?.image) setMeta('og:image', `${LEGAL_LINKS.baseUrl}${post.image}`, true);
+  const canonicalUrl = `${LEGAL_LINKS.baseUrl}${normalizeMarketingPath(window.location.pathname)}`;
+  setMeta('og:url', canonicalUrl, true);
+  const socialImage = post?.image ? `${LEGAL_LINKS.baseUrl}${post.image}` : `${LEGAL_LINKS.baseUrl}/logo.png`;
+  setMeta('og:image', socialImage, true);
+  setMeta('twitter:card', 'summary_large_image');
+  setMeta('twitter:title', title);
+  setMeta('twitter:description', description);
+  setMeta('twitter:image', socialImage);
+  let canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+  if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical); }
+  canonical.href = canonicalUrl;
 
   const existingSchema = document.head.querySelector('#rizzmaster-seo-schema');
   existingSchema?.remove();
   const schema = document.createElement('script');
   schema.id = 'rizzmaster-seo-schema';
   schema.type = 'application/ld+json';
-  schema.textContent = JSON.stringify(post ? {
+  schema.textContent = JSON.stringify(route.kind === 'rizzline' ? RIZZLINE_SCHEMA : post ? {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: post.title,
@@ -191,10 +206,16 @@ const MarketingNav: React.FC<{ navigate: (path: string) => void }> = ({ navigate
         <a href="/landing#features" onClick={(event) => { event.preventDefault(); navigate('/landing#features'); }} className="transition-colors hover:text-white">Features</a>
         <a href="/landing#how-it-works" onClick={(event) => { event.preventDefault(); navigate('/landing#how-it-works'); }} className="transition-colors hover:text-white">How it works</a>
         <a href="/blog" onClick={(event) => { event.preventDefault(); navigate('/blog'); }} className="transition-colors hover:text-white">Blog</a>
+        <a href="/rizzline" onClick={(event) => { event.preventDefault(); navigate('/rizzline'); }} className="transition-colors hover:text-white">Rizzline</a>
       </nav>
 
       <PlayStoreButton compact supportText="Free Android app" />
     </div>
+    <nav className="marketing-container flex gap-6 pb-4 text-xs font-semibold text-white/70 md:hidden" aria-label="Web tools and guides">
+      <a href="/" className="py-2 hover:text-white">Chat Reply</a>
+      <a href="/rizzline" onClick={event => { event.preventDefault(); navigate('/rizzline'); }} className="py-2 hover:text-white">Rizzline · Pickup lines</a>
+      <a href="/blog" onClick={event => { event.preventDefault(); navigate('/blog'); }} className="py-2 hover:text-white">Blog</a>
+    </nav>
   </header>
 );
 
@@ -213,6 +234,7 @@ const MarketingFooter: React.FC<{ navigate: (path: string) => void }> = ({ navig
         <p className="mt-2 text-xs text-white/35">Built for people who overthink every text.</p>
       </div>
       <div className="flex flex-wrap gap-x-6 gap-y-3 text-xs font-semibold text-white/45">
+        <a href="/rizzline" onClick={(event) => { event.preventDefault(); navigate('/rizzline'); }} className="transition-colors hover:text-white">Rizzline · Pickup lines</a>
         <a href="/blog" onClick={(event) => { event.preventDefault(); navigate('/blog'); }} className="transition-colors hover:text-white">Blog</a>
         <a href="/privacy" onClick={(event) => { event.preventDefault(); navigate('/privacy'); }} className="transition-colors hover:text-white">Privacy</a>
         <a href="/terms" onClick={(event) => { event.preventDefault(); navigate('/terms'); }} className="transition-colors hover:text-white">Terms</a>
@@ -916,7 +938,7 @@ const MarketingSite: React.FC = () => {
   const [pathname, setPathname] = useState(() => typeof window === 'undefined' ? '/' : window.location.pathname);
   const route = useMemo(() => getRoute(pathname), [pathname]);
   const article = route.kind === 'article' ? getBlogPost(route.slug) : undefined;
-  useEditorialAds(route.kind === 'blog' || Boolean(article));
+  useEditorialAds(route.kind === 'blog' || route.kind === 'rizzline' || Boolean(article));
 
   useEffect(() => {
     const onPopState = () => setPathname(window.location.pathname);
@@ -940,8 +962,7 @@ const MarketingSite: React.FC = () => {
     }, 0);
   };
 
-  return <div className="marketing-site min-h-screen overflow-x-hidden bg-[#050407] text-white"><MarketingNav navigate={navigate} />{route.kind === 'home' ? <HomePage navigate={navigate} /> : route.kind === 'blog' ? <BlogIndexPage navigate={navigate} /> : article ? <ArticlePage post={article} navigate={navigate} /> : route.kind === 'privacy' || route.kind === 'terms' || route.kind === 'support' ? <LegalPage kind={route.kind} navigate={navigate} /> : <><NotFoundPage navigate={navigate} /><MarketingFooter navigate={navigate} /></>}</div>;
+  return <div className="marketing-site min-h-screen overflow-x-hidden bg-[#050407] text-white"><MarketingNav navigate={navigate} />{route.kind === 'home' ? <HomePage navigate={navigate} /> : route.kind === 'rizzline' ? <><Suspense fallback={<main className="marketing-container py-12" aria-busy="true"><h1 className="text-4xl font-bold">Pickup lines for every vibe.</h1><p className="mt-4">Loading Rizzline…</p></main>}><RizzlinePage /></Suspense><MarketingFooter navigate={navigate} /></> : route.kind === 'blog' ? <BlogIndexPage navigate={navigate} /> : article ? <ArticlePage post={article} navigate={navigate} /> : route.kind === 'privacy' || route.kind === 'terms' || route.kind === 'support' ? <LegalPage kind={route.kind} navigate={navigate} /> : <><NotFoundPage navigate={navigate} /><MarketingFooter navigate={navigate} /></>}</div>;
 };
 
 export default MarketingSite;
-

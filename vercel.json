@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/rizzline",
+      "destination": "/rizzline/index.html"
+    },
+    {
+      "source": "/rizzline/",
+      "destination": "/rizzline/index.html"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/index?__route=$1"
     },
