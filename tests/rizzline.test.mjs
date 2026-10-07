@@ -45,6 +45,12 @@ test('page renders crawlable examples, FAQs and matching schema without browser 
   const { default: Page } = await server.ssrLoadModule('/components/rizzline/RizzlinePage.tsx');
   const html = renderToStaticMarkup(createElement(Page));
   assert.equal((html.match(/<h1\b/g) || []).length, 1);
+  assert.match(html, /Generate Next/);
+  assert.match(html, /Rizz Rating/);
+  assert.match(html, /Delivery Coach/);
+  assert.doesNotMatch(html, /Search the pickup line catalog/);
+  assert.doesNotMatch(html, /Show more lines/);
+  assert.doesNotMatch(html, /Use this line/);
   for (const category of content.RIZZLINE_CATEGORIES) {
     assert.ok(html.includes(`${category.label} pickup lines`));
     for (const example of category.examples) assert.ok(catalog.CURATED_PICKUP_LINES.some(line => line.text === example));
