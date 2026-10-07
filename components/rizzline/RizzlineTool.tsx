@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Bookmark, Check, ChevronDown, Copy, Download, Heart, Layers, Lightbulb, LoaderCircle, Share2, Shuffle, Sparkles, Trash2, X } from 'lucide-react';
 import { CATEGORIES, CATALOG_BY_ID, CURATED_PICKUP_LINES, LINES_BY_CATEGORY } from './data/curatedLines';
 import { getRandomPickupLine } from './services/pickupLineApi';
@@ -8,6 +8,8 @@ import { CARD_THEMES, createLineCard, downloadCardBlob, shareCardBlob } from './
 import { useLocalCollection } from './useLocalCollection';
 import type { CategoryKey, PickupLine, RizzReaction } from './types';
 import './rizzline.css';
+
+const useCardLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 const REACTIONS: Array<{ id: RizzReaction; label: string; emoji: string }> = [
   { id: 'fire', label: 'Fire', emoji: '🔥' },
@@ -107,11 +109,78 @@ export default function RizzlineTool() {
   const savedLines = useMemo(() => savedIds.flatMap(id => { const line = CATALOG_BY_ID.get(id); return line ? [line] : []; }), [savedIds]);
   const categoryInfo = CATEGORIES.find(item => item.id === current.category) || CATEGORIES[0];
   const railRef = useRef<HTMLDivElement>(null);
-  const pointerStart = useRef<{ x: number; y: number } | null>(null);
-  const next = () => { setTipOpen(false); setNotice(''); setBrowse(state => appendLine(state, getRandomPickupLine(category, state.lines[state.index].text).line)); };
-  const previous = () => { setTipOpen(false); setNotice(''); setBrowse(state => previousLine(state)); };
+  const cardRef = useRef<HTMLElement>(null);
+  const pointerStart = useRef<{ x: number; y: number; id: number } | null>(null);
+  const motion = useRef<Animation | null>(null);
+  const motionVersion = useRef(0);
+  const direction = useRef<1 | -1 | null>(null);
+  const movingRef = useRef(false);
+  const [moving, setMoving] = useState(false);
+  const resetDrag = () => {
+    pointerStart.current = null;
+    const card = cardRef.current;
+    if (!card) return;
+    const from = card.style.transform || 'none';
+    card.style.transform = ''; card.style.opacity = ''; card.classList.remove('rl-dragging');
+    motion.current?.cancel();
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      motion.current = card.animate([{ transform: from }, { transform: 'translateX(0) rotate(0deg)' }], { duration: 240, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    }
+  };
+  const cancelMotion = () => {
+    motionVersion.current++;
+    direction.current = null; movingRef.current = false; setMoving(false);
+    motion.current?.cancel();
+    pointerStart.current = null;
+    const card = cardRef.current;
+    if (card) { card.style.transform = ''; card.style.opacity = ''; card.classList.remove('rl-dragging'); card.removeAttribute('inert'); }
+  };
+  const changeLine = async (step: 1 | -1) => {
+    if (movingRef.current || savedOpen || cardLine) return;
+    if (step === -1 && browse.index === 0) { resetDrag(); return; }
+    const card = cardRef.current;
+    const version = ++motionVersion.current;
+    movingRef.current = true; setMoving(true); direction.current = step;
+    pointerStart.current = null;
+    motion.current?.cancel();
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (card && !reduceMotion) {
+      card.classList.remove('rl-dragging'); card.setAttribute('inert', '');
+      const distance = card.getBoundingClientRect().width * 1.05;
+      motion.current = card.animate([
+        { transform: card.style.transform || 'translateX(0) rotate(0deg)', opacity: Number(card.style.opacity || 1) },
+        { transform: `translateX(${-step * distance}px) rotate(${-step * 12}deg)`, opacity: 0 },
+      ], { duration: 180, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' });
+      try { await motion.current.finished; } catch { /* A new category or unmount may cancel the transition. */ }
+    }
+    if (version !== motionVersion.current) return;
+    setTipOpen(false); setNotice('');
+    setBrowse(state => step === 1 ? appendLine(state, getRandomPickupLine(category, state.lines[state.index].text).line) : previousLine(state));
+  };
+  const next = () => { void changeLine(1); };
+  const previous = () => { void changeLine(-1); };
+  useCardLayoutEffect(() => {
+    const card = cardRef.current;
+    const step = direction.current;
+    if (!card || step === null) return;
+    const version = motionVersion.current;
+    motion.current?.cancel(); card.style.transform = ''; card.style.opacity = '';
+    direction.current = null;
+    const finish = () => {
+      if (version !== motionVersion.current) return;
+      card.removeAttribute('inert'); movingRef.current = false; setMoving(false);
+    };
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { finish(); return; }
+    motion.current = card.animate([
+      { transform: `translateX(${step * 65}px) rotate(${step * 4}deg) scale(.96)`, opacity: 0 },
+      { transform: 'translateX(0) rotate(0deg) scale(1)', opacity: 1 },
+    ], { duration: 280, easing: 'cubic-bezier(.16,1,.3,1)' });
+    void motion.current.finished.then(finish, finish);
+  }, [browse.visit]);
+  useEffect(() => () => { motionVersion.current++; motion.current?.cancel(); }, []);
   const selectCategory = (value: CategoryKey) => {
     if (value === category) return;
+    cancelMotion();
     setCategory(value); setTipOpen(false); setNotice('');
     setBrowse(state => appendLine(state, getRandomPickupLine(value, state.lines[state.index].text).line));
   };
@@ -130,23 +199,51 @@ export default function RizzlineTool() {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [category, savedOpen, cardLine]);
+  }, [category, savedOpen, cardLine, browse.index]);
   const copy = async () => { try { await copyLine(current.text); setNotice('Copied!'); } catch { setNotice('Could not copy this line.'); } };
   const share = async () => { try { const result = await shareLine(`“${current.text}”\n\nvia Rizzline · rizzmaster.online/rizzline`); if (result !== 'cancelled') setNotice(result === 'shared' ? 'Shared!' : 'Copied for sharing!'); } catch { setNotice('Could not share. Try Copy Line instead.'); } };
-  const onPointerDown = (event: React.PointerEvent) => { if (event.pointerType !== 'mouse' && !(event.target as Element).closest('button')) pointerStart.current = { x: event.clientX, y: event.clientY }; };
-  const onPointerUp = (event: React.PointerEvent) => { const start = pointerStart.current; pointerStart.current = null; if (!start) return; const dx = event.clientX - start.x; const dy = event.clientY - start.y; if (Math.abs(dx) > 75 && Math.abs(dx) > Math.abs(dy) * 1.4) dx < 0 ? next() : previous(); };
+  const onPointerDown = (event: React.PointerEvent<HTMLElement>) => {
+    if (movingRef.current || event.button !== 0 || !(event.target instanceof Element) || event.target.closest('button,a,input')) return;
+    motion.current?.cancel();
+    pointerStart.current = { x: event.clientX, y: event.clientY, id: event.pointerId };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+  const onPointerMove = (event: React.PointerEvent<HTMLElement>) => {
+    const start = pointerStart.current;
+    if (!start || start.id !== event.pointerId) return;
+    const dx = event.clientX - start.x; const dy = event.clientY - start.y;
+    if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 12) { resetDrag(); return; }
+    if (Math.abs(dx) < 6) return;
+    const card = event.currentTarget;
+    const limited = Math.max(-card.offsetWidth * .85, Math.min(card.offsetWidth * .85, dx));
+    const drag = dx > 0 && browse.index === 0 ? limited * .2 : limited;
+    card.classList.add('rl-dragging');
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      card.style.transform = `translateX(${drag}px) rotate(${drag / 25}deg)`;
+      card.style.opacity = String(Math.max(.5, 1 - Math.abs(drag) / (card.offsetWidth * 1.5)));
+    }
+  };
+  const onPointerUp = (event: React.PointerEvent<HTMLElement>) => {
+    const start = pointerStart.current;
+    if (!start || start.id !== event.pointerId) return;
+    const dx = event.clientX - start.x; const dy = event.clientY - start.y;
+    pointerStart.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    if (Math.abs(dx) > 65 && Math.abs(dx) > Math.abs(dy) * 1.4) dx < 0 ? next() : previous();
+    else resetDrag();
+  };
   return <section className="rl-tool" aria-label="Rizzline pickup line generator">
     <header className="rl-header"><div className="rl-brand"><img src="/rizzline-logo.png" alt="" width={40} height={40} /><div><span>Rizzline</span><small>Good lines. Better conversations.</small></div></div><button className="rl-secondary rl-saved-button" onClick={() => setSavedOpen(true)} aria-label={`Open saved lines, ${savedIds.length} saved`}><Bookmark size={17} /><span>Saved</span>{savedIds.length > 0 && <span className="rl-count">{savedIds.length}</span>}</button></header>
     <div className="rl-vibes"><div className="rl-section-label"><span>Find your vibe</span><span>{CURATED_PICKUP_LINES.length.toLocaleString()} lines · 8 vibes</span></div><div ref={railRef} className="rl-vibe-rail" aria-label="Pickup line vibes">{CATEGORIES.map(item => <button type="button" key={item.id} aria-pressed={category === item.id} onClick={() => selectCategory(item.id)}><span aria-hidden="true">{item.emoji}</span>{item.label}</button>)}</div></div>
-    <article className="rl-line-card" onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerCancel={() => { pointerStart.current = null; }}>
+    <div className="rl-motion-stage"><article ref={cardRef} className="rl-line-card" aria-busy={moving} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={resetDrag} onLostPointerCapture={() => { if (pointerStart.current) resetDrag(); }}>
       <div className="rl-card-top"><span className="rl-tag"><span aria-hidden="true">{categoryInfo.emoji}</span> {categoryInfo.label}</span><div><button className="rl-icon-button" onClick={() => setCardLine(current)} title="Create a shareable card" aria-label="Create a shareable story card"><Layers size={20} /></button><button className={`rl-icon-button ${saved ? 'rl-is-saved' : ''}`} aria-label={saved ? 'Remove line from saved' : 'Save pickup line'} aria-pressed={saved} onClick={() => setSavedIds(ids => ids.includes(current.id) ? ids.filter(id => id !== current.id) : [current.id, ...ids].slice(0, 500))}><Heart size={20} fill={saved ? 'currentColor' : 'none'} /></button></div></div>
       <div className="rl-quote-stage"><span className="rl-quote-mark" aria-hidden="true">“</span><p className="rl-quote" key={browse.visit} aria-live="polite" aria-atomic="true">{current.text}</p></div>
       <div className="rl-coach"><button className="rl-text-button" aria-expanded={tipOpen} onClick={() => setTipOpen(value => !value)}><Lightbulb size={16} /> Delivery Coach <ChevronDown size={15} className={tipOpen ? 'rl-rotated' : ''} /></button>{tipOpen && <p>{current.deliveryTip || 'Keep it light, read the room, and leave space for a response.'}</p>}</div>
       <div className="rl-rating"><div className="rl-section-label"><span>Rizz Rating</span><span>Your take</span></div><div className="rl-reactions">{REACTIONS.map(item => <button key={item.id} type="button" aria-pressed={reactions[current.id] === item.id} onClick={() => setReactions(state => { const nextState = { ...state }; if (nextState[current.id] === item.id) delete nextState[current.id]; else nextState[current.id] = item.id; return nextState; })}><span aria-hidden="true">{item.emoji}</span>{item.label}{reactions[current.id] === item.id && <Check size={13} />}</button>)}</div></div>
       <div className="rl-utilities"><button className="rl-secondary" onClick={() => void copy()}>{notice === 'Copied!' ? <Check size={16} /> : <Copy size={16} />} {notice === 'Copied!' ? 'Copied!' : 'Copy Line'}</button><button className="rl-secondary" onClick={() => void share()}><Share2 size={16} /> Share Line</button></div>
-    </article>
-    <div className="rl-navigation"><button className="rl-secondary rl-back" disabled={browse.index === 0} onClick={previous} aria-label="Previous pickup line"><ArrowLeft size={20} /></button><button className="rl-primary" onClick={next}><Sparkles size={18} /> Generate Next <ArrowRight size={18} /></button><button className="rl-secondary rl-back" onClick={next} aria-label="Shuffle pickup line"><Shuffle size={19} /></button></div>
-    <button className="rl-card-cta" onClick={() => setCardLine(current)}><Layers size={18} /><span>Turn this line into a share card</span><ArrowRight size={17} /></button>
+    </article></div>
+    <div className="rl-navigation"><button className="rl-secondary rl-back" disabled={browse.index === 0 || moving} onClick={previous} aria-label="Previous pickup line"><ArrowLeft size={20} /></button><button className="rl-primary" disabled={moving} onClick={next}><Sparkles size={18} /> Generate Next <ArrowRight size={18} /></button><button className="rl-secondary rl-back" disabled={moving} onClick={next} aria-label="Shuffle pickup line"><Shuffle size={19} /></button></div>
+    <button className="rl-card-cta" disabled={moving} onClick={() => setCardLine(current)}><Layers size={18} /><span>Turn this line into a share card</span><ArrowRight size={17} /></button>
     <p className="rl-tool-status" role="status">{notice || (!storageAvailable ? 'Saving is available for this visit only.' : `${LINES_BY_CATEGORY[category].length.toLocaleString()} ${category === 'all' ? '' : category + ' '}lines. One at a time.`)}</p>
     {savedOpen && <SavedSheet lines={savedLines} onClose={() => setSavedOpen(false)} onRemove={id => setSavedIds(ids => ids.filter(value => value !== id))} onClear={() => setSavedIds([])} onSelect={line => { setCategory(line.category); setTipOpen(false); setBrowse(state => appendLine(state, line)); }} />}
     {cardLine && <CardModal line={cardLine} onClose={() => setCardLine(null)} />}

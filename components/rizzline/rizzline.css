@@ -81,6 +81,10 @@
 .rl-empty h3 { font-size:16px; color:#e4e4e7; margin-bottom:8px; }
 .rl-empty p { font-size:12px; }
 .rl-spin { animation:rl-spin 1s linear infinite; }
+.rl-motion-stage { overflow:hidden; margin-top:18px; border-radius:22px; }
+.rl-motion-stage .rl-line-card { margin-top:0; transform-origin:50% 80%; }
+.rl-line-card.rl-dragging { user-select:none; cursor:grabbing; }
+@media(max-width:480px) { .rl-motion-stage { margin-top:14px; border-radius:18px; } }
 @keyframes rl-spin { to { transform:rotate(360deg); } }
 @keyframes rl-enter { from { opacity:.5; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
 @media(max-width:480px) { .rl-tool { padding:16px; border-radius:22px; } .rl-header { margin-bottom:18px; } .rl-brand { gap:8px; } .rl-brand span { font-size:18px; } .rl-brand small { font-size:9px; } .rl-saved-button { padding:8px 10px; gap:6px; } .rl-line-card { padding:16px; margin-top:14px; border-radius:18px; } .rl-quote-stage { min-height:145px; padding:8px 0 16px; } .rl-quote { font-size:20px; line-height:1.35; } .rl-section-label>span:last-child { font-size:9px; } .rl-dialog-body { padding:16px; gap:12px; } .rl-preview { max-width:220px; } }
