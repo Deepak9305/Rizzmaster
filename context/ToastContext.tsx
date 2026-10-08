@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo } from 'react';
 
 type ToastType = 'success' | 'error' | 'info';
 
@@ -42,8 +42,11 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     timerIds.current.set(id, timerId);
   }, []);
 
+  // Adding/dismissing a toast must not invalidate every screen consuming this context.
+  const contextValue = useMemo(() => ({ showToast }), [showToast]);
+
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={contextValue}>
       {children}
       
       {/* Toast Container - Safe Area aware

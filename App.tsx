@@ -1,6 +1,5 @@
 
 import React, { useState, useRef, useEffect, lazy, Suspense, useCallback } from 'react';
-import { generateRizz, generateBio } from './services/rizzService';
 import { NativeBridge } from './services/nativeBridge';
 import { NotificationService } from './services/notificationService';
 import { ToastProvider, useToast } from './context/ToastContext';
@@ -307,40 +306,26 @@ const SplashScreen: React.FC<SplashScreenProps> = React.memo(({ isAppReady, onCo
   const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
-    // Duration of the progress bar animation in ms
-    const duration = 2200;
-    const interval = 20;
-    const steps = duration / interval;
-    let currentStep = 0;
-
-    const timer = setInterval(() => {
-      currentStep++;
-      // Calculate progress
-      const progressValue = Math.min(100, (currentStep / steps) * 100);
-      setProgress(progressValue);
-
-      if (currentStep >= steps) {
-        clearInterval(timer);
-      }
-    }, interval);
-
-    return () => clearInterval(timer);
+    if (!IS_WEB_PLATFORM) return;
+    // CSS animates the bar; React only updates the three status milestones.
+    const timers = [30, 70, 100].map(value =>
+      setTimeout(() => setProgress(value), 2200 * value / 100)
+    );
+    return () => timers.forEach(clearTimeout);
   }, []);
 
   // Monitor for completion
   useEffect(() => {
-    // Only exit if progress bar is full AND app data is ready
-    if (progress >= 100 && isAppReady && !isExiting) {
-      setIsExiting(true);
-      // Wait for the exit animation (fade/scale out) to finish before unmounting
-      setTimeout(() => {
-        onComplete();
-      }, 800);
-    }
-  }, [progress, isAppReady, isExiting, onComplete]);
+    // Android already has a native launch splash. Show the UI as soon as auth
+    // is ready instead of imposing another three seconds of artificial loading.
+    if (!isAppReady || (IS_WEB_PLATFORM && progress < 100)) return;
+    setIsExiting(true);
+    const timer = setTimeout(onComplete, IS_WEB_PLATFORM ? 800 : 150);
+    return () => clearTimeout(timer);
+  }, [progress, isAppReady, onComplete]);
 
   return (
-    <div className={`fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center overflow-hidden transition-all duration-[800ms] ${isExiting ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100'}`}>
+    <div className={`fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center overflow-hidden transition-opacity ${IS_WEB_PLATFORM ? 'duration-[800ms]' : 'duration-150'} ${isExiting ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
       <div className="native-splash-orb absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-rose-900/20 rounded-full blur-[100px] animate-pulse-glow" />
       <div className="native-splash-orb absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-amber-900/10 rounded-full blur-[80px] animate-float" />
 
@@ -353,13 +338,16 @@ const SplashScreen: React.FC<SplashScreenProps> = React.memo(({ isAppReady, onCo
         </div>
         <div className="w-64 md:w-80 h-[2px] bg-white/10 rounded-full overflow-hidden relative">
           <div
-            className="absolute top-0 left-0 h-full bg-gradient-to-r from-rose-500 via-amber-400 to-rose-500 shadow-[0_0_15px_rgba(251,191,36,0.5)] transition-all duration-75 ease-out"
-            style={{ width: `${progress}%` }}
+            className="absolute inset-0 bg-gradient-to-r from-rose-500 via-amber-400 to-rose-500 origin-left"
+            style={{
+              animation: IS_WEB_PLATFORM ? 'appStartupProgress 2.2s linear forwards' : 'none',
+              transform: `scaleX(${isAppReady ? 1 : 0.12})`,
+            }}
           />
         </div>
         <div className="mt-4 h-10 overflow-hidden flex flex-col items-center">
           <p className="text-[10px] md:text-xs font-bold tracking-[0.5em] text-white/40 uppercase animate-fade-in-up">
-            {progress < 30 ? 'ANALYZING...' : progress < 70 ? 'COOKING...' : (isAppReady ? 'READY.' : 'AUTHENTICATING...')}
+            {!IS_WEB_PLATFORM ? (isAppReady ? 'READY.' : 'AUTHENTICATING...') : progress < 30 ? 'ANALYZING...' : progress < 70 ? 'COOKING...' : (isAppReady ? 'READY.' : 'AUTHENTICATING...')}
           </p>
           {progress >= 100 && !isAppReady && (
             <p className="text-[9px] text-white/20 mt-2 animate-pulse">
@@ -2150,6 +2138,8 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         : undefined;
 
       let res;
+      const { generateRizz, generateBio } = await import('./services/rizzService');
+      if (!stillSameGenerationSession()) return;
       if (activeMode === InputMode.CHAT) {
         res = await generateRizz(finalProcessText, activeImage || undefined, activeVibe || undefined, activeResponseLength, customInstruction);
       } else {
@@ -2594,12 +2584,12 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                     userId={profile?.id || null}
                   />
                 )}
-                <SavedModal
-                  isOpen={showSavedModal}
+                {showSavedModal && <SavedModal
+                  isOpen
                   onClose={handleBackNavigation}
                   savedItems={savedItems}
                   onDelete={handleDeleteSaved}
-                />
+                />}
               </Suspense>
 
 
@@ -2683,6 +2673,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                       defaultValue=""
                       onChange={() => { if (inputError) setInputError(null); }}
                       placeholder={mode === InputMode.CHAT ? "Paste chat. Get Rizz." : "Hobbies, job, vibes..."}
+                      onFocus={() => { void import('./services/rizzService').catch(() => {}); }}
                       className="web-app-textarea w-full h-32 md:h-40 bg-black/40 border border-white/10 rounded-2xl p-4 text-sm md:text-base focus:ring-2 focus:ring-rose-500/50 focus:outline-none resize-none transition-all placeholder:text-white/20"
                       style={{ fontSize: '16px' }}
                     />

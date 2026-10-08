@@ -1,6 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@keyframes appStartupProgress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Modern Android WebViews size the composer without a JS layout read per key. */
+@supports (field-sizing: content) {
+  .coach-input { field-sizing: content; }
+}
 body {
   font-family: 'Space Grotesk', sans-serif;
   background-color: #050505;
@@ -1092,12 +1102,8 @@ html.native-app .animate-pulse {
   will-change: auto !important;
 }
 
-/* Coach history can contain up to 50 messages. Let WebView skip painting
-   bubbles outside the viewport without changing their measured scroll size. */
-html.native-app .native-coach-screen .coach-message-bubble {
-  content-visibility: auto;
-  contain-intrinsic-size: 0 72px;
-}
+/* Keep real message heights: placeholder heights made restored conversations
+   jump while scrolling and could leave the latest reply below the viewport. */
 
 html.native-app .web-app-results-panel {
   contain: layout style;

@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { CoachMessage, CustomPersona } from '../types';
-import { generateCoachAdvice } from '../services/rizzService';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { canUseNativeCamera } from '../services/nativeCapabilities';
 import { Capacitor } from '@capacitor/core';
@@ -155,9 +154,10 @@ const COACH_VIBES = [
 
 const MAX_STORED_MESSAGES = 50; // cap to avoid localStorage bloat
 const IS_NATIVE_COACH = Capacitor.isNativePlatform();
+const HAS_CONTENT_SIZING = typeof CSS !== 'undefined' && CSS.supports('field-sizing', 'content');
 
 const TypingIndicator = React.memo(({ icon, colors }: { icon?: React.ReactNode, colors?: any }) => (
-    <div className="coach-typing-indicator" style={{ display: 'flex', justifyContent: 'flex-start', animation: 'coachEntrance 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both' }}>
+    <div className="coach-typing-indicator" style={{ display: 'flex', justifyContent: 'flex-start', animation: IS_NATIVE_COACH ? 'none' : 'coachEntrance 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both' }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem' }}>
             <div style={{
                 width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
@@ -170,7 +170,7 @@ const TypingIndicator = React.memo(({ icon, colors }: { icon?: React.ReactNode, 
             <div style={{
                 padding: '1rem 1.25rem', borderRadius: '1.5rem 1.5rem 1.5rem 4px',
                 background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
-                backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)'
+                backdropFilter: IS_NATIVE_COACH ? 'none' : 'blur(10px)', WebkitBackdropFilter: IS_NATIVE_COACH ? 'none' : 'blur(10px)'
             }}>
                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center', height: '16px' }}>
                     {[0, 1, 2].map(i => (
@@ -193,14 +193,15 @@ const MessageBubble = React.memo(({ msg, onReport, icon, colors }: MsgProps) => 
     return (
         <div
             className="coach-message-bubble"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+            onMouseEnter={IS_NATIVE_COACH ? undefined : () => setIsHovered(true)}
+            onMouseLeave={IS_NATIVE_COACH ? undefined : () => setIsHovered(false)}
             style={{
                 display: 'flex', alignItems: 'flex-end', gap: '0.5rem',
                 justifyContent: isUser ? 'flex-end' : 'flex-start',
-                animation: 'coachEntrance 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both',
+                animation: IS_NATIVE_COACH ? 'none' : 'coachEntrance 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both',
                 position: 'relative',
-                transform: 'translateZ(0)', // GPU promotion
+                // Avoid retaining a separate GPU layer for every history bubble on Android.
+                transform: IS_NATIVE_COACH ? 'none' : 'translateZ(0)',
             }}
         >
             {!isUser && (
@@ -220,11 +221,11 @@ const MessageBubble = React.memo(({ msg, onReport, icon, colors }: MsgProps) => 
                 borderRadius: isUser ? '1.5rem 1.5rem 4px 1.5rem' : '1.5rem 1.5rem 1.5rem 4px',
                 color: 'white',
                 position: 'relative',
-                backdropFilter: !isUser ? 'blur(12px)' : 'none',
-                WebkitBackdropFilter: !isUser ? 'blur(12px)' : 'none',
+                backdropFilter: !IS_NATIVE_COACH && !isUser ? 'blur(12px)' : 'none',
+                WebkitBackdropFilter: !IS_NATIVE_COACH && !isUser ? 'blur(12px)' : 'none',
                 ...(isUser
-                    ? { background: `linear-gradient(135deg, ${colors?.primary || '#FF0080'} 0%, ${colors?.secondary || '#7928CA'} 100%)`, boxShadow: `0 4px 24px ${colors?.glow || 'rgba(255,0,128,0.25)'}` }
-                    : { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }
+                    ? { background: `linear-gradient(135deg, ${colors?.primary || '#FF0080'} 0%, ${colors?.secondary || '#7928CA'} 100%)`, boxShadow: IS_NATIVE_COACH ? 'none' : `0 4px 24px ${colors?.glow || 'rgba(255,0,128,0.25)'}` }
+                    : { background: IS_NATIVE_COACH ? '#141414' : 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: IS_NATIVE_COACH ? 'none' : '0 4px 15px rgba(0,0,0,0.1)' }
                 )
             }}>
                 {msg.content}
@@ -311,6 +312,11 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const isFirstMount = useRef(true);
+    const inputResizeFrame = useRef<number | null>(null);
+
+    useEffect(() => () => {
+        if (inputResizeFrame.current !== null) cancelAnimationFrame(inputResizeFrame.current);
+    }, []);
 
     const handleReportMessage = useCallback(async (content: string) => {
         try {
@@ -332,18 +338,19 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
 
     useEffect(() => {
         if (scrollRef.current) {
-            const behavior = isFirstMount.current ? 'auto' : 'smooth';
+            const behavior = IS_NATIVE_COACH || isFirstMount.current ? 'auto' : 'smooth';
             // Wrap in requestAnimationFrame for smoother sync with browser paint cycles
             const requestScroll = () => {
                 if (scrollRef.current) {
                     scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior });
                 }
             };
-            requestAnimationFrame(requestScroll);
+            const frame = requestAnimationFrame(requestScroll);
 
             if (isFirstMount.current && messages.length > 0) {
                 isFirstMount.current = false;
             }
+            return () => cancelAnimationFrame(frame);
         }
     }, [messages, loading]);
 
@@ -367,8 +374,15 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
 
     const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const ta = e.target;
-        ta.style.height = 'auto';
-        ta.style.height = Math.min(ta.scrollHeight, 128) + 'px';
+        // Older WebViews need a fallback. Coalesce bursts into one measurement
+        // per frame rather than forcing synchronous layout during each input event.
+        if (!HAS_CONTENT_SIZING && inputResizeFrame.current === null) {
+            inputResizeFrame.current = requestAnimationFrame(() => {
+                inputResizeFrame.current = null;
+                ta.style.height = 'auto';
+                ta.style.height = Math.min(ta.scrollHeight, 128) + 'px';
+            });
+        }
         // Only flip React state when empty↔non-empty — prevents re-render on every typed character
         const nowHasContent = ta.value.trim().length > 0;
         setHasContent(prev => prev === nowHasContent ? prev : nowHasContent);
@@ -405,6 +419,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
 
         try {
             const customInstruction = selectedVibe?.startsWith('custom:') ? customPersonas?.find(p => p.id === selectedVibe.split(':')[1])?.instruction : undefined;
+            const { generateCoachAdvice } = await import('../services/rizzService');
             const response = await generateCoachAdvice(next, shadowNotes, selectedVibe || undefined, customInstruction);
             // Persist updated intel dossier if the AI tacked one on
             if (response.updatedNotes && response.updatedNotes !== shadowNotes) {
@@ -545,7 +560,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                 width: '100%', minHeight: 0, maxHeight: '100%', overflow: 'hidden',
                 background: '#050505', zIndex: 100, isolation: 'isolate',
             }} className={`app-surface coach-screen${IS_NATIVE_COACH ? ' native-coach-screen' : ''}`}>
-                <AuroraBackground colors={currentTheme.colors} />
+                {!IS_NATIVE_COACH && <AuroraBackground colors={currentTheme.colors} />}
 
                 {/* Header */}
                 <div className="coach-header" style={{
@@ -861,6 +876,8 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                             <input type="file" ref={fileInputRef} onChange={handleFileInput} accept="image/*" style={{ display: 'none' }} />
 
                             <textarea
+                                className="coach-input"
+                                onFocus={() => { void import('../services/rizzService').catch(() => {}); }}
                                 ref={textareaRef}
                                 defaultValue=""
                                 onChange={handleInputChange}
@@ -869,7 +886,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
                                 rows={1}
                                 disabled={loading}
                                 style={{
-                                    flex: 1, background: 'transparent', border: 'none', outline: 'none',
+                                    flex: 1, width: 0, minWidth: 0, background: 'transparent', border: 'none', outline: 'none',
                                     color: 'white', fontSize: '15px', lineHeight: 1.6, resize: 'none',
                                     fontFamily: 'inherit', minHeight: '24px', maxHeight: '128px',
                                     opacity: loading ? 0.4 : 1,
