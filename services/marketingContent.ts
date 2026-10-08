@@ -54,6 +54,153 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'how-to-tell-if-someone-is-losing-interest-without-overthinking',
+    title: 'How to Tell If Someone Is Losing Interest Without Overthinking Every Text',
+    seoTitle: 'How to Tell If Someone Is Losing Interest Without Overthinking',
+    description: 'Learn how to read a change in texting without turning one slow reply into a verdict, ask for clarity calmly, and recognise when a repeated pattern deserves a boundary.',
+    excerpt: 'A slower reply is not automatically rejection. Compare the change with the person’s usual effort, look for a pattern across messages and plans, then ask one clear question instead of trying to solve their feelings from punctuation.',
+    date: '2026-10-08',
+    updatedAt: '2026-10-08',
+    readingTime: '11 min read',
+    category: 'Texting advice',
+    author: 'jake',
+    keywords: [
+      'how to tell if someone is losing interest',
+      'signs someone is losing interest over text',
+      'how to know if someone is losing interest in you',
+      'are they losing interest or just busy',
+      'what to text when someone is losing interest',
+      'how to ask if someone is still interested',
+      'how to stop overthinking texting changes',
+      'what to do when texting feels different'
+    ],
+    image: '/blog/how-to-tell-if-someone-is-losing-interest-without-overthinking-hero.png',
+    imageAlt: 'A woman calmly reviewing messages on her phone beside a notebook and coffee in a warm cafe',
+    imageCaption: 'A change in texting is easier to understand when you compare the whole pattern instead of one notification.',
+    resources: [
+      { label: 'American Psychological Association: How to keep your relationship healthy', url: 'https://www.apa.org/topics/marriage-relationships/healthy-relationships' },
+      { label: 'The Gottman Institute: Improve relationship communication', url: 'https://www.gottman.com/improve-communication-relationship/' },
+      { label: 'loveisrespect: What are my boundaries?', url: 'https://www.loveisrespect.org/resources/what-are-my-boundaries/' }
+    ],
+    faqs: [
+      { question: 'How can you tell if someone is losing interest over text?', answer: 'Look for a repeated change across several behaviours: less initiation, less curiosity, vague or abandoned plans, and little effort to repair the distance. A single slow reply or quiet day cannot establish that pattern.' },
+      { question: 'Are they losing interest or just busy?', answer: 'You cannot always know from texting alone. Compare their words with what they do next: a busy person who remains interested usually gives context, returns to the conversation, or suggests another time to connect.' },
+      { question: 'What should I text someone who seems less interested?', answer: 'Send one calm message that names the change without accusing them, such as, “I have noticed we have been talking less. Are you still interested in getting to know each other?” Then give their answer and follow-through room to speak.' }
+    ],
+    sections: [
+      {
+        heading: 'A slower reply is not the same as a loss of interest',
+        paragraphs: [
+          'When a conversation changes, your mind may try to explain it before you have enough information. A reply that used to arrive in an hour takes a day. The messages become shorter. A person who once asked questions starts reacting with a like or a single emoji. Those changes can feel significant, especially when you are already invested, but each one has several possible explanations.',
+          'Work, stress, family responsibilities, illness, travel, or a different texting style can affect contact without changing someone’s feelings. The opposite is also true: someone can remain friendly while gradually reducing the effort they are willing to give. The first step is to stop treating one message as a final answer. Ask whether the overall connection has changed and whether the person still makes a clear effort to stay connected.'
+        ],
+        bullets: [
+          'A quiet day is an observation, not a diagnosis.',
+          'Texting speed matters less than consistency, curiosity, and follow-through.',
+          'The pattern across messages and plans gives you better information than punctuation.'
+        ]
+      },
+      {
+        heading: 'Compare the change with their usual baseline',
+        paragraphs: [
+          'There is no universal number of messages that proves interest. Some people text throughout the day; others are warm and attentive but rarely start long conversations. Judge the change against the person’s normal behaviour and the stage of the connection. If they have always replied slowly but reliably make plans, their pace may simply be their pace. If they were previously engaged and have now stopped initiating, answering, or making room, the change deserves attention.',
+          'Context matters too. A new job, exam week, trip, or difficult family situation can explain a temporary dip. An explanation does not automatically make every arrangement work for you, but it helps you avoid turning a reasonable interruption into a personal rejection. Give context a place in your reading while still noticing whether the person communicates and repairs the gap.'
+        ],
+        bullets: [
+          'Ask what their normal communication looked like before the change.',
+          'Notice whether the shift is temporary or has continued across several interactions.',
+          'Keep your own needs in view; an understandable reason can still leave you wanting a different level of contact.'
+        ]
+      },
+      {
+        heading: 'The signals that matter more when they appear together',
+        paragraphs: [
+          'A fading connection usually shows up as a cluster of changes rather than one dramatic event. The person may stop asking about your life, reply without adding anything, avoid making a plan, or cancel without suggesting another time. They may still use affectionate words, but the relationship begins to depend on you to start, carry, and repair every interaction.',
+          'Look for the direction of effort. Is the other person still finding ways to participate, even if their style is quiet? Do they return to an unfinished conversation, remember what matters to you, or make a realistic alternative plan when they are unavailable? Interest does not have to look intense. It does have to be visible somewhere in the pattern.'
+        ],
+        bullets: [
+          'Initiation has become almost entirely one-sided.',
+          'Replies close conversations instead of helping them continue.',
+          'Plans stay vague, repeatedly change, or disappear without repair.',
+          'You are receiving reassurance in words but very little effort in practice.'
+        ]
+      },
+      {
+        heading: 'What does not prove that someone is losing interest',
+        paragraphs: [
+          'Some clues are vivid but weak. A missing heart emoji, a shorter goodnight, a delayed read receipt, or a change in the number of exclamation marks can trigger a story without offering much evidence. Even a single cancelled plan is not enough to know what someone feels. People communicate differently from one day to the next, and a message can land badly when you are already worried.',
+          'Try separating facts from the interpretation you added. “They replied after eight hours” is a fact. “They are bored of me” is a possible explanation. Write down two or three other explanations before you act, then decide what information would actually help. This keeps you from sending a message designed to make the other person disprove a fear that they have not been given a fair chance to understand.'
+        ],
+        bullets: [
+          'Response time by itself is weak evidence.',
+          'A different emoji, punctuation style, or greeting does not reveal a complete emotional state.',
+          'Social media activity is not a reliable substitute for a direct conversation.',
+          'Your anxiety can be real without its first explanation being accurate.'
+        ]
+      },
+      {
+        heading: 'Ask for clarity without making them manage your anxiety',
+        paragraphs: [
+          'If the change continues, a direct question is usually kinder than a private investigation. Keep it specific and proportionate. Say what you have noticed, explain what you want to understand, and leave room for an honest answer. You are asking for information, not demanding that the other person promise a future they do not want.',
+          'Avoid stacking several anxious questions into one long message. “Do you still like me? Did I do something? Are you talking to someone else? Why are you being weird?” may describe your fear, but it makes a calm answer harder. One clear question gives both people a better chance to be honest.'
+        ],
+        bullets: [
+          'I have noticed our conversations have become quieter. Are you still interested in getting to know each other?',
+          'I enjoy talking with you, but I am getting mixed signals. Do you still want to make a plan?',
+          'It feels like the pace has changed. Is something going on, or are you no longer feeling this connection?'
+        ]
+      },
+      {
+        heading: 'Give the answer room to become visible',
+        paragraphs: [
+          'After you ask, resist the urge to fill every pause. A person may need time to think, but an indefinite silence is information too. You can decide in advance how long you are comfortable waiting and what you will do if there is no clear reply. That is a limit for your own wellbeing, not a countdown designed to pressure them.',
+          'Pay attention to the answer and the action that follows. “I have been busy, but I do want to see you” means more when it becomes a specific plan. “I care about you” is worth hearing, but it cannot carry the whole connection if the person keeps avoiding contact. Clarity is not just a reassuring sentence; it is the relationship between what someone says and what they repeatedly do.'
+        ],
+        bullets: [
+          'A busy person can still communicate a realistic next step.',
+          'A vague answer may be sincere, but it may not offer the certainty or effort you need.',
+          'Let the other person take some responsibility for reconnecting after you have asked clearly.'
+        ]
+      },
+      {
+        heading: 'If the pattern confirms that their interest has changed',
+        paragraphs: [
+          'Disappointing information becomes easier to handle when you stop negotiating with it. You do not need to persuade someone back into interest, become more entertaining, or keep sending messages to prove that the connection could work. A person can have good qualities and still not be available for the kind of relationship you want.',
+          'Choose a response that protects your dignity and leaves the situation proportionate to what actually happened. You can step back without turning the ending into a performance. A simple message such as, “I get the sense this is no longer moving in the same direction, so I am going to leave it here. I wish you well,” gives you a clean next step and does not demand an argument.'
+        ],
+        bullets: [
+          'Stop carrying the conversation if the effort remains one-sided.',
+          'Do not treat a vague promise as a plan until behaviour supports it.',
+          'A respectful ending can be brief; you do not need a closing essay.'
+        ]
+      },
+      {
+        heading: 'Keep your life moving while you wait for clarity',
+        paragraphs: [
+          'The uncertainty feels larger when the chat becomes the main place you look for reassurance. Keep plans with friends, return to routines that make you feel like yourself, and spend time on activities that do not depend on one person replying. This is not a strategy to make them jealous or appear unavailable. It is a way to keep one uncertain connection from becoming the centre of your day.',
+          'You can stay open to a good outcome without placing your life on hold. Send the message you mean, then let the other person show their level of interest. If waiting begins to affect your sleep, work, appetite, or ability to enjoy ordinary activities, talk with someone you trust or a qualified mental-health professional. Dating uncertainty deserves care, but it does not deserve control of your whole life.'
+        ],
+        bullets: [
+          'Choose a check-in time instead of monitoring the chat continuously.',
+          'Make plans you would still enjoy if the reply arrives later than you hope.',
+          'Let evidence accumulate without making every notification responsible for your mood.'
+        ]
+      },
+      {
+        heading: 'The clearest answer is usually a pattern you can see',
+        paragraphs: [
+          'You cannot always know when someone’s interest is changing from text alone. You can notice whether the connection still contains mutual effort, ask a fair question, and decide what works for you if the answer is unclear. That is more useful than trying to decode a single pause perfectly.',
+          'Stay curious without abandoning your judgment. A promising connection can survive a busy week because both people return to it. A fading connection becomes clearer when you stop doing all the returning yourself. Let consistency, communication, and follow-through guide your next move.'
+        ],
+        bullets: [
+          'Read repeated behaviour instead of isolated digital signals.',
+          'Ask directly when the change matters to you.',
+          'Choose a boundary or invitation that reflects what you genuinely want.'
+        ]
+      }
+    ]
+  },
+  {
     slug: 'how-to-ask-for-clarity-in-a-situationship',
     title: 'How to Ask for Clarity in a Situationship Without Creating Pressure',
     seoTitle: 'How to Ask for Clarity in a Situationship',

@@ -514,6 +514,11 @@ const BlogIndexPage: React.FC<{ navigate: (path: string) => void }> = ({ navigat
 );
 
 const ARTICLE_EXAMPLES: Record<string, string[]> = {
+  'how-to-tell-if-someone-is-losing-interest-without-overthinking': [
+    'I have noticed our conversations have become quieter. Are you still interested in getting to know each other?',
+    'I enjoy talking with you, but I am getting mixed signals. Do you still want to make a plan?',
+    'It feels like this connection has changed, so I am going to step back. I wish you well.'
+  ],
   'dating-app-red-flags-before-first-date': ['I prefer to chat here a little longer before sharing my number.', 'I am happy to meet, but I would like to choose a public place and make my own way there.', 'I do not think this is a fit, so I am going to leave the conversation here. Take care.'],
   'how-to-stop-overthinking-while-dating': ['I have enjoyed getting to know you. Are you still interested in making a plan this week?', 'I am taking dating slowly and prefer clear plans. Would Thursday or Saturday work for you?', 'I am going to step back from guessing here. If you would like to continue, feel free to reach out.'],
   'talk-about-what-you-want-in-dating': ['I’m enjoying getting to know you, and I’m open to a relationship if we’re a good fit. What are you hoping to find?', 'I’m looking for something casual and clear right now. I wanted to say that early so we can see if we’re on the same page.', 'I’m still figuring out what fits me. I like being honest about that and checking in as we get to know each other.'],
@@ -624,6 +629,13 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'how-to-tell-if-someone-is-losing-interest-without-overthinking': [
+    { slug: 'how-to-stop-overthinking-while-dating', label: 'Stop overthinking the silence' },
+    { slug: 'signs-texting-conversation-losing-momentum', label: 'Spot fading conversation momentum' },
+    { slug: 'what-to-text-when-they-stop-replying', label: 'Choose a calm follow-up' },
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy texting boundaries' },
+    { slug: 'how-to-ask-for-clarity-in-a-situationship', label: 'Ask for clarity in a situationship' }
+  ],
   'how-to-ask-for-clarity-in-a-situationship': [
     { slug: 'talk-about-what-you-want-in-dating', label: 'Talk about what you want in dating' },
     { slug: 'how-to-pace-a-new-relationship-without-losing-yourself', label: 'Pace a new relationship' },
