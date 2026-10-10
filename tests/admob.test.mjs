@@ -79,7 +79,9 @@ function setup(options = {}) {
     './adConsentState': { readNativeConsentInfo: async () => options.nativeConsent ? options.nativeConsent() : null },
   });
   service.CONSENT_REFRESH_TIMEOUT_MS = 10;
+  service.SDK_INIT_TIMEOUT_MS = 10;
   service.NATIVE_CONSENT_TIMEOUT_MS = 10;
+  service.CONSENT_FORM_TIMEOUT_MS = 100;
   service.INIT_WAIT_TIMEOUT_MS = 250;
   service.REWARDED_PREPARE_TIMEOUT_MS = 20;
   service.REWARDED_POST_SHOW_TIMEOUT_MS = 250;
@@ -92,6 +94,21 @@ test('concurrent ad requests share consent gathering and SDK initialization', as
     service.prepareRewardVideo('reward'), service.prepareRewardVideo('reward'), service.initialize(),
   ]), [true, true, true]);
   assert.equal(calls.filter(call => call === 'consent-refresh').length, 1);
+  assert.equal(calls.filter(call => call === 'sdk-init').length, 1);
+  assert.equal(calls.filter(call => call === 'reward-request').length, 1);
+});
+
+test('SDK readiness has its own deadline and no reward request runs before completion', async () => {
+  let finishSdk;
+  const { service, calls } = setup({ initialize: () => new Promise(resolve => { finishSdk = resolve; }) });
+  service.SDK_INIT_TIMEOUT_MS = 100;
+  const request = service.prepareRewardVideo('reward');
+  while (!finishSdk) await delay(0);
+  await delay(20); // Longer than the consent-refresh deadline.
+  assert.equal(service.initialized, false);
+  assert.equal(calls.includes('reward-request'), false);
+  finishSdk();
+  assert.equal(await request, true);
   assert.equal(calls.filter(call => call === 'sdk-init').length, 1);
   assert.equal(calls.filter(call => call === 'reward-request').length, 1);
 });
@@ -374,6 +391,69 @@ test('privacy changes block pending requests and invalidate a cached permission'
   assert.equal(calls.includes('reward-request'), false);
 });
 
+test('a lost consent callback releases initialization and native permission permits rewarded ads', async () => {
+  const { service, calls } = setup({
+    refresh: () => ({ ...denied, isConsentFormAvailable: true }),
+    form: pending, nativeConsent: () => allowed,
+  });
+  service.CONSENT_FORM_TIMEOUT_MS = 5;
+  assert.equal(await service.prepareRewardVideo('reward'), true);
+  assert.equal(service.initPromise, null);
+  assert.ok(service.consentFormPromise, 'Keep the native form tracked even after the wait expires');
+  assert.equal(calls.filter(call => call === 'consent-form').length, 1);
+  assert.equal(calls.filter(call => call === 'reward-request').length, 1);
+});
+
+test('pending consent stays blocked until UMP permits ads, without another form or another long wait', async () => {
+  let permission = denied;
+  const { service, calls } = setup({
+    refresh: () => ({ ...denied, isConsentFormAvailable: true }),
+    form: pending, nativeConsent: () => permission,
+  });
+  service.CONSENT_FORM_TIMEOUT_MS = 5;
+  assert.equal(await service.prepareRewardVideo('reward'), false);
+  assert.equal(service.initPromise, null);
+  assert.equal(await service.prepareRewardVideo('reward'), false);
+  assert.equal(calls.includes('sdk-init'), false);
+  assert.equal(calls.includes('reward-request'), false);
+  permission = allowed;
+  assert.equal(await service.prepareRewardVideo('reward'), true);
+  assert.equal(calls.filter(call => call === 'consent-form').length, 1);
+});
+
+test('older APKs recover a missing form callback through a fresh UMP response', async () => {
+  let refreshes = 0;
+  const { service, calls } = setup({
+    refresh: () => ++refreshes === 1 ? { ...denied, isConsentFormAvailable: true } : allowed,
+    form: pending,
+  });
+  service.CONSENT_FORM_TIMEOUT_MS = 5;
+  assert.equal(await service.initialize(), true);
+  assert.equal(refreshes, 2);
+  assert.equal(calls.filter(call => call === 'consent-form').length, 1);
+});
+
+test('a late form callback cannot restore stale permission after a native denial', async () => {
+  let dismiss;
+  let permission = allowed;
+  const { service, calls } = setup({
+    refresh: () => ({ ...denied, isConsentFormAvailable: true }),
+    form: () => new Promise(resolve => { dismiss = resolve; }),
+    nativeConsent: () => permission,
+  });
+  service.CONSENT_FORM_TIMEOUT_MS = 5;
+  assert.equal(await service.initialize(), true);
+  permission = denied;
+  service.canRequestAds = false;
+  assert.equal(await service.initialize(), false);
+  dismiss(allowed);
+  await delay(0);
+  assert.equal(service.consentFormPromise, null);
+  assert.equal(service.canRequestAds, false);
+  assert.equal(await service.prepareRewardVideo('reward'), false);
+  assert.equal(calls.includes('reward-request'), false);
+});
+
 test('an initialized SDK cannot bypass an in-flight consent form on a later refresh', async () => {
   let refreshing = false;
   let dismiss;
@@ -547,6 +627,18 @@ test('modal and background suspension resumes a banner without a new request', a
   assert.equal(calls.filter(call => call === 'banner-resume').length, 3);
 });
 
+test('a newly attached banner uses the measured native slot before any resize', async t => {
+  const margins = [];
+  const { controller, calls } = setupBanner({ moveBanner: async margin => { margins.push(margin); return true; } });
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  assert.deepEqual(margins, [72]);
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+  assert.equal(calls.includes('banner-hide'), false);
+  await controller.setMode('visible');
+  assert.deepEqual(margins, [72], 'Stable geometry does not repeat positioning or ad requests');
+});
+
 test('premium or logout during slow consent prevents a late banner request', async t => {
   let resolveConsent;
   const { controller, calls } = setupBanner({ refresh: () => new Promise(resolve => { resolveConsent = resolve; }) });
@@ -589,6 +681,34 @@ test('consent denial blocks banners and logout cancels the retry', async t => {
   assert.equal(timers.size, 1);
   await controller.setMode('removed');
   assert.equal(timers.size, 0);
+});
+
+test('a missing consent callback does not prevent a permitted banner request', async t => {
+  const { controller, service, calls } = setupBanner({
+    refresh: () => ({ ...denied, isConsentFormAvailable: true }),
+    form: pending, nativeConsent: () => allowed,
+  });
+  t.after(() => controller.dispose());
+  service.CONSENT_FORM_TIMEOUT_MS = 5;
+  await controller.setMode('visible');
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+  assert.equal(service.initPromise, null);
+});
+
+test('readiness retries check permission sooner without making premature banner requests', async t => {
+  let permission = denied;
+  const { controller, calls, timers, advance } = setupBanner({ refresh: () => permission });
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  assert.equal(calls.includes('banner-request'), false);
+  const [id, retry] = [...timers][0];
+  assert.equal(retry.ms, 15_000);
+  permission = allowed;
+  advance(retry.ms);
+  timers.delete(id);
+  retry.callback();
+  await controller.setMode('visible');
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
 });
 
 test('no-fill schedules one delayed retry and a later native success recovers', async t => {
@@ -703,6 +823,7 @@ test('resizing moves the cached banner instead of loading another ad', async t =
   const { controller, calls } = setupBanner({ moveBanner: async margin => { moved.push(margin); return true; } });
   t.after(() => controller.dispose());
   await controller.setMode('visible');
+  moved.length = 0;
   await controller.setTopMargin(90);
   await controller.setTopMargin(90);
   assert.deepEqual(moved, [90]);
@@ -715,6 +836,7 @@ test('a size change while suspended does not display the banner until resuming',
   const { controller, calls } = setupBanner({ moveBanner: async margin => { moved.push(margin); return true; } });
   t.after(() => controller.dispose());
   await controller.setMode('visible');
+  moved.length = 0;
   await controller.setMode('hidden');
   await controller.setTopMargin(90);
   assert.deepEqual(moved, []);
@@ -744,7 +866,7 @@ test('a size change during native creation moves the view after creation settles
 test('another viewport change during native repositioning is applied before the queue settles', async t => {
   let finishMove;
   let moves = 0;
-  const { controller, calls } = setupBanner({ moveBanner: () => ++moves === 1 ? new Promise(resolve => { finishMove = resolve; }) : Promise.resolve(true) });
+  const { controller, calls } = setupBanner({ moveBanner: () => ++moves === 2 ? new Promise(resolve => { finishMove = resolve; }) : Promise.resolve(true) });
   t.after(() => controller.dispose());
   await controller.setTopMargin(72, 392);
   await controller.setMode('visible');
@@ -753,7 +875,7 @@ test('another viewport change during native repositioning is applied before the 
   const again = controller.setTopMargin(72, 940);
   finishMove(true);
   await Promise.all([resize, again]);
-  assert.equal(moves, 2);
+  assert.equal(moves, 3, 'Initial placement plus both viewport changes');
   assert.equal(calls.filter(call => call === 'banner-request').length, 1);
 });
 
@@ -823,6 +945,7 @@ test('a real width change recenters the compact banner without requesting anothe
   t.after(() => controller.dispose());
   await controller.setTopMargin(72, 392);
   await controller.setMode('visible');
+  moves = 0;
   calls.length = 0;
   await controller.setTopMargin(72, 872);
   await controller.setTopMargin(72, 872);
@@ -837,6 +960,7 @@ test('width changes during a modal recenter the cached banner only after the mod
   t.after(() => controller.dispose());
   await controller.setTopMargin(72, 392);
   await controller.setMode('visible');
+  moves = 0;
   await controller.setMode('hidden');
   calls.length = 0;
   await controller.setTopMargin(72, 872);

@@ -1,9 +1,8 @@
 package app.vercel.rizzmaster;
 
-import android.os.Build;
+import android.app.Activity;
 import android.view.View;
 import android.view.ViewGroup;
-import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import com.getcapacitor.JSObject;
@@ -19,44 +18,23 @@ import com.google.android.gms.ads.AdSize;
 public class BottomNavigationInsetPlugin extends Plugin {
     @PluginMethod
     public void getBottomInset(PluginCall call) {
-        JSObject result = new JSObject();
-        // The installed AdMob plugin already adds this inset on Android 15+.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-            result.put("inset", 0);
-            call.resolve(result);
-            return;
-        }
-
-        WindowInsetsCompat insets = ViewCompat.getRootWindowInsets(getActivity().getWindow().getDecorView());
-        int bottomPx = 0;
-        if (insets != null) {
-            Insets navigation = insets.getInsets(WindowInsetsCompat.Type.navigationBars());
-            bottomPx = navigation.bottom;
-        }
-        float density = getContext().getResources().getDisplayMetrics().density;
-        result.put("inset", Math.round(bottomPx / density));
-        call.resolve(result);
+        getInset(call, WindowInsetsCompat.Type.navigationBars(), false);
     }
 
     @PluginMethod
     public void getTopInset(PluginCall call) {
-        JSObject result = new JSObject();
-        // The installed AdMob plugin already adds this inset on Android 15+.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-            result.put("inset", 0);
-            call.resolve(result);
-            return;
-        }
+        getInset(call, WindowInsetsCompat.Type.statusBars(), true);
+    }
 
-        WindowInsetsCompat insets = ViewCompat.getRootWindowInsets(getActivity().getWindow().getDecorView());
-        int topPx = 0;
-        if (insets != null) {
-            Insets status = insets.getInsets(WindowInsetsCompat.Type.statusBars());
-            topPx = status.top;
-        }
-        float density = getContext().getResources().getDisplayMetrics().density;
-        result.put("inset", Math.round(topPx / density));
-        call.resolve(result);
+    private void getInset(PluginCall call, int type, boolean top) {
+        runOnUiThread(call, () -> {
+            JSObject result = new JSObject();
+            WindowInsetsCompat insets = ViewCompat.getRootWindowInsets(getActivity().getWindow().getDecorView());
+            int pixels = insets == null ? 0 : (top ? insets.getInsets(type).top : insets.getInsets(type).bottom);
+            float density = getContext().getResources().getDisplayMetrics().density;
+            result.put("inset", Math.round(pixels / density));
+            call.resolve(result);
+        });
     }
 
     private ViewGroup getBannerParent() {
@@ -65,10 +43,23 @@ public class BottomNavigationInsetPlugin extends Plugin {
         return (ViewGroup) content.getChildAt(0);
     }
 
-    private int getAdMobTopInset() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) return 0;
-        WindowInsetsCompat insets = ViewCompat.getRootWindowInsets(getActivity().getWindow().getDecorView());
-        return insets == null ? 0 : insets.getSystemWindowInsetTop();
+    private void runOnUiThread(PluginCall call, Runnable action) {
+        Activity activity = getActivity();
+        if (activity == null || activity.isFinishing() || activity.isDestroyed()) {
+            call.reject("Banner activity is unavailable");
+            return;
+        }
+        activity.runOnUiThread(() -> {
+            try {
+                if (activity != getActivity() || activity.isFinishing() || activity.isDestroyed()) {
+                    call.reject("Banner activity closed before layout");
+                    return;
+                }
+                action.run();
+            } catch (Exception ex) {
+                call.reject("Banner layout failed", ex);
+            }
+        });
     }
 
     private AdView getBannerView(ViewGroup parent) {
@@ -85,7 +76,7 @@ public class BottomNavigationInsetPlugin extends Plugin {
 
     @PluginMethod
     public void getBannerGeometry(PluginCall call) {
-        getActivity().runOnUiThread(() -> {
+        runOnUiThread(call, () -> {
             ViewGroup parent = getBannerParent();
             if (parent == null) {
                 call.reject("Banner parent is not laid out yet");
@@ -100,9 +91,9 @@ public class BottomNavigationInsetPlugin extends Plugin {
             int bottomPx = insets == null ? 0 : insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom;
             JSObject result = new JSObject();
             result.put("density", density);
-            // AdMob 8 adds its own status-bar inset on API 35+. Account for it
-            // once, relative to the actual WebView and native parent origins.
-            result.put("webViewOffsetDp", (webViewLocation[1] - parentLocation[1] - getAdMobTopInset()) / density);
+            // Capacitor owns safe areas. Map actual origins without assuming
+            // that a particular Android version adds an extra status inset.
+            result.put("webViewOffsetDp", (webViewLocation[1] - parentLocation[1]) / density);
             result.put("bottomInsetDp", bottomPx / density);
             // Reserve the supported compact size before requesting the ad.
             AdView adView = getBannerView(parent);
@@ -117,15 +108,19 @@ public class BottomNavigationInsetPlugin extends Plugin {
     @PluginMethod
     public void setBannerPosition(PluginCall call) {
         final int margin = Math.max(0, call.getInt("margin", 0));
-        getActivity().runOnUiThread(() -> {
+        runOnUiThread(call, () -> {
             ViewGroup parent = getBannerParent();
             AdView adView = getBannerView(parent);
             boolean updated = false;
             if (adView != null && adView.getParent() instanceof ViewGroup) {
                 ViewGroup container = (ViewGroup) adView.getParent();
+                if (!(container.getLayoutParams() instanceof ViewGroup.MarginLayoutParams)) {
+                    call.reject("Banner container does not support margins");
+                    return;
+                }
                 ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) container.getLayoutParams();
                 float density = getContext().getResources().getDisplayMetrics().density;
-                params.topMargin = Math.round(margin * density) + getAdMobTopInset();
+                params.topMargin = Math.round(margin * density);
                 params.bottomMargin = 0;
                 // A fixed-size ad only needs recentering after a width change,
                 // so reuse it rather than making a new request on rotation.
@@ -133,16 +128,11 @@ public class BottomNavigationInsetPlugin extends Plugin {
                 params.leftMargin = sideMargin;
                 params.rightMargin = sideMargin;
                 container.setLayoutParams(params);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-                    getActivity().getWindow().getDecorView().setOnApplyWindowInsetsListener((view, insets) -> {
-                        params.topMargin = Math.round(margin * density) + insets.getSystemWindowInsetTop();
-                        int centeredMargin = Math.max(0, (parent.getWidth() - AdSize.BANNER.getWidthInPixels(getContext())) / 2);
-                        params.leftMargin = centeredMargin;
-                        params.rightMargin = centeredMargin;
-                        container.setLayoutParams(params);
-                        return insets;
-                    });
-                }
+                // The measured DOM slot already includes safe-area padding.
+                // Override only the ad container's default inset adjustment;
+                // never replace Capacitor's decor-view listener. JS remeasures
+                // this slot on keyboard/viewport changes and rotation.
+                container.setOnApplyWindowInsetsListener((view, insets) -> insets);
                 updated = true;
             }
             JSObject result = new JSObject();

@@ -32,6 +32,7 @@ export const AdMobService = {
     rewardVideoDisplayStarted: false,
     // Internal Promise tracking to avoid redundant fetches and handle race conditions
     initPromise: null as Promise<boolean> | null,
+    consentFormPromise: null as Promise<AdmobConsentInfo> | null,
     rewardVideoPromise: null as Promise<boolean> | null,
     rewardVideoVersion: 0,
     rewardVideoPendingVersion: 0,
@@ -55,7 +56,10 @@ export const AdMobService = {
     REWARDED_STALE_AFTER_MS: 50 * 60 * 1000,
     REWARDED_SHOW_TIMEOUT_MS: 40000,
     CONSENT_REFRESH_TIMEOUT_MS: 15000,
+    // Google allows mediation up to 30 seconds, plus native parent-view setup.
+    SDK_INIT_TIMEOUT_MS: 45000,
     NATIVE_CONSENT_TIMEOUT_MS: 3000,
+    CONSENT_FORM_TIMEOUT_MS: 60000,
     INIT_WAIT_TIMEOUT_MS: 90000,
 
     applyConsentInfo(consentInfo: AdmobConsentInfo) {
@@ -127,6 +131,39 @@ export const AdMobService = {
         }), this.CONSENT_REFRESH_TIMEOUT_MS);
     },
 
+    async gatherConsentForm(): Promise<AdmobConsentInfo> {
+        // A deadline releases initialization, not the native form. Keep the
+        // operation tracked until its callback arrives to avoid duplicate forms.
+        let waitExpired = false;
+        if (!this.consentFormPromise) {
+            const operation = AdMob.showConsentForm();
+            this.consentFormPromise = operation;
+            const release = async () => {
+                try {
+                    if (waitExpired) {
+                        // A late callback must not restore its stale permission
+                        // snapshot after recovery. Re-read UMP's current state.
+                        this.canRequestAds = false;
+                        this.invalidateRewardVideo();
+                        await this.recoverConsentInfo();
+                    }
+                } catch (error) {
+                    console.warn('[AdMob] Late consent recovery failed:', error);
+                } finally {
+                    // Keep privacy-options entry serialized with this read too.
+                    if (this.consentFormPromise === operation) this.consentFormPromise = null;
+                }
+            };
+            void operation.then(release, release);
+        }
+        try {
+            return await this.withNativeTimeout('UMP consent form', this.consentFormPromise, this.CONSENT_FORM_TIMEOUT_MS);
+        } catch (error) {
+            waitExpired = true;
+            throw error;
+        }
+    },
+
     async recoverConsentInfo(): Promise<AdmobConsentInfo | null> {
         try {
             const nativeInfo = await this.withNativeTimeout(
@@ -173,12 +210,18 @@ export const AdMobService = {
 
                 let consentInfo: AdmobConsentInfo | null;
                 try {
-                    consentInfo = this.applyConsentInfo(await this.refreshConsentInfo());
-                    if (consentInfo.isConsentFormAvailable) {
+                    if (this.consentFormPromise) {
+                        // A previous wait expired. Read current native permission
+                        // rather than waiting forever or presenting another form.
+                        consentInfo = await this.recoverConsentInfo();
+                    } else {
+                        consentInfo = this.applyConsentInfo(await this.refreshConsentInfo());
+                    }
+                    if (!this.consentFormPromise && consentInfo?.isConsentFormAvailable) {
                         // Native loadAndShowConsentFormIfRequired decides whether
                         // an EU or US-state message must actually be presented.
                         console.log('AdMob: Loading required consent/privacy form...');
-                        consentInfo = this.applyConsentInfo(await AdMob.showConsentForm());
+                        consentInfo = this.applyConsentInfo(await this.gatherConsentForm());
                     }
                 } catch (error) {
                     console.warn('[AdMob] Consent gathering failed; checking current UMP permission:', error);
@@ -196,7 +239,7 @@ export const AdMobService = {
                 }
 
                 await this.withNativeTimeout('AdMob SDK initialization',
-                    AdMob.initialize({ testingDevices: [] }), this.CONSENT_REFRESH_TIMEOUT_MS);
+                    AdMob.initialize({ testingDevices: [] }), this.SDK_INIT_TIMEOUT_MS);
                 this.initialized = true;
                 console.log('AdMob Community Initialized after UMP consent checks');
                 return true;
@@ -214,7 +257,7 @@ export const AdMobService = {
     },
 
     async showPrivacyOptionsForm(): Promise<boolean> {
-        if (!canUseNativeAdMob() || !this.privacyOptionsRequired || this.privacyOptionsInProgress || this.initPromise) return false;
+        if (!canUseNativeAdMob() || !this.privacyOptionsRequired || this.privacyOptionsInProgress || this.initPromise || this.consentFormPromise) return false;
 
         this.privacyOptionsInProgress = true;
         this.canRequestAds = false;

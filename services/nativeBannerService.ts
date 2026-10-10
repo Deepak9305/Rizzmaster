@@ -11,6 +11,10 @@ export const BANNER_POSITION = BannerAdPosition.TOP_CENTER;
 // guidance. Normal banner refresh remains owned by the Google Mobile Ads SDK.
 export const BANNER_RETRY_INITIAL_MS = 60_000;
 export const BANNER_RETRY_MAX_MS = 300_000;
+// Permission checks do not issue ad requests. Recover these sooner while
+// retaining the slower pacing for actual load failures and no-fill.
+export const BANNER_READINESS_RETRY_INITIAL_MS = 15_000;
+export const BANNER_READINESS_RETRY_MAX_MS = 60_000;
 export const BANNER_LOAD_TIMEOUT_MS = 90_000;
 export const getBannerSlotHeight = () => BANNER_HEIGHT;
 
@@ -26,6 +30,7 @@ export class NativeBannerController {
     private running: Promise<void> | null = null;
     private retryTimer: ReturnType<typeof setTimeout> | null = null;
     private retryCount = 0;
+    private readinessRetryCount = 0;
     private retryAt = 0;
     private requestVersion = 0;
     private loadTimer: ReturnType<typeof setTimeout> | null = null;
@@ -60,6 +65,7 @@ export class NativeBannerController {
             if (mode === 'removed') {
                 this.retryAt = 0;
                 this.retryCount = 0;
+                this.readinessRetryCount = 0;
             }
         }
         return this.reconcile();
@@ -97,12 +103,15 @@ export class NativeBannerController {
         )));
     }
 
-    private scheduleRetry() {
+    private scheduleRetry(readinessOnly = false) {
         if (this.disposed || this.desired === 'removed') return;
         // No tight no-fill loops, no manual refreshing of a loaded ad, and no
         // recovery request inside AdMob's recommended 60-second interval.
         if (!this.retryAt || this.retryAt <= Date.now()) {
-            this.retryAt = Date.now() + Math.min(BANNER_RETRY_INITIAL_MS * 2 ** this.retryCount++, BANNER_RETRY_MAX_MS);
+            const delay = readinessOnly
+                ? Math.min(BANNER_READINESS_RETRY_INITIAL_MS * 2 ** this.readinessRetryCount++, BANNER_READINESS_RETRY_MAX_MS)
+                : Math.min(BANNER_RETRY_INITIAL_MS * 2 ** this.retryCount++, BANNER_RETRY_MAX_MS);
+            this.retryAt = Date.now() + delay;
         }
         this.waitForRetry();
     }
@@ -214,14 +223,15 @@ export class NativeBannerController {
                 if (this.desired !== 'visible') continue;
                 if (!initialized || !AdMobService.canRequestAds || AdMobService.privacyOptionsInProgress) {
                     await this.remove();
-                    this.scheduleRetry();
+                    this.scheduleRetry(true);
                     return;
                 }
+                this.readinessRetryCount = 0;
                 await this.registerListeners();
                 if (this.desired !== 'visible') continue;
                 if (!AdMobService.canRequestAds || AdMobService.privacyOptionsInProgress) {
                     await this.remove();
-                    this.scheduleRetry();
+                    this.scheduleRetry(true);
                     return;
                 }
                 // The component owns a stable layout slot. This reports native
@@ -264,6 +274,15 @@ export class NativeBannerController {
                         }));
                         // Native show resolves on view creation, not on load;
                         // Loaded/FailedToLoad clear the watchdog above.
+                        if (this.attached && this.moveBanner) {
+                            // Apply the measured slot immediately, including its
+                            // safe area, rather than waiting for the first resize.
+                            const margin = this.topMargin;
+                            const viewportWidthDp = this.viewportWidthDp;
+                            if (await this.moveBanner(margin)) {
+                                this.positionDirty = this.topMargin !== margin || this.viewportWidthDp !== viewportWidthDp;
+                            }
+                        }
                     } catch (error) {
                         await this.remove();
                         this.scheduleRetry();
