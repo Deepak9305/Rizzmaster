@@ -8,7 +8,7 @@ export const normalizeAuthError = (error: unknown, context: 'google' | 'email') 
     const raw = typeof details?.message === 'string' ? details.message : (typeof error === 'string' ? error : '');
     const message = raw.toLowerCase();
     const code = String(details?.code ?? '');
-    if (context === 'google' && code === '10') return 'Google sign-in is not configured for this app build. You can sign in with email for now.';
+    if (context === 'google' && code === '10') return 'Google sign-in is not configured for this Android build. Check the app package and signing certificate in Google Cloud, then try again.';
     if (code === '12501' || message.includes('cancel')) return 'Google sign-in was cancelled. Try again when you’re ready.';
     if (message.includes('invalid login credentials')) return 'Incorrect email or password.';
     if (message.includes('email not confirmed')) return 'Confirm your email before signing in.';
@@ -43,13 +43,16 @@ export const AuthService = {
 
     async initializeGoogle() {
         if (this.googleInitialized) return;
-        if (!runtimeConfig.googleClientId) throw new Error('Google sign-in is unavailable. Please use email sign-in.');
         if (!this.googleInitPromise) {
-            const operation = GoogleAuth.initialize({
-                clientId: runtimeConfig.googleClientId,
+            // Native builds also carry the client ID in Capacitor's plugin
+            // config and Android resources. This lets a bundled fallback UI
+            // initialize Google Auth even when Vite has no runtime env vars.
+            const options: { clientId?: string; scopes: string[]; grantOfflineAccess: boolean } = {
                 scopes: ['profile', 'email'],
                 grantOfflineAccess: false,
-            });
+            };
+            if (runtimeConfig.googleClientId) options.clientId = runtimeConfig.googleClientId;
+            const operation = GoogleAuth.initialize(options);
             this.googleInitPromise = operation;
             void operation.then(() => {
                 this.googleInitialized = true;

@@ -51,6 +51,15 @@ test('restored native sessions initialize Google before logging out', async () =
   assert.deepEqual(calls.map(call => call[0]), ['initialize', 'logout']);
 });
 
+test('native Google Auth can use the compiled client when the bundled UI has no env vars', async () => {
+  const { AuthService: service, calls } = auth({ config: { googleClientId: undefined } });
+  await service.initializeGoogle();
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0][0], 'initialize');
+  assert.deepEqual(Array.from(calls[0][1].scopes), ['profile', 'email']);
+  assert.equal(calls[0][1].grantOfflineAccess, false);
+});
+
 test('Google picker waits for native initialization and exchanges only the ID token', async () => {
   let finish;
   const { AuthService: service, calls } = auth({ initialize: () => new Promise(resolve => { finish = resolve; }) });
@@ -155,7 +164,7 @@ test('Google failures show an alert in the Google panel and clear the spinner', 
   const page = loginPage({ picker: async () => { throw { message: 'Something went wrong', code: '10' }; } });
   await page.find(page.render(), 'Continue with Google').props.onClick();
   assert.match(page.html(), /role="alert"/);
-  assert.match(page.html(), /not configured for this app build/);
+  assert.match(page.html(), /not configured for this Android build/);
   assert.doesNotMatch(page.html(), /Signing in\.\.\./);
   assert.equal(page.find(page.render(), 'Continue with Google').props.disabled, false);
 });

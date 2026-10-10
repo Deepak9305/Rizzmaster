@@ -4,6 +4,8 @@
     <string name="title_activity_main">RizzMaster</string>
     <string name="package_name">app.vercel.rizzmaster</string>
     <string name="custom_url_scheme">app.vercel.rizzmaster</string>
+    <!-- Web OAuth client used as the Google ID-token audience for Supabase. -->
+    <string name="server_client_id">413817396320-eogg5st74ecbfa346s92ren9mgr4jrqd.apps.googleusercontent.com</string>
     <string name="facebook_app_id">2224806321592496</string>
     <string name="fb_login_protocol_scheme">fb2224806321592496</string>
 </resources>
