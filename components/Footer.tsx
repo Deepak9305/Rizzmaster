@@ -67,7 +67,7 @@ const Footer: React.FC<FooterProps> = ({ className = "", onNavigate, onWebNaviga
 
         {/* Version Indicator */}
         <div className="text-[9px] text-white/10 font-mono select-none">
-          v1.2.3 (Mobile)
+          v1.2.4 (Mobile)
         </div>
       </div>
     </footer>

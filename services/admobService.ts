@@ -239,7 +239,7 @@ export const AdMobService = {
                 }
 
                 await this.withNativeTimeout('AdMob SDK initialization',
-                    AdMob.initialize({ testingDevices: [] }), this.SDK_INIT_TIMEOUT_MS);
+                    AdMob.initialize(), this.SDK_INIT_TIMEOUT_MS);
                 this.initialized = true;
                 console.log('AdMob Community Initialized after UMP consent checks');
                 return true;

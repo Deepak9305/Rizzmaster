@@ -63,24 +63,26 @@ type RewardedAdPreparationContext = {
   expiresAt: number | null;
 };
 
-// --- AD CONFIGURATION ---
-const USE_TEST_ADS = false; // Set to true for testing with Google test ads
-
+// --- PRODUCTION AD CONFIGURATION ---
+// Android is the only platform with configured production ad units. Unsupported
+// platforms stay empty instead of falling back to Google's test IDs.
 const AD_IDS = {
   BANNER: {
-    ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/6300978111' : 'ca-app-pub-7381421031784616/7234804095',
-    IOS: 'ca-app-pub-3940256099942544/2934735716' // Test ID until an iOS unit is configured
+    ANDROID: 'ca-app-pub-7381421031784616/7234804095',
+    IOS: '',
   },
   REWARD: {
-    ANDROID: USE_TEST_ADS ? 'ca-app-pub-3940256099942544/5224354917' : 'ca-app-pub-7381421031784616/6580197977',
-    IOS: 'ca-app-pub-3940256099942544/1712485313' // Test ID
+    ANDROID: 'ca-app-pub-7381421031784616/6580197977',
+    IOS: '',
   },
 };
 
-const getAdId = (type: keyof typeof AD_IDS) => {
+const getAdId = (type: keyof typeof AD_IDS): string => {
   const platform = Capacitor.getPlatform() as 'ios' | 'android';
-  return platform === 'ios' ? AD_IDS[type].IOS : AD_IDS[type].ANDROID;
+  return platform === 'android' ? AD_IDS[type].ANDROID : AD_IDS[type].IOS;
 };
+
+const hasProductionAdUnit = (type: keyof typeof AD_IDS) => Boolean(getAdId(type));
 
 const runAdTask = (label: string, task: Promise<boolean>) => {
   void task.then((success) => {
@@ -1259,7 +1261,8 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       !profile ||
       profile.is_premium ||
       (profile.credits || 0) >= rewardedAdRequiredCredits ||
-      !canUseNativeAdMob()
+      !canUseNativeAdMob() ||
+      !hasProductionAdUnit('REWARD')
     ) {
       return;
     }
@@ -1682,6 +1685,13 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       return;
     }
 
+    const rewardAdId = getAdId('REWARD');
+    if (!rewardAdId) {
+      setRewardedAdStatus('error');
+      showToast('Rewarded ads are not configured for this platform.', 'error');
+      return;
+    }
+
     rewardedAdInProgressRef.current = true;
     setIsRewardedAdLoading(true);
     setRewardedAdStatus(pendingAttemptId ? 'pending' : 'loading');
@@ -1700,7 +1710,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         const preparationContext = await getRewardedAdPreparationContext(currentProfile, requiredCredits);
         if (!stillSameUser()) return;
         rewardedAdAttemptRef.current = preparationContext.attemptId;
-        const earned = await AdMobService.showRewardVideo(getAdId('REWARD'), preparationContext.ssv);
+        const earned = await AdMobService.showRewardVideo(rewardAdId, preparationContext.ssv);
         if (!stillSameUser()) return;
         if (!earned) {
           setRewardedAdStatus('error');
@@ -2332,7 +2342,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     <div className="web-app-root relative min-h-screen overflow-x-hidden">
       <NativeBanner
         adId={getAdId('BANNER')}
-        enabled={Boolean(profile && !profile.is_premium && (session || isGuest) && !updateGateConfig?.blocked)}
+        enabled={Boolean(hasProductionAdUnit('BANNER') && profile && !profile.is_premium && (session || isGuest) && !updateGateConfig?.blocked)}
         suspended={showSplash || showOnboarding || currentView !== 'HOME' || isSessionBlocked || isOffline || showPremiumModal || showSavedModal || showCreditsExhaustedModal || showPersonaModal || isRewardedAdLoading || isPrivacyFormOpen}
         onConsentReady={setPrivacyOptionsRequired}
       />

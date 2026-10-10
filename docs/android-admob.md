@@ -41,6 +41,6 @@ cd android
 
 The native tests execute the patched plugin with controlled SDK callbacks, layout callbacks, and UI queues. They cover mediation readiness, callback timeouts, delayed/missing parents, hide-after-failure, resume of a missing view, removal ordering, and measured positioning without replacing Capacitor's insets listener. They do not replace a device check for keyboard, scrolling, rotation, app resume, and consent forms.
 
-Native fixes require a rebuilt APK/AAB and a Play release; publishing web JavaScript cannot change native classes already installed in release 10021. Compare requests, matched requests, impressions, and affected-session logs after rollout. Code fixes alone do not establish the cause of country-specific no-fill or AdMob account restrictions.
+Native fixes require a rebuilt APK/AAB and a Play release; publishing web JavaScript cannot change native classes already installed in release 10022. Compare requests, matched requests, impressions, and affected-session logs after rollout. Code fixes alone do not establish the cause of country-specific no-fill or AdMob account restrictions.
 
 References: [plugin 8.2.0 release notes](https://github.com/capacitor-community/admob/releases/tag/v8.2.0), [Google SDK initialization](https://developers.google.com/admob/android/quick-start#initialize_the_google_mobile_ads_sdk), [Meta adapter compatibility](https://developers.google.com/admob/android/mediation/meta#version_62201).
