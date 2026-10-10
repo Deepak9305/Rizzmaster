@@ -15,7 +15,7 @@ function callback(name, context) {
   visit(ast);
   assert.ok(found, name);
   return vm.runInNewContext(ts.transpileModule(`(${found.getText(ast)})`, {
-    compilerOptions: { target: ts.ScriptTarget.ES2022 },
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS },
   }).outputText, context);
 }
 function harness() {
@@ -49,6 +49,10 @@ function harness() {
     context[`set${name}`] = value => { state[name] = value; };
   }
   context.handleExitGuestMode = callback('handleExitGuestMode', context);
+  context.require = name => {
+    assert.equal(name, './services/rizzService');
+    return { generateRizz: context.generateRizz, generateBio: context.generateBio };
+  };
   return { context, state, storage };
 }
 
@@ -103,10 +107,12 @@ for (const outcome of ['resolve', 'reject']) {
     context.generateRizz = () => new Promise((resolve, reject) => pending.push({ resolve, reject }));
     const generate = callback('handleGenerate', context);
     const oldRequest = generate('old chat');
+    await new Promise(resolve => setImmediate(resolve));
     context.handleExitGuestMode();
     context.profileRef.current = { id: 'guest_user', credits: 2, is_premium: false };
     context.isGuestRef.current = true;
     const newRequest = generate('new chat');
+    await new Promise(resolve => setImmediate(resolve));
     if (outcome === 'resolve') pending[0].resolve({ tease: 'old' });
     else pending[0].reject(new Error('Network error'));
     await oldRequest;

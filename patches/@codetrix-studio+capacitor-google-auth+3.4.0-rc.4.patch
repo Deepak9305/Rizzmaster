@@ -1,0 +1,31 @@
+diff --git a/node_modules/@codetrix-studio/capacitor-google-auth/android/src/main/java/com/codetrixstudio/capacitor/GoogleAuth/GoogleAuth.java b/node_modules/@codetrix-studio/capacitor-google-auth/android/src/main/java/com/codetrixstudio/capacitor/GoogleAuth/GoogleAuth.java
+index 147fac8..6c12f10 100644
+--- a/node_modules/@codetrix-studio/capacitor-google-auth/android/src/main/java/com/codetrixstudio/capacitor/GoogleAuth/GoogleAuth.java
++++ b/node_modules/@codetrix-studio/capacitor-google-auth/android/src/main/java/com/codetrixstudio/capacitor/GoogleAuth/GoogleAuth.java
+@@ -91,6 +91,26 @@ public class GoogleAuth extends Plugin {
+     try {
+       GoogleSignInAccount account = completedTask.getResult(ApiException.class);
+
++      // Supabase validates the Google ID token itself. Its login flow does not
++      // need an AccountManager access token or a second tokeninfo HTTP request.
++      if (Boolean.TRUE.equals(call.getBoolean("skipAccessToken", false))) {
++        String idToken = account.getIdToken();
++        if (idToken == null || idToken.trim().isEmpty()) {
++          call.reject("Google did not return an ID token. Check the web client ID.");
++          return;
++        }
++        JSObject authentication = new JSObject();
++        authentication.put("idToken", idToken);
++        JSObject user = new JSObject();
++        user.put("authentication", authentication);
++        user.put("idToken", idToken);
++        user.put("id", account.getId());
++        user.put("name", account.getDisplayName());
++        user.put("email", account.getEmail());
++        call.resolve(user);
++        return;
++      }
++
+       // The accessToken is retrieved by executing a network request against the Google API, so it needs to run in a thread
+       ExecutorService executor = Executors.newSingleThreadExecutor();
+       executor.execute(() -> {

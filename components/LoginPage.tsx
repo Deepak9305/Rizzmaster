@@ -1,47 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { getAuthUnavailableMessage, getRuntimeConfigDebugMessage, runtimeConfig } from '../services/runtimeConfig';
 import { canUseNativeGoogleAuth } from '../services/nativeCapabilities';
 import LegalModals from './LegalModals';
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { AuthService, normalizeAuthError } from '../services/authService';
 
 interface LoginPageProps {
     onGuestEntry?: () => void;
     reason?: 'premium';
 }
-
-const normalizeAuthError = (error: unknown, context: 'google' | 'email') => {
-    const rawMessage = error instanceof Error ? error.message : String(error || '');
-    const message = rawMessage.toLowerCase();
-
-    if (message.includes('invalid login credentials')) {
-        return 'Incorrect email or password.';
-    }
-    if (message.includes('email not confirmed')) {
-        return 'Confirm your email before signing in.';
-    }
-    if (message.includes('user already registered')) {
-        return 'This email already has an account. Sign in instead.';
-    }
-    if (message.includes('signup requires a valid password')) {
-        return 'Use a stronger password with at least 6 characters.';
-    }
-    if (message.includes('network') || message.includes('fetch')) {
-        return 'Authentication service is unreachable right now. Check your connection and try again.';
-    }
-    if (message.includes('popup') || message.includes('redirect')) {
-        return 'Google sign-in could not start. Allow the redirect and try again.';
-    }
-    if (message.includes('audience')) {
-        return 'Google client mismatch. Update the web client ID in both Supabase and Capacitor.';
-    }
-
-    if (context === 'google' && !rawMessage.trim()) {
-        return 'Google sign-in failed before the session could be created.';
-    }
-
-    return rawMessage || 'Authentication failed. Please try again.';
-};
 
 const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
     const [isEmailMode, setIsEmailMode] = useState(false);
@@ -49,6 +16,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const authInFlight = useRef(false);
     const [error, setError] = useState<string | null>(null);
     const [message, setMessage] = useState<string | null>(null);
     const [showPremiumLoginWarning, setShowPremiumLoginWarning] = useState(reason === 'premium');
@@ -56,7 +24,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
     const authDebugMessage = getRuntimeConfigDebugMessage();
     const isAuthAvailable = runtimeConfig.authAvailable;
     const canUseNativeGoogleLogin = canUseNativeGoogleAuth();
-    const isGoogleLoginConfigured = canUseNativeGoogleLogin ? Boolean(runtimeConfig.googleClientId) : isAuthAvailable;
+    const isGoogleLoginConfigured = isAuthAvailable && (!canUseNativeGoogleLogin || Boolean(runtimeConfig.googleClientId));
 
     // State for Legal Modals
     const [activeLegalModal, setActiveLegalModal] = useState<'privacy' | 'terms' | null>(null);
@@ -76,114 +44,56 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
     }, [reason]);
 
     const handleGoogleLogin = async () => {
-        if (loading) return; // Prevent double-tap
-        if (!supabase || !isAuthAvailable) {
-            setError(authUnavailableMessage || 'Authentication service is currently unavailable.');
-            return;
-        }
-
+        if (authInFlight.current) return;
+        authInFlight.current = true;
         setLoading(true);
         setError(null);
         setMessage(null);
         try {
-            if (canUseNativeGoogleLogin) {
-                // --- NATIVE AUTH (Android/iOS) ---
-                console.log("Starting Native Google Sign-In");
-
-                if (!runtimeConfig.googleClientId) {
-                    setError('Google sign-in is unavailable because VITE_GOOGLE_CLIENT_ID is missing.');
-                    return;
-                }
-
-                let googleUser;
-                try {
-                    googleUser = await GoogleAuth.signIn();
-                    console.log("Google Plugin Success:", googleUser);
-                } catch (pluginError: any) {
-                    console.error("Google Plugin Error:", pluginError);
-                    const errStr = JSON.stringify(pluginError);
-                    if (errStr.includes('10') || (pluginError.code && pluginError.code === '10')) {
-                        setError('Google Sign-In failed with Android code 10. Add the correct debug/release SHA-1 fingerprint in Google Cloud Console.');
-                    } else {
-                        setError(normalizeAuthError(pluginError, 'google'));
-                    }
-                    return;
-                }
-
-                if (googleUser.authentication.idToken) {
-                    const { error: supabaseError } = await supabase.auth.signInWithIdToken({
-                        provider: 'google',
-                        token: googleUser.authentication.idToken,
-                    });
-
-                    if (supabaseError) {
-                        console.error("Supabase Auth Error:", supabaseError);
-                        setError(normalizeAuthError(supabaseError, 'google'));
-                        throw supabaseError;
-                    }
-                    setMessage('Signed in. Loading your profile...');
-                    return;
-                } else {
-                    throw new Error("No ID token returned from Google. Ensure 'serverClientId' is configured.");
-                }
-            } else {
-                // --- STANDARD WEB AUTH ---
-                const redirectUrl = runtimeConfig.webAuthRedirectUrl || window.location.origin;
-
-                const { error } = await supabase.auth.signInWithOAuth({
-                    provider: 'google',
-                    options: {
-                        redirectTo: redirectUrl,
-                        queryParams: {
-                            access_type: 'offline',
-                            prompt: 'consent',
-                        }
-                    }
-                });
-
-                if (error) throw error;
-                setMessage('Redirecting to Google...');
-            }
-        } catch (err: any) {
-            console.error("General Login Error:", err);
-            if (!canUseNativeGoogleLogin) {
-                setError(normalizeAuthError(err, 'google'));
-            }
+            const outcome = await AuthService.signInGoogle();
+            setMessage(outcome === 'redirect' ? 'Redirecting to Google...' : 'Signed in. Loading your profile...');
+        } catch (err) {
+            setError(normalizeAuthError(err, 'google'));
         } finally {
+            authInFlight.current = false;
             setLoading(false);
         }
     };
 
     const handleEmailAuth = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (authInFlight.current) return;
         if (!supabase || !isAuthAvailable) {
             setError(authUnavailableMessage || "Authentication service is currently unavailable.");
             return;
         }
 
+        authInFlight.current = true;
         setLoading(true);
         setError(null);
         setMessage(null);
 
         try {
             if (isSignUp) {
-                const { error: signUpError } = await supabase.auth.signUp({
-                    email,
+                const { data, error: signUpError } = await supabase.auth.signUp({
+                    email: email.trim(),
                     password,
                 });
                 if (signUpError) throw signUpError;
-                setMessage("Success! Check your email to confirm sign up.");
+                setMessage(data.session ? "Signed in. Loading your profile..." : "Success! Check your email to confirm sign up.");
             } else {
-                const { error: signInError } = await supabase.auth.signInWithPassword({
-                    email,
+                const { data, error: signInError } = await supabase.auth.signInWithPassword({
+                    email: email.trim(),
                     password,
                 });
                 if (signInError) throw signInError;
+                if (!data.session) throw new Error("Sign-in did not create a session. Please try again.");
                 setMessage('Signed in. Loading your profile...');
             }
         } catch (err: any) {
             setError(normalizeAuthError(err, 'email'));
         } finally {
+            authInFlight.current = false;
             setLoading(false);
         }
     };
@@ -286,32 +196,33 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
                             </div>
                         )}
 
+                        {error && (
+                            <div role="alert" className="p-3 mb-5 bg-red-500/10 border border-red-500/20 rounded-lg text-red-200 text-sm">
+                                {error}
+                            </div>
+                        )}
+                        {message && (
+                            <div role="status" className="p-3 mb-5 bg-green-500/10 border border-green-500/20 rounded-lg text-green-200 text-sm">
+                                {message}
+                            </div>
+                        )}
+
                         {isEmailMode ? (
                             <form onSubmit={handleEmailAuth} className="space-y-5 text-left animate-fade-in">
                                 <button
                                     type="button"
+                                    disabled={loading}
                                     onClick={() => { setIsEmailMode(false); setError(null); setMessage(null); }}
                                     className="text-white/50 hover:text-white text-xs uppercase tracking-widest flex items-center gap-2 transition-colors mb-2"
                                 >
                                     <span>←</span> Back to methods
                                 </button>
 
-                                {error && (
-                                    <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-200 text-sm">
-                                        {error}
-                                    </div>
-                                )}
-
-                                {message && (
-                                    <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-200 text-sm">
-                                        {message}
-                                    </div>
-                                )}
-
                                 <div className="space-y-1">
                                     <label className="block text-xs font-bold text-white/50 uppercase tracking-widest ml-1">Email</label>
                                     <input
                                         type="email"
+                                        autoComplete="email"
                                         required
                                         disabled={!isAuthAvailable || loading}
                                         value={email}
@@ -331,7 +242,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
                                         onChange={(e) => setPassword(e.target.value)}
                                         className="w-full bg-white/5 border-b border-white/20 focus:border-rose-500 rounded-t-lg px-4 py-3 text-white focus:outline-none focus:bg-white/10 transition-all placeholder:text-white/20"
                                         placeholder="••••••••"
-                                        minLength={6}
+                                        minLength={isSignUp ? 6 : undefined}
+                                        autoComplete={isSignUp ? "new-password" : "current-password"}
                                     />
                                 </div>
 
@@ -346,6 +258,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
                                 <div className="text-center mt-6">
                                     <button
                                         type="button"
+                                        disabled={loading}
                                         onClick={() => { setIsSignUp(!isSignUp); setError(null); setMessage(null); }}
                                         className="text-xs text-white/40 hover:text-white transition-colors"
                                     >
@@ -383,7 +296,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
 
                                 <button
                                     onClick={() => setIsEmailMode(true)}
-                                    disabled={!isAuthAvailable}
+                                    disabled={loading || !isAuthAvailable}
                                     className="w-full py-4 bg-transparent border border-white/10 text-white rounded-xl font-bold hover:bg-white/5 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
                                 >
                                     <svg className="w-5 h-5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
@@ -393,6 +306,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onGuestEntry, reason }) => {
                                 {onGuestEntry && (
                                     <button
                                         onClick={onGuestEntry}
+                                        disabled={loading}
                                         className="w-full py-4 bg-transparent border border-white/5 text-white/50 rounded-xl font-bold hover:bg-white/5 hover:text-white transition-all active:scale-[0.98] flex items-center justify-center gap-3 mt-2"
                                     >
                                         Continue as Guest

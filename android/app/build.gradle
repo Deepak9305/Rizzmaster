@@ -69,6 +69,7 @@ dependencies {
     testImplementation "junit:junit:$junitVersion"
     testImplementation 'org.mockito:mockito-core:5.15.2'
     testImplementation 'org.json:json:20231013'
+    testImplementation 'com.google.android.gms:play-services-auth:21.2.0'
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')

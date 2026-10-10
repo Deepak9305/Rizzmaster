@@ -8,7 +8,7 @@ import { supabase } from './services/supabaseClient';
 import RizzCard from './components/RizzCard';
 import Footer from './components/Footer';
 import { createDodoPortalSession } from './services/dodoBillingService';
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { AuthService } from './services/authService';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
@@ -49,6 +49,7 @@ import NoInternetOverlay from './components/NoInternetOverlay';
 
 const DAILY_CREDITS = 5;
 const IS_WEB_PLATFORM = !Capacitor.isNativePlatform();
+const STARTUP_ANIMATION_MS = IS_WEB_PLATFORM ? 2200 : 3000;
 const SILENT_PREMIUM_RESTORE_WAIT_MS = 45000;
 const SILENT_PREMIUM_RESTORE_RETRY_MS = 60000;
 const SILENT_PREMIUM_RESTORE_MAX_ATTEMPTS = 2;
@@ -306,23 +307,23 @@ const SplashScreen: React.FC<SplashScreenProps> = React.memo(({ isAppReady, onCo
   const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
-    if (!IS_WEB_PLATFORM) return;
-    // CSS animates the bar; React only updates the three status milestones.
+    // Keep the native handoff short, then let the bundled loading screen show
+    // its progress instead of jumping straight to the ready state.
     const timers = [30, 70, 100].map(value =>
-      setTimeout(() => setProgress(value), 2200 * value / 100)
+      setTimeout(() => setProgress(value), STARTUP_ANIMATION_MS * value / 100)
     );
     return () => timers.forEach(clearTimeout);
   }, []);
 
   // Monitor for completion
   useEffect(() => {
-    // Android already has a native launch splash. Show the UI as soon as auth
-    // is ready instead of imposing another three seconds of artificial loading.
     if (!isAppReady || (IS_WEB_PLATFORM && progress < 100)) return;
     setIsExiting(true);
-    const timer = setTimeout(onComplete, IS_WEB_PLATFORM ? 800 : 150);
+    const timer = setTimeout(onComplete, IS_WEB_PLATFORM ? 800 : 250);
     return () => clearTimeout(timer);
   }, [progress, isAppReady, onComplete]);
+
+  const startupComplete = isAppReady && progress >= 100;
 
   return (
     <div className={`fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center overflow-hidden transition-opacity ${IS_WEB_PLATFORM ? 'duration-[800ms]' : 'duration-150'} ${isExiting ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
@@ -340,14 +341,16 @@ const SplashScreen: React.FC<SplashScreenProps> = React.memo(({ isAppReady, onCo
           <div
             className="absolute inset-0 bg-gradient-to-r from-rose-500 via-amber-400 to-rose-500 origin-left"
             style={{
-              animation: IS_WEB_PLATFORM ? 'appStartupProgress 2.2s linear forwards' : 'none',
-              transform: `scaleX(${isAppReady ? 1 : 0.12})`,
+              animation: `appStartupProgress ${STARTUP_ANIMATION_MS}ms linear forwards`,
+              transform: 'scaleX(0.12)',
             }}
           />
         </div>
         <div className="mt-4 h-10 overflow-hidden flex flex-col items-center">
           <p className="text-[10px] md:text-xs font-bold tracking-[0.5em] text-white/40 uppercase animate-fade-in-up">
-            {!IS_WEB_PLATFORM ? (isAppReady ? 'READY.' : 'AUTHENTICATING...') : progress < 30 ? 'ANALYZING...' : progress < 70 ? 'COOKING...' : (isAppReady ? 'READY.' : 'AUTHENTICATING...')}
+            {!IS_WEB_PLATFORM
+              ? (startupComplete ? 'READY.' : 'AUTHENTICATING...')
+              : progress < 30 ? 'ANALYZING...' : progress < 70 ? 'COOKING...' : (startupComplete ? 'READY.' : 'AUTHENTICATING...')}
           </p>
           {progress >= 100 && !isAppReady && (
             <p className="text-[9px] text-white/20 mt-2 animate-pulse">
@@ -385,6 +388,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const profileRef = useRef<UserProfile | null>(null);
   const isGuestRef = useRef(false);
   const authUserIdRef = useRef<string | null>(null);
+  const profileLoadTaskRef = useRef<{ userId: string; promise: Promise<void> } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const sessionChannelRef = useRef<BroadcastChannel | null>(null);
@@ -1000,21 +1004,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
     // Defer heavy native plugin initialization so the initial React render is fully unblocked
     timerIds.push(setTimeout(() => {
-      // Google Auth
-      if (canUseNativeGoogleAuth() && runtimeConfig.googleClientId) {
-        try {
-          GoogleAuth.initialize({
-            clientId: runtimeConfig.googleClientId,
-            scopes: ['profile', 'email'],
-            grantOfflineAccess: false,
-          });
-        } catch (error) {
-          console.warn('[Startup] GoogleAuth initialization failed:', error);
-        }
-      } else if (!runtimeConfig.googleClientId) {
-        console.warn('[Startup] GoogleAuth initialization skipped because VITE_GOOGLE_CLIENT_ID is missing.');
-      }
-
       // In-App Purchases
       try {
         IAPService.initialize(
@@ -1434,7 +1423,18 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     sessionChannelRef.current?.postMessage({ type: 'NEW_SESSION_STARTED' });
   }, []);
 
-  async function loadUserDataSafe(userId: string, email?: string | null, accessToken?: string | null) {
+  function loadUserDataSafe(userId: string, email?: string | null, accessToken?: string | null): Promise<void> {
+    if (profileLoadTaskRef.current?.userId === userId) return profileLoadTaskRef.current.promise;
+    const promise = performUserDataLoad(userId, email, accessToken);
+    profileLoadTaskRef.current = { userId, promise };
+    const release = () => {
+      if (profileLoadTaskRef.current?.promise === promise) profileLoadTaskRef.current = null;
+    };
+    void promise.then(release, release);
+    return promise;
+  }
+
+  async function performUserDataLoad(userId: string, email?: string | null, accessToken?: string | null) {
     if (!supabase) return;
     setIsProfileLoadingHung(false);
     setProfileLoadError(null);
@@ -1442,6 +1442,14 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     try {
       const repaired = await fetchServerProfile('POST', accessToken);
       let profileData = repaired.profile;
+      if (authUserIdRef.current !== userId) return;
+      if (profileData) {
+        // Authentication can finish as soon as the account profile is ready;
+        // saved-item and daily-credit requests must not hold the login spinner.
+        const readyProfile = normalizeDailyCreditProfile(profileData as UserProfile);
+        profileRef.current = readyProfile;
+        setProfile(readyProfile);
+      }
 
       if (Array.isArray(repaired.savedItems)) {
         setSavedItems(repaired.savedItems as SavedItem[]);
@@ -1451,6 +1459,8 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
           .select('*')
           .eq('user_id', userId)
           .order('created_at', { ascending: false });
+
+        if (authUserIdRef.current !== userId) return;
 
         if (savedError) {
           console.warn('[Profile] Saved items load failed:', savedError.message);
@@ -1463,6 +1473,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       if (profileData) {
         try {
           const { data: claimData, error: claimError } = await supabase.rpc('claim_daily_credits_and_streak');
+          if (authUserIdRef.current !== userId) return;
           if (claimError) {
             console.error("Failed to claim daily credits and streak:", claimError);
           } else if (claimData) {
@@ -1470,7 +1481,9 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
               profileData = claimData.profile;
             }
             if (claimData.streak_msg && claimData.streak_msg.trim()) {
-              setTimeout(() => showToast(claimData.streak_msg, 'success'), 1500);
+              setTimeout(() => {
+                if (authUserIdRef.current === userId) showToast(claimData.streak_msg, 'success');
+              }, 1500);
             }
           }
         } catch (err) {
@@ -1532,6 +1545,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         localStorage.setItem(`rizz_coach_shadow_notes_${userId}`, profileData.shadow_notes);
       }
     } catch (e) {
+      if (authUserIdRef.current !== userId) return;
       console.error("Error loading user data", e);
       showToast("Could not load your account data. Please try again.", "error");
       setProfileLoadError("We couldn't finish loading your account data.");
@@ -1580,7 +1594,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       localStorage.removeItem('rizz_coach_shadow_notes');
 
       if (canUseNativeGoogleAuth()) {
-        try { await GoogleAuth.signOut(); } catch (error) { console.warn("Native Logout err", error); }
+        try { await AuthService.signOutGoogle(); } catch (error) { console.warn("Native Logout err", error); }
       }
       if (canUseNativeOneSignal()) {
         OneSignalService.logout();
