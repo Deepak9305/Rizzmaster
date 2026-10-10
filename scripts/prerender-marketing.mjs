@@ -69,6 +69,13 @@ const renderFaqs = (post) => post.faqs?.length
 const renderResources = (post) => `${renderResourcesOnly(post)}${renderFaqs(post)}`;
 
 const articleInternalLinks = {
+  'what-to-say-when-dating-app-match-nearly-empty-profile': [
+    { slug: 'best-dating-app-bio-ideas-for-guys', label: 'Write a profile that starts conversations' },
+    { slug: 'best-tinder-openers-for-guys', label: 'Use better dating app openers' },
+    { slug: 'texting-mistakes-new-conversation-feel-forced', label: 'Avoid forced conversation habits' },
+    { slug: 'dating-app-red-flags-before-first-date', label: 'Spot dating app red flags' },
+    { slug: 'what-to-text-after-getting-someones-number', label: 'Handle the first messages after a match' }
+  ],
   'how-to-ask-for-clarity-in-a-situationship': [
     { slug: 'talk-about-what-you-want-in-dating', label: 'Talk about what you want in dating' },
     { slug: 'how-to-pace-a-new-relationship-without-losing-yourself', label: 'Pace a new relationship' },

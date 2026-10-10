@@ -1,7 +1,7 @@
 {
   "appId": "app.vercel.rizzmaster",
   "appName": "RizzMaster",
-  "webDir": "dist",
+  "webDir": "dist-mobile",
   "server": {
     "url": "https://rizzmaster.online",
     "allowNavigation": [

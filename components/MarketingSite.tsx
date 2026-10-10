@@ -514,6 +514,11 @@ const BlogIndexPage: React.FC<{ navigate: (path: string) => void }> = ({ navigat
 );
 
 const ARTICLE_EXAMPLES: Record<string, string[]> = {
+  'what-to-say-when-dating-app-match-nearly-empty-profile': [
+    'Your profile is keeping its secrets. What is something you have been enjoying lately?',
+    'That trail looks beautiful. Was it a difficult hike, or mostly scenic?',
+    'I am choosing one question before I make up a whole story about you: what are you usually excited to talk about?'
+  ],
   'how-to-tell-if-someone-is-losing-interest-without-overthinking': [
     'I have noticed our conversations have become quieter. Are you still interested in getting to know each other?',
     'I enjoy talking with you, but I am getting mixed signals. Do you still want to make a plan?',
@@ -551,6 +556,7 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
 };
 
 const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
+  'what-to-say-when-dating-app-match-nearly-empty-profile': { do: 'Notice one real detail, ask an easy question, share a little of yourself, and watch for mutual curiosity.', doNot: 'Invent a personality from a photo, comment on someone’s body, or keep performing after the conversation stays one-sided.' },
   'dating-app-red-flags-before-first-date': { do: 'Slow down, protect your information, choose public plans, and let consistent behavior earn trust.', doNot: 'Ignore pressure, send money or private details, or keep explaining away the same uneasy pattern.' },
   'how-to-stop-overthinking-while-dating': { do: 'Separate facts from assumptions, regulate before reacting, and choose one clear next step.', doNot: 'Decode every pause, send messages to relieve anxiety, or ignore a repeated mismatch.' },
   'chemistry-vs-compatibility': { do: 'Enjoy the attraction while observing mutual effort, shared direction, everyday fit, and respectful repair over time.', doNot: 'Treat an intense spark as proof of compatibility or wait indefinitely for someone to become a better fit.' },
@@ -629,6 +635,13 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'what-to-say-when-dating-app-match-nearly-empty-profile': [
+    { slug: 'best-dating-app-bio-ideas-for-guys', label: 'Write a profile that starts conversations' },
+    { slug: 'best-tinder-openers-for-guys', label: 'Use better dating app openers' },
+    { slug: 'texting-mistakes-new-conversation-feel-forced', label: 'Avoid forced conversation habits' },
+    { slug: 'dating-app-red-flags-before-first-date', label: 'Spot dating app red flags' },
+    { slug: 'what-to-text-after-getting-someones-number', label: 'Handle the first messages after a match' }
+  ],
   'how-to-tell-if-someone-is-losing-interest-without-overthinking': [
     { slug: 'how-to-stop-overthinking-while-dating', label: 'Stop overthinking the silence' },
     { slug: 'signs-texting-conversation-losing-momentum', label: 'Spot fading conversation momentum' },

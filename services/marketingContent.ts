@@ -54,6 +54,160 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'what-to-say-when-dating-app-match-nearly-empty-profile',
+    title: 'What to Say When a Dating App Match Has a Nearly Empty Profile',
+    seoTitle: 'What to Say to a Dating App Match With a Nearly Empty Profile',
+    description: 'Learn how to start a conversation when a dating app match gives you almost no information, use respectful openers, ask better questions, and notice when the effort is not mutual.',
+    excerpt: 'A sparse profile is a low-information problem, not an invitation to invent a whole personality for someone. Use one specific observation, ask an easy question, and let their response show whether there is a conversation to build.',
+    date: '2026-10-10',
+    updatedAt: '2026-10-10',
+    readingTime: '10 min read',
+    category: 'Online dating',
+    author: 'amelia',
+    keywords: [
+      'what to say to a dating app match with no bio',
+      'how to start a conversation with an empty dating profile',
+      'dating app opener for a blank profile',
+      'what to message someone with no dating profile information',
+      'how to talk to a dating app match with no bio',
+      'dating app conversation starters',
+      'should I match with someone who has no bio',
+      'how to ask questions on a dating app'
+    ],
+    image: '/blog/dating-app-empty-profile-hero.png',
+    imageWebp: '/blog/dating-app-empty-profile-hero.webp',
+    imageAlt: 'A woman thoughtfully reviewing a dating app profile on her phone at a bright cafe table with a notebook and coffee',
+    imageCaption: 'When a profile gives you little to work with, one respectful observation and an easy question can open a real conversation.',
+    resources: [
+      { label: 'Federal Trade Commission: What to know about romance scams', url: 'https://consumer.ftc.gov/articles/what-know-about-romance-scams' },
+      { label: 'RAINN: Tips for safer dating online and in person', url: 'https://rainn.org/strategies-to-reduce-risk-increase-safety/tips-for-safer-dating-online-and-in-person/' },
+      { label: 'loveisrespect: Creating boundaries in romantic relationships', url: 'https://www.loveisrespect.org/resources/creating-boundaries-in-romantic-relationships/' }
+    ],
+    faqs: [
+      { question: 'What do you say to a dating app match with no bio?', answer: 'Use one genuine detail from a photo, prompt, or shared setting and pair it with a simple question. For example: “That trail looks beautiful. Was it a difficult hike, or mostly scenic?” If there is no useful detail at all, a direct question about what they enjoy is more respectful than guessing their personality.' },
+      { question: 'How do you start a conversation when someone’s dating profile is empty?', answer: 'Acknowledge the limited information lightly, then give them an easy way to share something real: “Your profile is keeping its secrets. What is something you have been enjoying lately?” Send one opener and let their answer show whether they want to participate.' },
+      { question: 'Should I match with someone who has no information on their profile?', answer: 'That depends on your comfort and the rest of the account. A sparse profile is not proof of bad intent, but it gives you less information for judging compatibility and safety. Keep the conversation on the app, avoid sharing sensitive details, and slow down if the person pressures you.' }
+    ],
+    sections: [
+      {
+        heading: 'Treat the empty profile as limited information, not a challenge',
+        paragraphs: [
+          'A nearly empty profile creates an awkward first-message problem: there may be no bio, no prompt answer, and no obvious interest to use as a natural opening. That does not mean you have to perform harder to make the conversation work. It means you have less information about the person, so your first message should help you learn something rather than pretend you already know them.',
+          'Keep the starting point small. You are not trying to produce the most original line in the app or create instant chemistry from three photos. You are testing whether the other person will offer a little curiosity and effort in return. One clear observation and one answerable question give the conversation a fair beginning without making you responsible for carrying it.'
+        ],
+        bullets: [
+          'You may know what a person chose to show, but not what their personality is like.',
+          'A sparse profile can reflect privacy, low effort, a new account, or a different comfort level.',
+          'The quality of their response gives you more useful information than a perfect opener would.'
+        ]
+      },
+      {
+        heading: 'Start with the one detail that is actually there',
+        paragraphs: [
+          'Look for a real detail in the available material: a hiking trail, a meal, a concert, a pet, a book, a travel photo, or an unusual background. Mention the detail without turning it into a judgment about their body, attractiveness, income, or lifestyle. Then ask a question that lets them add context instead of answering with a yes or no.',
+          'Specificity helps because it shows you noticed something. It also gives the other person an easy route into the conversation. If a photo shows a mountain, ask whether they go hiking often or which part of the trip they enjoyed. If it shows a dish, ask whether they made it or where they found it. The goal is a doorway, not an interrogation.'
+        ],
+        bullets: [
+          '“That bookstore looks like a dangerous place for my wallet. Did you find anything good?”',
+          '“Your dog looks like it has strong opinions. What is their favourite walk?”',
+          '“That concert photo has great energy. Who was playing?”',
+          '“I noticed the pottery in the background. Have you been making those pieces?”'
+        ]
+      },
+      {
+        heading: 'Use an opener that gives them somewhere to go',
+        paragraphs: [
+          'A greeting can be friendly, but “hey” gives the other person almost nothing to work with. A good opener contains a little substance: an observation, a playful angle, or a question with more than one possible answer. It should still sound like something you would say, because a message that gets a reply but does not sound like you creates a harder problem later.',
+          'If the profile is almost blank, directness can be more natural than pretending you found a hidden clue. A light line about the mystery followed by a genuine question gives the person control over what they want to share. Keep the tone curious rather than critical. Calling out their lack of effort too sharply may be accurate in some cases, but it rarely creates a relaxed first conversation.'
+        ],
+        bullets: [
+          '“Your profile is keeping its secrets. What is something you have been enjoying lately?”',
+          '“I have very little evidence here, so I am starting with an important question: what is your reliable comfort meal?”',
+          '“You seem to like getting out of the house. What has been the best thing you have done recently?”',
+          '“I am choosing one question before I make up a whole story about you: what are you usually excited to talk about?”'
+        ]
+      },
+      {
+        heading: 'Ask questions that reveal fit without turning into an interview',
+        paragraphs: [
+          'Once they reply, follow the thread they have offered instead of switching to a prepared list of questions. If they mention a hobby, share a small related detail about yourself and ask one natural follow-up. Conversation becomes easier when both people contribute information; it becomes tiring when one person answers while the other keeps collecting data.',
+          'Early questions do not need to uncover every relationship goal or life plan. They can show how someone spends an ordinary Saturday, what makes them laugh, what they are learning, or what kind of social pace feels good to them. Those answers give you a better sense of fit than a chain of generic questions about favourites.'
+        ],
+        bullets: [
+          'Ask about experiences and preferences that can lead to a story.',
+          'Share your own answer so the exchange does not feel one-sided.',
+          'Follow what interests them instead of forcing a topic because it sounded clever.',
+          'Let a pause happen; every quiet moment does not need to be repaired immediately.'
+        ]
+      },
+      {
+        heading: 'When all you can see is a photo',
+        paragraphs: [
+          'A photo can offer context without offering a complete identity. Comment on the activity, place, object, or atmosphere rather than making the person’s body the subject of the opener. “That beach looks peaceful” creates a conversation. “You look hot in that bikini” may feel intrusive, especially when there is no other information showing what kind of attention they welcome.',
+          'Avoid making assumptions about someone’s job, wealth, nationality, relationship history, or personality from a single image. The same photo can mean different things to different people. Use tentative language when it helps: “That looks like…” or “Was that taken at…?” Curiosity leaves room for correction, which is kinder than presenting a guess as if it were knowledge.'
+        ],
+        bullets: [
+          'Focus on the setting, activity, or object that gives you a genuine question.',
+          'Do not use private-looking details in a way that suggests surveillance.',
+          'Skip comments about bodies, sexual availability, or assumptions about identity.',
+          'Accept a correction without arguing for the story you invented.'
+        ]
+      },
+      {
+        heading: 'If they answer with one word, make one useful follow-up',
+        paragraphs: [
+          'A sparse profile followed by sparse replies gives you a different kind of information. One short answer may mean they are busy, shy, or still warming up. Several replies that close every door can show that the conversation is not receiving much investment. Give the exchange one specific follow-up rather than changing your whole personality to win momentum.',
+          'For example, if they answer “Italy” to a travel question, ask what they loved most about the trip and add a brief detail about a place you enjoyed. If the next answer is still only “the food,” you have made a reasonable effort. At that point, stepping back protects your time and leaves room for them to restart the conversation if they want to.'
+        ],
+        bullets: [
+          'Offer one follow-up that is easier to answer than the original question.',
+          'Add a small piece of your own context so the exchange stays balanced.',
+          'Watch for curiosity, questions, and attempts to keep the conversation moving.',
+          'Do not send a string of increasingly elaborate messages to solve a lack of effort.'
+        ]
+      },
+      {
+        heading: 'Keep safety in the picture when the profile tells you very little',
+        paragraphs: [
+          'A minimal profile is not automatically suspicious. People have different reasons for keeping their information private, and a low-detail account can still belong to a respectful person. It does mean you have fewer signals to work with, so let trust build through consistent behaviour rather than filling the gaps with optimism.',
+          'Keep early conversation on the dating app, avoid sharing your home address or financial information, and choose a public place if you meet. Be cautious when someone rushes intimacy, refuses reasonable questions, asks for money, or pressures you to move to a private channel before you feel ready. The Federal Trade Commission and RAINN offer practical guidance for recognising scams and planning safer dating interactions.'
+        ],
+        bullets: [
+          'Slow down when the person pushes for secrecy, money, or unusually fast commitment.',
+          'Use a public meeting place and tell someone you trust where you will be.',
+          'Treat pressure after a clear boundary as useful information about the connection.',
+          'Leave the conversation when your safety or comfort is being treated as negotiable.'
+        ]
+      },
+      {
+        heading: 'Use Rizz Master to find a starting point, then make it yours',
+        paragraphs: [
+          'A blank profile can make the first message feel like a blank page. Rizz Master can help you turn the few details you do have into several possible openers, whether you want something playful, direct, thoughtful, or low-key. Add the visible context and the kind of conversation you want; then choose the suggestion that sounds closest to your own voice.',
+          'The best use of an AI suggestion is as a draft, not a disguise. Remove details you would not naturally mention, soften a line that feels too intense, and keep the question honest. Never paste private information that does not belong in a dating opener. A message works better when it helps you show up clearly instead of trying to manufacture a personality.'
+        ],
+        bullets: [
+          'Give the tool a specific photo detail or conversation goal instead of asking for a generic pickup line.',
+          'Choose a tone that matches how you actually speak.',
+          'Edit the result until you could comfortably continue the conversation it starts.',
+          'Keep sensitive personal information out of the context you share.'
+        ]
+      },
+      {
+        heading: 'The best opener creates a chance for mutual effort',
+        paragraphs: [
+          'When a dating app profile is nearly empty, the first message cannot tell you everything. It can do something more useful: create a small, respectful opportunity for the other person to reveal how they communicate. Notice whether they answer with detail, ask something back, and make it easier for you to participate. Those signals matter more than whether your first line was clever enough to impress a stranger.',
+          'Start with what is real, ask what you genuinely want to know, and let the response guide the next move. If the conversation grows, you can learn more over time. If it stays one-sided, you have enough information to stop spending effort on a profile that is not meeting you halfway.'
+        ],
+        bullets: [
+          'Notice one real detail instead of inventing a personality for them.',
+          'Ask an easy question that invites a story or preference.',
+          'Share something about yourself so the conversation has two sides.',
+          'Judge the next step by mutual curiosity, respect, and consistency.'
+        ]
+      }
+    ]
+  },
+  {
     slug: 'how-to-tell-if-someone-is-losing-interest-without-overthinking',
     title: 'How to Tell If Someone Is Losing Interest Without Overthinking Every Text',
     seoTitle: 'How to Tell If Someone Is Losing Interest Without Overthinking',
