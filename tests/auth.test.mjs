@@ -60,6 +60,7 @@ test('Google picker waits for native initialization and exchanges only the ID to
   finish();
   assert.equal(await login, 'signed-in');
   assert.deepEqual(calls.map(call => call[0]), ['initialize', 'picker', 'exchange']);
+  assert.equal(calls[0][1].clientId, 'web-client');
   assert.equal(calls[1][1].skipAccessToken, true);
   assert.equal(calls[2][1].provider, 'google');
   assert.equal(calls[2][1].token, 'id-token');

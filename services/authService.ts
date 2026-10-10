@@ -24,8 +24,11 @@ export const AuthService = {
     googleInitialized: false,
     googleInitPromise: null as Promise<void> | null,
     googleSignInPromise: null as Promise<Awaited<ReturnType<typeof GoogleAuth.signIn>>> | null,
-    GOOGLE_WAIT_TIMEOUT_MS: 120_000,
-    GOOGLE_INIT_TIMEOUT_MS: 10_000,
+    // Keep a failed native bridge from leaving the login button spinning for
+    // minutes, while allowing enough time for the account picker on slower
+    // devices and networks.
+    GOOGLE_WAIT_TIMEOUT_MS: 45_000,
+    GOOGLE_INIT_TIMEOUT_MS: 12_000,
 
     async withTimeout<T>(operation: Promise<T>, milliseconds: number): Promise<T> {
         let timer: ReturnType<typeof setTimeout> | undefined;

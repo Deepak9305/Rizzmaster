@@ -319,7 +319,10 @@ const SplashScreen: React.FC<SplashScreenProps> = React.memo(({ isAppReady, onCo
 
   // Monitor for completion
   useEffect(() => {
-    if (!isAppReady || (IS_WEB_PLATFORM && progress < 100)) return;
+    // Both platforms wait for the same deterministic animation. Android used
+    // to exit as soon as auth was ready, which made the startup screen appear
+    // to be skipped on fast launches.
+    if (!isAppReady || progress < 100) return;
     setIsExiting(true);
     const timer = setTimeout(onComplete, IS_WEB_PLATFORM ? 800 : 250);
     return () => clearTimeout(timer);
@@ -334,7 +337,7 @@ const SplashScreen: React.FC<SplashScreenProps> = React.memo(({ isAppReady, onCo
 
       <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-4xl px-4">
         <div className="relative mb-12">
-          <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-rose-200 via-amber-100 to-rose-200 animate-text-shimmer drop-shadow-2xl">
+          <h1 className="native-startup-title text-6xl md:text-8xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-rose-200 via-amber-100 to-rose-200 animate-text-shimmer drop-shadow-2xl">
             Rizz Master
           </h1>
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent blur-xl opacity-50 animate-text-shimmer" style={{ backgroundSize: '200% 100%' }}></div>
@@ -1336,21 +1339,16 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       setIsSessionBlocked(false);
       setProfileLoadError(null);
       setIsProfileLoadingHung(false);
-      if (session) {
+      clearTimeout(failSafeTimeout);
+      setIsAuthReady(true);
+      if (session && !isGuestRef.current) {
         if (profileRef.current?.id && profileRef.current.id !== session.user.id) {
           profileRef.current = null;
           setProfile(null);
           setSavedItems([]);
         }
-        loadUserDataSafe(session.user.id, session.user.email, session.access_token)
-          .catch(e => console.error("Session Load Auth Err:", e))
-          .finally(() => {
-            clearTimeout(failSafeTimeout);
-            setIsAuthReady(true);
-          });
-      } else {
-        clearTimeout(failSafeTimeout);
-        setIsAuthReady(true);
+        void loadUserDataSafe(session.user.id, session.user.email, session.access_token)
+          .catch(e => console.error("Session Load Auth Err:", e));
       }
     }).catch(err => {
       console.error("Auth Session Error:", err);
@@ -1365,7 +1363,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       setIsSessionBlocked(false);
       setProfileLoadError(null);
       setIsProfileLoadingHung(false);
-      if (session) {
+      if (session && !isGuestRef.current) {
         if (profileRef.current?.id && profileRef.current.id !== session.user.id) {
           profileRef.current = null;
           setProfile(null);

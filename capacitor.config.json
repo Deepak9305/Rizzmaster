@@ -19,8 +19,10 @@
         "profile",
         "email"
       ],
-      "serverClientId": "237553251396-4dltfj8jfti6fsi1m548926k7sd7ijmq.apps.googleusercontent.com",
-      "forceCodeForRefreshToken": true
+      "clientId": "413817396320-eogg5st74ecbfa346s92ren9mgr4jrqd.apps.googleusercontent.com",
+      "androidClientId": "413817396320-eogg5st74ecbfa346s92ren9mgr4jrqd.apps.googleusercontent.com",
+      "serverClientId": "413817396320-eogg5st74ecbfa346s92ren9mgr4jrqd.apps.googleusercontent.com",
+      "forceCodeForRefreshToken": false
     },
     "SplashScreen": {
       "launchShowDuration": 700,
