@@ -37,6 +37,7 @@ export class NativeBannerController {
     private stalled = false;
     private positionDirty = false;
     private viewportWidthDp = 0;
+    private networkAvailable = true;
 
     constructor(
         private readonly adId: string,
@@ -71,6 +72,18 @@ export class NativeBannerController {
         return this.reconcile();
     }
 
+    setNetworkAvailable(available: boolean): Promise<void> {
+        if (this.disposed || available === this.networkAvailable) return this.running ?? Promise.resolve();
+        this.networkAvailable = available;
+        if (!available) {
+            this.clearRetry();
+            this.clearLoadTimer();
+        }
+        // Preserve the retry deadline: reconnecting recovers an overdue request
+        // immediately, but cannot turn network flapping into extra requests.
+        return this.reconcile();
+    }
+
     private nativeCall<T>(label: string, promise: Promise<T>): Promise<T> {
         return AdMobService.withNativeTimeout(`Banner ${label}`, promise, 5000);
     }
@@ -86,7 +99,7 @@ export class NativeBannerController {
     }
 
     private watchLoad() {
-        if (this.loaded || !this.attached || this.desired !== 'visible' || this.loadTimer) return;
+        if (this.loaded || !this.attached || this.desired !== 'visible' || !this.networkAvailable || this.loadTimer) return;
         const version = this.requestVersion;
         this.loadTimer = setTimeout(() => {
             if (version !== this.requestVersion || this.desired !== 'visible') return;
@@ -124,7 +137,7 @@ export class NativeBannerController {
             this.clearRetry();
             return false;
         }
-        if (this.desired !== 'visible' || this.retryTimer) return true;
+        if (this.desired !== 'visible' || !this.networkAvailable || this.retryTimer) return true;
         this.retryTimer = setTimeout(() => {
             this.retryTimer = null;
             void this.reconcile();
@@ -217,10 +230,17 @@ export class NativeBannerController {
                 this.visible = false;
                 this.reserve(0);
             } else {
+                if (!this.networkAvailable) {
+                    if (this.attached && this.visible) await this.nativeCall('hide', AdMob.hideBanner());
+                    this.visible = false;
+                    this.reserve(0);
+                    return;
+                }
                 if (this.waitForRetry()) return;
                 const initialized = await AdMobService.ensureInitialized('Top banner');
                 this.consentReady(AdMobService.isPrivacyOptionsRequired());
                 if (this.desired !== 'visible') continue;
+                if (!this.networkAvailable) continue;
                 if (!initialized || !AdMobService.canRequestAds || AdMobService.privacyOptionsInProgress) {
                     await this.remove();
                     this.scheduleRetry(true);
@@ -229,6 +249,7 @@ export class NativeBannerController {
                 this.readinessRetryCount = 0;
                 await this.registerListeners();
                 if (this.desired !== 'visible') continue;
+                if (!this.networkAvailable) continue;
                 if (!AdMobService.canRequestAds || AdMobService.privacyOptionsInProgress) {
                     await this.remove();
                     this.scheduleRetry(true);

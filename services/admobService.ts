@@ -32,6 +32,7 @@ export const AdMobService = {
     rewardVideoDisplayStarted: false,
     // Internal Promise tracking to avoid redundant fetches and handle race conditions
     initPromise: null as Promise<boolean> | null,
+    sdkInitPromise: null as Promise<boolean> | null,
     consentFormPromise: null as Promise<AdmobConsentInfo> | null,
     rewardVideoPromise: null as Promise<boolean> | null,
     rewardVideoVersion: 0,
@@ -184,6 +185,26 @@ export const AdMobService = {
         }
     },
 
+    initializeSdk(): Promise<boolean> {
+        if (this.initialized) return Promise.resolve(true);
+        if (this.sdkInitPromise) return this.sdkInitPromise;
+        this.sdkInitPromise = (async () => {
+            try {
+                await Promise.resolve(); // Publish the shared task before bridge errors can settle it.
+                await this.withNativeTimeout('AdMob SDK initialization', AdMob.initialize(), this.SDK_INIT_TIMEOUT_MS);
+                this.initialized = true;
+                return true;
+            } catch (error) {
+                console.error('[AdMob] SDK initialization failed:', error);
+                this.initialized = false;
+                return false;
+            } finally {
+                this.sdkInitPromise = null;
+            }
+        })();
+        return this.sdkInitPromise;
+    },
+
     async initialize(): Promise<boolean> {
         if (!canUseNativeAdMob()) {
             console.warn('[AdMob] Initialization skipped: native AdMob plugin is unavailable.');
@@ -209,6 +230,7 @@ export const AdMobService = {
                 }
 
                 let consentInfo: AdmobConsentInfo | null;
+                let sdkReady: Promise<boolean> | null = null;
                 try {
                     if (this.consentFormPromise) {
                         // A previous wait expired. Read current native permission
@@ -217,6 +239,10 @@ export const AdMobService = {
                     } else {
                         consentInfo = this.applyConsentInfo(await this.refreshConsentInfo());
                     }
+                    // UMP may already permit ads using an existing valid choice.
+                    // Warm the SDK while the required-form check finishes, but
+                    // callers still await this entire flow and its final permission.
+                    if (consentInfo?.canRequestAds) sdkReady = this.initializeSdk();
                     if (!this.consentFormPromise && consentInfo?.isConsentFormAvailable) {
                         // Native loadAndShowConsentFormIfRequired decides whether
                         // an EU or US-state message must actually be presented.
@@ -238,9 +264,7 @@ export const AdMobService = {
                     return false;
                 }
 
-                await this.withNativeTimeout('AdMob SDK initialization',
-                    AdMob.initialize(), this.SDK_INIT_TIMEOUT_MS);
-                this.initialized = true;
+                if (!await (sdkReady ?? this.initializeSdk())) return false;
                 console.log('AdMob Community Initialized after UMP consent checks');
                 return true;
             } catch (error) {
@@ -290,13 +314,14 @@ export const AdMobService = {
         return initialized;
     },
 
-    async prepareRewardVideo(adId: string, ssv?: RewardVideoSsv): Promise<boolean> {
-        if (!canUseNativeAdMob()) return false;
+    async prepareRewardVideo(adId: string, ssv?: RewardVideoSsv, canPrepare: () => boolean = () => true): Promise<boolean> {
+        if (!canUseNativeAdMob() || !canPrepare()) return false;
 
         const ssvKey = getRewardVideoSsvKey(ssv);
         if (this.isRewardVideoShowing && (this.rewardVideoDisplayStarted || this.activeRewardVideoAdId !== adId || this.activeRewardVideoSsvKey !== ssvKey)) return false;
 
         const initialized = await this.ensureInitialized('Reward video prepare');
+        if (!canPrepare()) return false;
         if (!initialized) {
             this.invalidateRewardVideo();
             return false;
@@ -307,7 +332,7 @@ export const AdMobService = {
             const pending = this.rewardVideoPromise;
             if (this.rewardVideoPendingAdId === adId && this.rewardVideoPendingSsvKey === ssvKey && this.rewardVideoPendingVersion === this.rewardVideoVersion) return pending;
             await pending;
-            return this.prepareRewardVideo(adId, ssv);
+            return this.prepareRewardVideo(adId, ssv, canPrepare);
         }
         if (this.hasFreshRewardVideo(adId, ssv)) return true;
 
@@ -326,7 +351,7 @@ export const AdMobService = {
                 // Publish the shared task before any synchronous bridge error
                 // or permission change can run its cleanup.
                 await Promise.resolve();
-                if (!this.canRequestAds || this.privacyOptionsInProgress) return false;
+                if (!this.canRequestAds || this.privacyOptionsInProgress || !canPrepare()) return false;
                 // The plugin's prepare promise resolves from this request's
                 // native onAdLoaded callback. Global Loaded events cannot
                 // distinguish two SSV contexts sharing the same ad unit.

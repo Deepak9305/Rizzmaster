@@ -311,8 +311,90 @@ test('a pre-form permission cannot override a current native denial', async () =
     nativeConsent: () => denied,
   });
   assert.equal(await service.prepareRewardVideo('reward'), false);
-  assert.equal(calls.includes('sdk-init'), false);
+  // SDK warm-up can start under the earlier valid UMP result; an actual ad
+  // request must still wait for the final permission after the form.
+  assert.equal(calls.includes('sdk-init'), true);
   assert.equal(calls.includes('reward-request'), false);
+});
+
+test('valid UMP permission overlaps SDK warm-up with the form check without requesting ads early', async () => {
+  let finishForm;
+  const { service, calls } = setup({
+    refresh: () => ({ ...allowed, isConsentFormAvailable: true }),
+    form: () => new Promise(resolve => { finishForm = resolve; }),
+  });
+  const preparing = service.prepareRewardVideo('reward');
+  while (!finishForm) await delay(0);
+  assert.equal(calls.filter(call => call === 'sdk-init').length, 1);
+  assert.equal(calls.includes('reward-request'), false);
+  finishForm(allowed);
+  assert.equal(await preparing, true);
+  assert.equal(calls.filter(call => call === 'reward-request').length, 1);
+});
+
+test('a guest preload survives until opt-in and reuses a single request without SSV', async () => {
+  const contexts = [];
+  const { service, calls } = setup({ prepareReward: params => contexts.push(params.ssv) });
+  assert.equal(await service.prepareRewardVideo('reward', undefined, () => true), true);
+  assert.equal(calls.includes('reward-show'), false);
+  assert.equal(await service.showRewardVideo('reward'), true);
+  assert.equal(calls.filter(call => call === 'reward-request').length, 1);
+  assert.deepEqual(contexts, [undefined]);
+});
+
+test('a guest exiting during consent cannot issue a late preload', async () => {
+  let finishConsent;
+  let guestActive = true;
+  const { service, calls } = setup({ refresh: () => new Promise(resolve => { finishConsent = resolve; }) });
+  const preload = service.prepareRewardVideo('reward', undefined, () => guestActive);
+  while (!finishConsent) await delay(0);
+  guestActive = false;
+  service.invalidateRewardVideo();
+  finishConsent(allowed);
+  assert.equal(await preload, false);
+  assert.equal(calls.includes('reward-request'), false);
+});
+
+test('the app preloads low-credit guests only and never starts a signed-in verification attempt early', () => {
+  const source = readFileSync(new URL('../App.tsx', import.meta.url), 'utf8');
+  const ast = ts.createSourceFile('App.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  let effect;
+  const findEffect = node => {
+    if (ts.isCallExpression(node) && node.expression.getText(ast) === 'useEffect' &&
+        node.arguments[0]?.getText(ast).includes("runAdTask('Guest low-credit rewarded preload'")) {
+      effect = node.arguments[0].getText(ast);
+    }
+    ts.forEachChild(node, findEffect);
+  };
+  findEffect(ast);
+  assert.ok(effect, 'Guest preparation must be wired into the app');
+  for (const scenario of [
+    { credits: 2, expected: 1 }, { credits: 1, expected: 1 }, { credits: 0, expected: 1 },
+    { credits: 3, expected: 0 }, { signedIn: true, credits: 0, expected: 0 },
+    { credits: 2, premium: true, expected: 0 }, { credits: 2, offline: true, expected: 0 },
+    { credits: 2, splash: true, expected: 0 }, { credits: 2, native: false, expected: 0 },
+  ]) {
+    let loads = 0;
+    const profile = { id: scenario.signedIn ? 'account' : 'guest_user', credits: scenario.credits, is_premium: Boolean(scenario.premium) };
+    const globals = {
+      IS_WEB_PLATFORM: scenario.native === false, showSplash: Boolean(scenario.splash), showOnboarding: false,
+      isOffline: Boolean(scenario.offline), profile, isGuest: !scenario.signedIn,
+      rewardedAdIdentityVersionRef: { current: 0 }, profileRef: { current: profile },
+      canUseNativeAdMob: () => scenario.native !== false, hasProductionAdUnit: () => true,
+      getAdId: () => 'reward', runAdTask() {},
+      AdMobService: { prepareRewardVideo: (_id, ssv, canPrepare) => {
+        assert.equal(ssv, undefined);
+        if (canPrepare()) loads++;
+        return Promise.resolve(true);
+      } },
+      exports: {},
+    };
+    vm.runInNewContext(ts.transpileModule(`exports.run = ${effect};`, {
+      compilerOptions: { target: ts.ScriptTarget.ES2022 },
+    }).outputText, globals);
+    globals.exports.run();
+    assert.equal(loads, scenario.expected, JSON.stringify(scenario));
+  }
 });
 
 test('a failed refresh recovers using previous-session permission held by native UMP', async () => {
@@ -729,6 +811,54 @@ test('no-fill schedules one delayed retry and a later native success recovers', 
   assert.equal(timers.size, 0);
 });
 
+test('offline time pauses banner retries and reconnection recovers a due request once', async t => {
+  const { controller, calls, callbacks, bannerEvents, timers, advance } = setupBanner();
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  callbacks.get(bannerEvents.FailedToLoad)({ code: 2 });
+  await controller.setNetworkAvailable(false);
+  assert.equal(timers.size, 0);
+  advance(120_000);
+  await controller.setMode('visible');
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+  await controller.setNetworkAvailable(true);
+  await controller.setNetworkAvailable(true);
+  assert.equal(calls.filter(call => call === 'banner-request').length, 2);
+});
+
+test('reconnecting before a no-fill deadline preserves pacing and a suspended banner stays hidden', async t => {
+  const { controller, calls, callbacks, bannerEvents, timers, advance } = setupBanner();
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  callbacks.get(bannerEvents.FailedToLoad)({ code: 3 });
+  await controller.setNetworkAvailable(false);
+  advance(10_000);
+  await controller.setNetworkAvailable(true);
+  assert.equal([...timers.values()][0].ms, 50_000);
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+  await controller.setMode('hidden');
+  await controller.setNetworkAvailable(false);
+  advance(60_000);
+  await controller.setNetworkAvailable(true);
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+  await controller.setMode('visible');
+  assert.equal(calls.filter(call => call === 'banner-request').length, 2);
+});
+
+test('network loss during consent prevents a late banner request', async t => {
+  let finishConsent;
+  const { controller, calls } = setupBanner({ refresh: () => new Promise(resolve => { finishConsent = resolve; }) });
+  t.after(() => controller.dispose());
+  const showing = controller.setMode('visible');
+  while (!finishConsent) await delay(0);
+  const offline = controller.setNetworkAvailable(false);
+  finishConsent(allowed);
+  await Promise.all([showing, offline]);
+  assert.equal(calls.includes('banner-request'), false);
+  await controller.setNetworkAvailable(true);
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+});
+
 test('a banner whose load callback never arrives is removed before retry', async t => {
   const { controller, calls, timers } = setupBanner({ noLoad: true });
   t.after(() => controller.dispose());
@@ -908,6 +1038,7 @@ test('banner placement converts CSS pixels and accounts for native origins once'
   assert.equal(placement.heightDp, 50);
   assert.equal(placement.viewportWidthDp, 392);
   assert.equal(placement.dpToCss, 1);
+  assert.equal(placement.nativeGeometryVerified, true);
 });
 
 test('an older bridge falls back without negative offsets or preventing an ad request', async () => {
@@ -923,6 +1054,7 @@ test('an older bridge falls back without negative offsets or preventing an ad re
   assert.equal(placement.margin, 69);
   assert.equal(placement.widthDp, 320);
   assert.equal(placement.heightDp, 50, 'The compact slot needs no loaded-size event');
+  assert.equal(placement.nativeGeometryVerified, false, 'A fallback must not become a permanent cached measurement');
   assert.equal(await moveNativeBanner(69), false);
 });
 

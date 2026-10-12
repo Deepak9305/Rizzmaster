@@ -1258,6 +1258,26 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   }, []);
 
   useEffect(() => {
+    // Guests have no server verification context to create. Warm one ad while
+    // their last two credits are still usable; displaying it remains opt-in.
+    if (
+      IS_WEB_PLATFORM || showSplash || showOnboarding || isOffline || !profile ||
+      !(isGuest || profile.id === 'guest_user') || profile.is_premium ||
+      (profile.credits || 0) > 2 || !canUseNativeAdMob() || !hasProductionAdUnit('REWARD')
+    ) return;
+
+    let cancelled = false;
+    const identityVersion = rewardedAdIdentityVersionRef.current;
+    const isCurrentGuest = () => !cancelled &&
+      identityVersion === rewardedAdIdentityVersionRef.current &&
+      profileRef.current?.id === 'guest_user' &&
+      !profileRef.current.is_premium && (profileRef.current.credits || 0) <= 2;
+    runAdTask('Guest low-credit rewarded preload',
+      AdMobService.prepareRewardVideo(getAdId('REWARD'), undefined, isCurrentGuest));
+    return () => { cancelled = true; };
+  }, [isGuest, profile?.id, profile?.credits, profile?.is_premium, showSplash, showOnboarding, isOffline]);
+
+  useEffect(() => {
     if (
       !showCreditsExhaustedModal ||
       IS_WEB_PLATFORM ||
@@ -2340,6 +2360,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     <div className="web-app-root relative min-h-screen overflow-x-hidden">
       <NativeBanner
         adId={getAdId('BANNER')}
+        online={!isOffline}
         enabled={Boolean(hasProductionAdUnit('BANNER') && profile && !profile.is_premium && (session || isGuest) && !updateGateConfig?.blocked)}
         suspended={showSplash || showOnboarding || currentView !== 'HOME' || isSessionBlocked || isOffline || showPremiumModal || showSavedModal || showCreditsExhaustedModal || showPersonaModal || isRewardedAdLoading || isPrivacyFormOpen}
         onConsentReady={setPrivacyOptionsRequired}

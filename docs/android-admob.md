@@ -2,6 +2,10 @@
 
 The Android app loads `https://rizzmaster.online` inside Capacitor. Guest and signed-in free users share the same native banner/UMP initialization. Guest rewarded completions grant local credits; signed-in rewards use server verification. These eligibility rules are unchanged.
 
+Guests preload one rewarded ad when they have two or fewer credits, after startup and while online. The existing cache is reused when they explicitly choose “Watch ad”; preparation does not display an ad or grant credits. Cancellation checks prevent a guest who exits during consent gathering from making a late preload. Signed-in users retain preparation only for the insufficient-credit offer, with their existing server verification context.
+
+Coach remains banner-free. The banner remains hidden under fullscreen dialogs and rewarded ads to avoid overlapping controls. Returning to Home reuses unchanged slot geometry so restoration does not wait for an unnecessary native measurement. Layout changes still trigger measurement.
+
 ## Native dependencies
 
 - Capacitor platform packages: 8.5.2.
@@ -26,6 +30,10 @@ The upstream 8.2.0 plugin fixes the missing-parent lookup and avoids replacing C
 A stalled consent-form bridge callback releases initialization after 60 seconds. The native form remains tracked, so retries cannot open duplicates. Only a fresh native UMP `canRequestAds` result can authorize requests; denial stays blocked. Late callbacks re-read native consent instead of trusting stale permission.
 
 Readiness failures retry after 15 seconds, backing off to 60 seconds. Actual banner load failures/no-fill retain the 60–300 second backoff. Normal refresh remains controlled by the Google SDK/AdMob setting, and layout changes do not create extra requests.
+
+Network loss pauses banner recovery timers and load watchdogs without resetting the retry deadline. Reconnection resumes an overdue request immediately when Home is visible; reconnecting before the deadline waits the remaining interval. It never resumes the banner over Coach or an open dialog. When a refreshed UMP result already allows ads, SDK initialization overlaps the form check; actual requests still wait for the final permission and SDK completion.
+
+In the AdMob console, verify that the banner unit uses **Google optimized automatic refresh**. This setting lives in AdMob, not this repository; publishing code does not enable it. Do not add a separate JavaScript refresh loop for loaded banners.
 
 ## Verification
 

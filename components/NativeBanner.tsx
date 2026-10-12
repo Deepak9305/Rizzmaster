@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { NativeBannerController, type BannerMode, BANNER_WIDTH } from '../services/nativeBannerService';
 import { getBannerPlacement, moveNativeBanner } from '../services/bottomNavigationInset';
 import { canUseNativeAdMob } from '../services/nativeCapabilities';
@@ -8,6 +8,7 @@ interface NativeBannerProps {
     adId: string;
     enabled: boolean;
     suspended: boolean;
+    online: boolean;
     onConsentReady: (required: boolean) => void;
 }
 
@@ -27,8 +28,9 @@ const reserveSlot = (height: number) => {
     document.documentElement.classList.toggle('native-banner-active', height > 0);
 };
 
-const NativeBanner: React.FC<NativeBannerProps> = ({ adId, enabled, suspended, onConsentReady }) => {
+const NativeBanner: React.FC<NativeBannerProps> = ({ adId, enabled, suspended, online, onConsentReady }) => {
     const [foreground, setForeground] = useState(() => document.visibilityState !== 'hidden');
+    const lastPlacement = useRef<{ key: string; placement: Awaited<ReturnType<typeof getBannerPlacement>> } | null>(null);
     const native = canUseNativeAdMob();
     const mode: BannerMode = !enabled ? 'removed' : suspended || !foreground ? 'hidden' : 'visible';
 
@@ -44,6 +46,10 @@ const NativeBanner: React.FC<NativeBannerProps> = ({ adId, enabled, suspended, o
         if (!native) return;
         consentObserver = onConsentReady;
     }, [native, onConsentReady]);
+
+    useEffect(() => {
+        if (native) void controller?.setNetworkAvailable(online);
+    }, [native, online]);
 
     useEffect(() => {
         if (!native) return;
@@ -66,12 +72,19 @@ const NativeBanner: React.FC<NativeBannerProps> = ({ adId, enabled, suspended, o
         const measure = async (measurement: number) => {
             const anchor = document.querySelector('.native-banner-anchor');
             if (!(anchor instanceof HTMLElement) || !anchor.getBoundingClientRect().height) return;
-            const key = `${Math.round(anchor.getBoundingClientRect().top * devicePixelRatio)}:${innerWidth}:${devicePixelRatio}`;
+            const key = `${Math.round(anchor.getBoundingClientRect().top * devicePixelRatio)}:${innerWidth}:${devicePixelRatio}:${window.visualViewport?.offsetTop ?? 0}`;
             // The keyboard changes viewport height, not banner geometry. Avoid
             // bridge traffic and reconciliation for identical measurements.
             if (key === lastMeasurement) return;
-            const placement = await getBannerPlacement(anchor);
+            // Dialogs and fullscreen ads do not usually change the slot. Reuse
+            // its geometry on return instead of waiting for another bridge call.
+            const placement = lastPlacement.current?.key === key
+                ? lastPlacement.current.placement
+                : await getBannerPlacement(anchor);
             if (cancelled || measurement !== version) return;
+            // Do not cache the CSS fallback after a slow/missing geometry bridge:
+            // a later successful measurement must be able to correct the slot.
+            lastPlacement.current = placement.nativeGeometryVerified ? { key, placement } : null;
             document.documentElement.style.setProperty('--native-navigation-inset', `${placement.bottomInsetCss}px`);
             dpToCss = placement.dpToCss;
             applyBannerSize(placement.widthDp, placement.heightDp);
@@ -81,6 +94,7 @@ const NativeBanner: React.FC<NativeBannerProps> = ({ adId, enabled, suspended, o
                 return;
             }
             controller ??= new NativeBannerController(adId, placement.margin, reserveSlot, required => consentObserver?.(required), moveNativeBanner);
+            await controller.setNetworkAvailable(online);
             await controller.setTopMargin(placement.margin, placement.viewportWidthDp);
             if (!cancelled && measurement === version) {
                 await controller.setMode('visible');
@@ -106,7 +120,7 @@ const NativeBanner: React.FC<NativeBannerProps> = ({ adId, enabled, suspended, o
             window.removeEventListener('resize', schedule);
             window.visualViewport?.removeEventListener('resize', schedule);
         };
-    }, [adId, mode, native]);
+    }, [adId, mode, native, online]);
 
     useEffect(() => {
         if (!native) return;

@@ -19,12 +19,14 @@ export const getBannerPlacement = async (anchor: HTMLElement) => {
     let density = window.devicePixelRatio || 1;
     let webViewOffsetDp = 0;
     let bottomInsetDp = 48;
+    let nativeGeometryVerified = false;
     if (Capacitor.getPlatform() === 'android' && Capacitor.isPluginAvailable('BottomNavigationInset')) {
         try {
             const geometry = await AdMobService.withNativeTimeout('Banner geometry', BottomNavigationInset.getBannerGeometry(), 1500);
             if (Number.isFinite(geometry.density) && geometry.density > 0) density = geometry.density;
             if (Number.isFinite(geometry.webViewOffsetDp)) webViewOffsetDp = geometry.webViewOffsetDp;
             if (Number.isFinite(geometry.bottomInsetDp)) bottomInsetDp = Math.max(0, geometry.bottomInsetDp);
+            nativeGeometryVerified = Number.isFinite(geometry.density) && geometry.density > 0 && Number.isFinite(geometry.webViewOffsetDp);
         } catch {
             // Older APKs use CSS coordinates until their native bridge is updated.
         }
@@ -39,6 +41,7 @@ export const getBannerPlacement = async (anchor: HTMLElement) => {
         viewportWidthDp,
         widthDp: BANNER_WIDTH,
         heightDp: BANNER_HEIGHT,
+        nativeGeometryVerified,
     };
 };
 
