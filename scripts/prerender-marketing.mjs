@@ -69,6 +69,13 @@ const renderFaqs = (post) => post.faqs?.length
 const renderResources = (post) => `${renderResourcesOnly(post)}${renderFaqs(post)}`;
 
 const articleInternalLinks = {
+  'how-to-have-the-exclusive-conversation-without-pressure': [
+    { slug: 'talk-about-what-you-want-in-dating', label: 'Talk about what you want in dating' },
+    { slug: 'how-to-ask-for-clarity-in-a-situationship', label: 'Ask for clarity in a situationship' },
+    { slug: 'how-to-build-trust-in-a-new-relationship', label: 'Build trust without rushing' },
+    { slug: 'how-to-pace-a-new-relationship-without-losing-yourself', label: 'Find a healthy relationship pace' },
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy texting boundaries' }
+  ],
   'what-to-say-when-dating-app-match-nearly-empty-profile': [
     { slug: 'best-dating-app-bio-ideas-for-guys', label: 'Write a profile that starts conversations' },
     { slug: 'best-tinder-openers-for-guys', label: 'Use better dating app openers' },

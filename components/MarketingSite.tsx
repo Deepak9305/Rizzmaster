@@ -514,6 +514,11 @@ const BlogIndexPage: React.FC<{ navigate: (path: string) => void }> = ({ navigat
 );
 
 const ARTICLE_EXAMPLES: Record<string, string[]> = {
+  'how-to-have-the-exclusive-conversation-without-pressure': [
+    'I am enjoying getting to know you, and I would like to focus on dating each other exclusively. How does that feel to you?',
+    'I like where this is going. Before I make assumptions, can we talk about whether we are seeing other people?',
+    'Thanks for being honest. I am looking for exclusivity, so I am going to step back rather than keep building something that does not fit.'
+  ],
   'what-to-say-when-dating-app-match-nearly-empty-profile': [
     'Your profile is keeping its secrets. What is something you have been enjoying lately?',
     'That trail looks beautiful. Was it a difficult hike, or mostly scenic?',
@@ -556,6 +561,7 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
 };
 
 const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
+  'how-to-have-the-exclusive-conversation-without-pressure': { do: 'Say what you want, ask a clear question, and listen for an agreement you can both describe in practical terms.', doNot: 'Treat closeness as an unspoken contract, negotiate against your own needs, or keep waiting indefinitely for a clearer answer.' },
   'what-to-say-when-dating-app-match-nearly-empty-profile': { do: 'Notice one real detail, ask an easy question, share a little of yourself, and watch for mutual curiosity.', doNot: 'Invent a personality from a photo, comment on someone’s body, or keep performing after the conversation stays one-sided.' },
   'dating-app-red-flags-before-first-date': { do: 'Slow down, protect your information, choose public plans, and let consistent behavior earn trust.', doNot: 'Ignore pressure, send money or private details, or keep explaining away the same uneasy pattern.' },
   'how-to-stop-overthinking-while-dating': { do: 'Separate facts from assumptions, regulate before reacting, and choose one clear next step.', doNot: 'Decode every pause, send messages to relieve anxiety, or ignore a repeated mismatch.' },
@@ -635,6 +641,13 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'how-to-have-the-exclusive-conversation-without-pressure': [
+    { slug: 'talk-about-what-you-want-in-dating', label: 'Talk about what you want in dating' },
+    { slug: 'how-to-ask-for-clarity-in-a-situationship', label: 'Ask for clarity in a situationship' },
+    { slug: 'how-to-build-trust-in-a-new-relationship', label: 'Build trust without rushing' },
+    { slug: 'how-to-pace-a-new-relationship-without-losing-yourself', label: 'Find a healthy relationship pace' },
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy texting boundaries' }
+  ],
   'what-to-say-when-dating-app-match-nearly-empty-profile': [
     { slug: 'best-dating-app-bio-ideas-for-guys', label: 'Write a profile that starts conversations' },
     { slug: 'best-tinder-openers-for-guys', label: 'Use better dating app openers' },
