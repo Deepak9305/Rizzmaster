@@ -69,6 +69,13 @@ const renderFaqs = (post) => post.faqs?.length
 const renderResources = (post) => `${renderResourcesOnly(post)}${renderFaqs(post)}`;
 
 const articleInternalLinks = {
+  'should-you-go-on-a-second-date-if-there-was-no-spark': [
+    { slug: 'follow-up-after-awkward-first-date', label: 'Follow up after an awkward first date' },
+    { slug: 'signs-a-first-date-went-well', label: 'Read the signs a first date went well' },
+    { slug: 'build-real-connection-first-date', label: 'Build a real connection on a first date' },
+    { slug: 'chemistry-vs-compatibility', label: 'Separate chemistry from compatibility' },
+    { slug: 'how-to-ask-someone-out-over-text', label: 'Ask someone out clearly' }
+  ],
   'how-to-have-the-exclusive-conversation-without-pressure': [
     { slug: 'talk-about-what-you-want-in-dating', label: 'Talk about what you want in dating' },
     { slug: 'how-to-ask-for-clarity-in-a-situationship', label: 'Ask for clarity in a situationship' },

@@ -54,6 +54,151 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'should-you-go-on-a-second-date-if-there-was-no-spark',
+    title: 'Should You Go on a Second Date If There Was No Spark? How to Tell a Slow Burn From a Clear No',
+    seoTitle: 'Should You Go on a Second Date If There Was No Spark?',
+    description: 'A first date can feel ordinary without being a clear no. Learn how to separate nerves, slow-burn curiosity, incompatibility, and red flags before deciding whether to meet again.',
+    excerpt: 'You do not need fireworks to justify a second date, but you do need enough curiosity, comfort, and mutual respect to make another meeting worthwhile. Use the first date as information, then choose a low-pressure next step or a clear close.',
+    date: '2026-10-13',
+    updatedAt: '2026-10-13',
+    readingTime: '12 min read',
+    category: 'First date advice',
+    author: 'amelia',
+    keywords: [
+      'should I go on a second date if there was no spark',
+      'second date after no chemistry',
+      'should I give someone a second chance after a first date',
+      'how to tell if attraction can grow',
+      'what to text after a mediocre first date',
+      'how to decide whether to go on a second date',
+      'how to politely decline a second date',
+      'slow burn attraction vs no chemistry'
+    ],
+    image: '/blog/should-you-go-on-second-date-if-no-spark-hero.png',
+    imageAlt: 'A person thinking over a possible second date at a cafe with coffee, a phone, and a notebook',
+    imageCaption: 'A second date can be a small, honest experiment when curiosity is present and the first meeting was respectful.',
+    resources: [
+      { label: 'Planned Parenthood: Healthy relationships', url: 'https://www.plannedparenthood.org/learn/relationships/healthy-relationships' },
+      { label: 'love is respect: Boundaries and expectations', url: 'https://www.loveisrespect.org/resources/boundaries-expectations/' },
+      { label: 'RAINN: Tips for safer dating online and in person', url: 'https://rainn.org/strategies-to-reduce-risk-increase-safety/tips-for-safer-dating-online-and-in-person/' }
+    ],
+    faqs: [
+      { question: 'Should I go on a second date if there was no spark?', answer: 'Consider it when you felt comfortable, respected, and specifically curious about the person. A quiet first date can be worth another meeting when the issue was nerves or an unhelpful setting. If you felt unsafe, pressured, or clearly incompatible, you do not need to try again.' },
+      { question: 'Can attraction grow after a first date?', answer: 'It can grow when there is some openness, warmth, and interest to build on, but it cannot be forced. A second date is a chance to gather better information, not a promise that attraction will appear.' },
+      { question: 'What should I text after a first date that felt just okay?', answer: 'Be honest and simple. If you are curious, say that you enjoyed meeting and suggest a short, specific second date. If you are not interested, thank them for their time and say that you did not feel the connection you are looking for.' },
+      { question: 'How do you politely decline a second date?', answer: 'Send a brief, direct message such as: “Thanks for meeting up. I did not feel the connection I am looking for, so I am going to leave it there. I wish you well.” You do not need to provide a detailed critique.' }
+    ],
+    sections: [
+      {
+        heading: 'No spark is a description, not a final diagnosis',
+        paragraphs: [
+          "People often use ‘no spark’ to describe several different experiences. You might have felt neutral, distracted, nervous, bored, physically uncomfortable, or quietly interested without the rush you expected. Those experiences lead to different decisions, so it helps to replace the broad label with a more precise observation.",
+          "A first date is also a noisy setting for judging compatibility. Two people may be carrying nerves, travelling across town, meeting after a long workday, or trying to translate an easy text conversation into real-time rhythm. A flat evening does not automatically mean the person is wrong for you. It also does not create an obligation to give them another chance. The useful question is what the date actually told you."
+        ],
+        bullets: [
+          'Neutral means you did not feel much yet; it is different from feeling repelled or unsafe.',
+          'Nerves can hide interest, but they do not excuse disrespect or pressure.',
+          'A second date is an option for gathering information, not a reward for being polite.'
+        ]
+      },
+      {
+        heading: 'Separate a slow start from a clear mismatch',
+        paragraphs: [
+          "A slow start usually leaves at least one thread you want to pick up. Maybe their humour became easier to understand after the first twenty minutes, you liked how they handled an awkward pause, or you caught yourself wanting to hear more about something they mentioned. The feeling may be small, but it is specific. That kind of curiosity can justify a short second date.",
+          "A clear mismatch feels different. You may have spent the evening editing yourself, felt no desire to know more, or noticed that your values, pace, communication style, or expectations were far apart. You do not need a dramatic reason to decline. Attraction is not a courtroom where you must prove that the other person failed."
+        ],
+        bullets: [
+          'Slow burn: there is a real detail, quality, or question you want to explore.',
+          'Mismatch: the date confirmed that the connection does not fit what you want.',
+          'Red flag: you felt pressured, mocked, watched, ignored, or unsafe.',
+          'Uncertainty: you are mostly wondering whether you should feel more excited than you do.'
+        ]
+      },
+      {
+        heading: 'Use three checks before you decide',
+        paragraphs: [
+          "First, check your comfort. Could you relax enough to be yourself around this person, even if the conversation was not effortless? Second, check your curiosity. Is there something you genuinely want to learn, experience, or test in another setting? Third, check the effort. Did they listen, make room for you, respect your limits, and show interest beyond getting a good impression?",
+          "These checks work better together than any single feeling. You can be attracted to someone and still decide that their behaviour was not respectful. You can feel only mild interest and still choose a second date because the interaction was kind and you would like more information. You are looking for a reasonable basis to participate, not a guarantee of a relationship."
+        ],
+        bullets: [
+          'Comfort: your body and attention did not spend the whole date trying to get away.',
+          'Curiosity: you can name one genuine reason to know more.',
+          'Mutual effort: the other person also helped create the conversation.',
+          'Fit: trying again would not require you to ignore an important need.'
+        ]
+      },
+      {
+        heading: 'Do not confuse anxiety with chemistry',
+        paragraphs: [
+          "An intense first date can feel like chemistry when it is actually uncertainty, pressure, or the relief of being chosen. The opposite can happen too: a calm, respectful date may feel less exciting because it does not activate the same chase. Neither reaction is a perfect measure of compatibility.",
+          "Ask what happened in your attention. Were you interested in the person, or were you focused on whether they liked you? Did you enjoy their company, or did you feel temporarily reassured when they showed interest? The answers can overlap, but separating them keeps you from choosing a second date only to settle a question about your own desirability."
+        ],
+        bullets: [
+          'Interest points outward toward learning about the person; anxiety points inward toward getting reassurance.',
+          'A calm date can still contain attraction, especially when you are used to intensity.',
+          'If you felt more relief than enjoyment when the date ended, give yourself time before deciding.'
+        ]
+      },
+      {
+        heading: 'Make the second date a smaller experiment',
+        paragraphs: [
+          "If you are curious but unconvinced, do not turn the second date into a high-stakes test. Choose a plan that makes conversation easier and gives both people a natural ending: coffee, a walk in a busy public place, a bookstore, or a short daytime activity. A simpler setting can reveal whether the first date was merely awkward or whether the connection stays flat when the pressure is lower.",
+          "Keep the goal modest. You are not trying to manufacture a breakthrough or decide whether this person could be your partner before the next coffee arrives. Notice how the interaction feels when you are less focused on making an impression. Do you become more open? Do they become more curious? Does the effort remain mutual when the novelty wears off?"
+        ],
+        bullets: [
+          'Choose a public plan with a clear time boundary.',
+          'Pick an activity that creates a little movement instead of forcing constant eye contact.',
+          'Tell a friend where you are going and use the safety practices that make you comfortable.',
+          'Leave room to end after an hour if the connection still feels wrong.'
+        ]
+      },
+      {
+        heading: 'What to text when you are open to another date',
+        paragraphs: [
+          "A second-date message does not need to pretend that the first meeting was perfect. Warmth and honesty can sit together. Mention one real detail you enjoyed, then make a simple invitation that the other person can accept or decline without being managed.",
+          "Try: ‘I enjoyed meeting you, especially our conversation about travel. I think we were both a little nervous at first. Would you be up for a short coffee next week?’ Or: ‘I had a good time getting to know you. I am curious to continue the conversation over a walk on Saturday if you are interested.’ A specific invitation gives the other person useful information and prevents a vague exchange from creating more uncertainty."
+        ],
+        bullets: [
+          'Keep the message short enough to answer easily.',
+          'Name a genuine point of connection instead of promising instant chemistry.',
+          'Offer a real plan, but leave the other person free to say no.',
+          'If they respond vaguely, let their follow-through provide the next piece of information.'
+        ]
+      },
+      {
+        heading: 'Use a second opinion without outsourcing the decision',
+        paragraphs: [
+          "When a first date feels ambiguous, it can help to write down what happened before asking friends or an app to interpret it. Separate facts from the story you are building: they asked three questions, interrupted twice, suggested meeting again, and you felt tense when they touched your arm. That record is more useful than a single verdict about whether the date had chemistry.",
+          "Rizz Master can help you compare the details, draft a low-pressure invitation, or find a respectful close. Use it as a thinking aid, then make the decision from your own comfort, values, and experience. No generated message can tell you whether you felt safe or whether you actually want to spend another hour with someone."
+        ],
+        bullets: [
+          'Write down observable behaviour before interpreting what it means.',
+          'Ask for help with wording, not permission to ignore your own reaction.',
+          'Choose the message that sounds like you and still gives the other person a real choice.'
+        ]
+      },
+      {
+        heading: 'What to text when you do not want a second date',
+        paragraphs: [
+          "If your answer is no, clarity is kinder than a soft promise you do not mean. You can appreciate the time without describing the date as wonderful, and you can decline without listing every reason. A short message also protects you from being pulled into a debate about whether your decision is reasonable.",
+          "Try: ‘Thanks for meeting up. I did not feel the connection I am looking for, so I am going to leave it there. I wish you well.’ If you felt unsafe or the person ignored a boundary, you can be firmer: ‘I am not comfortable continuing contact. Please do not message me again.’ You are allowed to choose the level of detail that keeps you safe and clear."
+        ],
+        bullets: [
+          'Do not offer a future plan as a way to avoid a difficult but honest no.',
+          'You do not need to debate attraction or prove that your reason is serious enough.',
+          'If the person pushes after a clear boundary, stop explaining and use the platform safety tools available to you.'
+        ]
+      },
+      {
+        heading: 'The decision rule: curiosity plus comfort is enough',
+        paragraphs: [
+          "You do not need fireworks to accept a second date. You need enough comfort to participate, enough curiosity to want more information, and enough mutual respect to make the experiment worthwhile. If those are present, a short second meeting can show you more than an anxious post-date analysis ever will.",
+          "You also do not need a dramatic rejection story to decline. If you felt no interest, the mismatch was clear, or your boundaries were not respected, let the first date be useful information and close the door. The right decision is the one that keeps you honest about what you want and proportionate about what the other person actually showed you."
+        ]
+      }
+    ]
+  },
+  {
     slug: 'how-to-have-the-exclusive-conversation-without-pressure',
     title: 'How to Have the “Are We Exclusive?” Conversation Without Pressure or Guessing',
     seoTitle: 'How to Ask If You’re Exclusive Without Creating Pressure',
