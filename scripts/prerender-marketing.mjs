@@ -317,7 +317,7 @@ const rizzlineSsr = await createServer({
 });
 try {
   const { default: RizzlinePage } = await rizzlineSsr.ssrLoadModule('/components/rizzline/RizzlinePage.tsx');
-  const rizzlineBody = `<div class="marketing-site min-h-screen overflow-x-hidden bg-[#050407] text-white"><header class="border-b border-white/10"><nav class="marketing-container flex flex-wrap items-center gap-6 py-6 text-sm" aria-label="Site navigation"><a href="/landing" class="font-bold text-pink-200">Rizz Master</a><a href="/" class="text-white/70">Chat Reply</a><a href="/rizzline" aria-current="page" class="text-white/90">Rizzline</a><a href="/blog" class="text-white/70">Blog</a></nav></header>${renderToStaticMarkup(createElement(RizzlinePage))}<footer class="marketing-container flex flex-wrap gap-6 border-t border-white/10 py-10 text-sm text-white/65"><a href="/landing">Rizz Master</a><a href="/rizzline">Rizzline</a><a href="/blog">Blog</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/support">Support</a></footer></div>`;
+  const rizzlineBody = `<div class="marketing-site min-h-screen overflow-x-hidden bg-[#050407] text-white"><header class="border-b border-white/10"><nav class="marketing-container flex flex-wrap items-center gap-6 py-6 text-sm" aria-label="Site navigation"><a href="/landing" class="font-bold text-pink-200">Rizz Master</a><a href="/" class="text-white/70">Chat Reply</a><a href="/rizzline-pickup-lines" aria-current="page" class="text-white/90">Rizzline</a><a href="/blog" class="text-white/70">Blog</a></nav></header>${renderToStaticMarkup(createElement(RizzlinePage))}<footer class="marketing-container flex flex-wrap gap-6 border-t border-white/10 py-10 text-sm text-white/65"><a href="/landing">Rizz Master</a><a href="/rizzline-pickup-lines">Rizzline</a><a href="/blog">Blog</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/support">Support</a></footer></div>`;
   const rizzlineHtml = createPageShell(shell, rizzlineBody)
     .replace('</head>', `<link rel="stylesheet" href="/assets/${escapeAttribute(rizzlineStylesheet)}" />\n</head>`)
     .replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(RIZZLINE_SEO.title)}</title>`)
@@ -329,7 +329,7 @@ try {
     .replace(/<meta\s+property="og:url"[^>]*>/i, `<meta property="og:url" content="${RIZZLINE_SEO.url}" />`)
     .replace(/<link\s+rel="canonical"[^>]*>/i, '')
     .replace('</head>', `<link rel="canonical" href="${RIZZLINE_SEO.url}" />\n<meta property="og:image" content="${RIZZLINE_SEO.image}" />\n<meta name="twitter:card" content="summary_large_image" />\n<meta name="twitter:title" content="${escapeAttribute(RIZZLINE_SEO.title)}" />\n<meta name="twitter:description" content="${escapeAttribute(RIZZLINE_SEO.description)}" />\n<meta name="twitter:image" content="${RIZZLINE_SEO.image}" />\n<script id="rizzmaster-seo-schema" type="application/ld+json">${JSON.stringify(RIZZLINE_SCHEMA).replaceAll('<', '\\u003c')}</script>\n</head>`);
-  await writePage('rizzline', withEditorialAds(rizzlineHtml));
+  await writePage('rizzline-pickup-lines', withEditorialAds(rizzlineHtml));
 } finally {
   await rizzlineSsr.close();
 }

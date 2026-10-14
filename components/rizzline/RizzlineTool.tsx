@@ -201,7 +201,7 @@ export default function RizzlineTool() {
     return () => window.removeEventListener('keydown', handleKey);
   }, [category, savedOpen, cardLine, browse.index]);
   const copy = async () => { try { await copyLine(current.text); setNotice('Copied!'); } catch { setNotice('Could not copy this line.'); } };
-  const share = async () => { try { const result = await shareLine(`“${current.text}”\n\nvia Rizzline · rizzmaster.online/rizzline`); if (result !== 'cancelled') setNotice(result === 'shared' ? 'Shared!' : 'Copied for sharing!'); } catch { setNotice('Could not share. Try Copy Line instead.'); } };
+  const share = async () => { try { const result = await shareLine(`“${current.text}”\n\nvia Rizzline · rizzmaster.online/rizzline-pickup-lines`); if (result !== 'cancelled') setNotice(result === 'shared' ? 'Shared!' : 'Copied for sharing!'); } catch { setNotice('Could not share. Try Copy Line instead.'); } };
   const onPointerDown = (event: React.PointerEvent<HTMLElement>) => {
     if (movingRef.current || event.button !== 0 || !(event.target instanceof Element) || event.target.closest('button,a,input')) return;
     motion.current?.cancel();

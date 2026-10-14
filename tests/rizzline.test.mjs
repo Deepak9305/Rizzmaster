@@ -58,23 +58,24 @@ test('page renders crawlable examples, FAQs and matching schema without browser 
   }
   for (const faq of content.RIZZLINE_FAQS) assert.ok(html.includes(faq.question));
   assert.equal(content.RIZZLINE_SCHEMA['@graph'][1].url, content.RIZZLINE_SEO.url);
-  assert.equal(routes.isMarketingPath('/rizzline/'), true);
+  assert.equal(routes.isMarketingPath('/rizzline-pickup-lines/'), true);
   assert.equal(routes.isMarketingPath('/'), false);
 });
 
 test('production route serves an indexable page with canonical, assets and a sitemap entry', async () => {
-  const html = await readFile(new URL('../dist/rizzline/index.html', import.meta.url), 'utf8');
+  const html = await readFile(new URL('../dist/rizzline-pickup-lines/index.html', import.meta.url), 'utf8');
   assert.match(html, /name="robots" content="index,follow"/);
-  assert.match(html, /rel="canonical" href="https:\/\/rizzmaster\.online\/rizzline"/);
+  assert.match(html, /rel="canonical" href="https:\/\/rizzmaster\.online\/rizzline-pickup-lines"/);
   assert.match(html, /name="viewport" content="width=device-width, initial-scale=1.0"/);
   assert.match(html, /<h1\b/);
   assert.match(html, /(?:src|href)="\/assets\//);
   assert.match(html, /rel="stylesheet" href="\/assets\/RizzlinePage-.*\.css"/);
   assert.doesNotMatch(html, /(?:src|href)="\.\/assets\//);
   const sitemap = await readFile(new URL('../public/sitemap.xml', import.meta.url), 'utf8');
-  assert.equal((sitemap.match(/<loc>https:\/\/rizzmaster\.online\/rizzline<\/loc>/g) || []).length, 1);
+  assert.equal((sitemap.match(/<loc>https:\/\/rizzmaster\.online\/rizzline-pickup-lines<\/loc>/g) || []).length, 1);
   const config = JSON.parse(await readFile(new URL('../vercel.json', import.meta.url), 'utf8'));
-  assert.equal(config.rewrites.find(route => route.source === '/rizzline').destination, '/rizzline/index.html');
+  assert.equal(config.redirects.find(route => route.source === '/rizzline').destination, '/rizzline-pickup-lines');
+  assert.equal(config.rewrites.find(route => route.source === '/rizzline-pickup-lines').destination, '/rizzline-pickup-lines/index.html');
 });
 
 test('share card sends a PNG file and respects share cancellation', async () => {

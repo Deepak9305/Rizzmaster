@@ -54,7 +54,7 @@ export async function createLineCard(text: string, category: string, themeId: st
   ctx.font = '400 26px "Space Grotesk", sans-serif'; ctx.fillStyle = '#a1a1aa'; ctx.textAlign = 'right';
   ctx.fillText(name.trim() ? `— ${name.trim().slice(0, 32)}` : 'by Rizz Master', 980, 1160, 580);
   ctx.textAlign = 'left'; ctx.font = '400 22px "Space Grotesk", sans-serif';
-  ctx.fillText('rizzmaster.online/rizzline', 100, 1235);
+  ctx.fillText('rizzmaster.online/rizzline-pickup-lines', 100, 1235);
   return new Promise<Blob>((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Image export failed')), 'image/png'));
 }
 

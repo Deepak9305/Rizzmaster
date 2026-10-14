@@ -42,7 +42,7 @@ const WebAppMenu: React.FC<WebAppMenuProps> = ({
   };
 
   const contentLinks = [
-    { label: 'Rizzline · Pickup lines', path: '/rizzline' },
+    { label: 'Rizzline · Pickup lines', path: '/rizzline-pickup-lines' },
     { label: 'Blog', path: '/blog' },
     { label: 'Support', path: '/support' },
     { label: 'Privacy', path: '/privacy' },

@@ -9,7 +9,7 @@ const mobileBuild = join(projectRoot, 'dist-mobile');
 // Capacitor still needs a local web directory for the native fallback, but
 // the Android app normally loads server.url. Keep the app shell and its
 // chunks while leaving website-only pages and media in the Vercel build.
-const excludedDirectories = new Set(['blog', 'landing', 'privacy', 'rizzline', 'support', 'terms']);
+const excludedDirectories = new Set(['blog', 'landing', 'privacy', 'rizzline', 'rizzline-pickup-lines', 'support', 'terms']);
 const excludedFiles = new Set([
   'manifest.webmanifest',
   'robots.txt',

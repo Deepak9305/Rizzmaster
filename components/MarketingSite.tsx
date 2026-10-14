@@ -18,7 +18,7 @@ const getRoute = (pathname: string): MarketingRoute => {
 
   if (path === MARKETING_HOME_PATH) return { kind: 'home' };
   if (path === '/blog') return { kind: 'blog' };
-  if (path === '/rizzline') return { kind: 'rizzline' };
+  if (path === '/rizzline-pickup-lines') return { kind: 'rizzline' };
   if (path === '/privacy') return { kind: 'privacy' };
   if (path === '/terms') return { kind: 'terms' };
   if (path === '/support') return { kind: 'support' };
@@ -206,14 +206,14 @@ const MarketingNav: React.FC<{ navigate: (path: string) => void }> = ({ navigate
         <a href="/landing#features" onClick={(event) => { event.preventDefault(); navigate('/landing#features'); }} className="transition-colors hover:text-white">Features</a>
         <a href="/landing#how-it-works" onClick={(event) => { event.preventDefault(); navigate('/landing#how-it-works'); }} className="transition-colors hover:text-white">How it works</a>
         <a href="/blog" onClick={(event) => { event.preventDefault(); navigate('/blog'); }} className="transition-colors hover:text-white">Blog</a>
-        <a href="/rizzline" onClick={(event) => { event.preventDefault(); navigate('/rizzline'); }} className="transition-colors hover:text-white">Rizzline</a>
+        <a href="/rizzline-pickup-lines" onClick={(event) => { event.preventDefault(); navigate('/rizzline-pickup-lines'); }} className="transition-colors hover:text-white">Rizzline</a>
       </nav>
 
       <PlayStoreButton compact supportText="Free Android app" />
     </div>
     <nav className="marketing-container flex gap-6 pb-4 text-xs font-semibold text-white/70 md:hidden" aria-label="Web tools and guides">
       <a href="/" className="py-2 hover:text-white">Chat Reply</a>
-      <a href="/rizzline" onClick={event => { event.preventDefault(); navigate('/rizzline'); }} className="py-2 hover:text-white">Rizzline · Pickup lines</a>
+      <a href="/rizzline-pickup-lines" onClick={event => { event.preventDefault(); navigate('/rizzline-pickup-lines'); }} className="py-2 hover:text-white">Rizzline · Pickup lines</a>
       <a href="/blog" onClick={event => { event.preventDefault(); navigate('/blog'); }} className="py-2 hover:text-white">Blog</a>
     </nav>
   </header>
@@ -234,7 +234,7 @@ const MarketingFooter: React.FC<{ navigate: (path: string) => void }> = ({ navig
         <p className="mt-2 text-xs text-white/35">Built for people who overthink every text.</p>
       </div>
       <div className="flex flex-wrap gap-x-6 gap-y-3 text-xs font-semibold text-white/45">
-        <a href="/rizzline" onClick={(event) => { event.preventDefault(); navigate('/rizzline'); }} className="transition-colors hover:text-white">Rizzline · Pickup lines</a>
+        <a href="/rizzline-pickup-lines" onClick={(event) => { event.preventDefault(); navigate('/rizzline-pickup-lines'); }} className="transition-colors hover:text-white">Rizzline · Pickup lines</a>
         <a href="/blog" onClick={(event) => { event.preventDefault(); navigate('/blog'); }} className="transition-colors hover:text-white">Blog</a>
         <a href="/privacy" onClick={(event) => { event.preventDefault(); navigate('/privacy'); }} className="transition-colors hover:text-white">Privacy</a>
         <a href="/terms" onClick={(event) => { event.preventDefault(); navigate('/terms'); }} className="transition-colors hover:text-white">Terms</a>

@@ -2,7 +2,7 @@ export const RIZZLINE_SEO = {
   title: 'Rizzline: Funny, Smooth & Romantic Pickup Lines | Rizz Master',
   heading: 'Pickup lines for every vibe.',
   description: 'Find funny, smooth, romantic, cheesy and nerdy pickup lines with Rizzline. Browse by vibe, save your favorites, copy a line or make a shareable card. Free on the web.',
-  url: 'https://rizzmaster.online/rizzline',
+  url: 'https://rizzmaster.online/rizzline-pickup-lines',
   image: 'https://rizzmaster.online/logo.png',
 };
 

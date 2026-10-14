@@ -1,12 +1,24 @@
 {
-  "rewrites": [
+  "redirects": [
     {
       "source": "/rizzline",
-      "destination": "/rizzline/index.html"
+      "destination": "/rizzline-pickup-lines",
+      "permanent": true
     },
     {
       "source": "/rizzline/",
-      "destination": "/rizzline/index.html"
+      "destination": "/rizzline-pickup-lines",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/rizzline-pickup-lines",
+      "destination": "/rizzline-pickup-lines/index.html"
+    },
+    {
+      "source": "/rizzline-pickup-lines/",
+      "destination": "/rizzline-pickup-lines/index.html"
     },
     {
       "source": "/api/(.*)",
