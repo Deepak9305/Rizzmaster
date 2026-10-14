@@ -2638,7 +2638,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
 
 
-              <div className={`web-app-sticky-header ${IS_WEB_PLATFORM ? 'web-support-layout-shell' : ''}`}>
+              <div className="web-app-sticky-header">
               <nav className={`web-app-topbar ${IS_WEB_PLATFORM ? 'web-app-topbar-with-support' : ''}`}>
                 <div className="web-app-topbar-leading">
                   {IS_WEB_PLATFORM && onNavigateToPath && (
@@ -2677,6 +2677,11 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                   </div>
                 </div>
               </nav>
+              <div className="native-banner-slot" aria-hidden="true">
+                <div className="native-banner-anchor">Advertisement</div>
+              </div>
+              </div>
+
               {IS_WEB_PLATFORM && (
                 <a
                   href={KOFI_SUPPORT_URL}
@@ -2693,10 +2698,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                   <span className="web-support-banner-arrow" aria-hidden="true">↗</span>
                 </a>
               )}
-              <div className="native-banner-slot" aria-hidden="true">
-                <div className="native-banner-anchor">Advertisement</div>
-              </div>
-              </div>
 
               <header className="web-app-heading text-center mb-6 md:mb-8">
                 <div className="inline-block relative">

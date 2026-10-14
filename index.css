@@ -62,13 +62,6 @@ html.native-app .web-app-root {
 .web-app-sticky-header { display: contents; }
 .native-banner-slot { display: none; }
 
-/* Keep a real containing block around the web-only sticky support card. The
-   native path continues to use the existing display-contents layout. */
-html:not(.native-app) .web-support-layout-shell {
-  display: block;
-  width: 100%;
-}
-
 html.native-app .web-app-sticky-header {
   display: block;
   position: sticky;
@@ -552,6 +545,13 @@ html.native-app.native-banner-enabled .native-banner-slot {
   background: #05030b;
 }
 
+/* Clip horizontal decoration without creating a separate scroll container.
+   The browser page must remain the scroll owner for the support banner. */
+html:not(.native-app) .web-app-root {
+  overflow-x: clip;
+  overflow-y: visible;
+}
+
 .web-app-shell {
   width: min(1380px, calc(100% - 28px));
   margin-inline: auto;
@@ -608,8 +608,8 @@ html.native-app.native-banner-enabled .native-banner-slot {
   -webkit-backdrop-filter: blur(20px);
 }
 
-/* The web-only support card occupies the same visual band as the native ad
-   slot while keeping the Android AdMob layout untouched. */
+/* The card is a direct child of the full tool shell so its sticky range spans
+   the tool instead of ending at the bottom of the account-controls header. */
 .web-app-topbar-with-support {
   margin-bottom: 0.65rem;
 }
@@ -624,11 +624,12 @@ html.native-app.native-banner-enabled .native-banner-slot {
   gap: 0.7rem;
   width: min(100%, 38rem);
   min-height: 3.15rem;
+  flex-shrink: 0;
   margin: 0 auto 1rem;
   padding: 0.55rem 1rem;
   border: 1px solid rgba(255, 190, 93, 0.22);
   border-radius: 1rem;
-  background: linear-gradient(105deg, rgba(74, 26, 38, 0.8), rgba(31, 14, 29, 0.9));
+  background: linear-gradient(105deg, #3c1621, #1c0d1b);
   color: rgba(255, 248, 235, 0.9);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 12px 30px rgba(0, 0, 0, 0.2);
   text-decoration: none;
@@ -638,7 +639,7 @@ html.native-app.native-banner-enabled .native-banner-slot {
 .web-support-banner:hover,
 .web-support-banner:focus-visible {
   border-color: rgba(255, 190, 93, 0.48);
-  background: linear-gradient(105deg, rgba(92, 30, 44, 0.9), rgba(42, 17, 38, 0.96));
+  background: linear-gradient(105deg, #541c29, #291125);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 16px 38px rgba(0, 0, 0, 0.28), 0 0 24px rgba(255, 173, 71, 0.08);
   transform: translateY(-1px);
 }
@@ -646,6 +647,13 @@ html.native-app.native-banner-enabled .native-banner-slot {
 .web-support-banner:focus-visible {
   outline: 2px solid rgba(255, 210, 120, 0.9);
   outline-offset: 3px;
+}
+
+@media (min-width: 1024px) {
+  html:not(.native-app) .web-app-input-panel {
+    top: calc(env(safe-area-inset-top, 0px) + 4.5rem);
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 6rem);
+  }
 }
 
 .web-support-banner-icon {
