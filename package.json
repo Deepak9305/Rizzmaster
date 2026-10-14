@@ -12,6 +12,7 @@
     "prepare:mobile": "node scripts/prepare-mobile-bundle.mjs",
     "preview": "vite preview",
     "test:rizzline": "node --test tests/rizzline.test.mjs",
+    "test:sharing": "node --test tests/web-rizz-sharing.test.mjs",
     "test:dodo": "node --test tests/dodo-billing.test.mjs",
     "test:rewarded": "node --test tests/rewarded-ad.test.mjs tests/rewarded-ad-runtime.test.mjs",
     "test:admob": "node --test tests/admob.test.mjs",

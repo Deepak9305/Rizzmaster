@@ -20,10 +20,10 @@ export async function copyLine(text: string): Promise<void> {
   }
 }
 
-export async function shareLine(text: string): Promise<'shared' | 'copied' | 'cancelled'> {
+export async function shareLine(text: string, title = 'Rizzline · Rizz Master'): Promise<'shared' | 'copied' | 'cancelled'> {
   if (navigator.share) {
     try {
-      await navigator.share({ title: 'Rizzline · Rizz Master', text });
+      await navigator.share({ title, text });
       return 'shared';
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') return 'cancelled';
