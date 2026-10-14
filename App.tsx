@@ -50,6 +50,7 @@ import NoInternetOverlay from './components/NoInternetOverlay';
 const DAILY_CREDITS = 5;
 const IS_WEB_PLATFORM = !Capacitor.isNativePlatform();
 const STARTUP_ANIMATION_MS = IS_WEB_PLATFORM ? 2200 : 3000;
+const KOFI_SUPPORT_URL = 'https://ko-fi.com/vantalumstudio';
 const SILENT_PREMIUM_RESTORE_WAIT_MS = 45000;
 const SILENT_PREMIUM_RESTORE_RETRY_MS = 60000;
 const SILENT_PREMIUM_RESTORE_MAX_ATTEMPTS = 2;
@@ -2638,7 +2639,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
 
               <div className="web-app-sticky-header">
-              <nav className="web-app-topbar">
+              <nav className={`web-app-topbar ${IS_WEB_PLATFORM ? 'web-app-topbar-with-support' : ''}`}>
                 <div className="web-app-topbar-leading">
                   {IS_WEB_PLATFORM && onNavigateToPath && (
                     <button onClick={() => setShowWebMenu(true)} aria-label="Open navigation menu" className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/70 transition-colors hover:bg-white/10 hover:text-white">
@@ -2676,6 +2677,22 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                   </div>
                 </div>
               </nav>
+              {IS_WEB_PLATFORM && (
+                <a
+                  href={KOFI_SUPPORT_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="web-support-banner"
+                  aria-label="Buy Rizz Master a coffee on Ko-fi"
+                >
+                  <span className="web-support-banner-icon" aria-hidden="true">☕</span>
+                  <span className="web-support-banner-copy">
+                    <span className="web-support-banner-eyebrow">Enjoying Rizz Master?</span>
+                    <span className="web-support-banner-title">Buy me a coffee</span>
+                  </span>
+                  <span className="web-support-banner-arrow" aria-hidden="true">↗</span>
+                </a>
+              )}
               <div className="native-banner-slot" aria-hidden="true">
                 <div className="native-banner-anchor">Advertisement</div>
               </div>
