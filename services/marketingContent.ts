@@ -54,6 +54,159 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'recover-after-awkward-text',
+    title: 'How to Recover After Sending an Awkward Text Without Making It Worse',
+    seoTitle: 'How to Recover After Sending an Awkward Text',
+    description: 'Sent a text that came out wrong? Learn when to clarify, apologize, follow up, or let it breathe, with practical recovery texts for common messaging mistakes.',
+    excerpt: 'An awkward text does not require a perfect rescue. Match the repair to the mistake, make one clear move, and let the next response show you what to do.',
+    date: '2026-10-14',
+    updatedAt: '2026-10-14',
+    readingTime: '10 min read',
+    category: 'Texting advice',
+    author: 'jake',
+    keywords: [
+      'how to recover after sending an awkward text',
+      'what to say after an awkward text',
+      'how to fix a texting mistake',
+      'how to apologize over text',
+      'what to do after a double text',
+      'awkward message recovery',
+      'what to text when a joke lands badly'
+    ],
+    image: '/blog/recover-after-awkward-text-hero.png',
+    imageAlt: 'A person pausing before sending a thoughtful follow-up text at a cafe in the evening',
+    imageCaption: 'The best repair message reduces confusion instead of creating a second conversation about the first one.',
+    resources: [
+      { label: 'Planned Parenthood: Healthy relationships', url: 'https://www.plannedparenthood.org/learn/relationships/healthy-relationships' },
+      { label: 'love is respect: Boundaries and expectations', url: 'https://www.loveisrespect.org/resources/boundaries-expectations/' },
+      { label: 'RAINN: Tips for safer dating online and in person', url: 'https://rainn.org/strategies-to-reduce-risk-increase-safety/tips-for-safer-dating-online-and-in-person/' }
+    ],
+    faqs: [
+      { question: 'How do I recover after sending an awkward text?', answer: 'First decide whether the problem was unclear wording, excess intensity, a hurtful comment, or simply embarrassment. Then send the smallest useful repair: clarify the meaning, apologize for the impact, or acknowledge the extra message. After that, stop adding pressure and let the other person respond.' },
+      { question: 'Should I apologize for sending a double text?', answer: 'A double text alone usually does not need an apology. If you sent a long, anxious follow-up, you can acknowledge it briefly: “I sent more than I needed to there. No pressure to answer all of that.” Then give the conversation room.' },
+      { question: 'What if they do not reply after my awkward message?', answer: 'If the message did not cross a boundary, avoid sending a stream of rescue texts. If a clear clarification or apology was genuinely needed, send it once and wait. Their silence is information about their availability or interest; it is not an invitation to keep performing a repair.' },
+      { question: 'What if my text crossed a boundary?', answer: 'Own the specific behaviour without defending your intent, apologize once, and respect the person’s choice about further contact. If they ask you to stop, stop. A good apology does not demand reassurance or access to the person you hurt.' }
+    ],
+    sections: [
+      {
+        heading: 'An awkward text is a repair problem, not a performance test',
+        paragraphs: [
+          'The first impulse after an awkward message is often to send another message immediately. You explain the joke, add context, make fun of yourself, ask whether they are mad, and then try to undo all of it with one more line. That reaction is understandable, but it turns one imperfect moment into a pile of new decisions for the other person to manage.',
+          'Your job is smaller. Work out what actually went wrong, make the clearest repair that fits it, and then give the conversation room. You are not trying to prove that you are effortlessly charming. You are showing that you can notice impact, speak plainly, and tolerate a little uncertainty without making someone else soothe it for you.'
+        ],
+        bullets: [
+          'Embarrassment is a feeling, not proof that the connection is ruined.',
+          'A repair should solve a communication problem, not erase every trace of vulnerability.',
+          'The other person gets to decide whether they want to continue the conversation.'
+        ]
+      },
+      {
+        heading: 'Classify the mistake before you write again',
+        paragraphs: [
+          'Not every awkward text needs the same response. A badly phrased compliment is different from a joke that hurt someone. A long double text is different from using the wrong name. If you treat every moment as a crisis, your repair will be too large for the actual problem and may create more pressure than the original message.',
+          'Read the message once as if a friend sent it to you. Identify the observable issue before you write the story that your dating life is over. That one pause helps you choose a proportionate next move.'
+        ],
+        bullets: [
+          'Unclear wording: your meaning can be fixed with one plain sentence.',
+          'Too much intensity: you need to reset the pace, not deny your interest.',
+          'A double text or essay: you need to stop adding work for the other person.',
+          'A hurtful or pressuring comment: you owe a specific apology and changed behaviour.',
+          'A wrong name, private detail, or wrong chat: acknowledge the concrete error without inventing a dramatic explanation.'
+        ]
+      },
+      {
+        heading: 'Use the three-part repair: name it, correct it, release pressure',
+        paragraphs: [
+          'Most useful repairs have three parts. Name the problem so the other person does not have to pretend it did not happen. Correct the meaning or take responsibility for the impact. Then release pressure by making it clear they do not have to reassure you, answer immediately, or accept the explanation.',
+          'For a message that sounded more intense than you intended, try: “That came out more serious than I meant. I like talking with you, but I am not trying to rush anything.” For a confusing sentence, try: “I worded that badly. I meant that I would like to see you again, not that I expect us to define this now.” Both messages do useful work without turning the other person into an audience for your panic.'
+        ],
+        bullets: [
+          'Name it: “That came out wrong.”',
+          'Correct it: “What I meant was…” or “I should not have said that.”',
+          'Release pressure: “No need to respond right away.”'
+        ]
+      },
+      {
+        heading: 'Know when clarification is enough and when you owe an apology',
+        paragraphs: [
+          'Clarification is for confusion. Use it when the words could reasonably be read in a way you did not intend, but no one’s boundary or dignity was put at risk. Keep it factual and short. “I meant the restaurant, not your neighbourhood” is more useful than a paragraph about how badly you communicate when you have a crush.',
+          'An apology is for impact. If you mocked something personal, pushed after a no, made a sexual comment that was not welcome, or used private information carelessly, do not hide behind “I was only joking.” Name the behaviour, acknowledge the effect, and avoid asking the person to reassure you that you are not a bad person. If they want distance, respect it.'
+        ],
+        bullets: [
+          'Clarify a meaning; apologize for behaviour that caused harm or pressure.',
+          'Do not make your intent the centre of an apology.',
+          'A real apology includes what you will do differently next time.',
+          'If someone says stop contacting them, the repair is to stop contacting them.'
+        ]
+      },
+      {
+        heading: 'Message Atelier: recovery texts for the moments people replay',
+        paragraphs: [
+          'Use these as starting points, then change the language so it sounds like you. The strongest version is usually the shortest one that addresses the actual issue. Avoid sending every option; one clear message is a repair, while a menu of explanations can feel like pressure.',
+          'If the message was a joke that landed badly: “That joke was careless and I can see why it did not land. I am sorry.” If you sent an accidental mini-essay: “I sent a full thought dump there. You do not need to answer all of it.” If you used the wrong name: “I am sorry—I sent that to you with the wrong name. That was careless.” If you pushed for a plan after a vague answer: “I think I put too much pressure on that. No need to force a plan.”'
+        ],
+        bullets: [
+          'After an overconfident opener: “I came in too strong there. Let me reset—how has your week actually been?”',
+          'After oversharing: “That was more personal than I meant to make the conversation. No pressure to respond to it.”',
+          'After a typo that changed the meaning: “Important typo: I meant ‘that sounds fun,’ not ‘that sounds awful.’”',
+          'After a message sent to the wrong person: “Wrong chat—sorry about that. Please ignore it.”',
+          'After crossing a line: “That comment was inappropriate. I am sorry. I will respect your space.”'
+        ]
+      },
+      {
+        heading: 'If they have not replied, do less than your anxiety requests',
+        paragraphs: [
+          'Silence makes the mind fill in the blank. You may want to send “Are you mad?”, “I knew that sounded weird,” or a joke about being rejected before the other person has even decided what they think. Those messages are often attempts to get relief rather than attempts to communicate, and they can make the recipient responsible for calming you down.',
+          'If the original message was merely a little clumsy, leave it alone and let the conversation continue naturally. If a correction was genuinely necessary, send one direct clarification or apology, then stop. Do not add a deadline, a self-insult, or a demand for a verdict. A pause gives both people better information than a frantic transcript does.'
+        ],
+        bullets: [
+          'Do not send a second apology just because the first one has not been answered.',
+          'Do not switch platforms to force a response.',
+          'Return to your own plans instead of monitoring the read receipt.',
+          'If they come back later, respond to the conversation you actually want rather than reopening the entire incident.'
+        ]
+      },
+      {
+        heading: 'Read the response without turning it into a test',
+        paragraphs: [
+          'A warm reply gives you permission to move forward, not a reason to keep discussing the awkward moment. Thank them if it helps, then return to normal conversation. A dry reply may mean they are busy, cautious, or less interested; match the energy once and watch what happens instead of interrogating the tone.',
+          'If they say the message made them uncomfortable, listen before you defend yourself. You can say, “I understand. I am sorry for putting you in that position,” and then let their boundary guide the next step. The goal of a repair is not to win the person back at any cost. It is to make your part clear and give them a real choice.'
+        ],
+        bullets: [
+          'Warm reply: accept the reset and continue without performing gratitude.',
+          'Dry reply: make one normal contribution, then allow the pace to reveal itself.',
+          'Concerned reply: listen, apologize specifically, and do not argue with their experience.',
+          'No reply: stop trying to extract certainty from the silence.'
+        ]
+      },
+      {
+        heading: 'Sometimes the awkward text reveals a real mismatch',
+        paragraphs: [
+          'A repair can fix wording without fixing incompatibility. Maybe your message revealed that you want more contact than they do, that your humour does not translate well over text, or that you are trying to keep a connection alive by carrying every exchange. Do not use an apology to hide information you needed to learn.',
+          'You can repair your delivery and still choose a different direction. “I was too sharp in that message, and I am sorry for the tone. I also think we want different levels of communication, so I am going to step back.” That is not a failed rescue. It is a clear ending that leaves less confusion behind.'
+        ],
+        bullets: [
+          'A good repair does not require you to abandon a reasonable need.',
+          'One awkward message is a moment; repeated pressure or mismatch is a pattern.',
+          'Look for mutual effort after the repair instead of trying to manufacture it.'
+        ]
+      },
+      {
+        heading: 'Run a 60-second send check before you hit send again',
+        paragraphs: [
+          'Before sending the follow-up, ask five questions: What exactly went wrong? Am I clarifying or asking to be comforted? Does this message give them more work? Have I said the important part once already? What action will I take if they do not respond? If you can answer those questions, the repair will usually be calmer and shorter.',
+          'The confidence move is not pretending you never misstep. It is being able to recover without making the other person manage your embarrassment. Send the message that is true, proportionate, and easy to understand. Then let the next move be shared—or let the silence tell you that it is time to move on.'
+        ],
+        bullets: [
+          'One problem, one repair, one pause.',
+          'Use plain language instead of a long defence of your intent.',
+          'Let their answer, boundary, or lack of follow-through become information.',
+          'Keep your dignity by staying kind and keeping your life moving.'
+        ]
+      }
+    ]
+  },
+  {
     slug: 'should-you-go-on-a-second-date-if-there-was-no-spark',
     title: 'Should You Go on a Second Date If There Was No Spark? How to Tell a Slow Burn From a Clear No',
     seoTitle: 'Should You Go on a Second Date If There Was No Spark?',

@@ -69,6 +69,13 @@ const renderFaqs = (post) => post.faqs?.length
 const renderResources = (post) => `${renderResourcesOnly(post)}${renderFaqs(post)}`;
 
 const articleInternalLinks = {
+  'recover-after-awkward-text': [
+    { slug: 'texting-mistakes-new-conversation-feel-forced', label: 'Avoid forced conversation habits' },
+    { slug: 'what-to-text-when-they-stop-replying', label: 'Choose a calm follow-up' },
+    { slug: 'reply-to-dry-texts', label: 'Reply to dry texts without chasing' },
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy texting boundaries' },
+    { slug: 'how-to-stop-overthinking-while-dating', label: 'Stop overthinking the next move' }
+  ],
   'should-you-go-on-a-second-date-if-there-was-no-spark': [
     { slug: 'follow-up-after-awkward-first-date', label: 'Follow up after an awkward first date' },
     { slug: 'signs-a-first-date-went-well', label: 'Read the signs a first date went well' },

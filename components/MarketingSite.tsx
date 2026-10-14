@@ -514,6 +514,11 @@ const BlogIndexPage: React.FC<{ navigate: (path: string) => void }> = ({ navigat
 );
 
 const ARTICLE_EXAMPLES: Record<string, string[]> = {
+  'recover-after-awkward-text': [
+    'That came out more intense than I meant. I like talking with you, but I am not trying to rush anything.',
+    'I sent a full thought dump there. You do not need to answer all of that.',
+    'That joke was careless and I can see why it did not land. I am sorry.'
+  ],
   'how-to-have-the-exclusive-conversation-without-pressure': [
     'I am enjoying getting to know you, and I would like to focus on dating each other exclusively. How does that feel to you?',
     'I like where this is going. Before I make assumptions, can we talk about whether we are seeing other people?',
@@ -561,6 +566,7 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
 };
 
 const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
+  'recover-after-awkward-text': { do: 'Identify the actual mistake, make one proportionate repair, and give the other person room to choose what happens next.', doNot: 'Stack explanations, ask them to soothe your embarrassment, or keep contacting them after they ask for space.' },
   'how-to-have-the-exclusive-conversation-without-pressure': { do: 'Say what you want, ask a clear question, and listen for an agreement you can both describe in practical terms.', doNot: 'Treat closeness as an unspoken contract, negotiate against your own needs, or keep waiting indefinitely for a clearer answer.' },
   'what-to-say-when-dating-app-match-nearly-empty-profile': { do: 'Notice one real detail, ask an easy question, share a little of yourself, and watch for mutual curiosity.', doNot: 'Invent a personality from a photo, comment on someone’s body, or keep performing after the conversation stays one-sided.' },
   'dating-app-red-flags-before-first-date': { do: 'Slow down, protect your information, choose public plans, and let consistent behavior earn trust.', doNot: 'Ignore pressure, send money or private details, or keep explaining away the same uneasy pattern.' },
@@ -641,6 +647,13 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'recover-after-awkward-text': [
+    { slug: 'texting-mistakes-new-conversation-feel-forced', label: 'Avoid forced conversation habits' },
+    { slug: 'what-to-text-when-they-stop-replying', label: 'Choose a calm follow-up' },
+    { slug: 'reply-to-dry-texts', label: 'Reply to dry texts without chasing' },
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy texting boundaries' },
+    { slug: 'how-to-stop-overthinking-while-dating', label: 'Stop overthinking the next move' }
+  ],
   'should-you-go-on-a-second-date-if-there-was-no-spark': [
     { slug: 'follow-up-after-awkward-first-date', label: 'Follow up after an awkward first date' },
     { slug: 'signs-a-first-date-went-well', label: 'Read the signs a first date went well' },
