@@ -101,7 +101,7 @@ html.native-app.native-banner-enabled .native-banner-slot {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: min(var(--native-banner-width, 320px), 100%);
+  width: min(var(--native-banner-width, 100%), 100%);
   height: var(--native-banner-height, 50px);
   margin-inline: auto;
   color: rgba(244, 232, 247, 0.3);

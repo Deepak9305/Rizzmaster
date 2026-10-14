@@ -3,7 +3,7 @@ import React, { lazy, memo, Suspense } from 'react';
 import { NativeBridge } from '../services/nativeBridge';
 import { useToast } from '../context/ToastContext';
 
-const WebRizzShareActions = lazy(() => import('./WebRizzShareActions'));
+const RizzShareActions = lazy(() => import('./RizzShareActions'));
 
 interface RizzCardProps {
   label: string;
@@ -15,7 +15,8 @@ interface RizzCardProps {
   onSave: (content: string, type: 'tease' | 'smooth' | 'chaotic' | 'bio') => void;
   onReport: () => void;
   delay?: number;
-  enableWebSharing?: boolean;
+  enableSharing?: boolean;
+  onCardOpenChange?: (open: boolean) => void;
 }
 
 const RizzCard: React.FC<RizzCardProps> = memo(({
@@ -28,7 +29,8 @@ const RizzCard: React.FC<RizzCardProps> = memo(({
   onSave,
   onReport,
   delay = 0,
-  enableWebSharing = false
+  enableSharing = false,
+  onCardOpenChange
 }) => {
   const { showToast } = useToast();
 
@@ -44,7 +46,7 @@ const RizzCard: React.FC<RizzCardProps> = memo(({
       className="glass rounded-2xl p-4 md:p-5 border border-white/5 hover:border-white/20 transition-all duration-300 group opacity-0 animate-fade-in-up active:scale-[0.99]"
       style={{ animationDelay: `${delay}s`, animationFillMode: 'forwards' }}
     >
-      <div className={`flex justify-between items-start mb-2 ${enableWebSharing ? 'flex-wrap gap-2' : ''}`}>
+      <div className={`flex justify-between items-start mb-2 ${enableSharing ? 'flex-wrap gap-2' : ''}`}>
         <div className="flex items-center gap-2 select-none">
           <span className="text-xl">{icon}</span>
           <span className={`text-xs font-bold uppercase tracking-widest bg-gradient-to-r ${color} bg-clip-text text-transparent`}>
@@ -52,7 +54,7 @@ const RizzCard: React.FC<RizzCardProps> = memo(({
           </span>
         </div>
         <div className="flex gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
-          {enableWebSharing ? <Suspense fallback={<span className="inline-block h-8 w-16" aria-busy="true" aria-label="Loading sharing actions" />}><WebRizzShareActions key={content} content={content} label={label} /></Suspense> : <button
+          {enableSharing ? <Suspense fallback={<span className="inline-block h-8 w-16" aria-busy="true" aria-label="Loading sharing actions" />}><RizzShareActions key={content} content={content} label={label} onCardOpenChange={onCardOpenChange} /></Suspense> : <button
             onClick={handleCopy}
             className="p-1.5 rounded-lg hover:bg-white/10 text-white/70 hover:text-white transition-colors active:scale-95"
             title="Copy to Clipboard"

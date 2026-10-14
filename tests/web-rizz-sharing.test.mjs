@@ -2,7 +2,7 @@ import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'vite';
 
-const server = await createServer({ configFile: false, server: { middlewareMode: true, watch: null }, appType: 'custom' });
+const server = await createServer({ configFile: false, cacheDir: 'node_modules/.vite-tests-web-sharing', server: { middlewareMode: true, watch: null, hmr: false }, appType: 'custom' });
 after(() => server.close());
 const { shareLine } = await server.ssrLoadModule('/components/rizzline/browserActions.ts');
 const { createLineCard, shareCardBlob } = await server.ssrLoadModule('/components/rizzline/cardActions.ts');

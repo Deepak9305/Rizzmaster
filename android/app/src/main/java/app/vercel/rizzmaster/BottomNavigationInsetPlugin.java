@@ -95,11 +95,14 @@ public class BottomNavigationInsetPlugin extends Plugin {
             // that a particular Android version adds an extra status inset.
             result.put("webViewOffsetDp", (webViewLocation[1] - parentLocation[1]) / density);
             result.put("bottomInsetDp", bottomPx / density);
-            // Reserve the supported compact size before requesting the ad.
+            // Match the SDK's anchored adaptive size before the ad loads so
+            // the web layout reserves its actual height without clipping.
             AdView adView = getBannerView(parent);
-            AdSize size = AdSize.BANNER;
+            int widthDp = (int) (getContext().getResources().getDisplayMetrics().widthPixels / density);
+            AdSize size = AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(getContext(), widthDp);
             result.put("widthDp", size.getWidth());
             result.put("heightDp", size.getHeight());
+            result.put("adaptive", true);
             result.put("bannerVisible", adView != null && adView.isShown());
             call.resolve(result);
         });
@@ -122,9 +125,12 @@ public class BottomNavigationInsetPlugin extends Plugin {
                 float density = getContext().getResources().getDisplayMetrics().density;
                 params.topMargin = Math.round(margin * density);
                 params.bottomMargin = 0;
-                // A fixed-size ad only needs recentering after a width change,
-                // so reuse it rather than making a new request on rotation.
-                int sideMargin = Math.max(0, (parent.getWidth() - AdSize.BANNER.getWidthInPixels(getContext())) / 2);
+                // Use the ad's requested size, never the old 320dp constant.
+                // Adaptive ads fill the width; compact ads in older hosted UI
+                // remain correctly centered until that UI is updated.
+                AdSize size = adView.getAdSize();
+                int adWidth = size == null ? parent.getWidth() : size.getWidthInPixels(getContext());
+                int sideMargin = Math.max(0, (parent.getWidth() - adWidth) / 2);
                 params.leftMargin = sideMargin;
                 params.rightMargin = sideMargin;
                 container.setLayoutParams(params);

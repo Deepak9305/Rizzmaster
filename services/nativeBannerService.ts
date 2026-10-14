@@ -37,6 +37,10 @@ export class NativeBannerController {
     private stalled = false;
     private positionDirty = false;
     private viewportWidthDp = 0;
+    private requestedWidthDp = 0;
+    private requestedAdaptive = false;
+    private bannerHeightDp = BANNER_HEIGHT;
+    private adaptive = false;
     private networkAvailable = true;
 
     constructor(
@@ -47,10 +51,12 @@ export class NativeBannerController {
         private readonly moveBanner?: (margin: number) => Promise<boolean>,
     ) {}
 
-    setTopMargin(margin: number, viewportWidthDp = this.viewportWidthDp): Promise<void> {
-        if (this.disposed || (margin === this.topMargin && viewportWidthDp === this.viewportWidthDp)) return this.running ?? Promise.resolve();
+    setTopMargin(margin: number, viewportWidthDp = this.viewportWidthDp, heightDp = this.bannerHeightDp, adaptive = this.adaptive): Promise<void> {
+        if (this.disposed || (margin === this.topMargin && viewportWidthDp === this.viewportWidthDp && heightDp === this.bannerHeightDp && adaptive === this.adaptive)) return this.running ?? Promise.resolve();
         this.topMargin = margin;
         this.viewportWidthDp = viewportWidthDp;
+        this.bannerHeightDp = heightDp;
+        this.adaptive = adaptive;
         this.positionDirty = this.attached;
         return this.reconcile();
     }
@@ -208,8 +214,14 @@ export class NativeBannerController {
         this.visible = false;
         this.loaded = false;
         this.positionDirty = false;
+        this.requestedWidthDp = 0;
         this.reserve(0);
         await this.nativeCall('removal', AdMob.removeBanner());
+    }
+
+    private needsNewSize() {
+        return this.attached && (this.adaptive !== this.requestedAdaptive ||
+            (this.adaptive && this.requestedWidthDp !== this.viewportWidthDp));
     }
 
     private async drain() {
@@ -257,7 +269,13 @@ export class NativeBannerController {
                 }
                 // The component owns a stable layout slot. This reports native
                 // visibility without collapsing that slot during suspension.
-                this.reserve(getBannerSlotHeight());
+                // Adaptive ads need a new SDK size only when the real width
+                // changes. Keyboard, scrolling and modal returns reuse them.
+                if (this.needsNewSize()) {
+                    await this.remove();
+                    if (this.desired !== 'visible') continue;
+                }
+                this.reserve(this.bannerHeightDp);
                 if (this.attached && this.positionDirty) {
                     const margin = this.topMargin;
                     const viewportWidthDp = this.viewportWidthDp;
@@ -278,17 +296,19 @@ export class NativeBannerController {
                         await this.nativeCall('resume', AdMob.resumeBanner());
                     }
                 } else {
-                    this.reserve(getBannerSlotHeight());
+                    this.reserve(this.bannerHeightDp);
                     ++this.requestVersion;
                     this.attached = true;
                     this.visible = true;
                     this.loaded = false;
+                    this.requestedWidthDp = this.viewportWidthDp;
+                    this.requestedAdaptive = this.adaptive;
                     try {
                         this.watchLoad();
                         console.log('[AdMob] Requesting top banner.', { adId: this.adId });
                         await this.nativeCall('show', AdMob.showBanner({
                             adId: this.adId,
-                            adSize: BannerAdSize.BANNER,
+                            adSize: this.adaptive ? BannerAdSize.ADAPTIVE_BANNER : BannerAdSize.BANNER,
                             position: BANNER_POSITION,
                             margin: this.topMargin,
                             isTesting: false,
@@ -312,7 +332,7 @@ export class NativeBannerController {
                 }
                 this.watchLoad();
             }
-            if (mode === this.desired && (mode !== 'visible' || !this.positionDirty)) return;
+            if (mode === this.desired && (mode !== 'visible' || (!this.positionDirty && !this.needsNewSize()))) return;
         }
     }
 

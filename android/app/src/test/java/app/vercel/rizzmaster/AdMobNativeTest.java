@@ -24,6 +24,7 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.community.admob.AdMob;
 import com.getcapacitor.community.admob.banner.BannerExecutor;
 import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.initialization.InitializationStatus;
 import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
@@ -245,13 +246,18 @@ public class AdMobNativeTest {
         when(parent.getChildCount()).thenReturn(1);
         when(parent.getChildAt(0)).thenReturn(container);
         when(parent.getWidth()).thenReturn(1080);
+        context.getResources().getDisplayMetrics().widthPixels = 1080;
+        AdSize adaptiveSize = new AdSize(540, 62);
+        when(ad.getAdSize()).thenReturn(adaptiveSize);
         when(container.getChildCount()).thenReturn(1);
         when(container.getChildAt(0)).thenReturn(ad);
         when(ad.getParent()).thenReturn(container);
         ViewGroup.MarginLayoutParams params = new ViewGroup.MarginLayoutParams(640, 100);
         when(container.getLayoutParams()).thenReturn(params);
         try (MockedStatic<ViewCompat> insets = mockStatic(ViewCompat.class);
-             MockedStatic<TypedValue> pixels = mockStatic(TypedValue.class)) {
+             MockedStatic<TypedValue> pixels = mockStatic(TypedValue.class);
+             MockedStatic<AdSize> sizes = mockStatic(AdSize.class)) {
+            sizes.when(() -> AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, 540)).thenReturn(adaptiveSize);
             // The local Android jar stubs dp conversion; supply its real result.
             pixels.when(() -> TypedValue.applyDimension(eq(TypedValue.COMPLEX_UNIT_DIP), anyFloat(), any()))
                 .thenAnswer(invocation -> invocation.getArgument(1, Float.class) * invocation.getArgument(2, DisplayMetrics.class).density);
@@ -260,12 +266,16 @@ public class AdMobNativeTest {
             ArgumentCaptor<JSObject> result = ArgumentCaptor.forClass(JSObject.class);
             verify(geometry).resolve(result.capture());
             assertEquals(24.0, result.getValue().getDouble("webViewOffsetDp"), 0.0);
+            assertEquals(540, result.getValue().getInt("widthDp"));
+            assertEquals(62, result.getValue().getInt("heightDp"));
+            assertTrue(result.getValue().getBoolean("adaptive"));
             PluginCall position = mock(PluginCall.class);
             when(position.getInt("margin", 0)).thenReturn(90);
             plugin.setBannerPosition(position);
             assertEquals(180, params.topMargin);
             assertEquals(0, params.bottomMargin);
-            assertEquals(220, params.leftMargin);
+            assertEquals(0, params.leftMargin);
+            assertEquals(0, params.rightMargin);
             verify(decor, never()).setOnApplyWindowInsetsListener(any());
             ArgumentCaptor<View.OnApplyWindowInsetsListener> listener = ArgumentCaptor.forClass(View.OnApplyWindowInsetsListener.class);
             verify(container).setOnApplyWindowInsetsListener(listener.capture());

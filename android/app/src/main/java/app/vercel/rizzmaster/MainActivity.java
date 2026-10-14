@@ -10,6 +10,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(AdMob.class);
         registerPlugin(AdConsentStatePlugin.class);
         registerPlugin(BottomNavigationInsetPlugin.class);
+        registerPlugin(RizzCardExportPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

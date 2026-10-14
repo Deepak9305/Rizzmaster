@@ -649,9 +649,9 @@ function setupBanner(options = {}) {
     } };
   };
   plugin.showBanner = async params => {
-    assert.equal(slots.at(-1), 50, 'Top reservation must match the native banner height');
+    assert.equal(slots.at(-1), options.bannerHeight ?? 50, 'Top reservation must match the native banner height');
     assert.equal(params.adId, 'ca-app-pub-7381421031784616/7234804095');
-    assert.equal(params.adSize, 'BANNER');
+    assert.equal(params.adSize, options.adaptive ? 'ADAPTIVE_BANNER' : 'BANNER');
     assert.equal(params.position, 'TOP_CENTER');
     assert.equal(params.margin, options.requestMargins?.shift() ?? 72);
     assert.equal(params.isTesting, false);
@@ -671,7 +671,7 @@ function setupBanner(options = {}) {
   const { NativeBannerController } = loadTs('../services/nativeBannerService.ts', {
     '@capacitor-community/admob': {
       AdMob: plugin, BannerAdPluginEvents: bannerEvents,
-      BannerAdPosition: { TOP_CENTER: 'TOP_CENTER' }, BannerAdSize: { BANNER: 'BANNER' },
+      BannerAdPosition: { TOP_CENTER: 'TOP_CENTER' }, BannerAdSize: { BANNER: 'BANNER', ADAPTIVE_BANNER: 'ADAPTIVE_BANNER' },
     },
     './admobService': { AdMobService: service },
     './nativeCapabilities': { canUseNativeAdMob: () => options.native !== false },
@@ -1023,7 +1023,7 @@ test('banner placement converts CSS pixels and accounts for native origins once'
   const { calculateBannerMargin, getBannerPlacement } = loadTs('../services/bottomNavigationInset.ts', {
     '@capacitor/core': {
       Capacitor: { getPlatform: () => 'android', isPluginAvailable: () => true },
-      registerPlugin: () => ({ getBannerGeometry: async () => ({ density: 2.75, webViewOffsetDp: -24, bottomInsetDp: 48, widthDp: 392, heightDp: 61 }) }),
+      registerPlugin: () => ({ getBannerGeometry: async () => ({ density: 2.75, webViewOffsetDp: -24, bottomInsetDp: 48, widthDp: 392, heightDp: 61, adaptive: true }) }),
     },
     './admobService': { AdMobService: { withNativeTimeout: async (_label, promise) => promise } },
     './nativeBannerService': { BANNER_HEIGHT: 50, BANNER_WIDTH: 320 },
@@ -1034,8 +1034,9 @@ test('banner placement converts CSS pixels and accounts for native origins once'
   const placement = await getBannerPlacement({ getBoundingClientRect: () => ({ top: 93 }) });
   assert.equal(placement.margin, 69);
   assert.equal(placement.bottomInsetCss, 48);
-  assert.equal(placement.widthDp, 320, 'An older APK advertising adaptive geometry cannot enlarge the compact slot');
-  assert.equal(placement.heightDp, 50);
+  assert.equal(placement.widthDp, 392, 'Reserve the full native adaptive width');
+  assert.equal(placement.heightDp, 61);
+  assert.equal(placement.adaptive, true);
   assert.equal(placement.viewportWidthDp, 392);
   assert.equal(placement.dpToCss, 1);
   assert.equal(placement.nativeGeometryVerified, true);
@@ -1055,7 +1056,57 @@ test('an older bridge falls back without negative offsets or preventing an ad re
   assert.equal(placement.widthDp, 320);
   assert.equal(placement.heightDp, 50, 'The compact slot needs no loaded-size event');
   assert.equal(placement.nativeGeometryVerified, false, 'A fallback must not become a permanent cached measurement');
+  assert.equal(placement.adaptive, false, 'An older APK must keep its compatible compact layout');
   assert.equal(await moveNativeBanner(69), false);
+});
+
+test('adaptive banners reserve the measured height and keep keyboard and modal returns request-free', async t => {
+  const { controller, calls, slots } = setupBanner({ adaptive: true, bannerHeight: 61, moveBanner: async () => true });
+  t.after(() => controller.dispose());
+  await controller.setTopMargin(72, 392, 61, true);
+  await controller.setMode('visible');
+  assert.equal(slots.at(-1), 61);
+  calls.length = 0;
+  await controller.setTopMargin(72, 392, 61, true);
+  await controller.setMode('visible');
+  assert.equal(calls.length, 0, 'Keyboard changes cannot recreate or move the ad');
+  await controller.setMode('hidden');
+  await controller.setMode('visible');
+  assert.equal(slots.at(-1), 61);
+  assert.equal(calls.filter(call => call === 'banner-request').length, 0);
+});
+
+test('a real adaptive width change requests the new size once after the modal closes', async t => {
+  const { controller, calls } = setupBanner({ adaptive: true, bannerHeight: 61, moveBanner: async () => true });
+  t.after(() => controller.dispose());
+  await controller.setTopMargin(72, 392, 61, true);
+  await controller.setMode('visible');
+  await controller.setMode('hidden');
+  calls.length = 0;
+  await controller.setTopMargin(72, 872, 61, true);
+  assert.equal(calls.includes('banner-request'), false);
+  await controller.setMode('visible');
+  await controller.setTopMargin(72, 872, 61, true);
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+  assert.equal(calls.filter(call => call === 'banner-remove').length, 1);
+});
+
+test('an adaptive width change during native creation replaces the old width once', async t => {
+  let finishShow;
+  let first = true;
+  const { controller, calls } = setupBanner({ adaptive: true, bannerHeight: 61, moveBanner: async () => true, showBanner: () => {
+    if (!first) return Promise.resolve();
+    first = false;
+    return new Promise(resolve => { finishShow = resolve; });
+  } });
+  t.after(() => controller.dispose());
+  await controller.setTopMargin(72, 392, 61, true);
+  const show = controller.setMode('visible');
+  while (!finishShow) await delay(0);
+  const resize = controller.setTopMargin(72, 872, 61, true);
+  finishShow();
+  await Promise.all([show, resize]);
+  assert.equal(calls.filter(call => call === 'banner-request').length, 2);
 });
 
 test('same-width keyboard viewport updates keep the compact banner visible without native calls', async t => {

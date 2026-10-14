@@ -7,8 +7,8 @@ android {
         applicationId "app.vercel.rizzmaster"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 10022
-        versionName "1.2.4"
+        versionCode 10023
+        versionName "1.2.5"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -31,11 +31,22 @@ android {
     }
 
     buildTypes {
+        // Local UI preview for changes that have not been published to the
+        // hosted website. Normal debug/release keep the production server URL.
+        sharePreview {
+            initWith debug
+            signingConfig signingConfigs.debug
+            matchingFallbacks = ['debug']
+        }
         release {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+    }
+
+    sourceSets {
+        sharePreview.assets.srcDir layout.buildDirectory.dir('generated/sharePreviewAssets')
     }
 
     // Required: Java 21 compatibility (matches Capacitor requirement)
@@ -52,6 +63,23 @@ android {
     testOptions {
         unitTests.returnDefaultValues = true
     }
+}
+
+tasks.register('prepareSharePreviewConfig') {
+    def inputConfig = file('src/main/assets/capacitor.config.json')
+    def outputConfig = layout.buildDirectory.file('generated/sharePreviewAssets/capacitor.config.json')
+    inputs.file(inputConfig)
+    outputs.file(outputConfig)
+    doLast {
+        def previewConfig = new groovy.json.JsonSlurper().parse(inputConfig)
+        previewConfig.server?.remove('url')
+        def outputFile = outputConfig.get().asFile
+        outputFile.parentFile.mkdirs()
+        outputFile.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(previewConfig))
+    }
+}
+tasks.configureEach {
+    if (name == 'preSharePreviewBuild') dependsOn 'prepareSharePreviewConfig'
 }
 
 repositories {

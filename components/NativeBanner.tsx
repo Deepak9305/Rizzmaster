@@ -95,7 +95,7 @@ const NativeBanner: React.FC<NativeBannerProps> = ({ adId, enabled, suspended, o
             }
             controller ??= new NativeBannerController(adId, placement.margin, reserveSlot, required => consentObserver?.(required), moveNativeBanner);
             await controller.setNetworkAvailable(online);
-            await controller.setTopMargin(placement.margin, placement.viewportWidthDp);
+            await controller.setTopMargin(placement.margin, placement.widthDp, placement.heightDp, placement.adaptive);
             if (!cancelled && measurement === version) {
                 await controller.setMode('visible');
                 lastMeasurement = key;

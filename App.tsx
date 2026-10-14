@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect, lazy, Suspense, useCallback } from 'react';
 import { NativeBridge } from './services/nativeBridge';
+import { canUseRizzSharing } from './services/rizzSharing';
 import { NotificationService } from './services/notificationService';
 import { ToastProvider, useToast } from './context/ToastContext';
 import { InputMode, RizzResponse, BioResponse, SavedItem, UserProfile, RizzOrBioResponse, ResponseLength, CustomPersona } from './types';
@@ -49,6 +50,7 @@ import NoInternetOverlay from './components/NoInternetOverlay';
 
 const DAILY_CREDITS = 5;
 const IS_WEB_PLATFORM = !Capacitor.isNativePlatform();
+const RIZZ_SHARING_ENABLED = canUseRizzSharing();
 const STARTUP_ANIMATION_MS = IS_WEB_PLATFORM ? 2200 : 3000;
 const KOFI_SUPPORT_URL = 'https://ko-fi.com/vantalumstudio';
 const SILENT_PREMIUM_RESTORE_WAIT_MS = 45000;
@@ -438,6 +440,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const [isRewardedAdLoading, setIsRewardedAdLoading] = useState(false);
   const [rewardedAdRequiredCredits, setRewardedAdRequiredCredits] = useState<1 | 2>(1);
   const [showSavedModal, setShowSavedModal] = useState(false);
+  const [showRizzShareCard, setShowRizzShareCard] = useState(false);
   const [showWebMenu, setShowWebMenu] = useState(false);
   const [showWebPremiumModal, setShowWebPremiumModal] = useState(false);
   const [webPremiumReason, setWebPremiumReason] = useState<'credits' | 'premium'>('premium');
@@ -1116,6 +1119,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       if (backButtonListener) backButtonListener.remove();
 
       backButtonListener = await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+        if (document.querySelector('.rm-share-dialog[open]')) {
+          window.dispatchEvent(new Event('rizzmaster:close-share-card'));
+          return;
+        }
         const { currentView, showPremiumModal, showCreditsExhaustedModal, showSavedModal } = stateRef.current;
 
         if (showCreditsExhaustedModal) {
@@ -2363,7 +2370,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         adId={getAdId('BANNER')}
         online={!isOffline}
         enabled={Boolean(hasProductionAdUnit('BANNER') && profile && !profile.is_premium && (session || isGuest) && !updateGateConfig?.blocked)}
-        suspended={showSplash || showOnboarding || currentView !== 'HOME' || isSessionBlocked || isOffline || showPremiumModal || showSavedModal || showCreditsExhaustedModal || showPersonaModal || isRewardedAdLoading || isPrivacyFormOpen}
+        suspended={showSplash || showOnboarding || currentView !== 'HOME' || isSessionBlocked || isOffline || showPremiumModal || showSavedModal || showRizzShareCard || showCreditsExhaustedModal || showPersonaModal || isRewardedAdLoading || isPrivacyFormOpen}
         onConsentReady={setPrivacyOptionsRequired}
       />
 
@@ -2900,9 +2907,9 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                       </div>
 
                       <div className="grid gap-3 md:gap-4 pb-6">
-                        <RizzCard label="Tease" content={result.tease} icon="😏" color="from-purple-500 to-indigo-500" isSaved={isSaved(result.tease)} type="tease" onSave={handleSaveWrapper} onReport={handleReport} delay={0.1} enableWebSharing={IS_WEB_PLATFORM} />
-                        <RizzCard label="Smooth" content={result.smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved(result.smooth)} type="smooth" onSave={handleSaveWrapper} onReport={handleReport} delay={0.2} enableWebSharing={IS_WEB_PLATFORM} />
-                        <RizzCard label="Chaotic" content={result.chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved(result.chaotic)} type="chaotic" onSave={handleSaveWrapper} onReport={handleReport} delay={0.3} enableWebSharing={IS_WEB_PLATFORM} />
+                        <RizzCard label="Tease" content={result.tease} icon="😏" color="from-purple-500 to-indigo-500" isSaved={isSaved(result.tease)} type="tease" onSave={handleSaveWrapper} onReport={handleReport} delay={0.1} enableSharing={RIZZ_SHARING_ENABLED} onCardOpenChange={setShowRizzShareCard} />
+                        <RizzCard label="Smooth" content={result.smooth} icon="🪄" color="from-blue-500 to-cyan-500" isSaved={isSaved(result.smooth)} type="smooth" onSave={handleSaveWrapper} onReport={handleReport} delay={0.2} enableSharing={RIZZ_SHARING_ENABLED} onCardOpenChange={setShowRizzShareCard} />
+                        <RizzCard label="Chaotic" content={result.chaotic} icon="🤡" color="from-orange-500 to-red-500" isSaved={isSaved(result.chaotic)} type="chaotic" onSave={handleSaveWrapper} onReport={handleReport} delay={0.3} enableSharing={RIZZ_SHARING_ENABLED} onCardOpenChange={setShowRizzShareCard} />
                       </div>
                     </>
                   )}

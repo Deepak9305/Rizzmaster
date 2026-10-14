@@ -4,7 +4,7 @@ import { BANNER_HEIGHT, BANNER_WIDTH } from './nativeBannerService';
 
 // Keep the bridge name compatible with APKs which already expose bottom insets.
 const BottomNavigationInset = registerPlugin<{
-    getBannerGeometry(): Promise<{ density: number; webViewOffsetDp: number; bottomInsetDp: number; widthDp?: number; heightDp?: number }>;
+    getBannerGeometry(): Promise<{ density: number; webViewOffsetDp: number; bottomInsetDp: number; widthDp?: number; heightDp?: number; adaptive?: boolean }>;
     setBannerPosition(options: { margin: number }): Promise<{ updated: boolean }>;
 }>('BottomNavigationInset');
 
@@ -20,6 +20,9 @@ export const getBannerPlacement = async (anchor: HTMLElement) => {
     let webViewOffsetDp = 0;
     let bottomInsetDp = 48;
     let nativeGeometryVerified = false;
+    let adaptive = false;
+    let widthDp = BANNER_WIDTH;
+    let heightDp = BANNER_HEIGHT;
     if (Capacitor.getPlatform() === 'android' && Capacitor.isPluginAvailable('BottomNavigationInset')) {
         try {
             const geometry = await AdMobService.withNativeTimeout('Banner geometry', BottomNavigationInset.getBannerGeometry(), 1500);
@@ -27,6 +30,12 @@ export const getBannerPlacement = async (anchor: HTMLElement) => {
             if (Number.isFinite(geometry.webViewOffsetDp)) webViewOffsetDp = geometry.webViewOffsetDp;
             if (Number.isFinite(geometry.bottomInsetDp)) bottomInsetDp = Math.max(0, geometry.bottomInsetDp);
             nativeGeometryVerified = Number.isFinite(geometry.density) && geometry.density > 0 && Number.isFinite(geometry.webViewOffsetDp);
+            if (geometry.adaptive === true && Number.isFinite(geometry.widthDp) && geometry.widthDp! > 0 &&
+                Number.isFinite(geometry.heightDp) && geometry.heightDp! > 0) {
+                adaptive = true;
+                widthDp = geometry.widthDp!;
+                heightDp = geometry.heightDp!;
+            }
         } catch {
             // Older APKs use CSS coordinates until their native bridge is updated.
         }
@@ -39,8 +48,9 @@ export const getBannerPlacement = async (anchor: HTMLElement) => {
         bottomInsetCss: bottomInsetDp * density / pixelRatio,
         dpToCss,
         viewportWidthDp,
-        widthDp: BANNER_WIDTH,
-        heightDp: BANNER_HEIGHT,
+        widthDp,
+        heightDp,
+        adaptive,
         nativeGeometryVerified,
     };
 };
