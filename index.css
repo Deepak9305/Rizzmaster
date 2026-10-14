@@ -62,6 +62,13 @@ html.native-app .web-app-root {
 .web-app-sticky-header { display: contents; }
 .native-banner-slot { display: none; }
 
+/* Keep a real containing block around the web-only sticky support card. The
+   native path continues to use the existing display-contents layout. */
+html:not(.native-app) .web-support-layout-shell {
+  display: block;
+  width: 100%;
+}
+
 html.native-app .web-app-sticky-header {
   display: block;
   position: sticky;

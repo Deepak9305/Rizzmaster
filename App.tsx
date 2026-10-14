@@ -2638,7 +2638,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
 
 
-              <div className="web-app-sticky-header">
+              <div className={`web-app-sticky-header ${IS_WEB_PLATFORM ? 'web-support-layout-shell' : ''}`}>
               <nav className={`web-app-topbar ${IS_WEB_PLATFORM ? 'web-app-topbar-with-support' : ''}`}>
                 <div className="web-app-topbar-leading">
                   {IS_WEB_PLATFORM && onNavigateToPath && (
