@@ -54,6 +54,171 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'talk-about-money-while-dating',
+    title: 'How to Talk About Money While Dating Without Making It Awkward or Transactional',
+    seoTitle: 'How to Talk About Money While Dating Without Making It Awkward',
+    description: 'Learn how to discuss splitting the bill, expensive plans, income differences, spending values, and financial boundaries while dating without turning the conversation into an interrogation.',
+    excerpt: 'Money conversations do not need to begin with a salary disclosure or a relationship budget. Start with the decision in front of you, say what works for you, and notice whether the other person can discuss fairness without shame or control.',
+    date: '2026-10-15',
+    updatedAt: '2026-10-15',
+    readingTime: '11 min read',
+    category: 'Dating & Connection',
+    author: 'amelia',
+    keywords: [
+      'how to talk about money while dating',
+      'how to split the bill on a date',
+      'how to say a date is too expensive',
+      'talking about finances early in dating',
+      'dating with different incomes',
+      'how to discuss money in a relationship',
+      'financial boundaries while dating',
+      'when to talk about money with someone you are dating'
+    ],
+    image: '/blog/talking-about-money-while-dating-hero.png',
+    imageAlt: 'Two people having a calm conversation about a restaurant bill at a cafe while dating',
+    imageCaption: 'A money conversation can be practical and respectful when both people have room to say what feels fair.',
+    resources: [
+      { label: 'MoneyHelper: Talking to your partner about money', url: 'https://www.moneyhelper.org.uk/en/family-and-care/talk-money/talking-to-your-partner-about-money' },
+      { label: 'Consumer Financial Protection Bureau: Money motivations', url: 'https://www.consumerfinance.gov/consumer-tools/educator-tools/money-motivations/' },
+      { label: 'love is respect: Types of abuse, including financial abuse', url: 'https://www.loveisrespect.org/resources/types-of-abuse/' }
+    ],
+    faqs: [
+      { question: 'Should you split the bill on a first date?', answer: 'There is no universal rule. The useful question is whether the plan and payment expectation were clear enough for both people. You can offer to split, take turns paying, or accept an invitation while making sure neither person is pressured into spending more than they can comfortably afford.' },
+      { question: 'How do you say a date is too expensive?', answer: 'Say it before the plan is final: “That sounds fun, but it is outside my budget this week. Would you be open to coffee or a walk instead?” A clear alternative makes the boundary easier to understand without requiring you to explain your entire financial situation.' },
+      { question: 'When should you talk about money while dating?', answer: 'Talk about the practical issue when it first affects a shared choice. A simple bill or budget conversation can happen early; detailed discussions about debt, income, shared accounts, and long-term plans usually belong when the relationship is becoming more serious or financially interdependent.' },
+      { question: 'Is a different income level a red flag in dating?', answer: 'A difference in income is not automatically a problem. Pay attention to whether both people can discuss cost, contribution, generosity, and limits without shame, entitlement, or control. The quality of the conversation matters more than matching numbers.' }
+    ],
+    sections: [
+      {
+        heading: 'Money is a dating conversation before it becomes a relationship conversation',
+        paragraphs: [
+          'You do not need to combine finances to notice how someone handles money. The first clues often appear in ordinary choices: who suggests the restaurant, whether the plan assumes a price range, how the bill is discussed, and what happens when one person says they would prefer something cheaper. Those moments are not a complete personality test, but they can show whether practical differences are safe to discuss.',
+          'The goal is not to find someone with the same salary, spending habits, or childhood relationship with money. It is to learn whether you can make decisions together without one person using embarrassment, generosity, or access to money as leverage. A good conversation makes room for honesty before resentment has a chance to do the talking.'
+        ],
+        bullets: [
+          'Dating expenses should be discussed as shared choices, not secret tests of interest.',
+          'Different money habits can work when both people are honest and flexible.',
+          'A respectful answer to a budget limit tells you more than an expensive gesture does.'
+        ]
+      },
+      {
+        heading: 'Work out which money question you are actually asking',
+        paragraphs: [
+          '“We need to talk about money” is so broad that it can make either person defensive before the conversation starts. Narrow it to the decision in front of you. Are you asking who is paying tonight, whether a weekend plan is affordable, how to share recurring costs, or whether your values around saving and spending are compatible? Each question deserves a different amount of detail.',
+          'You also do not have to disclose more than the decision requires. If a proposed date is outside your budget, the relevant information is that the plan does not work for you and what alternative you would enjoy. A new person does not need your account balance to understand a clear limit. More personal financial information can come later if trust, commitment, or shared obligations make it relevant.'
+        ],
+        bullets: [
+          'The bill question: “How should we handle tonight?”',
+          'The affordability question: “Does this plan fit what we both want to spend?”',
+          'The values question: “How do we each think about saving, spending, and generosity?”',
+          'The safety question: “Is this person respecting my financial independence?”'
+        ]
+      },
+      {
+        heading: 'Set the tone before the bill arrives',
+        paragraphs: [
+          'Many awkward money moments are created before anyone says anything. One person assumes the inviter pays, the other assumes the bill will be split, and both wait for the receipt to reveal which rule was supposedly obvious. You can remove much of that tension by making a small plan before the date or by speaking plainly when you sit down.',
+          'That does not mean turning a coffee date into a contract negotiation. A light sentence is enough: “I am happy to meet there. It is a little more than I usually spend, though—should we keep it casual and split the bill?” Or: “I invited you, so I am happy to cover this one. Next time you can choose the place.” Clarity gives the other person a real chance to agree rather than making them guess your expectations.'
+        ],
+        bullets: [
+          'If you invite, say whether you are offering to pay or simply suggesting the plan.',
+          'If you prefer to split, mention it without treating the other person as suspicious.',
+          'If someone offers to pay, accept only if you are comfortable and do not treat it as a debt.'
+        ]
+      },
+      {
+        heading: 'Use a simple script when the plan is outside your budget',
+        paragraphs: [
+          'A budget boundary is easier to communicate before money has been spent. You can be direct without turning the conversation into a confession: “That restaurant looks great, but it is more than I want to spend this week. Would you be up for the food market instead?” The alternative shows that you are declining the price, not rejecting the person.',
+          'If you do not have an alternative ready, you can still answer honestly: “I would like to see you, but I cannot do a dinner at that price right now. Can we plan something lower-cost?” Someone who is interested in spending time with you may be perfectly happy to adjust. Someone who treats your limit as an insult is giving you useful information about their expectations.'
+        ],
+        bullets: [
+          '“I would enjoy that, but it is outside my budget right now. Could we choose something simpler?”',
+          '“I can do coffee, a walk, or a casual meal. I am not looking to spend that much on a date yet.”',
+          '“I appreciate the idea, but I would rather choose a plan that feels comfortable for both of us.”'
+        ]
+      },
+      {
+        heading: 'Fair does not always mean fifty-fifty',
+        paragraphs: [
+          'Splitting a bill evenly is one possible arrangement, not the definition of fairness. If one person chose an expensive place, ordered more, earns substantially less, or offered to host the date, an equal number may not feel like an equal contribution. The right arrangement depends on what both people understood, what each can afford, and whether the decision was made freely.',
+          'You can also keep things simple by alternating dates, taking turns choosing the price range, or having each person pay for what they ordered. The important part is that the arrangement is visible enough to consent to. Fairness becomes fragile when one person silently keeps score and waits for the other to fail a test they were never told about.'
+        ],
+        bullets: [
+          'Ask what feels fair before assuming arithmetic will settle it.',
+          'Do not use one paid date as proof that the other person owes emotional or physical access.',
+          'Generosity is healthy when it is offered freely and can be declined without punishment.',
+          'If you cannot afford the plan, say so before accepting it.'
+        ]
+      },
+      {
+        heading: 'Different incomes require honesty, not a performance of equality',
+        paragraphs: [
+          'A relationship can include an income gap without making the lower-paid person a project or the higher-paid person a permanent sponsor. Problems usually begin when both people avoid naming the difference. The more expensive lifestyle becomes the default, one person keeps stretching to keep up, and the other mistakes that effort for comfort.',
+          'Talk about the experience rather than demanding a private financial audit. “I like doing things with you, but I cannot make this price range our normal.” Or: “I am comfortable paying for this sometimes, but I do not want money to decide everything we do together.” Those sentences protect choice on both sides. They also make it easier to discover whether the relationship can include low-cost pleasure, not only purchased experiences.'
+        ],
+        bullets: [
+          'Choose a shared price range that does not make one person anxious or the other resentful.',
+          'Let the person with more money offer options without deciding what the other person should want.',
+          'Do not pretend to afford a lifestyle because you fear looking less impressive.',
+          'Do not use money to create a hierarchy inside the relationship.'
+        ]
+      },
+      {
+        heading: 'Learn someone’s money style without conducting an interview',
+        paragraphs: [
+          'You can learn a lot from open-ended questions that invite a story instead of a number. Ask what they like spending money on, what they are saving for, whether they prefer planning or spontaneity, or what makes a date feel worth the cost. Then share your own answer. The aim is mutual context, not a hidden assessment where one person gives answers and the other assigns a score.',
+          'Money habits are often connected to family history, insecurity, culture, responsibility, or joy. A saver is not automatically wise, and a spender is not automatically careless. Look for self-awareness: can they explain their choices, adjust when circumstances change, and hear a different preference without mocking it? That is more useful than deciding whether their style matches yours after one dinner.'
+        ],
+        bullets: [
+          '“What do you genuinely enjoy spending money on?”',
+          '“Do you prefer planning dates ahead or choosing something spontaneous?”',
+          '“What makes a plan feel worth the money to you?”',
+          '“Are there any kinds of dates you would rather avoid because of the cost?”'
+        ]
+      },
+      {
+        heading: 'Know when financial disclosure becomes relevant',
+        paragraphs: [
+          'Early dating does not require a complete financial history. As a relationship becomes serious, though, money can affect choices about travel, housing, shared bills, debt, family support, work changes, and long-term plans. The conversation should grow with the level of interdependence. You can say, “We are starting to make decisions that affect both of us, so I think we should talk about the financial pieces that matter.”',
+          'Honesty does not mean demanding passwords, screenshots, account access, or every private detail. Discuss the information needed for a decision, agree on what remains separate, and take time before signing a lease, lending money, opening a joint account, or taking on debt together. A partner’s financial privacy and your financial independence can exist alongside transparency about shared commitments.'
+        ],
+        bullets: [
+          'Discuss debt, recurring obligations, and financial responsibilities before they affect shared plans.',
+          'Keep separate access to money and important documents while trust is still developing.',
+          'Do not lend money you cannot afford to lose or use a loan to keep an unstable connection alive.',
+          'Get qualified financial or legal advice before making major shared commitments.'
+        ]
+      },
+      {
+        heading: 'Separate an awkward money moment from a control pattern',
+        paragraphs: [
+          'Someone can be nervous about the bill, have a different habit, or make a clumsy assumption without being dangerous. Give a reasonable person a chance to hear your preference and adjust. The more important signal is what happens after you speak. Do they become curious and collaborative, or do they shame you, keep score, punish you, or insist that access to money gives them authority over your choices?',
+          'Financial control can include monitoring what you buy, restricting your ability to work, taking money without permission, creating debt in your name, or making basic support conditional on obedience. That is not a dating preference to negotiate away. If money is being used to isolate or control you, protect your access to resources and seek support from a trusted person or an appropriate local service. Your safety matters more than making the conversation sound polite.'
+        ],
+        bullets: [
+          'Healthy difference: “That price does not work for me.” “Okay, let’s choose another plan.”',
+          'Concerning pattern: your limit is mocked, punished, or treated as proof that you owe something.',
+          'Healthy generosity can be declined; control makes declining feel unsafe.',
+          'Repeated pressure around money deserves the same attention as repeated pressure around any other boundary.'
+        ]
+      },
+      {
+        heading: 'Make one clear agreement, then watch the follow-through',
+        paragraphs: [
+          'You do not need to solve every future money question on the first conversation. Choose the immediate agreement: split tonight, alternate invitations, set a date budget, or pause plans that are becoming uncomfortable. Say it in a sentence both people could repeat. If the arrangement changes, talk about the change instead of hoping the other person will notice your resentment.',
+          'Then pay attention to what happens over time. Do they remember the limit you shared? Can you enjoy inexpensive time together? Do they contribute in ways that feel mutual? Can you revisit the agreement without one person turning the conversation into a trial? Compatibility is not having identical financial lives. It is being able to build a shared rhythm without hiding, keeping score, or giving up your freedom to stay connected.'
+        ],
+        bullets: [
+          'State the plan clearly enough that neither person has to guess.',
+          'Revisit it when the relationship, income, or shared responsibilities change.',
+          'Judge the pattern of respect, not a single awkward bill.',
+          'Choose the arrangement you can sustain without resentment or self-abandonment.'
+        ]
+      }
+    ]
+  },
+  {
     slug: 'recover-after-awkward-text',
     title: 'How to Recover After Sending an Awkward Text Without Making It Worse',
     seoTitle: 'How to Recover After Sending an Awkward Text',

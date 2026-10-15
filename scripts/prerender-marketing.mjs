@@ -69,6 +69,12 @@ const renderFaqs = (post) => post.faqs?.length
 const renderResources = (post) => `${renderResourcesOnly(post)}${renderFaqs(post)}`;
 
 const articleInternalLinks = {
+  'talk-about-money-while-dating': [
+    { slug: 'talk-about-what-you-want-in-dating', label: 'Talk about what you want in dating' },
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy dating boundaries' },
+    { slug: 'how-to-have-the-exclusive-conversation-without-pressure', label: 'Have a clear relationship conversation' },
+    { slug: 'how-to-build-trust-in-a-new-relationship', label: 'Build trust without rushing' }
+  ],
   'recover-after-awkward-text': [
     { slug: 'texting-mistakes-new-conversation-feel-forced', label: 'Avoid forced conversation habits' },
     { slug: 'what-to-text-when-they-stop-replying', label: 'Choose a calm follow-up' },
