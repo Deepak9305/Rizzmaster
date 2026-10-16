@@ -514,6 +514,11 @@ const BlogIndexPage: React.FC<{ navigate: (path: string) => void }> = ({ navigat
 );
 
 const ARTICLE_EXAMPLES: Record<string, string[]> = {
+  'talk-about-sexual-health-before-sex': [
+    'I am attracted to you, and I want us to talk about safer sex before we go further.',
+    'I want to use a condom every time. Is that something you are comfortable with?',
+    'I have changed my mind, and I am going to stop here. I need us both to feel free to choose.'
+  ],
   'talk-about-money-while-dating': [
     'That restaurant looks great, but it is outside my budget this week. Would you be up for something simpler?',
     'I invited you, so I am happy to cover this one. Next time you can choose the place.',
@@ -571,6 +576,7 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
 };
 
 const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
+  'talk-about-sexual-health-before-sex': { do: 'Share your position, ask relevant questions, agree on protection and consent, and slow down when anything is unclear.', doNot: 'Treat health questions as an accusation, assume previous intimacy is permission, or negotiate past a clear boundary.' },
   'talk-about-money-while-dating': { do: 'Name the practical choice, say what feels comfortable, and look for a fair arrangement you can both sustain.', doNot: 'Hide your budget, treat payment as a test of attraction, or let generosity become a way to control access or decisions.' },
   'recover-after-awkward-text': { do: 'Identify the actual mistake, make one proportionate repair, and give the other person room to choose what happens next.', doNot: 'Stack explanations, ask them to soothe your embarrassment, or keep contacting them after they ask for space.' },
   'how-to-have-the-exclusive-conversation-without-pressure': { do: 'Say what you want, ask a clear question, and listen for an agreement you can both describe in practical terms.', doNot: 'Treat closeness as an unspoken contract, negotiate against your own needs, or keep waiting indefinitely for a clearer answer.' },
@@ -653,6 +659,12 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'talk-about-sexual-health-before-sex': [
+    { slug: 'texting-boundaries-while-dating', label: 'Set healthy dating boundaries' },
+    { slug: 'how-to-have-the-exclusive-conversation-without-pressure', label: 'Have a clear relationship conversation' },
+    { slug: 'how-to-build-trust-in-a-new-relationship', label: 'Build trust without rushing' },
+    { slug: 'talk-about-money-while-dating', label: 'Talk about money while dating' }
+  ],
   'talk-about-money-while-dating': [
     { slug: 'talk-about-what-you-want-in-dating', label: 'Talk about what you want in dating' },
     { slug: 'texting-boundaries-while-dating', label: 'Set healthy dating boundaries' },

@@ -54,6 +54,173 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'talk-about-sexual-health-before-sex',
+    title: 'How to Talk About Sexual Health Before Sex Without Making It Awkward',
+    seoTitle: 'How to Talk About Sexual Health Before Sex Without Making It Awkward',
+    description: 'Learn how to bring up STI testing, protection, pregnancy prevention, boundaries, and consent before sex without turning the moment into an interrogation or a mood killer.',
+    excerpt: 'The most attractive version of the conversation is clear, mutual, and early enough that neither person feels cornered. Say what you know, ask what you need, and treat hesitation as a reason to slow down rather than something to overcome.',
+    date: '2026-10-17',
+    updatedAt: '2026-10-17',
+    readingTime: '11 min read',
+    category: 'Healthy intimacy',
+    author: 'amelia',
+    keywords: [
+      'how to talk about sexual health before sex',
+      'how to talk about STI testing with a partner',
+      'what to say before having sex with someone new',
+      'how to discuss condoms without awkwardness',
+      'how to talk about safer sex',
+      'how to ask about sexual health while dating',
+      'how to talk about consent before sex',
+      'sexual health conversation starters'
+    ],
+    image: '/blog/talk-about-sexual-health-before-sex-hero.png',
+    imageAlt: 'Two adults having a calm conversation about sexual health and boundaries at a cafe',
+    imageCaption: 'A safer-sex conversation creates room for honest choices before the moment becomes rushed or pressured.',
+    resources: [
+      { label: 'CDC: Conversation tips about sexual health and STI prevention', url: 'https://www.cdc.gov/sti-awareness/pbyt/conversation.html' },
+      { label: 'Planned Parenthood: How to talk to a partner about safer sex', url: 'https://www.plannedparenthood.org/learn/stds-hiv-safer-sex/safer-sex/how-do-i-talk-my-partner-about-safer-sex' },
+      { label: 'RAINN: Consent 101, respect and building trust', url: 'https://rainn.org/5-rules-for-getting-consent/' }
+    ],
+    faqs: [
+      { question: 'When should you talk about sexual health before sex?', answer: 'Start the conversation before sexual activity begins, while both people can think clearly and leave the situation without pressure. The exact timing depends on the relationship, but waiting until one person is already aroused or physically committed can make an honest choice harder.' },
+      { question: 'What should you ask a new partner about sexual health?', answer: 'Ask about the protection you plan to use, when each person was last tested, whether there are any current STI diagnoses or treatments to discuss, pregnancy prevention if relevant, and what each person wants or does not want to do. Ask only what is relevant and be ready to answer the same questions.' },
+      { question: 'How do you bring up condoms without killing the mood?', answer: 'Make it normal and direct: “I want us to use a condom. Are you comfortable with that?” You can also keep supplies available and discuss preferences before things heat up. A partner who respects you will care about a safer plan more than preserving an illusion that responsible choices are unromantic.' },
+      { question: 'What if someone refuses to talk about sexual health?', answer: 'You do not have to continue toward sex without the information and protection you need. Say that you are not comfortable proceeding, pause the encounter, and leave if the person keeps pressuring you. Avoid treating their defensiveness as a problem you must solve with better wording.' }
+    ],
+    sections: [
+      {
+        heading: 'The conversation is part of intimacy, not an interruption to it',
+        paragraphs: [
+          'A lot of people imagine safer-sex conversations as a formal meeting that drains all the chemistry from a moment. In practice, the awkwardness usually comes from uncertainty: one person is guessing what the other knows, wants, or will accept, while both are trying to act relaxed. A short, honest conversation replaces some of that guessing with information.',
+          'Talking about sexual health does not require a dramatic pause or a perfect speech. It can be warm, confident, and matter-of-fact. You are saying that attraction matters enough to protect both people’s health, comfort, and freedom to choose. That is not a rejection of desire. It is part of making desire safe to follow.'
+        ],
+        bullets: [
+          'Bring it up before sexual activity, when both people still have room to think and choose.',
+          'Treat questions as mutual: you should be prepared to answer the same ones you ask.',
+          'A clear conversation is more intimate than making someone guess what you need.'
+        ]
+      },
+      {
+        heading: 'Choose a moment that does not depend on momentum',
+        paragraphs: [
+          'The easiest time to talk is before you are in the middle of making out, undressing, or trying to decide whether to go home together. You can bring it up while making plans, during a date, or in a message before meeting. Choose a setting where the other person can answer honestly and where either of you can pause without being punished for changing direction.',
+          'Privacy does not mean isolation. If you are meeting someone new, keep your own transport, tell a trusted person where you are, and choose an environment that feels safe. A sexual-health conversation should give you more control over your decision, not make you dependent on the other person’s mood or hospitality.'
+        ],
+        bullets: [
+          'Before the date: “I like where this is going, and I prefer to talk about safer sex before anything physical happens.”',
+          'During a calm moment: “Can we talk about protection and testing before we decide what happens next?”',
+          'If the situation suddenly speeds up: “I am interested, but I want to slow down for a quick health and boundaries conversation.”'
+        ]
+      },
+      {
+        heading: 'Say what you know, then ask what you need to know',
+        paragraphs: [
+          'Start with your own position so the conversation does not feel like an interrogation. Say what protection you want to use, what you are comfortable with, and when you were last tested if you know. Then ask open, relevant questions. “I was last tested in May and I want us to use condoms. When were you last tested, and is there anything we should talk about before we have sex?” gives the other person useful information and a fair invitation to respond.',
+          'You do not need to demand a medical file or ask for details that do not affect the decision in front of you. Sexual health is personal, but it is not a reason to hide information that could change another person’s informed choice. If either person has a diagnosis, symptoms, a recent exposure, or is taking treatment, pause and talk with a healthcare professional about what is safe and what timing matters.'
+        ],
+        bullets: [
+          'When were you last tested, and what were you tested for?',
+          'Is there anything about your current sexual health that you want me to know before we continue?',
+          'What protection do you prefer to use?',
+          'Are there any activities or boundaries you already know you do not want?',
+          'What would make you feel comfortable stopping or changing the plan?'
+        ]
+      },
+      {
+        heading: 'Use language that is direct without sounding like a verdict',
+        paragraphs: [
+          'The tone matters, but clarity matters more. You can be affectionate and still say the sentence that protects you. Avoid framing testing or protection as evidence that the other person is dirty, untrustworthy, or guilty. Make it a shared practice that applies to both people, not a demand aimed at the person with less power in the conversation.',
+          'If you feel nervous, name that without making the other person reassure you. “This is a little awkward to bring up, but I like you and I want us to handle it well” is enough. You can then ask the practical question. Confidence here is not sounding perfectly casual; it is staying honest when the topic carries real consequences.'
+        ],
+        bullets: [
+          '“I am attracted to you, and I want us to talk about safer sex before we go further.”',
+          '“I want to use a condom every time. Is that something you are comfortable with?”',
+          '“I do not know everything about testing windows, so I would rather check with a healthcare professional than guess.”',
+          '“We can stop at any point. I want both of us to feel free to change our minds.”'
+        ]
+      },
+      {
+        heading: 'Separate the health conversation from the consent conversation',
+        paragraphs: [
+          'Sexual health and consent support each other, but they answer different questions. Health questions help you decide what protection, testing, treatment, or pregnancy prevention may be relevant. Consent asks whether each person freely wants the specific activity now. A positive answer to one does not replace the other. Someone can be tested and still say no; someone can want sex and still need a safer plan before continuing.',
+          'Consent should remain changeable throughout the experience. Agreeing to one activity does not create permission for another, and being intimate in the past does not create permission today. If someone becomes quiet, pulls away, seems impaired, or says they want to stop, pause and check in. A respectful partner treats a change of mind as information, not an obstacle.'
+        ],
+        bullets: [
+          'Ask for agreement about the activity you are actually considering, not a vague all-purpose yes.',
+          'Do not use attraction, money, previous intimacy, or a planned date as leverage.',
+          'A pause is allowed even when the conversation or physical moment already started.',
+          'If consent is unclear, stop and make the next choice explicit.'
+        ]
+      },
+      {
+        heading: 'Make protection a shared plan instead of a last-second negotiation',
+        paragraphs: [
+          'If you want to use condoms or another barrier, talk about it before the moment becomes rushed and have the supplies you prefer available. You can discuss fit, allergies, lubrication, dental dams, or other practical details without turning the conversation into a lecture. If pregnancy prevention is relevant, discuss that separately too; one method may not address every concern.',
+          'Do not accept the idea that bringing protection is your responsibility because you are the more cautious person. Both people are responsible for making an informed plan. If the plan changes—for example, a condom breaks, a method is unavailable, or someone no longer feels comfortable—stop and decide what support or medical advice is needed rather than improvising under pressure.'
+        ],
+        bullets: [
+          'Keep the protection you want to use accessible and check that it is not damaged or expired.',
+          'Agree on protection before clothes are off, not only when someone reaches for it.',
+          'Do not let a partner remove, refuse, or alter protection without your agreement.',
+          'Ask a pharmacist or healthcare professional about product questions or possible exposure.'
+        ]
+      },
+      {
+        heading: 'If you have an STI or recent exposure, lead with honesty and care',
+        paragraphs: [
+          'Sharing a diagnosis or recent exposure can feel frightening because people often attach shame to information that should be handled as health information. You can state the relevant facts, explain what a healthcare professional has advised, and give the other person time to decide what they are comfortable with. Do not minimize the information to keep the moment moving, and do not present yourself as contaminated or unworthy of intimacy.',
+          'A conversation may sound like: “Before we have sex, I need to tell you that I have been diagnosed with ____. I am following treatment, and my clinician advised ____. I want you to have the information and decide what feels right for you.” The other person may ask questions, pause, choose protection, or decide not to continue. Respecting that choice is part of the disclosure.'
+        ],
+        bullets: [
+          'Share information before sexual contact, not after someone has already lost the chance to choose.',
+          'Use a healthcare professional for diagnosis, treatment, and questions about transmission or timing.',
+          'Do not promise that a test or treatment removes every possible risk without professional guidance.',
+          'Give the other person time and do not demand immediate reassurance.'
+        ]
+      },
+      {
+        heading: 'Watch what happens when you ask for a safer plan',
+        paragraphs: [
+          'The answer matters, but the way someone responds tells you something too. A considerate partner may be surprised or nervous, yet still listen, answer honestly, and work with you on a plan. They may need a moment to think. That is different from someone who mocks testing, lies about protection, says you owe them sex because they paid for the date, or keeps pushing after you have said no.',
+          'You do not have to stay in a conversation long enough to persuade someone to respect your health. If a person becomes aggressive, threatening, intoxicated, or coercive, prioritize getting somewhere safe and contacting someone you trust or a local support service. A disappointing date is manageable. A situation where you cannot safely say no requires a different response.'
+        ],
+        bullets: [
+          'Healthy response: curiosity, honesty, patience, and willingness to pause.',
+          'Concerning response: shame, anger, bargaining, deception, or pressure to continue.',
+          'A person can decline sex without being punished, mocked, or made responsible for your feelings.',
+          'You can leave the situation when the conversation no longer feels safe.'
+        ]
+      },
+      {
+        heading: 'Use a calm boundary when the answers do not work for you',
+        paragraphs: [
+          'You may learn that the other person does not want to use the protection you need, does not want to discuss testing, is not ready to disclose what affects your choice, or wants a type of intimacy you do not want. You do not need to prove that your standard is objectively correct before acting on it. A boundary is a decision about your participation.',
+          'Keep the wording short. “I am not comfortable having sex without a condom, so I am going to stop here.” Or: “I like you, but we are not aligned on what I need to feel safe. I am going to head home.” You can be warm without making the boundary negotiable. If the person respects it, the interaction may end kindly. If they keep arguing, repeat the decision once and create distance.'
+        ],
+        bullets: [
+          '“I am interested, but I am not ready to continue without a safer-sex plan.”',
+          '“I understand that you do not want to discuss testing. I am not comfortable proceeding.”',
+          '“No, I have changed my mind. I am going to leave now.”',
+          '“This is not a punishment. It is what I need to choose sex freely.”'
+        ]
+      },
+      {
+        heading: 'Keep the conversation alive after the first time',
+        paragraphs: [
+          'Sexual health is not a one-time form you complete before a new relationship. People’s partners, testing, contraception, medications, comfort levels, and boundaries can change. A brief check-in after a new experience can make it easier to talk about what felt good, what felt uncertain, and what you want to do differently next time.',
+          'You can ask, “How are you feeling after last night?” or “Is there anything we should plan differently before we do that again?” Keep the question open and be ready for an answer you did not expect. The relationship becomes safer when both people can update an agreement without punishment. Chemistry grows more reliably when neither person has to trade honesty for access.'
+        ],
+        bullets: [
+          'Check in when a boundary, partner, protection method, or health situation changes.',
+          'Treat new information as a reason to update the plan, not assign blame.',
+          'Keep medical questions with qualified healthcare professionals.',
+          'Let mutual care and the ability to stop be part of the attraction.'
+        ]
+      }
+    ]
+  },
+  {
     slug: 'talk-about-money-while-dating',
     title: 'How to Talk About Money While Dating Without Making It Awkward or Transactional',
     seoTitle: 'How to Talk About Money While Dating Without Making It Awkward',
