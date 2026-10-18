@@ -54,6 +54,158 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'how-to-talk-about-your-ex-on-a-date',
+    title: 'How to Talk About Your Ex on a Date Without Making It a Red Flag',
+    seoTitle: 'How to Talk About Your Ex on a Date Without Making It a Red Flag',
+    description: 'Learn how much to share about a past relationship on a date, when it is relevant, how to avoid comparisons, and what to say when an ex becomes the whole conversation.',
+    excerpt: 'Mentioning an ex is not automatically a red flag. The useful question is whether you can give enough context to be honest, stay present with the person in front of you, and notice whether the conversation leaves room for a new connection.',
+    date: '2026-10-18',
+    updatedAt: '2026-10-18',
+    readingTime: '10 min read',
+    category: 'First-date conversation',
+    author: 'jake',
+    keywords: [
+      'how to talk about your ex on a date',
+      'is talking about your ex a red flag',
+      'how much to share about an ex early dating',
+      'what to say when asked about your ex',
+      'how to avoid comparing a date to your ex',
+      'dating someone who talks about their ex',
+      'how to know if someone is over their ex',
+      'talking about past relationships on a first date'
+    ],
+    image: '/blog/how-to-talk-about-your-ex-on-a-date-hero.png',
+    imageAlt: 'Two adults having a thoughtful first-date conversation in a warm cafe',
+    imageCaption: 'A brief, honest answer about the past can create context without making a new person compete with it.',
+    resources: [
+      { label: 'The Gottman Institute: Dating after a breakup', url: 'https://www.gottman.com/blog/dating-after-a-breakup/' },
+      { label: 'Planned Parenthood: How to have a healthy relationship', url: 'https://www.plannedparenthood.org/learn/relationships/healthy-relationships' },
+      { label: 'love is respect: Setting boundaries', url: 'https://www.loveisrespect.org/pdf/Setting_Boundaries.pdf' }
+    ],
+    faqs: [
+      { question: 'How much should you say about an ex on a first date?', answer: 'Give the amount of context the question needs, then return to the present. A short description of what happened, what you learned, or why the relationship ended is usually enough for an early date. Save detailed history for a relationship where trust and relevance have grown.' },
+      { question: 'Is talking about your ex a red flag?', answer: 'Not by itself. It becomes more concerning when the ex dominates the date, the story is built on blame or idealization, comparisons keep appearing, or the person seems unable to make room for a new connection. Look for a pattern rather than judging one mention.' },
+      { question: 'What do you say if your date keeps talking about their ex?', answer: 'Acknowledge that the relationship mattered, then name what you want from the date: “I can see that shaped you. I am interested in getting to know you, though, so can we talk about what you want now?” Their response to the redirect gives you useful information.' },
+      { question: 'Should you tell a date you are still friends with your ex?', answer: 'If the friendship affects your life or could reasonably come up, be straightforward. Explain the practical connection and the boundaries that keep it clear. The goal is not to make the person approve instantly; it is to give them enough context to decide what feels comfortable.' }
+    ],
+    sections: [
+      {
+        heading: 'An ex is context, not the subject of the date',
+        paragraphs: [
+          'A past relationship will sometimes come up naturally. You may be asked what you are looking for, why your last relationship ended, whether you still talk to someone, or what changed for you after dating them. A brief answer can be honest and useful. It gives the person in front of you a little context without asking them to carry your entire history before they know you.',
+          'The real signal is not whether you say the word “ex.” It is whether you can answer, stay grounded in the present, and leave room for curiosity about each other. A date starts to feel like an audition for a role your ex left open when every question leads back to that person or every new detail gets measured against the old relationship.'
+        ],
+        bullets: [
+          'Answer the question that was asked instead of opening the full relationship archive.',
+          'Keep the focus on what is relevant to the connection you are exploring now.',
+          'Notice whether both people have room to speak, ask, and change the subject naturally.'
+        ]
+      },
+      {
+        heading: 'Answer with a useful amount of truth',
+        paragraphs: [
+          'You do not have to choose between a vague “it was complicated” and a ten-minute timeline. A useful answer usually has three parts: what happened in broad terms, where you are now, and anything the other person actually needs to know at this stage. That keeps you honest without making a first date responsible for processing the breakup.',
+          'For example, “We wanted different things and ended it last year. It taught me to be clearer about communication, and I am ready to meet someone who wants a steady connection” gives more information than a slogan while staying present. If the question is casual, the answer can be shorter. Depth should follow trust and relevance, not pressure to prove that you are healed.'
+        ],
+        bullets: [
+          '“We were together for a while, but the relationship had run its course. I have had time to move forward.”',
+          '“It ended because we wanted different futures. I am comfortable talking about it, but I am more interested in getting to know you.”',
+          '“That relationship changed what I value. I now pay closer attention to consistency and direct communication.”'
+        ]
+      },
+      {
+        heading: 'Explain what you learned instead of comparing people',
+        paragraphs: [
+          'A new person should not have to beat your ex to earn your interest. Comparisons can sound flattering at first—“you are so much better than my ex”—but they still place an old relationship between you. The person may wonder whether they are being seen clearly or used as evidence that you have finally chosen well.',
+          'Turn the lesson toward your own choices and standards. “I used to avoid difficult conversations, and I am working on being more direct now” says something real without making the date compete. It also leaves room for the other person to show who they are instead of rewarding them for not being someone else.'
+        ],
+        bullets: [
+          'Talk about a pattern you understand better now, not a scorecard of who treated you best.',
+          'Describe what you want to practice in a new connection.',
+          'Avoid using an ex as a shortcut for judging someone you have only just met.',
+          'Let the new person be specific, surprising, and different.'
+        ]
+      },
+      {
+        heading: 'Know the difference between a story and a spiral',
+        paragraphs: [
+          'A story has a shape: what happened, what you made of it, and where you are now. A spiral keeps collecting evidence. It moves from one grievance to another, revisits old messages, explains every betrayal, or turns the date into an audience for anger. You can have real reasons to be hurt and still notice that the first date is not the right place to unpack all of them.',
+          'If you are the one speaking, pause when you stop answering the other person’s question and start trying to make them agree with your version of the breakup. If you are listening, you can be kind without becoming a therapist or referee. A simple redirect shows whether the conversation can return to the present.'
+        ],
+        bullets: [
+          'A story gives context and then makes room for the date to continue.',
+          'A spiral keeps the ex emotionally present even when the original question is over.',
+          'Strong feelings are not a problem; making a new person manage them may be.',
+          'A pause, change of subject, or shorter answer can protect the tone of the evening.'
+        ]
+      },
+      {
+        heading: 'If the breakup was recent, be honest about your readiness',
+        paragraphs: [
+          'There is no universal waiting period that proves someone is ready to date. A relationship can end months ago and still take up someone’s whole inner life, while another person may have processed a difficult ending with care. Instead of defending a timeline, ask yourself whether you are curious about a new person or mainly looking for relief, validation, distraction, or a reaction from your ex.',
+          'You do not have to cancel every date because you are still healing. You do need to set a pace you can actually handle and avoid promising more availability than you have. If the topic comes up, “The breakup is fairly recent, so I am taking things slowly. I like meeting you, and I want to be honest about that pace” is clearer than pretending nothing is tender.'
+        ],
+        bullets: [
+          '“I am open to meeting people, but I am not rushing into a serious relationship.”',
+          '“I am still processing some of it, and I want to be respectful of your time.”',
+          '“I am interested in you as a person, not in using this date to send a message to someone else.”'
+        ]
+      },
+      {
+        heading: 'When the ex is still part of your life',
+        paragraphs: [
+          'Some exes remain in the same workplace, friend group, class, neighborhood, or parenting arrangement. Staying in contact is not automatically unfinished business. What matters is whether the contact has a clear reason, whether the boundaries are understandable, and whether you can give a new person accurate context without asking them to ignore what they see.',
+          'Keep the explanation practical rather than defensive. “We share custody, so we communicate about our child. We keep it to that and use a shared calendar” gives a date something concrete to understand. If the connection is emotionally tangled, admit that. Clarity may make the date more complicated, but uncertainty usually makes it harder for everyone.'
+        ],
+        bullets: [
+          'Name the practical reason for contact.',
+          'Describe the boundaries that make the contact workable.',
+          'Do not hide a connection that is likely to affect future plans.',
+          'Give the other person time to decide what they are comfortable exploring.'
+        ]
+      },
+      {
+        heading: 'Pay attention to how they describe someone they once loved',
+        paragraphs: [
+          'You cannot determine a person’s whole character from one frustrated sentence about an ex. You can listen for whether they take any responsibility, describe events with some proportion, and speak about a difficult ending without turning the other person into a cartoon villain. Someone can have been treated badly and still speak carefully about what they know and what they do not.',
+          'Repeated “crazy ex” stories, total innocence in every conflict, or nostalgic comparisons are useful signals to explore rather than instant diagnoses. Ask a gentle follow-up: “What did you learn about your part in that?” or “What would you want to do differently next time?” A person who can reflect may give a grounded answer. A person who only wants an ally may resist any question that adds complexity.'
+        ],
+        bullets: [
+          'Look for accountability without demanding a confession.',
+          'Notice whether the story has room for facts, nuance, and the other person’s humanity.',
+          'Treat blame, contempt, and idealization as patterns worth slowing down to understand.',
+          'You can leave a conversation that makes you feel recruited into an old conflict.'
+        ]
+      },
+      {
+        heading: 'Redirect the conversation when the ex takes over',
+        paragraphs: [
+          'A redirect does not have to sound like a reprimand. Start by acknowledging the feeling or importance of the relationship, then say what you want more of. That gives the person a chance to adjust without pretending the topic did not matter. The goal is a shared date, not a perfect performance from either side.',
+          'If they respond well, the conversation can move forward. If they keep returning to the ex after you have clearly redirected, treat that behavior as information. You are allowed to decide that the person may be interesting and still not available for the kind of connection you want right now.'
+        ],
+        bullets: [
+          '“I can tell that relationship had a big impact on you. I am curious about what you want now.”',
+          '“I understand why that came up. I would like to hear more about your life outside that relationship too.”',
+          '“I am happy to answer questions about my past, but I do not want us to spend the whole date comparing people.”',
+          '“This feels like a lot of space for someone who is not here. Do you feel ready to meet someone new?”'
+        ]
+      },
+      {
+        heading: 'Decide whether there is room for you in the conversation',
+        paragraphs: [
+          'There is no perfect sentence that makes an unavailable person available. You can be tactful, brief, and curious, then watch what happens next. Does the conversation become more mutual? Do they show interest in your life? Can they talk about the past without abandoning the present? Those answers matter more than whether they used the right dating vocabulary.',
+          'A good first date does not require both people to have no history. It requires enough presence to notice the person across the table. Be honest about your own past, avoid making the new person compete with it, and let their response guide your next move. If the exchange leaves you feeling like an audience, rescuer, or replacement, you have learned something valuable before investing more time.'
+        ],
+        bullets: [
+          'Be honest enough to give context and selective enough to protect the new connection.',
+          'Stay curious about the person in front of you rather than grading them against history.',
+          'Use a calm redirect when needed, then watch whether it is respected.',
+          'Choose a second date because there is mutual interest now, not because you hope to finish an old story.'
+        ]
+      }
+    ]
+  },
+  {
     slug: 'talk-about-sexual-health-before-sex',
     title: 'How to Talk About Sexual Health Before Sex Without Making It Awkward',
     seoTitle: 'How to Talk About Sexual Health Before Sex Without Making It Awkward',

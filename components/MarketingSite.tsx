@@ -514,6 +514,11 @@ const BlogIndexPage: React.FC<{ navigate: (path: string) => void }> = ({ navigat
 );
 
 const ARTICLE_EXAMPLES: Record<string, string[]> = {
+  'how-to-talk-about-your-ex-on-a-date': [
+    'We ended a while ago and I learned that I want clearer communication now.',
+    'We still share a friend group, so we are cordial, but I am not trying to restart it.',
+    'I can answer that, but I would rather spend this date getting to know you.'
+  ],
   'talk-about-sexual-health-before-sex': [
     'I am attracted to you, and I want us to talk about safer sex before we go further.',
     'I want to use a condom every time. Is that something you are comfortable with?',
@@ -576,6 +581,7 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
 };
 
 const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
+  'how-to-talk-about-your-ex-on-a-date': { do: 'Give honest relevant context, take responsibility for your part, and return your attention to the person in front of you.', doNot: 'Compare people, use “crazy ex” as a complete explanation, or make a new date manage unresolved feelings.' },
   'talk-about-sexual-health-before-sex': { do: 'Share your position, ask relevant questions, agree on protection and consent, and slow down when anything is unclear.', doNot: 'Treat health questions as an accusation, assume previous intimacy is permission, or negotiate past a clear boundary.' },
   'talk-about-money-while-dating': { do: 'Name the practical choice, say what feels comfortable, and look for a fair arrangement you can both sustain.', doNot: 'Hide your budget, treat payment as a test of attraction, or let generosity become a way to control access or decisions.' },
   'recover-after-awkward-text': { do: 'Identify the actual mistake, make one proportionate repair, and give the other person room to choose what happens next.', doNot: 'Stack explanations, ask them to soothe your embarrassment, or keep contacting them after they ask for space.' },
@@ -659,6 +665,13 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'how-to-talk-about-your-ex-on-a-date': [
+    { slug: 'should-you-go-on-a-second-date-if-there-was-no-spark', label: 'Decide whether a second date is worth it' },
+    { slug: 'how-to-tell-if-someone-is-emotionally-available', label: 'Recognize emotional availability' },
+    { slug: 'how-to-build-trust-in-a-new-relationship', label: 'Build trust without rushing' },
+    { slug: 'talk-about-what-you-want-in-dating', label: 'Talk about what you want in dating' },
+    { slug: 'how-to-handle-jealousy-in-a-new-relationship', label: 'Handle jealousy without control' }
+  ],
   'talk-about-sexual-health-before-sex': [
     { slug: 'texting-boundaries-while-dating', label: 'Set healthy dating boundaries' },
     { slug: 'how-to-have-the-exclusive-conversation-without-pressure', label: 'Have a clear relationship conversation' },

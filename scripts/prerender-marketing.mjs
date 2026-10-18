@@ -69,6 +69,13 @@ const renderFaqs = (post) => post.faqs?.length
 const renderResources = (post) => `${renderResourcesOnly(post)}${renderFaqs(post)}`;
 
 const articleInternalLinks = {
+  'how-to-talk-about-your-ex-on-a-date': [
+    { slug: 'should-you-go-on-a-second-date-if-there-was-no-spark', label: 'Decide whether a second date is worth it' },
+    { slug: 'how-to-tell-if-someone-is-emotionally-available', label: 'Recognize emotional availability' },
+    { slug: 'how-to-build-trust-in-a-new-relationship', label: 'Build trust without rushing' },
+    { slug: 'talk-about-what-you-want-in-dating', label: 'Talk about what you want in dating' },
+    { slug: 'how-to-handle-jealousy-in-a-new-relationship', label: 'Handle jealousy without control' }
+  ],
   'talk-about-sexual-health-before-sex': [
     { slug: 'texting-boundaries-while-dating', label: 'Set healthy dating boundaries' },
     { slug: 'how-to-have-the-exclusive-conversation-without-pressure', label: 'Have a clear relationship conversation' },
