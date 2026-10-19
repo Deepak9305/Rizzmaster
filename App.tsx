@@ -60,8 +60,8 @@ const WEB_PROMOTIONS = [
     href: KOFI_SUPPORT_URL,
     icon: '☕',
     logo: '',
-    eyebrow: 'Enjoying Rizz Master?',
-    title: 'Buy me a coffee',
+    eyebrow: 'Did Rizz Master help today?',
+    title: 'Buy the creator a coffee',
     ariaLabel: 'Buy Rizz Master a coffee on Ko-fi',
   },
   {
