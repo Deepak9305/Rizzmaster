@@ -53,6 +53,24 @@ const IS_WEB_PLATFORM = !Capacitor.isNativePlatform();
 const RIZZ_SHARING_ENABLED = canUseRizzSharing();
 const STARTUP_ANIMATION_MS = IS_WEB_PLATFORM ? 2200 : 3000;
 const KOFI_SUPPORT_URL = 'https://ko-fi.com/vantalumstudio';
+const RIZZLINE_PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.rizzline.app';
+const WEB_PROMOTION_ROTATION_MS = 10_000;
+const WEB_PROMOTIONS = [
+  {
+    href: KOFI_SUPPORT_URL,
+    icon: '☕',
+    eyebrow: 'Enjoying Rizz Master?',
+    title: 'Buy me a coffee',
+    ariaLabel: 'Buy Rizz Master a coffee on Ko-fi',
+  },
+  {
+    href: RIZZLINE_PLAY_STORE_URL,
+    icon: '✨',
+    eyebrow: 'Need a pickup line?',
+    title: 'Try Rizzline',
+    ariaLabel: 'Get Rizzline pickup lines on Google Play',
+  },
+] as const;
 const SILENT_PREMIUM_RESTORE_WAIT_MS = 45000;
 const SILENT_PREMIUM_RESTORE_RETRY_MS = 60000;
 const SILENT_PREMIUM_RESTORE_MAX_ATTEMPTS = 2;
@@ -442,6 +460,8 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const [showSavedModal, setShowSavedModal] = useState(false);
   const [showRizzShareCard, setShowRizzShareCard] = useState(false);
   const [showWebMenu, setShowWebMenu] = useState(false);
+  const [webPromotionIndex, setWebPromotionIndex] = useState(0);
+  const [isWebPromotionPaused, setIsWebPromotionPaused] = useState(false);
   const [showWebPremiumModal, setShowWebPremiumModal] = useState(false);
   const [webPremiumReason, setWebPremiumReason] = useState<'credits' | 'premium'>('premium');
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
@@ -450,6 +470,16 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const [profileLoadError, setProfileLoadError] = useState<string | null>(null);
   const [isOffline, setIsOffline] = useState(false);
   const lastOfflineStatusRef = useRef(false);
+
+  useEffect(() => {
+    if (!IS_WEB_PLATFORM || isWebPromotionPaused) return;
+
+    const intervalId = window.setInterval(() => {
+      setWebPromotionIndex((current) => (current + 1) % WEB_PROMOTIONS.length);
+    }, WEB_PROMOTION_ROTATION_MS);
+
+    return () => window.clearInterval(intervalId);
+  }, [isWebPromotionPaused]);
 
   loadingRef.current = loading;
   savedItemsRef.current = savedItems;
@@ -2691,16 +2721,20 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
               {IS_WEB_PLATFORM && (
                 <a
-                  href={KOFI_SUPPORT_URL}
+                  href={WEB_PROMOTIONS[webPromotionIndex].href}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="web-support-banner"
-                  aria-label="Buy Rizz Master a coffee on Ko-fi"
+                  aria-label={WEB_PROMOTIONS[webPromotionIndex].ariaLabel}
+                  onMouseEnter={() => setIsWebPromotionPaused(true)}
+                  onMouseLeave={() => setIsWebPromotionPaused(false)}
+                  onFocus={() => setIsWebPromotionPaused(true)}
+                  onBlur={() => setIsWebPromotionPaused(false)}
                 >
-                  <span className="web-support-banner-icon" aria-hidden="true">☕</span>
+                  <span className="web-support-banner-icon" aria-hidden="true">{WEB_PROMOTIONS[webPromotionIndex].icon}</span>
                   <span className="web-support-banner-copy">
-                    <span className="web-support-banner-eyebrow">Enjoying Rizz Master?</span>
-                    <span className="web-support-banner-title">Buy me a coffee</span>
+                    <span className="web-support-banner-eyebrow">{WEB_PROMOTIONS[webPromotionIndex].eyebrow}</span>
+                    <span className="web-support-banner-title">{WEB_PROMOTIONS[webPromotionIndex].title}</span>
                   </span>
                   <span className="web-support-banner-arrow" aria-hidden="true">↗</span>
                 </a>
