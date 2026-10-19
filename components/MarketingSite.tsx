@@ -514,6 +514,11 @@ const BlogIndexPage: React.FC<{ navigate: (path: string) => void }> = ({ navigat
 );
 
 const ARTICLE_EXAMPLES: Record<string, string[]> = {
+  'how-to-answer-what-do-you-do-for-fun': [
+    'I have been trying one new recipe every Sunday. Last week was a great soup; the dessert was a disaster. What have you been enjoying lately?',
+    'Most of my fun is low-key: long walks, good playlists, and finding cafés worth returning to. I am always open to a new recommendation.',
+    'I do not have one impressive hobby, but I have been getting curious about street photography. I like noticing details I would normally miss.'
+  ],
   'how-to-talk-about-your-ex-on-a-date': [
     'We ended a while ago and I learned that I want clearer communication now.',
     'We still share a friend group, so we are cordial, but I am not trying to restart it.',
@@ -581,6 +586,7 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
 };
 
 const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
+  'how-to-answer-what-do-you-do-for-fun': { do: 'Give one specific detail, say why you enjoy it, and leave the other person an easy opening.', doNot: 'List vague hobbies, apologise for your life, or turn the answer into a performance.' },
   'how-to-talk-about-your-ex-on-a-date': { do: 'Give honest relevant context, take responsibility for your part, and return your attention to the person in front of you.', doNot: 'Compare people, use “crazy ex” as a complete explanation, or make a new date manage unresolved feelings.' },
   'talk-about-sexual-health-before-sex': { do: 'Share your position, ask relevant questions, agree on protection and consent, and slow down when anything is unclear.', doNot: 'Treat health questions as an accusation, assume previous intimacy is permission, or negotiate past a clear boundary.' },
   'talk-about-money-while-dating': { do: 'Name the practical choice, say what feels comfortable, and look for a fair arrangement you can both sustain.', doNot: 'Hide your budget, treat payment as a test of attraction, or let generosity become a way to control access or decisions.' },
@@ -665,6 +671,13 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'how-to-answer-what-do-you-do-for-fun': [
+    { slug: 'build-real-connection-first-date', label: 'Build a real connection on a first date' },
+    { slug: 'how-to-connect-emotionally-while-dating', label: 'Connect emotionally while dating' },
+    { slug: 'how-to-ask-someone-out-over-text', label: 'Ask someone out clearly' },
+    { slug: 'texting-mistakes-new-conversation-feel-forced', label: 'Avoid forced conversation habits' },
+    { slug: 'keep-dating-fun-when-you-want-something-serious', label: 'Keep dating fun while staying intentional' }
+  ],
   'how-to-talk-about-your-ex-on-a-date': [
     { slug: 'should-you-go-on-a-second-date-if-there-was-no-spark', label: 'Decide whether a second date is worth it' },
     { slug: 'how-to-tell-if-someone-is-emotionally-available', label: 'Recognize emotional availability' },

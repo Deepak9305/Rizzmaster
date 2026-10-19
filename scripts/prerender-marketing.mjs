@@ -69,6 +69,13 @@ const renderFaqs = (post) => post.faqs?.length
 const renderResources = (post) => `${renderResourcesOnly(post)}${renderFaqs(post)}`;
 
 const articleInternalLinks = {
+  'how-to-answer-what-do-you-do-for-fun': [
+    { slug: 'build-real-connection-first-date', label: 'Build a real connection on a first date' },
+    { slug: 'how-to-connect-emotionally-while-dating', label: 'Connect emotionally while dating' },
+    { slug: 'how-to-ask-someone-out-over-text', label: 'Ask someone out clearly' },
+    { slug: 'texting-mistakes-new-conversation-feel-forced', label: 'Avoid forced conversation habits' },
+    { slug: 'keep-dating-fun-when-you-want-something-serious', label: 'Keep dating fun while staying intentional' }
+  ],
   'how-to-talk-about-your-ex-on-a-date': [
     { slug: 'should-you-go-on-a-second-date-if-there-was-no-spark', label: 'Decide whether a second date is worth it' },
     { slug: 'how-to-tell-if-someone-is-emotionally-available', label: 'Recognize emotional availability' },
