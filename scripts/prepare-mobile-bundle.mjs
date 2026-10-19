@@ -17,6 +17,7 @@ const excludedFiles = new Set([
   'logo.png',
   'rizzline-logo.png',
   'rizzline-banner-logo.png',
+  'rizzline-banner-logo.webp',
   'rizzmaster-hero-poster.png',
 ]);
 

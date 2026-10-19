@@ -67,7 +67,7 @@ const WEB_PROMOTIONS = [
   {
     href: RIZZLINE_PLAY_STORE_URL,
     icon: '',
-    logo: '/rizzline-banner-logo.png',
+    logo: '/rizzline-banner-logo.webp',
     eyebrow: 'Need a pickup line now?',
     title: 'Install Rizzline',
     ariaLabel: 'Get Rizzline pickup lines on Google Play',
@@ -2734,7 +2734,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                   onBlur={() => setIsWebPromotionPaused(false)}
                 >
                   {WEB_PROMOTIONS[webPromotionIndex].logo ? (
-                    <img className="web-support-banner-logo" src={WEB_PROMOTIONS[webPromotionIndex].logo} alt="" aria-hidden="true" />
+                    <picture className="web-support-banner-logo" aria-hidden="true">
+                      <source srcSet={WEB_PROMOTIONS[webPromotionIndex].logo} type="image/webp" />
+                      <img src="/rizzline-banner-logo.png" alt="" width="32" height="32" />
+                    </picture>
                   ) : (
                     <span className="web-support-banner-icon" aria-hidden="true">{WEB_PROMOTIONS[webPromotionIndex].icon}</span>
                   )}
