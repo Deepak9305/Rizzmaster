@@ -70,7 +70,7 @@ const WEB_PROMOTIONS = [
     href: RIZZLINE_PLAY_STORE_URL,
     icon: '',
     logo: '/rizzline-banner-logo.webp',
-    eyebrow: 'Need a pickup line now?',
+    eyebrow: 'Need a pickup line that works?',
     title: 'Install Rizzline',
     ariaLabel: 'Get Rizzline pickup lines on Google Play',
   },
