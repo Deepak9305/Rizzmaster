@@ -669,6 +669,17 @@ html:not(.native-app) .web-app-root {
   font-size: 1.15rem;
 }
 
+.web-support-banner-logo {
+  display: block;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 206, 117, 0.3);
+  border-radius: 0.7rem;
+  object-fit: cover;
+  box-shadow: 0 0 14px rgba(255, 71, 192, 0.2);
+}
+
 .web-support-banner-copy {
   display: flex;
   min-width: 0;

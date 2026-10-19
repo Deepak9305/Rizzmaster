@@ -59,15 +59,17 @@ const WEB_PROMOTIONS = [
   {
     href: KOFI_SUPPORT_URL,
     icon: '☕',
+    logo: '',
     eyebrow: 'Enjoying Rizz Master?',
     title: 'Buy me a coffee',
     ariaLabel: 'Buy Rizz Master a coffee on Ko-fi',
   },
   {
     href: RIZZLINE_PLAY_STORE_URL,
-    icon: '✨',
-    eyebrow: 'Need a pickup line?',
-    title: 'Try Rizzline',
+    icon: '',
+    logo: '/rizzline-banner-logo.png',
+    eyebrow: 'Need a pickup line now?',
+    title: 'Install Rizzline',
     ariaLabel: 'Get Rizzline pickup lines on Google Play',
   },
 ] as const;
@@ -2731,7 +2733,11 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                   onFocus={() => setIsWebPromotionPaused(true)}
                   onBlur={() => setIsWebPromotionPaused(false)}
                 >
-                  <span className="web-support-banner-icon" aria-hidden="true">{WEB_PROMOTIONS[webPromotionIndex].icon}</span>
+                  {WEB_PROMOTIONS[webPromotionIndex].logo ? (
+                    <img className="web-support-banner-logo" src={WEB_PROMOTIONS[webPromotionIndex].logo} alt="" aria-hidden="true" />
+                  ) : (
+                    <span className="web-support-banner-icon" aria-hidden="true">{WEB_PROMOTIONS[webPromotionIndex].icon}</span>
+                  )}
                   <span className="web-support-banner-copy">
                     <span className="web-support-banner-eyebrow">{WEB_PROMOTIONS[webPromotionIndex].eyebrow}</span>
                     <span className="web-support-banner-title">{WEB_PROMOTIONS[webPromotionIndex].title}</span>

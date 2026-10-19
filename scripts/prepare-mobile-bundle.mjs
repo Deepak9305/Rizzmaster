@@ -16,6 +16,7 @@ const excludedFiles = new Set([
   'sitemap.xml',
   'logo.png',
   'rizzline-logo.png',
+  'rizzline-banner-logo.png',
   'rizzmaster-hero-poster.png',
 ]);
 
