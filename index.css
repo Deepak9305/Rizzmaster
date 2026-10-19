@@ -618,6 +618,8 @@ html:not(.native-app) .web-app-root {
   position: sticky;
   top: env(safe-area-inset-top, 0px);
   z-index: 20;
+  isolation: isolate;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -634,6 +636,42 @@ html:not(.native-app) .web-app-root {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 12px 30px rgba(0, 0, 0, 0.2);
   text-decoration: none;
   transition: border-color 180ms ease, background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+
+.web-support-banner::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: '';
+  background: radial-gradient(circle at 12% 50%, rgba(255, 196, 108, 0.2), transparent 30%), radial-gradient(circle at 86% 0%, rgba(255, 91, 142, 0.12), transparent 36%);
+  pointer-events: none;
+}
+
+.web-support-banner--support {
+  border-color: rgba(255, 196, 108, 0.34);
+  background: linear-gradient(105deg, #4d1c28, #25101e 58%, #1a0c1b);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 14px 32px rgba(79, 28, 30, 0.26), 0 0 28px rgba(255, 177, 78, 0.08);
+}
+
+.web-support-banner--support .web-support-banner-icon {
+  border-color: rgba(255, 216, 136, 0.44);
+  background: linear-gradient(145deg, rgba(255, 205, 111, 0.24), rgba(255, 117, 102, 0.12));
+  box-shadow: 0 0 18px rgba(255, 190, 93, 0.2);
+  animation: web-support-coffee-glow 2.8s ease-in-out infinite;
+}
+
+.web-support-banner--support .web-support-banner-eyebrow {
+  color: rgba(255, 241, 211, 0.7);
+}
+
+.web-support-banner--support .web-support-banner-title {
+  color: #ffe8b0;
+  letter-spacing: 0.01em;
+}
+
+@keyframes web-support-coffee-glow {
+  0%, 100% { box-shadow: 0 0 14px rgba(255, 190, 93, 0.14); transform: translateY(0); }
+  50% { box-shadow: 0 0 22px rgba(255, 190, 93, 0.3); transform: translateY(-1px); }
 }
 
 .web-support-banner:hover,
@@ -721,6 +759,10 @@ html:not(.native-app) .web-app-root {
 .web-support-banner:hover .web-support-banner-arrow,
 .web-support-banner:focus-visible .web-support-banner-arrow {
   transform: translate(2px, -2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .web-support-banner--support .web-support-banner-icon { animation: none; }
 }
 
 .web-app-topbar-leading,

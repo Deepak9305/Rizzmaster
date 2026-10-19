@@ -57,6 +57,7 @@ const RIZZLINE_PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=c
 const WEB_PROMOTION_ROTATION_MS = 10_000;
 const WEB_PROMOTIONS = [
   {
+    kind: 'support',
     href: KOFI_SUPPORT_URL,
     icon: '☕',
     logo: '',
@@ -65,6 +66,7 @@ const WEB_PROMOTIONS = [
     ariaLabel: 'Buy Rizz Master a coffee on Ko-fi',
   },
   {
+    kind: 'rizzline',
     href: RIZZLINE_PLAY_STORE_URL,
     icon: '',
     logo: '/rizzline-banner-logo.webp',
@@ -2726,7 +2728,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                   href={WEB_PROMOTIONS[webPromotionIndex].href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="web-support-banner"
+                  className={`web-support-banner web-support-banner--${WEB_PROMOTIONS[webPromotionIndex].kind}`}
                   aria-label={WEB_PROMOTIONS[webPromotionIndex].ariaLabel}
                   onMouseEnter={() => setIsWebPromotionPaused(true)}
                   onMouseLeave={() => setIsWebPromotionPaused(false)}
