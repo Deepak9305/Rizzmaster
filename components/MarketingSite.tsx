@@ -514,6 +514,11 @@ const BlogIndexPage: React.FC<{ navigate: (path: string) => void }> = ({ navigat
 );
 
 const ARTICLE_EXAMPLES: Record<string, string[]> = {
+  'how-to-make-small-talk-when-you-have-nothing-in-common': [
+    'This place has a surprisingly serious coffee menu. Have you found a safe order yet?',
+    'I came here knowing almost nobody, so I am starting with the important question: what brought you here?',
+    'I keep asking people about the best thing they have found in their neighbourhood. What is yours?'
+  ],
   'how-to-answer-what-do-you-do-for-fun': [
     'I have been trying one new recipe every Sunday. Last week was a great soup; the dessert was a disaster. What have you been enjoying lately?',
     'Most of my fun is low-key: long walks, good playlists, and finding cafés worth returning to. I am always open to a new recommendation.',
@@ -586,6 +591,7 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
 };
 
 const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
+  'how-to-make-small-talk-when-you-have-nothing-in-common': { do: 'Use the shared setting, add one honest detail, and ask a question that leaves room for a real answer.', doNot: 'Search for a perfect common interest, stack questions, or keep carrying a conversation after the other person stops participating.' },
   'how-to-answer-what-do-you-do-for-fun': { do: 'Give one specific detail, say why you enjoy it, and leave the other person an easy opening.', doNot: 'List vague hobbies, apologise for your life, or turn the answer into a performance.' },
   'how-to-talk-about-your-ex-on-a-date': { do: 'Give honest relevant context, take responsibility for your part, and return your attention to the person in front of you.', doNot: 'Compare people, use “crazy ex” as a complete explanation, or make a new date manage unresolved feelings.' },
   'talk-about-sexual-health-before-sex': { do: 'Share your position, ask relevant questions, agree on protection and consent, and slow down when anything is unclear.', doNot: 'Treat health questions as an accusation, assume previous intimacy is permission, or negotiate past a clear boundary.' },
@@ -671,6 +677,13 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'how-to-make-small-talk-when-you-have-nothing-in-common': [
+    { slug: 'how-to-answer-what-do-you-do-for-fun', label: 'Answer what you do for fun' },
+    { slug: 'texting-mistakes-new-conversation-feel-forced', label: 'Avoid forced conversation habits' },
+    { slug: 'build-real-connection-first-date', label: 'Build a real connection' },
+    { slug: 'best-tinder-openers-for-guys', label: 'Start with a better opener' },
+    { slug: 'how-to-connect-emotionally-while-dating', label: 'Listen for real connection' }
+  ],
   'how-to-answer-what-do-you-do-for-fun': [
     { slug: 'build-real-connection-first-date', label: 'Build a real connection on a first date' },
     { slug: 'how-to-connect-emotionally-while-dating', label: 'Connect emotionally while dating' },

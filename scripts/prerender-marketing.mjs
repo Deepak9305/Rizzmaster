@@ -69,6 +69,13 @@ const renderFaqs = (post) => post.faqs?.length
 const renderResources = (post) => `${renderResourcesOnly(post)}${renderFaqs(post)}`;
 
 const articleInternalLinks = {
+  'how-to-make-small-talk-when-you-have-nothing-in-common': [
+    { slug: 'how-to-answer-what-do-you-do-for-fun', label: 'Answer what you do for fun' },
+    { slug: 'texting-mistakes-new-conversation-feel-forced', label: 'Avoid forced conversation habits' },
+    { slug: 'build-real-connection-first-date', label: 'Build a real connection' },
+    { slug: 'best-tinder-openers-for-guys', label: 'Start with a better opener' },
+    { slug: 'how-to-connect-emotionally-while-dating', label: 'Listen for real connection' }
+  ],
   'how-to-answer-what-do-you-do-for-fun': [
     { slug: 'build-real-connection-first-date', label: 'Build a real connection on a first date' },
     { slug: 'how-to-connect-emotionally-while-dating', label: 'Connect emotionally while dating' },
