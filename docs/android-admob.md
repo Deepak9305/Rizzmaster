@@ -9,14 +9,14 @@ Coach remains banner-free. The banner remains hidden under fullscreen dialogs an
 ## Native dependencies
 
 - Capacitor platform packages: 8.5.2.
-- AdMob plugin: 8.2.0, with the tracked patch in `patches/@capacitor-community+admob+8.2.0.patch`.
+- AdMob plugin: 8.2.1, with the tracked patch in `patches/@capacitor-community+admob+8.2.1.patch`.
 - Google Mobile Ads: 25.4.0, pinned in `android/variables.gradle`.
 - Meta mediation adapter: 6.22.0.1, tested by Google with Mobile Ads 25.4.0 and Audience Network 6.22.0.
 - UMP: 4.0.0.
 
 `npm install` / `npm ci` apply the native patch through `postinstall`. Do not skip installation scripts when building Android. Keep the patch when upgrading dependencies, review whether its fixes are upstream, and run the native regression tests before replacing it.
 
-The upstream 8.2.0 plugin fixes the missing-parent lookup and avoids replacing Capacitor's decor-view inset listener. The app patch additionally:
+Upstream 8.2.1 retains the 8.2.0 missing-parent and decor-view inset fixes. Its Android banner and initialization code still needs the app patch below; the new Native Ads preview API is not used. Keep the supported Android SDK at the exact 25.4.0 pin instead of forcing a newer SDK independently of the plugin and mediation adapter. The app patch additionally:
 
 - Resolves initialization only after the parent exists **and** Google's SDK/mediation completion callback arrives. A missing callback rejects after 35 seconds; late callbacks cannot resolve a rejected call. The JavaScript SDK deadline is 45 seconds, independently of UMP's network timeout.
 - Runs banner view creation, hide, resume, removal, and requests on the UI thread, catching exceptions inside queued actions.
@@ -49,6 +49,8 @@ cd android
 
 The native tests execute the patched plugin with controlled SDK callbacks, layout callbacks, and UI queues. They cover mediation readiness, callback timeouts, delayed/missing parents, hide-after-failure, resume of a missing view, removal ordering, and measured positioning without replacing Capacitor's insets listener. They do not replace a device check for keyboard, scrolling, rotation, app resume, and consent forms.
 
+The 8.2.1 upgrade was verified locally on 2026-10-20: the regenerated patch applied to pristine 8.2.1 sources, all 108 JavaScript ad/reward tests and 13 Android unit tests (including eight AdMob regressions) passed, production web build and Android sync/config checks passed, and the minified release APK built successfully. Gradle's release dependency report resolved Google Mobile Ads 25.4.0. Live ad delivery on a device was not checked as part of this upgrade.
+
 Native fixes require a rebuilt APK/AAB and a Play release; publishing web JavaScript cannot change native classes already installed in release 10022. Compare requests, matched requests, impressions, and affected-session logs after rollout. Code fixes alone do not establish the cause of country-specific no-fill or AdMob account restrictions.
 
-References: [plugin 8.2.0 release notes](https://github.com/capacitor-community/admob/releases/tag/v8.2.0), [Google SDK initialization](https://developers.google.com/admob/android/quick-start#initialize_the_google_mobile_ads_sdk), [Meta adapter compatibility](https://developers.google.com/admob/android/mediation/meta#version_62201).
+References: [plugin 8.2.1 release notes](https://github.com/capacitor-community/admob/releases/tag/v8.2.1), [Google SDK initialization](https://developers.google.com/admob/android/quick-start#initialize_the_google_mobile_ads_sdk), [Meta adapter compatibility](https://developers.google.com/admob/android/mediation/meta#version_62201).

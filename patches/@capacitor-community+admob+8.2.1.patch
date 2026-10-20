@@ -1,8 +1,8 @@
 diff --git a/node_modules/@capacitor-community/admob/android/src/main/java/com/getcapacitor/community/admob/AdMob.java b/node_modules/@capacitor-community/admob/android/src/main/java/com/getcapacitor/community/admob/AdMob.java
-index c5b1528..783cee2 100644
+index 2da5abb..81bcb94 100644
 --- a/node_modules/@capacitor-community/admob/android/src/main/java/com/getcapacitor/community/admob/AdMob.java
 +++ b/node_modules/@capacitor-community/admob/android/src/main/java/com/getcapacitor/community/admob/AdMob.java
-@@ -21,8 +21,7 @@ import com.getcapacitor.community.admob.rewarded.AdRewardExecutor;
+@@ -22,8 +22,7 @@ import com.getcapacitor.community.admob.rewarded.AdRewardExecutor;
  import com.getcapacitor.community.admob.rewardedinterstitial.AdRewardInterstitialExecutor;
  import com.google.android.gms.ads.MobileAds;
  import com.google.android.gms.ads.RequestConfiguration;
@@ -12,7 +12,7 @@ index c5b1528..783cee2 100644
  import org.json.JSONException;
  
  @CapacitorPlugin(
-@@ -91,36 +90,55 @@ public class AdMob extends Plugin {
+@@ -125,36 +124,55 @@ public class AdMob extends Plugin {
  
      @PluginMethod
      public void initialize(final PluginCall call) {
