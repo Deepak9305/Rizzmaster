@@ -69,6 +69,13 @@ const renderFaqs = (post) => post.faqs?.length
 const renderResources = (post) => `${renderResourcesOnly(post)}${renderFaqs(post)}`;
 
 const articleInternalLinks = {
+  'how-to-make-friends-as-an-adult-when-life-feels-too-busy': [
+    { slug: 'how-to-make-small-talk-when-you-have-nothing-in-common', label: 'Make small talk when you have nothing in common' },
+    { slug: 'how-to-answer-what-do-you-do-for-fun', label: 'Answer what you do for fun' },
+    { slug: 'how-to-connect-emotionally-while-dating', label: 'Listen for real connection' },
+    { slug: 'how-to-build-trust-in-a-new-relationship', label: 'Build trust through consistency' },
+    { slug: 'texting-boundaries-while-dating', label: 'Keep communication healthy' }
+  ],
   'how-to-make-small-talk-when-you-have-nothing-in-common': [
     { slug: 'how-to-answer-what-do-you-do-for-fun', label: 'Answer what you do for fun' },
     { slug: 'texting-mistakes-new-conversation-feel-forced', label: 'Avoid forced conversation habits' },

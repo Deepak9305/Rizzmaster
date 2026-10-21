@@ -514,6 +514,11 @@ const BlogIndexPage: React.FC<{ navigate: (path: string) => void }> = ({ navigat
 );
 
 const ARTICLE_EXAMPLES: Record<string, string[]> = {
+  'how-to-make-friends-as-an-adult-when-life-feels-too-busy': [
+    'I enjoyed talking with you after the meeting. Want to grab coffee next Tuesday before work?',
+    'I am trying to make my week a little more social. Want to join me for a walk after work one day?',
+    'You mentioned that café last week, and I finally tried it. Free Saturday morning to compare orders?'
+  ],
   'how-to-make-small-talk-when-you-have-nothing-in-common': [
     'This place has a surprisingly serious coffee menu. Have you found a safe order yet?',
     'I came here knowing almost nobody, so I am starting with the important question: what brought you here?',
@@ -591,6 +596,7 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
 };
 
 const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
+  'how-to-make-friends-as-an-adult-when-life-feels-too-busy': { do: 'Create a repeatable rhythm, make specific invitations, and watch for effort coming back.', doNot: 'Wait for a perfect free week, force instant closeness, or keep organising every plan alone.' },
   'how-to-make-small-talk-when-you-have-nothing-in-common': { do: 'Use the shared setting, add one honest detail, and ask a question that leaves room for a real answer.', doNot: 'Search for a perfect common interest, stack questions, or keep carrying a conversation after the other person stops participating.' },
   'how-to-answer-what-do-you-do-for-fun': { do: 'Give one specific detail, say why you enjoy it, and leave the other person an easy opening.', doNot: 'List vague hobbies, apologise for your life, or turn the answer into a performance.' },
   'how-to-talk-about-your-ex-on-a-date': { do: 'Give honest relevant context, take responsibility for your part, and return your attention to the person in front of you.', doNot: 'Compare people, use “crazy ex” as a complete explanation, or make a new date manage unresolved feelings.' },
@@ -677,6 +683,13 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'how-to-make-friends-as-an-adult-when-life-feels-too-busy': [
+    { slug: 'how-to-make-small-talk-when-you-have-nothing-in-common', label: 'Make small talk when you have nothing in common' },
+    { slug: 'how-to-answer-what-do-you-do-for-fun', label: 'Answer what you do for fun' },
+    { slug: 'how-to-connect-emotionally-while-dating', label: 'Listen for real connection' },
+    { slug: 'how-to-build-trust-in-a-new-relationship', label: 'Build trust through consistency' },
+    { slug: 'texting-boundaries-while-dating', label: 'Keep communication healthy' }
+  ],
   'how-to-make-small-talk-when-you-have-nothing-in-common': [
     { slug: 'how-to-answer-what-do-you-do-for-fun', label: 'Answer what you do for fun' },
     { slug: 'texting-mistakes-new-conversation-feel-forced', label: 'Avoid forced conversation habits' },

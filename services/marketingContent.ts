@@ -54,6 +54,162 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'how-to-make-friends-as-an-adult-when-life-feels-too-busy',
+    title: 'How to Make Friends as an Adult When Your Life Feels Too Busy',
+    seoTitle: 'How to Make Friends as an Adult When Your Life Feels Too Busy',
+    description: 'Learn how to make friends as an adult without adding another exhausting obligation to your calendar. Use small invitations, repeated places, realistic follow-ups, and a simple rhythm that turns acquaintances into genuine friends.',
+    excerpt: 'Adult friendship rarely begins with a perfect free weekend. It grows when you make a little room, return to the same people, and turn one pleasant conversation into a specific next plan.',
+    date: '2026-10-21',
+    updatedAt: '2026-10-21',
+    readingTime: '10 min read',
+    category: 'Friendship & community',
+    author: 'amelia',
+    keywords: [
+      'how to make friends as an adult',
+      'how to make friends when you are busy',
+      'how to turn acquaintances into friends',
+      'how to make time for friendships',
+      'how often to reach out to a new friend',
+      'how to build a social life as an adult',
+      'what to text a new friend',
+      'how to make friends after moving'
+    ],
+    image: '/blog/how-to-make-friends-as-an-adult-when-life-feels-too-busy-hero.png',
+    imageWebp: '/blog/how-to-make-friends-as-an-adult-when-life-feels-too-busy-hero.webp',
+    imageAlt: 'Three adults talking naturally at a warm neighborhood cafe after work',
+    imageCaption: 'Friendship becomes easier to build when connection has a place in the week.',
+    resources: [
+      { label: 'U.S. Surgeon General: Social connection', url: 'https://www.hhs.gov/surgeongeneral/reports-and-publications/connection/index.html' },
+      { label: 'NIH: Do social ties affect our health?', url: 'https://newsinhealth.nih.gov/2017/02/do-social-ties-affect-our-health' },
+      { label: 'U.S. Surgeon General: Recommendations for individuals', url: 'https://www.hhs.gov/surgeongeneral/reports-and-publications/connection/resources/index.html' }
+    ],
+    faqs: [
+      { question: 'How do I make friends when I am already busy?', answer: 'Start with places and routines already in your week. Use a short coffee, walk, shared class, or regular group rather than waiting for a completely free day. A small repeatable plan is easier to sustain than an ambitious social reset.' },
+      { question: 'How often should I reach out to a new friend?', answer: 'Reach out often enough to create a rhythm, while leaving room for their life and response. A specific invitation every week or two is usually more useful than constant checking in or disappearing for months.' },
+      { question: 'What if a new friendship feels one-sided?', answer: 'Look at the pattern across several attempts. Make one clear invitation, notice whether they offer another time when they cannot make it, and stop doing all the planning if the effort never comes back.' },
+      { question: 'Is it okay to make friends through work?', answer: 'Yes, as long as you respect the workplace context and let trust develop gradually. Keep invitations low-pressure, make it easy to decline, and pay attention to any power or reporting relationship that requires extra care.' }
+    ],
+    sections: [
+      {
+        heading: 'Friendship needs rhythm, not constant availability',
+        paragraphs: [
+          'Making friends as an adult can feel like one more project competing with work, family, health, errands, and the recovery time you already need. The problem is often the size of the plan. If friendship only counts when you can give someone an entire evening every week, your schedule will keep rejecting it.',
+          'A better approach is to build a rhythm that fits the life you actually have. A ten-minute conversation after a class, a walk around the block, or a coffee before work can create the next point of contact. Friendship grows through repeated moments of attention. It does not require unlimited access to your calendar.'
+        ],
+        bullets: [
+          'Choose a pace you can repeat for three months.',
+          'Let short meetings count as real time together.',
+          'Build around routines you already protect.',
+          'Look for consistency before chasing instant closeness.'
+        ]
+      },
+      {
+        heading: 'Audit the week you already have',
+        paragraphs: [
+          'Before searching for a new community, look at the places where you already see people. The colleague who always takes lunch at the same time, the person at your gym, a neighbour you greet, or someone from a class may be closer to becoming a friend than a stranger you have not met yet. Familiarity is not friendship, but it gives you a starting point.',
+          'Circle two repeatable windows: one for being around people and one for following up. The first could be a Saturday market, a running group, a library event, or a shared commute. The second could be fifteen minutes on Sunday to send one message. A social life becomes more manageable when you give it a container instead of hoping motivation appears at the end of a long day.'
+        ],
+        bullets: [
+          'List the places you return to without much effort.',
+          'Notice who seems open to a short conversation.',
+          'Protect one small social window before adding more.',
+          'Remove one low-value obligation if your week has no margin.'
+        ]
+      },
+      {
+        heading: 'Choose repeated places over one-off networking',
+        paragraphs: [
+          'One-off events can create introductions, but repeated settings make friendship easier because every meeting does not begin from zero. You get to remember a detail, ask how something went, and see whether the person is warm over time. That shared history lowers the pressure on both of you.',
+          'Choose a setting where conversation can happen naturally and where attendance is not a major performance. A volunteer shift, language class, hobby group, community project, or regular café can work. You are not looking for a room full of potential best friends. You are looking for a place where a few familiar faces can become part of your normal week.'
+        ],
+        bullets: [
+          'Prefer a group that meets regularly and welcomes newcomers.',
+          'Pick an activity you would still enjoy if no friendship forms.',
+          'Return enough times for people to recognise you.',
+          'Notice who asks questions and follows the conversation.'
+        ]
+      },
+      {
+        heading: 'Make the first move specific and small',
+        paragraphs: [
+          'Vague invitations are easy to postpone because neither person knows what they are agreeing to. “We should hang out sometime” sounds friendly, but it has no next action. A better invitation names the activity, the rough time, and the reason you thought of them: “I liked talking with you after the workshop. Want to grab coffee next Tuesday before work?”',
+          'Keep the first plan light enough that a yes does not feel like a commitment to a new identity. A walk, a quick lunch, a museum hour, or trying the place they mentioned gives the friendship room to develop without making the invitation carry too much meaning.'
+        ],
+        bullets: [
+          'Mention the moment that made you want to continue talking.',
+          'Suggest one activity rather than asking for an open-ended plan.',
+          'Offer two reasonable times when that is helpful.',
+          'Make declining easy so the invitation stays generous.'
+        ]
+      },
+      {
+        heading: 'Move from acquaintance to friend through follow-through',
+        paragraphs: [
+          'The first good conversation is only a signal. Friendship becomes more real when you remember what someone told you and return to it later. Ask how their presentation went, check whether they found the book they wanted, or send the photo of the place you discussed. Small acts of attention communicate that the conversation had a life beyond the moment.',
+          'Follow-through also means showing a little more of yourself over time. You can share a preference, admit that a week has been difficult, or explain why a hobby matters to you. Do it in layers and watch whether the other person meets you with similar care. Closeness is built through mutual disclosure and reliability, not through one intense conversation.'
+        ],
+        bullets: [
+          'Remember one detail and bring it up naturally.',
+          'Keep a promise, even when it is a small one.',
+          'Share personal context without making the other person responsible for it.',
+          'Let trust grow at the speed of repeated behaviour.'
+        ]
+      },
+      {
+        heading: 'Use messages to support the friendship, not replace it',
+        paragraphs: [
+          'Texting is useful for keeping a thread alive between plans, but it can also create the feeling of a friendship without enough shared time. Send something that has a point: a recommendation, a callback to an earlier joke, or a simple invitation. You do not need to manufacture constant conversation to prove that you care.',
+          'If the person replies slowly, read the pattern rather than one gap. People can be interested and busy. The useful question is whether they return to the connection, answer with some warmth, or suggest another time when they cannot make your plan. A friendship can survive uneven response times; it struggles when only one person keeps restarting it.'
+        ],
+        bullets: [
+          'Send a message that gives them something easy to answer.',
+          'Use a specific invitation when you want to meet.',
+          'Do not turn delayed replies into a silent test.',
+          'Match the level of effort you are actually receiving.'
+        ]
+      },
+      {
+        heading: 'Handle cancellations and slow starts without taking over',
+        paragraphs: [
+          'New friendships often begin with imperfect logistics. Someone gets sick, a deadline moves, or the first plan is not quite the right fit. A calm response protects the connection without making you the permanent organiser: “No problem. I would still like to meet. If you want to reschedule, send me a day that works.”',
+          'Then watch what happens. A genuine scheduling problem usually comes with some form of repair: another suggestion, an apology, or a later message. If the person repeatedly accepts your effort without helping create a plan, you have useful information. You can leave the door open without standing in it.'
+        ],
+        bullets: [
+          'Accept a reasonable cancellation without punishing the person.',
+          'Return responsibility for the next plan when appropriate.',
+          'Give one clear opportunity for repair.',
+          'Step back from repeated vagueness instead of escalating effort.'
+        ]
+      },
+      {
+        heading: 'Build different levels of friendship',
+        paragraphs: [
+          'A healthy social life does not require every new person to become a best friend. Some people will be activity friends, some will be good for thoughtful conversations, and a smaller number may become part of your inner circle. Expecting every connection to reach the deepest level quickly can make ordinary, useful relationships feel disappointing.',
+          'Give each friendship the amount of care that fits its shape. Invite the running partner for another run. Share the longer conversation with the friend who enjoys it. Keep your closest relationships supported while allowing newer connections to develop without comparison. Variety makes a social life more resilient because one person does not have to meet every need.'
+        ],
+        bullets: [
+          'Name the kind of connection that is growing without forcing a label.',
+          'Invite people into activities that suit the relationship.',
+          'Keep more than one source of community in your life.',
+          'Let closeness deepen through evidence rather than urgency.'
+        ]
+      },
+      {
+        heading: 'A simple 30-day friendship plan',
+        paragraphs: [
+          'For the next month, make the goal small enough to finish. In week one, return to one place where people gather and start two short conversations. In week two, follow up with one person using a specific detail. In week three, make one low-pressure invitation. In week four, return to the setting or plan another meeting with anyone who showed shared interest.',
+          'The point is not to collect contacts or force a best friend into existence. It is to practise the behaviours that make friendship possible: showing up, noticing people, making a clear invitation, and allowing the response to guide you. If the first attempt goes nowhere, you have not failed. You have learned where to invest the next small amount of time.'
+        ],
+        bullets: [
+          'Week 1: return to one repeatable social setting.',
+          'Week 2: remember and follow up on one detail.',
+          'Week 3: make one specific, low-pressure invitation.',
+          'Week 4: repeat the connection that showed mutual effort.'
+        ]
+      }
+    ]
+  },
+  {
     slug: 'how-to-make-small-talk-when-you-have-nothing-in-common',
     title: 'How to Make Small Talk When You Have Nothing in Common',
     seoTitle: 'How to Make Small Talk When You Have Nothing in Common Without Sounding Forced',
