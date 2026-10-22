@@ -514,6 +514,11 @@ const BlogIndexPage: React.FC<{ navigate: (path: string) => void }> = ({ navigat
 );
 
 const ARTICLE_EXAMPLES: Record<string, string[]> = {
+  'how-to-stop-comparing-your-life-to-everyone-else-online': [
+    'I caught myself comparing my whole life to one post, so I am taking a break from scrolling and getting back to my own plan.',
+    'That looks exciting. I am happy for you, and it also made me realise I want to make more room for travel this year.',
+    'I have been feeling behind lately. I am going to focus on one thing I can actually change this week.'
+  ],
   'how-to-make-friends-as-an-adult-when-life-feels-too-busy': [
     'I enjoyed talking with you after the meeting. Want to grab coffee next Tuesday before work?',
     'I am trying to make my week a little more social. Want to join me for a walk after work one day?',
@@ -596,6 +601,7 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
 };
 
 const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
+  'how-to-stop-comparing-your-life-to-everyone-else-online': { do: 'Name the exact comparison, decide what value is underneath it, and return to an action you control.', doNot: 'Treat a selected post as a complete life story, punish yourself for having the feeling, or copy someone else’s timeline.' },
   'how-to-make-friends-as-an-adult-when-life-feels-too-busy': { do: 'Create a repeatable rhythm, make specific invitations, and watch for effort coming back.', doNot: 'Wait for a perfect free week, force instant closeness, or keep organising every plan alone.' },
   'how-to-make-small-talk-when-you-have-nothing-in-common': { do: 'Use the shared setting, add one honest detail, and ask a question that leaves room for a real answer.', doNot: 'Search for a perfect common interest, stack questions, or keep carrying a conversation after the other person stops participating.' },
   'how-to-answer-what-do-you-do-for-fun': { do: 'Give one specific detail, say why you enjoy it, and leave the other person an easy opening.', doNot: 'List vague hobbies, apologise for your life, or turn the answer into a performance.' },
@@ -683,6 +689,13 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'how-to-stop-comparing-your-life-to-everyone-else-online': [
+    { slug: 'how-to-make-friends-as-an-adult-when-life-feels-too-busy', label: 'Build a social life that fits your week' },
+    { slug: 'how-to-make-small-talk-when-you-have-nothing-in-common', label: 'Make small talk with more confidence' },
+    { slug: 'how-to-answer-what-do-you-do-for-fun', label: 'Talk about what you enjoy' },
+    { slug: 'how-to-stop-overthinking-while-dating', label: 'Stop overthinking your next move' },
+    { slug: 'how-to-build-trust-in-a-new-relationship', label: 'Build trust through consistency' }
+  ],
   'how-to-make-friends-as-an-adult-when-life-feels-too-busy': [
     { slug: 'how-to-make-small-talk-when-you-have-nothing-in-common', label: 'Make small talk when you have nothing in common' },
     { slug: 'how-to-answer-what-do-you-do-for-fun', label: 'Answer what you do for fun' },

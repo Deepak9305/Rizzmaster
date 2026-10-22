@@ -54,6 +54,149 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'how-to-stop-comparing-your-life-to-everyone-else-online',
+    title: 'How to Stop Comparing Your Life to Everyone Else’s Online',
+    seoTitle: 'How to Stop Comparing Yourself to Others Online and Feel Less Behind',
+    description: 'Learn how to stop comparing your life to other people online without deleting every app or pretending comparison never happens. Separate admiration from envy, curate your feed, and build a personal definition of progress.',
+    excerpt: 'A feed shows you selected moments, not a complete life. The way out of comparison is to notice what the post awakens, decide whether you actually want it, and return your attention to a life you can shape.',
+    date: '2026-10-22',
+    updatedAt: '2026-10-22',
+    readingTime: '10 min read',
+    category: 'Confidence & mindset',
+    author: 'jake',
+    keywords: [
+      'how to stop comparing yourself to others',
+      'how to stop comparing your life to others online',
+      'social media comparison',
+      'how to stop feeling behind in life',
+      'how to compare yourself less',
+      'how to curate your social media feed',
+      'what to do when social media makes you feel bad',
+      'how to focus on your own progress'
+    ],
+    image: '/blog/how-to-stop-comparing-your-life-to-everyone-else-online-hero.png',
+    imageWebp: '/blog/how-to-stop-comparing-your-life-to-everyone-else-online-hero.webp',
+    imageAlt: 'An adult putting down a phone and looking toward a notebook by a bright window',
+    imageCaption: 'A calmer comparison starts when you return from the highlight reel to your own next step.',
+    resources: [
+      { label: 'PubMed: Social media use and social well-being in adults', url: 'https://pubmed.ncbi.nlm.nih.gov/31742462/' },
+      { label: 'PLOS ONE: Active and passive social media use', url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC7951844/' },
+      { label: 'APA: Health advisory on social media use', url: 'https://www.apa.org/topics/social-media-internet/health-advisory-adolescent-social-media-use' }
+    ],
+    faqs: [
+      { question: 'Why do I feel behind when my life is actually okay?', answer: 'Online feeds put selected achievements beside the unfinished parts of your own life. The comparison feels personal because you are comparing someone else’s visible results with your private process, including all the uncertainty they do not show.' },
+      { question: 'How do I stop comparing myself online without deleting every app?', answer: 'Change the conditions first: mute accounts that repeatedly trigger unhelpful comparisons, remove unnecessary notifications, set a stopping point, and follow more varied and useful content. A short intentional break can help you notice what you want to change.' },
+      { question: 'What is a healthy way to compare myself with other people?', answer: 'Use comparison as information rather than a verdict. Ask what specific quality, habit, or goal you admire, then decide whether it fits your values and circumstances. Borrow the lesson without copying the entire life.' },
+      { question: 'Should I mute a friend who makes me feel behind?', answer: 'Muting can be a reasonable boundary when you need space from a repeated trigger. It does not have to be a punishment or a permanent decision. You can protect your attention while keeping the real relationship warm in other ways.' }
+    ],
+    sections: [
+      {
+        heading: 'Your feed is evidence of selection, not a complete life',
+        paragraphs: [
+          'The comparison begins with a mismatch that is easy to miss. You experience your own life as a continuous stream of ordinary mornings, unfinished tasks, doubt, bills, awkward conversations, and small wins. You see someone else through selected moments: the promotion announcement, the holiday photo, the engagement, the new apartment, the perfect dinner, or the confident opinion.',
+          'That does not make every post fake. It means the post is incomplete. Research on social media and well-being is mixed and depends on how people use platforms, what they are seeking, and which kinds of content they see. Treating every visible result as a full biography gives the image more authority than it deserves.'
+        ],
+        bullets: [
+          'Ask what part of the person’s life the post actually shows.',
+          'Remember that timing and context are missing from most updates.',
+          'Do not turn a stranger’s highlight into a verdict on your ordinary day.',
+          'Notice whether scrolling leaves you informed, connected, inspired, or depleted.'
+        ]
+      },
+      {
+        heading: 'Name the comparison before you try to fix it',
+        paragraphs: [
+          '“I feel behind” is real, but it is too broad to guide your next move. Behind in what: money, career, love, confidence, appearance, friendships, travel, or creative work? The feeling often becomes less overwhelming when you name the exact comparison underneath it.',
+          'Write one sentence without arguing with yourself: “I saw their new job and felt afraid that my work is going nowhere.” That sentence separates the trigger from the story. You can then examine the story instead of allowing a vague sense of failure to spread across your entire identity.'
+        ],
+        bullets: [
+          'Identify the post, person, or topic that activated the feeling.',
+          'Name the conclusion you made about yourself.',
+          'Ask whether the conclusion is a fact, a prediction, or a fear.',
+          'Choose one small action only after the comparison is specific.'
+        ]
+      },
+      {
+        heading: 'Separate admiration, envy, and actual desire',
+        paragraphs: [
+          'Sometimes comparison is trying to tell you that a value matters to you. You may admire someone’s independence, creative discipline, close friendships, or willingness to take a risk. That signal is useful. It becomes painful when you skip the question of whether you want the whole visible package or only one quality inside it.',
+          'Envy can contain information without becoming an instruction. You might not want their exact job; you might want more autonomy. You might not want their relationship; you might want more closeness. You might not want their body; you might want to feel stronger in your own. Translate the image into a value you can pursue on your terms.'
+        ],
+        bullets: [
+          'Ask, “What exactly am I responding to?”',
+          'Separate the outcome from the quality you admire.',
+          'Check whether the goal fits your values or only looks impressive.',
+          'Turn one vague desire into a behaviour you can practise.'
+        ]
+      },
+      {
+        heading: 'Change the feed without making dramatic promises',
+        paragraphs: [
+          'You do not have to delete every platform to make your attention more livable. Start by noticing which accounts reliably create a spiral rather than a useful response. Mute, unfollow, restrict, or move them out of the places you check automatically. This is attention management, not a declaration that those people are bad.',
+          'Then add material that gives your feed a wider picture: ordinary routines, practical learning, different kinds of bodies and families, local communities, and creators who show process as well as results. Adjust notifications and decide when you will check the app. Small changes are easier to sustain than a dramatic reset you resent after two days.'
+        ],
+        bullets: [
+          'Mute before you make a permanent decision.',
+          'Turn off notifications that pull you back without a reason.',
+          'Replace some aspirational content with useful or grounding content.',
+          'Notice how you feel ten minutes after scrolling, not only while doing it.'
+        ]
+      },
+      {
+        heading: 'Compare actions, not finished outcomes',
+        paragraphs: [
+          'A finished outcome is usually a poor target for daily comparison. You see someone’s published book, strong body, busy social life, or successful business, but not the sequence of ordinary actions that made it possible. Comparing your current chapter with their visible result produces shame without a route forward.',
+          'Use process questions instead. What did they practise repeatedly? What support, time, money, or access might have helped? Which part is available to you now? A useful comparison ends with a next action you can take, even if it is much smaller than the result that first caught your attention.'
+        ],
+        bullets: [
+          'Ask what repeated behaviour sits behind the visible result.',
+          'Choose a 15-minute version of the action.',
+          'Track your own repetitions instead of someone else’s milestones.',
+          'Let a different starting point change the pace, not your worth.'
+        ]
+      },
+      {
+        heading: 'Keep the lesson and release the self-attack',
+        paragraphs: [
+          'Self-criticism can feel like accountability because it is loud. It rarely provides precise instructions. “I am a failure” does not tell you whether to update your résumé, call a friend, rest, learn a skill, or stop following an account. Replace the identity attack with a useful observation: “I want more structure in my creative work,” or “I miss having people to make plans with.”',
+          'Speak to yourself with the same accuracy you would use with someone you care about. You can admit that you are unhappy with a part of your life without declaring the whole person defective. Clear language makes change more possible because it leaves you with an action rather than a sentence you cannot complete.'
+        ],
+        bullets: [
+          'Replace “I am behind” with “I want more progress in…”',
+          'Describe the problem without using it as your identity.',
+          'Ask what support would make the next step easier.',
+          'Take responsibility for a choice without taking blame for everything.'
+        ]
+      },
+      {
+        heading: 'Stay connected without performing your progress',
+        paragraphs: [
+          'Comparison can make you withdraw, post only to prove that you are doing well, or avoid people whose lives seem further ahead. That can make the original feeling stronger. A more useful response is to choose connection that is not a scoreboard: message a friend honestly, attend the class, ask someone how they are doing, or share an ordinary update without turning it into a brand statement.',
+          'You also get to protect a private life. Not every goal needs to be announced, measured publicly, or converted into content. Some progress becomes stronger when it has time to grow away from an audience. Let your online presence support your real relationships instead of asking strangers to confirm that your life is moving.'
+        ],
+        bullets: [
+          'Reach out for conversation rather than approval.',
+          'Share process with people who can respond with care.',
+          'Keep some goals private while they are still fragile.',
+          'Choose real contact when scrolling has started to feel isolating.'
+        ]
+      },
+      {
+        heading: 'Build a personal scorecard for the next 30 days',
+        paragraphs: [
+          'A personal scorecard gives your attention somewhere to land. Choose three areas that matter in this season and define one behaviour for each. For example: send one message each week to support friendship, complete two focused work sessions, and take three walks. The measures should be within your control and small enough to repeat.',
+          'Review the scorecard once a week, not every time you feel insecure. Ask what helped, what got in the way, and what you want to adjust. You are not trying to prove that you are ahead of anyone else. You are making your progress visible to yourself, which is a calmer and more honest source of direction.'
+        ],
+        bullets: [
+          'Pick three values instead of ten goals.',
+          'Measure actions you control rather than outcomes you cannot guarantee.',
+          'Review weekly and adjust without turning the plan into punishment.',
+          'Let a quiet month count if it reflects the life you are choosing.'
+        ]
+      }
+    ]
+  },
+  {
     slug: 'how-to-make-friends-as-an-adult-when-life-feels-too-busy',
     title: 'How to Make Friends as an Adult When Your Life Feels Too Busy',
     seoTitle: 'How to Make Friends as an Adult When Your Life Feels Too Busy',

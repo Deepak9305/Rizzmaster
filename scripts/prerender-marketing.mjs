@@ -69,6 +69,13 @@ const renderFaqs = (post) => post.faqs?.length
 const renderResources = (post) => `${renderResourcesOnly(post)}${renderFaqs(post)}`;
 
 const articleInternalLinks = {
+  'how-to-stop-comparing-your-life-to-everyone-else-online': [
+    { slug: 'how-to-make-friends-as-an-adult-when-life-feels-too-busy', label: 'Build a social life that fits your week' },
+    { slug: 'how-to-make-small-talk-when-you-have-nothing-in-common', label: 'Make small talk with more confidence' },
+    { slug: 'how-to-answer-what-do-you-do-for-fun', label: 'Talk about what you enjoy' },
+    { slug: 'how-to-stop-overthinking-while-dating', label: 'Stop overthinking your next move' },
+    { slug: 'how-to-build-trust-in-a-new-relationship', label: 'Build trust through consistency' }
+  ],
   'how-to-make-friends-as-an-adult-when-life-feels-too-busy': [
     { slug: 'how-to-make-small-talk-when-you-have-nothing-in-common', label: 'Make small talk when you have nothing in common' },
     { slug: 'how-to-answer-what-do-you-do-for-fun', label: 'Answer what you do for fun' },
