@@ -601,6 +601,7 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
 };
 
 const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
+  'how-to-have-a-difficult-conversation-without-getting-defensive': { do: 'Name one specific issue, listen for the other person’s meaning, make a workable request, and follow through on your boundary.', doNot: 'Build a character case, interrupt to win the point, demand instant agreement, or stay in a conversation that has become unsafe.' },
   'how-to-stop-comparing-your-life-to-everyone-else-online': { do: 'Name the exact comparison, decide what value is underneath it, and return to an action you control.', doNot: 'Treat a selected post as a complete life story, punish yourself for having the feeling, or copy someone else’s timeline.' },
   'how-to-make-friends-as-an-adult-when-life-feels-too-busy': { do: 'Create a repeatable rhythm, make specific invitations, and watch for effort coming back.', doNot: 'Wait for a perfect free week, force instant closeness, or keep organising every plan alone.' },
   'how-to-make-small-talk-when-you-have-nothing-in-common': { do: 'Use the shared setting, add one honest detail, and ask a question that leaves room for a real answer.', doNot: 'Search for a perfect common interest, stack questions, or keep carrying a conversation after the other person stops participating.' },
@@ -689,7 +690,15 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'how-to-have-a-difficult-conversation-without-getting-defensive': [
+    { slug: 'how-to-make-small-talk-when-you-have-nothing-in-common', label: 'Build confidence in everyday conversations' },
+    { slug: 'how-to-make-friends-as-an-adult-when-life-feels-too-busy', label: 'Make room for better friendships' },
+    { slug: 'how-to-build-trust-in-a-new-relationship', label: 'Build trust through consistency' },
+    { slug: 'texting-boundaries-while-dating', label: 'Set boundaries without sounding rude' },
+    { slug: 'how-to-stop-overthinking-while-dating', label: 'Separate facts from anxious stories' }
+  ],
   'how-to-stop-comparing-your-life-to-everyone-else-online': [
+    { slug: 'how-to-have-a-difficult-conversation-without-getting-defensive', label: 'Have a hard conversation without a fight' },
     { slug: 'how-to-make-friends-as-an-adult-when-life-feels-too-busy', label: 'Build a social life that fits your week' },
     { slug: 'how-to-make-small-talk-when-you-have-nothing-in-common', label: 'Make small talk with more confidence' },
     { slug: 'how-to-answer-what-do-you-do-for-fun', label: 'Talk about what you enjoy' },
@@ -699,6 +708,7 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
   'how-to-make-friends-as-an-adult-when-life-feels-too-busy': [
     { slug: 'how-to-make-small-talk-when-you-have-nothing-in-common', label: 'Make small talk when you have nothing in common' },
     { slug: 'how-to-answer-what-do-you-do-for-fun', label: 'Answer what you do for fun' },
+    { slug: 'how-to-have-a-difficult-conversation-without-getting-defensive', label: 'Handle difficult conversations better' },
     { slug: 'how-to-connect-emotionally-while-dating', label: 'Listen for real connection' },
     { slug: 'how-to-build-trust-in-a-new-relationship', label: 'Build trust through consistency' },
     { slug: 'texting-boundaries-while-dating', label: 'Keep communication healthy' }
