@@ -8,7 +8,7 @@
     "dev:vite": "vite",
     "dev:api": "node dev-api-server.js",
     "start:cloud-run": "node cloud-run-server.js",
-    "build": "tsc && vite build && node scripts/prerender-marketing.mjs && node scripts/prepare-mobile-bundle.mjs",
+    "build": "tsc && node scripts/generate-sitemap.mjs && vite build && node scripts/prerender-marketing.mjs && node scripts/prepare-mobile-bundle.mjs",
     "prepare:mobile": "node scripts/prepare-mobile-bundle.mjs",
     "preview": "vite preview",
     "test:rizzline": "node --test tests/rizzline.test.mjs",
