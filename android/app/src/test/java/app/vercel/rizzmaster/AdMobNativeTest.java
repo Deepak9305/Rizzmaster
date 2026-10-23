@@ -23,9 +23,14 @@ import com.getcapacitor.JSObject;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.community.admob.AdMob;
 import com.getcapacitor.community.admob.banner.BannerExecutor;
+import com.getcapacitor.community.admob.models.AdOptions;
+import com.getcapacitor.community.admob.rewarded.AdRewardExecutor;
+import com.getcapacitor.community.admob.rewarded.RewardedAdCallbackAndListeners;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.rewarded.RewardedAd;
 import com.google.android.gms.ads.initialization.InitializationStatus;
 import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 import java.lang.reflect.Field;
@@ -99,11 +104,11 @@ public class AdMobNativeTest {
             AtomicReference<OnInitializationCompleteListener> completion = captureSdk(sdk);
             PluginCall call = mock(PluginCall.class);
             plugin().initialize(call);
-            verify(call, never()).resolve();
+            verify(call, never()).resolve(any(JSObject.class));
             assertNotNull(completion.get());
             completion.get().onInitializationComplete(mock(InitializationStatus.class));
             completion.get().onInitializationComplete(mock(InitializationStatus.class));
-            verify(call, times(1)).resolve();
+            verify(call, times(1)).resolve(any(JSObject.class));
             assertTrue(timeouts.isEmpty());
         }
     }
@@ -117,12 +122,12 @@ public class AdMobNativeTest {
             timeouts.get(35000L).run();
             completion.get().onInitializationComplete(mock(InitializationStatus.class));
             verify(call).reject("AdMob SDK initialization timed out");
-            verify(call, never()).resolve();
+            verify(call, never()).resolve(any(JSObject.class));
         }
     }
 
     @Test
-    public void missingParentCanAppearOnALaterLayoutPass() {
+    public void sdkReadinessDoesNotDependOnABannerParent() {
         try (MockedConstruction<Handler> ignored = handlers(); MockedStatic<MobileAds> sdk = mockStatic(MobileAds.class)) {
             AtomicReference<OnInitializationCompleteListener> completion = captureSdk(sdk);
             ViewTreeObserver observer = mock(ViewTreeObserver.class);
@@ -131,37 +136,47 @@ public class AdMobNativeTest {
             when(content.getChildAt(0)).thenReturn(null);
             PluginCall call = mock(PluginCall.class);
             plugin().initialize(call);
-            assertNull(completion.get());
+            assertNotNull(completion.get());
+            completion.get().onInitializationComplete(mock(InitializationStatus.class));
+            verify(call).resolve(any(JSObject.class));
+            verify(observer, never()).addOnGlobalLayoutListener(any());
+        }
+    }
+
+    @Test
+    public void bannerParentCanAppearOnALaterLayoutPass() {
+        try (MockedConstruction<Handler> ignored = handlers()) {
+            ViewTreeObserver observer = mock(ViewTreeObserver.class);
+            when(observer.isAlive()).thenReturn(true);
+            when(content.getViewTreeObserver()).thenReturn(observer);
+            when(content.getChildAt(0)).thenReturn(null);
+            AtomicReference<Boolean> ready = new AtomicReference<>();
+            banner().awaitViewGroup(ready::set);
+            assertNull(ready.get());
             ArgumentCaptor<ViewTreeObserver.OnGlobalLayoutListener> layout = ArgumentCaptor.forClass(ViewTreeObserver.OnGlobalLayoutListener.class);
             verify(observer).addOnGlobalLayoutListener(layout.capture());
             when(content.getChildAt(0)).thenReturn(parent);
             layout.getValue().onGlobalLayout();
-            assertNotNull(completion.get());
-            completion.get().onInitializationComplete(mock(InitializationStatus.class));
-            verify(call).resolve();
+            assertEquals(Boolean.TRUE, ready.get());
             verify(observer).removeOnGlobalLayoutListener(layout.getValue());
         }
     }
 
     @Test
     public void parentTimeoutCanRetryWithoutCachingNull() {
-        try (MockedConstruction<Handler> ignored = handlers(); MockedStatic<MobileAds> sdk = mockStatic(MobileAds.class)) {
-            AtomicReference<OnInitializationCompleteListener> completion = captureSdk(sdk);
+        try (MockedConstruction<Handler> ignored = handlers()) {
             ViewTreeObserver observer = mock(ViewTreeObserver.class);
             when(observer.isAlive()).thenReturn(true);
             when(content.getViewTreeObserver()).thenReturn(observer);
             when(content.getChildAt(0)).thenReturn(null);
-            AdMob plugin = plugin();
-            PluginCall first = mock(PluginCall.class);
-            plugin.initialize(first);
+            BannerExecutor banner = banner();
+            AtomicReference<Boolean> ready = new AtomicReference<>();
+            banner.awaitViewGroup(ready::set);
             timeouts.get(5000L).run();
-            verify(first).reject(contains("parent view never appeared"));
-            assertNull(completion.get());
+            assertEquals(Boolean.FALSE, ready.get());
             when(content.getChildAt(0)).thenReturn(parent);
-            PluginCall retry = mock(PluginCall.class);
-            plugin.initialize(retry);
-            completion.get().onInitializationComplete(mock(InitializationStatus.class));
-            verify(retry).resolve();
+            banner.awaitViewGroup(ready::set);
+            assertEquals(Boolean.TRUE, ready.get());
         }
     }
 
@@ -173,6 +188,75 @@ public class AdMobNativeTest {
         Field field = object.getClass().getDeclaredField(name);
         field.setAccessible(true);
         field.set(object, value);
+    }
+
+    @Test
+    public void transientRefreshFailuresRetainTheLoadedBannerAndItsRefreshLifecycle() throws Exception {
+        for (int code : new int[] { 0, 2, 3 }) {
+            AtomicReference<JSObject> event = new AtomicReference<>();
+            BannerExecutor banner = new BannerExecutor(() -> context, () -> activity, (name, data) -> event.set(data), "Test");
+            AdView ad = mock(AdView.class);
+            setField(banner, "mAdView", ad);
+            setField(banner, "mAdViewLayout", mock(RelativeLayout.class));
+            setField(banner, "hasLoadedBanner", true);
+            LoadAdError error = mock(LoadAdError.class);
+            when(error.getCode()).thenReturn(code);
+            when(error.getMessage()).thenReturn("Refresh unavailable");
+            when(error.getDomain()).thenReturn("com.google.android.gms.ads");
+            java.lang.reflect.Method failure = BannerExecutor.class.getDeclaredMethod("handleBannerFailure", AdView.class, LoadAdError.class);
+            failure.setAccessible(true);
+            failure.invoke(banner, ad, error);
+            verify(ad, never()).destroy();
+            assertTrue(event.get().getBoolean("viewRetained"));
+            assertTrue(event.get().getBoolean("refreshFailure"));
+            assertEquals("com.google.android.gms.ads", event.get().getString("domain"));
+        }
+    }
+
+    @Test
+    public void initialLoadFailureReleasesTheEmptyViewForOneJavascriptRecoveryOwner() throws Exception {
+        AtomicReference<JSObject> event = new AtomicReference<>();
+        BannerExecutor banner = new BannerExecutor(() -> context, () -> activity, (name, data) -> event.set(data), "Test");
+        AdView ad = mock(AdView.class);
+        setField(banner, "mAdView", ad);
+        setField(banner, "mAdViewLayout", mock(RelativeLayout.class));
+        LoadAdError error = mock(LoadAdError.class);
+        when(error.getCode()).thenReturn(3);
+        when(error.getMessage()).thenReturn("No fill");
+        when(error.getDomain()).thenReturn("com.google.android.gms.ads");
+        java.lang.reflect.Method failure = BannerExecutor.class.getDeclaredMethod("handleBannerFailure", AdView.class, LoadAdError.class);
+        failure.setAccessible(true);
+        failure.invoke(banner, ad, error);
+        verify(ad).destroy();
+        assertFalse(event.get().getBoolean("viewRetained"));
+        assertFalse(event.get().getBoolean("refreshFailure"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void supersededRewardLoadCannotReplaceTheNewerNativeCache() throws Exception {
+        Field field = AdRewardExecutor.class.getDeclaredField("latestLoads");
+        field.setAccessible(true);
+        Map<String, Long> versions = (Map<String, Long>) field.get(null);
+        String id = "reward-unit-generation-test";
+        versions.put(id, 2L);
+        RewardedAd newer = mock(RewardedAd.class);
+        AdRewardExecutor.preparedAds.put(id, newer);
+        PluginCall oldCall = mock(PluginCall.class);
+        AtomicReference<JSObject> event = new AtomicReference<>();
+        try {
+            RewardedAdCallbackAndListeners.INSTANCE.getRewardedAdLoadCallback(
+                oldCall, (name, data) -> event.set(data), mock(AdOptions.class), id, 1L
+            ).onAdLoaded(mock(RewardedAd.class));
+            ArgumentCaptor<JSObject> result = ArgumentCaptor.forClass(JSObject.class);
+            verify(oldCall).resolve(result.capture());
+            assertTrue(result.getValue().getBoolean("superseded"));
+            assertSame(newer, AdRewardExecutor.preparedAds.get(id));
+            assertNull(event.get());
+        } finally {
+            versions.remove(id);
+            AdRewardExecutor.preparedAds.remove(id);
+        }
     }
 
     @Test

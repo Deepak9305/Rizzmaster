@@ -60,7 +60,11 @@ export const moveNativeBanner = async (margin: number): Promise<boolean> => {
     try {
         const result = await AdMobService.withNativeTimeout('Banner position', BottomNavigationInset.setBannerPosition({ margin }), 1500);
         return result.updated;
-    } catch {
-        return false;
+    } catch (error) {
+        const failure = error as { code?: string; message?: string } | null;
+        if (failure?.code === 'UNIMPLEMENTED' || /(?:unimplemented|not implemented)/i.test(failure?.message ?? '')) return false;
+        // A slow bridge is not evidence that this APK lacks positioning support.
+        // Let the controller retry the move while preserving the loaded ad.
+        throw error;
     }
 };

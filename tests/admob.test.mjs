@@ -49,7 +49,7 @@ function setup(options = {}) {
     },
     prepareRewardVideoAd: async params => {
       calls.push('reward-request');
-      if (options.prepareReward) await options.prepareReward(params);
+      if (options.prepareReward) return await options.prepareReward(params);
     },
     showRewardVideoAd: async () => {
       calls.push('reward-show');
@@ -359,9 +359,13 @@ test('the app preloads low-credit guests only and never starts a signed-in verif
   const source = readFileSync(new URL('../App.tsx', import.meta.url), 'utf8');
   const ast = ts.createSourceFile('App.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   let effect;
+  let eligibility;
   const findEffect = node => {
+    if (ts.isVariableDeclaration(node) && node.name.getText(ast) === 'guestRewardPreloadEligible') {
+      eligibility = node.initializer.getText(ast);
+    }
     if (ts.isCallExpression(node) && node.expression.getText(ast) === 'useEffect' &&
-        node.arguments[0]?.getText(ast).includes("runAdTask('Guest low-credit rewarded preload'")) {
+        node.arguments[0]?.getText(ast).includes('startGuestRewardPreload(')) {
       effect = node.arguments[0].getText(ast);
     }
     ts.forEachChild(node, findEffect);
@@ -382,6 +386,10 @@ test('the app preloads low-credit guests only and never starts a signed-in verif
       rewardedAdIdentityVersionRef: { current: 0 }, profileRef: { current: profile },
       canUseNativeAdMob: () => scenario.native !== false, hasProductionAdUnit: () => true,
       getAdId: () => 'reward', runAdTask() {},
+      startGuestRewardPreload: (_id, canPrepare) => {
+        if (canPrepare()) loads++;
+        return () => {};
+      },
       AdMobService: { prepareRewardVideo: (_id, ssv, canPrepare) => {
         assert.equal(ssv, undefined);
         if (canPrepare()) loads++;
@@ -389,7 +397,7 @@ test('the app preloads low-credit guests only and never starts a signed-in verif
       } },
       exports: {},
     };
-    vm.runInNewContext(ts.transpileModule(`exports.run = ${effect};`, {
+    vm.runInNewContext(ts.transpileModule(`exports.run = () => { const guestRewardPreloadEligible = ${eligibility}; return (${effect})(); };`, {
       compilerOptions: { target: ts.ScriptTarget.ES2022 },
     }).outputText, globals);
     globals.exports.run();
@@ -578,6 +586,21 @@ test('a rewarded ad cannot appear after its show attempt timed out', async () =>
   assert.equal(calls.includes('reward-show'), false);
 });
 
+test('a slow JIT load does not consume the native fullscreen show deadline', async () => {
+  const { service, plugin, listeners, events } = setup({ prepareReward: () => delay(40) });
+  service.REWARDED_PREPARE_TIMEOUT_MS = 200;
+  service.REWARDED_SHOW_TIMEOUT_MS = 60;
+  plugin.showRewardVideoAd = async () => {
+    await delay(35);
+    listeners.get(events.Showed)?.();
+    listeners.get(events.Rewarded)?.({ amount: 5 });
+    listeners.get(events.Dismissed)?.();
+    return { amount: 5 };
+  };
+  assert.equal(await service.showRewardVideo('reward'), true);
+  assert.equal(service.isRewardVideoShowing, false);
+});
+
 test('permission changing during loading prevents a late rewarded cache from becoming ready', async () => {
   let finish;
   const { service } = setup({ prepareReward: () => new Promise(resolve => { finish = resolve; }) });
@@ -663,7 +686,7 @@ function setupBanner(options = {}) {
     }
   };
   plugin.hideBanner = async () => calls.push('banner-hide');
-  plugin.resumeBanner = async () => calls.push('banner-resume');
+  plugin.resumeBanner = async () => { calls.push('banner-resume'); await options.resumeBanner?.(); };
   plugin.removeBanner = async () => {
     calls.push('banner-remove');
     await options.removeBanner?.();
@@ -906,7 +929,7 @@ test('stalled native listener cleanup cannot wedge the banner retry queue', asyn
   });
   t.after(() => controller.dispose());
   await controller.setMode('visible');
-  const retry = [...timers.values()].find(timer => timer.ms === 60_000);
+  const retry = [...timers.values()].find(timer => timer.ms === 1000);
   assert.ok(retry, 'Cleanup must settle and schedule recovery');
   fail = false;
   advance(retry.ms);
@@ -1186,7 +1209,7 @@ test('a hung banner bridge call releases the queue for logout and later retries'
   t.after(() => controller.dispose());
   await controller.setMode('visible');
   assert.equal(calls.at(-1), 'banner-remove');
-  assert.equal([...timers.values()][0].ms, 60_000);
+  assert.equal([...timers.values()][0].ms, 1000);
   await controller.setMode('removed');
   assert.equal(timers.size, 0);
   hung = false;
@@ -1232,7 +1255,7 @@ test('a pending banner failure while hidden retains its recovery deadline', asyn
   t.after(() => controller.dispose());
   await controller.setMode('visible');
   await controller.setMode('hidden');
-  callbacks.get(bannerEvents.FailedToLoad)({ code: 2 });
+  callbacks.get(bannerEvents.FailedToLoad)({ code: 3 });
   assert.equal(timers.size, 0);
   advance(20_000);
   await controller.setMode('visible');
@@ -1240,11 +1263,11 @@ test('a pending banner failure while hidden retains its recovery deadline', asyn
   assert.equal(calls.filter(call => call === 'banner-request').length, 1);
 });
 
-test('repeated failures back off across modal transitions and cap at five minutes', async t => {
+test('repeated no-fill uses one-minute recovery without an increasing cooldown', async t => {
   const { controller, callbacks, bannerEvents, timers, advance } = setupBanner({ noLoad: true });
   t.after(() => controller.dispose());
   await controller.setMode('visible');
-  for (const expected of [60_000, 120_000, 240_000, 300_000, 300_000]) {
+  for (const expected of [60_000, 60_000, 60_000, 60_000, 60_000]) {
     callbacks.get(bannerEvents.FailedToLoad)({ code: 3 });
     assert.equal([...timers.values()][0].ms, expected);
     await controller.setMode('hidden');
@@ -1301,6 +1324,608 @@ function setupBannerLifecycle(options = {}) {
     removed: () => removed,
   };
 }
+
+test('previous-session native permission starts ads while this session consent refresh is pending', async () => {
+  let finishRefresh;
+  const { service, calls } = setup({
+    refresh: () => new Promise(resolve => { finishRefresh = resolve; }), nativeConsent: () => allowed,
+  });
+  service.CONSENT_REFRESH_TIMEOUT_MS = 200;
+  const result = await Promise.race([service.prepareRewardVideo('reward'), delay(60).then(() => 'still waiting')]);
+  assert.equal(result, true, 'Valid native permission should not wait for the refresh deadline');
+  assert.ok(calls.indexOf('consent-refresh') < calls.indexOf('sdk-init'));
+  assert.equal(calls.filter(call => call === 'reward-request').length, 1);
+  finishRefresh(denied);
+  await service.consentGatheringPromise;
+  assert.equal(service.canRequestAds, false);
+  assert.equal(service.rewardVideoReady, false, 'A later denial invalidates the loaded cache');
+});
+
+test('a delayed startup permission snapshot cannot override a newer UMP denial', async () => {
+  let finishRead;
+  const { service, calls } = setup({ refresh: () => denied, nativeConsent: () => new Promise(resolve => { finishRead = resolve; }) });
+  assert.equal(await service.initialize(), false);
+  finishRead(allowed);
+  await delay(0);
+  assert.equal(service.canRequestAds, false);
+  assert.equal(calls.includes('sdk-init'), false);
+});
+
+test('a lost privacy-options callback recovers permission without allowing duplicate forms', async () => {
+  let dismiss;
+  let permission = allowed;
+  let forms = 0;
+  const { service } = setup({
+    nativeConsent: () => permission,
+    privacyForm: () => { forms++; return new Promise(resolve => { dismiss = resolve; }); },
+  });
+  assert.equal(await service.initialize(), true);
+  service.privacyOptionsRequired = true;
+  service.CONSENT_FORM_TIMEOUT_MS = 5;
+  assert.equal(await service.showPrivacyOptionsForm(), true);
+  assert.equal(service.privacyOptionsInProgress, false);
+  assert.equal(await service.prepareRewardVideo('reward'), true);
+  service.privacyOptionsRequired = true;
+  assert.equal(await service.showPrivacyOptionsForm(), false);
+  assert.equal(forms, 1);
+  permission = denied;
+  dismiss();
+  await delay(0);
+  assert.equal(service.privacyOptionsPromise, null);
+  assert.equal(service.canRequestAds, false);
+  assert.equal(service.rewardVideoReady, false);
+});
+
+test('a late guest load is cached after the UI deadline and reused on the next opt-in', async () => {
+  let finish;
+  const { service, calls } = setup({ prepareReward: () => new Promise(resolve => { finish = resolve; }) });
+  service.REWARDED_PREPARE_TIMEOUT_MS = 5;
+  assert.equal(await service.prepareRewardVideo('reward'), false);
+  finish();
+  await delay(0);
+  assert.equal(service.hasFreshRewardVideo('reward'), true);
+  assert.equal(calls.includes('reward-show'), false);
+  assert.equal(await service.showRewardVideo('reward'), true);
+  assert.equal(calls.filter(call => call === 'reward-request').length, 1);
+});
+
+test('a credit change during guest preloading does not discard an already requested ad', async () => {
+  let finish;
+  let eligible = true;
+  const { service, calls } = setup({ prepareReward: () => new Promise(resolve => { finish = resolve; }) });
+  service.REWARDED_PREPARE_TIMEOUT_MS = 100;
+  const preload = service.prepareRewardVideo('reward', undefined, () => eligible);
+  while (!finish) await delay(0);
+  eligible = false; // React cleaned up the old effect after a credit/profile update.
+  finish();
+  assert.equal(await preload, true);
+  assert.equal(service.hasFreshRewardVideo('reward'), true);
+  assert.equal(await service.showRewardVideo('reward'), true);
+  assert.equal(calls.filter(call => call === 'reward-request').length, 1);
+});
+
+function setupGuestPreload(options = {}) {
+  const timers = new Map();
+  let timerId = 0;
+  let now = 100_000;
+  let ready = Boolean(options.ready);
+  let eligible = true;
+  let foreground;
+  let requests = 0;
+  let observersRemoved = 0;
+  const readinessListeners = new Set();
+  const service = {
+    initialized: options.readiness !== false,
+    canRequestAds: options.readiness !== false,
+    rewardVideoRequestCount: 0,
+    rewardVideoPreparing: false,
+    subscribeReadiness: callback => { readinessListeners.add(callback); return () => readinessListeners.delete(callback); },
+    REWARDED_STALE_AFTER_MS: 50 * 60 * 1000,
+    rewardVideoPreparedAt: now - (options.age ?? 0),
+    hasFreshRewardVideo: () => ready && now - service.rewardVideoPreparedAt < service.REWARDED_STALE_AFTER_MS,
+    prepareRewardVideo: async (_id, ssv, canPrepare) => {
+      assert.equal(ssv, undefined, 'Guest maintenance must not create an SSV context');
+      assert.equal(canPrepare(), true);
+      if (!service.initialized || !service.canRequestAds) return false;
+      if (!options.noRequest) ++service.rewardVideoRequestCount;
+      requests++;
+      const result = await (options.load?.(requests) ?? true);
+      if (result) { ready = true; service.rewardVideoPreparedAt = now; }
+      return result;
+    },
+  };
+  const { startGuestRewardPreload } = loadTs('../services/guestRewardPreload.ts', {
+    './admobService': { AdMobService: service },
+    './bannerLifecycle': { observeBannerForeground: callback => {
+      foreground = callback;
+      callback(options.foreground !== false);
+      return () => { observersRemoved++; };
+    } },
+  }, {
+    Date: class extends Date { static now() { return now; } },
+    setTimeout: (callback, ms) => { const id = ++timerId; timers.set(id, { callback, ms }); return id; },
+    clearTimeout: id => timers.delete(id),
+  });
+  const stop = startGuestRewardPreload('reward', () => eligible);
+  return {
+    stop, timers, service, foreground: active => foreground(active),
+    notifyReadiness: () => { for (const callback of readinessListeners) callback(); },
+    advance: ms => { now += ms; }, setEligible: value => { eligible = value; },
+    get requests() { return requests; }, get observersRemoved() { return observersRemoved; },
+    fire: async () => {
+      const [id, timer] = [...timers][0];
+      now += timer.ms;
+      timers.delete(id);
+      timer.callback();
+      await delay(0);
+    },
+  };
+}
+
+test('a failed guest preload retries once per minute and then reuses the ready cache', async t => {
+  const state = setupGuestPreload({ load: request => request > 1 });
+  t.after(state.stop);
+  await delay(0);
+  assert.equal(state.requests, 1);
+  assert.equal([...state.timers.values()][0].ms, 60000);
+  await state.fire();
+  assert.equal(state.requests, 2);
+  assert.equal([...state.timers.values()][0].ms, 50 * 60 * 1000);
+  state.foreground(true);
+  await delay(0);
+  assert.equal(state.requests, 2, 'Visibility updates reuse a ready ad');
+});
+
+test('guest preload failure pacing survives background and quick resume', async t => {
+  const state = setupGuestPreload({ load: () => false });
+  t.after(state.stop);
+  await delay(0);
+  state.foreground(false);
+  assert.equal(state.timers.size, 0);
+  state.advance(10000);
+  state.foreground(true);
+  await delay(0);
+  assert.equal(state.requests, 1);
+  assert.equal([...state.timers.values()][0].ms, 50000);
+  await state.fire();
+  assert.equal(state.requests, 2);
+});
+
+test('guest maintenance reuses a fresh cache and reloads only at expiry', async t => {
+  const state = setupGuestPreload({ ready: true, age: 10000 });
+  t.after(state.stop);
+  await delay(0);
+  assert.equal(state.requests, 0);
+  assert.equal([...state.timers.values()][0].ms, 50 * 60 * 1000 - 10000);
+  await state.fire();
+  assert.equal(state.requests, 1);
+});
+
+test('guest maintenance issues no requests in the background and refreshes expired cache on return', async t => {
+  const state = setupGuestPreload({ ready: true });
+  t.after(state.stop);
+  await delay(0);
+  state.foreground(false);
+  state.advance(51 * 60 * 1000);
+  assert.equal(state.requests, 0);
+  assert.equal(state.timers.size, 0);
+  state.foreground(true);
+  await delay(0);
+  assert.equal(state.requests, 1);
+});
+
+test('guest preload expiry and retry stop when the guest is no longer eligible', async () => {
+  const state = setupGuestPreload({ load: () => false });
+  await delay(0);
+  state.setEligible(false);
+  await state.fire();
+  assert.equal(state.requests, 1);
+  assert.equal(state.timers.size, 0);
+  state.stop();
+  assert.equal(state.observersRemoved, 1);
+});
+
+test('foreground changes during one guest load do not duplicate it or leak timers after cleanup', async () => {
+  let finish;
+  const state = setupGuestPreload({ load: () => new Promise(resolve => { finish = resolve; }) });
+  state.foreground(false);
+  state.foreground(true);
+  assert.equal(state.requests, 1);
+  state.stop();
+  finish(true);
+  await delay(0);
+  assert.equal(state.timers.size, 0);
+  assert.equal(state.observersRemoved, 1);
+});
+
+test('guest preload starts promptly when permission and SDK become ready without waiting for a failure timer', async t => {
+  const state = setupGuestPreload({ readiness: false });
+  t.after(state.stop);
+  await delay(0);
+  assert.equal(state.service.rewardVideoRequestCount, 0);
+  assert.equal([...state.timers.values()][0].ms, 15000);
+  state.service.canRequestAds = true;
+  state.service.initialized = true;
+  state.notifyReadiness();
+  await delay(0);
+  assert.equal(state.service.rewardVideoRequestCount, 1);
+  assert.equal(state.requests, 1);
+  assert.equal([...state.timers.values()][0].ms, 50 * 60 * 1000);
+});
+
+test('a consent-only wait interrupted by backgrounding does not become a no-fill cooldown', async t => {
+  let finish;
+  const state = setupGuestPreload({ noRequest: true, load: () => new Promise(resolve => { finish = resolve; }) });
+  t.after(state.stop);
+  state.foreground(false);
+  finish(false);
+  await delay(0);
+  assert.equal(state.service.rewardVideoRequestCount, 0);
+  state.foreground(true);
+  assert.equal(state.requests, 2, 'Resume may prepare immediately because no native ad request failed');
+  finish(true);
+  await delay(0);
+});
+
+test('reward verification alone does not hide a banner; covering UI and Coach still do', () => {
+  const source = readFileSync(new URL('../App.tsx', import.meta.url), 'utf8');
+  const ast = ts.createSourceFile('App.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  let expression;
+  const visit = node => {
+    if (ts.isJsxSelfClosingElement(node) && node.tagName.getText(ast) === 'NativeBanner') {
+      expression = node.attributes.properties.find(prop => prop.name?.getText(ast) === 'suspended').initializer.expression.getText(ast);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(ast);
+  assert.ok(expression);
+  const base = {
+    showSplash: false, showOnboarding: false, currentView: 'HOME', isSessionBlocked: false,
+    isOffline: false, showPremiumModal: false, showSavedModal: false, showRizzShareCard: false,
+    showCreditsExhaustedModal: false, showPersonaModal: false, isPrivacyFormOpen: false,
+    isRewardedAdLoading: true, rewardedAdStatus: 'pending',
+  };
+  const suspended = overrides => vm.runInNewContext(expression, { ...base, ...overrides });
+  assert.equal(suspended({}), false);
+  assert.equal(suspended({ rewardedAdStatus: 'loading' }), true);
+  assert.equal(suspended({ currentView: 'COACH' }), true);
+  assert.equal(suspended({ showCreditsExhaustedModal: true }), true);
+  assert.equal(suspended({ showPremiumModal: true }), true);
+  assert.equal(suspended({ isPrivacyFormOpen: true }), true);
+});
+
+test('a late older load for the same guest context does not discard the newer ready cache', async () => {
+  let finish;
+  let loads = 0;
+  const { service, calls } = setup({ prepareReward: () => ++loads === 1 ? new Promise(resolve => { finish = resolve; }) : undefined });
+  service.REWARDED_PREPARE_TIMEOUT_MS = 5;
+  assert.equal(await service.prepareRewardVideo('reward'), false);
+  assert.equal(await service.prepareRewardVideo('reward'), true);
+  finish();
+  await delay(0);
+  assert.equal(service.hasFreshRewardVideo('reward'), true);
+  assert.equal(await service.showRewardVideo('reward'), true);
+  assert.equal(calls.filter(call => call === 'reward-request').length, 2);
+});
+
+test('a superseded native callback cannot invalidate the newer SSV cache', async () => {
+  let finish;
+  let loads = 0;
+  const { service } = setup({ prepareReward: () => ++loads === 1 ? new Promise(resolve => { finish = resolve; }) : undefined });
+  service.REWARDED_PREPARE_TIMEOUT_MS = 5;
+  const a = { userId: 'user', customData: 'first' };
+  const b = { userId: 'user', customData: 'second' };
+  assert.equal(await service.prepareRewardVideo('reward', a), false);
+  assert.equal(await service.prepareRewardVideo('reward', b), true);
+  finish({ superseded: true });
+  await delay(0);
+  assert.equal(service.hasFreshRewardVideo('reward', b), true);
+  assert.equal(service.hasFreshRewardVideo('reward', a), false);
+});
+
+test('logout during a timed-out load prevents late guest cache adoption', async () => {
+  let finish;
+  const { service } = setup({ prepareReward: () => new Promise(resolve => { finish = resolve; }) });
+  service.REWARDED_PREPARE_TIMEOUT_MS = 5;
+  assert.equal(await service.prepareRewardVideo('reward'), false);
+  service.invalidateRewardVideo();
+  finish();
+  await delay(0);
+  assert.equal(service.hasFreshRewardVideo('reward'), false);
+});
+
+test('a failed show-listener registration preserves a valid ad that was never shown', async () => {
+  let broken = true;
+  const { service, calls } = setup({ listener: () => { if (broken) throw new Error('Bridge registration failed'); } });
+  assert.equal(await service.prepareRewardVideo('reward'), true);
+  assert.equal(await service.showRewardVideo('reward'), false);
+  assert.equal(service.hasFreshRewardVideo('reward'), true);
+  broken = false;
+  assert.equal(await service.showRewardVideo('reward'), true);
+  assert.equal(calls.filter(call => call === 'reward-request').length, 1);
+});
+
+test('optional impression listener failure or a lost callback cannot block banner loading', async t => {
+  for (const hanging of [false, true]) {
+    const { controller, calls, timers } = setupBanner({ bannerListener: event => {
+      if (event !== 'banner-impression') return;
+      if (hanging) return pending();
+      throw new Error('Unsupported optional event');
+    } });
+    t.after(() => controller.dispose());
+    await controller.setMode('visible');
+    assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+    assert.equal(timers.size, 0);
+  }
+});
+
+test('transient native refresh failures retain the loaded banner and SDK refresh ownership', async t => {
+  const { controller, calls, callbacks, bannerEvents, timers, slots } = setupBanner();
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  for (const code of [0, 2, 3]) callbacks.get(bannerEvents.FailedToLoad)({ code, viewRetained: true, refreshFailure: true });
+  await controller.setMode('visible');
+  assert.equal(timers.size, 0, 'Do not add a second refresh loop');
+  assert.equal(slots.at(-1), 50);
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+  assert.equal(calls.includes('banner-remove'), false);
+});
+
+test('native retained-view confirmation also recovers a missed initial Loaded event', async t => {
+  const { controller, calls, callbacks, bannerEvents, timers } = setupBanner({ noLoad: true });
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  callbacks.get(bannerEvents.FailedToLoad)({ code: 3, viewRetained: true, refreshFailure: true });
+  await controller.setMode('hidden');
+  await controller.setMode('visible');
+  assert.equal(timers.size, 0);
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+});
+
+test('verified permission and SDK readiness wake a banner before its readiness retry deadline', async t => {
+  const { controller, service, calls, timers } = setupBanner({ refresh: () => denied });
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  assert.equal([...timers.values()][0].ms, 15000);
+  service.applyConsentInfo(allowed);
+  await service.initializeSdk();
+  await controller.setMode('visible');
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+  assert.equal(timers.size, 0);
+});
+
+test('verified permission wakes a cold SDK and banner without waiting for a readiness timer', async t => {
+  const { controller, service, calls, timers } = setupBanner({ refresh: () => denied });
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  assert.equal(service.initialized, false);
+  assert.equal(timers.size, 1);
+  service.applyConsentInfo(allowed);
+  await controller.setMode('visible');
+  assert.equal(calls.filter(call => call === 'sdk-init').length, 1);
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+  assert.equal(timers.size, 0);
+});
+
+test('a temporary positioning failure retries the move without destroying the cached banner', async t => {
+  let moves = 0;
+  const { controller, calls, timers, advance } = setupBanner({ moveBanner: async () => {
+    if (++moves === 2) throw new Error('Temporary bridge delay');
+    return true;
+  } });
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  await controller.setTopMargin(90);
+  assert.equal(calls.includes('banner-remove'), false);
+  const [id, retry] = [...timers][0];
+  assert.equal(retry.ms, 1000);
+  advance(retry.ms);
+  timers.delete(id);
+  retry.callback();
+  await controller.setMode('visible');
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+  assert.equal(calls.filter(call => call === 'banner-resume').length, 1);
+  assert.equal(moves, 3);
+});
+
+test('a temporary initial positioning failure retains the pending banner and pauses its load watchdog', async t => {
+  let moves = 0;
+  const { controller, calls, callbacks, bannerEvents, timers, advance } = setupBanner({
+    noLoad: true,
+    moveBanner: async () => { if (++moves === 1) throw new Error('Bridge busy'); return true; },
+  });
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  assert.equal(calls.includes('banner-remove'), false);
+  assert.equal(timers.size, 1);
+  const [id, retry] = [...timers][0];
+  assert.equal(retry.ms, 1000);
+  advance(retry.ms);
+  timers.delete(id);
+  retry.callback();
+  await controller.setMode('visible');
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+  assert.equal([...timers.values()][0].ms, 90000);
+  callbacks.get(bannerEvents.Loaded)();
+  assert.equal(timers.size, 0);
+});
+
+test('a positioning bridge timeout is not misreported as an unsupported APK', async () => {
+  const { moveNativeBanner } = loadTs('../services/bottomNavigationInset.ts', {
+    '@capacitor/core': {
+      Capacitor: { getPlatform: () => 'android', isPluginAvailable: () => true },
+      registerPlugin: () => ({ setBannerPosition: async () => { throw new Error('Banner position timed out'); } }),
+    },
+    './admobService': { AdMobService: { withNativeTimeout: async (_label, promise) => promise } },
+    './nativeBannerService': { BANNER_HEIGHT: 50, BANNER_WIDTH: 320 },
+  });
+  await assert.rejects(moveNativeBanner(90), /timed out/);
+});
+
+test('a missing cached view on resume uses a short local retry instead of no-fill backoff', async t => {
+  const { controller, calls, timers, advance } = setupBanner({ resumeBanner: () => { throw new Error('No cached view'); } });
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  await controller.setMode('hidden');
+  await controller.setMode('visible');
+  const [id, retry] = [...timers][0];
+  assert.equal(retry.ms, 1000);
+  advance(retry.ms);
+  timers.delete(id);
+  retry.callback();
+  await controller.setMode('visible');
+  assert.equal(calls.filter(call => call === 'banner-request').length, 2);
+});
+
+test('a loaded banner survives a lost native show response without a replacement request', async t => {
+  const { controller, calls, callbacks, bannerEvents, timers } = setupBanner({ bannerTimeout: 15, showBanner: pending });
+  t.after(() => controller.dispose());
+  const showing = controller.setMode('visible');
+  while (!calls.includes('banner-request')) await delay(0);
+  callbacks.get(bannerEvents.Loaded)();
+  await showing;
+  assert.equal(timers.size, 0);
+  assert.equal(calls.filter(call => call === 'banner-request').length, 1);
+  assert.equal(calls.includes('banner-remove'), false);
+});
+
+test('network load errors recover on a real reconnect without bypassing no-fill pacing', async t => {
+  const { controller, calls, callbacks, bannerEvents, timers } = setupBanner();
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  callbacks.get(bannerEvents.FailedToLoad)({ code: 2 });
+  assert.equal([...timers.values()][0].ms, 15000);
+  await controller.setNetworkAvailable(false);
+  await controller.setNetworkAvailable(true);
+  assert.equal(calls.filter(call => call === 'banner-request').length, 2);
+  assert.equal(timers.size, 0);
+});
+
+function setupNetworkLifecycle(options = {}) {
+  const changes = [];
+  const windowEvents = new Map();
+  let nativeEvent;
+  let foregroundEvent;
+  let reads = 0;
+  let removed = 0;
+  let probes = 0;
+  const { observeNativeNetwork } = loadTs('../services/networkLifecycle.ts', {
+    '@capacitor/network': { Network: {
+      getStatus: async () => { reads++; return options.status?.(reads) ?? { connected: true, connectionType: 'wifi' }; },
+      addListener: async (_name, callback) => {
+        nativeEvent = callback;
+        await options.registration?.();
+        return { remove: async () => { removed++; } };
+      },
+    } },
+    './bannerLifecycle': { observeBannerForeground: callback => { foregroundEvent = callback; callback(true); return () => {}; } },
+  }, {
+    AbortController, URL,
+    location: { origin: 'https://rizzmaster.online', protocol: 'https:', hostname: 'rizzmaster.online' },
+    window: { addEventListener: (event, callback) => windowEvents.set(event, callback), removeEventListener: event => windowEvents.delete(event) },
+    fetch: async (url, init) => {
+      probes++;
+      assert.equal(url.href, 'https://rizzmaster.online/manifest.webmanifest');
+      assert.equal(init.method, 'HEAD');
+      assert.equal(init.cache, 'no-store');
+      assert.equal(init.credentials, 'omit');
+      return options.fetch ? await options.fetch(init.signal) : { ok: true, headers: { get: () => 'application/manifest+json' } };
+    },
+  });
+  const observer = observeNativeNetwork(connected => changes.push(connected));
+  return {
+    observer, changes, windowEvents, nativeEvent: status => nativeEvent(status), foregroundEvent: active => foregroundEvent(active),
+    get reads() { return reads; }, get removed() { return removed; }, get probes() { return probes; },
+  };
+}
+
+test('an old offline snapshot cannot overwrite a newer online native event', async t => {
+  let finish;
+  const state = setupNetworkLifecycle({ status: () => new Promise(resolve => { finish = resolve; }) });
+  t.after(() => state.observer.dispose());
+  state.nativeEvent({ connected: true, connectionType: 'wifi' });
+  finish({ connected: false, connectionType: 'none' });
+  await state.observer.refresh();
+  assert.deepEqual(state.changes, [true]);
+});
+
+test('late network snapshots and listener registration are ignored and cleaned up after unmount', async () => {
+  let finish;
+  let register;
+  const state = setupNetworkLifecycle({
+    status: () => new Promise(resolve => { finish = resolve; }),
+    registration: () => new Promise(resolve => { register = resolve; }),
+  });
+  state.observer.dispose();
+  finish({ connected: false, connectionType: 'none' });
+  register();
+  await delay(0);
+  assert.deepEqual(state.changes, []);
+  assert.equal(state.removed, 1);
+  assert.equal(state.windowEvents.size, 0);
+});
+
+test('native foreground resume rechecks connectivity instead of retaining an old offline state', async t => {
+  const state = setupNetworkLifecycle({ status: reads => ({ connected: reads > 1, connectionType: reads > 1 ? 'wifi' : 'none' }) });
+  t.after(() => state.observer.dispose());
+  await state.observer.refresh();
+  assert.deepEqual(state.changes, [false]);
+  state.foregroundEvent(false);
+  state.foregroundEvent(true);
+  await state.observer.refresh();
+  assert.deepEqual(state.changes, [false, true]);
+  assert.equal(state.reads, 2);
+});
+
+test('resuming during an old network snapshot queues a fresh read after that snapshot settles', async t => {
+  let finish;
+  const state = setupNetworkLifecycle({ status: reads => reads === 1
+    ? new Promise(resolve => { finish = resolve; }) : { connected: true, connectionType: 'wifi' },
+  });
+  t.after(() => state.observer.dispose());
+  state.foregroundEvent(false);
+  state.foregroundEvent(true);
+  finish({ connected: false, connectionType: 'none' });
+  await delay(0);
+  assert.deepEqual(state.changes, [true]);
+  assert.equal(state.reads, 2);
+});
+
+test('a reachable HTTPS origin can recover an unvalidated native transport', async t => {
+  const state = setupNetworkLifecycle({ status: () => ({ connected: false, connectionType: 'wifi' }) });
+  t.after(() => state.observer.dispose());
+  await state.observer.refresh();
+  assert.deepEqual(state.changes, [true]);
+  assert.equal(state.probes, 1);
+});
+
+test('no transport, failed probes and captive portal HTML cannot be treated as online', async t => {
+  for (const options of [
+    { status: () => ({ connected: false, connectionType: 'none' }) },
+    { status: () => ({ connected: false, connectionType: 'wifi' }), fetch: () => { throw new Error('Offline'); } },
+    { status: () => ({ connected: false, connectionType: 'wifi' }), fetch: () => ({ ok: true, headers: { get: () => 'text/html' } }) },
+  ]) {
+    const state = setupNetworkLifecycle(options);
+    t.after(() => state.observer.dispose());
+    await state.observer.refresh();
+    assert.deepEqual(state.changes, [false]);
+    if (options.status().connectionType === 'none') assert.equal(state.probes, 0);
+  }
+});
+
+test('an older reachability probe cannot overwrite a newer real disconnection', async t => {
+  let finish;
+  const state = setupNetworkLifecycle({
+    status: () => ({ connected: false, connectionType: 'wifi' }),
+    fetch: () => new Promise(resolve => { finish = resolve; }),
+  });
+  t.after(() => state.observer.dispose());
+  while (!finish) await delay(0);
+  state.nativeEvent({ connected: false, connectionType: 'none' });
+  finish({ ok: true, headers: { get: () => 'application/manifest+json' } });
+  await state.observer.refresh();
+  assert.deepEqual(state.changes, [false]);
+});
 
 test('a stale initial inactive response cannot hide a banner after a newer native resume', async () => {
   const lifecycle = setupBannerLifecycle();

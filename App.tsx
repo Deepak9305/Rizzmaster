@@ -14,12 +14,13 @@ import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { AdMobService, type RewardVideoSsv } from './services/admobService';
+import { startGuestRewardPreload } from './services/guestRewardPreload';
 import { ForegroundSessionClock } from './services/foregroundSessionClock';
 import NativeBanner from './components/NativeBanner';
 import { OneSignalService } from './services/oneSignalService';
 import IAPService from './services/iapService';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { Network } from '@capacitor/network';
+import { observeNativeNetwork } from './services/networkLifecycle';
 import { getApiUrl, runtimeConfig } from './services/runtimeConfig';
 import {
   canUseNativeAdMob,
@@ -474,6 +475,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const [profileLoadError, setProfileLoadError] = useState<string | null>(null);
   const [isOffline, setIsOffline] = useState(false);
   const lastOfflineStatusRef = useRef(false);
+  const refreshNetworkRef = useRef<(() => Promise<void>) | null>(null);
 
   useEffect(() => {
     if (!IS_WEB_PLATFORM || isWebPromotionPaused) return;
@@ -714,19 +716,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
   // Network Connectivity Monitoring
   useEffect(() => {
-    // Initial State
-    if (!canUseNativeNetwork()) {
-      return;
-    }
-
-    Network.getStatus().then(status => {
-      const isCurrentlyOffline = !status.connected;
-      setIsOffline(isCurrentlyOffline);
-      lastOfflineStatusRef.current = isCurrentlyOffline;
-    });
-
-    const listener = Network.addListener('networkStatusChange', status => {
-      const isNowOffline = !status.connected;
+    if (!canUseNativeNetwork()) return;
+    let initial = true;
+    const observer = observeNativeNetwork(connected => {
+      const isNowOffline = !connected;
       const wasOffline = lastOfflineStatusRef.current;
 
       // Update State
@@ -734,17 +727,19 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       lastOfflineStatusRef.current = isNowOffline;
 
       // Only show toast if the status actually CHANGED
-      if (isNowOffline !== wasOffline) {
+      if (!initial && isNowOffline !== wasOffline) {
         if (!isNowOffline) {
           showToast("Connection Restored 📡", "success");
         } else {
           showToast("Connection Lost ⚠️", "error");
         }
       }
+      initial = false;
     });
-
+    refreshNetworkRef.current = observer.refresh;
     return () => {
-      listener.then(l => l.remove());
+      refreshNetworkRef.current = null;
+      observer.dispose();
     };
   }, [showToast]);
 
@@ -1299,25 +1294,21 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     return promise;
   }, []);
 
+  const guestRewardPreloadEligible = Boolean(
+    !IS_WEB_PLATFORM && !showSplash && !showOnboarding && !isOffline && profile &&
+    (isGuest || profile.id === 'guest_user') && !profile.is_premium &&
+    (profile.credits || 0) <= 2 && canUseNativeAdMob() && hasProductionAdUnit('REWARD')
+  );
   useEffect(() => {
-    // Guests have no server verification context to create. Warm one ad while
-    // their last two credits are still usable; displaying it remains opt-in.
-    if (
-      IS_WEB_PLATFORM || showSplash || showOnboarding || isOffline || !profile ||
-      !(isGuest || profile.id === 'guest_user') || profile.is_premium ||
-      (profile.credits || 0) > 2 || !canUseNativeAdMob() || !hasProductionAdUnit('REWARD')
-    ) return;
-
-    let cancelled = false;
+    if (!guestRewardPreloadEligible) return;
     const identityVersion = rewardedAdIdentityVersionRef.current;
-    const isCurrentGuest = () => !cancelled &&
+    const isCurrentGuest = () =>
       identityVersion === rewardedAdIdentityVersionRef.current &&
       profileRef.current?.id === 'guest_user' &&
       !profileRef.current.is_premium && (profileRef.current.credits || 0) <= 2;
-    runAdTask('Guest low-credit rewarded preload',
-      AdMobService.prepareRewardVideo(getAdId('REWARD'), undefined, isCurrentGuest));
-    return () => { cancelled = true; };
-  }, [isGuest, profile?.id, profile?.credits, profile?.is_premium, showSplash, showOnboarding, isOffline]);
+    // Stable eligibility avoids cancelling the same preload as credits go 2 -> 1 -> 0.
+    return startGuestRewardPreload(getAdId('REWARD'), isCurrentGuest);
+  }, [guestRewardPreloadEligible, profile?.id]);
 
   useEffect(() => {
     if (
@@ -2347,10 +2338,8 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   }, []);
 
   const handleRetryNetwork = useCallback(async () => {
-    const status = await Network.getStatus();
-    setIsOffline(!status.connected);
-    if (status.connected) showToast("We're back online! 📡", "success");
-  }, [showToast]);
+    await refreshNetworkRef.current?.();
+  }, []);
 
   const handleCoachGoPremium = useCallback(() => {
     handleBackNavigation();
@@ -2404,7 +2393,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         adId={getAdId('BANNER')}
         online={!isOffline}
         enabled={Boolean(hasProductionAdUnit('BANNER') && profile && !profile.is_premium && (session || isGuest) && !updateGateConfig?.blocked)}
-        suspended={showSplash || showOnboarding || currentView !== 'HOME' || isSessionBlocked || isOffline || showPremiumModal || showSavedModal || showRizzShareCard || showCreditsExhaustedModal || showPersonaModal || isRewardedAdLoading || isPrivacyFormOpen}
+        suspended={showSplash || showOnboarding || currentView !== 'HOME' || isSessionBlocked || isOffline || showPremiumModal || showSavedModal || showRizzShareCard || showCreditsExhaustedModal || showPersonaModal || (isRewardedAdLoading && rewardedAdStatus !== 'pending') || isPrivacyFormOpen}
         onConsentReady={setPrivacyOptionsRequired}
       />
 

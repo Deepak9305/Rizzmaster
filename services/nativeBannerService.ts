@@ -7,16 +7,15 @@ export type BannerMode = 'visible' | 'hidden' | 'removed';
 export const BANNER_WIDTH = 320;
 export const BANNER_HEIGHT = 50;
 export const BANNER_POSITION = BannerAdPosition.TOP_CENTER;
-// Keep manual recovery comfortably outside AdMob's one-minute request
-// guidance. Normal banner refresh remains owned by the Google Mobile Ads SDK.
+// Actual failed loads remain paced. Refresh of a loaded banner belongs to the SDK.
 export const BANNER_RETRY_INITIAL_MS = 60_000;
-export const BANNER_RETRY_MAX_MS = 300_000;
 // Permission checks do not issue ad requests. Recover these sooner while
 // retaining the slower pacing for actual load failures and no-fill.
 export const BANNER_READINESS_RETRY_INITIAL_MS = 15_000;
 export const BANNER_READINESS_RETRY_MAX_MS = 60_000;
 export const BANNER_LOAD_TIMEOUT_MS = 90_000;
 export const getBannerSlotHeight = () => BANNER_HEIGHT;
+type RetryKind = 'load' | 'network' | 'local' | 'readiness';
 
 // A single native banner is shared by the app. Serialize show/hide/remove so
 // a slow consent response cannot display it over a newer modal or premium session.
@@ -28,9 +27,12 @@ export class NativeBannerController {
     private disposed = false;
     private listeners: PluginListenerHandle[] = [];
     private running: Promise<void> | null = null;
+    private reconcileAgain = false;
     private retryTimer: ReturnType<typeof setTimeout> | null = null;
-    private retryCount = 0;
+    private networkRetryCount = 0;
     private readinessRetryCount = 0;
+    private localRetryCount = 0;
+    private retryKind: RetryKind = 'load';
     private retryAt = 0;
     private requestVersion = 0;
     private loadTimer: ReturnType<typeof setTimeout> | null = null;
@@ -42,6 +44,7 @@ export class NativeBannerController {
     private bannerHeightDp = BANNER_HEIGHT;
     private adaptive = false;
     private networkAvailable = true;
+    private readonly stopReadiness: () => void;
 
     constructor(
         private readonly adId: string,
@@ -49,7 +52,17 @@ export class NativeBannerController {
         private readonly reserve: (height: number) => void,
         private readonly consentReady: (required: boolean) => void,
         private readonly moveBanner?: (margin: number) => Promise<boolean>,
-    ) {}
+    ) {
+        this.stopReadiness = AdMobService.subscribeReadiness(() => {
+            if (this.disposed || this.desired !== 'visible') return;
+            const permitted = AdMobService.canRequestAds && !AdMobService.privacyOptionsInProgress;
+            if (permitted && this.retryKind === 'readiness') {
+                this.retryAt = 0;
+                this.clearRetry();
+            }
+            if (permitted || this.attached) void this.reconcile();
+        });
+    }
 
     setTopMargin(margin: number, viewportWidthDp = this.viewportWidthDp, heightDp = this.bannerHeightDp, adaptive = this.adaptive): Promise<void> {
         if (this.disposed || (margin === this.topMargin && viewportWidthDp === this.viewportWidthDp && heightDp === this.bannerHeightDp && adaptive === this.adaptive)) return this.running ?? Promise.resolve();
@@ -71,8 +84,9 @@ export class NativeBannerController {
             // the background must neither restart nor bypass recovery pacing.
             if (mode === 'removed') {
                 this.retryAt = 0;
-                this.retryCount = 0;
+                this.networkRetryCount = 0;
                 this.readinessRetryCount = 0;
+                this.localRetryCount = 0;
             }
         }
         return this.reconcile();
@@ -84,14 +98,16 @@ export class NativeBannerController {
         if (!available) {
             this.clearRetry();
             this.clearLoadTimer();
+        } else if (this.retryKind === 'network') {
+            this.retryAt = 0;
+            this.clearRetry();
         }
-        // Preserve the retry deadline: reconnecting recovers an overdue request
-        // immediately, but cannot turn network flapping into extra requests.
+        // Reconnect wakes network recovery. A no-fill deadline remains intact.
         return this.reconcile();
     }
 
     private nativeCall<T>(label: string, promise: Promise<T>): Promise<T> {
-        return AdMobService.withNativeTimeout(`Banner ${label}`, promise, 5000);
+        return AdMobService.withNativeTimeout(`Banner ${label}`, promise, 10000);
     }
 
     private clearRetry() {
@@ -122,14 +138,17 @@ export class NativeBannerController {
         )));
     }
 
-    private scheduleRetry(readinessOnly = false) {
+    private scheduleRetry(kind: RetryKind = 'load') {
         if (this.disposed || this.desired === 'removed') return;
-        // No tight no-fill loops, no manual refreshing of a loaded ad, and no
-        // recovery request inside AdMob's recommended 60-second interval.
+        // Bridge/listener failures are not no-fill responses. Recover locally
+        // without making them wait through the demand-failure cooldown.
         if (!this.retryAt || this.retryAt <= Date.now()) {
-            const delay = readinessOnly
+            this.retryKind = kind;
+            const delay = kind === 'readiness'
                 ? Math.min(BANNER_READINESS_RETRY_INITIAL_MS * 2 ** this.readinessRetryCount++, BANNER_READINESS_RETRY_MAX_MS)
-                : Math.min(BANNER_RETRY_INITIAL_MS * 2 ** this.retryCount++, BANNER_RETRY_MAX_MS);
+                : kind === 'local' ? Math.min(1000 * 2 ** this.localRetryCount++, 15000)
+                : kind === 'network' ? Math.min(15000 * 2 ** this.networkRetryCount++, 60000)
+                : BANNER_RETRY_INITIAL_MS;
             this.retryAt = Date.now() + delay;
         }
         this.waitForRetry();
@@ -159,7 +178,8 @@ export class NativeBannerController {
                 this.loaded = true;
                 this.clearLoadTimer();
                 this.stalled = false;
-                this.retryCount = 0;
+                this.networkRetryCount = 0;
+                this.localRetryCount = 0;
                 this.retryAt = 0;
                 this.clearRetry();
                 console.log('[AdMob] Top banner loaded.');
@@ -167,16 +187,23 @@ export class NativeBannerController {
             () => AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (error: unknown) => {
                 if (!this.attached || this.disposed) return;
                 this.clearLoadTimer();
+                console.warn('[AdMob] Top banner failed to load:', error);
+                const failure = error as { code?: number; viewRetained?: boolean } | null;
+                if (failure?.viewRetained) {
+                    // A transient SDK refresh failure does not invalidate the
+                    // displayed ad. Keep its view and automatic-refresh lifecycle.
+                    this.loaded = true; // Native confirms it has a previously loaded ad.
+                    this.stalled = false;
+                    return;
+                }
                 ++this.requestVersion;
-                this.attached = false; // Android destroys a failed banner itself.
+                this.attached = false; // Initial-load failure destroys its native view.
                 this.visible = false;
                 this.loaded = false;
                 this.positionDirty = false;
                 this.reserve(0);
-                console.warn('[AdMob] Top banner failed to load:', error);
-                this.scheduleRetry();
+                this.scheduleRetry(failure?.code === 2 ? 'network' : 'load');
             }),
-            () => AdMob.addListener(BannerAdPluginEvents.AdImpression, () => console.log('[AdMob] Top banner impression.')),
         ];
         for (const register of registrations) {
             const pending = register();
@@ -191,16 +218,34 @@ export class NativeBannerController {
                 throw error;
             }
         }
+        // Impression telemetry must never prevent requesting an ad. A missing
+        // optional event on an older bridge is safe; Loaded/Failed remain required.
+        const requiredListener = this.listeners[0];
+        void Promise.resolve().then(() => AdMob.addListener(
+            BannerAdPluginEvents.AdImpression, () => console.log('[AdMob] Top banner impression.'),
+        )).then(listener => {
+            if (this.disposed || this.listeners[0] !== requiredListener) AdMobService.removeListener(listener);
+            else this.listeners.push(listener);
+        }).catch(error => console.warn('[AdMob] Banner impression telemetry unavailable:', error));
     }
 
     private reconcile(): Promise<void> {
-        if (this.running) return this.running;
-        this.running = this.drain().catch(async error => {
-            console.warn('[AdMob] Top banner operation failed:', error);
-            await this.remove().catch(cleanupError => console.warn('[AdMob] Banner cleanup failed:', cleanupError));
-            await this.cleanupListeners();
-            this.scheduleRetry();
-        }).finally(() => { this.running = null; });
+        if (this.running) {
+            this.reconcileAgain = true;
+            return this.running;
+        }
+        this.running = (async () => {
+            do {
+                this.reconcileAgain = false;
+                try { await this.drain(); }
+                catch (error) {
+                    console.warn('[AdMob] Top banner operation failed:', error);
+                    await this.remove().catch(cleanupError => console.warn('[AdMob] Banner cleanup failed:', cleanupError));
+                    await this.cleanupListeners();
+                    this.scheduleRetry('local');
+                }
+            } while (this.reconcileAgain);
+        })().finally(() => { this.running = null; });
         return this.running;
     }
 
@@ -248,6 +293,9 @@ export class NativeBannerController {
                     this.reserve(0);
                     return;
                 }
+                if (this.attached && (!AdMobService.canRequestAds || AdMobService.privacyOptionsInProgress)) {
+                    await this.remove();
+                }
                 if (this.waitForRetry()) return;
                 const initialized = await AdMobService.ensureInitialized('Top banner');
                 this.consentReady(AdMobService.isPrivacyOptionsRequired());
@@ -255,7 +303,7 @@ export class NativeBannerController {
                 if (!this.networkAvailable) continue;
                 if (!initialized || !AdMobService.canRequestAds || AdMobService.privacyOptionsInProgress) {
                     await this.remove();
-                    this.scheduleRetry(true);
+                    this.scheduleRetry('readiness');
                     return;
                 }
                 this.readinessRetryCount = 0;
@@ -264,7 +312,7 @@ export class NativeBannerController {
                 if (!this.networkAvailable) continue;
                 if (!AdMobService.canRequestAds || AdMobService.privacyOptionsInProgress) {
                     await this.remove();
-                    this.scheduleRetry(true);
+                    this.scheduleRetry('readiness');
                     return;
                 }
                 // The component owns a stable layout slot. This reports native
@@ -279,14 +327,20 @@ export class NativeBannerController {
                 if (this.attached && this.positionDirty) {
                     const margin = this.topMargin;
                     const viewportWidthDp = this.viewportWidthDp;
+                    this.clearLoadTimer();
                     if (this.visible) await this.nativeCall('hide', AdMob.hideBanner());
                     this.visible = false;
-                    if (await this.moveBanner?.(margin)) {
-                        this.positionDirty = this.topMargin !== margin || this.viewportWidthDp !== viewportWidthDp;
-                    } else {
-                        // Older APKs cannot move their cached view. Recreate
-                        // only on a real layout change, never on scrolling.
-                        await this.remove();
+                    try {
+                        if (await this.moveBanner?.(margin)) {
+                            this.positionDirty = this.topMargin !== margin || this.viewportWidthDp !== viewportWidthDp;
+                        } else {
+                            // Only confirmed unsupported/missing views need recreation.
+                            await this.remove();
+                        }
+                    } catch (error) {
+                        console.warn('[AdMob] Banner positioning will retry:', error);
+                        this.scheduleRetry('local');
+                        return; // Keep the cached view hidden until it is positioned safely.
                     }
                     if (this.desired !== 'visible') continue;
                 }
@@ -313,21 +367,31 @@ export class NativeBannerController {
                             margin: this.topMargin,
                             isTesting: false,
                         }));
-                        // Native show resolves on view creation, not on load;
-                        // Loaded/FailedToLoad clear the watchdog above.
-                        if (this.attached && this.moveBanner) {
-                            // Apply the measured slot immediately, including its
-                            // safe area, rather than waiting for the first resize.
-                            const margin = this.topMargin;
-                            const viewportWidthDp = this.viewportWidthDp;
+                    } catch (error) {
+                        // Loaded is stronger evidence than a lost bridge response.
+                        // Do not destroy a usable ad or turn that into a fast reload.
+                        if (!this.attached || !this.loaded) throw error;
+                        console.warn('[AdMob] Banner loaded despite a bridge response failure:', error);
+                    }
+                    // Native show resolves on view creation, not on load;
+                    // Loaded/FailedToLoad clear the watchdog above.
+                    if (this.attached && this.moveBanner) {
+                        // Apply the measured slot, including its safe area.
+                        const margin = this.topMargin;
+                        const viewportWidthDp = this.viewportWidthDp;
+                        try {
                             if (await this.moveBanner(margin)) {
                                 this.positionDirty = this.topMargin !== margin || this.viewportWidthDp !== viewportWidthDp;
                             }
+                        } catch (error) {
+                            console.warn('[AdMob] Initial banner positioning will retry:', error);
+                            this.positionDirty = true;
+                            this.clearLoadTimer();
+                            if (this.attached && this.visible) await this.nativeCall('hide', AdMob.hideBanner());
+                            this.visible = false;
+                            this.scheduleRetry('local');
+                            return;
                         }
-                    } catch (error) {
-                        await this.remove();
-                        this.scheduleRetry();
-                        throw error;
                     }
                 }
                 this.watchLoad();
@@ -338,6 +402,7 @@ export class NativeBannerController {
 
     async dispose() {
         this.disposed = true;
+        this.stopReadiness();
         this.desired = 'removed';
         this.clearRetry();
         await this.reconcile();
