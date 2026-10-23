@@ -5,6 +5,7 @@ import { LEGAL_LINKS } from '../services/legalLinks';
 import { BLOG_POSTS, EDITORIAL_AUTHORS, getBlogPost, PLAY_STORE_URL, type BlogPost } from '../services/marketingContent';
 import { MARKETING_LEGAL_PAGES, type MarketingLegalPageKey } from '../services/marketingLegal';
 import { MARKETING_HOME_PATH, normalizeMarketingPath } from '../services/marketingRoutes';
+import { getRelatedGuideSlugs, PICKUP_LINE_GUIDE_SLUGS } from '../services/editorialDiscovery';
 
 const RizzlinePage = lazy(() => import('./rizzline/RizzlinePage'));
 
@@ -678,13 +679,19 @@ const ArticleDoDont: React.FC<{ post: BlogPost }> = ({ post }) => {
 };
 
 const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void }> = ({ post, navigate }) => {
-  const relatedPosts = BLOG_POSTS.filter((candidate) => candidate.slug !== post.slug).slice(0, 3);
+  const preferred = getRelatedGuideSlugs(post.slug);
+  const candidates = BLOG_POSTS.filter(candidate => candidate.slug !== post.slug);
+  const relatedPosts = [
+    ...preferred.flatMap(slug => candidates.filter(candidate => candidate.slug === slug)),
+    ...candidates.filter(candidate => !preferred.includes(candidate.slug))
+  ].slice(0, 3);
 
   return (
     <section className="mt-20 border-t border-white/10 pt-12">
       <p className="text-xs font-black uppercase tracking-[0.2em] text-pink-200/75">Keep reading</p>
       <h2 className="mt-3 text-2xl font-black text-white md:text-3xl">More help for your next text</h2>
       <div className="mt-7 grid gap-4 md:grid-cols-3">{relatedPosts.map((related) => <BlogCard key={related.slug} post={related} navigate={navigate} />)}</div>
+      {PICKUP_LINE_GUIDE_SLUGS.includes(post.slug) && <p className="mt-6 text-sm text-white/70">Want to try an opener? <a href="/rizzline-pickup-lines" className="font-bold text-pink-200 underline underline-offset-4">Browse Rizzline pickup lines by vibe</a>, then adapt your choice to the person and the conversation.</p>}
     </section>
   );
 };

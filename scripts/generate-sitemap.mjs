@@ -34,7 +34,7 @@ const { BLOG_POSTS } = await loadTypeScriptModule(contentPath);
 const latestPostDate = BLOG_POSTS.reduce((latest, post) => post.date > latest ? post.date : latest, '1970-01-01');
 const entries = [
   page('/', latestPostDate, 'weekly', '1.0'),
-  page('/rizzline-pickup-lines', '2026-10-15', 'monthly', '0.9'),
+  page('/rizzline-pickup-lines', '2026-10-23', 'monthly', '0.9'),
   page('/landing', latestPostDate, 'weekly', '1.0'),
   page('/blog', latestPostDate, 'weekly', '0.9'),
   ...BLOG_POSTS.map((post) => page('/blog/' + post.slug, post.updatedAt || post.date, 'monthly', '0.85')),

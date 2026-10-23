@@ -222,8 +222,10 @@ const articleInternalLinks = {
   ]
 };
 
-const renderRelated = (post, posts) => posts
-  .filter((candidate) => candidate.slug !== post.slug)
+const renderRelated = (post, posts) => [
+  ...getRelatedGuideSlugs(post.slug).flatMap(slug => posts.filter(candidate => candidate.slug === slug)),
+  ...posts.filter(candidate => candidate.slug !== post.slug && !getRelatedGuideSlugs(post.slug).includes(candidate.slug))
+]
   .slice(0, 3)
   .map((related) => `<a href="/blog/${escapeAttribute(related.slug)}" class="rounded-2xl border border-white/10 bg-white/[0.03] p-5"><span class="text-xs font-bold uppercase tracking-[0.18em] text-pink-300/80">${escapeHtml(related.category)}</span><h3 class="mt-3 text-lg font-bold text-white">${escapeHtml(related.title)}</h3><p class="mt-2 text-sm leading-6 text-white/50">${escapeHtml(related.excerpt)}</p><span class="mt-4 inline-block text-sm font-bold text-pink-200">Read the guide -&gt;</span></a>`)
   .join('');
@@ -240,7 +242,9 @@ const renderArticle = (post, posts) => {
     .slice(0, 3)
     .map((related) => ({ slug: related.slug, label: related.title })))
     .map((link) => `<a href="/blog/${escapeAttribute(link.slug)}" class="rounded-full border border-white/10 bg-black/20 px-3.5 py-2 text-xs font-bold text-white/65">${escapeHtml(link.label)} -&gt;</a>`)
-    .join('');
+    .join('') + (PICKUP_LINE_GUIDE_SLUGS.includes(post.slug)
+      ? '<a href="/rizzline-pickup-lines" class="rounded-full border border-pink-300/20 px-3.5 py-2 text-xs font-bold text-pink-200">Browse Rizzline pickup lines by vibe</a>'
+      : '');
 
   return `<main class="marketing-container marketing-page-padding"><a href="/blog" class="mb-10 inline-flex items-center gap-2 text-sm font-bold text-white/45">&lt;- Back to the blog</a><article class="mx-auto max-w-3xl"><div class="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-white/35"><span class="text-pink-300/80">${escapeHtml(post.category)}</span><span aria-hidden="true">&bull;</span><span>${escapeHtml(post.readingTime)}</span><span aria-hidden="true">&bull;</span><time datetime="${escapeAttribute(post.date)}">${escapeHtml(dateLabel(post.date))}</time></div><h1 class="mt-6 text-4xl font-black leading-[1.05] tracking-[-0.04em] text-white md:text-6xl">${escapeHtml(post.title)}</h1>${authorLine}<p class="mt-7 text-lg leading-8 text-white/55">${escapeHtml(post.description)}</p>${post.image ? `<figure class="mt-9 overflow-hidden rounded-3xl border border-pink-300/15 bg-black/20"><picture>${post.imageWebp ? `<source type="image/webp" srcset="${escapeAttribute(post.imageWebp)}">` : ''}<img src="${escapeAttribute(post.image)}" alt="${escapeAttribute(post.imageAlt || post.title)}" class="aspect-[16/9] w-full object-cover"></picture><figcaption class="border-t border-white/10 px-5 py-3 text-xs text-white/35">${escapeHtml(post.imageCaption || 'A better follow-up is clear, calm, and gives the other person room to choose.')}</figcaption></figure>` : ''}<div class="mt-10 space-y-5"><aside class="relative overflow-hidden rounded-3xl border border-pink-300/20 bg-pink-500/[0.08] p-6"><p class="text-xs font-black uppercase tracking-[0.2em] text-pink-200/80">Quick answer</p><p class="mt-3 text-base leading-7 text-white/75">${escapeHtml(post.excerpt)}</p></aside><nav aria-label="Related dating guides" class="rounded-3xl border border-white/10 bg-white/[0.03] p-5 md:p-6"><p class="text-xs font-black uppercase tracking-[0.2em] text-pink-200/75">Continue reading</p><div class="mt-4 flex flex-wrap gap-2.5">${internalLinks}</div></nav>${renderResources(post)}</div><div class="mt-12 space-y-12">${articleSections}</div>${renderArticleCta()}<section class="mt-20 border-t border-white/10 pt-12"><p class="text-xs font-black uppercase tracking-[0.2em] text-pink-200/75">Keep reading</p><h2 class="mt-3 text-2xl font-black text-white md:text-3xl">More help for your next text</h2><div class="mt-7 grid gap-4 md:grid-cols-3">${renderRelated(post, posts)}</div></section></article></main><footer class="marketing-container border-t border-white/10 py-10 text-sm text-white/45"><a href="/blog">Blog</a> <a href="/privacy" class="ml-4">Privacy</a> <a href="/terms" class="ml-4">Terms</a> <a href="/support" class="ml-4">Support</a></footer>`;
 };
@@ -353,6 +357,7 @@ const writePage = async (route, html) => {
 };
 
 const { BLOG_POSTS, EDITORIAL_AUTHORS, PLAY_STORE_URL } = await loadMarketingContent();
+const { getRelatedGuideSlugs, PICKUP_LINE_GUIDE_SLUGS } = await loadTypeScriptModule(join(projectRoot, 'services/editorialDiscovery.ts'));
 const { MARKETING_LEGAL_PAGES } = await loadMarketingLegal();
 const shell = await readFile(shellPath, 'utf8');
 

@@ -986,7 +986,7 @@ export const BLOG_POSTS: BlogPost[] = [
     description: 'Learn how to bring up STI testing, protection, pregnancy prevention, boundaries, and consent before sex without turning the moment into an interrogation or a mood killer.',
     excerpt: 'The most attractive version of the conversation is clear, mutual, and early enough that neither person feels cornered. Say what you know, ask what you need, and treat hesitation as a reason to slow down rather than something to overcome.',
     date: '2026-10-17',
-    updatedAt: '2026-10-17',
+    updatedAt: '2026-10-23',
     readingTime: '11 min read',
     category: 'Healthy intimacy',
     author: 'amelia',
@@ -1015,6 +1015,14 @@ export const BLOG_POSTS: BlogPost[] = [
       { question: 'What if someone refuses to talk about sexual health?', answer: 'You do not have to continue toward sex without the information and protection you need. Say that you are not comfortable proceeding, pause the encounter, and leave if the person keeps pressuring you. Avoid treating their defensiveness as a problem you must solve with better wording.' }
     ],
     sections: [
+      {
+        heading: 'Start with a shared plan, not a demand for reassurance',
+        paragraphs: [
+          'Try this before deciding to have sex: “I am interested in you. Before we go further, I want to talk about testing, protection, and what we each feel comfortable doing. I can share my situation first.” The opening states interest and makes the questions mutual without suggesting that an answer commits either person to sex.',
+          'If they say, “I was tested recently,” follow with “Do you know when and what was included? I can tell you the same about mine.” If either of you is uncertain, “Let’s check with a clinician and keep things at a level we are both comfortable with for now” is a complete next step. This guide offers conversation examples; it cannot interpret results, decide testing windows, or assess your individual medical risk.',
+          'If the answer is “Don’t you trust me?”, return to the practical decision: “This is how I approach sex with anyone. I am happy to answer the same questions, and I am comfortable waiting.” A disagreement about protection is a reason to pause, even when the attraction is mutual.'
+        ]
+      },
       {
         heading: 'The conversation is part of intimacy, not an interruption to it',
         paragraphs: [
@@ -1153,7 +1161,7 @@ export const BLOG_POSTS: BlogPost[] = [
     description: 'Learn how to discuss splitting the bill, expensive plans, income differences, spending values, and financial boundaries while dating without turning the conversation into an interrogation.',
     excerpt: 'Money conversations do not need to begin with a salary disclosure or a relationship budget. Start with the decision in front of you, say what works for you, and notice whether the other person can discuss fairness without shame or control.',
     date: '2026-10-15',
-    updatedAt: '2026-10-15',
+    updatedAt: '2026-10-23',
     readingTime: '11 min read',
     category: 'Dating & Connection',
     author: 'amelia',
@@ -1294,6 +1302,14 @@ export const BLOG_POSTS: BlogPost[] = [
           'Concerning pattern: your limit is mocked, punished, or treated as proof that you owe something.',
           'Healthy generosity can be declined; control makes declining feel unsafe.',
           'Repeated pressure around money deserves the same attention as repeated pressure around any other boundary.'
+        ]
+      },
+      {
+        heading: 'Three money conversations with an actual next step',
+        paragraphs: [
+          'An expensive invitation: “That restaurant is beyond what I want to spend this week. I would still like to see you. How about the market and coffee on Saturday?” This protects the budget and makes interest clear. If they offer to pay, decide whether you want to accept rather than treating the offer as a debt you must repay with affection or access.',
+          'A surprising bill: “I had planned to cover my food and drink. I did not realize we were splitting the shared bottles evenly. Can we work out our own items?” Bring up the actual arrangement instead of accusing the group of taking advantage. For the next outing, agree how shared orders will be handled before ordering.',
+          'Unequal incomes: “I like spending time with you, but matching your usual spending is not sustainable for me. I can budget about this much for our plans. If you want something more expensive, let’s agree in advance whether it is your invitation or choose something else.” The useful outcome is an arrangement both people can repeat without resentment, not proof that one person is more generous.'
         ]
       },
       {
@@ -3574,7 +3590,7 @@ export const BLOG_POSTS: BlogPost[] = [
     description: 'Learn how to stop overthinking while dating, separate facts from anxious stories, and make calm next moves without ignoring real red flags.',
     excerpt: 'Dating uncertainty can make every pause, message, and change of tone feel like evidence. A calmer approach is to separate facts from guesses, regulate before reacting, and judge the pattern rather than one moment.',
     date: '2026-09-26',
-    updatedAt: '2026-09-26',
+    updatedAt: '2026-10-23',
     readingTime: '12 min read',
     category: 'Dating confidence',
     keywords: [
@@ -3621,6 +3637,14 @@ export const BLOG_POSTS: BlogPost[] = [
         imageWebp: '/blog/how-to-stop-overthinking-dating-facts.webp',
         imageAlt: 'Two adults having an attentive conversation over coffee while getting to know each other',
         imageCaption: 'Real information comes from shared conversation and consistent behaviour, not from decoding every small signal.'
+      },
+      {
+        heading: 'A worked example: the unconfirmed Saturday plan',
+        paragraphs: [
+          'Suppose you suggested Saturday, they replied “That could work,” and there has been no confirmation. The fact is that the plan is tentative. “They are rejecting me” and “They definitely want to go” are both interpretations. The immediate problem is scheduling, so solve that problem before trying to decode the whole connection.',
+          'Send a message that gives the plan a useful decision point: “Would you like to do coffee at 3 on Saturday? I am sorting out my weekend, so let me know by tomorrow evening.” Choose a deadline that fits your plans, rather than using it to test their interest. Until that point, continue with your day. If there is no confirmation, make other plans; you do not need another message to turn silence into permission.',
+          'If they offer Sunday instead and follow through, you have new evidence of effort. If the same vague exchange keeps happening, the problem may be unreliable planning rather than a single anxious interpretation. Judge the repeated behaviour separately from the urge to refresh your inbox. This exercise cannot diagnose anxiety or tell you what someone privately feels.'
+        ]
       },
       {
         heading: 'Separate facts from the story your mind adds',
