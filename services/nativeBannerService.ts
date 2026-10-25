@@ -2,6 +2,7 @@ import { AdMob, BannerAdPluginEvents, BannerAdPosition, BannerAdSize } from '@ca
 import type { PluginListenerHandle } from '@capacitor/core';
 import { AdMobService } from './admobService';
 import { canUseNativeAdMob } from './nativeCapabilities';
+import { recordAdEvent } from './adDiagnostics';
 
 export type BannerMode = 'visible' | 'hidden' | 'removed';
 export const BANNER_WIDTH = 320;
@@ -24,6 +25,7 @@ export class NativeBannerController {
     private attached = false;
     private visible = false;
     private loaded = false;
+    private needsReload = false;
     private disposed = false;
     private listeners: PluginListenerHandle[] = [];
     private running: Promise<void> | null = null;
@@ -45,6 +47,7 @@ export class NativeBannerController {
     private adaptive = false;
     private networkAvailable = true;
     private readonly stopReadiness: () => void;
+    private readonly stopRecovery: () => void;
 
     constructor(
         private readonly adId: string,
@@ -53,6 +56,9 @@ export class NativeBannerController {
         private readonly consentReady: (required: boolean) => void,
         private readonly moveBanner?: (margin: number) => Promise<boolean>,
     ) {
+        this.stopRecovery = AdMobService.subscribeRecovery(() => {
+            if (!this.disposed && this.desired === 'visible') void this.reconcile();
+        });
         this.stopReadiness = AdMobService.subscribeReadiness(() => {
             if (this.disposed || this.desired !== 'visible') return;
             const permitted = AdMobService.canRequestAds && !AdMobService.privacyOptionsInProgress;
@@ -76,6 +82,7 @@ export class NativeBannerController {
 
     setMode(mode: BannerMode): Promise<void> {
         if (this.disposed) return this.running ?? Promise.resolve();
+        if (mode !== this.desired) recordAdEvent(mode === 'visible' ? 'banner.eligible' : 'banner.suspended');
         this.desired = mode;
         if (mode !== 'visible') {
             this.clearRetry();
@@ -176,6 +183,8 @@ export class NativeBannerController {
             () => AdMob.addListener(BannerAdPluginEvents.Loaded, () => {
                 if (!this.attached || this.disposed) return;
                 this.loaded = true;
+                this.needsReload = false;
+                recordAdEvent('banner.loaded');
                 this.clearLoadTimer();
                 this.stalled = false;
                 this.networkRetryCount = 0;
@@ -188,18 +197,22 @@ export class NativeBannerController {
                 if (!this.attached || this.disposed) return;
                 this.clearLoadTimer();
                 console.warn('[AdMob] Top banner failed to load:', error);
-                const failure = error as { code?: number; viewRetained?: boolean } | null;
+                const failure = error as { code?: number; viewRetained?: boolean; hasLoadedAd?: boolean; refreshFailure?: boolean } | null;
+                recordAdEvent('banner.failed', failure?.code);
                 if (failure?.viewRetained) {
-                    // A transient SDK refresh failure does not invalidate the
-                    // displayed ad. Keep its view and automatic-refresh lifecycle.
-                    this.loaded = true; // Native confirms it has a previously loaded ad.
                     this.stalled = false;
+                    // New bridges can retain an EMPTY view too. Older bridges
+                    // only sent viewRetained=true for an already loaded creative.
+                    this.loaded = failure.hasLoadedAd ?? failure.refreshFailure ?? true;
+                    this.needsReload = !this.loaded;
+                    if (this.needsReload) this.scheduleRetry(failure.code === 2 ? 'network' : 'load');
                     return;
                 }
                 ++this.requestVersion;
                 this.attached = false; // Initial-load failure destroys its native view.
                 this.visible = false;
                 this.loaded = false;
+                this.needsReload = false;
                 this.positionDirty = false;
                 this.reserve(0);
                 this.scheduleRetry(failure?.code === 2 ? 'network' : 'load');
@@ -222,7 +235,7 @@ export class NativeBannerController {
         // optional event on an older bridge is safe; Loaded/Failed remain required.
         const requiredListener = this.listeners[0];
         void Promise.resolve().then(() => AdMob.addListener(
-            BannerAdPluginEvents.AdImpression, () => console.log('[AdMob] Top banner impression.'),
+            BannerAdPluginEvents.AdImpression, () => recordAdEvent('banner.impression'),
         )).then(listener => {
             if (this.disposed || this.listeners[0] !== requiredListener) AdMobService.removeListener(listener);
             else this.listeners.push(listener);
@@ -258,6 +271,7 @@ export class NativeBannerController {
         this.attached = false;
         this.visible = false;
         this.loaded = false;
+        this.needsReload = false;
         this.positionDirty = false;
         this.requestedWidthDp = 0;
         this.reserve(0);
@@ -344,22 +358,25 @@ export class NativeBannerController {
                     }
                     if (this.desired !== 'visible') continue;
                 }
-                if (this.attached) {
-                    if (!this.visible) {
-                        this.visible = true;
-                        await this.nativeCall('resume', AdMob.resumeBanner());
-                    }
-                } else {
+                // A retained empty view may have been hidden while its retry
+                // was pending. showBanner(existing) reloads it but does not resume it.
+                if (this.attached && !this.visible) {
+                    this.visible = true;
+                    await this.nativeCall('resume', AdMob.resumeBanner());
+                }
+                if (!this.attached || this.needsReload) {
                     this.reserve(this.bannerHeightDp);
                     ++this.requestVersion;
                     this.attached = true;
                     this.visible = true;
                     this.loaded = false;
+                    this.needsReload = false;
                     this.requestedWidthDp = this.viewportWidthDp;
                     this.requestedAdaptive = this.adaptive;
                     try {
                         this.watchLoad();
                         console.log('[AdMob] Requesting top banner.', { adId: this.adId });
+                        recordAdEvent('banner.request');
                         await this.nativeCall('show', AdMob.showBanner({
                             adId: this.adId,
                             adSize: this.adaptive ? BannerAdSize.ADAPTIVE_BANNER : BannerAdSize.BANNER,
@@ -403,6 +420,7 @@ export class NativeBannerController {
     async dispose() {
         this.disposed = true;
         this.stopReadiness();
+        this.stopRecovery();
         this.desired = 'removed';
         this.clearRetry();
         await this.reconcile();

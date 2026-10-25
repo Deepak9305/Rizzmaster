@@ -26,6 +26,8 @@ import com.getcapacitor.community.admob.banner.BannerExecutor;
 import com.getcapacitor.community.admob.models.AdOptions;
 import com.getcapacitor.community.admob.rewarded.AdRewardExecutor;
 import com.getcapacitor.community.admob.rewarded.RewardedAdCallbackAndListeners;
+import com.getcapacitor.community.admob.rewarded.RewardAdPluginEvents;
+import com.getcapacitor.community.admob.helpers.FullscreenPluginCallback;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.MobileAds;
@@ -214,7 +216,7 @@ public class AdMobNativeTest {
     }
 
     @Test
-    public void initialLoadFailureReleasesTheEmptyViewForOneJavascriptRecoveryOwner() throws Exception {
+    public void initialNoFillRetainsTheEmptyViewForJavascriptRetry() throws Exception {
         AtomicReference<JSObject> event = new AtomicReference<>();
         BannerExecutor banner = new BannerExecutor(() -> context, () -> activity, (name, data) -> event.set(data), "Test");
         AdView ad = mock(AdView.class);
@@ -227,9 +229,56 @@ public class AdMobNativeTest {
         java.lang.reflect.Method failure = BannerExecutor.class.getDeclaredMethod("handleBannerFailure", AdView.class, LoadAdError.class);
         failure.setAccessible(true);
         failure.invoke(banner, ad, error);
+        verify(ad, never()).destroy();
+        assertTrue(event.get().getBoolean("viewRetained"));
+        assertFalse(event.get().getBoolean("hasLoadedAd"));
+        assertFalse(event.get().getBoolean("refreshFailure"));
+    }
+
+    @Test
+    public void invalidBannerRequestReleasesTheUnusableView() throws Exception {
+        AtomicReference<JSObject> event = new AtomicReference<>();
+        BannerExecutor banner = new BannerExecutor(() -> context, () -> activity, (name, data) -> event.set(data), "Test");
+        AdView ad = mock(AdView.class);
+        setField(banner, "mAdView", ad);
+        setField(banner, "mAdViewLayout", mock(RelativeLayout.class));
+        setField(banner, "hasLoadedBanner", true);
+        LoadAdError error = mock(LoadAdError.class);
+        when(error.getCode()).thenReturn(1);
+        when(error.getMessage()).thenReturn("Invalid request");
+        when(error.getDomain()).thenReturn("com.google.android.gms.ads");
+        java.lang.reflect.Method failure = BannerExecutor.class.getDeclaredMethod("handleBannerFailure", AdView.class, LoadAdError.class);
+        failure.setAccessible(true);
+        failure.invoke(banner, ad, error);
         verify(ad).destroy();
         assertFalse(event.get().getBoolean("viewRetained"));
-        assertFalse(event.get().getBoolean("refreshFailure"));
+    }
+
+    @Test
+    public void unavailableActivityRejectsRewardBeforeConsumingItsCache() {
+        String id = "reward-not-shown";
+        RewardedAd ad = mock(RewardedAd.class);
+        AdRewardExecutor.preparedAds.put(id, ad);
+        when(activity.isFinishing()).thenReturn(true);
+        PluginCall call = mock(PluginCall.class);
+        when(call.getString("adId")).thenReturn(id);
+        try {
+            new AdRewardExecutor(() -> context, () -> activity, (name, data) -> {}, "Test")
+                .showRewardVideoAd(call, (name, data) -> {});
+            verify(call).reject("App is not in the foreground. Please retry.", "AD_NOT_FOREGROUND");
+            verify(ad, never()).show(any(), any());
+            assertSame(ad, AdRewardExecutor.preparedAds.get(id));
+        } finally { AdRewardExecutor.preparedAds.remove(id); }
+    }
+
+    @Test
+    public void rewardedImpressionUsesActualSdkCallbackWithoutGrantingAReward() {
+        java.util.List<String> events = new java.util.ArrayList<>();
+        FullscreenPluginCallback callback = new FullscreenPluginCallback(
+            RewardAdPluginEvents.INSTANCE, (name, data) -> events.add(name), null);
+        assertTrue(events.isEmpty());
+        callback.onAdImpression();
+        assertEquals(java.util.Collections.singletonList("rewardedAdRecordedImpression"), events);
     }
 
     @Test

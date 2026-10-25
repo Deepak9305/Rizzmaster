@@ -1,6 +1,6 @@
 {
   "name": "rizz-master",
-  "version": "1.2.6",
+  "version": "1.2.8",
   "type": "module",
   "scripts": {
     "postinstall": "patch-package --error-on-fail",

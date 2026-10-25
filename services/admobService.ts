@@ -7,6 +7,7 @@ import {
 } from '@capacitor-community/admob';
 import { canUseNativeAdMob } from './nativeCapabilities';
 import { readNativeConsentInfo } from './adConsentState';
+import { getAdDeliveryDiagnostics, recordAdEvent } from './adDiagnostics';
 
 export type RewardVideoSsv = {
     userId: string;
@@ -38,6 +39,7 @@ export const AdMobService = {
     privacyOptionsPromise: null as Promise<void> | null,
     consentRevision: 0,
     readinessListeners: new Set<() => void>(),
+    recoveryListeners: new Set<() => void>(),
     rewardVideoPromise: null as Promise<boolean> | null,
     rewardVideoVersion: 0,
     rewardVideoContextVersion: 0,
@@ -60,7 +62,7 @@ export const AdMobService = {
     REWARDED_PREPARE_TIMEOUT_MS: 35000,
     REWARDED_POST_SHOW_TIMEOUT_MS: 90000,
     REWARDED_DISMISS_GRACE_MS: 2000,
-    REWARDED_STALE_AFTER_MS: 50 * 60 * 1000,
+    REWARDED_STALE_AFTER_MS: 55 * 60 * 1000,
     REWARDED_SHOW_TIMEOUT_MS: 40000,
     CONSENT_REFRESH_TIMEOUT_MS: 15000,
     // Google allows mediation up to 30 seconds; leave room for bridge delivery.
@@ -69,9 +71,28 @@ export const AdMobService = {
     CONSENT_FORM_TIMEOUT_MS: 60000,
     INIT_WAIT_TIMEOUT_MS: 90000,
 
+    getDeliveryDiagnostics() {
+        return {
+            ...getAdDeliveryDiagnostics(), initialized: this.initialized,
+            canRequestAds: this.canRequestAds, privacyInProgress: this.privacyOptionsInProgress,
+            rewardPreparing: this.rewardVideoPreparing, rewardShowing: this.isRewardVideoShowing,
+        };
+    },
+
     subscribeReadiness(listener: () => void) {
         this.readinessListeners.add(listener);
         return () => { this.readinessListeners.delete(listener); };
+    },
+
+    subscribeRecovery(listener: () => void) {
+        this.recoveryListeners.add(listener);
+        return () => { this.recoveryListeners.delete(listener); };
+    },
+
+    wakePendingAds() {
+        for (const listener of this.recoveryListeners) {
+            try { listener(); } catch (error) { console.warn('[AdMob] Recovery observer failed:', error); }
+        }
     },
 
     notifyReadiness() {
@@ -90,6 +111,7 @@ export const AdMobService = {
         ++this.consentRevision;
         this.consentInfo = consentInfo;
         this.canRequestAds = consentInfo.canRequestAds === true;
+        if (changed) recordAdEvent(this.canRequestAds ? 'consent.allowed' : 'consent.blocked');
         this.privacyOptionsRequired = consentInfo.privacyOptionsRequirementStatus === 'REQUIRED';
         if (changed) this.notifyReadiness();
         return consentInfo;
@@ -220,10 +242,12 @@ export const AdMobService = {
                 const result: unknown = await this.withNativeTimeout('AdMob SDK initialization', AdMob.initialize(), this.SDK_INIT_TIMEOUT_MS);
                 if (result && typeof result === 'object') console.log('[AdMob] Adapter initialization:', result);
                 this.initialized = true;
+                recordAdEvent('sdk.ready');
                 return true;
             } catch (error) {
                 console.error('[AdMob] SDK initialization failed:', error);
                 this.initialized = false;
+                recordAdEvent('sdk.failed');
                 return false;
             } finally {
                 this.sdkInitPromise = null;
@@ -406,6 +430,7 @@ export const AdMobService = {
                 // native onAdLoaded callback. Global Loaded events cannot
                 // distinguish two SSV contexts sharing the same ad unit.
                 ++this.rewardVideoRequestCount;
+                recordAdEvent('reward.request');
                 const nativeLoad = AdMob.prepareRewardVideoAd({ adId, isTesting: false, ssv });
                 const adopt = (result: unknown) => {
                     if ((result as { superseded?: boolean } | null)?.superseded) return false;
@@ -422,6 +447,8 @@ export const AdMobService = {
                     }
                     this.rewardVideoReady = true;
                     this.rewardVideoPreparedAt = Date.now();
+                    // The same promise is observed twice; count each native load once.
+                    if (!prepared) { recordAdEvent('reward.loaded'); prepared = true; }
                     return true;
                 };
                 void nativeLoad.then(result => {
@@ -440,6 +467,7 @@ export const AdMobService = {
                 return prepared;
             } catch (error) {
                 console.error('AdMob Prepare Reward Error:', error);
+                recordAdEvent('reward.load-failed');
                 return false;
             } finally {
                 if (this.rewardVideoPendingVersion === version) {
@@ -484,6 +512,7 @@ export const AdMobService = {
                 let rewardListener: any = null;
                 let dismissListener: any = null;
                 let failedShowListener: any = null;
+                let impressionListener: any = null;
                 let dismissGraceTimer: ReturnType<typeof setTimeout> | null = null;
 
                 let timeout: ReturnType<typeof setTimeout> | null = setTimeout(() => {
@@ -494,7 +523,7 @@ export const AdMobService = {
                 const cleanupAndResolve = (success: boolean) => {
                     if (resolved) return;
                     resolved = true;
-                    this.cleanupListeners([showedListener, rewardListener, dismissListener, failedShowListener]);
+                    this.cleanupListeners([showedListener, rewardListener, dismissListener, failedShowListener, impressionListener]);
                     if (timeout) clearTimeout(timeout);
                     if (dismissGraceTimer) clearTimeout(dismissGraceTimer);
                     if (showRequested) {
@@ -524,6 +553,7 @@ export const AdMobService = {
                         showedListener = await register(RewardAdPluginEvents.Showed, () => {
                             if (showed) return;
                             showed = true;
+                            recordAdEvent('reward.shown');
                             console.log('[AdMob] Reward video showing, switching to dismissal watchdog');
                             if (timeout) clearTimeout(timeout);
                             timeout = setTimeout(() => {
@@ -540,6 +570,7 @@ export const AdMobService = {
                                 type: typeof info?.type === 'string' ? info.type : null,
                             });
                             const validReward = didEarnReward(info);
+                            if (validReward && !earned) recordAdEvent('reward.earned');
                             earned ||= validReward;
                             if (!validReward) {
                                 console.warn('[AdMob] Reward video callback did not include a positive reward amount.');
@@ -552,6 +583,7 @@ export const AdMobService = {
                             console.log('[AdMob] Reward video dismissed');
                             if (dismissed) return;
                             dismissed = true;
+                            recordAdEvent('reward.dismissed');
                             if (earned) { cleanupAndResolve(true); return; }
                             if (timeout) clearTimeout(timeout);
                             // Some mediation adapters can dispatch dismiss
@@ -588,6 +620,16 @@ export const AdMobService = {
                             return;
                         }
 
+                        // Optional actual SDK impression event. Older APKs do not
+                        // emit it; its registration must never delay showing.
+                        void Promise.resolve().then(() => AdMob.addListener('rewardedAdRecordedImpression' as any, () => {
+                            if (!resolved && showRequested) recordAdEvent('reward.impression');
+                        })).then(listener => {
+                            if (resolved) this.removeListener(listener);
+                            else impressionListener = listener;
+                        }).catch(() => {});
+                        const cachedAt = this.rewardVideoPreparedAt;
+                        const cachedContext = this.rewardVideoContextVersion;
                         try {
                             // JIT loading has its own deadline. Give the native
                             // show callback its full window once an ad is ready.
@@ -615,7 +657,16 @@ export const AdMobService = {
                         } catch (error) {
                             if (resolved) return;
                             console.error('AdMob showRewardVideoAd threw:', error);
-                            this.invalidateRewardVideo();
+                            const notConsumed = (error as { code?: string } | null)?.code === 'AD_NOT_FOREGROUND';
+                            if (notConsumed && !showed && !earned && !dismissed &&
+                                cachedContext === this.rewardVideoContextVersion && this.canRequestAds &&
+                                !this.privacyOptionsInProgress && Date.now() - cachedAt < this.REWARDED_STALE_AFTER_MS) {
+                                showRequested = false;
+                                this.rewardVideoReady = true;
+                                this.rewardVideoPreparedAt = cachedAt;
+                                recordAdEvent('reward.retained-not-shown');
+                            } else this.invalidateRewardVideo();
+                            recordAdEvent('reward.show-failed', (error as { code?: string } | null)?.code);
                             cleanupAndResolve(false);
                         }
                     } catch (error) {

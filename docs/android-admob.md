@@ -18,7 +18,7 @@ Coach remains banner-free. The banner remains hidden under fullscreen dialogs an
 
 Upstream 8.2.1 retains the 8.2.0 missing-parent and decor-view inset fixes. Its Android banner and initialization code still needs the app patch below; the new Native Ads preview API is not used. Keep the supported Android SDK at the exact 25.4.0 pin instead of forcing a newer SDK independently of the plugin and mediation adapter. The app patch additionally:
 
-- Resolves initialization only after the parent exists **and** Google's SDK/mediation completion callback arrives. A missing callback rejects after 35 seconds; late callbacks cannot resolve a rejected call. The JavaScript SDK deadline is 45 seconds, independently of UMP's network timeout.
+- Resolves initialization after Google's SDK/mediation completion callback, independently of banner attachment. A missing callback rejects after 35 seconds; late callbacks cannot resolve a rejected call. The JavaScript SDK deadline is 45 seconds, independently of UMP's network timeout.
 - Runs banner view creation, hide, resume, removal, and requests on the UI thread, catching exceptions inside queued actions.
 - Rejects hide/resume when a load failure has removed the view. Removal resolves after cleanup and is idempotent.
 - Settles requests for existing banners, and installs listeners/attaches the parent before loading a new banner.
@@ -29,11 +29,23 @@ Upstream 8.2.1 retains the 8.2.0 missing-parent and decor-view inset fixes. Its 
 
 A stalled consent-form bridge callback releases initialization after 60 seconds. The native form remains tracked, so retries cannot open duplicates. Only a fresh native UMP `canRequestAds` result can authorize requests; denial stays blocked. Late callbacks re-read native consent instead of trusting stale permission.
 
-Readiness failures retry after 15 seconds, backing off to 60 seconds. Actual banner load failures/no-fill retain the 60–300 second backoff. Normal refresh remains controlled by the Google SDK/AdMob setting, and layout changes do not create extra requests.
+Readiness failures retry after 15 seconds, backing off to 60 seconds. Local bridge errors retry after 1–15 seconds; network load errors after 15–60 seconds; other failed loads/no-fill after 60 seconds. Normal refresh remains controlled by the Google SDK/AdMob setting, and layout changes do not create extra requests.
 
 Network loss pauses banner recovery timers and load watchdogs without resetting the retry deadline. Reconnection resumes an overdue request immediately when Home is visible; reconnecting before the deadline waits the remaining interval. It never resumes the banner over Coach or an open dialog. When a refreshed UMP result already allows ads, SDK initialization overlaps the form check; actual requests still wait for the final permission and SDK completion.
 
 In the AdMob console, verify that the banner unit uses **Google optimized automatic refresh**. This setting lives in AdMob, not this repository; publishing code does not enable it. Do not add a separate JavaScript refresh loop for loaded banners.
+
+## Delivery recovery (2026-10-25)
+
+`adRecovery.ts` owns startup retries independently of banner/reward screens. It retries failed readiness at 15/30/60-second intervals while foreground and online. Foreground, reconnect and verified readiness wake pending work; per-format load/no-fill deadlines and request deduplication still apply. SDK initialization still waits for the mediation completion callback.
+
+The native patch retains an empty banner view after internal/network/no-fill errors. `hasLoadedAd` distinguishes a retained empty view needing a paced retry from an existing creative whose automatic refresh remains SDK-owned. Invalid requests recreate the view. Hosted JS also understands older APKs: absent retention metadata uses their existing destroy/recreate path.
+
+An open insufficient-credit offer retries unsuccessful preload at most three times, one minute apart, stopping on success, closing, identity change or lost eligibility. It never displays an ad automatically. Reward cache expiry is 55 minutes. A native `AD_NOT_FOREGROUND` rejection before calling `show()` preserves an unconsumed reward for a later explicit opt-in; unknown failures from older APKs still invalidate conservatively.
+
+`AdMobService.getDeliveryDiagnostics()` returns session counters and current readiness. `[AdDelivery]` log entries distinguish eligibility, requests, loads, shows and actual SDK impressions. The new `rewardedAdRecordedImpression` event is optional on older APKs; do not substitute shows or paid callbacks for missing impression data. Diagnostics contain no conversation text, account IDs or SSV tokens and are not uploaded.
+
+JavaScript recovery can deploy ahead of the APK. Retained native banner views, the explicit unconsumed-reward rejection and rewarded impression callbacks require a rebuilt APK/AAB. These changes improve recovery coverage; actual requests, fill and impression changes must be measured after rollout.
 
 ## Verification
 

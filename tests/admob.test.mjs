@@ -77,6 +77,7 @@ function setup(options = {}) {
     },
     './nativeCapabilities': { canUseNativeAdMob: () => options.native !== false },
     './adConsentState': { readNativeConsentInfo: async () => options.nativeConsent ? options.nativeConsent() : null },
+    './adDiagnostics': { recordAdEvent() {}, getAdDeliveryDiagnostics: () => ({ counts: {}, lastEvent: null }) },
   });
   service.CONSENT_REFRESH_TIMEOUT_MS = 10;
   service.SDK_INIT_TIMEOUT_MS = 10;
@@ -101,7 +102,9 @@ test('concurrent ad requests share consent gathering and SDK initialization', as
 test('SDK readiness has its own deadline and no reward request runs before completion', async () => {
   let finishSdk;
   const { service, calls } = setup({ initialize: () => new Promise(resolve => { finishSdk = resolve; }) });
-  service.SDK_INIT_TIMEOUT_MS = 100;
+  // Leave wall-clock headroom when Android compilation runs on the same host.
+  service.SDK_INIT_TIMEOUT_MS = 3000;
+  service.INIT_WAIT_TIMEOUT_MS = 4000;
   const request = service.prepareRewardVideo('reward');
   while (!finishSdk) await delay(0);
   await delay(20); // Longer than the consent-refresh deadline.
@@ -120,7 +123,10 @@ test('fresh rewarded ads reuse their verified context, while expired ads reload 
   assert.equal(await service.prepareRewardVideo('reward', { ...ssv }), true);
   assert.equal(calls.filter(call => call === 'reward-request').length, 1);
   assert.equal(listeners.size, 0, 'Loading uses its request-specific native promise');
-  service.rewardVideoPreparedAt = Date.now() - 51 * 60 * 1000;
+  service.rewardVideoPreparedAt = Date.now() - 54 * 60 * 1000;
+  assert.equal(await service.prepareRewardVideo('reward', ssv), true);
+  assert.equal(calls.filter(call => call === 'reward-request').length, 1);
+  service.rewardVideoPreparedAt = Date.now() - 56 * 60 * 1000;
   assert.equal(await service.prepareRewardVideo('reward', ssv), true);
   assert.equal(calls.filter(call => call === 'reward-request').length, 2);
 });
@@ -698,6 +704,7 @@ function setupBanner(options = {}) {
     },
     './admobService': { AdMobService: service },
     './nativeCapabilities': { canUseNativeAdMob: () => options.native !== false },
+    './adDiagnostics': { recordAdEvent() {} },
   }, {
     Date: class extends Date { static now() { return now; } },
     setTimeout: (callback, ms) => { const id = nextTimer++; timers.set(id, { callback, ms }); return id; },
@@ -1973,4 +1980,180 @@ test('APKs without native App events still track WebView visibility', () => {
   lifecycle.handlers.get('visibilitychange')();
   assert.deepEqual(lifecycle.changes, [true, false, true]);
   lifecycle.stop();
+});
+
+test('retained empty banner retries once on the same view, and a later SDK load cancels its retry', async t => {
+  const state = setupBanner({ noLoad: true });
+  const { controller, callbacks, bannerEvents, calls, timers } = state;
+  t.after(() => controller.dispose());
+  await controller.setMode('visible');
+  callbacks.get(bannerEvents.FailedToLoad)({ code: 3, viewRetained: true, hasLoadedAd: false, refreshFailure: false });
+  await controller.setMode('hidden');
+  await controller.setMode('visible');
+  assert.equal(calls.filter(x => x === 'banner-request').length, 1);
+  assert.equal(calls.includes('banner-remove'), false);
+  const retry = [...timers.values()].find(x => x.ms === 60000);
+  assert.ok(retry);
+  state.advance(60000);
+  retry.callback();
+  await delay(0);
+  assert.equal(calls.filter(x => x === 'banner-request').length, 2);
+  assert.ok(calls.lastIndexOf('banner-resume') < calls.lastIndexOf('banner-request'));
+  assert.ok(calls.includes('banner-resume'), 'A retained view hidden during backoff must resume before reloading');
+  assert.equal(calls.includes('banner-remove'), false);
+  callbacks.get(bannerEvents.Loaded)();
+  callbacks.get(bannerEvents.FailedToLoad)({ code: 0, viewRetained: true, hasLoadedAd: true, refreshFailure: true });
+  await controller.setMode('visible');
+  assert.equal(calls.filter(x => x === 'banner-request').length, 2);
+});
+
+test('a confirmed unconsumed native rejection preserves the reward for the next opt-in', async () => {
+  const { service, plugin, listeners, calls, events } = setup();
+  await service.prepareRewardVideo('reward');
+  const loadedAt = service.rewardVideoPreparedAt;
+  plugin.showRewardVideoAd = async () => { throw Object.assign(new Error('Activity unavailable'), { code: 'AD_NOT_FOREGROUND' }); };
+  assert.equal(await service.showRewardVideo('reward'), false);
+  assert.equal(service.hasFreshRewardVideo('reward'), true);
+  assert.equal(service.rewardVideoPreparedAt, loadedAt);
+  assert.equal(service.isRewardVideoShowing, false);
+  plugin.showRewardVideoAd = async () => {
+    listeners.get(events.Showed)?.();
+    listeners.get(events.Rewarded)?.({ amount: 5 });
+    listeners.get(events.Dismissed)?.();
+    return { amount: 5 };
+  };
+  assert.equal(await service.showRewardVideo('reward'), true);
+  assert.equal(calls.filter(x => x === 'reward-request').length, 1);
+  assert.equal(service.hasFreshRewardVideo('reward'), false);
+});
+
+test('an older native bridge with an unknown show rejection cannot restore a possibly consumed reward', async () => {
+  const { service, plugin } = setup();
+  await service.prepareRewardVideo('reward');
+  plugin.showRewardVideoAd = async () => { throw new Error('Unknown native failure'); };
+  assert.equal(await service.showRewardVideo('reward'), false);
+  assert.equal(service.hasFreshRewardVideo('reward'), false);
+});
+
+test('a privacy change during a rejected reward show cannot resurrect its cached ad', async () => {
+  const { service, plugin } = setup();
+  await service.prepareRewardVideo('reward');
+  plugin.showRewardVideoAd = async () => {
+    service.applyConsentInfo(denied);
+    throw Object.assign(new Error('No activity'), { code: 'AD_NOT_FOREGROUND' });
+  };
+  assert.equal(await service.showRewardVideo('reward'), false);
+  assert.equal(service.hasFreshRewardVideo('reward'), false);
+});
+
+function recoveryHarness(service, path, start) {
+  let foreground;
+  let now = 100000;
+  let next = 0;
+  const timers = new Map();
+  const module = loadTs(path, {
+    './admobService': { AdMobService: service },
+    './bannerLifecycle': { observeBannerForeground: callback => { foreground = callback; callback(true); return () => {}; } },
+    './adDiagnostics': { recordAdEvent() {} },
+  }, {
+    Date: class extends Date { static now() { return now; } },
+    setTimeout: (callback, ms) => { const id = ++next; timers.set(id, { callback, ms }); return id; },
+    clearTimeout: id => timers.delete(id),
+  });
+  const result = start(module);
+  return { result, timers, foreground: value => foreground(value),
+    fire() { const [id, timer] = timers.entries().next().value; timers.delete(id); now += timer.ms; timer.callback(); } };
+}
+
+test('startup retries independently without a banner, respects offline/background and stops cleanly', async () => {
+  let attempts = 0;
+  const { service } = setup({ initialize: () => { if (++attempts === 1) throw new Error('Temporary SDK failure'); } });
+  let wakes = 0;
+  service.subscribeRecovery(() => wakes++);
+  const state = recoveryHarness(service, '../services/adRecovery.ts', module => module.startAdRecovery(true));
+  await delay(0);
+  assert.equal(attempts, 1);
+  assert.equal(state.timers.size, 1);
+  state.foreground(false);
+  assert.equal(state.timers.size, 0);
+  state.result.setOnline(false);
+  state.foreground(true);
+  await delay(0);
+  assert.equal(attempts, 1);
+  state.result.setOnline(true);
+  await delay(0);
+  assert.equal(attempts, 2);
+  assert.equal(service.initialized, true);
+  assert.ok(wakes > 0);
+  assert.equal(state.timers.size, 0);
+  state.result.stop();
+  state.foreground(true);
+  assert.equal(state.timers.size, 0);
+});
+
+test('startup retries a failed SDK automatically without another UI trigger', async () => {
+  let attempts = 0;
+  const { service } = setup({ initialize: () => { if (++attempts < 2) throw new Error('Retry'); } });
+  const state = recoveryHarness(service, '../services/adRecovery.ts', module => module.startAdRecovery(true));
+  await delay(0);
+  assert.equal(attempts, 1);
+  assert.equal([...state.timers.values()][0].ms, 15000);
+  state.fire();
+  await delay(0);
+  assert.equal(attempts, 2);
+  assert.equal(service.initialized, true);
+  assert.equal(state.timers.size, 0);
+  state.result.stop();
+});
+
+test('open rewarded offers retry bounded failures, respect recovery pacing and stop after success', async () => {
+  const { service } = setup();
+  let requests = 0;
+  const state = recoveryHarness(service, '../services/rewardOfferPreload.ts', module => module.startRewardOfferPreload(async allowed => {
+    assert.equal(allowed(), true);
+    return ++requests >= 2;
+  }, () => true));
+  await delay(0);
+  assert.equal(requests, 1);
+  service.wakePendingAds();
+  await delay(0);
+  assert.equal(requests, 1, 'Reconnect/readiness must not bypass an actual failure deadline');
+  state.fire();
+  await delay(0);
+  assert.equal(requests, 2);
+  assert.equal(state.timers.size, 0);
+  service.wakePendingAds();
+  assert.equal(requests, 2);
+  state.result();
+});
+
+test('reward offer recovery stops at three failures and never loads after its offer closes', async () => {
+  const { service } = setup();
+  let requests = 0;
+  const state = recoveryHarness(service, '../services/rewardOfferPreload.ts', module => module.startRewardOfferPreload(async () => { requests++; return false; }, () => true));
+  await delay(0);
+  for (let i = 0; i < 2; i++) { state.fire(); await delay(0); }
+  assert.equal(requests, 3);
+  assert.equal(state.timers.size, 0);
+  state.result();
+  service.wakePendingAds();
+  state.foreground(true);
+  assert.equal(requests, 3);
+});
+
+test('closing an offer during async preparation prevents a late native request', async () => {
+  const { service } = setup();
+  let finishContext;
+  let requests = 0;
+  const state = recoveryHarness(service, '../services/rewardOfferPreload.ts', module => module.startRewardOfferPreload(async canPrepare => {
+    await new Promise(resolve => { finishContext = resolve; });
+    if (!canPrepare()) return false;
+    requests++;
+    return true;
+  }, () => true));
+  state.result();
+  finishContext();
+  await delay(0);
+  assert.equal(requests, 0);
+  assert.equal(state.timers.size, 0);
 });

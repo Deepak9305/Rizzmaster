@@ -10,10 +10,10 @@ index 2da5abb..6a3114e 100644
 -import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 +import java.util.concurrent.atomic.AtomicBoolean;
  import org.json.JSONException;
- 
+
  @CapacitorPlugin(
 @@ -125,36 +124,57 @@ public class AdMob extends Plugin {
- 
+
      @PluginMethod
      public void initialize(final PluginCall call) {
 -        this.setRequestConfiguration(call);
@@ -88,9 +88,9 @@ index 2da5abb..6a3114e 100644
 +            handler.post(initOnMain);
          }
      }
- 
+
 diff --git a/node_modules/@capacitor-community/admob/android/src/main/java/com/getcapacitor/community/admob/banner/BannerExecutor.java b/node_modules/@capacitor-community/admob/android/src/main/java/com/getcapacitor/community/admob/banner/BannerExecutor.java
-index e5ae2b7..6ccb8c6 100644
+index e5ae2b7..7500e1e 100644
 --- a/node_modules/@capacitor-community/admob/android/src/main/java/com/getcapacitor/community/admob/banner/BannerExecutor.java
 +++ b/node_modules/@capacitor-community/admob/android/src/main/java/com/getcapacitor/community/admob/banner/BannerExecutor.java
 @@ -39,6 +39,7 @@ public class BannerExecutor extends Executor {
@@ -98,11 +98,11 @@ index e5ae2b7..6ccb8c6 100644
      private AdView mAdView;
      private ViewGroup mViewGroup;
 +    private boolean hasLoadedBanner;
- 
+
      public BannerExecutor(
          Supplier<Context> contextSupplier,
 @@ -51,8 +52,8 @@ public class BannerExecutor extends Executor {
- 
+
      /**
       * How long to wait for the banner parent to appear before giving up. Deliberately
 -     * generous: the devices where the parent is late are the slow ones, and a premature
@@ -111,7 +111,7 @@ index e5ae2b7..6ccb8c6 100644
 +     * SDK initialization and rewarded formats are independent of it.
       */
      private static final long PARENT_TIMEOUT_MS = 5000;
- 
+
 @@ -63,8 +64,7 @@ public class BannerExecutor extends Executor {
       * android.R.id.content can still have no child when initialize() runs - for example
       * when the app is relaunched quickly after being closed - and the old code cached that
@@ -124,7 +124,7 @@ index e5ae2b7..6ccb8c6 100644
          if (resolveViewGroup() != null) {
 @@ -163,6 +163,16 @@ public class BannerExecutor extends Executor {
      }
- 
+
      public void showBanner(final PluginCall call, boolean systemBarsHandlesInsets) {
 +        runBannerAction(call, () -> awaitViewGroup(found -> {
 +            if (!found) {
@@ -138,27 +138,27 @@ index e5ae2b7..6ccb8c6 100644
 +    private void showBannerOnMain(final PluginCall call, boolean systemBarsHandlesInsets) {
          final AdOptions adOptions = AdOptions.getFactory().createBannerOptions(call);
          float density = contextSupplier.get().getResources().getDisplayMetrics().density;
- 
+
 @@ -178,13 +188,14 @@ public class BannerExecutor extends Executor {
          }
- 
+
          if (mAdView != null) {
 -            updateExistingAdView(adOptions);
 +            updateExistingAdView(adOptions, call);
              return;
          }
- 
+
          // Why a try catch block?
          try {
              mAdView = new AdView(contextSupplier.get());
 +            hasLoadedBanner = false;
- 
+
              if (!adOptions.adSize.toString().equals("ADAPTIVE_BANNER")) {
                  mAdView.setAdSize(adOptions.adSize.getSize());
-@@ -266,103 +277,122 @@ public class BannerExecutor extends Executor {
+@@ -266,103 +277,123 @@ public class BannerExecutor extends Executor {
                  return insets;
              });
- 
+
 -            createNewAdView(adOptions);
 -
 -            call.resolve();
@@ -167,7 +167,7 @@ index e5ae2b7..6ccb8c6 100644
              call.reject(ex.getLocalizedMessage(), ex);
          }
      }
- 
+
      public void hideBanner(final PluginCall call) {
 -        if (mAdView == null) {
 -            call.reject("You tried to hide a banner that was never shown");
@@ -202,7 +202,7 @@ index e5ae2b7..6ccb8c6 100644
 +            call.resolve();
 +        });
      }
- 
+
      public void resumeBanner(final PluginCall call) {
 -        try {
 -            activitySupplier.get().runOnUiThread(() -> {
@@ -231,7 +231,7 @@ index e5ae2b7..6ccb8c6 100644
 -        }
 +        });
      }
- 
+
      public void removeBanner(final PluginCall call) {
 -        try {
 +        runBannerAction(call, () -> {
@@ -284,7 +284,7 @@ index e5ae2b7..6ccb8c6 100644
 +            }
 +        });
      }
- 
+
 -    private void updateExistingAdView(AdOptions adOptions) {
 +    private void updateExistingAdView(AdOptions adOptions, PluginCall call) {
          // Bind to the AdView present when this call was made. `mAdView` is a
@@ -304,20 +304,21 @@ index e5ae2b7..6ccb8c6 100644
 +            call.resolve();
          });
      }
- 
+
 +    private void handleBannerFailure(AdView adView, LoadAdError adError) {
 +        if (adView != mAdView) return;
-+        // A temporary refresh failure must not destroy the last usable creative
-+        // or Google's automatic refresh state. Initial failures have one recovery
-+        // owner in JavaScript after removing the unsuccessful view.
-+        boolean retained = hasLoadedBanner && (
++        // Keep ordinary failed loads on the same AdView. A loaded creative also
++        // survives other refresh failures unless the request itself is invalid.
++        boolean transientFailure = (
 +            adError.getCode() == AdRequest.ERROR_CODE_INTERNAL_ERROR ||
 +            adError.getCode() == AdRequest.ERROR_CODE_NETWORK_ERROR ||
 +            adError.getCode() == AdRequest.ERROR_CODE_NO_FILL
 +        );
++        boolean retained = transientFailure || (hasLoadedBanner && adError.getCode() != AdRequest.ERROR_CODE_INVALID_REQUEST);
 +        JSObject error = new AdMobPluginError(adError);
 +        error.put("viewRetained", retained);
 +        error.put("refreshFailure", hasLoadedBanner);
++        error.put("hasLoadedAd", hasLoadedBanner);
 +        if (!retained) {
 +            final ViewGroup parent = resolveViewGroup();
 +            if (parent != null) parent.removeView(mAdViewLayout);
@@ -340,9 +341,9 @@ index e5ae2b7..6ccb8c6 100644
          // Bind to the AdView instance created for this call. `mAdView` is a
          // shared field that removeBanner/hideBanner or a stale ad-listener
          // callback can null from the UI thread before this posted task runs;
-@@ -371,9 +401,10 @@ public class BannerExecutor extends Executor {
+@@ -371,9 +402,10 @@ public class BannerExecutor extends Executor {
          final AdView adView = mAdView;
- 
+
          // Run AdMob In Main UI Thread
 -        activitySupplier.get().runOnUiThread(() -> {
 +        runBannerAction(call, () -> {
@@ -352,7 +353,7 @@ index e5ae2b7..6ccb8c6 100644
                  return;
              }
              final AdRequest adRequest = RequestHelper.createRequest(adOptions);
-@@ -381,8 +412,6 @@ public class BannerExecutor extends Executor {
+@@ -381,8 +413,6 @@ public class BannerExecutor extends Executor {
              AdViewIdHelper.assignIdToAdView(adView, adOptions, adRequest, logTag, contextSupplier.get());
              // Add the AdView to the view hierarchy.
              mAdViewLayout.addView(adView);
@@ -361,18 +362,18 @@ index e5ae2b7..6ccb8c6 100644
              adView.setAdListener(
                  new AdListener() {
                      @Override
-@@ -390,6 +419,7 @@ public class BannerExecutor extends Executor {
+@@ -390,6 +420,7 @@ public class BannerExecutor extends Executor {
                          if (adView != mAdView) {
                              return;
                          }
 +                        hasLoadedBanner = true;
                          final BannerAdSizeInfo sizeInfo = new BannerAdSizeInfo(adView);
- 
+
                          notifyListeners(BannerAdPluginEvents.SizeChanged.getWebEventName(), sizeInfo);
-@@ -407,20 +437,7 @@ public class BannerExecutor extends Executor {
+@@ -407,20 +438,7 @@ public class BannerExecutor extends Executor {
                              return;
                          }
- 
+
 -                        final ViewGroup bannerParent = resolveViewGroup();
 -                        if (bannerParent != null) {
 -                            bannerParent.removeView(mAdViewLayout);
@@ -390,8 +391,8 @@ index e5ae2b7..6ccb8c6 100644
 +                        handleBannerFailure(adView, adError);
                          super.onAdFailedToLoad(adError);
                      }
- 
-@@ -465,8 +482,15 @@ public class BannerExecutor extends Executor {
+
+@@ -465,8 +483,15 @@ public class BannerExecutor extends Executor {
              if (bannerParent != null) {
                  bannerParent.addView(mAdViewLayout);
                  mAdViewLayout.requestApplyInsets();
@@ -413,11 +414,11 @@ index 82540fb..c2d7bb5 100644
 --- a/node_modules/@capacitor-community/admob/android/src/main/java/com/getcapacitor/community/admob/models/AdMobPluginError.kt
 +++ b/node_modules/@capacitor-community/admob/android/src/main/java/com/getcapacitor/community/admob/models/AdMobPluginError.kt
 @@ -2,6 +2,7 @@ package com.getcapacitor.community.admob.models
- 
+
  import com.getcapacitor.JSObject
  import com.google.android.gms.ads.AdError
 +import com.google.android.gms.ads.LoadAdError
- 
+
  data class AdMobPluginError(val code: Int, val message: String) : JSObject() {
      override fun put(key: String, value: Int): JSObject {
 @@ -11,5 +12,11 @@ data class AdMobPluginError(val code: Int, val message: String) : JSObject() {
@@ -434,7 +435,7 @@ index 82540fb..c2d7bb5 100644
 +    }
  }
 diff --git a/node_modules/@capacitor-community/admob/android/src/main/java/com/getcapacitor/community/admob/rewarded/AdRewardExecutor.java b/node_modules/@capacitor-community/admob/android/src/main/java/com/getcapacitor/community/admob/rewarded/AdRewardExecutor.java
-index 4b7ea7f..ae0834c 100644
+index 4b7ea7f..620b3ae 100644
 --- a/node_modules/@capacitor-community/admob/android/src/main/java/com/getcapacitor/community/admob/rewarded/AdRewardExecutor.java
 +++ b/node_modules/@capacitor-community/admob/android/src/main/java/com/getcapacitor/community/admob/rewarded/AdRewardExecutor.java
 @@ -17,11 +17,19 @@ import com.google.android.gms.ads.rewarded.RewardedAd;
@@ -442,9 +443,9 @@ index 4b7ea7f..ae0834c 100644
  import java.util.LinkedHashMap;
  import java.util.Map;
 +import java.util.concurrent.atomic.AtomicLong;
- 
+
  public class AdRewardExecutor extends Executor {
- 
+
      public static final Map<String, RewardedAd> preparedAds = new LinkedHashMap<>();
      public static String lastPreparedAdId;
 +    private static final AtomicLong loadSequence = new AtomicLong();
@@ -454,7 +455,7 @@ index 4b7ea7f..ae0834c 100644
 +        Long current = latestLoads.get(adId);
 +        return current != null && current == version;
 +    }
- 
+
      public AdRewardExecutor(
          Supplier<Context> contextSupplier,
 @@ -40,11 +48,13 @@ public class AdRewardExecutor extends Executor {
@@ -472,8 +473,8 @@ index 4b7ea7f..ae0834c 100644
                  );
              } catch (Exception ex) {
                  call.reject(ex.getLocalizedMessage(), ex);
-@@ -54,33 +64,32 @@ public class AdRewardExecutor extends Executor {
- 
+@@ -54,33 +64,43 @@ public class AdRewardExecutor extends Executor {
+
      @PluginMethod
      public void showRewardVideoAd(final PluginCall call, BiConsumer<String, JSObject> notifyListenersFunction) {
 -        String requestedAdId = call.getString("adId");
@@ -485,11 +486,14 @@ index 4b7ea7f..ae0834c 100644
 -            call.reject(errorMessage);
 -            AdMobPluginError errorObject = new AdMobPluginError(-1, errorMessage);
 -            notifyListenersFunction.accept(RewardAdPluginEvents.FailedToLoad, errorObject);
--            return;
--        }
++        Activity activity = activitySupplier.get();
++        if (activity == null) {
++            call.reject("App is not in the foreground. Please retry.", "AD_NOT_FOREGROUND");
+             return;
+         }
 -
          try {
-             activitySupplier.get().runOnUiThread(() -> {
+-            activitySupplier.get().runOnUiThread(() -> {
 -                ad.setFullScreenContentCallback(
 -                    new FullscreenPluginCallback(RewardAdPluginEvents.INSTANCE, notifyListenersFunction, () -> {
 -                        preparedAds.remove(adId);
@@ -503,7 +507,14 @@ index 4b7ea7f..ae0834c 100644
 -                    activitySupplier.get(),
 -                    RewardedAdCallbackAndListeners.INSTANCE.getOnUserEarnedRewardListener(call, notifyListenersFunction)
 -                );
++            activity.runOnUiThread(() -> {
 +                try {
++                    if (activity != activitySupplier.get() || activity.isFinishing() || activity.isDestroyed()) {
++                        // This rejects BEFORE show() and leaves the prepared ad
++                        // untouched. JS may safely reuse it on a later opt-in.
++                        call.reject("App is not in the foreground. Please retry.", "AD_NOT_FOREGROUND");
++                        return;
++                    }
 +                    String requestedAdId = call.getString("adId");
 +                    String adId = requestedAdId != null ? requestedAdId : lastPreparedAdId;
 +                    RewardedAd ad = adId != null ? preparedAds.get(adId) : null;
@@ -537,7 +548,7 @@ index 338d219..75f68a7 100644
 @@ -26,9 +26,13 @@ object RewardedAdCallbackAndListeners {
          }
      }
- 
+
 -    fun getRewardedAdLoadCallback(call: PluginCall, notifyListenersFunction: BiConsumer<String, JSObject>, adOptions: AdOptions): RewardedAdLoadCallback {
 +    fun getRewardedAdLoadCallback(call: PluginCall, notifyListenersFunction: BiConsumer<String, JSObject>, adOptions: AdOptions, requestedId: String, version: Long): RewardedAdLoadCallback {
          return object : RewardedAdLoadCallback() {
@@ -549,8 +560,8 @@ index 338d219..75f68a7 100644
                  val immersiveMode = call.getBoolean("immersiveMode")
                  ad.setImmersiveMode(immersiveMode ?: false)
                  ad.fullScreenContentCallback = FullscreenPluginCallback(
-@@ -66,8 +70,9 @@ object RewardedAdCallbackAndListeners {
- 
+@@ -66,11 +70,12 @@ object RewardedAdCallbackAndListeners {
+
              override fun onAdFailedToLoad(adError: LoadAdError) {
                  val adMobError = AdMobPluginError(adError)
 -
@@ -561,3 +572,34 @@ index 338d219..75f68a7 100644
                  call.reject(adError.message, adError.code.toString())
              }
          }
+     }
+
+-}
+\ No newline at end of file
++}
+diff --git a/node_modules/@capacitor-community/admob/android/src/main/java/com/getcapacitor/community/admob/helpers/FullscreenPluginCallback.kt b/node_modules/@capacitor-community/admob/android/src/main/java/com/getcapacitor/community/admob/helpers/FullscreenPluginCallback.kt
+index 6839110..98c5ea8 100644
+--- a/node_modules/@capacitor-community/admob/android/src/main/java/com/getcapacitor/community/admob/helpers/FullscreenPluginCallback.kt
++++ b/node_modules/@capacitor-community/admob/android/src/main/java/com/getcapacitor/community/admob/helpers/FullscreenPluginCallback.kt
+@@ -3,6 +3,7 @@ package com.getcapacitor.community.admob.helpers
+ import com.getcapacitor.JSObject
+ import com.getcapacitor.community.admob.models.AdMobPluginError
+ import com.getcapacitor.community.admob.models.LoadPluginEventNames
++import com.getcapacitor.community.admob.rewarded.RewardAdPluginEvents
+ import com.google.android.gms.ads.AdError
+ import com.google.android.gms.ads.FullScreenContentCallback
+ import com.google.android.gms.common.util.BiConsumer
+@@ -13,6 +14,13 @@ class FullscreenPluginCallback(
+     private val onCompleted: Runnable? = null
+ ): FullScreenContentCallback() {
+
++    override fun onAdImpression() {
++        // Separate actual impressions from the plugin's paid/revenue event.
++        if (loadPluginObject === RewardAdPluginEvents) {
++            notifyListenersFunction.accept("rewardedAdRecordedImpression", JSObject())
++        }
++    }
++
+     override fun onAdClicked() {
+         loadPluginObject.adClicked?.let { notifyListenersFunction.accept(it, JSObject()) }
+     }

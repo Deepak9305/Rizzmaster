@@ -15,6 +15,8 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { AdMobService, type RewardVideoSsv } from './services/admobService';
 import { startGuestRewardPreload } from './services/guestRewardPreload';
+import { startRewardOfferPreload } from './services/rewardOfferPreload';
+import { startAdRecovery } from './services/adRecovery';
 import { ForegroundSessionClock } from './services/foregroundSessionClock';
 import NativeBanner from './components/NativeBanner';
 import { OneSignalService } from './services/oneSignalService';
@@ -475,6 +477,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const [profileLoadError, setProfileLoadError] = useState<string | null>(null);
   const [isOffline, setIsOffline] = useState(false);
   const lastOfflineStatusRef = useRef(false);
+  const adRecoveryRef = useRef<ReturnType<typeof startAdRecovery> | null>(null);
   const refreshNetworkRef = useRef<(() => Promise<void>) | null>(null);
 
   useEffect(() => {
@@ -725,6 +728,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       // Update State
       setIsOffline(isNowOffline);
       lastOfflineStatusRef.current = isNowOffline;
+      adRecoveryRef.current?.setOnline(connected);
 
       // Only show toast if the status actually CHANGED
       if (!initial && isNowOffline !== wasOffline) {
@@ -1026,12 +1030,17 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       return;
     }
     const timer = setTimeout(() => {
-      runAdTask('Initial AdMob init', AdMobService.initialize().then((initialized) => {
-        setPrivacyOptionsRequired(AdMobService.isPrivacyOptionsRequired());
-        return initialized;
-      }));
+      adRecoveryRef.current = startAdRecovery(!lastOfflineStatusRef.current);
     }, 1000);
-    return () => clearTimeout(timer);
+    const stopReadiness = AdMobService.subscribeReadiness(() => {
+      setPrivacyOptionsRequired(AdMobService.isPrivacyOptionsRequired());
+    });
+    return () => {
+      clearTimeout(timer);
+      stopReadiness();
+      adRecoveryRef.current?.stop();
+      adRecoveryRef.current = null;
+    };
   }, []);
 
   useEffect(() => {
@@ -1323,29 +1332,17 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       return;
     }
 
-    let cancelled = false;
-    void getRewardedAdPreparationContext(profile, rewardedAdRequiredCredits)
-      .then((context) => {
-        if (cancelled) return false;
-        return AdMobService.prepareRewardVideo(getAdId('REWARD'), context.ssv);
-      })
-      .then((prepared) => {
-        if (!cancelled && prepared) {
-          console.log('[AdMob] Rewarded ad preloaded for the insufficient-credit offer.');
-        } else if (!cancelled) {
-          console.warn('[AdMob] Rewarded ad preload was not ready; tap will retry.');
-        }
-      })
-      .catch((error) => {
-        if (!cancelled) {
-          console.warn('[AdMob] Rewarded ad preload failed; tap will retry.', error instanceof Error ? error.message : 'unknown error');
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [getRewardedAdPreparationContext, profile, rewardedAdRequiredCredits, showCreditsExhaustedModal]);
+    const identity = rewardedAdIdentityVersionRef.current;
+    const currentProfile = profile;
+    return startRewardOfferPreload(async canPrepare => {
+      if (!canPrepare()) return false;
+      const context = await getRewardedAdPreparationContext(currentProfile, rewardedAdRequiredCredits);
+      if (!canPrepare()) return false;
+      return AdMobService.prepareRewardVideo(getAdId('REWARD'), context.ssv, canPrepare);
+    }, () => identity === rewardedAdIdentityVersionRef.current &&
+      profileRef.current?.id === currentProfile.id && !profileRef.current.is_premium &&
+      (profileRef.current.credits || 0) < rewardedAdRequiredCredits && !lastOfflineStatusRef.current);
+  }, [getRewardedAdPreparationContext, profile?.id, profile?.is_premium, profile?.credits, rewardedAdRequiredCredits, showCreditsExhaustedModal]);
 
   useEffect(() => {
     if (!IS_WEB_PLATFORM || loginReason !== 'premium' || !session || !profile || isGuest) return;
