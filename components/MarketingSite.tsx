@@ -697,6 +697,13 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'how-to-stop-people-pleasing-without-feeling-selfish': [
+    { slug: 'how-to-have-a-difficult-conversation-without-getting-defensive', label: 'Have a difficult conversation without a fight' },
+    { slug: 'how-to-make-friends-as-an-adult-when-life-feels-too-busy', label: 'Build a social life that fits your week' },
+    { slug: 'how-to-make-small-talk-when-you-have-nothing-in-common', label: 'Make everyday conversations easier' },
+    { slug: 'how-to-build-trust-in-a-new-relationship', label: 'Build trust through consistency' },
+    { slug: 'texting-boundaries-while-dating', label: 'Set communication boundaries' }
+  ],
   'how-to-have-a-difficult-conversation-without-getting-defensive': [
     { slug: 'how-to-make-small-talk-when-you-have-nothing-in-common', label: 'Build confidence in everyday conversations' },
     { slug: 'how-to-make-friends-as-an-adult-when-life-feels-too-busy', label: 'Make room for better friendships' },
