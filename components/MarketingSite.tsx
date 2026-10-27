@@ -689,7 +689,7 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
   return (
     <section className="mt-20 border-t border-white/10 pt-12">
       <p className="text-xs font-black uppercase tracking-[0.2em] text-pink-200/75">Keep reading</p>
-      <h2 className="mt-3 text-2xl font-black text-white md:text-3xl">More help for your next text</h2>
+      <h2 className="mt-3 text-2xl font-black text-white md:text-3xl">More help for your next conversation</h2>
       <div className="mt-7 grid gap-4 md:grid-cols-3">{relatedPosts.map((related) => <BlogCard key={related.slug} post={related} navigate={navigate} />)}</div>
       {PICKUP_LINE_GUIDE_SLUGS.includes(post.slug) && <p className="mt-6 text-sm text-white/70">Want to try an opener? <a href="/rizzline-pickup-lines" className="font-bold text-pink-200 underline underline-offset-4">Browse Rizzline pickup lines by vibe</a>, then adapt your choice to the person and the conversation.</p>}
     </section>
@@ -697,6 +697,13 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'why-group-conversations-feel-invisible': [
+    { slug: 'how-to-make-small-talk-when-you-have-nothing-in-common', label: 'Make small talk when you have nothing in common' },
+    { slug: 'how-to-make-friends-as-an-adult-when-life-feels-too-busy', label: 'Build a social life that fits your week' },
+    { slug: 'how-to-have-a-difficult-conversation-without-getting-defensive', label: 'Handle difficult conversations better' },
+    { slug: 'how-to-answer-what-do-you-do-for-fun', label: 'Talk about what you enjoy' },
+    { slug: 'how-to-stop-people-pleasing-without-feeling-selfish', label: 'Set boundaries without losing yourself' }
+  ],
   'how-to-stop-people-pleasing-without-feeling-selfish': [
     { slug: 'how-to-have-a-difficult-conversation-without-getting-defensive', label: 'Have a difficult conversation without a fight' },
     { slug: 'how-to-make-friends-as-an-adult-when-life-feels-too-busy', label: 'Build a social life that fits your week' },
@@ -990,7 +997,7 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
 };
 
 const ArticleInternalLinks: React.FC<{ post: BlogPost; navigate: (path: string) => void }> = ({ post, navigate }) => (
-  <nav aria-label="Related dating guides" className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 md:p-6">
+  <nav aria-label="Related guides" className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 md:p-6">
     <p className="text-xs font-black uppercase tracking-[0.2em] text-pink-200/75">Continue reading</p>
     <div className="mt-4 flex flex-wrap gap-2.5">
       {(ARTICLE_INTERNAL_LINKS[post.slug] || []).map((link) => <a key={link.slug} href={`/blog/${link.slug}`} onClick={(event) => { event.preventDefault(); navigate(`/blog/${link.slug}`); }} className="rounded-full border border-white/10 bg-black/20 px-3.5 py-2 text-xs font-bold text-white/65 transition-colors hover:border-pink-300/30 hover:text-pink-100">{link.label} <span aria-hidden="true">→</span></a>)}
