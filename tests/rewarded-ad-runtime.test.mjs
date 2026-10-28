@@ -338,7 +338,7 @@ function setupFlow(options = {}) {
   };
   context.updateCredits = appCallback('updateCredits', context);
   context.getRewardedAdPreparationContext = appCallback('getRewardedAdPreparationContext', context);
-  return { run: appCallback('handleWatchRewardedAd', context), state, context, advance: ms => { now += ms; } };
+  return { run: appCallback('handleWatchLegacyRewardedAd', context), state, context, advance: ms => { now += ms; } };
 }
 
 test('guests still earn and persist five local credits without account verification', async () => {

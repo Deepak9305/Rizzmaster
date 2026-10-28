@@ -52,14 +52,14 @@ async function assertPreflight(response, origin) {
 }
 
 test('native preflights return empty 204 responses through the shared HTTP adapter', async () => {
-  for (const route of ['/api/ai', '/api/profile', '/api/rewarded-ad/status', '/api/rewarded-ad/complete']) {
+  for (const route of ['/api/ai', '/api/profile', '/api/rewarded-ad/status', '/api/rewarded-ad/complete', '/api/rewarded-ad/claim']) {
     await assertPreflight(await preflight(direct + route), 'https://localhost');
   }
 });
 
 test('Vercel rewritten API routes support Android and Capacitor preflights', async () => {
   for (const origin of ['https://localhost', 'capacitor://localhost']) {
-    for (const route of ['ai', 'rewarded-ad/complete']) {
+    for (const route of ['ai', 'rewarded-ad/complete', 'rewarded-ad/claim']) {
       await assertPreflight(await preflight(`${rewritten}/api/index?__route=${route}`, origin), origin);
     }
   }

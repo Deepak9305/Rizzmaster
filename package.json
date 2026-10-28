@@ -15,7 +15,8 @@
     "test:sharing": "node --test tests/web-rizz-sharing.test.mjs tests/native-rizz-sharing.test.mjs",
     "test:dodo": "node --test tests/dodo-billing.test.mjs",
     "test:rewarded": "node --test tests/rewarded-ad.test.mjs tests/rewarded-ad-runtime.test.mjs",
-    "test:admob": "node --test tests/admob.test.mjs",
+    "test:admob": "node --test --test-concurrency=1 tests/admob.test.mjs tests/simple-ads.test.mjs",
+    "test:ads-db": "node --test tests/reward-claims-db.test.mjs",
     "test:api": "node --test tests/api-http.test.mjs",
     "test:iap": "node --test tests/iap-runtime.test.mjs tests/iap-account-binding.test.mjs tests/iap-google-play.test.mjs",
     "verify:native-config": "node scripts/verify-native-config.js",
@@ -57,6 +58,7 @@
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "8.5.2",
+    "@electric-sql/pglite": "0.5.12",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",

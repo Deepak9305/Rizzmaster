@@ -19,5 +19,6 @@ export const routes = {
   '/api/rewarded-ad/attempt': () => import('./rewarded-ad-attempt.js'),
   '/api/rewarded-ad/status': () => import('./rewarded-ad-status.js'),
   '/api/rewarded-ad/complete': () => import('./rewarded-ad-complete.js'),
+  '/api/rewarded-ad/claim': () => import('./rewarded-ad-claim.js'),
   '/api/admob/reward-ssv': () => import('./admob-reward-ssv.js'),
 };

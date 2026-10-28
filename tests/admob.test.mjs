@@ -11,8 +11,9 @@ function loadTs(path, imports = {}, globals = {}) {
   }).outputText;
   const context = {
     exports: {}, require: name => {
-      assert.ok(name in imports, `Unexpected import ${name}`);
-      return imports[name];
+      const resolved = name === './admobService' ? './legacyAdmobService' : name === './nativeBannerService' ? './legacyNativeBannerService' : name;
+      assert.ok(resolved in imports, `Unexpected import ${name}`);
+      return imports[resolved];
     },
     console: { log() {}, warn() {}, error() {} },
     setTimeout, clearTimeout, Date, Promise,
@@ -69,7 +70,7 @@ function setup(options = {}) {
       } };
     },
   };
-  const { AdMobService: service } = loadTs('../services/admobService.ts', {
+  const { AdMobService: service } = loadTs('../services/legacyAdmobService.ts', {
     '@capacitor-community/admob': {
       AdMob: plugin,
       RewardAdPluginEvents: events,
@@ -387,6 +388,7 @@ test('the app preloads low-credit guests only and never starts a signed-in verif
     let loads = 0;
     const profile = { id: scenario.signedIn ? 'account' : 'guest_user', credits: scenario.credits, is_premium: Boolean(scenario.premium) };
     const globals = {
+      usesSimpleAds: () => false,
       IS_WEB_PLATFORM: scenario.native === false, showSplash: Boolean(scenario.splash), showOnboarding: false,
       isOffline: Boolean(scenario.offline), profile, isGuest: !scenario.signedIn,
       rewardedAdIdentityVersionRef: { current: 0 }, profileRef: { current: profile },
@@ -697,12 +699,12 @@ function setupBanner(options = {}) {
     calls.push('banner-remove');
     await options.removeBanner?.();
   };
-  const { NativeBannerController } = loadTs('../services/nativeBannerService.ts', {
+  const { NativeBannerController } = loadTs('../services/legacyNativeBannerService.ts', {
     '@capacitor-community/admob': {
       AdMob: plugin, BannerAdPluginEvents: bannerEvents,
       BannerAdPosition: { TOP_CENTER: 'TOP_CENTER' }, BannerAdSize: { BANNER: 'BANNER', ADAPTIVE_BANNER: 'ADAPTIVE_BANNER' },
     },
-    './admobService': { AdMobService: service },
+    './legacyAdmobService': { AdMobService: service },
     './nativeCapabilities': { canUseNativeAdMob: () => options.native !== false },
     './adDiagnostics': { recordAdEvent() {} },
   }, {
@@ -1055,8 +1057,8 @@ test('banner placement converts CSS pixels and accounts for native origins once'
       Capacitor: { getPlatform: () => 'android', isPluginAvailable: () => true },
       registerPlugin: () => ({ getBannerGeometry: async () => ({ density: 2.75, webViewOffsetDp: -24, bottomInsetDp: 48, widthDp: 392, heightDp: 61, adaptive: true }) }),
     },
-    './admobService': { AdMobService: { withNativeTimeout: async (_label, promise) => promise } },
-    './nativeBannerService': { BANNER_HEIGHT: 50, BANNER_WIDTH: 320 },
+    './legacyAdmobService': { AdMobService: { withNativeTimeout: async (_label, promise) => promise } },
+    './legacyNativeBannerService': { BANNER_HEIGHT: 50, BANNER_WIDTH: 320 },
   }, { window: { devicePixelRatio: 2.75, innerWidth: 392 } });
   assert.equal(calculateBannerMargin(69, 2.75, 2.75, 0), 69, 'Fullscreen Android has no extra status offset');
   assert.equal(calculateBannerMargin(93, 2.75, 2.75, -24), 69, 'Android 15 SDK-applied status inset is counted once');
@@ -1078,8 +1080,8 @@ test('an older bridge falls back without negative offsets or preventing an ad re
       Capacitor: { getPlatform: () => 'android', isPluginAvailable: () => true },
       registerPlugin: () => ({ getBannerGeometry: async () => { throw new Error('Unimplemented'); }, setBannerPosition: async () => { throw new Error('Unimplemented'); } }),
     },
-    './admobService': { AdMobService: { withNativeTimeout: async (_label, promise) => promise } },
-    './nativeBannerService': { BANNER_HEIGHT: 50, BANNER_WIDTH: 320 },
+    './legacyAdmobService': { AdMobService: { withNativeTimeout: async (_label, promise) => promise } },
+    './legacyNativeBannerService': { BANNER_HEIGHT: 50, BANNER_WIDTH: 320 },
   }, { window: { devicePixelRatio: 2.75, innerWidth: 392 } });
   const placement = await getBannerPlacement({ getBoundingClientRect: () => ({ top: 69 }) });
   assert.equal(placement.margin, 69);
@@ -1441,8 +1443,8 @@ function setupGuestPreload(options = {}) {
       return result;
     },
   };
-  const { startGuestRewardPreload } = loadTs('../services/guestRewardPreload.ts', {
-    './admobService': { AdMobService: service },
+  const { startGuestRewardPreload } = loadTs('../services/legacyGuestRewardPreload.ts', {
+    './legacyAdmobService': { AdMobService: service },
     './bannerLifecycle': { observeBannerForeground: callback => {
       foreground = callback;
       callback(options.foreground !== false);
@@ -1763,8 +1765,8 @@ test('a positioning bridge timeout is not misreported as an unsupported APK', as
       Capacitor: { getPlatform: () => 'android', isPluginAvailable: () => true },
       registerPlugin: () => ({ setBannerPosition: async () => { throw new Error('Banner position timed out'); } }),
     },
-    './admobService': { AdMobService: { withNativeTimeout: async (_label, promise) => promise } },
-    './nativeBannerService': { BANNER_HEIGHT: 50, BANNER_WIDTH: 320 },
+    './legacyAdmobService': { AdMobService: { withNativeTimeout: async (_label, promise) => promise } },
+    './legacyNativeBannerService': { BANNER_HEIGHT: 50, BANNER_WIDTH: 320 },
   });
   await assert.rejects(moveNativeBanner(90), /timed out/);
 });
@@ -2052,7 +2054,7 @@ function recoveryHarness(service, path, start) {
   let next = 0;
   const timers = new Map();
   const module = loadTs(path, {
-    './admobService': { AdMobService: service },
+    './legacyAdmobService': { AdMobService: service },
     './bannerLifecycle': { observeBannerForeground: callback => { foreground = callback; callback(true); return () => {}; } },
     './adDiagnostics': { recordAdEvent() {} },
   }, {
@@ -2070,7 +2072,7 @@ test('startup retries independently without a banner, respects offline/backgroun
   const { service } = setup({ initialize: () => { if (++attempts === 1) throw new Error('Temporary SDK failure'); } });
   let wakes = 0;
   service.subscribeRecovery(() => wakes++);
-  const state = recoveryHarness(service, '../services/adRecovery.ts', module => module.startAdRecovery(true));
+  const state = recoveryHarness(service, '../services/legacyAdRecovery.ts', module => module.startAdRecovery(true));
   await delay(0);
   assert.equal(attempts, 1);
   assert.equal(state.timers.size, 1);
@@ -2094,7 +2096,7 @@ test('startup retries independently without a banner, respects offline/backgroun
 test('startup retries a failed SDK automatically without another UI trigger', async () => {
   let attempts = 0;
   const { service } = setup({ initialize: () => { if (++attempts < 2) throw new Error('Retry'); } });
-  const state = recoveryHarness(service, '../services/adRecovery.ts', module => module.startAdRecovery(true));
+  const state = recoveryHarness(service, '../services/legacyAdRecovery.ts', module => module.startAdRecovery(true));
   await delay(0);
   assert.equal(attempts, 1);
   assert.equal([...state.timers.values()][0].ms, 15000);
@@ -2109,7 +2111,7 @@ test('startup retries a failed SDK automatically without another UI trigger', as
 test('open rewarded offers retry bounded failures, respect recovery pacing and stop after success', async () => {
   const { service } = setup();
   let requests = 0;
-  const state = recoveryHarness(service, '../services/rewardOfferPreload.ts', module => module.startRewardOfferPreload(async allowed => {
+  const state = recoveryHarness(service, '../services/legacyRewardOfferPreload.ts', module => module.startRewardOfferPreload(async allowed => {
     assert.equal(allowed(), true);
     return ++requests >= 2;
   }, () => true));
@@ -2130,7 +2132,7 @@ test('open rewarded offers retry bounded failures, respect recovery pacing and s
 test('reward offer recovery stops at three failures and never loads after its offer closes', async () => {
   const { service } = setup();
   let requests = 0;
-  const state = recoveryHarness(service, '../services/rewardOfferPreload.ts', module => module.startRewardOfferPreload(async () => { requests++; return false; }, () => true));
+  const state = recoveryHarness(service, '../services/legacyRewardOfferPreload.ts', module => module.startRewardOfferPreload(async () => { requests++; return false; }, () => true));
   await delay(0);
   for (let i = 0; i < 2; i++) { state.fire(); await delay(0); }
   assert.equal(requests, 3);
@@ -2145,7 +2147,7 @@ test('closing an offer during async preparation prevents a late native request',
   const { service } = setup();
   let finishContext;
   let requests = 0;
-  const state = recoveryHarness(service, '../services/rewardOfferPreload.ts', module => module.startRewardOfferPreload(async canPrepare => {
+  const state = recoveryHarness(service, '../services/legacyRewardOfferPreload.ts', module => module.startRewardOfferPreload(async canPrepare => {
     await new Promise(resolve => { finishContext = resolve; });
     if (!canPrepare()) return false;
     requests++;

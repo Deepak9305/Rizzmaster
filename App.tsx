@@ -17,6 +17,8 @@ import { AdMobService, type RewardVideoSsv } from './services/admobService';
 import { startGuestRewardPreload } from './services/guestRewardPreload';
 import { startRewardOfferPreload } from './services/rewardOfferPreload';
 import { startAdRecovery } from './services/adRecovery';
+import { SimpleAds, usesSimpleAds } from './services/simpleAds';
+import { readEarnedClaims, saveEarnedClaim, submitEarnedClaim, recoverEarnedClaims } from './services/rewardClaims';
 import { ForegroundSessionClock } from './services/foregroundSessionClock';
 import NativeBanner from './components/NativeBanner';
 import { OneSignalService } from './services/oneSignalService';
@@ -1304,7 +1306,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   }, []);
 
   const guestRewardPreloadEligible = Boolean(
-    !IS_WEB_PLATFORM && !showSplash && !showOnboarding && !isOffline && profile &&
+    !usesSimpleAds() && !IS_WEB_PLATFORM && !showSplash && !showOnboarding && !isOffline && profile &&
     (isGuest || profile.id === 'guest_user') && !profile.is_premium &&
     (profile.credits || 0) <= 2 && canUseNativeAdMob() && hasProductionAdUnit('REWARD')
   );
@@ -1321,6 +1323,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
   useEffect(() => {
     if (
+      usesSimpleAds() ||
       !showCreditsExhaustedModal ||
       IS_WEB_PLATFORM ||
       !profile ||
@@ -1718,7 +1721,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     return null;
   }, []);
 
-  const handleWatchRewardedAd = useCallback(async (requiredCreditsOverride?: 1 | 2) => {
+  const handleWatchLegacyRewardedAd = useCallback(async (requiredCreditsOverride?: 1 | 2) => {
     const currentProfile = profileRef.current;
     const requiredCredits = requiredCreditsOverride ?? rewardedAdRequiredCredits;
     const openedFromPremiumModal = showPremiumModal;
@@ -1849,6 +1852,97 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       }
     }
   }, [getRewardedAdPreparationContext, handleBackNavigation, isGuest, rewardedAdRequiredCredits, rewardedAdStatus, showPremiumModal, showToast, updateCredits]);
+
+  const simplePreloadEligible = Boolean(usesSimpleAds() && !showSplash && !showOnboarding &&
+    currentView === 'HOME' && !isOffline && profile && !profile.is_premium && (profile.credits || 0) <= 2);
+  useEffect(() => {
+    if (!usesSimpleAds()) return;
+    const identity = rewardedAdIdentityVersionRef.current;
+    SimpleAds.setRewardEligibility(getAdId('REWARD'), simplePreloadEligible ? () =>
+      identity === rewardedAdIdentityVersionRef.current && Boolean(profileRef.current &&
+      !profileRef.current.is_premium && (profileRef.current.credits || 0) <= 2) : null);
+    return () => SimpleAds.setRewardEligibility(getAdId('REWARD'), null);
+  }, [simplePreloadEligible, profile?.id]);
+
+  useEffect(() => {
+    if (!usesSimpleAds() || isOffline || !profile?.id || profile.id === 'guest_user') return;
+    const account = profile.id;
+    const identity = rewardedAdIdentityVersionRef.current;
+    let stopped = false;
+    const current = () => !stopped && identity === rewardedAdIdentityVersionRef.current && profileRef.current?.id === account;
+    const recover = async () => {
+      if (!current() || !SimpleAds.active || !SimpleAds.online) return;
+      const result = await recoverEarnedClaims(account, current);
+      if (!current() || !result) return;
+      if (result.status === 'granted' && result.credits !== undefined && profileRef.current) {
+        const updated = { ...profileRef.current, credits: result.credits };
+        profileRef.current = updated; setProfile(updated); setRewardedAdStatus('success');
+        showToast('Your earned ad credits have been added.', 'success');
+      } else if (readEarnedClaims(account).length) setRewardedAdStatus('pending');
+    };
+    void recover();
+    const stop = SimpleAds.subscribeReadiness(() => { void recover(); });
+    return () => { stopped = true; stop(); };
+  }, [profile?.id, isOffline, showToast]);
+
+  const handleWatchRewardedAd = useCallback(async (requiredCreditsOverride?: 1 | 2) => {
+    if (!usesSimpleAds()) { await handleWatchLegacyRewardedAd(requiredCreditsOverride); return; }
+    const user = profileRef.current;
+    if (!user || user.is_premium || rewardedAdInProgressRef.current) return;
+    const requiredCredits = requiredCreditsOverride ?? rewardedAdRequiredCredits;
+    const guest = user.id === 'guest_user';
+    const pending = guest ? null : readEarnedClaims(user.id)[0];
+    if (!pending && (user.credits || 0) >= requiredCredits) return;
+    const identity = rewardedAdIdentityVersionRef.current;
+    const same = () => identity === rewardedAdIdentityVersionRef.current && profileRef.current?.id === user.id;
+    rewardedAdInProgressRef.current = true;
+    setIsRewardedAdLoading(true); setRewardedAdStatus(pending ? 'pending' : 'loading');
+    const claim = pending ?? { claimId: crypto.randomUUID(), requiredCredits };
+    let earned = Boolean(pending);
+    let granting: Promise<void> | null = null;
+    const grant = async () => {
+      if (guest) {
+        if (!same()) return;
+        updateCredits(previous => previous + 5);
+      } else {
+        const result = await submitEarnedClaim(user.id, claim);
+        if (!same()) return;
+        if (result.status === 'pending') {
+          setRewardedAdStatus('pending');
+          showToast('Your earned reward is saved. We will retry adding the credits.', 'info'); return;
+        }
+        if (result.status === 'rejected') {
+          setRewardedAdStatus('error'); showToast('This credit claim was declined. Please contact support if needed.', 'error'); return;
+        }
+        if (profileRef.current && result.credits !== undefined) {
+          const updated = { ...profileRef.current, credits: result.credits };
+          profileRef.current = updated; setProfile(updated);
+        }
+      }
+      if (!same()) return;
+      setRewardedAdStatus('success'); setShowCreditsExhaustedModal(false);
+      showToast('5 credits added. You can continue generating.', 'success');
+      if (showPremiumModal) handleBackNavigation();
+    };
+    try {
+      if (pending) { await grant(); return; }
+      await SimpleAds.showRewardVideo(getAdId('REWARD'), undefined, undefined, () => {
+        if (earned || !same()) return;
+        earned = true;
+        if (!guest) saveEarnedClaim(user.id, claim);
+        granting = grant();
+        void granting.catch(() => { if (same()) setRewardedAdStatus('pending'); });
+      });
+      if (granting) await granting;
+      if (!earned && same()) {
+        setRewardedAdStatus('error'); showToast('The ad did not earn a reward. Please try again.', 'error');
+      }
+    } catch (error) {
+      if (same()) { setRewardedAdStatus(earned ? 'pending' : 'error'); showToast(earned ? 'Your reward is pending. Please retry.' : 'The ad is unavailable. Please try again.', 'info'); }
+    } finally {
+      if (same()) { rewardedAdInProgressRef.current = false; setIsRewardedAdLoading(false); }
+    }
+  }, [handleWatchLegacyRewardedAd, rewardedAdRequiredCredits, updateCredits, showToast, showPremiumModal, handleBackNavigation]);
 
   const handleRestorePurchases = useCallback(async () => {
     if (!profileRef.current) return;
@@ -2493,9 +2587,9 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
               </button>
             </div>
             {rewardedAdStatus === 'pending' ? (
-              <p className="mt-4 text-center text-xs text-amber-100/80" role="status">Reward verification is pending. Credits will appear when confirmed.</p>
+              <p className="mt-4 text-center text-xs text-amber-100/80" role="status">{usesSimpleAds() ? 'Your earned reward is saved. We will retry adding the credits.' : 'Reward verification is pending. Credits will appear when confirmed.'}</p>
             ) : rewardedAdStatus === 'error' ? (
-              <p className="mt-4 text-center text-xs text-rose-200/80" role="status">The ad could not be completed or verified. You can try again.</p>
+              <p className="mt-4 text-center text-xs text-rose-200/80" role="status">{usesSimpleAds() ? 'The ad or credit claim did not complete. You can try again.' : 'The ad could not be completed or verified. You can try again.'}</p>
             ) : (
               <p className="mt-4 text-center text-xs text-white/35">Credits are added after the rewarded ad is completed.</p>
             )}

@@ -1,5 +1,76 @@
 # Android ad initialization and banner maintenance
 
+## Simplified flow (local implementation, 2026-10-28)
+
+Rollback checkpoint: `5acd3e4`. The Android SDK versions remain Capacitor 8.5.2,
+community AdMob 8.2.1, Google Mobile Ads 25.4.0, UMP 4.0.0, and Meta mediation
+6.22.0.1. The community AdMob package now runs without a source patch; the Google
+Auth patch remains independent.
+
+New APKs register `AdsStartup`. That small app-owned bridge requests UMP updates,
+opens required consent/privacy forms, and reports readiness from Google's actual
+SDK callback. SDK startup does not depend on a banner parent. Its state includes
+`canRequestAds`, `privacyOptionsRequired`, `sdkReady`, `busy`, `formOpen`, and `error`.
+Only UMP's authoritative permission enables requests. JS timeouts do not cancel
+native forms, launch duplicate initialization, or manufacture consent/readiness.
+
+`simpleAds.ts` owns startup, foreground/network state, and one rewarded cache;
+`simpleBanner.ts` owns the banner. Failed native loads retry after 60 seconds while
+eligible/foreground, retaining deadlines across backgrounding. Reward preloading
+starts at two credits or fewer for both guests and accounts on the main tool,
+after splash/onboarding. Watching still requires insufficient generation credits
+and explicit user action. Cache lifetime is 55 minutes; one native load remains
+serialized even when the JS wait times out. An ad confirmed on screen retains
+ownership until native dismissal/failure. If a stock SDK terminal callback never
+arrives, restarting the app is the recovery; JS cannot cancel a native show safely.
+
+The stock banner plugin destroys its view on failed automatic refresh as well as
+initial failure. The controller therefore retries that missing view after 60
+seconds. Successful automatic refresh remains SDK-owned. Existing keyboard,
+placement, adaptive sizing, modal, Coach, and premium rules are preserved.
+
+The new flow supplies no SSV data. Earned guests receive five local credits.
+Earned account rewards persist an account-scoped UUID claim before calling
+`POST /api/rewarded-ad/claim` with `{ claimId, requiredCredits }`. Authentication
+selects the account. The service-role-only `admin_claim_client_reward` transaction
+locks the profile, checks eligibility, records the account/claim pair, and adds
+exactly five credits. Retrying a claim returns the result without granting twice.
+This trusts the client completion signal and does not prove that an ad was watched.
+Pending claims survive transient server/auth errors and retry on reconnect,
+foreground return, next launch, or explicit retry. Switching accounts cannot
+submit or display another account's credits.
+
+Local counters record requests, loads, shows, earned callbacks, failures, and
+banner impressions. The stock rewarded plugin exposes a paid event, not a
+separate impression event: rewarded impression count is explicitly unavailable.
+No counter contains account IDs or conversation content, and none is uploaded.
+
+### Migration and verification
+
+- This implementation is local; no production database, deployment, or Play
+  release is changed. Prepare/apply the new claim migration and deploy the API
+  before serving the new hosted frontend, then distribute the rebuilt shell.
+- The normal Android shell loads `https://rizzmaster.online`. Rebuilding the
+  shell alone does not serve unpublished frontend code. Use the existing
+  `sharePreview` variant for a bundled local frontend check.
+- Older APKs without `AdsStartup` select the isolated `legacy*` services and
+  existing SSV flow. Their endpoints, RPC, and history remain available. Do not
+  disable the AdMob SSV callback in the console while those clients remain.
+  Callbacks without an attempt ID acknowledge without granting credits.
+- After adoption and legacy traffic are reviewed, remove the legacy modules and
+  SSV runtime in a separate change. Keep the rollback checkpoint and do not drop
+  reward history as part of that retirement.
+- `npm run test:admob` covers old/new orchestration; `npm run test:rewarded`
+  covers compatibility/verification; `npm run test:ads-db` runs the actual new
+  SQL in local PGlite PostgreSQL, including duplicate submissions, account locks,
+  eligibility and SQL permissions. PGlite serializes connections; a real
+  multi-connection Postgres contention test remains a release check.
+- Run `npm run build`, `npx cap sync android`, `npm run verify:native-config`,
+  and Android unit/compile checks. Use test ads on a connected device; production
+  ad IDs/configuration stay unchanged. Measure delivery and revenue after rollout.
+
+## Legacy implementation history
+
 The Android app loads `https://rizzmaster.online` inside Capacitor. Guest and signed-in free users share the same native banner/UMP initialization. Guest rewarded completions grant local credits; signed-in rewards use server verification. These eligibility rules are unchanged.
 
 Guests preload one rewarded ad when they have two or fewer credits, after startup and while online. The existing cache is reused when they explicitly choose “Watch ad”; preparation does not display an ad or grant credits. Cancellation checks prevent a guest who exits during consent gathering from making a late preload. Signed-in users retain preparation only for the insufficient-credit offer, with their existing server verification context.

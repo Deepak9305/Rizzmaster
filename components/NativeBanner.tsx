@@ -3,6 +3,7 @@ import { NativeBannerController, type BannerMode, BANNER_WIDTH } from '../servic
 import { getBannerPlacement, moveNativeBanner } from '../services/bottomNavigationInset';
 import { canUseNativeAdMob } from '../services/nativeCapabilities';
 import { observeBannerForeground } from '../services/bannerLifecycle';
+import { SimpleAds, usesSimpleAds } from '../services/simpleAds';
 
 interface NativeBannerProps {
     adId: string;
@@ -124,6 +125,10 @@ const NativeBanner: React.FC<NativeBannerProps> = ({ adId, enabled, suspended, o
 
     useEffect(() => {
         if (!native) return;
+        if (usesSimpleAds()) {
+            setForeground(SimpleAds.active);
+            return SimpleAds.subscribeReadiness(() => setForeground(SimpleAds.active));
+        }
         return observeBannerForeground(setForeground);
     }, [native]);
 
