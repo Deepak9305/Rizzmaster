@@ -1899,6 +1899,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     setIsRewardedAdLoading(true); setRewardedAdStatus(pending ? 'pending' : 'loading');
     const claim = pending ?? { claimId: crypto.randomUUID(), requiredCredits };
     let earned = Boolean(pending);
+    let adShown = false;
     let granting: Promise<void> | null = null;
     const grant = async () => {
       if (guest) {
@@ -1926,7 +1927,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     };
     try {
       if (pending) { await grant(); return; }
-      await SimpleAds.showRewardVideo(getAdId('REWARD'), undefined, undefined, () => {
+      await SimpleAds.showRewardVideo(getAdId('REWARD'), undefined, () => { adShown = true; }, () => {
         if (earned || !same()) return;
         earned = true;
         if (!guest) saveEarnedClaim(user.id, claim);
@@ -1935,7 +1936,8 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       });
       if (granting) await granting;
       if (!earned && same()) {
-        setRewardedAdStatus('error'); showToast('The ad did not earn a reward. Please try again.', 'error');
+        setRewardedAdStatus('error');
+        showToast(adShown ? 'The ad closed without earning a reward. Please watch to the end to earn credits.' : 'The ad could not load right now. Please try again in a minute.', 'info');
       }
     } catch (error) {
       if (same()) { setRewardedAdStatus(earned ? 'pending' : 'error'); showToast(earned ? 'Your reward is pending. Please retry.' : 'The ad is unavailable. Please try again.', 'info'); }

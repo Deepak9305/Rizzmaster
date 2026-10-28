@@ -31,7 +31,7 @@ export const SimpleAds = {
     rewardAdId: '', eligible: null as (() => boolean) | null,
     loadTask: null as Promise<boolean> | null,
     loadRetryAt: 0, rewardVideoPreparedAt: 0, cachedAdId: '',
-    rewardVideoRequestCount: 0, generation: 0,
+    rewardVideoRequestCount: 0, generation: 0, actionVersion: 0,
     isRewardVideoShowing: false, rewardVideoDisplayStarted: false,
     REWARDED_STALE_AFTER_MS: CACHE_MS,
     get initialized() { return this.state.sdkReady; },
@@ -45,7 +45,7 @@ export const SimpleAds = {
     notify() { for (const callback of this.listeners) { try { callback(); } catch (e) { console.warn('[Ads] Observer failed', e); } } },
     getDeliveryDiagnostics() { return { ...getAdDeliveryDiagnostics(), ...this.state, foreground: this.active, online: this.online, rewardPreparing: this.rewardVideoPreparing, rewardShowing: this.isRewardVideoShowing, rewardImpressions: 'unavailable: stock plugin exposes paid events only' }; },
     apply(state: AdsState) {
-        if ((this.state.canRequestAds && !state.canRequestAds) || (!this.state.formOpen && state.formOpen)) this.invalidateRewardVideo();
+        if ((this.state.canRequestAds && !state.canRequestAds) || (!this.state.formOpen && state.formOpen)) this.invalidateRewardVideo(false);
         this.state = state;
         recordAdEvent(state.error ? 'startup.error' : 'startup.state');
         this.notify();
@@ -113,7 +113,35 @@ export const SimpleAds = {
         this.eligible = eligible;
         void this.tick();
     },
-    invalidateRewardVideo() { this.generation++; this.cachedAdId = ''; this.rewardVideoPreparedAt = 0; },
+    invalidateRewardVideo(cancelActions = true) {
+        this.generation++;
+        if (cancelActions) this.actionVersion++;
+        this.cachedAdId = ''; this.rewardVideoPreparedAt = 0;
+        this.notify();
+    },
+    waitForRewardReady(actionVersion: number): Promise<boolean> {
+        if (!this.active || !this.online || actionVersion !== this.actionVersion) return Promise.resolve(false);
+        if (this.ready()) return Promise.resolve(true);
+        return new Promise(resolve => {
+            let settled = false;
+            const finish = (ready: boolean) => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timer);
+                this.listeners.delete(check);
+                resolve(ready);
+            };
+            const check = () => {
+                if (!this.active || !this.online || actionVersion !== this.actionVersion) finish(false);
+                else if (this.ready()) finish(true);
+            };
+            const timer = setTimeout(() => finish(false), 45000);
+            this.listeners.add(check);
+            // start() returns promptly; the native readiness event completes this wait.
+            void this.ensureInitialized('watch').then(check, () => finish(false));
+            check();
+        });
+    },
     hasFreshRewardVideo(adId?: string, _ssv?: unknown): boolean {
         return Boolean(this.cachedAdId && (!adId || adId === this.cachedAdId) && Date.now() - this.rewardVideoPreparedAt < CACHE_MS);
     },
@@ -144,9 +172,11 @@ export const SimpleAds = {
         return bounded('Reward load', this.loadTask, 35000).catch(() => false);
     },
     async showRewardVideo(adId: string, _ssv?: unknown, onShow?: () => void, onEarned?: () => void): Promise<boolean> {
-        if (this.isRewardVideoShowing || !this.ready()) return false;
+        if (this.isRewardVideoShowing) return false;
+        const actionVersion = this.actionVersion;
+        if (!await this.waitForRewardReady(actionVersion) || actionVersion !== this.actionVersion) return false;
         const generation = this.generation;
-        if (!await this.prepareRewardVideo(adId) || !this.ready() || generation !== this.generation || this.isRewardVideoShowing) return false;
+        if (!await this.prepareRewardVideo(adId) || !this.ready() || generation !== this.generation || actionVersion !== this.actionVersion || this.isRewardVideoShowing) return false;
         this.isRewardVideoShowing = true;
         this.notify();
         const handles: PluginListenerHandle[] = [];

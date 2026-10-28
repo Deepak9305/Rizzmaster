@@ -68,6 +68,56 @@ test('one low-credit preload is reused and expires after 55 minutes', async () =
   await s.advance(60000); assert.equal(s.calls.filter(x => x === 'load').length, 2);
   s.runtime.stop();
 });
+test('explicit watch waits for SDK completion, joins preload, and grants once after the ad', async () => {
+  const s = setup(); await flush(); let awards = 0;
+  Object.assign(s.state, { sdkReady: false, canRequestAds: false });
+  s.stateEvent(s.state);
+  s.ads.setRewardEligibility('reward', () => true);
+  const show = s.ads.showRewardVideo('reward', undefined, undefined, () => awards++);
+  await flush(); assert.deepEqual(s.calls, []);
+  // A required form opening must not cancel the user's request while it waits.
+  s.stateEvent({ ...s.state, formOpen: true }); await flush();
+  assert.deepEqual(s.calls, []);
+  Object.assign(s.state, { sdkReady: true, canRequestAds: true, formOpen: false });
+  s.stateEvent(s.state); await flush();
+  assert.equal(s.calls.filter(x => x === 'load').length, 1);
+  assert.equal(s.calls.filter(x => x === 'show').length, 1);
+  s.events.get('earned')({ amount: 1 }); s.events.get('closed')(); await s.advance(2000);
+  assert.equal(await show, true); assert.equal(awards, 1); s.runtime.stop();
+});
+test('readiness timeout, denial, background, offline and account changes do not show an ad', async () => {
+  for (const cancel of ['timeout', 'background', 'offline', 'account']) {
+    const s = setup(); await flush();
+    Object.assign(s.state, { sdkReady: false, canRequestAds: false }); s.stateEvent(s.state);
+    const baseline = s.ads.listeners.size;
+    const show = s.ads.showRewardVideo('reward'); await flush();
+    if (cancel === 'timeout') await s.advance(45000);
+    if (cancel === 'background') s.foreground(false);
+    if (cancel === 'offline') s.runtime.setOnline(false);
+    if (cancel === 'account') s.ads.invalidateRewardVideo();
+    assert.equal(await show, false);
+    assert.equal(s.ads.listeners.size, baseline);
+    Object.assign(s.state, { sdkReady: true, canRequestAds: true }); s.stateEvent(s.state); await flush();
+    assert.equal(s.calls.includes('show'), false); s.runtime.stop();
+  }
+});
+test('explicit watch respects failed-load retry deadline and never awards for no fill', async () => {
+  const s = setup(); await flush(); let awards = 0;
+  s.plugin.prepareRewardVideoAd = async () => { s.calls.push('load'); throw new Error('no fill'); };
+  assert.equal(await s.ads.showRewardVideo('reward', undefined, undefined, () => awards++), false);
+  assert.equal(await s.ads.showRewardVideo('reward'), false);
+  assert.equal(s.calls.filter(x => x === 'load').length, 1);
+  await s.advance(60000);
+  assert.equal(await s.ads.showRewardVideo('reward'), false);
+  assert.equal(s.calls.filter(x => x === 'load').length, 2);
+  assert.equal(awards, 0); assert.equal(s.calls.includes('show'), false); s.runtime.stop();
+});
+test('account change immediately after a watch tap cancels before requesting an ad', async () => {
+  const s = setup(); await flush();
+  const show = s.ads.showRewardVideo('reward');
+  s.ads.invalidateRewardVideo();
+  assert.equal(await show, false); assert.deepEqual(s.calls, []); s.runtime.stop();
+});
 test('failed preloads retry once per minute and pause in background', async () => {
   const s = setup(); await flush(); s.plugin.prepareRewardVideoAd = async () => { s.calls.push('load'); throw new Error('no fill'); };
   s.ads.setRewardEligibility('reward', () => true); await flush();
@@ -172,14 +222,14 @@ test('claim API takes the authenticated account, ignores requested reward amount
   assert.equal(calls.length, 1);
 });
 
-function appFlow({ guest = false, pending = false, earns = true, simple = true, switched = false } = {}) {
+function appFlow({ guest = false, pending = false, earns = true, simple = true, switched = false, shown = false } = {}) {
   const source = readFileSync(new URL('../App.tsx', import.meta.url), 'utf8');
   const ast = ts.createSourceFile('App.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   let callback;
   const visit = node => { if (ts.isVariableDeclaration(node) && node.name.getText(ast) === 'handleWatchRewardedAd') callback = node.initializer.arguments[0].getText(ast); ts.forEachChild(node, visit); };
   visit(ast);
   const user = { id: guest ? 'guest_user' : 'account-a', credits: 0, is_premium: false };
-  const state = { shows: 0, saves: 0, submits: 0, legacy: 0, status: 'idle', credited: 0, loading: false };
+  const state = { shows: 0, saves: 0, submits: 0, legacy: 0, status: 'idle', credited: 0, loading: false, toasts: [] };
   const context = {
     usesSimpleAds: () => simple, handleWatchLegacyRewardedAd: async () => { state.legacy++; },
     profileRef: { current: user }, rewardedAdInProgressRef: { current: false }, rewardedAdIdentityVersionRef: { current: 1 },
@@ -188,11 +238,12 @@ function appFlow({ guest = false, pending = false, earns = true, simple = true, 
     saveEarnedClaim: account => { state.saves++; assert.equal(account, 'account-a'); },
     submitEarnedClaim: async account => { state.submits++; assert.equal(account, 'account-a'); return { status: 'granted', credits: 5 }; },
     setIsRewardedAdLoading: value => { state.loading = value; }, setRewardedAdStatus: value => { state.status = value; },
-    setShowCreditsExhaustedModal() {}, setProfile: profile => { state.credited = profile.credits; }, showToast() {},
+    setShowCreditsExhaustedModal() {}, setProfile: profile => { state.credited = profile.credits; }, showToast: message => state.toasts.push(message),
     updateCredits: updater => { state.credited = updater(user.credits); }, getAdId: () => 'reward',
     crypto: { randomUUID: () => 'new-claim' },
     SimpleAds: { showRewardVideo: async (_id, _ssv, _onShow, onEarned) => {
       state.shows++;
+      if (shown) _onShow();
       if (switched) { context.rewardedAdIdentityVersionRef.current++; context.profileRef.current = { id: 'account-b' }; }
       if (earns) onEarned();
       return earns;
@@ -214,4 +265,12 @@ test('actual App action retries a saved reward before showing another ad; cancel
     const flow = appFlow(options); await flow.run(); assert.equal(flow.state.credited, 0); assert.equal(flow.state.submits, 0);
   }
   const legacy = appFlow({ simple: false }); await legacy.run(); assert.equal(legacy.state.legacy, 1); assert.equal(legacy.state.shows, 0);
+});
+test('actual App distinguishes load failure from a displayed ad closed without reward', async () => {
+  const unavailable = appFlow({ earns: false }); await unavailable.run();
+  assert.match(unavailable.state.toasts.at(-1), /could not load/);
+  assert.doesNotMatch(unavailable.state.toasts.at(-1), /without earning|did not earn/);
+  const closed = appFlow({ earns: false, shown: true }); await closed.run();
+  assert.match(closed.state.toasts.at(-1), /closed without earning/);
+  assert.equal(closed.state.credited, 0); assert.equal(unavailable.state.credited, 0);
 });

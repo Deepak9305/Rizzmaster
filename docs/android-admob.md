@@ -13,6 +13,10 @@ SDK callback. SDK startup does not depend on a banner parent. Its state includes
 `canRequestAds`, `privacyOptionsRequired`, `sdkReady`, `busy`, `formOpen`, and `error`.
 Only UMP's authoritative permission enables requests. JS timeouts do not cancel
 native forms, launch duplicate initialization, or manufacture consent/readiness.
+An explicit watch action starts/joins initialization and waits up to 45 seconds
+for the native readiness event before preparing the reward. Account changes,
+backgrounding, or going offline cancel that wait. A load failure is reported
+separately from an ad that was shown and closed without earning a reward.
 
 `simpleAds.ts` owns startup, foreground/network state, and one rewarded cache;
 `simpleBanner.ts` owns the banner. Failed native loads retry after 60 seconds while
@@ -47,9 +51,13 @@ No counter contains account IDs or conversation content, and none is uploaded.
 
 ### Migration and verification
 
-- This implementation is local; no production database, deployment, or Play
-  release is changed. Prepare/apply the new claim migration and deploy the API
-  before serving the new hosted frontend, then distribute the rebuilt shell.
+- Production claim migration applied on 2026-10-28 after the API deployment.
+  Verified the actual service-role grant (+5), duplicate retry, and insufficient-
+  credit eligibility using a synthetic account inside a rolled-back transaction;
+  no test account, credit update, or test claim persisted. RLS and server-only
+  permissions were checked, and the legacy SSV function remains present.
+- The watch-readiness/message fix is local until the next frontend deployment.
+  The native startup helper and patch removal still require a rebuilt shell.
 - The normal Android shell loads `https://rizzmaster.online`. Rebuilding the
   shell alone does not serve unpublished frontend code. Use the existing
   `sharePreview` variant for a bundled local frontend check.
