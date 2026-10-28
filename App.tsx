@@ -17,7 +17,7 @@ import { AdMobService, type RewardVideoSsv } from './services/admobService';
 import { startGuestRewardPreload } from './services/guestRewardPreload';
 import { startRewardOfferPreload } from './services/rewardOfferPreload';
 import { startAdRecovery } from './services/adRecovery';
-import { SimpleAds, usesSimpleAds } from './services/simpleAds';
+import { SimpleAds, usesSimpleAds, rewardFailureMessage } from './services/simpleAds';
 import { readEarnedClaims, saveEarnedClaim, submitEarnedClaim, recoverEarnedClaims } from './services/rewardClaims';
 import { ForegroundSessionClock } from './services/foregroundSessionClock';
 import NativeBanner from './components/NativeBanner';
@@ -463,7 +463,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const [showCreditsExhaustedModal, setShowCreditsExhaustedModal] = useState(false);
   const [privacyOptionsRequired, setPrivacyOptionsRequired] = useState(false);
   const [isPrivacyFormOpen, setIsPrivacyFormOpen] = useState(false);
-  const [rewardedAdStatus, setRewardedAdStatus] = useState<'idle' | 'loading' | 'pending' | 'success' | 'error'>('idle');
+  const [rewardedAdStatus, setRewardedAdStatus] = useState<'idle' | 'loading' | 'checking' | 'pending' | 'success' | 'error'>('idle');
   const [isRewardedAdLoading, setIsRewardedAdLoading] = useState(false);
   const [rewardedAdRequiredCredits, setRewardedAdRequiredCredits] = useState<1 | 2>(1);
   const [showSavedModal, setShowSavedModal] = useState(false);
@@ -1159,6 +1159,9 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       if (backButtonListener) backButtonListener.remove();
 
       backButtonListener = await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+        // Ad controls and pod transitions belong to the SDK. A queued app Back
+        // event must not close a modal, navigate history, or exit under the ad.
+        if (AdMobService.isRewardVideoShowing) return;
         if (document.querySelector('.rm-share-dialog[open]')) {
           window.dispatchEvent(new Event('rizzmaster:close-share-card'));
           return;
@@ -1899,8 +1902,15 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     setIsRewardedAdLoading(true); setRewardedAdStatus(pending ? 'pending' : 'loading');
     const claim = pending ?? { claimId: crypto.randomUUID(), requiredCredits };
     let earned = Boolean(pending);
-    let adShown = false;
+    let creditGranted = false, announced = false;
     let granting: Promise<void> | null = null;
+    const finishGrantUi = () => {
+      if (!same() || announced || SimpleAds.isRewardVideoShowing) return;
+      announced = true;
+      setRewardedAdStatus('success'); setShowCreditsExhaustedModal(false);
+      showToast('5 credits added. You can continue generating.', 'success');
+      if (showPremiumModal) handleBackNavigation();
+    };
     const grant = async () => {
       if (guest) {
         if (!same()) return;
@@ -1920,24 +1930,27 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
           profileRef.current = updated; setProfile(updated);
         }
       }
-      if (!same()) return;
-      setRewardedAdStatus('success'); setShowCreditsExhaustedModal(false);
-      showToast('5 credits added. You can continue generating.', 'success');
-      if (showPremiumModal) handleBackNavigation();
+      creditGranted = true;
+      // Persist/grant immediately when earned, but don't navigate or close the
+      // offer underneath the SDK's fullscreen/pod transition.
+      finishGrantUi();
     };
     try {
       if (pending) { await grant(); return; }
-      await SimpleAds.showRewardVideo(getAdId('REWARD'), undefined, () => { adShown = true; }, () => {
+      const viewing = await SimpleAds.watchRewardVideo(getAdId('REWARD'), undefined, undefined, () => {
         if (earned || !same()) return;
         earned = true;
         if (!guest) saveEarnedClaim(user.id, claim);
         granting = grant();
         void granting.catch(() => { if (same()) setRewardedAdStatus('pending'); });
+      }, () => {
+        if (same() && !earned) setRewardedAdStatus('checking');
       });
       if (granting) await granting;
+      if (creditGranted) finishGrantUi();
       if (!earned && same()) {
-        setRewardedAdStatus('error');
-        showToast(adShown ? 'The ad closed without earning a reward. Please watch to the end to earn credits.' : 'The ad could not load right now. Please try again in a minute.', 'info');
+        setRewardedAdStatus(viewing.reason === 'cancelled' ? 'idle' : 'error');
+        if (viewing.reason !== 'cancelled') showToast(rewardFailureMessage(viewing), 'info');
       }
     } catch (error) {
       if (same()) { setRewardedAdStatus(earned ? 'pending' : 'error'); showToast(earned ? 'Your reward is pending. Please retry.' : 'The ad is unavailable. Please try again.', 'info'); }
@@ -2585,10 +2598,12 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                 disabled={isRewardedAdLoading}
                 className="min-h-14 rounded-2xl border border-amber-300/35 bg-amber-300/10 px-3 py-3 text-sm font-extrabold text-amber-100 transition hover:bg-amber-300/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isRewardedAdLoading ? (rewardedAdStatus === 'pending' ? 'Checking reward...' : 'Opening ad...') : rewardedAdStatus === 'pending' ? 'Check reward' : 'Watch ad · +5'}
+                {isRewardedAdLoading ? (rewardedAdStatus === 'pending' || rewardedAdStatus === 'checking' ? 'Checking reward...' : 'Opening ad...') : rewardedAdStatus === 'pending' ? 'Check reward' : 'Watch ad · +5'}
               </button>
             </div>
-            {rewardedAdStatus === 'pending' ? (
+            {rewardedAdStatus === 'checking' ? (
+              <p className="mt-4 text-center text-xs text-amber-100/80" role="status">Waiting for the ad to confirm your reward...</p>
+            ) : rewardedAdStatus === 'pending' ? (
               <p className="mt-4 text-center text-xs text-amber-100/80" role="status">{usesSimpleAds() ? 'Your earned reward is saved. We will retry adding the credits.' : 'Reward verification is pending. Credits will appear when confirmed.'}</p>
             ) : rewardedAdStatus === 'error' ? (
               <p className="mt-4 text-center text-xs text-rose-200/80" role="status">{usesSimpleAds() ? 'The ad or credit claim did not complete. You can try again.' : 'The ad could not be completed or verified. You can try again.'}</p>
@@ -2993,7 +3008,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                           disabled={isRewardedAdLoading}
                           className="w-full min-h-[58px] rounded-2xl border border-amber-300/30 bg-amber-300/10 px-2 py-3 text-xs font-bold text-amber-200 transition hover:bg-amber-300/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 flex flex-col items-center justify-center"
                         >
-                          <span>{isRewardedAdLoading ? (rewardedAdStatus === 'pending' ? 'Checking reward...' : 'Opening ad...') : rewardedAdStatus === 'pending' ? 'Check reward' : 'Watch an ad'}</span>
+                          <span>{isRewardedAdLoading ? (rewardedAdStatus === 'pending' || rewardedAdStatus === 'checking' ? 'Checking reward...' : 'Opening ad...') : rewardedAdStatus === 'pending' ? 'Check reward' : 'Watch an ad'}</span>
                           <span className="text-[10px] uppercase tracking-wide text-amber-200/70">+5 credits</span>
                         </button>
                       )}

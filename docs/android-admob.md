@@ -25,8 +25,28 @@ starts at two credits or fewer for both guests and accounts on the main tool,
 after splash/onboarding. Watching still requires insufficient generation credits
 and explicit user action. Cache lifetime is 55 minutes; one native load remains
 serialized even when the JS wait times out. An ad confirmed on screen retains
-ownership until native dismissal/failure. If a stock SDK terminal callback never
-arrives, restarting the app is the recovery; JS cannot cancel a native show safely.
+ownership until native dismissal/failure or confirmed native host return. The new
+`getPresentationState` bridge checks that MainActivity is RESUMED and has native
+window focus. After a shown ad, five seconds of stable host interaction releases
+a missing-dismissal lock; background time, transient pod transitions, bridge
+errors, and a visible SDK fullscreen window cannot unlock it. Original AdsStartup
+APKs without this bridge method retain callback-only recovery until rebuilt.
+
+Rewards are bound to the stock plugin's per-call show promise, which resolves
+from its native earned callback. That callback can still grant after dismissal
+cleanup, with identity checks and deduplication; unscoped global reward events
+cannot credit a different viewing. Dismissal alone never earns credits. The UI
+shows "Checking reward" while settling, and reports busy/loading/cooldown/offline/
+show failures separately. App Back handling does not navigate beneath SDK ads.
+Credit persistence/submission happens on earning, but success UI closure and
+history navigation are deferred until fullscreen ownership has ended.
+
+On-device check (2026-10-28): an isolated bundled probe on the connected phone
+loaded Google's rewarded test unit, observed `hostInteractive=false` while the
+SDK was onscreen, received one earned callback, and returned `{earned:true}`
+with ownership cleared after dismissal/native focus return. No account reward
+claim was submitted. The particular production ad pod exit was not reproduced;
+missing-dismissal, brief pod transitions, and late rewards are regression-tested.
 
 The stock banner plugin destroys its view on failed automatic refresh as well as
 initial failure. The controller therefore retries that missing view after 60
@@ -56,8 +76,9 @@ No counter contains account IDs or conversation content, and none is uploaded.
   credit eligibility using a synthetic account inside a rolled-back transaction;
   no test account, credit update, or test claim persisted. RLS and server-only
   permissions were checked, and the legacy SSV function remains present.
-- The watch-readiness/message fix is local until the next frontend deployment.
-  The native startup helper and patch removal still require a rebuilt shell.
+- The watch-readiness/message fix was deployed in `cbafdea`. The subsequent
+  presentation/reward recovery change is local until deployed and requires a
+  rebuilt shell for the native focus check.
 - The normal Android shell loads `https://rizzmaster.online`. Rebuilding the
   shell alone does not serve unpublished frontend code. Use the existing
   `sharePreview` variant for a bundled local frontend check.

@@ -8199,7 +8199,11 @@ export const BLOG_POSTS: BlogPost[] = [
           'Listen for the end of a sentence rather than waiting for a perfectly silent room.',
           'Use a topic change as a reset instead of assuming you missed your chance.',
           'Start with the person nearest the thread you want to join.'
-        ]
+        ],
+        image: '/blog/why-group-conversations-feel-invisible-rhythm.png',
+        imageWebp: '/blog/why-group-conversations-feel-invisible-rhythm.webp',
+        imageAlt: 'A thoughtful adult notices an opening while friends talk around a café table',
+        imageCaption: 'You do not need to take over a group; noticing its rhythm can reveal a smaller, more natural opening.'
       },
       {
         heading: 'Use the anchor, add, and open formula',
@@ -8225,7 +8229,11 @@ export const BLOG_POSTS: BlogPost[] = [
           '“Would you do it again?”',
           '“That sounds exhausting. What helped?”',
           '“I have had the opposite experience. Want to hear the short version?”'
-        ]
+        ],
+        image: '/blog/why-group-conversations-feel-invisible-connection.png',
+        imageWebp: '/blog/why-group-conversations-feel-invisible-connection.webp',
+        imageAlt: 'Two adults exchange a genuine reaction during a relaxed group conversation',
+        imageCaption: 'A small, attentive response can create more connection than waiting for an impressive story.'
       },
       {
         heading: 'If someone talks over you, do not immediately blame your personality',
@@ -8290,6 +8298,197 @@ export const BLOG_POSTS: BlogPost[] = [
           'Make a small contribution and leave room for a response.',
           'Speak up when you are interrupted, then observe the group\'s response.',
           'Choose people and settings that make reciprocity possible.'
+        ]
+      }
+    ]
+  },
+  {
+    slug: 'why-you-feel-disconnected-from-people-even-when-you-are-social',
+    title: 'Why You Feel Disconnected From People Even When You’re Social',
+    seoTitle: 'Why You Feel Disconnected From People Even When You’re Social',
+    description: 'Learn why you can spend time with people and still feel lonely, how to tell social contact from real connection, and what small changes can make relationships feel more mutual and meaningful.',
+    excerpt: 'Being busy, invited, and surrounded by people does not always create a sense of belonging. This guide helps you spot the difference between contact and connection, make a few honest bids for closeness, and build a social rhythm that feels real rather than performative.',
+    date: '2026-10-28',
+    updatedAt: '2026-10-28',
+    readingTime: '11 min read',
+    category: 'Friendship & connection',
+    keywords: [
+      'why do I feel disconnected from people',
+      'why do I feel lonely when I am surrounded by people',
+      'how to feel more connected to others',
+      'social but still lonely',
+      'difference between loneliness and isolation',
+      'how to build deeper friendships',
+      'how to stop feeling emotionally disconnected',
+      'how to make social connections feel meaningful'
+    ],
+    image: '/blog/why-feel-disconnected-socially-hero.png',
+    imageWebp: '/blog/why-feel-disconnected-socially-hero.webp',
+    imageAlt: 'A thoughtful adult sits at a lively café table while friends talk nearby',
+    imageCaption: 'A full calendar can still feel lonely when your relationships do not leave room to be known.',
+    author: 'amelia',
+    resources: [
+      { label: 'CDC: Health effects of social isolation and loneliness', url: 'https://www.cdc.gov/social-connectedness/risk-factors/index.html' },
+      { label: 'CDC: Improving social connectedness', url: 'https://www.cdc.gov/social-connectedness/improving/index.html' },
+      { label: 'NHS: Get help with loneliness', url: 'https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/feeling-lonely/' },
+      { label: 'NHS Every Mind Matters: Maintaining healthy relationships and mental wellbeing', url: 'https://www.nhs.uk/every-mind-matters/lifes-challenges/maintaining-healthy-relationships-and-mental-wellbeing/' }
+    ],
+    faqs: [
+      {
+        question: 'Why do I feel lonely even when I have friends?',
+        answer: 'You may have regular contact without enough emotional closeness, honesty, reciprocity, or dependable time together. Loneliness is about how connected you feel, not simply how many people are in your phone or around you. Look for the kind of connection that is missing before assuming you need a larger social circle.'
+      },
+      {
+        question: 'What is the difference between being alone and feeling lonely?',
+        answer: 'Being alone describes your circumstances; loneliness describes the experience of feeling disconnected or not close to others. Some people enjoy solitude and still feel supported, while someone can feel lonely in a crowded room. Both experiences can change over time.'
+      },
+      {
+        question: 'How can I build deeper friendships without oversharing?',
+        answer: 'Offer one honest, relevant detail and notice whether the other person responds with care or curiosity. Depth can grow gradually through repeated small disclosures, shared activities, and follow-through. You do not need to reveal your most private history to test whether a relationship has room for more honesty.'
+      },
+      {
+        question: 'When should I get support for feeling disconnected?',
+        answer: 'Consider speaking with a qualified mental-health professional if disconnection lasts, makes you withdraw from daily life, or comes with persistent low mood, anxiety, hopelessness, or difficulty functioning. You do not have to wait until the feeling becomes a crisis to ask for help.'
+      }
+    ],
+    sections: [
+      {
+        heading: 'A busy social life is not the same as feeling known',
+        paragraphs: [
+          'You can attend dinners, answer group chats, make conversation at work, and still come home with the feeling that nobody really reached you. That does not make you ungrateful or socially incapable. It may mean that your life contains plenty of contact but too little room for attention, honesty, or mutual follow-through. A full calendar can hide a thin sense of belonging for a while because activity looks like connection from the outside.',
+          'Start by separating the quantity of interaction from its quality. Did you feel listened to? Could you say something true without immediately turning it into a joke? Did anyone remember what mattered to you last week? Did you leave with more energy, less energy, or simply the relief that the event was over? These questions are not a demand for every interaction to become profound. They help you identify what kind of connection your current routine is and is not providing.'
+        ],
+        bullets: [
+          'Contact is time near people; connection includes attention, recognition, and some mutual investment.',
+          'You can want more closeness without deciding that every existing relationship is fake.',
+          'The useful question is not “How many people do I know?” but “Where can I be more fully myself?”'
+        ]
+      },
+      {
+        heading: 'Name what is missing before you try to fix everything',
+        paragraphs: [
+          '“I feel disconnected” is real, but it is broad. You may be missing someone to call in a difficult moment, a friend who initiates plans, a place where you can be playful, a partner who asks follow-up questions, or a community that sees you regularly. Different gaps need different responses. More parties will not necessarily solve the absence of one dependable person, and a new relationship cannot carry every unmet need without becoming overloaded.',
+          'Try finishing this sentence: “I would feel more connected if I had more…” Then choose one word: consistency, depth, affection, shared interests, honesty, support, novelty, or belonging. This turns a vague ache into a direction. It also protects you from chasing the wrong solution, such as filling every evening when what you actually want is one conversation where you do not have to perform.'
+        ],
+        bullets: [
+          'Consistency: someone who follows up and makes room repeatedly.',
+          'Depth: conversations that move beyond updates and opinions.',
+          'Belonging: a group where your presence is expected and welcomed.',
+          'Support: a person or service that can hold difficulty without making you feel like a burden.'
+        ]
+      },
+      {
+        heading: 'Notice the ways you protect yourself from being known',
+        paragraphs: [
+          'Disconnection is not always caused by the people around you. Sometimes you have learned to stay easy to like and difficult to know. You keep conversations light, answer “I am fine” automatically, cancel when you feel exposed, or wait for someone else to prove that they care before offering any sign that you do. These habits may have protected you from rejection or disappointment. They can also make closeness impossible to recognise when it arrives.',
+          'This is not an invitation to blame yourself. It is an invitation to test one safer alternative. Share a small truth rather than your entire history. Say that a week has been hard. Tell a friend what you would actually enjoy doing. Ask for a follow-up instead of hoping they guess. Then watch what happens. A person who responds with care is giving you evidence. A person who dismisses or exploits the opening is giving you different evidence, and you can adjust accordingly.'
+        ],
+        bullets: [
+          'Replace automatic “fine” with one accurate sentence.',
+          'Share something that is personal but not unsafe or overwhelming.',
+          'Ask a direct question instead of testing whether someone notices your silence.',
+          'Treat the other person’s response as information, not as a verdict on your worth.'
+        ],
+        image: '/blog/why-feel-disconnected-socially-listening.png',
+        imageWebp: '/blog/why-feel-disconnected-socially-listening.webp',
+        imageAlt: 'Two friends sit together on a park walk while one listens attentively',
+        imageCaption: 'Closeness often starts with one honest detail and a response that makes room for the next one.'
+      },
+      {
+        heading: 'Make a small bid for connection instead of waiting for the perfect moment',
+        paragraphs: [
+          'A bid for connection is a small attempt to share attention: sending a friend a voice note, asking what they really thought about something, inviting them to a specific plan, or saying, “I could use company this week.” It is not a demand for instant intimacy. It gives another person a clear opportunity to respond. Waiting for people to notice an unspoken need feels safer, but it also makes the result impossible to interpret. A direct bid creates information.',
+          'Keep the bid concrete and easy to answer. “Want to catch up sometime?” can disappear into a busy week. “I am free Thursday after seven—would you like to take a walk and hear what has been going on?” gives the relationship a shape. If the person cannot make that time, look for whether they suggest another. One missed plan is ordinary. A repeated absence of curiosity is a pattern worth noticing.'
+        ],
+        bullets: [
+          '“I have missed talking properly. Are you free for a call this weekend?”',
+          '“I want a low-key plan this week. Coffee on Wednesday?”',
+          '“I have had a strange week and could use a listening ear. Do you have capacity?”',
+          '“I would like us to see each other more regularly. What rhythm would work for you?”'
+        ]
+      },
+      {
+        heading: 'Use repetition instead of chasing intensity',
+        paragraphs: [
+          'Deep connection usually grows through repeated, ordinary contact. A weekly walk, monthly dinner, shared class, volunteer shift, or reliable check-in can do more for belonging than an occasional night that feels unusually exciting. Repetition gives people enough context to remember you, notice changes, and build trust without requiring either person to manufacture a dramatic moment.',
+          'Choose a rhythm that can survive your real life. If you are busy, make the invitation smaller: a twenty-minute call, a standing lunch, or a shared errand. Let the relationship become familiar before you judge it for lacking instant chemistry. At the same time, do not confuse repetition with reciprocity. A routine becomes connection when both people contribute, adjust, and show some interest in keeping it alive.'
+        ],
+        bullets: [
+          'Pick one activity that naturally repeats rather than relying on spontaneous availability.',
+          'Make plans specific enough to happen and flexible enough to survive a busy week.',
+          'Look for follow-through from both sides, not just the comfort of a calendar slot.',
+          'Let familiarity build trust; do not demand instant emotional intensity.'
+        ],
+        image: '/blog/why-feel-disconnected-socially-ritual.png',
+        imageWebp: '/blog/why-feel-disconnected-socially-ritual.webp',
+        imageAlt: 'A diverse group of adults meets regularly for a relaxed board game evening',
+        imageCaption: 'Shared routines create the repeated contact through which trust and belonging can grow.'
+      },
+      {
+        heading: 'Repair one thin relationship before collecting more people',
+        paragraphs: [
+          'When you feel disconnected, the instinct may be to start over with an entirely new social circle. New people can be wonderful, but sometimes one existing relationship has more potential than your current pattern allows. Maybe you only exchange logistics with a sibling, send memes instead of asking how a friend is doing, or keep waiting for an old friend to initiate. A small repair can reveal whether the relationship is merely underfed or genuinely unavailable.',
+          'Name the distance without making an accusation. “I have noticed we mostly exchange updates and I miss feeling closer. I would like to make more time if you do too” leaves room for an honest answer. The other person may welcome it, be unable to offer more, or suggest a different kind of connection. All three answers are useful. Repair is not persuading someone to become the person you need; it is making the relationship more truthful.'
+        ],
+        bullets: [
+          'Describe the current pattern rather than assigning a motive.',
+          'Say what you would like to try next.',
+          'Ask whether the other person has the interest and capacity to meet you there.',
+          'Accept a clear no or a repeated lack of effort as information.'
+        ]
+      },
+      {
+        heading: 'Let your online life support connection instead of replacing it',
+        paragraphs: [
+          'Digital contact can be genuinely meaningful, especially across distance or during periods when health, work, money, or access make in-person plans difficult. The problem is not that online relationships are unreal. It is that passive consumption can look like social participation while leaving you more aware of everyone else’s highlight reel and less involved in a reciprocal exchange.',
+          'Ask what your screen time is doing in the moment. Is it helping you talk to someone, join a community, learn a shared interest, or arrange a real plan? Or is it giving you a stream of other people’s closeness while your own needs stay unnamed? Adjust one part rather than declaring a total digital detox. Send a direct message, join a smaller group, mute comparison-heavy accounts, or put your phone away during one conversation so your attention can become visible.'
+        ],
+        bullets: [
+          'Choose active connection—conversation, collaboration, or shared practice—over endless observation.',
+          'Notice whether an online space leaves you supported, neutral, or more isolated.',
+          'Use technology to make a relationship easier to maintain, not to avoid every vulnerable moment.',
+          'Protect the attention that lets another person feel your presence.'
+        ]
+      },
+      {
+        heading: 'Know when disconnection needs more support',
+        paragraphs: [
+          'Feeling disconnected can follow a move, breakup, conflict, grief, burnout, discrimination, illness, a new job, or a long period of stress. It can also sit alongside anxiety or depression. You do not need to diagnose yourself from a blog post, and you should not treat social advice as a substitute for care. If the feeling is persistent, worsening, or interfering with work, relationships, sleep, daily tasks, or your ability to enjoy anything, consider speaking with a qualified professional.',
+          'For ordinary loneliness, start with a small, repeatable action and tell one trusted person what you are trying to change. For fear, hopelessness, severe anxiety, or thoughts of harming yourself, seek timely professional or crisis support in your country. The goal is not to force yourself to be more social at any cost. It is to have enough support to understand what is making connection difficult and choose a safe next step.'
+        ],
+        bullets: [
+          'Choose support when the feeling is limiting daily life, not only when it becomes unbearable.',
+          'A therapist, counsellor, primary-care clinician, or local support service can help you explore the pattern.',
+          'You are allowed to ask for care before you have a neat explanation.'
+        ]
+      },
+      {
+        heading: 'A seven-day connection reset',
+        paragraphs: [
+          'Do not try to rebuild your entire social life in a week. Use seven days to gather evidence about what helps you feel more present and what drains you. Each action should be small enough to complete and specific enough to review. The purpose is not to create a perfect streak. It is to replace vague self-judgment with a few real experiments.',
+          'On day one, name the kind of connection you miss. On day two, send one specific invitation. On day three, share one honest but manageable detail. On day four, attend or return to a repeatable group or activity. On day five, ask one follow-up question and stay with the answer. On day six, repair or clarify one thin relationship. On day seven, write down which people, places, and rhythms made it easier to be yourself. Keep the smallest useful action and repeat it next week.'
+        ],
+        bullets: [
+          'Day 1: name the missing quality—depth, consistency, support, affection, or belonging.',
+          'Day 2: make one clear invitation with a time or activity.',
+          'Day 3: replace “fine” with one honest sentence.',
+          'Day 4: join a repeated activity or return to a familiar place.',
+          'Day 5: ask a follow-up question and listen without planning your next line.',
+          'Day 6: name a distance in one relationship and offer a small repair.',
+          'Day 7: review what created mutual effort and choose one rhythm to keep.'
+        ]
+      },
+      {
+        heading: 'Connection is built from attention that comes back',
+        paragraphs: [
+          'You do not need to become more entertaining, available, or surrounded by people to deserve closeness. Start by making the missing need specific, offering one honest bid, and watching whether attention comes back. The right relationship may not answer perfectly every time, but it will contain some curiosity, repair, and willingness to make room.',
+          'A social life can look full and still need redesign. Keep the contact that nourishes you, make the weak ties more intentional when there is mutual interest, and step back from patterns that repeatedly make you feel invisible. Connection is not a performance you complete alone. It is a pattern two or more people build through presence, honesty, and return.'
+        ],
+        bullets: [
+          'Be specific about the kind of connection you want.',
+          'Make a small bid that another person can actually answer.',
+          'Build repetition, not just intensity.',
+          'Let reciprocity—not wishful thinking—guide your next investment.'
         ]
       }
     ]

@@ -1,6 +1,7 @@
 package app.vercel.rizzmaster;
 
 import android.app.Activity;
+import androidx.lifecycle.Lifecycle;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -28,6 +29,7 @@ public class AdsStartupPlugin extends Plugin {
         result.put("sdkReady", sdkReady);
         result.put("busy", refreshing || formOpen || sdkStarting);
         result.put("formOpen", formOpen);
+        result.put("presentationRecovery", true);
         result.put("error", error);
         return result;
     }
@@ -70,6 +72,18 @@ public class AdsStartupPlugin extends Plugin {
     }
 
     @PluginMethod public void getState(PluginCall call) { onUi(call, () -> call.resolve(state())); }
+
+    @PluginMethod public void getPresentationState(PluginCall call) {
+        onUi(call, () -> {
+            // Foreground JS alone is not proof that an SDK Activity/dialog ended.
+            // Both the host lifecycle and native input focus must have returned.
+            boolean interactive = getActivity().getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED)
+                && getActivity().hasWindowFocus();
+            JSObject result = new JSObject();
+            result.put("hostInteractive", interactive);
+            call.resolve(result);
+        });
+    }
 
     @PluginMethod public void start(PluginCall call) {
         onUi(call, () -> {

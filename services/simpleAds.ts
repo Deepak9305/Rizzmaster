@@ -4,9 +4,24 @@ import { observeBannerForeground } from './bannerLifecycle';
 import { getAdDeliveryDiagnostics, recordAdEvent } from './adDiagnostics';
 
 export const usesSimpleAds = () => Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('AdsStartup');
-export type AdsState = { canRequestAds: boolean; sdkReady: boolean; privacyOptionsRequired: boolean; busy: boolean; formOpen: boolean; error?: string };
+export type AdsState = { canRequestAds: boolean; sdkReady: boolean; privacyOptionsRequired: boolean; busy: boolean; formOpen: boolean; presentationRecovery?: boolean; error?: string };
+export type RewardResult = { earned: boolean; reason?: 'busy' | 'offline' | 'not-ready' | 'cancelled' | 'load-failed' | 'retry-wait' | 'load-pending' | 'show-failed' | 'show-pending' | 'closed-without-reward'; retryAfterSeconds?: number };
+export const rewardFailureMessage = (result: RewardResult): string => {
+    switch (result.reason) {
+        case 'busy': return 'The previous ad session is still closing. Please wait a moment.';
+        case 'offline': return 'You are offline. Reconnect to load an ad.';
+        case 'not-ready': return 'Ads are still getting ready. Please try again shortly.';
+        case 'load-pending': return 'The ad is still loading. Please wait a moment.';
+        case 'retry-wait': return `No ad is available yet. Please try again in ${result.retryAfterSeconds || 60} seconds.`;
+        case 'show-pending': return 'The ad is still opening. Please wait before trying again.';
+        case 'show-failed': return 'The ad could not open. Please try again.';
+        case 'closed-without-reward': return 'The ad ended without confirming a reward. Any delayed earned reward will still be added.';
+        default: return 'The ad could not load right now. Please try again shortly.';
+    }
+};
 const Startup = registerPlugin<{
     start(): Promise<AdsState>; getState(): Promise<AdsState>; showPrivacyOptions(): Promise<AdsState>;
+    getPresentationState(): Promise<{ hostInteractive: boolean }>;
     addListener(event: 'stateChanged', callback: (state: AdsState) => void): Promise<PluginListenerHandle>;
 }>('AdsStartup');
 
@@ -171,39 +186,92 @@ export const SimpleAds = {
             .finally(() => { this.loadTask = null; this.notify(); this.schedule(); });
         return bounded('Reward load', this.loadTask, 35000).catch(() => false);
     },
-    async showRewardVideo(adId: string, _ssv?: unknown, onShow?: () => void, onEarned?: () => void): Promise<boolean> {
-        if (this.isRewardVideoShowing) return false;
+    async showRewardVideo(adId: string, ssv?: unknown, onShow?: () => void, onEarned?: () => void): Promise<boolean> {
+        return (await this.watchRewardVideo(adId, ssv, onShow, onEarned)).earned;
+    },
+    async watchRewardVideo(adId: string, _ssv?: unknown, onShow?: () => void, onEarned?: () => void, onChecking?: () => void): Promise<RewardResult> {
+        const fail = (reason: NonNullable<RewardResult['reason']>, retryAfterSeconds?: number): RewardResult => {
+            recordAdEvent(`reward.blocked.${reason}`);
+            return { earned: false, reason, ...(retryAfterSeconds === undefined ? {} : { retryAfterSeconds }) };
+        };
+        if (this.isRewardVideoShowing) return fail('busy');
         const actionVersion = this.actionVersion;
-        if (!await this.waitForRewardReady(actionVersion) || actionVersion !== this.actionVersion) return false;
+        if (!await this.waitForRewardReady(actionVersion)) return fail(actionVersion !== this.actionVersion ? 'cancelled' : !this.online ? 'offline' : 'not-ready');
+        if (actionVersion !== this.actionVersion) return fail('cancelled');
         const generation = this.generation;
-        if (!await this.prepareRewardVideo(adId) || !this.ready() || generation !== this.generation || actionVersion !== this.actionVersion || this.isRewardVideoShowing) return false;
+        if (!await this.prepareRewardVideo(adId)) return fail(this.loadTask ? 'load-pending' : Date.now() < this.loadRetryAt ? 'retry-wait' : 'load-failed', Math.max(0, Math.ceil((this.loadRetryAt - Date.now()) / 1000)));
+        if (generation !== this.generation || actionVersion !== this.actionVersion) return fail('cancelled');
+        if (this.isRewardVideoShowing) return fail('busy');
+        if (!this.ready()) return fail(!this.online ? 'offline' : 'not-ready');
         this.isRewardVideoShowing = true;
         this.notify();
         const handles: PluginListenerHandle[] = [];
-        let issued = false, earned = false, ended = false, uiResolved = false;
+        let issued = false, earned = false, ended = false, uiResolved = false, dismissed = false;
+        const canCheckReturn = this.state.presentationRecovery === true;
+        let checkingReturn = false, returnedAt: number | null = null;
         let timer: ReturnType<typeof setTimeout> | null = null;
         let grace: ReturnType<typeof setTimeout> | null = null;
-        let resolveUi: (value: boolean) => void;
-        const result = new Promise<boolean>(resolve => { resolveUi = resolve; });
-        const deliver = () => { if (!uiResolved) { uiResolved = true; resolveUi(earned); } };
+        let returnTimer: ReturnType<typeof setTimeout> | null = null;
+        let resolveUi: (value: RewardResult) => void;
+        const result = new Promise<RewardResult>(resolve => { resolveUi = resolve; });
+        const deliver = (reason: RewardResult['reason']) => { if (!uiResolved) { uiResolved = true; resolveUi(earned ? { earned: true } : { earned: false, reason }); } };
         const reward = (info: { amount?: number }) => {
-            if (!issued || ended || earned || generation !== this.generation || !Number.isFinite(Number(info?.amount)) || Number(info?.amount) <= 0) return;
+            // The stock show promise resolves ONLY from this viewing's native earned
+            // callback. Keep accepting it after UI cleanup; global events have no ad ID
+            // and can otherwise credit a later viewing for an older ad's callback.
+            if (!issued || earned || actionVersion !== this.actionVersion || !Number.isFinite(Number(info?.amount)) || Number(info?.amount) <= 0) return;
             earned = true;
             recordAdEvent('reward.earned');
             onEarned?.();
         };
-        const finish = () => {
+        const finish = (reason: RewardResult['reason'] = 'closed-without-reward') => {
             if (ended) return;
             ended = true;
             if (timer) clearTimeout(timer);
             if (grace) clearTimeout(grace);
+            if (returnTimer) clearTimeout(returnTimer);
+            stopReturnChecks();
             handles.forEach(handle => { void handle.remove().catch(() => {}); });
             this.isRewardVideoShowing = false;
             this.rewardVideoDisplayStarted = false;
             this.notify();
-            deliver();
+            deliver(reason);
             this.schedule();
         };
+        const fallbackDismissal = () => {
+            if (!grace && dismissed && !ended) grace = setTimeout(() => finish(), 5000);
+        };
+        const checkReturn = async () => {
+            if (ended || !issued || !this.active || checkingReturn || !canCheckReturn) return;
+            checkingReturn = true;
+            try {
+                const state = await bounded('Ad presentation state', Startup.getPresentationState(), 2500);
+                if (ended) return;
+                if (state.hostInteractive === true && this.rewardVideoDisplayStarted) {
+                    if (returnedAt === null) { returnedAt = Date.now(); onChecking?.(); }
+                    if (Date.now() - returnedAt >= 5000) {
+                        recordAdEvent(dismissed ? 'reward.returned' : 'reward.recovered-missing-dismissal');
+                        finish(); return;
+                    }
+                } else {
+                    // A pod transition can briefly resume the host. Require a stable
+                    // focused host, never unlock simply because JS resumed or time passed.
+                    returnedAt = null;
+                }
+            } catch {
+                // A transient bridge failure is not evidence that the ad ended.
+                returnedAt = null;
+                recordAdEvent('reward.presentation-unavailable');
+            } finally {
+                checkingReturn = false;
+                if (!ended && this.active && canCheckReturn) returnTimer = setTimeout(() => { returnTimer = null; void checkReturn(); }, 1000);
+            }
+        };
+        const stopReturnChecks = this.subscribeReadiness(() => {
+            if (returnTimer) { clearTimeout(returnTimer); returnTimer = null; }
+            if (!this.active) returnedAt = null;
+            else void checkReturn();
+        });
         const add = async (event: any, callback: (info: any) => void) => {
             let expired = false;
             const registration = AdMob.addListener(event, callback);
@@ -214,28 +282,32 @@ export const SimpleAds = {
         try {
             await add(RewardAdPluginEvents.Showed, () => {
                 if (!issued || ended) return;
+                dismissed = false; returnedAt = null;
+                if (grace) { clearTimeout(grace); grace = null; }
                 this.rewardVideoDisplayStarted = true;
                 if (timer) clearTimeout(timer);
                 recordAdEvent('reward.shown'); onShow?.();
+                void checkReturn();
             });
-            await add(RewardAdPluginEvents.Rewarded, reward);
+            await add(RewardAdPluginEvents.Rewarded, () => { if (issued && !ended) recordAdEvent('reward.callback'); });
             await add(RewardAdPluginEvents.Dismissed, () => {
                 if (!issued || ended) return;
+                dismissed = true;
                 recordAdEvent('reward.dismissed');
-                // Allow a mediated earned callback that arrives just after dismissal.
-                grace = setTimeout(finish, 2000);
+                onChecking?.();
+                if (canCheckReturn) void checkReturn(); else fallbackDismissal();
             });
-            await add(RewardAdPluginEvents.FailedToShow, () => { if (issued) finish(); });
-            if (!this.ready() || generation !== this.generation) { finish(); return result; }
+            await add(RewardAdPluginEvents.FailedToShow, error => { if (issued) { recordAdEvent('reward.show-failed', error?.code); finish('show-failed'); } });
+            if (!this.ready() || generation !== this.generation) { finish('cancelled'); return result; }
             this.cachedAdId = ''; this.rewardVideoPreparedAt = 0;
             issued = true;
             timer = setTimeout(() => {
                 // A native show cannot be cancelled through stock plugin APIs. Release
                 // the UI wait, but retain ownership until a terminal native callback.
-                recordAdEvent('reward.show-timeout'); deliver();
+                recordAdEvent('reward.show-timeout'); deliver('show-pending');
             }, 40000);
-            void AdMob.showRewardVideoAd({ adId }).then(reward, () => finish());
-        } catch (e) { console.warn('[Ads] Reward unavailable', e); finish(); }
+            void AdMob.showRewardVideoAd({ adId }).then(reward, error => { recordAdEvent('reward.show-failed', error?.code); finish('show-failed'); });
+        } catch (e) { console.warn('[Ads] Reward unavailable', e); finish('show-failed'); }
         return result;
     },
 };

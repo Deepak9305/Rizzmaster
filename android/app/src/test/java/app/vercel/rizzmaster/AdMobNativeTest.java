@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.Lifecycle;
 import android.content.Context;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.PluginCall;
@@ -18,6 +19,26 @@ import org.junit.Test;
 import org.mockito.MockedStatic;
 
 public class AdMobNativeTest {
+    @Test public void presentationRequiresResumedHostAndNativeWindowFocus() throws Exception {
+        AppCompatActivity activity = mock(AppCompatActivity.class);
+        Lifecycle lifecycle = mock(Lifecycle.class);
+        when(activity.getLifecycle()).thenReturn(lifecycle);
+        doAnswer(i -> { i.getArgument(0, Runnable.class).run(); return null; }).when(activity).runOnUiThread(any());
+        AdsStartupPlugin plugin = new AdsStartupPlugin() {
+            @Override public AppCompatActivity getActivity() { return activity; }
+        };
+        for (Lifecycle.State state : new Lifecycle.State[] {Lifecycle.State.STARTED, Lifecycle.State.RESUMED}) {
+            for (boolean focused : new boolean[] {false, true}) {
+                when(lifecycle.getCurrentState()).thenReturn(state);
+                when(activity.hasWindowFocus()).thenReturn(focused);
+                PluginCall call = mock(PluginCall.class);
+                plugin.getPresentationState(call);
+                org.mockito.ArgumentCaptor<JSObject> result = org.mockito.ArgumentCaptor.forClass(JSObject.class);
+                verify(call).resolve(result.capture());
+                assertEquals(state == Lifecycle.State.RESUMED && focused, result.getValue().getBoolean("hostInteractive"));
+            }
+        }
+    }
     @Test public void startupWaitsForSdkAndDoesNotRequireBannerLayout() throws Exception {
         AppCompatActivity activity = mock(AppCompatActivity.class);
         Context context = mock(Context.class);
