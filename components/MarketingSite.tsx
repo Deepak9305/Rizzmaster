@@ -993,6 +993,13 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'how-to-tell-if-someone-is-emotionally-available', label: 'Recognize emotional availability' },
     { slug: 'texting-boundaries-while-dating', label: 'Set healthy dating boundaries' },
     { slug: 'how-to-pace-a-new-relationship-without-losing-yourself', label: 'Keep a healthy relationship pace' }
+  ],
+  'how-to-reconnect-with-an-old-friend-after-months-of-silence': [
+    { slug: 'how-to-make-friends-as-an-adult-when-life-feels-too-busy', label: 'Build friendships that fit your life' },
+    { slug: 'how-to-make-small-talk-when-you-have-nothing-in-common', label: 'Make everyday conversations easier' },
+    { slug: 'how-to-have-a-difficult-conversation-without-getting-defensive', label: 'Handle a difficult conversation' },
+    { slug: 'why-you-feel-disconnected-from-people-even-when-you-are-social', label: 'Understand why you feel disconnected' },
+    { slug: 'how-to-stop-people-pleasing-without-feeling-selfish', label: 'Set boundaries without disappearing' }
   ]
 };
 
