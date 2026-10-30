@@ -676,6 +676,8 @@ html:not(.native-app) .web-app-root {
 }
 
 .web-support-banner--guide .web-support-banner-logo {
+  width: 2.85rem;
+  height: 2.85rem;
   border-color: rgba(255, 132, 196, 0.48);
   box-shadow: 0 0 18px rgba(255, 73, 170, 0.26);
 }
