@@ -1000,6 +1000,13 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'how-to-have-a-difficult-conversation-without-getting-defensive', label: 'Handle a difficult conversation' },
     { slug: 'why-you-feel-disconnected-from-people-even-when-you-are-social', label: 'Understand why you feel disconnected' },
     { slug: 'how-to-stop-people-pleasing-without-feeling-selfish', label: 'Set boundaries without disappearing' }
+  ],
+  'what-to-do-when-you-outgrow-your-friend-group': [
+    { slug: 'how-to-make-friends-as-an-adult-when-life-feels-too-busy', label: 'Build friendships that fit your life' },
+    { slug: 'how-to-reconnect-with-an-old-friend-after-months-of-silence', label: 'Reconnect without making it awkward' },
+    { slug: 'why-you-feel-disconnected-from-people-even-when-you-are-social', label: 'Understand feeling disconnected' },
+    { slug: 'how-to-have-a-difficult-conversation-without-getting-defensive', label: 'Have a difficult conversation' },
+    { slug: 'how-to-stop-people-pleasing-without-feeling-selfish', label: 'Set boundaries without guilt' }
   ]
 };
 

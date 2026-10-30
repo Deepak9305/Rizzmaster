@@ -83,8 +83,8 @@ const WEB_PROMOTIONS = [
   {
     kind: 'guide',
     href: GUMROAD_GUIDE_URL,
-    icon: '🫦',
-    logo: '',
+    icon: '',
+    logo: '/promotions/make-her-think-about-you-lip-icon.webp',
     eyebrow: 'Make her think about you every night',
     title: 'Get the PDF',
     ariaLabel: 'Get the Make Her Think About You PDF guide on Gumroad',
