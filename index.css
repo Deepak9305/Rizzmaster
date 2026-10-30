@@ -669,6 +669,26 @@ html:not(.native-app) .web-app-root {
   letter-spacing: 0.01em;
 }
 
+.web-support-banner--guide {
+  border-color: rgba(255, 109, 178, 0.38);
+  background: linear-gradient(105deg, #35142c, #180d1d 58%, #111326);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 14px 32px rgba(77, 27, 76, 0.3), 0 0 28px rgba(255, 73, 170, 0.08);
+}
+
+.web-support-banner--guide .web-support-banner-logo {
+  border-color: rgba(255, 132, 196, 0.48);
+  box-shadow: 0 0 18px rgba(255, 73, 170, 0.26);
+}
+
+.web-support-banner--guide .web-support-banner-eyebrow {
+  color: rgba(255, 218, 239, 0.72);
+}
+
+.web-support-banner--guide .web-support-banner-title {
+  color: #ffd3ed;
+  letter-spacing: 0.01em;
+}
+
 @keyframes web-support-coffee-glow {
   0%, 100% { box-shadow: 0 0 14px rgba(255, 190, 93, 0.14); transform: translateY(0); }
   50% { box-shadow: 0 0 22px rgba(255, 190, 93, 0.3); transform: translateY(-1px); }

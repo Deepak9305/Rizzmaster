@@ -59,6 +59,7 @@ const RIZZ_SHARING_ENABLED = canUseRizzSharing();
 const STARTUP_ANIMATION_MS = IS_WEB_PLATFORM ? 2200 : 3000;
 const KOFI_SUPPORT_URL = 'https://ko-fi.com/vantalumstudio';
 const RIZZLINE_PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.rizzline.app';
+const GUMROAD_GUIDE_URL = 'https://ameliasmithreal.gumroad.com/l/yzcpp';
 const WEB_PROMOTION_ROTATION_MS = 10_000;
 const WEB_PROMOTIONS = [
   {
@@ -78,6 +79,15 @@ const WEB_PROMOTIONS = [
     eyebrow: 'Need a pickup line that works?',
     title: 'Install Rizzline',
     ariaLabel: 'Get Rizzline pickup lines on Google Play',
+  },
+  {
+    kind: 'guide',
+    href: GUMROAD_GUIDE_URL,
+    icon: '',
+    logo: '/promotions/make-her-think-about-you-cover.webp',
+    eyebrow: '32-page guide · instant PDF · PPP pricing',
+    title: 'Make conversations linger',
+    ariaLabel: 'Get the Make Her Think About You PDF guide on Gumroad',
   },
 ] as const;
 const SILENT_PREMIUM_RESTORE_WAIT_MS = 45000;
@@ -469,7 +479,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const [showSavedModal, setShowSavedModal] = useState(false);
   const [showRizzShareCard, setShowRizzShareCard] = useState(false);
   const [showWebMenu, setShowWebMenu] = useState(false);
-  const [webPromotionIndex, setWebPromotionIndex] = useState(0);
+  const [webPromotionIndex, setWebPromotionIndex] = useState(() => IS_WEB_PLATFORM ? Math.floor(Math.random() * WEB_PROMOTIONS.length) : 0);
   const [isWebPromotionPaused, setIsWebPromotionPaused] = useState(false);
   const [showWebPremiumModal, setShowWebPremiumModal] = useState(false);
   const [webPremiumReason, setWebPremiumReason] = useState<'credits' | 'premium'>('premium');
@@ -2835,7 +2845,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                   {WEB_PROMOTIONS[webPromotionIndex].logo ? (
                     <picture className="web-support-banner-logo" aria-hidden="true">
                       <source srcSet={WEB_PROMOTIONS[webPromotionIndex].logo} type="image/webp" />
-                      <img src="/rizzline-banner-logo.png" alt="" width="32" height="32" />
+                      <img src={WEB_PROMOTIONS[webPromotionIndex].logo} alt="" width="32" height="32" />
                     </picture>
                   ) : (
                     <span className="web-support-banner-icon" aria-hidden="true">{WEB_PROMOTIONS[webPromotionIndex].icon}</span>

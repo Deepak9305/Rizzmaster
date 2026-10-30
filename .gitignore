@@ -16,6 +16,7 @@ pnpm-debug.log*
 
 .vercel
 .idea/
+tmp/image-library/
 .env*
 migration/
 .tmp-rizz-*.png
