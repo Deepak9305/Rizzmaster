@@ -84,9 +84,9 @@ const WEB_PROMOTIONS = [
     kind: 'guide',
     href: GUMROAD_GUIDE_URL,
     icon: '',
-    logo: '/promotions/make-her-think-about-you-cover.webp',
-    eyebrow: '32-page guide · instant PDF · PPP pricing',
-    title: 'Make conversations linger',
+    logo: '/promotions/make-her-think-about-you-banner.webp',
+    eyebrow: 'Make her think about you every night',
+    title: 'Get the PDF',
     ariaLabel: 'Get the Make Her Think About You PDF guide on Gumroad',
   },
 ] as const;
