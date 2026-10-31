@@ -1007,6 +1007,13 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'why-you-feel-disconnected-from-people-even-when-you-are-social', label: 'Understand feeling disconnected' },
     { slug: 'how-to-have-a-difficult-conversation-without-getting-defensive', label: 'Have a difficult conversation' },
     { slug: 'how-to-stop-people-pleasing-without-feeling-selfish', label: 'Set boundaries without guilt' }
+  ],
+  'why-you-feel-behind-in-life-when-everyone-else-seems-ahead': [
+    { slug: 'how-to-stop-comparing-your-life-to-everyone-else-online', label: 'Stop letting comparison run your life' },
+    { slug: 'how-to-make-friends-as-an-adult-when-life-feels-too-busy', label: 'Build a social life that fits your week' },
+    { slug: 'how-to-stop-people-pleasing-without-feeling-selfish', label: 'Protect your priorities without guilt' },
+    { slug: 'why-you-feel-disconnected-from-people-even-when-you-are-social', label: 'Understand feeling disconnected' },
+    { slug: 'how-to-have-a-difficult-conversation-without-getting-defensive', label: 'Talk about pressure without a fight' }
   ]
 };
 
