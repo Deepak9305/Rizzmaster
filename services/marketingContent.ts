@@ -9060,7 +9060,7 @@ export const BLOG_POSTS: BlogPost[] = [
       'overexplaining anxiety',
       'how to apologise without making excuses'
     ],
-    image: '/blog/why-you-overexplain-yourself-hero.svg',
+    image: '/blog/why-you-overexplain-yourself-hero.png',
     imageAlt: 'A clear message separated from a tangled group of extra explanations',
     imageCaption: 'Clarity is not the same as emotional distance. A clear message gives the important part enough room to be understood.',
     resources: [
@@ -9094,7 +9094,7 @@ export const BLOG_POSTS: BlogPost[] = [
           'Then decide whether one piece of context changes what the person can reasonably do next. “I cannot make Friday because I have a family commitment” may be enough. “I cannot make Friday” may be enough too. The schedule, your guilt about cancelling, the history of every time you have been late, and the reasons you hope they are not offended usually belong in your private processing rather than the message.',
           'A useful test is removal. Delete the second sentence and read the first one alone. If the message is still accurate and actionable, keep the shorter version. You are not withholding the truth; you are separating the decision from the urge to manage every interpretation of it.'
         ],
-        image: '/blog/why-you-overexplain-yourself-point.svg',
+        image: '/blog/why-you-overexplain-yourself-point.png',
         imageAlt: 'A three-step message structure showing the point, useful context, and next step',
         imageCaption: 'A strong message has a centre: point first, only-useful context second, and a clear next step when one is needed.'
       },
@@ -9134,7 +9134,7 @@ export const BLOG_POSTS: BlogPost[] = [
           'Compare “I am really sorry, I feel terrible, I know this is probably annoying, and I promise I am not trying to be difficult, but I just have so much going on…” with “I am sorry, I cannot take this on today. I can look at it tomorrow morning.” The second message is not colder. It is easier to trust because the decision and the available action are visible.',
           'If you worry that directness sounds harsh, read the message aloud once. Add one human sentence if needed, not five protective ones. “I appreciate you thinking of me” or “I like talking with you” can carry more warmth than a paragraph of self-defence.'
         ],
-        image: '/blog/why-you-overexplain-yourself-warmth.svg',
+        image: '/blog/why-you-overexplain-yourself-warmth.png',
         imageAlt: 'A warm concise message beside a longer message filled with repeated apologies',
         imageCaption: 'Warmth comes from acknowledgement and respect—not from making the other person read your entire internal debate.'
       },
