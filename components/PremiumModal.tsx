@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import IAPService from '../services/iapService';
 import { canUseNativeIap } from '../services/nativeCapabilities';
+import PremiumBenefits from './PremiumBenefits';
 
 interface PremiumModalProps {
     onClose: () => void;
@@ -10,15 +11,6 @@ interface PremiumModalProps {
     userId?: string | null;
 }
 
-// Only list features that are ACTUALLY gated behind premium
-const FEATURES = [
-    { icon: '⚡', label: 'Unlimited Daily Generations', sub: 'Free users get 5/day. You get infinite.' },
-    { icon: '🧠', label: 'Rizz Coach – Unlimited Sessions', sub: 'Free users get 1 coach persona. You get all 3.' },
-    { icon: '🎭', label: 'All Pro Vibes Unlocked', sub: 'Access every expert style — Roast Master, Unhinged & more.' },
-    { icon: '🚫', label: 'Zero Ads', sub: 'No interstitial ads interrupting your flow.' },
-    { icon: '📸', label: 'Priority Photo Analysis', sub: 'Faster queue, deeper reads on screenshots.' },
-    { icon: '🔥', label: 'Early Access to New Features', sub: 'First to get everything we ship.' },
-];
 
 const PremiumModal: React.FC<PremiumModalProps> = ({
     onClose,
@@ -28,7 +20,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
     userId = null,
 }) => {
     const [selectedPlan, setSelectedPlan] = useState<'WEEKLY' | 'MONTHLY'>('WEEKLY');
-    const [prices, setPrices] = useState({ weekly: '$4.99', monthly: '$15.99' });
+    const [prices, setPrices] = useState({ weekly: '', monthly: '' });
     const [isSubscribing, setIsSubscribing] = useState(false);
     const hasNativePurchases = canUseNativeIap();
 
@@ -70,17 +62,6 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
         }
     };
 
-    const computeSavings = () => {
-        const w = parseFloat(prices.weekly.replace(/[^0-9.]/g, ''));
-        const m = parseFloat(prices.monthly.replace(/[^0-9.]/g, ''));
-        if (!isNaN(w) && !isNaN(m)) {
-            const savings = Math.round((1 - (m / 4.33 / w)) * 100);
-            return savings > 0 ? savings : null;
-        }
-        return null;
-    };
-    const savings = computeSavings();
-
     return (
         <div className="app-modal fixed inset-0 z-50 flex items-center justify-center p-4">
             <div
@@ -88,13 +69,14 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
                 onClick={onClose}
             />
 
-            <div className="app-card relative bg-[#111] rounded-3xl p-6 md:p-8 max-w-sm w-full border border-yellow-500/30 overflow-hidden shadow-2xl shadow-yellow-500/10 animate-scale-in overflow-y-auto max-h-[90dvh]">
+            <div role="dialog" aria-modal="true" aria-labelledby="native-premium-title" className="app-card relative bg-[#111] rounded-3xl p-6 md:p-8 max-w-sm w-full border border-yellow-500/30 overflow-hidden shadow-2xl shadow-yellow-500/10 animate-scale-in overflow-y-auto max-h-[90dvh]">
                 {/* Gold top bar */}
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-600" />
 
                 {/* Close */}
                 <button
                     onClick={onClose}
+                    aria-label="Close premium options"
                     className="absolute top-4 right-4 text-white/30 hover:text-white"
                 >
                     ✕
@@ -105,36 +87,23 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
                     <div className="w-14 h-14 mx-auto mb-3 bg-yellow-500/10 rounded-full flex items-center justify-center text-2xl border border-yellow-500/20 animate-pulse-glow">
                         👑
                     </div>
-                    <h2 className="text-xl md:text-2xl font-bold text-white mb-1">
+                    <h2 id="native-premium-title" className="text-xl md:text-2xl font-bold text-white mb-1">
                         Unlock God Mode
                     </h2>
                     <p className="text-xs text-white/40">
-                        Everything unlocked. No limits. No ads.
+                        All premium styles. No daily credit limits.
                     </p>
                 </div>
 
                 {/* Urgency banner */}
                 <div className="bg-rose-500/10 border border-rose-500/25 rounded-xl px-3 py-2 mb-5 text-center">
                     <p className="text-[11px] text-rose-300 font-semibold">
-                        🔥 &nbsp;Launch pricing — may increase anytime
+                        ✨ &nbsp;One account. Premium on web and Android.
                     </p>
                 </div>
 
                 {/* Features */}
-                <ul className="space-y-3 mb-6">
-                    {FEATURES.map((f, i) => (
-                        <li key={i} className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-yellow-500/8 border border-yellow-500/15 flex items-center justify-center text-sm flex-shrink-0">
-                                {f.icon}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <div className="text-sm text-white/90 font-semibold leading-tight">{f.label}</div>
-                                <div className="text-[10px] text-white/35 leading-tight mt-0.5">{f.sub}</div>
-                            </div>
-                            <span className="text-green-500 text-sm flex-shrink-0">✓</span>
-                        </li>
-                    ))}
-                </ul>
+                <PremiumBenefits />
 
                 {/* Plan selector */}
                 <div className="grid grid-cols-2 gap-3 mb-5">
@@ -153,15 +122,10 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
                                         : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/10'
                                 }`}
                             >
-                                {plan === 'MONTHLY' && savings && (
-                                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-gradient-to-r from-rose-500 to-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shadow-lg">
-                                        SAVE {savings}%
-                                    </div>
-                                )}
                                 <span className="text-[10px] font-bold uppercase tracking-wider mb-1 opacity-70">{label}</span>
-                                <span className="text-lg font-black text-yellow-400">{price}</span>
+                                <span className={`${price ? 'text-lg' : 'text-xs'} font-black text-yellow-400`}>{price || 'Price in Google Play'}</span>
                                 <span className="text-[9px] text-white/30 mt-0.5">
-                                    {plan === 'WEEKLY' ? 'billed weekly' : 'best value'}
+                                    {plan === 'WEEKLY' ? 'billed weekly' : 'billed monthly'}
                                 </span>
                             </button>
                         );
@@ -181,7 +145,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
                     </span>
                     <span className="text-[10px] opacity-80 uppercase mt-0.5">
                         {hasNativePurchases
-                            ? (selectedPlan === 'WEEKLY' ? `${prices.weekly} billed weekly` : `${prices.monthly} billed monthly`)
+                            ? (prices[selectedPlan === 'WEEKLY' ? 'weekly' : 'monthly'] ? (selectedPlan === 'WEEKLY' ? `${prices.weekly} billed weekly` : `${prices.monthly} billed monthly`) : 'Confirm price in Google Play')
                             : 'Free account required · Takes 30 seconds'}
                     </span>
                 </button>
@@ -195,7 +159,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
                         Restore Purchases
                     </button>
                     <p className="text-center text-[10px] text-white/20">
-                        Recurring billing. Cancel anytime in App Store / Play Store.
+                        Recurring billing. Cancel your Google Play subscription in Google Play.
                     </p>
                 </div>
             </div>

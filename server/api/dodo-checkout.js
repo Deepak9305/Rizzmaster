@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { applyCors } from './_cors.js';
+import { countryPricing, getPricingCountry } from './_dodo-pricing.js';
 import { ensureUserProfile } from './_profiles.js';
 import { supabaseAdmin } from './_supabase.js';
 import {
@@ -136,7 +137,7 @@ export default async function handler(req, res) {
     }
     const session = await client.checkoutSessions.create({
       product_cart: [{ product_id: plan.id, quantity: 1 }],
-      billing_currency: 'USD',
+      ...countryPricing(getPricingCountry(req)),
       customer: {
         email: auth.user.email,
         name: auth.user.user_metadata?.full_name || auth.user.user_metadata?.name || undefined,

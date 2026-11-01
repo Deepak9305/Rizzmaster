@@ -28,13 +28,11 @@ export const dodoConfig = {
     WEEKLY: {
       id: readEnv('DODO_PAYMENTS_WEEKLY_PRODUCT_ID'),
       label: 'Weekly',
-      price: '$4.99',
       interval: 'week',
     },
     MONTHLY: {
       id: readEnv('DODO_PAYMENTS_MONTHLY_PRODUCT_ID'),
       label: 'Monthly',
-      price: '$15.99',
       interval: 'month',
     },
   },

@@ -6,7 +6,10 @@ export type DodoPlanId = 'WEEKLY' | 'MONTHLY';
 export interface DodoPlan {
   id: DodoPlanId;
   label: string;
-  price: string;
+  price: string | null;
+  currency?: string;
+  dueToday?: string;
+  trialDays?: number;
   interval: string;
   available: boolean;
 }
@@ -43,11 +46,15 @@ const billingRequest = async <T>(path: string, init: RequestInit = {}): Promise<
   return payload as T;
 };
 
-export const getDodoPlans = () => billingRequest<{
+export const getDodoPlans = async () => {
+  const response = await fetch(getApiUrl('/api/dodo-plans'), { signal: AbortSignal.timeout(15000) });
+  if (!response.ok) throw new Error('Could not load prices.');
+  return response.json() as Promise<{
   enabled: boolean;
-  currency: string;
+  country: string | null;
   plans: DodoPlan[];
-}>('/api/dodo-plans');
+  }>;
+};
 
 export const startDodoCheckout = (plan: DodoPlanId) => billingRequest<{ checkoutUrl: string }>(
   '/api/dodo-checkout',

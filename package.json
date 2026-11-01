@@ -13,7 +13,7 @@
     "preview": "vite preview",
     "test:rizzline": "node --test tests/rizzline.test.mjs",
     "test:sharing": "node --test tests/web-rizz-sharing.test.mjs tests/native-rizz-sharing.test.mjs",
-    "test:dodo": "node --test tests/dodo-billing.test.mjs",
+    "test:dodo": "node --test tests/dodo-billing.test.mjs tests/dodo-pricing.test.mjs",
     "test:rewarded": "node --test tests/rewarded-ad.test.mjs tests/rewarded-ad-runtime.test.mjs",
     "test:admob": "node --test --test-concurrency=1 tests/admob.test.mjs tests/simple-ads.test.mjs",
     "test:ads-db": "node --test tests/reward-claims-db.test.mjs",
