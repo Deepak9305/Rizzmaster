@@ -2,6 +2,52 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Compact premium cards: keep purchase controls in view on phone screens. */
+.premium-dialog {
+  width: 100%;
+  max-height: calc(100dvh - 32px);
+  padding: 20px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.premium-dialog--web { max-width: 384px; }
+.premium-heading { margin-bottom: 16px; }
+.premium-crown { width: 36px; height: 36px; margin-bottom: 8px; font-size: 20px; }
+.premium-benefits { display: grid; gap: 9px; margin-bottom: 16px; }
+.premium-benefits > li { gap: 10px; }
+.premium-benefits > li > span:first-child { width: 30px; height: 30px; font-size: 16px; }
+.premium-benefits p:first-child { font-size: 13px; line-height: 18px; }
+.premium-benefits p + p { margin-top: 1px; font-size: 11px; line-height: 15px; }
+.premium-plans { margin-bottom: 12px; }
+.premium-plans > button { padding: 10px 8px; min-height: 72px; }
+.premium-plans > button > span { overflow-wrap: anywhere; }
+.premium-upgrade { min-height: 48px; padding: 10px 8px; }
+.premium-footer { margin-top: 12px; }
+.premium-dialog--web .premium-plans > button > span:nth-child(2) { margin: 4px 0; }
+@media (min-width: 768px) {
+  .premium-dialog--web { max-width: 700px; padding: 28px; }
+  .premium-dialog--web .premium-heading { margin-bottom: 24px; }
+  .premium-web-columns { display: grid; grid-template-columns: 1.1fr 1fr; gap: 28px; align-items: center; }
+  .premium-web-columns .premium-benefits { margin-bottom: 0; gap: 14px; }
+  .premium-purchase { min-width: 0; }
+  .premium-web-columns .premium-purchase { padding-left: 24px; border-left: 1px solid rgb(255 255 255 / 0.1); }
+}
+@media (max-height: 700px) {
+  .premium-dialog { padding: 16px; }
+  .premium-heading { margin-bottom: 12px; }
+  .premium-crown { width: 30px; height: 30px; margin-bottom: 5px; font-size: 17px; }
+  .premium-benefits { gap: 7px; margin-bottom: 12px; }
+  .premium-footer { margin-top: 9px; }
+}
+@media (max-height: 580px) and (max-width: 767px) {
+  .premium-crown { display: none; }
+  .premium-heading { padding-inline: 16px; margin-bottom: 9px; }
+  .premium-benefits { gap: 5px; margin-bottom: 9px; }
+  .premium-benefits > li > span:first-child { width: 26px; height: 26px; }
+  .premium-plans { margin-bottom: 9px; }
+  .premium-plans > button { min-height: 64px; padding-block: 6px; }
+}
+
 @keyframes appStartupProgress {
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }

@@ -69,7 +69,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
                 onClick={onClose}
             />
 
-            <div role="dialog" aria-modal="true" aria-labelledby="native-premium-title" className="app-card relative bg-[#111] rounded-3xl p-6 md:p-8 max-w-sm w-full border border-yellow-500/30 overflow-hidden shadow-2xl shadow-yellow-500/10 animate-scale-in overflow-y-auto max-h-[90dvh]">
+            <div role="dialog" aria-modal="true" aria-labelledby="native-premium-title" className="premium-dialog premium-dialog--native app-card relative bg-[#111] rounded-3xl max-w-sm w-full border border-yellow-500/30 shadow-2xl shadow-yellow-500/10 animate-scale-in">
                 {/* Gold top bar */}
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-600" />
 
@@ -83,8 +83,8 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
                 </button>
 
                 {/* Hero */}
-                <div className="text-center mb-5">
-                    <div className="w-14 h-14 mx-auto mb-3 bg-yellow-500/10 rounded-full flex items-center justify-center text-2xl border border-yellow-500/20 animate-pulse-glow">
+                <div className="premium-heading text-center">
+                    <div className="premium-crown mx-auto bg-yellow-500/10 rounded-full flex items-center justify-center border border-yellow-500/20">
                         👑
                     </div>
                     <h2 id="native-premium-title" className="text-xl md:text-2xl font-bold text-white mb-1">
@@ -96,17 +96,12 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
                 </div>
 
                 {/* Urgency banner */}
-                <div className="bg-rose-500/10 border border-rose-500/25 rounded-xl px-3 py-2 mb-5 text-center">
-                    <p className="text-[11px] text-rose-300 font-semibold">
-                        ✨ &nbsp;One account. Premium on web and Android.
-                    </p>
-                </div>
 
                 {/* Features */}
                 <PremiumBenefits />
 
                 {/* Plan selector */}
-                <div className="grid grid-cols-2 gap-3 mb-5">
+                <div className="premium-plans grid grid-cols-2 gap-3">
                     {(['WEEKLY', 'MONTHLY'] as const).map(plan => {
                         const isSelected = selectedPlan === plan;
                         const price = plan === 'WEEKLY' ? prices.weekly : prices.monthly;
@@ -136,7 +131,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
                 <button
                     onClick={handleSubscribe}
                     disabled={isSubscribing}
-                    className="w-full py-3 bg-gradient-to-r from-yellow-600 to-amber-500 text-black font-bold rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-lg flex flex-col items-center leading-tight mb-4 animate-shimmer bg-[length:200%_100%]"
+                    className="premium-upgrade w-full py-3 bg-gradient-to-r from-yellow-600 to-amber-500 text-black font-bold rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-lg flex flex-col items-center leading-tight"
                 >
                     <span className="text-sm">
                         {isSubscribing
@@ -151,7 +146,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
                 </button>
 
                 {/* Footer */}
-                <div className="flex flex-col gap-2 items-center">
+                <div className="premium-footer flex flex-col gap-2 items-center">
                     <button
                         onClick={onRestore}
                         className="text-xs text-white/40 hover:text-white/80 underline decoration-white/20 underline-offset-4"
@@ -159,7 +154,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({
                         Restore Purchases
                     </button>
                     <p className="text-center text-[10px] text-white/20">
-                        Recurring billing. Cancel your Google Play subscription in Google Play.
+                        Auto-renews. Cancel in Google Play.
                     </p>
                 </div>
             </div>
