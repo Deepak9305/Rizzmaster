@@ -520,6 +520,11 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
     'That came out longer than I meant. The short version is: I need more time to decide.',
     'I was defensive there. I am sorry. I can explain the impact without asking you to reassure me.'
   ],
+  'why-you-say-yes-when-you-mean-no': [
+    'Thanks for asking, but I cannot take that on this week. I hope you find someone who can.',
+    'I would like to see you, but I am not available tonight. I can do Sunday afternoon if that works for you.',
+    'I understand you are disappointed. My answer is still no, and I am not going to keep debating it.'
+  ],
   'how-to-stop-comparing-your-life-to-everyone-else-online': [
     'I caught myself comparing my whole life to one post, so I am taking a break from scrolling and getting back to my own plan.',
     'That looks exciting. I am happy for you, and it also made me realise I want to make more room for travel this year.',
@@ -608,6 +613,7 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
 
 const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
   'why-you-overexplain-yourself': { do: 'Lead with the point, add only context that changes the meaning, and let the other person have their own reaction.', doNot: 'Predict every objection, repeat apologies, prove your intentions, or turn a clear boundary into a request for permission.' },
+  'why-you-say-yes-when-you-mean-no': { do: 'Pause, check your actual capacity, answer clearly, and offer an alternative only when you genuinely want to.', doNot: 'Agree to stop the discomfort, invent a long excuse, reopen a clear no because someone is disappointed, or confuse guilt with wrongdoing.' },
   'how-to-have-a-difficult-conversation-without-getting-defensive': { do: 'Name one specific issue, listen for the other person’s meaning, make a workable request, and follow through on your boundary.', doNot: 'Build a character case, interrupt to win the point, demand instant agreement, or stay in a conversation that has become unsafe.' },
   'how-to-stop-comparing-your-life-to-everyone-else-online': { do: 'Name the exact comparison, decide what value is underneath it, and return to an action you control.', doNot: 'Treat a selected post as a complete life story, punish yourself for having the feeling, or copy someone else’s timeline.' },
   'how-to-make-friends-as-an-adult-when-life-feels-too-busy': { do: 'Create a repeatable rhythm, make specific invitations, and watch for effort coming back.', doNot: 'Wait for a perfect free week, force instant closeness, or keep organising every plan alone.' },
@@ -708,6 +714,13 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'how-to-stop-people-pleasing-without-feeling-selfish', label: 'Stop people-pleasing without guilt' },
     { slug: 'how-to-say-no-to-a-date-without-overexplaining', label: 'Say no without overexplaining' },
     { slug: 'texting-boundaries-while-dating', label: 'Set clearer texting boundaries' }
+  ],
+  'why-you-say-yes-when-you-mean-no': [
+    { slug: 'how-to-stop-people-pleasing-without-feeling-selfish', label: 'Stop people-pleasing without losing yourself' },
+    { slug: 'how-to-have-a-difficult-conversation-without-getting-defensive', label: 'Have a difficult conversation without a fight' },
+    { slug: 'how-to-say-no-to-a-date-without-overexplaining', label: 'Say no without overexplaining' },
+    { slug: 'texting-boundaries-while-dating', label: 'Set clearer communication boundaries' },
+    { slug: 'how-to-talk-about-money-while-dating', label: 'Talk about money without pressure' }
   ],
   'why-group-conversations-feel-invisible': [
     { slug: 'how-to-make-small-talk-when-you-have-nothing-in-common', label: 'Make small talk when you have nothing in common' },
