@@ -800,8 +800,11 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
           backgroundTimestamp.current = null;
 
           // Record usage and refresh notification schedule
-          await NotificationService.recordUsage();
-          await NotificationService.schedulePersonalizedNotifications();
+          if (profileRef.current && !stateRef.current.showOnboarding &&
+              localStorage.getItem('rizz_onboarding_completed') === 'true') {
+            await NotificationService.recordUsage();
+            await NotificationService.schedulePersonalizedNotifications();
+          }
 
           // Do not warm-load full-screen ads on resume. Broad resume preloads create
           // matched requests that often expire unused and hurt AdMob show rate.
@@ -851,28 +854,29 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   }, []);
   // --- END ACTIVE TIME TRACKING ---
 
-  const initializeNotifications = useCallback(() => {
-    // OneSignal Push Notifications
-    runStartupTask('OneSignal initialization', Promise.resolve(OneSignalService.initialize()));
-    // Local Notifications & Usage Tracking
-    runStartupTask('Local notifications initialization', Promise.resolve(NotificationService.initialize()));
-  }, []);
-
   // Check for Onboarding on Mount
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem('rizz_onboarding_completed');
     if (!hasSeenOnboarding) {
       setShowOnboarding(true);
-    } else {
-      initializeNotifications();
     }
-  }, [initializeNotifications]);
+  }, []);
+
+  // Only ask after onboarding and successful guest/account entry. Neither
+  // notification permission nor reminder scheduling participates in app readiness.
+  useEffect(() => {
+    if (showSplash || showOnboarding || !profile?.id ||
+        localStorage.getItem('rizz_onboarding_completed') !== 'true') return;
+    let active = true;
+    runStartupTask('OneSignal initialization', OneSignalService.initialize());
+    runStartupTask('Local notifications initialization', NotificationService.initialize(() => active));
+    return () => { active = false; };
+  }, [showSplash, showOnboarding, profile?.id]);
 
   const handleOnboardingComplete = useCallback(() => {
     localStorage.setItem('rizz_onboarding_completed', 'true');
     setShowOnboarding(false);
-    initializeNotifications();
-  }, [initializeNotifications]);
+  }, []);
 
   const handleUpgrade = useCallback(async (purchaseData?: any): Promise<boolean> => {
     const currentProfile = profileRef.current;

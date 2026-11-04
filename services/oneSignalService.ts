@@ -17,13 +17,9 @@ export const OneSignalService = {
         // 1. Initialise OneSignal
         OneSignal.initialize(ONESIGNAL_APP_ID);
 
-        // 2. Request Notification Permission
-        // This prompts the user to allow notifications on iOS and Android 13+
-        OneSignal.Notifications.requestPermission(true).then((success: boolean) => {
-            console.log('OneSignal: Notification permission granted:', success);
-        });
-
-        // 3. Notification Click/Opened Listener
+        // Permission is requested once by NotificationService after entry.
+        // Initializing push delivery must never open permission/settings dialogs.
+        // Notification Click/Opened Listener
         OneSignal.Notifications.addEventListener('click', (event) => {
             console.log('OneSignal: Notification clicked:', event);
             // You can handle deep linking or specific actions here

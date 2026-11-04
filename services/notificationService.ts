@@ -1,6 +1,15 @@
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Preferences } from '@capacitor/preferences';
 import { canUseNativeNotifications } from './nativeCapabilities';
+import { createNotificationPermissionGate } from './notificationPermission';
+
+const NOTIFICATION_DECISION_KEY = 'rizz_notification_permission_decision';
+const ensurePermission = createNotificationPermissionGate({
+    checkPermissions: () => LocalNotifications.checkPermissions(),
+    requestPermissions: () => LocalNotifications.requestPermissions(),
+    getDecision: async () => (await Preferences.get({ key: NOTIFICATION_DECISION_KEY })).value,
+    saveDecision: value => Preferences.set({ key: NOTIFICATION_DECISION_KEY, value }),
+});
 
 const USAGE_HISTORY_KEY = 'rizz_app_usage_history';
 const MAX_HISTORY_SAMPLES = 14; // Last 14 opens
@@ -113,16 +122,11 @@ export const NotificationService = {
     },
 
     /**
-     * Request permissions and initialize
+     * Ask once after entry; subsequent launches only use existing permission.
      */
-    async initialize() {
+    async initialize(canPrompt: () => boolean = () => true) {
         if (!canUseNativeNotifications()) return;
-
-        const permission = await LocalNotifications.checkPermissions();
-        if (permission.display !== 'granted') {
-            const result = await LocalNotifications.requestPermissions();
-            if (result.display !== 'granted') return;
-        }
+        if (!await ensurePermission(canPrompt) || !canPrompt()) return;
 
         // Record a usage hit on every init
         await this.recordUsage();
@@ -138,6 +142,9 @@ export const NotificationService = {
         if (!canUseNativeNotifications()) return;
 
         try {
+            const permission = await LocalNotifications.checkPermissions();
+            if (permission.display !== 'granted') return;
+
             const { value } = await Preferences.get({ key: USAGE_HISTORY_KEY });
             let history = this.parseUsageHistory(value);
 
@@ -199,6 +206,11 @@ export const NotificationService = {
         if (!canUseNativeNotifications()) return;
 
         try {
+            // schedule() can itself request permission in plugin 8.3.x.
+            // Guard every caller (including resume), so refusal stays final.
+            const permission = await LocalNotifications.checkPermissions();
+            if (permission.display !== 'granted') return;
+
             // 1. Clear existing scheduled notifications to avoid duplicates
             const pending = await LocalNotifications.getPending();
             if (pending.notifications.length > 0) {
@@ -226,6 +238,7 @@ export const NotificationService = {
                     inboxList: content.inboxList,
                     summaryText: content.summaryText,
                     id: 1000 + i, // Unique ID per day
+                    isExactNotification: false,
                     schedule: {
                         at: this.getNextOccurrence(optimalHour, i),
                         repeats: false, // We re-schedule every time they open the app anyway
