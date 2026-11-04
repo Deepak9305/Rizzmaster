@@ -654,7 +654,8 @@ const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
   'build-real-connection-first-date': { do: 'Stay curious, share the conversation, and communicate interest without rushing the pace.', doNot: 'Perform for approval, interrogate the other person, or treat intensity as proof of compatibility.' },
   'keep-dating-fun-when-you-want-something-serious': { do: 'Know what you want, choose shared experiences, and let clarity grow from mutual effort.', doNot: 'Turn every date into an interview, force certainty early, or abandon your life to prove interest.' },
   'how-to-build-trust-in-a-new-relationship': { do: 'Build consistency, communicate honestly, respect boundaries, and let repeated actions create confidence.', doNot: 'Rush vulnerability, use surveillance as reassurance, or ignore a pattern that makes you feel unsafe.' },
-  'how-to-handle-jealousy-in-a-new-relationship': { do: 'Separate facts from fear, ask for clarity, and make requests that leave both people their freedom.', doNot: 'Check phones, set loyalty tests, or call control proof of love.' }
+  'how-to-handle-jealousy-in-a-new-relationship': { do: 'Separate facts from fear, ask for clarity, and make requests that leave both people their freedom.', doNot: 'Check phones, set loyalty tests, or call control proof of love.' },
+  'why-socializing-leaves-you-drained': { do: 'Treat your energy as information, choose a sustainable format, and communicate limits before resentment takes over.', doNot: 'Label yourself antisocial, force a yes to avoid disappointing people, or disappear without explaining a change in plans.' }
 };
 
 const ArticleQuickAnswer: React.FC<{ post: BlogPost }> = ({ post }) => (
@@ -1039,6 +1040,13 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'how-to-stop-people-pleasing-without-feeling-selfish', label: 'Protect your priorities without guilt' },
     { slug: 'why-you-feel-disconnected-from-people-even-when-you-are-social', label: 'Understand feeling disconnected' },
     { slug: 'how-to-have-a-difficult-conversation-without-getting-defensive', label: 'Talk about pressure without a fight' }
+  ],
+  'why-socializing-leaves-you-drained': [
+    { slug: 'how-to-make-friends-as-an-adult-when-life-feels-too-busy', label: 'Build friendships that fit your week' },
+    { slug: 'how-to-reconnect-with-an-old-friend-after-months-of-silence', label: 'Reconnect without making it awkward' },
+    { slug: 'what-to-do-when-you-outgrow-your-friend-group', label: 'Notice when a friendship no longer fits' },
+    { slug: 'how-to-make-small-talk-when-you-have-nothing-in-common', label: 'Make everyday conversations easier' },
+    { slug: 'why-you-feel-disconnected-from-people-even-when-you-are-social', label: 'Understand feeling disconnected' }
   ]
 };
 
