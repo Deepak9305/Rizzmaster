@@ -710,6 +710,12 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'when-venting-becomes-emotional-dumping': [
+    { slug: 'why-socializing-leaves-you-drained', label: 'Understand feeling drained after socialising' },
+    { slug: 'why-you-say-yes-when-you-mean-no', label: 'Say no before resentment builds' },
+    { slug: 'how-to-have-a-difficult-conversation-without-getting-defensive', label: 'Discuss a recurring problem calmly' },
+    { slug: 'how-to-reconnect-with-an-old-friend-after-months-of-silence', label: 'Reconnect with a friend' }
+  ],
   'why-you-overexplain-yourself': [
     { slug: 'how-to-have-a-difficult-conversation-without-getting-defensive', label: 'Have a difficult conversation without a fight' },
     { slug: 'how-to-stop-people-pleasing-without-feeling-selfish', label: 'Stop people-pleasing without guilt' },
@@ -1042,6 +1048,7 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'how-to-have-a-difficult-conversation-without-getting-defensive', label: 'Talk about pressure without a fight' }
   ],
   'why-socializing-leaves-you-drained': [
+    { slug: 'when-venting-becomes-emotional-dumping', label: 'Set limits when every conversation feels heavy' },
     { slug: 'how-to-make-friends-as-an-adult-when-life-feels-too-busy', label: 'Build friendships that fit your week' },
     { slug: 'how-to-reconnect-with-an-old-friend-after-months-of-silence', label: 'Reconnect without making it awkward' },
     { slug: 'what-to-do-when-you-outgrow-your-friend-group', label: 'Notice when a friendship no longer fits' },

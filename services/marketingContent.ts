@@ -53,6 +53,155 @@ export interface BlogPost {
 }
 
 export const BLOG_POSTS: BlogPost[] = [
+{
+  "slug": "when-venting-becomes-emotional-dumping",
+  "title": "When Does Venting Become Emotional Dumping? What to Say When Every Conversation Feels Heavy",
+  "seoTitle": "Venting vs Emotional Dumping: Differences and What to Say",
+  "description": "Understand venting vs emotional dumping, recognise repeated boundary problems, and use practical scripts to support a friend without becoming their only source of support.",
+  "excerpt": "Venting becomes difficult when someone repeatedly overlooks your capacity, ignores a request to pause, or expects constant availability. Look at how the conversation is shared and how limits are received, rather than judging how painful the topic is.",
+  "date": "2026-11-05",
+  "updatedAt": "2026-11-05",
+  "readingTime": "10 min read",
+  "category": "Friendship & communication",
+  "author": "amelia",
+  "keywords": [
+    "venting vs emotional dumping",
+    "when does venting become emotional dumping",
+    "how to set boundaries with a venting friend",
+    "what to say when someone emotionally dumps",
+    "how to ask before venting",
+    "friend only talks about their problems"
+  ],
+  "image": "/blog/venting-emotional-dumping-hero.png",
+  "imageAlt": "Two adults sharing a thoughtful conversation on a park bench",
+  "imageCaption": "Support works better when both people have room to speak, pause, and name what they can offer.",
+  "resources": [
+    {
+      "label": "NHS: Helping others with mental health problems",
+      "url": "https://www.nhs.uk/every-mind-matters/supporting-others/helping-others/"
+    },
+    {
+      "label": "NHS: Maintaining healthy relationships and mental wellbeing",
+      "url": "https://www.nhs.uk/every-mind-matters/lifes-challenges/maintaining-healthy-relationships-and-mental-wellbeing/"
+    }
+  ],
+  "faqs": [
+    {
+      "question": "What is the difference between venting and emotional dumping?",
+      "answer": "Venting usually leaves room for the listener’s availability and response. Emotional dumping is an informal description for sharing that repeatedly overwhelms that space or disregards stated limits. Neither term is a diagnosis, and one difficult conversation is not enough to judge a whole friendship."
+    },
+    {
+      "question": "Is it wrong to vent to friends?",
+      "answer": "No. Sharing distress is part of friendship. Checking whether it is a good time, saying what kind of support would help, and respecting a pause makes it easier for both people to participate honestly."
+    },
+    {
+      "question": "How do I tell a friend I cannot listen right now?",
+      "answer": "Acknowledge them and state your capacity: “That sounds really hard. I cannot give this my attention tonight. I can talk tomorrow afternoon.” Offer another time only if you can follow through."
+    },
+    {
+      "question": "What if my friend gets upset when I set a boundary?",
+      "answer": "Disappointment can happen without making the boundary wrong. Acknowledge the feeling, repeat what you can offer, and watch whether they eventually respect it. Repeated insults, pressure, or demands for constant access call for firmer limits and possibly more distance."
+    }
+  ],
+  "sections": [
+    {
+      "heading": "The difference is in the exchange, not the weight of the story",
+      "paragraphs": [
+        "Your friend starts telling you about another awful day. You care, but your shoulders tighten when the messages keep arriving. Then guilt steps in: a good friend would listen, so perhaps the exhaustion means you are selfish. That is a poor starting point for deciding what to do. Caring about someone and having enough attention for a difficult conversation are different questions.",
+        "Venting and emotional dumping are everyday terms, not clinical diagnoses. Here, emotional dumping describes a pattern in which sharing repeatedly overlooks the listener’s availability or stated limits. A painful subject, tears, a long message, or needing support more than once does not establish that pattern. Someone can be going through grief or a crisis without being inconsiderate.",
+        "The useful question is what happens when the listener participates. Can they ask to pause? Can they say they are tired? Does the conversation make room for their answer? A friend having a terrible month may need more than they can give back right now. Mutual care still shows up in whether your limits matter."
+      ]
+    },
+    {
+      "heading": "Look for these patterns before applying a label",
+      "paragraphs": [
+        "Start with behaviour you could describe without guessing anyone’s motives. Perhaps calls regularly continue after you say you need to leave. Perhaps a delayed reply leads to accusations. Perhaps you are expected to review every argument, compose every response, and be available afterward to manage the result.",
+        "Repetition alone needs context. People may return to the same problem because it is unresolved, complicated, or outside their control. They are not required to follow your advice to deserve compassion. The concern is whether you can choose your role in the conversation and whether they respect the answer.",
+        "Also examine your side of the arrangement. If you keep saying “call anytime” while silently hoping they never do, they may not know there is a problem. A clear limit gives the relationship a fair opportunity to change."
+      ],
+      "bullets": [
+        "Capacity: Have they checked whether you can listen, or responded when you said you cannot?",
+        "Scope: Are you offering companionship, or being assigned responsibility for fixing the situation?",
+        "Response: Does a pause lead to an adjustment, or to repeated pressure?",
+        "Pattern: Is this a difficult season, or an ongoing expectation that your needs disappear?"
+      ]
+    },
+    {
+      "heading": "Ask what kind of support would actually help",
+      "paragraphs": [
+        "One reason supportive conversations go badly is that both people arrive with different jobs in mind. Your friend wants to be heard; you start solving. You want a brief update; they expect an evening of detailed processing. Neither person has named the mismatch.",
+        "Try asking: “Would it help more if I listened, helped you think through options, or did something practical?” This is a conversation starter, not a menu they must complete perfectly. If they do not know, listen for a little while and check again. Reflect the main feeling before offering a conclusion.",
+        "For example, “It sounds like being dismissed in that meeting really hurt” acknowledges the experience without confirming every assumption about a colleague’s intentions. Support does not require agreement with every interpretation. You can care about the person and remain honest about what you know."
+      ],
+      "bullets": [
+        "Listening: “I am here. What part of today has stayed with you?”",
+        "Options: “Do you want to think about your next move together?”",
+        "Practical help: “Would company while you do that errand make tomorrow easier?”",
+        "Uncertainty: “I cannot tell what they intended, but I understand why it upset you.”"
+      ],
+      "image": "/blog/venting-emotional-dumping-checkin.png",
+      "imageAlt": "Two friends talking on a porch while one listens attentively",
+      "imageCaption": "A simple check about timing and support can prevent an avoidable mismatch."
+    },
+    {
+      "heading": "What to say when you have no capacity tonight",
+      "paragraphs": [
+        "A useful limit tells someone what is available. “You always dump on me” turns the exchange into a dispute about their character. “I cannot manage a heavy conversation tonight” gives them a fact they can act on. Keep your explanation proportionate; an exhausted person does not need to present evidence of exhaustion.",
+        "Consider this illustrative exchange. Friend: “Can I call? Everything has gone wrong.” You: “I am sorry today has been so rough. I cannot talk tonight. I can check in tomorrow after lunch.” Friend: “Just five minutes?” You: “I cannot tonight. Tomorrow is what I can offer.” The second answer does not need a new reason.",
+        "If you have some capacity, define it before beginning: “I have about fifteen minutes before I need to leave.” Use that as a real limit, not a promise that they must feel better by minute fifteen. When time ends, acknowledge where you are stopping and follow through."
+      ],
+      "bullets": [
+        "No alternative available: “I care about you, and I am not able to be the person you talk this through with today.”",
+        "Voice notes: “I cannot keep up with long voice messages during work. Please send a short message asking when I can talk.”",
+        "Late calls: “I will answer messages in the daytime. I am keeping my phone quiet overnight.”",
+        "Ending a call: “I need to stop here. I am glad you told me what has been happening.”"
+      ]
+    },
+    {
+      "heading": "Address the recurring pattern outside the difficult moment",
+      "paragraphs": [
+        "If every conversation becomes heavy, choose a calmer time to discuss how you communicate. Name a specific pattern and the change you want. “Our last few calls have run late after I said I needed to sleep. I want to keep talking, but I need us to stop when I say I am heading off.” That is easier to understand than a sudden announcement that the friendship is toxic.",
+        "Separate two issues that often get tangled: the amount of support you can provide and the kind of friendship you miss. You might say, “I miss doing ordinary things together too. Could we take a walk this weekend without spending the whole time on the argument?” This invites another way of connecting without demanding that their problem disappear.",
+        "Then observe the next few interactions. An awkward first response followed by changed behaviour is different from an enthusiastic apology followed by the same pressure. Judge whether the practical agreement starts working, not whether the conversation about it sounded perfect."
+      ]
+    },
+    {
+      "heading": "If you are the one who needs to vent",
+      "paragraphs": [
+        "Ask a question that allows a real no: “Something upsetting happened at work. Do you have the energy to hear about it?” A request becomes less meaningful if you send ten messages before they answer or punish them for being unavailable. Share a little context so they understand what they are agreeing to, then wait.",
+        "Name what would help: “I mostly need someone to listen for a few minutes; I am not asking you to solve it.” If you need a longer conversation, ask for a time rather than stretching a short check-in indefinitely. Before describing graphic or especially upsetting details, check whether they are comfortable hearing them.",
+        "If you realise you overwhelmed someone, repair it directly. “I kept going after you said you were tired. I am sorry. Next time I will ask first and stop when you need to.” Avoid an apology that makes them reassure you that you are not a burden. The most useful repair is a change they can notice."
+      ]
+    },
+    {
+      "heading": "Support can be uneven without becoming unlimited",
+      "paragraphs": [
+        "A friendship is not a ledger with equal minutes on each side. Illness, grief, unemployment, and family problems can make support uneven for a long time. Asking a struggling friend to perform cheerfulness or reciprocate immediately can turn closeness into another task they are failing.",
+        "That still leaves room for limits. You might manage one planned call a week, occasional meals, or company at an appointment. Saying what you can reliably offer is more helpful than promising unlimited access and then disappearing. The NHS guidance linked below encourages listening, practical help, and attention to your own wellbeing.",
+        "When someone’s difficulties are affecting daily life, wider support may help. Ask whether they would like help considering a qualified professional, a support group, or another trusted person. Present this as more support around them, not as an eviction notice from the friendship. Friends can remain friends while professional care addresses needs they cannot meet."
+      ],
+      "image": "/blog/venting-emotional-dumping-connection.png",
+      "imageAlt": "An adult having a relaxed phone conversation at home beside a window",
+      "imageCaption": "Reliable contact can have limits. An honest offer is easier to sustain than constant availability."
+    },
+    {
+      "heading": "When a limit is repeatedly ignored",
+      "paragraphs": [
+        "Someone may feel hurt when an old arrangement changes. Give a safe relationship room for an honest reaction, but distinguish disappointment from pressure. “I wish you could talk tonight” is different from repeated insults, demands, or attempts to make you responsible for their wellbeing.",
+        "State the action you control: “If the messages keep coming after I say I need to stop, I will mute the chat until morning.” Follow through consistently. If the pattern continues, reduce the role you are playing or reconsider how much contact works for you. A boundary needs an action you can carry out, not their agreement that it is justified.",
+        "If someone appears to be in immediate danger or unable to stay safe, focus on urgent local help and involving an appropriate trusted person or professional. That situation needs more than an ordinary discussion about texting availability. Do not promise secrecy about an immediate safety concern."
+      ]
+    },
+    {
+      "heading": "A better conversation leaves room for both people",
+      "paragraphs": [
+        "Before your next difficult exchange, decide what you can offer today: listening, time, practical help, or a later conversation. Say it early. If you are the person sharing, ask first and accept the answer. Those small choices make support clearer without turning friendship into a formal appointment.",
+        "Afterward, review one thing: did both people have room to be honest? The listener should be able to say they are tired. The person struggling should be able to share something painful without being treated as a problem to remove. Neither person needs to get every sentence right for that exchange to work.",
+        "Start with the next real moment. “I want to hear you, and I have ten minutes.” “Tonight is too much; could we talk tomorrow?” “I need listening more than advice.” A friendship becomes easier to trust when those answers are allowed to matter."
+      ]
+    }
+  ]
+},
   {
     slug: 'how-to-have-a-difficult-conversation-without-getting-defensive',
     title: 'How to Have a Difficult Conversation Without Getting Defensive or Starting a Fight',
