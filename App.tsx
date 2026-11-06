@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect, lazy, Suspense, useCallback } from 'react';
 import { NativeBridge } from './services/nativeBridge';
 import { canUseRizzSharing } from './services/rizzSharing';
-import { isEbookPromotionDue, readEbookGenerationCount, saveEbookGenerationCount } from './services/ebookPromotion';
+import { isEbookPromotionDue, readEbookGenerationCount, saveEbookGenerationCount, preloadEbookCover } from './services/ebookPromotion';
 import { NotificationService } from './services/notificationService';
 import { ToastProvider, useToast } from './context/ToastContext';
 import { InputMode, RizzResponse, BioResponse, SavedItem, UserProfile, RizzOrBioResponse, ResponseLength, CustomPersona } from './types';
@@ -2085,6 +2085,11 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
     loadingRef.current = true;
     setLoading(true);
+
+    if (IS_WEB_PLATFORM && !currentProfile.is_premium && isEbookPromotionDue(webGenerationCountRef.current + 1)) {
+      preloadEbookCover();
+      void import('./components/EbookPromotionModal').catch(() => { /* Lazy rendering can retry later. */ });
+    }
 
     try {
       const { data: { session: activeSession } } = await supabase.auth.getSession();

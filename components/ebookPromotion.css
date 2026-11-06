@@ -6,13 +6,15 @@
   box-shadow:0 22px 75px #0009,inset 0 0 22px #e89c7c14,0 1px 12px #f4967d38;
   color-scheme:dark;
 }
-.ebook-promo[open] { display:grid; grid-template-columns:205px minmax(0,1fr); gap:26px; align-items:center; }
-.ebook-promo::backdrop { background:#090813a8; backdrop-filter:blur(5px); }
+.ebook-promo[open] { display:grid; grid-template-columns:205px minmax(0,1fr); grid-template-areas:'cover heading' 'cover body'; column-gap:26px; row-gap:0; align-items:center; }
+.ebook-promo::backdrop { background:#090813b3; backdrop-filter:blur(3px); }
 .ebook-promo button,.ebook-promo a { -webkit-tap-highlight-color:transparent; }
 .ebook-promo-close { position:absolute; right:8px; top:8px; display:grid; place-items:center; width:36px; height:36px; border-radius:50%; color:#fce5d4; }
 .ebook-promo-close:hover { background:#ffffff15; }
-.ebook-promo-cover { width:100%; height:auto; aspect-ratio:1; object-fit:contain; border:1px solid #9d7b91; border-radius:13px; box-shadow:0 8px 25px #0005; }
-.ebook-promo-content { text-align:center; }
+.ebook-promo-artwork { grid-area:cover; display:block; align-self:center; }
+.ebook-promo-cover { display:block; width:100%; height:auto; aspect-ratio:1; object-fit:contain; border:1px solid #9d7b91; border-radius:13px; box-shadow:0 8px 25px #0005; background:#101628; }
+.ebook-promo-heading { grid-area:heading; text-align:center; }
+.ebook-promo-content { grid-area:body; text-align:center; }
 .ebook-promo h2 { margin:0; font-family:Georgia,'Times New Roman',serif; font-size:27px; font-weight:600; line-height:1.12; letter-spacing:-.4px; }
 .ebook-promo-divider { display:flex; align-items:center; gap:10px; margin:15px 0; color:#ffc6a0; }
 .ebook-promo-divider::before,.ebook-promo-divider::after { content:''; height:1px; flex:1; background:#ce9679; opacity:.7; }
@@ -22,12 +24,14 @@
 .ebook-promo-dismiss { margin-top:8px; min-height:36px; padding:4px 14px; color:#e5b4a3; font:17px/1.3 Georgia,'Times New Roman',serif; text-decoration:underline; text-underline-offset:4px; }
 .ebook-promo :focus-visible { outline:2px solid #ffd6a7; outline-offset:3px; }
 @media(max-width:520px) {
-  .ebook-promo { padding:48px 18px 18px; border-radius:20px; max-width:370px; }
-  .ebook-promo[open] { grid-template-columns:100px minmax(0,1fr); gap:14px; }
-  .ebook-promo h2 { font-size:22px; }
-  .ebook-promo p { font-size:16px; margin-bottom:14px; }
-  .ebook-promo-divider { margin:11px 0; }
-  .ebook-promo-cta { font-size:20px; padding:10px 8px; }
-  .ebook-promo-dismiss { font-size:16px; }
+  .ebook-promo { padding:44px 20px 14px; border-radius:20px; max-width:380px; }
+  .ebook-promo[open] { grid-template-columns:108px minmax(0,1fr); grid-template-areas:'cover heading' 'body body'; column-gap:16px; row-gap:18px; }
+  .ebook-promo h2 { font-size:23px; font-weight:400; line-height:1.12; letter-spacing:-.35px; text-align:left; }
+  .ebook-promo-cover { border-radius:10px; }
+  .ebook-promo p { font-size:18px; line-height:1.4; max-width:290px; margin:0 auto 17px; }
+  .ebook-promo-divider { display:none; }
+  .ebook-promo-cta { font-size:22px; padding:12px; }
+  .ebook-promo-dismiss { font-size:16px; min-height:40px; margin-top:5px; }
 }
+@media(max-width:350px) { .ebook-promo[open] { grid-template-columns:88px minmax(0,1fr); column-gap:12px; } .ebook-promo h2 { font-size:21px; } }
 @media(max-height:440px) { .ebook-promo { padding:24px; } .ebook-promo-cover { max-height:180px; } }

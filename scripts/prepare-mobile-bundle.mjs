@@ -12,6 +12,7 @@ const mobileBuild = join(projectRoot, 'dist-mobile');
 const excludedDirectories = new Set(['blog', 'landing', 'privacy', 'rizzline', 'rizzline-pickup-lines', 'support', 'terms']);
 const excludedFiles = new Set([
   'make-her-think-about-you-cover.png',
+  'make-her-think-about-you-cover.webp',
   'manifest.webmanifest',
   'robots.txt',
   'sitemap.xml',

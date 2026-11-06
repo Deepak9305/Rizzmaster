@@ -1,4 +1,16 @@
 const GENERATION_KEY = 'rizz_web_ebook_generations';
+let coverPreloaded = false;
+
+export function preloadEbookCover(): void {
+  if (coverPreloaded || typeof Image === 'undefined') return;
+  coverPreloaded = true;
+  const cover = new Image();
+  cover.onerror = () => {
+    cover.onerror = null;
+    cover.src = '/promotions/make-her-think-about-you-cover.png';
+  };
+  cover.src = '/promotions/make-her-think-about-you-cover.webp';
+}
 
 export function isEbookPromotionDue(count: number): boolean {
   return count >= 2 && (count - 2) % 5 === 0;

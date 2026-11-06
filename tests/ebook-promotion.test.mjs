@@ -4,7 +4,22 @@ import { createServer } from 'vite';
 
 const server = await createServer({ configFile:false, server:{ middlewareMode:true, watch:null, hmr:false }, appType:'custom' });
 after(() => server.close());
-const { isEbookPromotionDue, readEbookGenerationCount, saveEbookGenerationCount } = await server.ssrLoadModule('/services/ebookPromotion.ts');
+const { isEbookPromotionDue, readEbookGenerationCount, saveEbookGenerationCount, preloadEbookCover } = await server.ssrLoadModule('/services/ebookPromotion.ts');
+
+test('preloading requests WebP once and falls back to the original PNG on failure', () => {
+  let image;
+  let requests = 0;
+  globalThis.Image = class { constructor() { image=this; requests++; } };
+  try {
+    preloadEbookCover();
+    assert.equal(image.src,'/promotions/make-her-think-about-you-cover.webp');
+    image.onerror();
+    assert.equal(image.src,'/promotions/make-her-think-about-you-cover.png');
+    assert.equal(image.onerror,null);
+    preloadEbookCover();
+    assert.equal(requests,1);
+  } finally { delete globalThis.Image; }
+});
 
 test('offers appear after two successful generations and five more thereafter', () => {
   assert.deepEqual(Array.from({length:23}, (_,n)=>n).filter(isEbookPromotionDue), [2,7,12,17,22]);

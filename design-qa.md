@@ -88,3 +88,16 @@ Initial 390px check found that the close control crowded the title (P2). Increas
 ## Limitations
 
 Live authenticated/guest AI generation was not exercised; integration was checked through code review, focused cadence tests, and the actual modal rendered in a browser harness. Existing Android app was not reinstalled because no native behavior changes are required.
+
+## Mobile layout and image delivery revision
+
+final result: passed
+
+- User feedback source: `C:/Users/rv941/AppData/Local/Temp/codex-clipboard-10d7b114-f657-440d-8de3-d643b02651a3.jpg`.
+- Before/after evidence: `tmp/ebook-popup-mobile.png` and `tmp/ebook-popup-mobile-v2.png`, both 390 x 844 CSS pixels at density 1, opened together for comparison.
+- Desktop evidence: `tmp/ebook-popup-desktop-v2.png`, 1280 x 720 at density 1.
+- Fixed mobile layout imbalance (P2): cover and heading now share the top row; description, CTA, and dismiss action use the full width beneath. Removed the mobile divider, softened heading weight, and retained the selected plum/cream/rose palette. The 358 x 351 panel fits comfortably at 390 x 844; the 288 x 362 panel fits at 320 x 568 without internal scrolling or horizontal overflow.
+- Full-view captures keep all text and controls readable; no additional focused crop needed. The supplied cover is unchanged and proportionate, the title and description are exact, and desktop hierarchy is preserved.
+- WebP cover: 69,476 bytes versus original PNG 560,620 bytes (87.6% reduction). Browser confirmed currentSrc selects WebP and naturalWidth is 600. Picture source provides PNG compatibility; image error removes WebP source to retry PNG. Preloader fallback tested with a simulated image failure.
+- Upcoming offer generation preloads the cover and component while generation is underway. Android remains excluded from the preload and popup; both cover formats are excluded from mobile packaging.
+- Production build and all three focused tests passed. No captured browser console errors. Live AI generation and checkout purchase were not exercised.
