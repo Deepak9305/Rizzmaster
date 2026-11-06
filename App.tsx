@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect, lazy, Suspense, useCallback } from 'react';
 import { NativeBridge } from './services/nativeBridge';
 import { canUseRizzSharing } from './services/rizzSharing';
+import { isEbookPromotionDue, readEbookGenerationCount, saveEbookGenerationCount } from './services/ebookPromotion';
 import { NotificationService } from './services/notificationService';
 import { ToastProvider, useToast } from './context/ToastContext';
 import { InputMode, RizzResponse, BioResponse, SavedItem, UserProfile, RizzOrBioResponse, ResponseLength, CustomPersona } from './types';
@@ -50,6 +51,7 @@ const LoginPage = lazy(() => import('./components/LoginPage'));
 const OnboardingFlow = lazy(() => import('./components/OnboardingFlow'));
 const WebPremiumModal = lazy(() => import('./components/WebPremiumModal'));
 const WebAppMenu = lazy(() => import('./components/WebAppMenu'));
+const EbookPromotionModal = lazy(() => import('./components/EbookPromotionModal'));
 import ErrorBoundary from './components/ErrorBoundary';
 import NoInternetOverlay from './components/NoInternetOverlay';
 
@@ -448,6 +450,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const generationSessionVersionRef = useRef(0);
   const loadingRef = useRef(false);
   const savedItemsRef = useRef<SavedItem[]>([]);
+  const webGenerationCountRef = useRef(IS_WEB_PLATFORM ? readEbookGenerationCount() : 0);
 
   // Splash State
   const [showSplash, setShowSplash] = useState(true);
@@ -482,6 +485,8 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const [webPromotionIndex, setWebPromotionIndex] = useState(() => IS_WEB_PLATFORM ? Math.floor(Math.random() * WEB_PROMOTIONS.length) : 0);
   const [isWebPromotionPaused, setIsWebPromotionPaused] = useState(false);
   const [showWebPremiumModal, setShowWebPremiumModal] = useState(false);
+  const [showEbookPromotion, setShowEbookPromotion] = useState(false);
+  useEffect(() => { setShowEbookPromotion(false); }, [profile?.id, currentView]);
   const [webPremiumReason, setWebPremiumReason] = useState<'credits' | 'premium'>('premium');
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
   const [isSessionBlocked, setIsSessionBlocked] = useState(false);
@@ -2360,6 +2365,11 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         skipFinalProfileSync = !shouldSyncSignedInProfile;
         setResult(res);
 
+        if (IS_WEB_PLATFORM && !currentProfile.is_premium) {
+          const count = ++webGenerationCountRef.current;
+          saveEbookGenerationCount(count);
+          if (isEbookPromotionDue(count)) setShowEbookPromotion(true);
+        }
       }
 
     } catch (error: any) {
@@ -2557,6 +2567,14 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
               handleExitGuestMode();
             }}
           />
+        </Suspense>
+      )}
+      {IS_WEB_PLATFORM && showEbookPromotion && profile && !profile.is_premium && currentView === 'HOME' &&
+        !loading && !showSplash && !showOnboarding && !isSessionBlocked && !isOffline &&
+        !showWebPremiumModal && !showPremiumModal && !showCreditsExhaustedModal &&
+        !showSavedModal && !showRizzShareCard && !showPersonaModal && !showWebMenu && (
+        <Suspense fallback={null}>
+          <EbookPromotionModal href={GUMROAD_GUIDE_URL} onClose={() => setShowEbookPromotion(false)} />
         </Suspense>
       )}
       {IS_WEB_PLATFORM && onNavigateToPath && !profile && !showSplash && (

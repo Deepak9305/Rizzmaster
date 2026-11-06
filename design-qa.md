@@ -43,3 +43,48 @@ Resolved findings:
 Visual review covered typography and wrapping, spacing and frame widths, rose/dark color states, original logo quality, consistent Lucide icons, copy and action hierarchy. No remaining P0/P1/P2 issues were observed in these states.
 
 Verification: browser interactions at 320, 390, 768 and 1280px; no horizontal overflow or JavaScript errors; generate/previous, save/reload, copy, card download and image-share fallback passed. Category filters, personal ratings, arrow-key navigation, Escape/focus restoration and styling with JavaScript disabled passed. Native file sharing was tested with a simulated browser API; an actual recipient/share sheet was not exercised. Build, prerender and seven focused regression tests passed.
+
+---
+
+# Ebook popup review
+
+final result: passed
+
+## Evidence and scope
+
+- Source visual: `C:/Users/rv941/AppData/Local/Temp/codex-clipboard-e2fc61df-a7ef-43bf-9e2a-3e189b98aaff.png` (1536 x 1024).
+- Supplied cover: `public/promotions/make-her-think-about-you-cover.png` (600 x 600).
+- Desktop implementation: `tmp/ebook-popup-desktop.png` (1280 x 720 CSS pixels, density 1).
+- Mobile implementation: `tmp/ebook-popup-mobile.png` (390 x 844 CSS pixels, density 1).
+- Local review: http://127.0.0.1:5188/tmp/ebook-popup-review.html (development harness, not published).
+- State: open ebook offer, main tool background. The harness substitutes sample replies to avoid spending credits or calling production generation.
+
+## Comparison
+
+Source and desktop captures were opened together in one comparison input. The modal region was compared at a smaller intended size: 600px maximum desktop width. The surrounding tool in the mock is illustrative and is not recreated. Mobile uses the same two-column composition with smaller artwork and type.
+
+- Typography: cream Georgia serif heading, italic description, serif CTA and secondary dismiss link preserve the reference's hierarchy. Native font rendering and compact line wraps differ from the generated artwork.
+- Spacing: small centered panel, rounded border, balanced columns, compact action area. Mobile is 358 x 352 at 390 x 844 and 288 x 422 at 320 x 568, without horizontal overflow. Short landscape viewports allow internal scrolling for access to all controls.
+- Color: dark plum panel, warm rose border, soft glow, cream type and rose CTA follow the selected reference.
+- Image: exact supplied square artwork retained without distortion; the concept's taller crop is intentionally not reproduced.
+- Copy: title, description, Get the PDF and Not now match the selection. The existing Gumroad URL is used.
+
+All text and controls are readable in the full captures, so further focused crops were unnecessary.
+
+## Comparison history
+
+Initial 390px check found that the close control crowded the title (P2). Increased mobile top padding from 30px to 48px, then captured again. The revised image confirms separation and no overflow. No remaining P0/P1/P2 findings.
+
+## Interactions and code checks
+
+- Browser harness: generation 1 no offer; generation 2 opens; 3 through 6 no offer; 7 opens.
+- Close button, Not now, Escape, and focus restoration checked. Native dialog provides focus containment; pointer-backdrop dismissal is implemented.
+- Link destination inspected; checkout was not opened or purchased.
+- Browser console: no captured errors in the harness.
+- Automated cadence and session-storage tests pass, including blocked/corrupt storage.
+- App integration reviewed: counter runs only in successful free-user web generation branch; native platform cannot increment it or mount the dialog. Coach is excluded. No native plugins or ad behavior changed.
+- New image excluded from mobile bundle. Component and styles load lazily.
+
+## Limitations
+
+Live authenticated/guest AI generation was not exercised; integration was checked through code review, focused cadence tests, and the actual modal rendered in a browser harness. Existing Android app was not reinstalled because no native behavior changes are required.

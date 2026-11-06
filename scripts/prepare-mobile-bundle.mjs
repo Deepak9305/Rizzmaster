@@ -11,6 +11,7 @@ const mobileBuild = join(projectRoot, 'dist-mobile');
 // chunks while leaving website-only pages and media in the Vercel build.
 const excludedDirectories = new Set(['blog', 'landing', 'privacy', 'rizzline', 'rizzline-pickup-lines', 'support', 'terms']);
 const excludedFiles = new Set([
+  'make-her-think-about-you-cover.png',
   'manifest.webmanifest',
   'robots.txt',
   'sitemap.xml',
