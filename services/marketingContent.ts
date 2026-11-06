@@ -54,6 +54,156 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
 {
+  "slug": "why-compliments-make-you-uncomfortable",
+  "title": "Why Compliments Make You Uncomfortable—and What to Say Instead of Putting Yourself Down",
+  "seoTitle": "Why Compliments Make You Uncomfortable and What to Say",
+  "description": "Learn why praise can feel awkward and how to respond to compliments at work, with friends, and on dates without putting yourself down or feeling obliged to return one.",
+  "excerpt": "A simple thank you lets you acknowledge a kind remark without proving you deserve it. Notice whether your discomfort comes from attention, expectations, or the comment itself, then choose a response that fits.",
+  "date": "2026-11-06",
+  "updatedAt": "2026-11-06",
+  "readingTime": "9 min read",
+  "category": "Social confidence",
+  "author": "jake",
+  "keywords": [
+    "why do compliments make me uncomfortable",
+    "how to accept a compliment",
+    "what to say when someone compliments you",
+    "how to respond to compliments without being awkward",
+    "accept compliments without sounding arrogant",
+    "how to respond to unwanted compliments"
+  ],
+  "image": "/blog/compliments-uncomfortable-hero.png",
+  "imageAlt": "Two adults sharing an encouraging conversation while working with clay in a pottery studio",
+  "imageCaption": "A kind observation can be received without a joke at your own expense.",
+  "resources": [
+    {
+      "label": "Centre for Clinical Interventions: Assertiveness, including giving and receiving compliments",
+      "url": "https://www.cci.health.wa.gov.au/en/Resources/Looking-After-Yourself/Assertiveness"
+    },
+    {
+      "label": "NHS: Raising low self-esteem",
+      "url": "https://www.nhs.uk/mental-health/self-help/tips-and-support/raise-low-self-esteem/"
+    }
+  ],
+  "faqs": [
+    {
+      "question": "Why do I feel uncomfortable when someone compliments me?",
+      "answer": "Possible reasons include disliking attention, worrying about seeming arrogant, doubting the praise, or wondering what the person expects in return. The context matters. Feeling awkward once does not establish a mental-health problem or a particular personal history."
+    },
+    {
+      "question": "How do I accept a compliment without sounding arrogant?",
+      "answer": "Acknowledge the person’s kindness: “Thank you, I appreciate that.” You can add one honest detail, such as “I worked hard on it,” without claiming you are better than anyone else."
+    },
+    {
+      "question": "Do I have to compliment someone back?",
+      "answer": "No. You can receive a compliment without returning one immediately. Offer your own appreciation when it is sincere and specific, rather than treating praise as a debt."
+    },
+    {
+      "question": "How should I respond to an unwanted compliment?",
+      "answer": "Choose a response that matches the situation, from redirecting the topic to stating a limit: “Please keep the feedback about my work.” You do not owe warmth or continued conversation when a remark is intrusive or a stated boundary is ignored."
+    }
+  ],
+  "sections": [
+    {
+      "heading": "You can receive the kindness before you believe every word",
+      "paragraphs": [
+        "Someone says your presentation was excellent. Before you can enjoy it, you explain which slide went wrong. A friend likes your outfit, and you announce how cheap it was. A date says you have a great smile, and suddenly you are listing everything you dislike about your teeth. The compliment has become a small argument nobody intended to start.",
+        "The simplest useful response is “Thank you.” Add “That means a lot” if it does. Then let the moment move on. Accepting a compliment means acknowledging what someone chose to tell you; it does not require a public declaration that their assessment is objectively correct.",
+        "If that still feels uncomfortable, start there. You can practise a different response while feeling awkward. Waiting until you feel completely confident makes an ordinary conversation depend on a much bigger emotional change."
+      ]
+    },
+    {
+      "heading": "Find out which part of praise makes you tense",
+      "paragraphs": [
+        "There is no single explanation for disliking compliments. You might enjoy encouragement in private but hate being praised in front of a room. You might accept comments about your skills and dislike comments about your body. You might have learned that modest people immediately reject praise, or worry that accepting it commits you to being equally impressive next time.",
+        "Look at the thought that arrives immediately after the remark. “Everyone is looking at me” points toward attention. “They will expect this every time” points toward pressure. “They must want something” points toward trust or context. These are possibilities to examine, not diagnoses you can establish from a short exchange.",
+        "Sometimes the discomfort belongs to the remark itself. A colleague commenting on your body, a stranger refusing to leave you alone, or a compliment followed by a demand is different from ordinary kindness. Improving your ability to accept praise should not train you to ignore that distinction."
+      ],
+      "bullets": [
+        "Attention: Would the same compliment feel easier in private?",
+        "Credibility: What evidence makes you doubt this particular comment?",
+        "Expectation: Have they actually asked for anything, or are you predicting a debt?",
+        "Context: Was the remark welcome, appropriate, and easy to move on from?"
+      ]
+    },
+    {
+      "heading": "Replace the automatic put-down with a two-part response",
+      "paragraphs": [
+        "Try acknowledgement plus one optional detail. “Thanks, I enjoyed working on it.” “That is kind of you. I was nervous about sharing it.” “Thank you; I love this jacket too.” The second sentence gives the conversation somewhere to go without undoing the first.",
+        "A useful distinction is between adding information and cancelling the praise. “Thanks, I found it secondhand” shares a detail. “This old thing? It was practically free” may dismiss the compliment before the other person can finish. The price of something does not invalidate someone liking it.",
+        "Watch the little word “but.” “Thank you, but I made loads of mistakes” asks the other person to defend their kindness. If a flaw needs discussing, it can have its own place later. An informal compliment does not need a full performance review attached."
+      ],
+      "bullets": [
+        "Instead of “I look terrible,” try “Thank you, that is lovely to hear.”",
+        "Instead of “Anyone could have done it,” try “Thanks, I put a lot into it.”",
+        "Instead of “You are just being nice,” try “I appreciate you saying that.”",
+        "Instead of rushing to return the praise, pause and let your thanks stand."
+      ]
+    },
+    {
+      "heading": "At work, accept your contribution and share credit precisely",
+      "paragraphs": [
+        "Workplace praise can trigger a particular worry: taking credit might look boastful, while refusing it might seem gracious. There is a better middle ground. Name your part accurately and acknowledge the people who helped. “Thank you. I worked on the structure, and Maya’s testing caught a major issue before launch.”",
+        "That response gives the listener useful information. “It was nothing” hides your contribution. “The team did everything” may be inaccurate if you led the work. Sharing credit does not require removing yourself from the account.",
+        "Consider this illustrative exchange. Manager: “Your explanation made the decision much easier.” You: “Thanks, I am glad the comparison helped.” If you need specific feedback for future work, add “Was there a section you found particularly useful?” Ask because the answer will help, rather than turning every compliment into a request for more reassurance."
+      ],
+      "image": "/blog/compliments-uncomfortable-work.png",
+      "imageAlt": "Two adults discussing a creative project with notebooks and material samples on a table",
+      "imageCaption": "Specific credit recognises both your contribution and the people who helped."
+    },
+    {
+      "heading": "With friends, leave room for affection without making it a transaction",
+      "paragraphs": [
+        "A friend saying “You are always good at making people feel included” may be offering appreciation for something you barely notice. Responding with a list of times you were socially awkward can make a warm moment unexpectedly difficult. Try “That means a lot. I am glad you felt welcome.”",
+        "There is no rule that you must produce matching praise. An instant “No, you are amazing” can be sincere, but it can also become a way to get attention off yourself. Receive the first comment before choosing whether you have something of your own to say.",
+        "If you want to return appreciation, make it about a real observation: “I loved that you checked on Sam when the group got loud.” That is more personal than searching for an equally flattering adjective. Friendship has enough room for one person to be appreciated without balancing the exchange immediately."
+      ]
+    },
+    {
+      "heading": "On a date, choose whether you want to invite more flirtation",
+      "paragraphs": [
+        "A compliment on a date can be both kind and flirtatious. You can accept it without matching the intensity. “Thank you, that is sweet” acknowledges the gesture. “Thank you, I was hoping you would notice” adds a playful invitation when you actually want that tone.",
+        "The important decision is your interest, not whether you can deliver the cleverest comeback. If you like the person but go blank, a smile and a plain thank you are enough. Being briefly shy does not ruin the conversation. Trying to rescue every pause can make a pleasant moment feel like an audition.",
+        "Here are illustrative options for different intentions. They are choices rather than escalation steps; a more flirtatious response is useful only if it expresses what you mean."
+      ],
+      "bullets": [
+        "Warm: “Thank you. That made me smile.”",
+        "Playful: “I am going to remember that one.”",
+        "Interested: “That is especially nice coming from you.”",
+        "Friendly without escalation: “That is kind of you, thanks. How has your week been?”"
+      ],
+      "image": "/blog/compliments-uncomfortable-date.png",
+      "imageAlt": "Two adults enjoying a conversation while looking at art in a gallery",
+      "imageCaption": "A warm response can stay simple; flirtation is an option when you want it."
+    },
+    {
+      "heading": "An appearance compliment does not require you to explain your body",
+      "paragraphs": [
+        "Comments about appearance can be complicated even when intended kindly. You might be comfortable with praise about your style but dislike discussion of weight, age, skin, or physical changes. There is no requirement to disclose a health issue, your eating habits, or personal history to explain the preference.",
+        "For a harmless comment you welcome, “Thank you” works. For a subject you would rather avoid, try “I would prefer not to talk about my weight.” At work, “Please keep the feedback about the project” moves the conversation back to the appropriate subject.",
+        "Notice what follows the boundary. Someone who misjudged the remark may apologise and adjust. Repeated comments after you have asked them to stop are a behaviour problem, not a sign that you need to become better at taking a compliment. Depending on the setting, leave the exchange, document a recurring workplace issue, or seek support from someone appropriate."
+      ]
+    },
+    {
+      "heading": "What if the compliment sounds backhanded or creates an obligation?",
+      "paragraphs": [
+        "“You look good for your age” and “You are surprisingly articulate” include a comparison that may feel diminishing. You do not have to decode the person’s entire intention before deciding what to say. “What do you mean by surprisingly?” invites clarification. “I would rather you left the comparison out” names the part that bothered you.",
+        "Likewise, praise does not create consent or a favour owed. If someone says, “I have been telling you how beautiful you are, so at least give me your number,” the request stands on its own. “No, I am not sharing it” is complete. Receiving a kind comment never commits you to contact, a date, or physical affection.",
+        "When the setting feels safe and the comment seems clumsy, a brief clarification may help. When someone is persistent or intimidating, focus on ending the interaction and getting support. You can choose distance without first persuading them that their wording was wrong."
+      ]
+    },
+    {
+      "heading": "Practise with one small compliment this week",
+      "paragraphs": [
+        "Choose an easy situation rather than your most emotionally loaded one. When someone offers a welcome compliment, answer with one sentence and resist adding the familiar criticism. Notice the urge, let it pass for a moment, and continue the conversation.",
+        "Afterward, write down what was said and what you assumed it meant. “They liked how I explained the task” is the observation. “Now I must never make a mistake” is an extra rule you added. Separating those two makes the practice more useful than forcing yourself to repeat praise you do not yet believe.",
+        "The Centre for Clinical Interventions includes receiving compliments in its assertiveness resources. The NHS also suggests keeping a record of positive evidence when working on low self-esteem. Those resources offer a next step if the subject connects to a broader pattern. If distress about yourself is persistent or affects daily life, consider qualified support.",
+        "Aim for a modest change: let one welcome comment reach you without immediately arguing against it. Appreciation can be a brief human moment. You can thank someone, keep your boundaries, and carry on being an imperfect person."
+      ]
+    }
+  ]
+},
+{
   "slug": "when-venting-becomes-emotional-dumping",
   "title": "When Does Venting Become Emotional Dumping? What to Say When Every Conversation Feels Heavy",
   "seoTitle": "Venting vs Emotional Dumping: Differences and What to Say",

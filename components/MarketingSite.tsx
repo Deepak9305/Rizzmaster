@@ -710,6 +710,12 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'why-compliments-make-you-uncomfortable': [
+    { slug: 'why-you-overexplain-yourself', label: 'Be clear without overexplaining' },
+    { slug: 'why-you-say-yes-when-you-mean-no', label: 'Say no without agreeing from guilt' },
+    { slug: 'how-to-make-small-talk-when-you-have-nothing-in-common', label: 'Keep everyday conversations flowing' },
+    { slug: 'how-to-flirt-without-coming-on-too-strong', label: 'Flirt at a comfortable pace' }
+  ],
   'when-venting-becomes-emotional-dumping': [
     { slug: 'why-socializing-leaves-you-drained', label: 'Understand feeling drained after socialising' },
     { slug: 'why-you-say-yes-when-you-mean-no', label: 'Say no before resentment builds' },
@@ -717,6 +723,7 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'how-to-reconnect-with-an-old-friend-after-months-of-silence', label: 'Reconnect with a friend' }
   ],
   'why-you-overexplain-yourself': [
+    { slug: 'why-compliments-make-you-uncomfortable', label: 'Accept a compliment without putting yourself down' },
     { slug: 'how-to-have-a-difficult-conversation-without-getting-defensive', label: 'Have a difficult conversation without a fight' },
     { slug: 'how-to-stop-people-pleasing-without-feeling-selfish', label: 'Stop people-pleasing without guilt' },
     { slug: 'how-to-say-no-to-a-date-without-overexplaining', label: 'Say no without overexplaining' },
