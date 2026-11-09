@@ -48,6 +48,8 @@ For the account deletion feature to work correctly, you must execute the `public
 ### 4. Build & Deployment
 The project uses a localized Tailwind build process rather than a CDN.
 
+Use Node.js 22.x (declared in `package.json` and `.nvmrc`). The Capacitor asset tool uses a pinned Sharp 0.34.5 override so clean Linux installs receive platform-specific Sharp/libvips packages rather than the older GitHub binary download and source-build fallback. Keep npm optional dependencies enabled and commit `package-lock.json` with dependency changes.
+
 1. Install dependencies: `npm install`
 2. Build for production: `npm run build`
 3. Sync Capacitor Android assets: `npx cap sync android`

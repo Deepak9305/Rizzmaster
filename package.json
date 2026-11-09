@@ -2,6 +2,9 @@
   "name": "rizz-master",
   "version": "1.2.8",
   "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "postinstall": "patch-package --error-on-fail",
     "dev": "node dev-server.js",
@@ -70,6 +73,9 @@
     "vite": "^5.3.1"
   },
   "overrides": {
-    "@capacitor/core": "$@capacitor/core"
+    "@capacitor/core": "$@capacitor/core",
+    "@capacitor/assets": {
+      "sharp": "0.34.5"
+    }
   }
 }
