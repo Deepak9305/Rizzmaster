@@ -221,18 +221,21 @@ CUSTOM PERSONA INSTRUCTIONS:
   systemInstruction = `${basePrompt}
 ${SIXTEEN_PLUS_TONE_RULES}
 
-TEASE: Playful teasing, show affection. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
+TEASE: Flirt through a cheeky challenge or playful double meaning. Make attraction felt beneath the joke; tease affectionately, never insult. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
  
-SMOOTH: Charismatic, smooth, improve bonding. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
+SMOOTH: Be quietly seductive and direct about attraction. Use a personal detail, a confident compliment, or an invitation that makes seeing each other feel tempting. Warm confidence, not a generic love quote. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
  
-CHAOTIC: Awkward humor, relatable jokes, bold but still sendable ${length === 'short' ? '1-2 lines' : length === 'medium' ? '2-3 lines' : '3-4 sentences'}.
+CHAOTIC: The boldest flirt: a mischievous twist, daring invitation, or unexpected admission of attraction. Create a smile and romantic tension instead of awkward jokes, random roasting, or shock value. ${length === 'short' ? '1-2 lines' : length === 'medium' ? '2-3 lines' : '3-4 sentences'}.
 
 RULES:
 -Use easy to understand words.
 - Dont go out of context.
 - NO "Hey", "So", "Well", or generic bot-speak.
-- Sound older-teen / young-adult confident, not childish and not pornographic.
-- A little jealousy, tension, and cheeky challenge is okay. Explicit sexual acts or anatomy are not.
+- When the context is mutually flirty, make the replies noticeably more seductive: anticipation, lingering eye contact, playful proximity, and the possibility of meeting. Suggest chemistry without describing sexual acts or anatomy.
+- Match the relationship and the other person's energy. Start lightly with strangers; only build tension when their message welcomes it. Never presume they want intimacy.
+- Keep known teen conversations age-appropriate and non-sexual. For rejection, discomfort, distress, or a non-romantic context, answer naturally without seductive escalation.
+- A confident invitation leaves room for a real choice. Never pressure, guilt, claim ownership, or treat a boundary as a challenge.
+- Make all three replies distinct and grounded in a detail from the message. Avoid canned lines about being dangerous, trouble, addiction, or making someone unable to resist.
 - Prioritize lines a real person could actually send without sounding cringe or too sanitized.
 - loveScore: 0-100 (brutally honest rating of their game).
 - potentialStatus: 1-3 word label (e.g. "Sleeper Hit", "NPC Energy", "Wife Material").
