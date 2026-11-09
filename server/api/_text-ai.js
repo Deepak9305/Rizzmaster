@@ -22,8 +22,9 @@ export const generateText = async (request, timeoutMs) => {
     model,
     messages: request.messages,
     temperature: request.temperature,
-    max_tokens: Math.max(request.max_tokens || 1200, 120),
-    reasoning: { enabled: false, exclude: true },
+    // Reasoning and visible output share this limit; preserve room for the reply.
+    max_tokens: Math.max(request.max_tokens || 1200, 120) + 1024,
+    reasoning: { effort: 'low', exclude: true },
     provider: {
       order: ['wafer', 'digitalocean'],
       only: ['wafer', 'digitalocean'],

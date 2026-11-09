@@ -69,21 +69,21 @@ async function callHandler(body) {
   return { status, payload };
 }
 
-test('all text budgets use DeepSeek with reasoning disabled and only Wafer then DigitalOcean', async () => {
+test('all text budgets use DeepSeek with low reasoning and only Wafer then DigitalOcean', async () => {
   for (const max_tokens of [400, 600, 650, 900, 1000]) {
     assert.equal(await generateText({ ...request, max_tokens }, 2000), 'A useful reply');
     const upstream = requests.at(-1);
     assert.equal(upstream.url, '/api/v1/chat/completions');
     assert.equal(upstream.headers.authorization, 'Bearer test-openrouter-key');
     assert.equal(upstream.body.model, DEFAULT_TEXT_MODEL);
-    assert.deepEqual(upstream.body.reasoning, { enabled: false, exclude: true });
+    assert.deepEqual(upstream.body.reasoning, { effort: 'low', exclude: true });
     assert.deepEqual(upstream.body.provider, {
       order: ['wafer', 'digitalocean'],
       only: ['wafer', 'digitalocean'],
       allow_fallbacks: true,
       require_parameters: true,
     });
-    assert.equal(upstream.body.max_tokens, max_tokens);
+    assert.equal(upstream.body.max_tokens, max_tokens + 1024);
     assert.equal(upstream.body.models, undefined);
   }
 });

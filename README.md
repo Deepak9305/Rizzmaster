@@ -16,7 +16,7 @@ You must provide the following environment variables during your production buil
 - `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase server-only service role key for API routes. Never expose this with a `VITE_` prefix.
 - `OPENROUTER_API_KEY`: Required server-only OpenRouter API key for replies, bios, and Coach. Never use a `VITE_` prefix.
 - `OPENROUTER_BASE_URL`: Optional; defaults to `https://openrouter.ai/api/v1`.
-- `OPENROUTER_MODEL`: Set to `deepseek/deepseek-v4-flash-0731`, or remove it to use that default. Replace any existing Nemotron value before deploying. Reasoning is disabled using `reasoning.enabled: false` for all text generation.
+- `OPENROUTER_MODEL`: Set to `deepseek/deepseek-v4-flash-0731`, or remove it to use that default. Replace any existing Nemotron value before deploying. All text generation uses `reasoning.effort: low`, with reasoning excluded from returned content. The completion limit includes an additional 1,024 tokens of headroom for reasoning; this is a limit, not a fixed token charge.
 - `OPENROUTER_SITE_URL` and `OPENROUTER_APP_NAME`: Optional attribution; default to `https://rizzmaster.online` and `Rizz Master`.
 - `GEMINI_API_KEY`: Server-only Gemini key, required for image analysis.
 - `IAP_ACCOUNT_BINDING_SECRET`: Preferred high-entropy server-only secret used to bind an Android purchase to the signed-in Rizzmaster account. If omitted, the API derives a domain-separated fallback from `SUPABASE_SERVICE_ROLE_KEY`; set this explicitly in Vercel Production for independent secret rotation. Never expose it with a `VITE_` prefix.
