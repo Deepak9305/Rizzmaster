@@ -69,7 +69,7 @@ async function callHandler(body) {
   return { status, payload };
 }
 
-test('all text budgets use Nemotron with reasoning disabled and only the two ordered providers', async () => {
+test('all text budgets use Super VL with reasoning disabled and only DeepInfra then Prime Intellect', async () => {
   for (const max_tokens of [400, 600, 650, 900, 1000]) {
     assert.equal(await generateText({ ...request, max_tokens }, 2000), 'A useful reply');
     const upstream = requests.at(-1);
@@ -78,8 +78,8 @@ test('all text budgets use Nemotron with reasoning disabled and only the two ord
     assert.equal(upstream.body.model, DEFAULT_TEXT_MODEL);
     assert.deepEqual(upstream.body.reasoning, { enabled: false, exclude: true });
     assert.deepEqual(upstream.body.provider, {
-      order: ['fireworks', 'deepinfra'],
-      only: ['fireworks', 'deepinfra'],
+      order: ['deepinfra', 'primeintellect'],
+      only: ['deepinfra', 'primeintellect'],
       allow_fallbacks: true,
       require_parameters: true,
     });
@@ -88,8 +88,8 @@ test('all text budgets use Nemotron with reasoning disabled and only the two ord
   }
 });
 
-test('legacy Android and DeepSeek client IDs and the new web ID all route to Nemotron', async () => {
-  for (const model of ['openai/gpt-oss-120b', 'llama-3.3-70b-versatile', 'deepseek/deepseek-v4-flash-0731', DEFAULT_TEXT_MODEL]) {
+test('legacy Android, DeepSeek and Lightning client IDs and the new web ID all route to Super VL', async () => {
+  for (const model of ['openai/gpt-oss-120b', 'llama-3.3-70b-versatile', 'deepseek/deepseek-v4-flash-0731', 'nvidia/nemotron-3.5-lightning', DEFAULT_TEXT_MODEL]) {
     assert.deepEqual(await callHandler({ ...request, model }), {
       status: 200, payload: { content: 'A useful reply' },
     });

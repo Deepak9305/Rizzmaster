@@ -12,7 +12,7 @@ const PROFILE_BOOTSTRAP_FAILED_ERROR = 'PROFILE_BOOTSTRAP_FAILED';
 const CREDIT_DEDUCTION_FAILED_ERROR = 'CREDIT_DEDUCTION_FAILED';
 
 // Model Configuration
-const TEXT_MODEL = 'nvidia/nemotron-3.5-lightning';
+const TEXT_MODEL = 'nvidia/nemotron-3.5-super-vl';
 
 const getPreferredModel = (_hasImage: boolean) => TEXT_MODEL;
 
