@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 
-export const DEFAULT_TEXT_MODEL = 'deepseek/deepseek-v4-flash-0731';
+export const DEFAULT_TEXT_MODEL = 'nvidia/nemotron-3.5-lightning';
 
 export const generateText = async (request, timeoutMs) => {
   const apiKey = process.env.OPENROUTER_API_KEY?.trim();
@@ -22,9 +22,14 @@ export const generateText = async (request, timeoutMs) => {
     model,
     messages: request.messages,
     temperature: request.temperature,
-    // Leave room for low-effort reasoning as well as the existing visible reply budget.
-    max_tokens: Math.max(request.max_tokens || 1200, 120) + 1024,
-    reasoning: { effort: 'low', exclude: true },
+    max_tokens: Math.max(request.max_tokens || 1200, 120),
+    reasoning: { enabled: false, exclude: true },
+    provider: {
+      order: ['fireworks', 'deepinfra'],
+      only: ['fireworks', 'deepinfra'],
+      allow_fallbacks: true,
+      require_parameters: true,
+    },
   });
   if (completion.error) throw new Error('OpenRouter could not complete the request.');
   const choice = completion.choices?.[0];

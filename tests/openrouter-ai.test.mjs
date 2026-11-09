@@ -69,21 +69,27 @@ async function callHandler(body) {
   return { status, payload };
 }
 
-test('all text budgets use only DeepSeek with bounded low reasoning and private reasoning excluded', async () => {
+test('all text budgets use Nemotron with reasoning disabled and only the two ordered providers', async () => {
   for (const max_tokens of [400, 600, 650, 900, 1000]) {
     assert.equal(await generateText({ ...request, max_tokens }, 2000), 'A useful reply');
     const upstream = requests.at(-1);
     assert.equal(upstream.url, '/api/v1/chat/completions');
     assert.equal(upstream.headers.authorization, 'Bearer test-openrouter-key');
     assert.equal(upstream.body.model, DEFAULT_TEXT_MODEL);
-    assert.deepEqual(upstream.body.reasoning, { effort: 'low', exclude: true });
-    assert.equal(upstream.body.max_tokens, max_tokens + 1024);
+    assert.deepEqual(upstream.body.reasoning, { enabled: false, exclude: true });
+    assert.deepEqual(upstream.body.provider, {
+      order: ['fireworks', 'deepinfra'],
+      only: ['fireworks', 'deepinfra'],
+      allow_fallbacks: true,
+      require_parameters: true,
+    });
+    assert.equal(upstream.body.max_tokens, max_tokens);
     assert.equal(upstream.body.models, undefined);
   }
 });
 
-test('legacy Android IDs and the new web ID both route to DeepSeek', async () => {
-  for (const model of ['openai/gpt-oss-120b', 'llama-3.3-70b-versatile', DEFAULT_TEXT_MODEL]) {
+test('legacy Android and DeepSeek client IDs and the new web ID all route to Nemotron', async () => {
+  for (const model of ['openai/gpt-oss-120b', 'llama-3.3-70b-versatile', 'deepseek/deepseek-v4-flash-0731', DEFAULT_TEXT_MODEL]) {
     assert.deepEqual(await callHandler({ ...request, model }), {
       status: 200, payload: { content: 'A useful reply' },
     });
@@ -91,7 +97,7 @@ test('legacy Android IDs and the new web ID both route to DeepSeek', async () =>
   }
 });
 
-test('image requests analyze with Gemini then write with DeepSeek without forwarding the image', async () => {
+test('image requests analyze with Gemini then write with Nemotron without forwarding the image', async () => {
   const originalFetch = globalThis.fetch;
   let analysisCalls = 0;
   const analysis = mock.method(globalThis, 'fetch', async (url, options) => {
@@ -113,7 +119,7 @@ test('image requests analyze with Gemini then write with DeepSeek without forwar
   } finally { analysis.mock.restore(); }
 });
 
-test('provider failures, empty output and truncation fail without a backup or retry', async () => {
+test('provider failures, empty output and truncation fail without a model backup or SDK retry', async () => {
   for (const mode of ['error', 'empty', 'truncated']) {
     responseMode = mode;
     requests.length = 0;

@@ -12,7 +12,7 @@ const PROFILE_BOOTSTRAP_FAILED_ERROR = 'PROFILE_BOOTSTRAP_FAILED';
 const CREDIT_DEDUCTION_FAILED_ERROR = 'CREDIT_DEDUCTION_FAILED';
 
 // Model Configuration
-const TEXT_MODEL = 'deepseek/deepseek-v4-flash-0731';
+const TEXT_MODEL = 'nvidia/nemotron-3.5-lightning';
 
 const getPreferredModel = (_hasImage: boolean) => TEXT_MODEL;
 
