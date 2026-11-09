@@ -54,6 +54,147 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'what-to-say-when-someone-keeps-interrupting-you',
+    title: 'What to Say When Someone Keeps Interrupting You Without Turning It Into an Argument',
+    seoTitle: 'What to Say When Someone Keeps Interrupting You',
+    description: 'Use clear, practical phrases when someone talks over you at work, with friends, or on a date. Reclaim your turn, address repeated interruptions, and keep the conversation moving.',
+    excerpt: '“Let me finish this thought, then I want to hear yours.” Start with a short reset, watch whether the other person makes room, and address the pattern when a single reminder stops working.',
+    date: '2026-11-09',
+    updatedAt: '2026-11-09',
+    readingTime: '10 min read',
+    category: 'Communication & confidence',
+    author: 'jake',
+    keywords: ['what to say when someone keeps interrupting you', 'how to respond when someone talks over you', 'being interrupted at work', 'friend keeps interrupting me', 'politely ask someone to let you finish'],
+    image: '/blog/interruptions-hero.jpg',
+    imageWebp: '/blog/interruptions-hero.webp',
+    imageAlt: 'An adult speaking in a small discussion circle while the other participants listen',
+    imageCaption: 'A conversation works better when each person gets room to complete a thought.',
+    resources: [
+      { label: 'Stanford Report: How people perceive conversational interruptions', url: 'https://news.stanford.edu/stories/2018/05/exploring-interruption-conversation' },
+      { label: 'Centre for Clinical Interventions: Assertiveness resources and exercises', url: 'https://www.cci.health.wa.gov.au/Resources/Looking-After-Yourself/Assertiveness' },
+      { label: 'Acas: Recognising bullying at work, for UK readers', url: 'https://www.acas.org.uk/bullying-at-work' }
+    ],
+    faqs: [
+      { question: 'What is a polite way to tell someone to stop interrupting?', answer: 'Try “Let me finish this thought, then I want to hear yours.” Keep your tone steady and complete the point briefly. If it happens again, name the behaviour: “I have been cut off a few times. Please let me finish before you respond.”' },
+      { question: 'Is interrupting always a sign of disrespect?', answer: 'No. Overlapping speech can come from enthusiasm, different conversational habits, a misunderstanding, or a delay on a call. Notice whether the person returns the floor and adjusts when you ask. Repeatedly preventing you from contributing is a different problem from one accidental overlap.' },
+      { question: 'What if my boss keeps talking over me?', answer: 'Use a short, task-focused request such as “Before we decide, there is one risk I need to finish explaining.” If a public correction feels risky, follow up in writing or speak privately with your manager or the meeting chair. Repeated exclusion may need support through your workplace, not a stronger comeback.' },
+      { question: 'How do I respond when someone says I am too sensitive about interruptions?', answer: 'Return to the practical request: “We can see it differently. I am asking to finish my sentence before you answer.” Their agreement with your feelings is not required to understand the request. If they keep mocking it, decide whether to pause the exchange or seek support.' }
+    ],
+    sections: [
+      {
+        heading: 'Start with one sentence that gives the conversation a route back',
+        paragraphs: [
+          'When someone cuts you off, try: “Let me finish this thought, then I want to hear yours.” Say it at your ordinary speaking volume, finish the point, and hand the conversation back. The useful part is the sequence: you are asking for a turn, not announcing that the other person has lost theirs.',
+          'For a lighter collision, “One second, I was getting to that” may be enough. For a repeated one, use “I have been cut off a few times. Please let me finish.” Choose the smallest response that actually makes room. A polished speech about respect is rarely helpful while two people are already talking.',
+          'The aim is to make your point audible without turning the exchange into a contest. That also means keeping the reclaimed turn proportionate. If you promise one last point, make one last point instead of opening three new topics.'
+        ],
+        bullets: [
+          'First interruption: “Let me finish this thought, then over to you.”',
+          'Someone jumps to a conclusion: “That is not quite the point I was making. Let me finish it.”',
+          'Repeated interruption: “Please hear the whole point before responding.”',
+          'You lose your place: “I lost my thread for a moment. What I was saying was…”'
+        ]
+      },
+      {
+        heading: 'Separate an excited overlap from losing your turn',
+        paragraphs: [
+          'A friend saying “Yes, exactly!” while you speak is different from someone replacing your story with theirs. Before deciding what the interruption means, ask what happened to the floor: did they add a brief reaction and return to listening, or did your contribution disappear?',
+          'Stanford reporting on Katherine Hilton’s research describes how listeners can interpret the same overlapping speech differently depending on their conversational style. That supports a useful caution: a moment of simultaneous talking does not reveal someone’s motives on its own. The study does not tell you what a particular colleague or date intended.',
+          'A shared rhythm can still need adjustment. “I know we both get excited. I lose my train of thought when we overlap, so can we take turns?” addresses the mismatch without diagnosing anyone. Neither an accent, a diagnosis, nor a confident voice establishes that a person is deliberately dismissing you. Their response to a clear request gives you more useful information.'
+        ]
+      },
+      {
+        heading: 'Use a pause, a marker, and a brief return to the point',
+        paragraphs: [
+          'If talking louder usually makes things worse, stop competing for a beat. Then use a short marker: “One moment.” Follow with the unfinished point itself: “The deadline is Friday, and the supplier needs our answer today.” This is easier to follow than restarting the entire story with a running commentary about why interruptions upset you.',
+          'A small open-hand gesture or looking toward the person chairing a meeting can help indicate that your turn is unfinished. Neither is compulsory. Eye contact, body language, and speaking comfort differ; a useful phrase should work without demanding a particular performance of confidence.',
+          'Finish, then invite the response: “That is the concern. What were you going to add?” Returning the floor makes your request concrete. You are practising turn-taking rather than punishing someone with silence.'
+        ],
+        image: '/blog/interruptions-workshop.jpg',
+        imageWebp: '/blog/interruptions-workshop.webp',
+        imageAlt: 'Two adults discussing materials and notes across a workshop table',
+        imageCaption: 'A short request followed by one clear point is easier to follow than a competition for volume.'
+      },
+      {
+        heading: 'At work, connect the interruption to the decision being made',
+        paragraphs: [
+          'Workplace conversations often move quickly, and status can make it harder to reclaim a turn. Try language that explains why the missing information matters: “Before we choose that option, I need to finish the cost comparison.” Or ask the chair directly: “Could I have thirty seconds to complete the update, then take questions?”',
+          'Consider this illustrative exchange. You say, “The launch date is possible if…” A colleague cuts in: “Great, let’s commit to it.” A useful response is: “There is a condition attached. We can commit only if testing finishes on Thursday.” You recover the information the group needs without first litigating the colleague’s manners.',
+          'For a manager who regularly interrupts, a private request may be more workable: “In our updates I sometimes get cut off before I reach the recommendation. Could I give the summary first and then take questions?” A written recap can preserve the substance when the room moves on. It should clarify the decision, not become a disguised reprimand.',
+          'If the pattern affects your work or credit, note concrete examples and their impact. Consider asking a meeting chair, trusted manager, staff representative, or HR contact for help. A communication technique cannot guarantee a fair response from someone with power over you.'
+        ]
+      },
+      {
+        heading: 'With friends, correct the pattern without putting the friendship on trial',
+        paragraphs: [
+          'A friend may interrupt because your story reminds them of something they want to share. The first reset can be warm: “I want to hear that story. Let me finish this bit first.” If you find the conversation has moved three subjects away, try “Before we leave that, I wanted to finish what happened.”',
+          'When it keeps happening, talk privately about one repeatable behaviour. “When I start telling you something difficult, we often switch to your experience before I finish. I end up dropping what I wanted to say. Could you let me get to the end first?” That is more actionable than “You never listen to anyone.”',
+          'There is room for both experiences. Once you have finished, ask about theirs if you still have the capacity. The correction is not a demand to become the only interesting person in the room; it is a request for a conversation in which neither person has to fight to exist.'
+        ]
+      },
+      {
+        heading: 'On a date, watch the adjustment rather than demanding a perfect performance',
+        paragraphs: [
+          'Nerves can make a first date unusually fast or uneven. Try “I am enjoying your stories. Let me finish mine, then I have a question for you.” If the person apologises and becomes more curious, the exchange may recover without needing a serious discussion about compatibility.',
+          'If they keep answering their own questions or completing your thoughts incorrectly, be clearer: “I would rather answer that myself.” Then answer. This is especially useful when someone turns an assumption about your job, background, or preferences into a speech before you have spoken.',
+          'One awkward exchange is limited evidence. Repeatedly ignoring a straightforward request matters more. A date who treats your voice as an inconvenience is giving you information about the experience of spending time together. Continuing the evening, shortening it, or declining another date are choices you can make without proving a diagnosis or winning an argument.'
+        ]
+      },
+      {
+        heading: 'Practise the sentence before the conversation gets fast',
+        paragraphs: [
+          'A phrase is easier to use if your first attempt is not in the middle of a tense meeting. Pick one line that sounds like you and say it aloud a few times. Practise a slightly warmer and a slightly firmer version. The goal is familiarity, not a flawless delivery.',
+          'If you want a starting point, use Rizz Master Coach to rehearse a hypothetical interruption: who is speaking, what keeps happening, and what you want to finish saying. Compare the wording, shorten it, then practise the version you could comfortably say yourself. Leave out names and private workplace details. A generated line is a drafting aid, not a guarantee that the other person will cooperate.'
+        ]
+      },
+      {
+        heading: 'Make room for the person who gets interrupted too',
+        paragraphs: [
+          'Sometimes the most useful move belongs to someone else in the room. If you notice a colleague losing their turn, say “I wanted to hear the rest of Priya’s point.” In a friend group: “Hold on, Sam had not finished the story.” Direct attention back to the original speaker and let them decide whether to continue.',
+          'Check whether the person wants that help before making it a regular intervention. Some prefer a quiet prompt, a turn from the chair, or space to address it themselves. Avoid speaking on their behalf for so long that your defence becomes another interruption.',
+          'Build a simple group habit: finish a thought, invite a response, and return to the interrupted person when two people start together. That reduces how often the quietest member has to make a public request for basic room.'
+        ]
+      },
+      {
+        heading: 'On calls, fix the timing before assuming the worst',
+        paragraphs: [
+          'Audio delay can make cooperative people repeatedly collide. “There may be a lag. I will finish this point, then pause for you” is often a better first move than accusing someone of not listening. In larger calls, use the hand-raise or chat function and ask the host for a turn.',
+          'If someone jumps in to check a crucial fact, briefly clarify it and return: “Yes, that is the revised date. The remaining issue is staffing.” Not every interruption needs to be prevented. A warning about an immediate risk or a clarification needed to understand the next sentence can reasonably change the order of speaking.',
+          'It also helps to signal your own structure: “There are two things to cover.” When the second is finished, stop. Clear handovers make it easier for others to tell a thinking pause from the end of your contribution.'
+        ],
+        image: '/blog/interruptions-checkin.jpg',
+        imageWebp: '/blog/interruptions-checkin.webp',
+        imageAlt: 'Two adults having a focused conversation over mugs at a kitchen counter',
+        imageCaption: 'A private check-in can make a recurring communication problem easier to discuss.'
+      },
+      {
+        heading: 'If they argue with the boundary, repeat the request instead of expanding the case',
+        paragraphs: [
+          '“You are too sensitive.” “I was only helping.” “You talk too slowly.” Those replies invite you to defend your personality rather than finish your point. Return to the practical request: “I hear that you were trying to help. I still want to finish before you respond.”',
+          'The Centre for Clinical Interventions describes assertiveness as expressing a view clearly while respecting others. One useful application is a steady repetition of the request instead of adding new accusations. This is a practice option, not evidence that you can make anyone listen if you choose the perfect tone.',
+          'If the person continues, change the format or end the attempt: “We are talking over each other. Let’s pause and come back to this.” In a meeting, ask the chair to manage turns. Privately, you might say “I want to discuss this, but I am not going to keep competing to finish a sentence.” Use only a consequence you are prepared and able to follow through on.'
+        ]
+      },
+      {
+        heading: 'Repair your own interruption without turning it into another speech',
+        paragraphs: [
+          'If someone points out that you cut them off, make the repair short: “You are right. I jumped in. Finish what you were saying.” Then listen. Explaining your excitement for a minute can become a second way of keeping the floor.',
+          'If you are worried about forgetting a thought, jot down a word instead of holding the whole sentence ready while the person speaks. If you interrupted to correct something, ask whether the correction needs to happen now. A wrong name may wait; a safety-critical instruction may not.',
+          'An interruption habit is easier to change when the group can acknowledge it without humiliation. Thank someone for redirecting you, return to their point, and ask a relevant follow-up. The repair is visible in what happens next, not in the length of the apology.'
+        ]
+      },
+      {
+        heading: 'Know when this is bigger than conversational technique',
+        paragraphs: [
+          'Repeated public put-downs, retaliation for speaking, threats, or deliberate exclusion deserve more attention than a sharper sentence. Acas, the UK workplace advisory service, includes persistent put-downs in meetings among examples that may indicate workplace bullying. Its guidance is UK-specific; seek advice relevant to your own workplace and location.',
+          'In a personal relationship, avoid confronting someone alone if doing so could put you at risk. Seek support from a trusted person or an appropriate local service. Being calm is not a responsibility to remain in an intimidating exchange.',
+          'For ordinary interruptions, start smaller: reclaim the turn, complete one point, and invite the response. Then notice whether the conversation becomes more shared. The useful outcome is not that you delivered the strongest comeback. It is that you and the people around you have a workable way to hear each other.',
+          'Editorial note: the exchanges in this guide are illustrative examples, not transcripts or claims of guaranteed results. The linked resources provide background on interruption perceptions, assertiveness, and workplace concerns; the suggested phrases are Rizz Master editorial examples.'
+        ]
+      }
+    ]
+  },
+  {
     slug: 'why-you-feel-guilty-when-you-rest',
     title: 'Why You Feel Guilty When You Rest—and How to Stop Treating Recovery Like a Reward',
     seoTitle: 'Why You Feel Guilty When You Rest and How to Stop',

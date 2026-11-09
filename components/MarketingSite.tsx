@@ -515,6 +515,11 @@ const BlogIndexPage: React.FC<{ navigate: (path: string) => void }> = ({ navigat
 );
 
 const ARTICLE_EXAMPLES: Record<string, string[]> = {
+  'what-to-say-when-someone-keeps-interrupting-you': [
+    'Let me finish this thought, then I want to hear yours.',
+    'Before we decide, there is one risk I need to finish explaining.',
+    'I know we both get excited. I lose my place when we overlap. Can we take turns?'
+  ],
   'why-you-overexplain-yourself': [
     'I appreciate the invite, but I cannot make tonight. Could we try Sunday?',
     'That came out longer than I meant. The short version is: I need more time to decide.',
@@ -612,6 +617,7 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
 };
 
 const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
+  'what-to-say-when-someone-keeps-interrupting-you': { do: 'Ask for your turn briefly, finish one point, and invite a response. Address repeated patterns privately when practical.', doNot: 'Assume every overlap is hostile, compete for volume, diagnose the other person, or keep arguing in an intimidating exchange.' },
   'why-you-overexplain-yourself': { do: 'Lead with the point, add only context that changes the meaning, and let the other person have their own reaction.', doNot: 'Predict every objection, repeat apologies, prove your intentions, or turn a clear boundary into a request for permission.' },
   'why-you-say-yes-when-you-mean-no': { do: 'Pause, check your actual capacity, answer clearly, and offer an alternative only when you genuinely want to.', doNot: 'Agree to stop the discomfort, invent a long excuse, reopen a clear no because someone is disappointed, or confuse guilt with wrongdoing.' },
   'how-to-have-a-difficult-conversation-without-getting-defensive': { do: 'Name one specific issue, listen for the other person’s meaning, make a workable request, and follow through on your boundary.', doNot: 'Build a character case, interrupt to win the point, demand instant agreement, or stay in a conversation that has become unsafe.' },
@@ -710,6 +716,12 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'what-to-say-when-someone-keeps-interrupting-you': [
+    { slug: 'why-group-conversations-feel-invisible', label: 'Find your place in a group conversation' },
+    { slug: 'how-to-have-a-difficult-conversation-without-getting-defensive', label: 'Discuss a recurring problem without a fight' },
+    { slug: 'why-you-overexplain-yourself', label: 'Keep the point clear and concise' },
+    { slug: 'why-you-say-yes-when-you-mean-no', label: 'Hold a boundary without guilt' }
+  ],
   'why-you-feel-guilty-when-you-rest': [
     { slug: 'why-you-feel-behind-in-life-when-everyone-else-seems-ahead', label: 'Step outside someone else’s timeline' },
     { slug: 'why-socializing-leaves-you-drained', label: 'Understand social exhaustion' },
@@ -729,6 +741,7 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'how-to-reconnect-with-an-old-friend-after-months-of-silence', label: 'Reconnect with a friend' }
   ],
   'why-you-overexplain-yourself': [
+    { slug: 'what-to-say-when-someone-keeps-interrupting-you', label: 'Finish your point when someone talks over you' },
     { slug: 'why-you-feel-guilty-when-you-rest', label: 'Stop treating rest like a reward' },
     { slug: 'why-compliments-make-you-uncomfortable', label: 'Accept a compliment without putting yourself down' },
     { slug: 'how-to-have-a-difficult-conversation-without-getting-defensive', label: 'Have a difficult conversation without a fight' },
@@ -758,6 +771,7 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'texting-boundaries-while-dating', label: 'Set communication boundaries' }
   ],
   'how-to-have-a-difficult-conversation-without-getting-defensive': [
+    { slug: 'what-to-say-when-someone-keeps-interrupting-you', label: 'Handle repeated interruptions' },
     { slug: 'how-to-make-small-talk-when-you-have-nothing-in-common', label: 'Build confidence in everyday conversations' },
     { slug: 'how-to-make-friends-as-an-adult-when-life-feels-too-busy', label: 'Make room for better friendships' },
     { slug: 'how-to-build-trust-in-a-new-relationship', label: 'Build trust through consistency' },

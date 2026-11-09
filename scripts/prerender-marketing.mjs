@@ -69,6 +69,22 @@ const renderFaqs = (post) => post.faqs?.length
 const renderResources = (post) => `${renderResourcesOnly(post)}${renderFaqs(post)}`;
 
 const articleInternalLinks = {
+  'what-to-say-when-someone-keeps-interrupting-you': [
+    { slug: 'why-group-conversations-feel-invisible', label: 'Find your place in a group conversation' },
+    { slug: 'how-to-have-a-difficult-conversation-without-getting-defensive', label: 'Discuss a recurring problem without a fight' },
+    { slug: 'why-you-overexplain-yourself', label: 'Keep the point clear and concise' },
+    { slug: 'why-you-say-yes-when-you-mean-no', label: 'Hold a boundary without guilt' }
+  ],
+  'how-to-have-a-difficult-conversation-without-getting-defensive': [
+    { slug: 'what-to-say-when-someone-keeps-interrupting-you', label: 'Handle repeated interruptions' },
+    { slug: 'how-to-make-small-talk-when-you-have-nothing-in-common', label: 'Build confidence in everyday conversations' },
+    { slug: 'how-to-build-trust-in-a-new-relationship', label: 'Build trust through consistency' }
+  ],
+  'why-you-overexplain-yourself': [
+    { slug: 'what-to-say-when-someone-keeps-interrupting-you', label: 'Finish your point when someone talks over you' },
+    { slug: 'how-to-have-a-difficult-conversation-without-getting-defensive', label: 'Discuss a recurring problem calmly' },
+    { slug: 'why-you-say-yes-when-you-mean-no', label: 'Hold a boundary without guilt' }
+  ],
   'how-to-stop-comparing-your-life-to-everyone-else-online': [
     { slug: 'how-to-make-friends-as-an-adult-when-life-feels-too-busy', label: 'Build a social life that fits your week' },
     { slug: 'how-to-make-small-talk-when-you-have-nothing-in-common', label: 'Make small talk with more confidence' },
