@@ -1,4 +1,3 @@
-import OpenAI from "openai";
 import {
   GoogleGenAI,
   createModelContent,
@@ -9,9 +8,11 @@ import {
 import { supabase, supabaseAdmin } from './_supabase.js';
 import { ensureUserProfile } from './_profiles.js';
 import { applyCors } from './_cors.js';
+import { DEFAULT_TEXT_MODEL, generateText } from './_text-ai.js';
 
-const DEFAULT_BASE_URL = "https://api.groq.com/openai/v1";
 const ALLOWED_MODELS = new Set([
+  DEFAULT_TEXT_MODEL,
+  // Legacy client IDs are accepted only as aliases for the new server-side model.
   "openai/gpt-oss-120b",
   "gemini-2.5-flash-lite",
   // Allow older clients during staged rollout; backend remaps them below.
@@ -19,12 +20,6 @@ const ALLOWED_MODELS = new Set([
   "llama-3.3-70b-versatile",
   "llama-3.2-90b-vision-preview",
 ]);
-const TEXT_MODEL_FALLBACKS = [
-  "openai/gpt-oss-120b",
-];
-const VISION_MODEL_FALLBACKS = [
-  "gemini-2.5-flash-lite",
-];
 const MAX_MESSAGES = 8;
 const MAX_TEXT_LENGTH = 16000;
 const MAX_IMAGE_URL_LENGTH = 6_000_000;
@@ -302,28 +297,6 @@ const withProviderTimeout = async (promise, timeoutMs) => {
 };
 
 const GEMINI_VISION_MODEL = "gemini-2.5-flash-lite";
-const GROQ_TEXT_MODEL = "openai/gpt-oss-120b";
-const GROQ_TEXT_MIN_TOKENS = 120;
-
-const getModelFallbackChain = (requestedModel, isImageRequest) => {
-  const canonicalModel = isImageRequest ? GEMINI_VISION_MODEL : GROQ_TEXT_MODEL;
-  const chain = [
-    requestedModel,
-    canonicalModel,
-    ...(isImageRequest ? VISION_MODEL_FALLBACKS : TEXT_MODEL_FALLBACKS),
-  ];
-
-  return chain.filter((model, index) => (
-    typeof model === "string" &&
-    ALLOWED_MODELS.has(model) &&
-    chain.indexOf(model) === index
-  )).map((model) => {
-    if (isImageRequest) {
-      return model === "gemini-2.5-flash-lite" ? model : GEMINI_VISION_MODEL;
-    }
-    return model === "openai/gpt-oss-120b" ? model : GROQ_TEXT_MODEL;
-  }).filter((model, index, array) => array.indexOf(model) === index);
-};
 
 const getMimeTypeFromDataUrl = (value) => {
   if (typeof value !== "string") return null;
@@ -635,101 +608,14 @@ export default async function handler(req, res) {
       console.log(`[AI API] Guest generation allowed for IP: ${identifier}. Frontend will manage local credits.`);
     }
 
-    const candidateModels = getModelFallbackChain(request.model, isImageRequest);
-    let completion = null;
-    let content = "";
-    let lastProviderError = null;
-    const systemInstruction = extractSystemInstruction(request.messages);
-
+    let messages = request.messages;
     if (isImageRequest) {
-      try {
-        const geminiApiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-        if (!geminiApiKey) {
-          throw new Error("Gemini API key is not configured on the server.");
-        }
-
-        const groqApiKey = process.env.GROQ_API_KEY || process.env.LLAMA_API_KEY;
-        if (!groqApiKey) {
-          throw new Error("Groq API key is not configured on the server.");
-        }
-
-        const gemini = new GoogleGenAI({ apiKey: geminiApiKey });
-        const textOnlyMessages = await buildTextOnlyMessagesFromImageRequest(gemini, request.messages);
-        const hybridRequest = {
-          ...request,
-          model: GROQ_TEXT_MODEL,
-          messages: textOnlyMessages,
-        };
-
-        const client = new OpenAI({
-          apiKey: groqApiKey,
-          baseURL: process.env.LLAMA_BASE_URL || DEFAULT_BASE_URL,
-        });
-
-        completion = await withProviderTimeout(
-          client.chat.completions.create({
-            ...hybridRequest,
-            model: GROQ_TEXT_MODEL,
-            max_tokens: Math.max(hybridRequest.max_tokens || GROQ_TEXT_MIN_TOKENS, GROQ_TEXT_MIN_TOKENS),
-            reasoning_effort: "low",
-          }),
-          AI_PROVIDER_TIMEOUT_MS
-        );
-        content = completion.choices?.[0]?.message?.content?.trim() || "";
-
-        if (!content) {
-          throw new Error(`AI provider returned an empty response for model ${GROQ_TEXT_MODEL}.`);
-        }
-      } catch (providerError) {
-        lastProviderError = providerError;
-        console.warn(`[AI API] Hybrid image pipeline failed:`, providerError?.message || providerError);
-      }
-    } else {
-      for (const candidateModel of candidateModels) {
-        try {
-          const groqApiKey = process.env.GROQ_API_KEY || process.env.LLAMA_API_KEY;
-          if (!groqApiKey) {
-            throw new Error("Groq API key is not configured on the server.");
-          }
-
-          const client = new OpenAI({
-            apiKey: groqApiKey,
-            baseURL: process.env.LLAMA_BASE_URL || DEFAULT_BASE_URL,
-          });
-
-          completion = await withProviderTimeout(
-            client.chat.completions.create({
-              ...request,
-              model: candidateModel,
-              ...(candidateModel === GROQ_TEXT_MODEL
-                ? {
-                    max_tokens: Math.max(request.max_tokens || GROQ_TEXT_MIN_TOKENS, GROQ_TEXT_MIN_TOKENS),
-                    reasoning_effort: "low",
-                  }
-                : {}),
-            }),
-            AI_PROVIDER_TIMEOUT_MS
-          );
-          content = completion.choices?.[0]?.message?.content?.trim() || "";
-
-          if (content) {
-            if (candidateModel !== request.model) {
-              console.warn(`[AI API] Provider fallback used. Requested ${request.model}, served with ${candidateModel}.`);
-            }
-            break;
-          }
-
-          lastProviderError = new Error(`AI provider returned an empty response for model ${candidateModel}.`);
-        } catch (providerError) {
-          lastProviderError = providerError;
-          console.warn(`[AI API] Model attempt failed for ${candidateModel}:`, providerError?.message || providerError);
-        }
-      }
+      const geminiApiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+      if (!geminiApiKey) throw new Error("Gemini API key is not configured on the server.");
+      const gemini = new GoogleGenAI({ apiKey: geminiApiKey });
+      messages = await buildTextOnlyMessagesFromImageRequest(gemini, messages);
     }
-
-    if (!content) {
-      throw lastProviderError || new Error("AI provider returned an empty response.");
-    }
+    const content = await generateText({ ...request, messages }, AI_PROVIDER_TIMEOUT_MS);
 
     return json(res, 200, { content });
   } catch (error) {
