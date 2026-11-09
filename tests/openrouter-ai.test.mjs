@@ -69,7 +69,7 @@ async function callHandler(body) {
   return { status, payload };
 }
 
-test('all text budgets use Super VL with reasoning disabled and only DeepInfra then Prime Intellect', async () => {
+test('all text budgets use DeepSeek with reasoning disabled and only Wafer then DigitalOcean', async () => {
   for (const max_tokens of [400, 600, 650, 900, 1000]) {
     assert.equal(await generateText({ ...request, max_tokens }, 2000), 'A useful reply');
     const upstream = requests.at(-1);
@@ -78,8 +78,8 @@ test('all text budgets use Super VL with reasoning disabled and only DeepInfra t
     assert.equal(upstream.body.model, DEFAULT_TEXT_MODEL);
     assert.deepEqual(upstream.body.reasoning, { enabled: false, exclude: true });
     assert.deepEqual(upstream.body.provider, {
-      order: ['deepinfra', 'primeintellect'],
-      only: ['deepinfra', 'primeintellect'],
+      order: ['wafer', 'digitalocean'],
+      only: ['wafer', 'digitalocean'],
       allow_fallbacks: true,
       require_parameters: true,
     });
@@ -88,8 +88,8 @@ test('all text budgets use Super VL with reasoning disabled and only DeepInfra t
   }
 });
 
-test('legacy Android, DeepSeek and Lightning client IDs and the new web ID all route to Super VL', async () => {
-  for (const model of ['openai/gpt-oss-120b', 'llama-3.3-70b-versatile', 'deepseek/deepseek-v4-flash-0731', 'nvidia/nemotron-3.5-lightning', DEFAULT_TEXT_MODEL]) {
+test('legacy Android and Nemotron client IDs and the new web ID all route to DeepSeek', async () => {
+  for (const model of ['openai/gpt-oss-120b', 'llama-3.3-70b-versatile', 'nvidia/nemotron-3.5-super-vl', 'nvidia/nemotron-3.5-lightning', DEFAULT_TEXT_MODEL]) {
     assert.deepEqual(await callHandler({ ...request, model }), {
       status: 200, payload: { content: 'A useful reply' },
     });
@@ -97,7 +97,7 @@ test('legacy Android, DeepSeek and Lightning client IDs and the new web ID all r
   }
 });
 
-test('image requests analyze with Gemini then write with Nemotron without forwarding the image', async () => {
+test('image requests analyze with Gemini then write with DeepSeek without forwarding the image', async () => {
   const originalFetch = globalThis.fetch;
   let analysisCalls = 0;
   const analysis = mock.method(globalThis, 'fetch', async (url, options) => {

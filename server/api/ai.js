@@ -14,7 +14,7 @@ const ALLOWED_MODELS = new Set([
   DEFAULT_TEXT_MODEL,
   // Legacy client IDs are accepted only as aliases for the new server-side model.
   "nvidia/nemotron-3.5-lightning",
-  "deepseek/deepseek-v4-flash-0731",
+  "nvidia/nemotron-3.5-super-vl",
   "openai/gpt-oss-120b",
   "gemini-2.5-flash-lite",
   // Allow older clients during staged rollout; backend remaps them below.

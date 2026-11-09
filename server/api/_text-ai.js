@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 
-export const DEFAULT_TEXT_MODEL = 'nvidia/nemotron-3.5-super-vl';
+export const DEFAULT_TEXT_MODEL = 'deepseek/deepseek-v4-flash-0731';
 
 export const generateText = async (request, timeoutMs) => {
   const apiKey = process.env.OPENROUTER_API_KEY?.trim();
@@ -25,8 +25,8 @@ export const generateText = async (request, timeoutMs) => {
     max_tokens: Math.max(request.max_tokens || 1200, 120),
     reasoning: { enabled: false, exclude: true },
     provider: {
-      order: ['deepinfra', 'primeintellect'],
-      only: ['deepinfra', 'primeintellect'],
+      order: ['wafer', 'digitalocean'],
+      only: ['wafer', 'digitalocean'],
       allow_fallbacks: true,
       require_parameters: true,
     },
