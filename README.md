@@ -1,6 +1,6 @@
 # Rizzmaster Production App
 
-Rizzmaster is an AI dating assistant mobile app using React, Vite, Capacitor, Supabase, AdMob, Google login, and DeepSeek V4 Flash 0731 through OpenRouter. Gemini analyzes images before DeepSeek writes the replies.
+Rizzmaster is an AI dating assistant mobile app using React, Vite, Capacitor, Supabase, AdMob, Google login, and Groq-hosted Llama AI models.
 
 ## Production Setup & Security Hardening
 
@@ -14,11 +14,7 @@ You must provide the following environment variables during your production buil
 - `VITE_SUPABASE_ANON_KEY`: Your Supabase anon key.
 - `VITE_AUTH_REDIRECT_URL`: The exact hosted web URL Supabase should return to after Google login.
 - `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase server-only service role key for API routes. Never expose this with a `VITE_` prefix.
-- `OPENROUTER_API_KEY`: Required server-only OpenRouter API key for replies, bios, and Coach. Never use a `VITE_` prefix.
-- `OPENROUTER_BASE_URL`: Optional; defaults to `https://openrouter.ai/api/v1`.
-- `OPENROUTER_MODEL`: Set to `deepseek/deepseek-v4-flash-0731`, or remove it to use that default. Replace any existing Nemotron value before deploying. All text generation uses `reasoning.effort: low`, with reasoning excluded from returned content. The completion limit includes an additional 1,024 tokens of headroom for reasoning; this is a limit, not a fixed token charge.
-- `OPENROUTER_SITE_URL` and `OPENROUTER_APP_NAME`: Optional attribution; default to `https://rizzmaster.online` and `Rizz Master`.
-- `GEMINI_API_KEY`: Server-only Gemini key, required for image analysis.
+- `GROQ_API_KEY`: Your Groq API key for accessing Llama models.
 - `IAP_ACCOUNT_BINDING_SECRET`: Preferred high-entropy server-only secret used to bind an Android purchase to the signed-in Rizzmaster account. If omitted, the API derives a domain-separated fallback from `SUPABASE_SERVICE_ROLE_KEY`; set this explicitly in Vercel Production for independent secret rotation. Never expose it with a `VITE_` prefix.
 - `DODO_PAYMENTS_API_KEY`: Server-only Dodo Payments API key.
 - `DODO_PAYMENTS_WEBHOOK_KEY`: Server-only signing key for `/api/dodo-webhook`.
@@ -27,8 +23,6 @@ You must provide the following environment variables during your production buil
 - `DODO_PAYMENTS_MONTHLY_PRODUCT_ID`: Dodo recurring product configured at `$15.99 USD` per month.
 - `DODO_PAYMENTS_RETURN_URL`: Web return URL, normally `https://rizzmaster.online/billing/return`.
 - `DODO_PAYMENTS_ENABLED`: Set to `true` only after products, webhook delivery, and the Supabase billing migration are verified.
-
-Set `OPENROUTER_API_KEY` in the hosting environment before deploying this migration. Requests try Wafer first and DigitalOcean second; the provider allowlist excludes all others. OpenRouter handles fallback between these two providers for the same model. There is no Groq or alternative-model fallback. Older Android/web clients sending OSS, Llama or Nemotron model IDs are routed to the configured server model too. Redeploy after changing environment variables. The Cloud Run deployment script reads the `openrouter-api-key` secret. Run `npm run test:ai` for provider routing and failure tests.
 
 Never give Dodo secrets a `VITE_` prefix. Use test credentials in Vercel Preview and live credentials in Production.
 
