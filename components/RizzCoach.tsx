@@ -35,6 +35,7 @@ interface RizzCoachProps {
     isPremium: boolean;
     onGoPremium?: () => void;
     onCreditsExhausted?: (requiredCredits?: 1 | 2) => void;
+    onGenerationCompleted?: (userId: string) => void;
     onOpenWebMenu?: () => void;
     onLoginRequired?: () => void;
     shadowNotes: string;
@@ -285,7 +286,7 @@ const AuroraBackground = React.memo(({ colors }: { colors: any }) => (
     </div>
 ));
 
-const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits, onUpdateCredits, isPremium, onGoPremium, onCreditsExhausted, onOpenWebMenu, onLoginRequired, shadowNotes, onUpdateShadowNotes, customPersonas = [], onAddPersona, onEditPersona }) => {
+const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits, onUpdateCredits, isPremium, onGoPremium, onCreditsExhausted, onGenerationCompleted, onOpenWebMenu, onLoginRequired, shadowNotes, onUpdateShadowNotes, customPersonas = [], onAddPersona, onEditPersona }) => {
     const { showToast } = useToast();
 
     // Dynamically scoped keys to prevent cross-account pollution on shared devices
@@ -432,6 +433,7 @@ const RizzCoach: React.FC<RizzCoachProps> = ({ isOpen, onClose, userId, credits,
             // Image costs 2 credits, text costs 1
             const responseCost: 1 | 2 = hadImage ? 2 : 1;
             if (!isPremium) onUpdateCredits((prev) => prev - responseCost);
+            onGenerationCompleted?.(userId);
         } catch (err: any) {
             console.error('Coach error:', err);
             if (err.message === 'LOGIN_REQUIRED') {

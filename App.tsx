@@ -27,6 +27,7 @@ import IAPService from './services/iapService';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { observeNativeNetwork } from './services/networkLifecycle';
 import { getApiUrl, runtimeConfig } from './services/runtimeConfig';
+import { recordAndroidSuccessfulGeneration } from './services/androidPremiumPrompt';
 import {
   canUseNativeAdMob,
   canUseNativeAppEvents,
@@ -57,6 +58,7 @@ import NoInternetOverlay from './components/NoInternetOverlay';
 
 const DAILY_CREDITS = 5;
 const IS_WEB_PLATFORM = !Capacitor.isNativePlatform();
+const IS_ANDROID_PLATFORM = Capacitor.getPlatform() === 'android';
 const RIZZ_SHARING_ENABLED = canUseRizzSharing();
 const STARTUP_ANIMATION_MS = IS_WEB_PLATFORM ? 2200 : 3000;
 const KOFI_SUPPORT_URL = 'https://ko-fi.com/vantalumstudio';
@@ -451,6 +453,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const loadingRef = useRef(false);
   const savedItemsRef = useRef<SavedItem[]>([]);
   const webGenerationCountRef = useRef(IS_WEB_PLATFORM ? readEbookGenerationCount() : 0);
+  const androidPremiumPromptSequenceRef = useRef(0);
 
   // Splash State
   const [showSplash, setShowSplash] = useState(true);
@@ -473,6 +476,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
 
   // Modals & Flags
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [pendingAndroidPremiumPrompt, setPendingAndroidPremiumPrompt] = useState<{ identity: string; sequence: number } | null>(null);
   const [showCreditsExhaustedModal, setShowCreditsExhaustedModal] = useState(false);
   const [privacyOptionsRequired, setPrivacyOptionsRequired] = useState(false);
   const [isPrivacyFormOpen, setIsPrivacyFormOpen] = useState(false);
@@ -516,6 +520,20 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   const [editingPersona, setEditingPersona] = useState<CustomPersona | null>(null);
   const [personaName, setPersonaName] = useState('');
   const [personaInstruction, setPersonaInstruction] = useState('');
+
+  const recordAndroidGeneration = useCallback((identity: string) => {
+    if (!IS_ANDROID_PLATFORM) return;
+    const currentProfile = profileRef.current;
+    if (!currentProfile || currentProfile.id !== identity || currentProfile.is_premium) return;
+
+    const record = recordAndroidSuccessfulGeneration(identity);
+    if (!record.shouldPrompt) return;
+
+    setPendingAndroidPremiumPrompt({
+      identity,
+      sequence: ++androidPremiumPromptSequenceRef.current,
+    });
+  }, []);
 
   // Guest Mode State
   const [isGuest, setIsGuest] = useState(false);
@@ -622,6 +640,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     setPersonaName('');
     setPersonaInstruction('');
     setShowPremiumModal(false);
+    setPendingAndroidPremiumPrompt(null);
     setShowCreditsExhaustedModal(false);
     setShowSavedModal(false);
     setShowPersonaModal(false);
@@ -657,6 +676,68 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     setRewardedAdStatus('idle');
     setIsRewardedAdLoading(false);
   }, [profile?.id, isGuest]);
+
+  useEffect(() => {
+    if (!IS_ANDROID_PLATFORM || !pendingAndroidPremiumPrompt) return;
+
+    const currentProfile = profile;
+    if (!currentProfile || currentProfile.id !== pendingAndroidPremiumPrompt.identity || currentProfile.is_premium) {
+      setPendingAndroidPremiumPrompt(null);
+      return;
+    }
+
+    // Wait until the successful response has rendered and any blocking UI has settled.
+    if (
+      loading ||
+      showSplash ||
+      showOnboarding ||
+      isSessionBlocked ||
+      isOffline ||
+      isPrivacyFormOpen ||
+      showPremiumModal ||
+      showCreditsExhaustedModal ||
+      showSavedModal ||
+      showRizzShareCard ||
+      showPersonaModal
+    ) return;
+
+    const sequence = pendingAndroidPremiumPrompt.sequence;
+    const timer = window.setTimeout(() => {
+      const activeProfile = profileRef.current;
+      if (
+        sequence !== androidPremiumPromptSequenceRef.current ||
+        !activeProfile ||
+        activeProfile.id !== pendingAndroidPremiumPrompt.identity ||
+        activeProfile.is_premium ||
+        showPremiumModal ||
+        loading
+      ) return;
+
+      setPendingAndroidPremiumPrompt(null);
+      window.history.pushState({ view: stateRef.current.currentView, premium: true, scheduledPremium: true }, '');
+      setRewardedAdStatus('idle');
+      setIsRewardedAdLoading(false);
+      rewardedAdAttemptRef.current = null;
+      setShowPremiumModal(true);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    loading,
+    showSplash,
+    showOnboarding,
+    isSessionBlocked,
+    isOffline,
+    isPrivacyFormOpen,
+    showPremiumModal,
+    showCreditsExhaustedModal,
+    showSavedModal,
+    showRizzShareCard,
+    showPersonaModal,
+    pendingAndroidPremiumPrompt,
+    profile?.id,
+    profile?.is_premium,
+  ]);
 
   useEffect(() => {
     if (profile?.id) {
@@ -1235,6 +1316,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       // Fallback: directly set the view in case history is missing
       setCurrentView('HOME');
       setShowPremiumModal(false);
+      setPendingAndroidPremiumPrompt(null);
       setShowSavedModal(false);
       setRewardedAdStatus('idle');
       setIsRewardedAdLoading(false);
@@ -1682,6 +1764,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       setSession(null);
       setProfile(null);
       setSavedItems([]);
+      setPendingAndroidPremiumPrompt(null);
       setIsSessionBlocked(false);
       setIsProfileLoadingHung(false);
       setProfileLoadError(null);
@@ -2374,6 +2457,8 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
           const count = ++webGenerationCountRef.current;
           saveEbookGenerationCount(count);
           if (isEbookPromotionDue(count)) setShowEbookPromotion(true);
+        } else {
+          recordAndroidGeneration(currentProfile.id);
         }
       }
 
@@ -2438,7 +2523,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         await syncProfile().catch(() => null);
       }
     }
-  }, [showToast, handleCreditsExhausted, updateCredits, syncProfile]);
+  }, [showToast, handleCreditsExhausted, updateCredits, syncProfile, recordAndroidGeneration]);
 
   const isSaved = useCallback((content: string) => savedItems.some(item => item.content === content), [savedItems]);
   const clear = useCallback(() => {
@@ -2571,6 +2656,17 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
               setLoginReason('premium');
               handleExitGuestMode();
             }}
+          />
+        </Suspense>
+      )}
+      {!IS_WEB_PLATFORM && showPremiumModal && (
+        <Suspense fallback={null}>
+          <PremiumModal
+            onClose={handleBackNavigation}
+            onUpgrade={handleUpgrade}
+            onRestore={handleRestorePurchases}
+            isGuest={isGuest}
+            userId={profile?.id || null}
           />
         </Suspense>
       )}
@@ -2723,6 +2819,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                 isPremium={profile?.is_premium || false}
                 onGoPremium={handleCoachGoPremium}
                 onCreditsExhausted={handleCreditsExhausted}
+                onGenerationCompleted={recordAndroidGeneration}
                 onOpenWebMenu={IS_WEB_PLATFORM && onNavigateToPath ? handleCoachOpenWebMenu : undefined}
                 onLoginRequired={handleCoachLoginRequired}
                 shadowNotes={profile?.shadow_notes || ''}
@@ -2794,15 +2891,6 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
               <div className="web-app-backdrop fixed inset-0 z-[-1] pointer-events-none overflow-hidden" />
 
               <Suspense fallback={null}>
-                {showPremiumModal && (
-                  <PremiumModal
-                    onClose={handleBackNavigation}
-                    onUpgrade={handleUpgrade}
-                    onRestore={handleRestorePurchases}
-                    isGuest={isGuest}
-                    userId={profile?.id || null}
-                  />
-                )}
                 {showSavedModal && <SavedModal
                   isOpen
                   onClose={handleBackNavigation}
