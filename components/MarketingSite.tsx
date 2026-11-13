@@ -1082,6 +1082,13 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'what-to-do-when-you-outgrow-your-friend-group', label: 'Notice when a friendship no longer fits' },
     { slug: 'how-to-make-small-talk-when-you-have-nothing-in-common', label: 'Make everyday conversations easier' },
     { slug: 'why-you-feel-disconnected-from-people-even-when-you-are-social', label: 'Understand feeling disconnected' }
+  ],
+  'why-you-keep-checking-your-phone': [
+    { slug: 'how-to-stop-comparing-your-life-to-everyone-else-online', label: 'Stop letting online comparison run your attention' },
+    { slug: 'why-you-feel-guilty-when-you-rest', label: 'Rest without reaching for another task' },
+    { slug: 'why-you-overexplain-yourself', label: 'Stop using extra words to manage reactions' },
+    { slug: 'why-socializing-leaves-you-drained', label: 'Understand what drains your social energy' },
+    { slug: 'how-to-make-friends-as-an-adult-when-life-feels-too-busy', label: 'Build connection that fits real life' }
   ]
 };
 
