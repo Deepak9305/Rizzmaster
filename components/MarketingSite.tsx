@@ -1089,6 +1089,13 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'why-you-overexplain-yourself', label: 'Stop using extra words to manage reactions' },
     { slug: 'why-socializing-leaves-you-drained', label: 'Understand what drains your social energy' },
     { slug: 'how-to-make-friends-as-an-adult-when-life-feels-too-busy', label: 'Build connection that fits real life' }
+  ],
+  'how-to-make-a-big-decision-when-every-option-feels-wrong': [
+    { slug: 'why-you-feel-behind-in-life-when-everyone-else-seems-ahead', label: 'Step outside someone else’s timeline' },
+    { slug: 'how-to-stop-comparing-your-life-to-everyone-else-online', label: 'Stop letting comparison make the choice for you' },
+    { slug: 'why-you-overexplain-yourself', label: 'Communicate the decision without defending it' },
+    { slug: 'why-you-feel-guilty-when-you-rest', label: 'Make room to think without guilt' },
+    { slug: 'how-to-have-a-difficult-conversation-without-getting-defensive', label: 'Discuss a difficult choice calmly' }
   ]
 };
 
