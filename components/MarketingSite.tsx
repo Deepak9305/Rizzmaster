@@ -1096,6 +1096,13 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'why-you-overexplain-yourself', label: 'Communicate the decision without defending it' },
     { slug: 'why-you-feel-guilty-when-you-rest', label: 'Make room to think without guilt' },
     { slug: 'how-to-have-a-difficult-conversation-without-getting-defensive', label: 'Discuss a difficult choice calmly' }
+  ],
+  'why-small-things-annoy-you-lately': [
+    { slug: 'why-you-keep-checking-your-phone', label: 'Break the automatic phone-checking loop' },
+    { slug: 'why-socializing-leaves-you-drained', label: 'Understand what drains your patience' },
+    { slug: 'why-you-feel-guilty-when-you-rest', label: 'Rest before exhaustion becomes resentment' },
+    { slug: 'how-to-have-a-difficult-conversation-without-getting-defensive', label: 'Talk about a recurring problem calmly' },
+    { slug: 'why-you-say-yes-when-you-mean-no', label: 'Set a boundary before you snap' }
   ]
 };
 
