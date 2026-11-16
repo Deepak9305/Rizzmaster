@@ -249,12 +249,13 @@ const renderRelated = (post, posts) => [
 const renderArticleCta = (compact = false) => `<section class="${compact ? 'my-2 p-6' : 'mt-16 p-7'} rounded-3xl border border-pink-300/15 bg-pink-500/[0.08]"><p class="text-xs font-bold uppercase tracking-[0.22em] text-pink-200/75">Need a second opinion?</p><h2 class="mt-3 text-2xl font-bold text-white">Turn the situation into a send-ready reply.</h2><p class="mt-3 max-w-xl text-sm leading-6 text-white/50">Rizz Master helps you find the right words without losing your personality.</p><a href="${escapeAttribute(PLAY_STORE_URL)}" class="mt-6 inline-flex rounded-2xl bg-pink-500 px-5 py-3.5 text-sm font-bold text-white">Get it on Google Play</a></section>`;
 
 const renderArticle = (post, posts) => {
-  const reviewPromotionLayout = post.slug === 'why-small-things-annoy-you-lately';
-  const middleIndex = reviewPromotionLayout ? 3 : Math.ceil(post.sections.length / 2);
+  const promotionLayout = getArticlePromotionLayout(post.slug, post.sections.length);
+  const reviewPromotionLayout = promotionLayout.ebook;
+  const middleIndex = promotionLayout.firstIndex;
   const author = post.author ? EDITORIAL_AUTHORS[post.author] : null;
   const authorLine = author ? `<p class="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-white/40">By ${escapeHtml(author.name)} <span class="text-white/20">&middot;</span> ${escapeHtml(author.role)}</p>` : '';
-  const middlePromotion = post.slug === 'why-small-things-annoy-you-lately' ? `<aside aria-label="Ebook promotion" class="my-2 flex items-center gap-5 rounded-3xl border border-pink-300/25 bg-pink-500/10 p-5 md:p-7"><picture class="w-24 shrink-0 sm:w-36"><source type="image/webp" srcset="/promotions/make-her-think-about-you-cover.webp"><img src="/promotions/make-her-think-about-you-cover.png" alt="Make Her Think About You Every Night by Amelia Smith" width="600" height="600" loading="lazy" class="aspect-square w-full rounded-xl object-contain"></picture><div><p class="text-xs font-bold text-pink-200/75">Our ebook</p><h2 class="mt-2 text-xl font-bold text-white sm:text-2xl">Make Her Think About You Every Night</h2><p class="mt-3 text-sm leading-6 text-white/60">A private guide to words, timing, and tension that lingers.</p><a href="https://ameliasmithreal.gumroad.com/l/yzcpp" target="_blank" rel="noopener noreferrer" class="mt-4 inline-flex rounded-full bg-pink-500 px-5 py-3 text-sm font-bold text-white">Get the PDF →</a></div></aside>` : renderArticleCta(true);
-  const articleSections = post.sections.map((section, index) => `${index === middleIndex ? middlePromotion : ''}${reviewPromotionLayout && index === post.sections.length - 1 ? renderArticleCta() : ''}<section><h2 class="text-2xl font-bold tracking-tight text-white md:text-3xl">${escapeHtml(section.heading)}</h2>${section.paragraphs.map((paragraph) => `<p class="mt-5 text-base leading-8 text-white/60">${escapeHtml(paragraph)}</p>`).join('')}${renderSectionImage(section)}${renderBullets(section.bullets)}</section>`).join('');
+  const middlePromotion = reviewPromotionLayout ? `<aside aria-label="Ebook promotion" class="my-2 flex items-center gap-5 rounded-3xl border border-pink-300/25 bg-pink-500/10 p-5 md:p-7"><picture class="w-24 shrink-0 sm:w-36"><source type="image/webp" srcset="/promotions/make-her-think-about-you-cover.webp"><img src="/promotions/make-her-think-about-you-cover.png" alt="Make Her Think About You Every Night by Amelia Smith" width="600" height="600" loading="lazy" class="aspect-square w-full rounded-xl object-contain"></picture><div><p class="text-xs font-bold text-pink-200/75">Our ebook</p><h2 class="mt-2 text-xl font-bold text-white sm:text-2xl">Make Her Think About You Every Night</h2><p class="mt-3 text-sm leading-6 text-white/60">A private guide to words, timing, and tension that lingers.</p><a href="https://ameliasmithreal.gumroad.com/l/yzcpp" target="_blank" rel="noopener noreferrer" class="mt-4 inline-flex rounded-full bg-pink-500 px-5 py-3 text-sm font-bold text-white">Get the PDF →</a></div></aside>` : renderArticleCta(true);
+  const articleSections = post.sections.map((section, index) => `${index === middleIndex ? middlePromotion : ''}${reviewPromotionLayout && index === promotionLayout.appIndex ? renderArticleCta() : ''}<section><h2 class="text-2xl font-bold tracking-tight text-white md:text-3xl">${escapeHtml(section.heading)}</h2>${section.paragraphs.map((paragraph) => `<p class="mt-5 text-base leading-8 text-white/60">${escapeHtml(paragraph)}</p>`).join('')}${renderSectionImage(section)}${renderBullets(section.bullets)}</section>`).join('');
   const internalLinks = (articleInternalLinks[post.slug] || posts
     .filter((candidate) => candidate.slug !== post.slug)
     .slice(0, 3)
@@ -375,7 +376,7 @@ const writePage = async (route, html) => {
 };
 
 const { BLOG_POSTS, EDITORIAL_AUTHORS, PLAY_STORE_URL } = await loadMarketingContent();
-const { getRelatedGuideSlugs, PICKUP_LINE_GUIDE_SLUGS } = await loadTypeScriptModule(join(projectRoot, 'services/editorialDiscovery.ts'));
+const { getRelatedGuideSlugs, PICKUP_LINE_GUIDE_SLUGS, getArticlePromotionLayout } = await loadTypeScriptModule(join(projectRoot, 'services/editorialDiscovery.ts'));
 const { MARKETING_LEGAL_PAGES } = await loadMarketingLegal();
 const shell = await readFile(shellPath, 'utf8');
 
