@@ -1,5 +1,6 @@
 // Shared by the browser and prerenderer so discovery links survive without JS.
 export const EBOOK_PROMOTION_SLUGS = [
+  'why-you-procrastinate-on-things-you-care-about',
   'why-small-things-annoy-you-lately',
   'respond-to-last-minute-date-cancellation',
   'what-to-text-when-someone-needs-space',

@@ -1103,6 +1103,13 @@ const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string
     { slug: 'why-you-feel-guilty-when-you-rest', label: 'Rest before exhaustion becomes resentment' },
     { slug: 'how-to-have-a-difficult-conversation-without-getting-defensive', label: 'Talk about a recurring problem calmly' },
     { slug: 'why-you-say-yes-when-you-mean-no', label: 'Set a boundary before you snap' }
+  ],
+  'why-you-procrastinate-on-things-you-care-about': [
+    { slug: 'how-to-make-a-big-decision-when-every-option-feels-wrong', label: 'Make a difficult decision without waiting for certainty' },
+    { slug: 'why-you-feel-guilty-when-you-rest', label: 'Separate recovery from avoidance' },
+    { slug: 'why-you-feel-behind-in-life-when-everyone-else-seems-ahead', label: 'Step outside someone else’s timeline' },
+    { slug: 'why-you-overexplain-yourself', label: 'Stop performing for an imagined audience' },
+    { slug: 'why-you-keep-checking-your-phone', label: 'Break the automatic distraction loop' }
   ]
 };
 

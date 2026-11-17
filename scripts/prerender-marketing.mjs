@@ -235,6 +235,13 @@ const articleInternalLinks = {
     { slug: 'how-to-tell-if-someone-is-emotionally-available', label: 'Recognize emotional availability' },
     { slug: 'texting-boundaries-while-dating', label: 'Set healthy dating boundaries' },
     { slug: 'how-to-pace-a-new-relationship-without-losing-yourself', label: 'Keep a healthy relationship pace' }
+  ],
+  'why-you-procrastinate-on-things-you-care-about': [
+    { slug: 'how-to-make-a-big-decision-when-every-option-feels-wrong', label: 'Make a difficult decision without waiting for certainty' },
+    { slug: 'why-you-feel-guilty-when-you-rest', label: 'Separate recovery from avoidance' },
+    { slug: 'why-you-feel-behind-in-life-when-everyone-else-seems-ahead', label: 'Step outside someone else’s timeline' },
+    { slug: 'why-you-overexplain-yourself', label: 'Stop performing for an imagined audience' },
+    { slug: 'why-you-keep-checking-your-phone', label: 'Break the automatic distraction loop' }
   ]
 };
 
