@@ -189,18 +189,116 @@ const sanitizeResponse = <T>(data: T): T => {
 /**
  * Generates Rizz (Tease, Smooth, Chaotic) based on input text and optional image.
  */
-const safeChatReply = (value: unknown, fallback: string): string =>
-  typeof value === 'string' && value.trim() && !/\[(?:NSFW|CENSORED)\]/.test(value) ? value : fallback;
+type ConversationStage = 'opening' | 'active' | 'planned' | 'direct' | 'boundary';
+
+const getLatestConversationText = (inputText: string): string => {
+  const lines = inputText.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+  return (lines[lines.length - 1] || inputText).replace(/^(?:user|you|them|her|him|match|other person)\s*:\s*/i, '').trim();
+};
+
+const getConversationStage = (inputText: string): ConversationStage => {
+  const latest = getLatestConversationText(inputText).toLowerCase();
+
+  if (/\b(?:no|stop|don't|do not|not interested|uncomfortable|leave me alone|back off)\b/.test(latest)) {
+    return 'boundary';
+  }
+  if (/\b(?:sex|nudes?|sext(?:ing)?|fuck|horny|come over|come round|sleep with me|hook ?up|right now|in my bed|your place|my place)\b/.test(latest)) {
+    return 'direct';
+  }
+  if (/\b(?:tonight|tomorrow|at \d|where should|when should|on my way|see you|meet|reservation|booked)\b/.test(latest)) {
+    return 'planned';
+  }
+  if (/\b(?:kiss|miss you|can't wait|wish you were|want you|chemistry|attracted|tempting|flirt)\b/.test(latest)) {
+    return 'active';
+  }
+  return 'opening';
+};
+
+const getConversationStageGuidance = (stage: ConversationStage): string => {
+  switch (stage) {
+    case 'direct':
+      return 'The latest message is already direct. Reply to that invitation with confident, non-graphic tension or a clear next step. Do not reset to coffee, drinks, a first date, or “let us flirt”.';
+    case 'planned':
+      return 'A plan already exists. Build on the plan and the existing chemistry. Do not suggest starting over with coffee, drinks, or a first date.';
+    case 'active':
+      return 'The conversation is already flirting. Continue the established energy and details. Do not restart with generic first-date advice.';
+    case 'boundary':
+      return 'The latest message signals discomfort or refusal. Respect it directly and do not escalate, tease, or suggest meeting.';
+    default:
+      return 'This appears to be an opening or early exchange. A simple invitation can be appropriate when it fits the message.';
+  }
+};
+
+const isStageResetReply = (value: string, stage: ConversationStage): boolean => (
+  stage !== 'opening' && /\b(?:coffee|drinks?|grab a drink|start with a proper date|first date|let(?:'|’)?s flirt|see where the chemistry leads)\b/i.test(value)
+);
+
+const safeChatReply = (value: unknown, fallback: string, stage: ConversationStage): string =>
+  typeof value === 'string' && value.trim() && !/\[(?:NSFW|CENSORED)\]/.test(value) && !isStageResetReply(value, stage)
+    ? value
+    : fallback;
+
+const getStageAwareReplyFallback = (inputText: string): RizzResponse | null => {
+  const stage = getConversationStage(inputText);
+  if (stage === 'boundary') {
+    return {
+      tease: 'That crossed a line. Keep it respectful if you want me to stay in this conversation.',
+      smooth: 'I am not comfortable with that. Please respect my boundary.',
+      chaotic: 'Bold is fine. Ignoring a no is not. Read the room.',
+      loveScore: 10,
+      potentialStatus: 'Read The Room',
+      analysis: 'The right move here is respect, not more escalation.',
+    };
+  }
+
+  if (stage === 'direct') {
+    return {
+      tease: 'That is a very direct invitation. I like the confidence. What did you have in mind? 😉',
+      smooth: 'You have my attention. Tell me when you want to make that happen.',
+      chaotic: 'Straight to the point? Dangerous. Give me one good reason to say yes 😉',
+      loveScore: 68,
+      potentialStatus: 'Strong Intent',
+      analysis: 'The interest is clear, so the reply should keep the tension moving forward.',
+    };
+  }
+
+  if (stage === 'planned') {
+    return {
+      tease: 'Good. Keep that same energy when we see each other.',
+      smooth: 'I like having something to look forward to. I will see you then.',
+      chaotic: 'The plan is locked. Now try not to make the anticipation too obvious 😉',
+      loveScore: 78,
+      potentialStatus: 'Plan Secured',
+      analysis: 'There is already a plan, so the reply should build anticipation instead of restarting the exchange.',
+    };
+  }
+
+  if (stage === 'active') {
+    return {
+      tease: 'Careful. Keep talking like that and I might start enjoying this too much.',
+      smooth: 'You are making this very easy to look forward to.',
+      chaotic: 'That energy is getting dangerous. I am listening 😉',
+      loveScore: 72,
+      potentialStatus: 'Chemistry Building',
+      analysis: 'The conversation already has momentum, so the reply should keep the tension alive.',
+    };
+  }
+
+  return null;
+};
 
 const getNonGraphicAdultReplyFallback = (inputText: string): RizzResponse | null => {
   if (!/\b(?:sex|nudes?|sext(?:ing)?|fuck|horny|dick|pussy|blowjob|handjob)\b/i.test(inputText)) {
     return null;
   }
 
+  const stageFallback = getStageAwareReplyFallback(inputText);
+  if (stageFallback) return stageFallback;
+
   return {
     tease: 'That is a bold invitation. You will have to earn the next step first 😉',
-    smooth: 'You are tempting, but I like a little build-up. Start with a proper date.',
-    chaotic: 'Skipping straight to the finale? I respect the confidence. Try the opening scene first 😉',
+    smooth: 'You are tempting. Keep that energy going and let the anticipation build.',
+    chaotic: 'Skipping ahead already? I respect the confidence. Keep making your case 😉',
     loveScore: 58,
     potentialStatus: 'Needs More Spark',
     analysis: 'The confidence is clear. A little more build-up would make the invitation land better.',
@@ -216,6 +314,7 @@ export const generateRizz = async (
 ): Promise<RizzResponse> => { // Return type simplified for consistency
 
   const isUnsafe = isBlockedChatReplyRequest(inputText);
+  const conversationStage = getConversationStage(inputText);
 
   if (isUnsafe) {
     return {
@@ -240,6 +339,8 @@ CUSTOM PERSONA INSTRUCTIONS:
 ${SIXTEEN_PLUS_TONE_RULES}
 
 CHAT REPLY RULES (text and screenshots, including custom vibes):
+- Read the conversation in chronological order and treat the latest meaningful message as the strongest signal. For screenshots, identify the final visible exchange before writing.
+- Current conversation stage guidance: ${getConversationStageGuidance(conversationStage)}
 - Adult sexual wording in context is not a reason to refuse. For consensual adult flirting, even if the user asks for graphic wording, give sendable, non-graphic flirting without mentioning moderation or echoing explicit words. Use implication, timing, and playful confidence.
 - If the user wants to decline, or the conversation shows hesitation, discomfort, or a no, offer clear, respectful boundary-setting without escalating.
 - Decline requests to create sexual content involving minors, incest, bestiality, coercion, or non-consensual intimate images, and requests for targeted hate or threats. When such content is quoted for help, give a safe response instead. Never assume an ambiguous age is adult for sexualized flirting.
@@ -341,17 +442,17 @@ CRITICAL: ${length === 'short'
 
           // Validate structure and provide defaults if keys are missing
           // This prevents "blank screen" issues if the model hallucinates the schema
-          const adultFallback = getNonGraphicAdultReplyFallback(inputText);
+          const responseFallback = getStageAwareReplyFallback(inputText) || getNonGraphicAdultReplyFallback(inputText);
           const modelReturnedReply = [normalizedData.tease, normalizedData.smooth, normalizedData.chaotic]
             .some(value => typeof value === 'string' && value.trim() && !/\[(?:NSFW|CENSORED)\]/.test(value));
-          const useAdultFallback = Boolean(adultFallback && !modelReturnedReply);
+          const useResponseFallback = Boolean(responseFallback && !modelReturnedReply);
           const finalResponse: RizzResponse = {
-            tease: safeChatReply(normalizedData.tease, adultFallback?.tease || "What did you have in mind?"),
-            smooth: safeChatReply(normalizedData.smooth, adultFallback?.smooth || "Tell me a little more."),
-            chaotic: safeChatReply(normalizedData.chaotic, adultFallback?.chaotic || "Okay, I have questions."),
-            loveScore: useAdultFallback ? adultFallback!.loveScore : (typeof normalizedData.lovescore === 'number' ? normalizedData.lovescore : 50),
-            potentialStatus: useAdultFallback ? adultFallback!.potentialStatus : (normalizedData.potentialstatus || adultFallback?.potentialStatus || "Unknown"),
-            analysis: useAdultFallback ? adultFallback!.analysis : (normalizedData.analysis || adultFallback?.analysis || "No analysis available.")
+            tease: safeChatReply(normalizedData.tease, responseFallback?.tease || "What did you have in mind?", conversationStage),
+            smooth: safeChatReply(normalizedData.smooth, responseFallback?.smooth || "Tell me a little more.", conversationStage),
+            chaotic: safeChatReply(normalizedData.chaotic, responseFallback?.chaotic || "Okay, I have questions.", conversationStage),
+            loveScore: useResponseFallback ? responseFallback!.loveScore : (typeof normalizedData.lovescore === 'number' ? normalizedData.lovescore : 50),
+            potentialStatus: useResponseFallback ? responseFallback!.potentialStatus : (normalizedData.potentialstatus || responseFallback?.potentialStatus || "Unknown"),
+            analysis: useResponseFallback ? responseFallback!.analysis : (normalizedData.analysis || responseFallback?.analysis || "No analysis available.")
           };
 
           return finalResponse;

@@ -113,10 +113,32 @@ test('adult model refusals still produce useful non-graphic replies', async () =
   });
   const { api } = service(refusal);
   const result = await api.generateRizz('Come over and have sex with me.');
-  assert.match(result.tease, /bold invitation/i);
-  assert.match(result.smooth, /little build-up/i);
-  assert.match(result.chaotic, /opening scene/i);
+  assert.match(result.tease, /direct invitation/i);
+  assert.match(result.smooth, /make that happen/i);
+  assert.match(result.chaotic, /good reason to say yes/i);
   assert.doesNotMatch(JSON.stringify(result), /\bsex\b|\bnudes?\b/i);
+});
+
+test('late-stage replies do not reset the conversation to coffee or a first date', async () => {
+  const genericResponse = JSON.stringify({
+    tease: 'How about we start with coffee first?',
+    smooth: 'Maybe we should get drinks and see where the chemistry leads.',
+    chaotic: "Let's flirt a little and meet up sometime.",
+    loveScore: 75,
+    potentialStatus: 'Good',
+    analysis: 'A fun opening move.',
+  });
+  const { api, calls } = service(genericResponse);
+  const result = await api.generateRizz([
+    'Them: You have been on my mind all night.',
+    'You: Then stop making me wait.',
+    'Them: Come over right now.',
+  ].join('\n'));
+
+  assert.match(calls[0].messages[0].content, /latest message is already direct/i);
+  assert.doesNotMatch(JSON.stringify(result), /coffee|drinks?|first date|let's flirt|meet up/i);
+  assert.match(result.tease, /direct invitation/i);
+  assert.match(result.smooth, /attention/i);
 });
 
 test('Coach retains contextual support instructions for abuse and self-harm topics', async () => {
