@@ -232,13 +232,13 @@ test('failure results distinguish a busy ad, failed-load cooldown, offline, and 
   const cooldown = await s.ads.watchRewardVideo('reward');
   assert.equal(cooldown.reason, 'retry-wait'); assert.equal(cooldown.retryAfterSeconds, 60); s.runtime.stop();
 });
-test('banner reuses loaded view through keyboard-like geometry updates and suspension; refresh failure recreates after 60 seconds', async () => {
+test('banner reuses loaded view through keyboard-like geometry updates and suspension; refresh failure recreates after 30 seconds', async () => {
   const s = setup(); await flush(); const banner = s.banner();
   await banner.setMode('visible'); s.events.get('banner-loaded')(); await flush();
   await banner.setTopMargin(60); await banner.setMode('hidden'); await banner.setMode('visible');
   assert.equal(s.calls.filter(x => x === 'banner').length, 1);
-  s.events.get('banner-error')(); await s.advance(59000); assert.equal(s.calls.filter(x => x === 'banner').length, 1);
-  await s.advance(1000); assert.equal(s.calls.filter(x => x === 'banner').length, 2);
+  s.events.get('banner-error')(); await s.advance(29_999); assert.equal(s.calls.filter(x => x === 'banner').length, 1);
+  await s.advance(1); assert.equal(s.calls.filter(x => x === 'banner').length, 2);
   await banner.dispose(); s.runtime.stop();
 });
 test('privacy revocation removes banner and discards cached reward', async () => {

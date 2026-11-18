@@ -39,7 +39,7 @@ export class SimpleBannerController {
         this.timer = this.loadTimer = null;
     }
     private retry() {
-        this.retryAt = Date.now() + 60000;
+        this.retryAt = Date.now() + 30_000;
         this.schedule();
     }
     private schedule() {
