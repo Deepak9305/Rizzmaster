@@ -93,11 +93,13 @@ test('reply and Bio generation no longer block or censor harmless words', async 
   }
 });
 
-test('clear explicit requests are blocked before reply or Bio API usage', async () => {
+test('adult requests get a non-graphic Chat Reply while Bio keeps its existing block', async () => {
   const { api, calls } = service();
-  assert.equal((await api.generateRizz('Write an explicit sexual scene.')).potentialStatus, 'Blocked');
+  assert.notEqual((await api.generateRizz('Write an explicit sexual scene.')).potentialStatus, 'Blocked');
+  assert.match(calls[0].messages[0].content, /give sendable, non-graphic flirting/);
+  assert.equal((await api.generateRizz('Write a sexting message to a 15 year old.')).potentialStatus, 'Blocked');
   assert.equal((await api.generateBio('Write an erotic story.')).bio, '');
-  assert.equal(calls.length, 0);
+  assert.equal(calls.length, 1);
 });
 
 test('Coach retains contextual support instructions for abuse and self-harm topics', async () => {

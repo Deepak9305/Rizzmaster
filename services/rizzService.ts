@@ -2,7 +2,7 @@ import { RizzResponse, BioResponse, ResponseLength } from "../types";
 import { resizeImage } from "./imageService";
 import { getApiUrl } from "./runtimeConfig";
 import { supabase } from "./supabaseClient";
-import { isBlockedRequest, sanitizeGeneratedText } from './contentSafety';
+import { isBlockedChatReplyRequest, isBlockedRequest, sanitizeGeneratedText } from './contentSafety';
 
 const AI_ENDPOINT = getApiUrl('/api/ai');
 const LOGIN_REQUIRED_ERROR = 'LOGIN_REQUIRED';
@@ -189,6 +189,9 @@ const sanitizeResponse = <T>(data: T): T => {
 /**
  * Generates Rizz (Tease, Smooth, Chaotic) based on input text and optional image.
  */
+const safeChatReply = (value: unknown, fallback: string): string =>
+  typeof value === 'string' && value.trim() && !/\[(?:NSFW|CENSORED)\]/.test(value) ? value : fallback;
+
 export const generateRizz = async (
   inputText: string,
   image?: string | undefined,
@@ -197,7 +200,7 @@ export const generateRizz = async (
   customInstruction?: string
 ): Promise<RizzResponse> => { // Return type simplified for consistency
 
-  const isUnsafe = isBlockedRequest(inputText);
+  const isUnsafe = isBlockedChatReplyRequest(inputText);
 
   if (isUnsafe) {
     return {
@@ -220,6 +223,11 @@ CUSTOM PERSONA INSTRUCTIONS:
 
   systemInstruction = `${basePrompt}
 ${SIXTEEN_PLUS_TONE_RULES}
+
+CHAT REPLY RULES (text and screenshots, including custom vibes):
+- Adult sexual wording in context is not a reason to refuse. For consensual adult flirting, even if the user asks for graphic wording, give sendable, non-graphic flirting without mentioning moderation or echoing explicit words. Use implication, timing, and playful confidence.
+- If the user wants to decline, or the conversation shows hesitation, discomfort, or a no, offer clear, respectful boundary-setting without escalating.
+- Decline requests to create sexual content involving minors, incest, bestiality, coercion, or non-consensual intimate images, and requests for targeted hate or threats. When such content is quoted for help, give a safe response instead. Never assume an ambiguous age is adult for sexualized flirting.
 
 TEASE: Flirt through a cheeky challenge or playful double meaning. Make attraction felt beneath the joke; tease affectionately, never insult. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
  
@@ -294,9 +302,8 @@ CRITICAL: ${length === 'short'
             rawData = JSON.parse(cleanJson(responseText));
           } catch (parseError) {
             console.warn("Rizz JSON parse failed, returning sanitized fallback:", parseError);
-            const fallback = sanitizeText(responseText).slice(0, 240);
             return {
-              tease: fallback || "The reply came back scrambled. Try a shorter prompt.",
+              tease: "The reply came back scrambled. Try a shorter prompt.",
               smooth: "Try again with a little more context if you want a cleaner set.",
               chaotic: "The model freestyled off-format, but I caught it before the UI broke.",
               loveScore: 50,
@@ -320,9 +327,9 @@ CRITICAL: ${length === 'short'
           // Validate structure and provide defaults if keys are missing
           // This prevents "blank screen" issues if the model hallucinates the schema
           const finalResponse: RizzResponse = {
-            tease: normalizedData.tease || "The AI is speechless (try again).",
-            smooth: normalizedData.smooth || "Too smooth for words (try again).",
-            chaotic: normalizedData.chaotic || "System overload (try again).",
+            tease: safeChatReply(normalizedData.tease, "What did you have in mind?"),
+            smooth: safeChatReply(normalizedData.smooth, "Tell me a little more."),
+            chaotic: safeChatReply(normalizedData.chaotic, "Okay, I have questions."),
             loveScore: typeof normalizedData.lovescore === 'number' ? normalizedData.lovescore : 50,
             potentialStatus: normalizedData.potentialstatus || "Unknown",
             analysis: normalizedData.analysis || "No analysis available."

@@ -14,6 +14,14 @@ export const isBlockedRequest = (text: string): boolean => {
     (Boolean(requestPrefix) && (EXPLICIT_REQUEST.test(requestedContent) || ABUSIVE_GENERATION.test(requestedContent)));
 };
 
+export const isBlockedChatReplyRequest = (text: string): boolean => {
+  if (!isBlockedRequest(text)) return false;
+  const input = text.trim();
+  const prefix = input.match(GENERATION_REQUEST)?.[0];
+  if (!prefix || !EXPLICIT_REQUEST.test(input.slice(prefix.length))) return true;
+  return /\b(?:minor|underage|child|incest|bestiality|rape|non[- ]?consensual|(?:[0-9]|1[0-7])[- ]year[- ]old)\b/i.test(input);
+};
+
 // Exact, high-confidence terms only. No fuzzy letter substitutions, ordinary
 // words, ages or topic labels such as "sex", "abuse" or "suicide".
 const OUTPUT_SLURS = /\b(?:nigger|nigga|faggot|kike|raghead)\b/gi;
