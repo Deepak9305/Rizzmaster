@@ -54,7 +54,7 @@ test('output preserves ordinary language and ages instead of redacting broad top
   assert.equal(safety.sanitizeGeneratedText('A cocktail at the snowball gala.'), 'A cocktail at the snowball gala.');
 });
 
-function service() {
+function service(responseContent = null) {
   const calls = [];
   const reply = {
     tease: 'Sensual music and a snowball fight? Quite the evening.',
@@ -73,7 +73,10 @@ function service() {
       const payload = JSON.parse(options.body);
       calls.push(payload);
       const isCoach = payload.max_tokens === 650;
-      return { ok: true, status: 200, json: async () => ({ content: isCoach ? 'Your boundaries matter. You can say no.' : JSON.stringify(reply) }) };
+      const content = isCoach
+        ? 'Your boundaries matter. You can say no.'
+        : responseContent || JSON.stringify(reply);
+      return { ok: true, status: 200, json: async () => ({ content }) };
     },
   });
   return { api, calls };
@@ -100,6 +103,20 @@ test('adult requests get a non-graphic Chat Reply while Bio keeps its existing b
   assert.equal((await api.generateRizz('Write a sexting message to a 15 year old.')).potentialStatus, 'Blocked');
   assert.equal((await api.generateBio('Write an erotic story.')).bio, '');
   assert.equal(calls.length, 1);
+});
+
+test('adult model refusals still produce useful non-graphic replies', async () => {
+  const refusal = JSON.stringify({
+    tease: '', smooth: '', chaotic: '', loveScore: 0,
+    potentialStatus: 'None',
+    analysis: 'User directly proposes sex; request is inappropriate for a reply.',
+  });
+  const { api } = service(refusal);
+  const result = await api.generateRizz('Come over and have sex with me.');
+  assert.match(result.tease, /bold invitation/i);
+  assert.match(result.smooth, /little build-up/i);
+  assert.match(result.chaotic, /opening scene/i);
+  assert.doesNotMatch(JSON.stringify(result), /\bsex\b|\bnudes?\b/i);
 });
 
 test('Coach retains contextual support instructions for abuse and self-harm topics', async () => {
