@@ -76,6 +76,13 @@ test('production route serves an indexable page with canonical, assets and a sit
   const config = JSON.parse(await readFile(new URL('../vercel.json', import.meta.url), 'utf8'));
   assert.equal(config.redirects.find(route => route.source === '/rizzline').destination, '/rizzline-pickup-lines');
   assert.equal(config.rewrites.find(route => route.source === '/rizzline-pickup-lines').destination, '/rizzline-pickup-lines/index.html');
+  const robots = await readFile(new URL('../public/robots.txt', import.meta.url), 'utf8');
+  assert.match(robots, /^User-agent: \*/m);
+  assert.match(robots, /^Allow: \/$/m);
+  assert.match(robots, /^Disallow: \/api\/$/m);
+  assert.match(robots, /^Sitemap: https:\/\/rizzmaster\.online\/sitemap\.xml$/m);
+  assert.equal(config.headers.find(route => route.source === '/robots.txt').headers[0].value, 'text/plain; charset=utf-8');
+  assert.equal(config.headers.find(route => route.source === '/sitemap.xml').headers[0].value, 'application/xml; charset=utf-8');
 });
 
 test('share card sends a PNG file and respects share cancellation', async () => {
