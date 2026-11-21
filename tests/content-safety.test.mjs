@@ -100,9 +100,20 @@ test('adult requests get a non-graphic Chat Reply while Bio keeps its existing b
   const { api, calls } = service();
   assert.notEqual((await api.generateRizz('Write an explicit sexual scene.')).potentialStatus, 'Blocked');
   assert.match(calls[0].messages[0].content, /give sendable, non-graphic flirting/);
+  assert.match(calls[0].messages[0].content, /double meaning, implication, timing/);
   assert.equal((await api.generateRizz('Write a sexting message to a 15 year old.')).potentialStatus, 'Blocked');
   assert.equal((await api.generateBio('Write an erotic story.')).bio, '');
   assert.equal(calls.length, 1);
+});
+
+test('mutual adult flirting gets seductive subtext without forcing it into every context', async () => {
+  const { api, calls } = service();
+  await api.generateRizz('Them: I like the way you look at me.\nYou: You noticed?\nThem: I notice more than you think.');
+  const prompt = calls[0].messages[0].content;
+  assert.match(prompt, /mutually flirty and adult/i);
+  assert.match(prompt, /At least one reply may carry a clear double meaning/i);
+  assert.match(prompt, /Escalate one step at a time/i);
+  assert.match(prompt, /do not force sexual subtext into a neutral message/i);
 });
 
 test('adult model refusals still produce useful non-graphic replies', async () => {
@@ -114,8 +125,8 @@ test('adult model refusals still produce useful non-graphic replies', async () =
   const { api } = service(refusal);
   const result = await api.generateRizz('Come over and have sex with me.');
   assert.match(result.tease, /direct invitation/i);
-  assert.match(result.smooth, /make that happen/i);
-  assert.match(result.chaotic, /good reason to say yes/i);
+  assert.match(result.smooth, /same energy/i);
+  assert.match(result.chaotic, /bold in person/i);
   assert.doesNotMatch(JSON.stringify(result), /\bsex\b|\bnudes?\b/i);
 });
 

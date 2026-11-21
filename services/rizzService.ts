@@ -130,6 +130,7 @@ const SIXTEEN_PLUS_TONE_RULES = `
 - Bold, witty, teasing, confident, and a little suggestive is allowed.
 - Mild profanity is fine when it sounds natural, not edgy for its own sake.
 - Flirty tension is good. Keep the wording non-graphic and sendable.
+- When mutual adult interest is clear, prefer layered double meanings, charged phrasing, anticipation, and playful subtext over neutral compliments. Keep the surface meaning natural and the flirtier meaning suggestive, never graphic.
 - When an adult chat contains sexual wording, translate the intent into playful implication, anticipation, or a confident boundary. Do not repeat graphic terms or describe sexual acts, anatomy, or fetish content.
 - Never sexualize minors or encourage coercion, threats, abuse, or targeted hate. Decline those requests briefly and respectfully.
 - Mentioning an age, quoting abuse, or asking about sexual health, consent, trauma, or self-harm is not itself misconduct. Respond supportively and non-graphically; never roast a vulnerable user.
@@ -253,9 +254,9 @@ const getStageAwareReplyFallback = (inputText: string): RizzResponse | null => {
 
   if (stage === 'direct') {
     return {
-      tease: 'That is a very direct invitation. I like the confidence. What did you have in mind? 😉',
-      smooth: 'You have my attention. Tell me when you want to make that happen.',
-      chaotic: 'Straight to the point? Dangerous. Give me one good reason to say yes 😉',
+      tease: 'That is a very direct invitation. I like the confidence. Tell me how you plan to make it worth my while 😉',
+      smooth: 'You have my attention. Keep that same energy and tell me when you want to make it happen.',
+      chaotic: 'Straight to the point? Now I am curious whether you are this bold in person 😉',
       loveScore: 68,
       potentialStatus: 'Strong Intent',
       analysis: 'The interest is clear, so the reply should keep the tension moving forward.',
@@ -264,9 +265,9 @@ const getStageAwareReplyFallback = (inputText: string): RizzResponse | null => {
 
   if (stage === 'planned') {
     return {
-      tease: 'Good. Keep that same energy when we see each other.',
-      smooth: 'I like having something to look forward to. I will see you then.',
-      chaotic: 'The plan is locked. Now try not to make the anticipation too obvious 😉',
+      tease: 'The plan is locked. Try not to make the anticipation too obvious.',
+      smooth: 'I like having something to look forward to, especially when you keep making it tempting.',
+      chaotic: 'Now the real challenge is behaving until then 😉',
       loveScore: 78,
       potentialStatus: 'Plan Secured',
       analysis: 'There is already a plan, so the reply should build anticipation instead of restarting the exchange.',
@@ -275,9 +276,9 @@ const getStageAwareReplyFallback = (inputText: string): RizzResponse | null => {
 
   if (stage === 'active') {
     return {
-      tease: 'Careful. Keep talking like that and I might start enjoying this too much.',
-      smooth: 'You are making this very easy to look forward to.',
-      chaotic: 'That energy is getting dangerous. I am listening 😉',
+      tease: 'Careful. Keep talking like that and I might start matching your energy.',
+      smooth: 'You are making it very easy to imagine this conversation getting even more interesting.',
+      chaotic: 'That sounded innocent until I read it twice. I like your style 😉',
       loveScore: 72,
       potentialStatus: 'Chemistry Building',
       analysis: 'The conversation already has momentum, so the reply should keep the tension alive.',
@@ -296,9 +297,9 @@ const getNonGraphicAdultReplyFallback = (inputText: string): RizzResponse | null
   if (stageFallback) return stageFallback;
 
   return {
-    tease: 'That is a bold invitation. You will have to earn the next step first 😉',
-    smooth: 'You are tempting. Keep that energy going and let the anticipation build.',
-    chaotic: 'Skipping ahead already? I respect the confidence. Keep making your case 😉',
+    tease: 'That is a bold invitation. I like the confidence. Give me a reason to keep saying yes 😉',
+    smooth: 'You are tempting. Keep that energy and let the anticipation do some of the work.',
+    chaotic: 'Skipping ahead already? I respect the confidence. Try making me curious before making me blush 😉',
     loveScore: 58,
     potentialStatus: 'Needs More Spark',
     analysis: 'The confidence is clear. A little more build-up would make the invitation land better.',
@@ -341,22 +342,23 @@ ${SIXTEEN_PLUS_TONE_RULES}
 CHAT REPLY RULES (text and screenshots, including custom vibes):
 - Read the conversation in chronological order and treat the latest meaningful message as the strongest signal. For screenshots, identify the final visible exchange before writing.
 - Current conversation stage guidance: ${getConversationStageGuidance(conversationStage)}
-- Adult sexual wording in context is not a reason to refuse. For consensual adult flirting, even if the user asks for graphic wording, give sendable, non-graphic flirting without mentioning moderation or echoing explicit words. Use implication, timing, and playful confidence.
+- Adult sexual wording in context is not a reason to refuse. For consensual adult flirting, even if the user asks for graphic wording, give sendable, non-graphic flirting without mentioning moderation or echoing explicit words. Use double meaning, implication, timing, and playful confidence.
 - If the user wants to decline, or the conversation shows hesitation, discomfort, or a no, offer clear, respectful boundary-setting without escalating.
 - Decline requests to create sexual content involving minors, incest, bestiality, coercion, or non-consensual intimate images, and requests for targeted hate or threats. When such content is quoted for help, give a safe response instead. Never assume an ambiguous age is adult for sexualized flirting.
 
-TEASE: Flirt through a cheeky challenge or playful double meaning. Make attraction felt beneath the joke; tease affectionately, never insult. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
+TEASE: Flirt through a cheeky challenge or a context-specific double meaning. Give the line a natural surface reading and a flirtier subtext; tease affectionately, never insult. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
  
-SMOOTH: Be quietly seductive and direct about attraction. Use a personal detail, a confident compliment, or an invitation that makes seeing each other feel tempting. Warm confidence, not a generic love quote. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
+SMOOTH: Be quietly seductive and direct about attraction. Use a personal detail, a confident compliment, or an invitation that makes closeness feel tempting. Let the subtext do some work; do not become explicit or generic. ${length === 'short' ? '1 line' : length === 'medium' ? '2 lines' : '2-3 sentences'}.
  
-CHAOTIC: The boldest flirt: a mischievous twist, daring invitation, or unexpected admission of attraction. Create a smile and romantic tension instead of awkward jokes, random roasting, or shock value. ${length === 'short' ? '1-2 lines' : length === 'medium' ? '2-3 lines' : '3-4 sentences'}.
+CHAOTIC: The boldest flirt: a mischievous double meaning, daring invitation, or unexpected admission of attraction. Create a smile and romantic tension instead of awkward jokes, random roasting, or shock value. ${length === 'short' ? '1-2 lines' : length === 'medium' ? '2-3 lines' : '3-4 sentences'}.
 
 RULES:
 -Use easy to understand words.
 - Dont go out of context.
 - NO "Hey", "So", "Well", or generic bot-speak.
-- When the context is mutually flirty, make the replies noticeably more seductive: anticipation, lingering eye contact, playful proximity, and the possibility of meeting. Suggest chemistry without describing sexual acts or anatomy.
+- When the context is mutually flirty and adult, make the replies noticeably more seductive: use anticipation, loaded but natural wording, lingering eye contact, playful proximity, and the possibility of meeting. At least one reply may carry a clear double meaning, but do not force sexual subtext into a neutral message or describe sexual acts or anatomy.
 - Match the relationship and the other person's energy. Start lightly with strangers; only build tension when their message welcomes it. Never presume they want intimacy.
+- Escalate one step at a time. If the other person welcomes a flirt, answer with a little more warmth or subtext, not a sudden jump to explicitness.
 - Keep known teen conversations age-appropriate and non-sexual. For rejection, discomfort, distress, or a non-romantic context, answer naturally without seductive escalation.
 - A confident invitation leaves room for a real choice. Never pressure, guilt, claim ownership, or treat a boundary as a challenge.
 - Make all three replies distinct and grounded in a detail from the message. Avoid canned lines about being dangerous, trouble, addiction, or making someone unable to resist.
