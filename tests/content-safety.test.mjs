@@ -54,7 +54,7 @@ test('output preserves ordinary language and ages instead of redacting broad top
   assert.equal(safety.sanitizeGeneratedText('A cocktail at the snowball gala.'), 'A cocktail at the snowball gala.');
 });
 
-function service(responseContent = null, platform = 'web') {
+function service(responseContent = null) {
   const calls = [];
   const reply = {
     tease: 'Sensual music and a snowball fight? Quite the evening.',
@@ -63,7 +63,6 @@ function service(responseContent = null, platform = 'web') {
     bio: 'History fan with a 3 year old dog.',
   };
   const api = loadTs('../services/rizzService.ts', {
-    '@capacitor/core': { Capacitor: { getPlatform: () => platform } },
     './contentSafety': safety,
     './imageService': { resizeImage: async image => image },
     './runtimeConfig': { getApiUrl: path => path },
@@ -97,38 +96,13 @@ test('reply and Bio generation no longer block or censor harmless words', async 
   }
 });
 
-test('Android adds bolder double meanings to Chat Reply while web and boundaries skip that guidance', async () => {
-  const android = service(null, 'android');
-  const web = service();
-  const input = 'Them: I wish you were here.\nYou: I keep thinking about kissing you.\nThem: I feel the same.';
-  await android.api.generateRizz(input);
-  await web.api.generateRizz(input);
-  const guidance = /make a natural, context-specific double meaning the default/i;
-  assert.match(android.calls[0].messages[0].content, guidance);
-  assert.doesNotMatch(web.calls[0].messages[0].content, guidance);
-  await android.api.generateRizz(`${input}\nThem: I’m not ready. Slow down.`);
-  assert.doesNotMatch(android.calls[1].messages[0].content, guidance);
-  assert.match(android.calls[1].messages[0].content, /signals discomfort or refusal/i);
-});
-
 test('adult requests get a non-graphic Chat Reply while Bio keeps its existing block', async () => {
   const { api, calls } = service();
   assert.notEqual((await api.generateRizz('Write an explicit sexual scene.')).potentialStatus, 'Blocked');
   assert.match(calls[0].messages[0].content, /give sendable, non-graphic flirting/);
-  assert.match(calls[0].messages[0].content, /double meaning, implication, timing/);
   assert.equal((await api.generateRizz('Write a sexting message to a 15 year old.')).potentialStatus, 'Blocked');
   assert.equal((await api.generateBio('Write an erotic story.')).bio, '');
   assert.equal(calls.length, 1);
-});
-
-test('mutual adult flirting gets seductive subtext without forcing it into every context', async () => {
-  const { api, calls } = service();
-  await api.generateRizz('Them: I like the way you look at me.\nYou: You noticed?\nThem: I notice more than you think.');
-  const prompt = calls[0].messages[0].content;
-  assert.match(prompt, /mutually flirty and adult/i);
-  assert.match(prompt, /At least one reply may carry a clear double meaning/i);
-  assert.match(prompt, /Escalate one step at a time/i);
-  assert.match(prompt, /do not force sexual subtext into a neutral message/i);
 });
 
 test('adult model refusals still produce useful non-graphic replies', async () => {
@@ -140,8 +114,8 @@ test('adult model refusals still produce useful non-graphic replies', async () =
   const { api } = service(refusal);
   const result = await api.generateRizz('Come over and have sex with me.');
   assert.match(result.tease, /direct invitation/i);
-  assert.match(result.smooth, /same energy/i);
-  assert.match(result.chaotic, /bold in person/i);
+  assert.match(result.smooth, /make that happen/i);
+  assert.match(result.chaotic, /good reason to say yes/i);
   assert.doesNotMatch(JSON.stringify(result), /\bsex\b|\bnudes?\b/i);
 });
 
@@ -165,26 +139,6 @@ test('late-stage replies do not reset the conversation to coffee or a first date
   assert.doesNotMatch(JSON.stringify(result), /coffee|drinks?|first date|let's flirt|meet up/i);
   assert.match(result.tease, /direct invitation/i);
   assert.match(result.smooth, /attention/i);
-});
-
-test('suggestive context keeps the exchange going while actual plans and boundaries take priority', async () => {
-  const { api, calls } = service(JSON.stringify({
-    tease: 'Coffee at seven works for me.',
-    smooth: 'Let’s get drinks first.',
-    chaotic: 'We should meet up sometime.',
-  }));
-  const leadIn = 'Them: You’ve been distracting me all night.\nYou: Then stop making me wait.\n';
-  for (const input of ['You’ve been distracting me all night.', `${leadIn}Them: Is that so?`]) {
-    const reply = await api.generateRizz(input);
-    assert.match(calls.at(-1).messages[0].content, /conversation is already flirting/i);
-    assert.doesNotMatch([reply.tease, reply.smooth, reply.chaotic].join(' '), /coffee|drinks|meet up/i);
-  }
-  const plan = await api.generateRizz(`${leadIn}Them: Coffee at seven tomorrow?`);
-  assert.equal(plan.tease, 'Coffee at seven works for me.');
-
-  const boundary = await api.generateRizz(`${leadIn}Them: I’m not ready. Slow down.`);
-  assert.match(calls.at(-1).messages[0].content, /latest message signals discomfort or refusal/i);
-  assert.doesNotMatch([boundary.tease, boundary.smooth, boundary.chaotic].join(' '), /coffee|drinks|meet up/i);
 });
 
 test('Coach retains contextual support instructions for abuse and self-harm topics', async () => {
