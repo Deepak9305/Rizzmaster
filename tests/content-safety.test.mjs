@@ -152,6 +152,26 @@ test('late-stage replies do not reset the conversation to coffee or a first date
   assert.match(result.smooth, /attention/i);
 });
 
+test('suggestive context keeps the exchange going while actual plans and boundaries take priority', async () => {
+  const { api, calls } = service(JSON.stringify({
+    tease: 'Coffee at seven works for me.',
+    smooth: 'Let’s get drinks first.',
+    chaotic: 'We should meet up sometime.',
+  }));
+  const leadIn = 'Them: You’ve been distracting me all night.\nYou: Then stop making me wait.\n';
+  for (const input of ['You’ve been distracting me all night.', `${leadIn}Them: Is that so?`]) {
+    const reply = await api.generateRizz(input);
+    assert.match(calls.at(-1).messages[0].content, /conversation is already flirting/i);
+    assert.doesNotMatch([reply.tease, reply.smooth, reply.chaotic].join(' '), /coffee|drinks|meet up/i);
+  }
+  const plan = await api.generateRizz(`${leadIn}Them: Coffee at seven tomorrow?`);
+  assert.equal(plan.tease, 'Coffee at seven works for me.');
+
+  const boundary = await api.generateRizz(`${leadIn}Them: I’m not ready. Slow down.`);
+  assert.match(calls.at(-1).messages[0].content, /latest message signals discomfort or refusal/i);
+  assert.doesNotMatch([boundary.tease, boundary.smooth, boundary.chaotic].join(' '), /coffee|drinks|meet up/i);
+});
+
 test('Coach retains contextual support instructions for abuse and self-harm topics', async () => {
   const { api, calls } = service();
   for (const content of ['He pressured me for sex. How do I say no?', 'My friend mentioned suicide.']) {

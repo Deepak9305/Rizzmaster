@@ -190,28 +190,30 @@ const sanitizeResponse = <T>(data: T): T => {
 /**
  * Generates Rizz (Tease, Smooth, Chaotic) based on input text and optional image.
  */
-type ConversationStage = 'opening' | 'active' | 'planned' | 'direct' | 'boundary';
+type ConversationStage = 'opening' | 'active' | 'planned' | 'date-plan' | 'direct' | 'boundary';
 
-const getLatestConversationText = (inputText: string): string => {
-  const lines = inputText.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
-  return (lines[lines.length - 1] || inputText).replace(/^(?:user|you|them|her|him|match|other person)\s*:\s*/i, '').trim();
-};
+const FLIRT_CUE = /\b(?:kiss|miss you|can['’]t wait|wish you were|want you|chemistry|attracted|tempting|flirt|on my mind all night|distract(?:ing|ed) me all night|making me blush|closer to me|stop making me wait)\b/i;
+const DATE_PIVOT = /\b(?:coffee|drinks?|first date|let(?:'|’)?s flirt|see where the chemistry leads|meet up|hang out|go on a date)\b/i;
 
 const getConversationStage = (inputText: string): ConversationStage => {
-  const latest = getLatestConversationText(inputText).toLowerCase();
+  const recent = inputText.split(/\r?\n/).map(line => line.trim()).filter(Boolean).slice(-4)
+    .map(line => line.replace(/^(?:user|you|them|her|him|match|other person)\s*:\s*/i, ''));
+  const latest = (recent[recent.length - 1] || '').toLowerCase();
 
-  if (/\b(?:no|stop|don't|do not|not interested|uncomfortable|leave me alone|back off)\b/.test(latest)) {
+  const boundaryText = latest.replace(/^stop making me wait\b/, '');
+  if (/\b(?:no|stop|don['’]t|do not|not interested|uncomfortable|leave me alone|back off|not ready|slow down)\b/.test(boundaryText)) {
     return 'boundary';
   }
   if (/\b(?:sex|nudes?|sext(?:ing)?|fuck|horny|come over|come round|sleep with me|hook ?up|right now|in my bed|your place|my place)\b/.test(latest)) {
     return 'direct';
   }
-  if (/\b(?:tonight|tomorrow|at \d|where should|when should|on my way|see you|meet|reservation|booked)\b/.test(latest)) {
-    return 'planned';
+  if (DATE_PIVOT.test(latest) && /\b(?:at|tomorrow|tonight|where|when|grab|get|for|works|still|meet)\b/i.test(latest)) {
+    return 'date-plan';
   }
-  if (/\b(?:kiss|miss you|can't wait|wish you were|want you|chemistry|attracted|tempting|flirt)\b/.test(latest)) {
+  if (FLIRT_CUE.test(latest) || recent.slice(0, -1).filter(line => FLIRT_CUE.test(line)).length >= 2) {
     return 'active';
   }
+  if (/\b(?:at \d|on my way|see you|reservation|booked)\b/.test(latest)) return 'planned';
   return 'opening';
 };
 
@@ -219,8 +221,9 @@ const getConversationStageGuidance = (stage: ConversationStage): string => {
   switch (stage) {
     case 'direct':
       return 'The latest message is already direct. Reply to that invitation with confident, non-graphic tension or a clear next step. Do not reset to coffee, drinks, a first date, or “let us flirt”.';
+    case 'date-plan':
     case 'planned':
-      return 'A plan already exists. Build on the plan and the existing chemistry. Do not suggest starting over with coffee, drinks, or a first date.';
+      return 'Continue the actual plan or logistics in the conversation. Refer to the place or activity already discussed when relevant.';
     case 'active':
       return 'The conversation is already flirting. Continue the established energy and details. Do not restart with generic first-date advice.';
     case 'boundary':
@@ -231,7 +234,7 @@ const getConversationStageGuidance = (stage: ConversationStage): string => {
 };
 
 const isStageResetReply = (value: string, stage: ConversationStage): boolean => (
-  stage !== 'opening' && /\b(?:coffee|drinks?|grab a drink|start with a proper date|first date|let(?:'|’)?s flirt|see where the chemistry leads)\b/i.test(value)
+  stage !== 'opening' && stage !== 'date-plan' && DATE_PIVOT.test(value)
 );
 
 const safeChatReply = (value: unknown, fallback: string, stage: ConversationStage): string =>
@@ -260,6 +263,17 @@ const getStageAwareReplyFallback = (inputText: string): RizzResponse | null => {
       loveScore: 68,
       potentialStatus: 'Strong Intent',
       analysis: 'The interest is clear, so the reply should keep the tension moving forward.',
+    };
+  }
+
+  if (stage === 'date-plan') {
+    return {
+      tease: 'I like where this is going. Are we still on?',
+      smooth: 'Sounds good to me. Let’s confirm the details.',
+      chaotic: 'I’m in. Send me the details so I can make it official.',
+      loveScore: 70,
+      potentialStatus: 'Making Plans',
+      analysis: 'They’re talking logistics, so keep the reply focused on the plan.',
     };
   }
 
@@ -340,7 +354,7 @@ CUSTOM PERSONA INSTRUCTIONS:
 ${SIXTEEN_PLUS_TONE_RULES}
 
 CHAT REPLY RULES (text and screenshots, including custom vibes):
-- Read the conversation in chronological order and treat the latest meaningful message as the strongest signal. For screenshots, identify the final visible exchange before writing.
+- Read the last few turns to establish the chemistry, then answer the latest meaningful message. For screenshots, apply this to the visible exchange. If the stage hint misses suggestive subtext, follow the actual exchange.
 - Current conversation stage guidance: ${getConversationStageGuidance(conversationStage)}
 - Adult sexual wording in context is not a reason to refuse. For consensual adult flirting, even if the user asks for graphic wording, give sendable, non-graphic flirting without mentioning moderation or echoing explicit words. Use double meaning, implication, timing, and playful confidence.
 - If the user wants to decline, or the conversation shows hesitation, discomfort, or a no, offer clear, respectful boundary-setting without escalating.
@@ -356,7 +370,8 @@ RULES:
 -Use easy to understand words.
 - Dont go out of context.
 - NO "Hey", "So", "Well", or generic bot-speak.
-- When the context is mutually flirty and adult, make the replies noticeably more seductive: use anticipation, loaded but natural wording, lingering eye contact, playful proximity, and the possibility of meeting. At least one reply may carry a clear double meaning, but do not force sexual subtext into a neutral message or describe sexual acts or anatomy.
+- When the context is mutually flirty and adult, make the replies noticeably more seductive. Play off their exact wording, match their level of boldness, and leave a natural opening for them to flirt back. At least one reply may carry a clear double meaning, but do not force sexual subtext into a neutral message or describe sexual acts or anatomy.
+- In an already suggestive exchange, stay in the moment. Do not pivot to coffee, drinks, a first date, or a generic meetup unless the latest message is actually about those plans.
 - Match the relationship and the other person's energy. Start lightly with strangers; only build tension when their message welcomes it. Never presume they want intimacy.
 - Escalate one step at a time. If the other person welcomes a flirt, answer with a little more warmth or subtext, not a sudden jump to explicitness.
 - Keep known teen conversations age-appropriate and non-sexual. For rejection, discomfort, distress, or a non-romantic context, answer naturally without seductive escalation.
