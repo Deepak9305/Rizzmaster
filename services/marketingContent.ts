@@ -54,6 +54,149 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'why-you-feel-relieved-when-plans-get-canceled',
+    title: 'Why You Feel Relieved When Plans Get Canceled, Even When You Like the People',
+    seoTitle: 'Why You Feel Relieved When Plans Get Canceled',
+    description: 'Understand why a canceled plan can feel like relief, separate ordinary tiredness from social dread, and make friendship plans easier to keep without forcing yourself through every invitation.',
+    excerpt: 'You were looking forward to seeing them, then the plan disappears and your whole body relaxes. That relief is information. Learn what it may be telling you about your energy, the plan, and the people involved.',
+    date: '2026-11-21',
+    updatedAt: '2026-11-21',
+    readingTime: '10 min read',
+    category: 'Friendship & wellbeing',
+    author: 'amelia',
+    keywords: [
+      'why do I feel relieved when plans get canceled',
+      'relieved when friends cancel plans',
+      'why I do not want to socialize',
+      'social anxiety and canceled plans',
+      'how to make plans when socially tired',
+      'how to stop canceling plans with friends',
+      'am I a bad friend for feeling relieved'
+    ],
+    image: '/blog/plans-cancelled-hero.png',
+    imageAlt: 'An adult relaxing at home after plans with friends were canceled',
+    imageCaption: 'Relief after a canceled plan can point to a need for recovery, a difficult social pattern, or a plan that asked too much of you.',
+    resources: [
+      { label: 'NHS: Get help with stress', url: 'https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/stress/' },
+      { label: 'NHS: Social anxiety', url: 'https://www.nhs.uk/mental-health/conditions/social-anxiety/' },
+      { label: 'Mind: Social anxiety', url: 'https://www.mind.org.uk/information-support/types-of-mental-health-problems/social-anxiety/' },
+      { label: 'American Psychological Association: Addressing loneliness', url: 'https://www.apa.org/research-practice/emerging-evidence-practitioners/addressing-loneliness' }
+    ],
+    faqs: [
+      { question: 'Am I a bad friend if I feel relieved when plans are canceled?', answer: 'No. Relief usually tells you that some part of the plan was demanding, uncertain, or badly timed. Look at what you do next. You can care about your friends, appreciate the cancellation, and still suggest a form of contact that you can genuinely sustain.' },
+      { question: 'Why do I want to see my friends but avoid making plans?', answer: 'You may want connection while having limited energy for travel, noise, preparation, conversation, or the fear of disappointing people. A smaller or more predictable plan can meet the need for connection without asking your whole evening to carry it.' },
+      { question: 'How can I tell whether I need rest or whether I am avoiding people?', answer: 'Notice the pattern and the after-effect. Rest usually leaves some capacity available later. Avoidance often brings short relief followed by more worry, isolation, or a growing list of plans you cannot face. The distinction is not perfect, so use it as a prompt to observe rather than a label to punish yourself with.' },
+      { question: 'What can I say when I need to change a plan with friends?', answer: 'Be clear and offer a realistic alternative if you want continued contact: “I’m more drained than I expected, so I need a quiet night. Could we do a short walk on Sunday instead?” Do not offer a replacement you already know you will dread.' }
+    ],
+    sections: [
+      {
+        heading: 'Relief is a signal, not a verdict on the friendship',
+        paragraphs: [
+          'You see the message in the group chat: dinner is off. Someone is ill, the weather changed, or the person who was organising it has had a long day. You type something sympathetic, put your phone down, and feel your shoulders drop. The evening you were supposedly looking forward to suddenly feels available again.',
+          'That reaction can be confusing when you genuinely like the people involved. You may wonder whether the relief means you are selfish, secretly dislike them, or have become incapable of maintaining a friendship. It may mean something much simpler: you were tired, the plan had hidden effort in it, or you had been carrying more social pressure than you noticed.',
+          'Treat the feeling as information before you turn it into an identity. Relief can point to a need for rest. It can also reveal that a particular group dynamic, venue, travel route, or expectation has become expensive for you. The useful question is not “What is wrong with me?” It is “Which part of this plan was my body glad to escape?”'
+        ],
+        bullets: [
+          'You can care about someone and still lack the energy for a particular plan.',
+          'Relief after cancellation does not automatically mean the friendship is wrong.',
+          'The detail that brings relief may identify what needs to change.'
+        ]
+      },
+      {
+        heading: 'Separate tiredness from dread',
+        paragraphs: [
+          'Tiredness is often specific. You might want the people but not the late train, loud restaurant, three-hour commitment, or pressure to be entertaining after a difficult week. Once the demand is smaller, your interest in seeing them may return. Dread is broader and more persistent. You may feel watched, judged, trapped, or unable to relax even around people you trust.',
+          'Mind describes social anxiety as including dread about social plans and worry about how you acted around other people. That does not mean every canceled plan is a mental health condition. It does give you a way to notice when the pattern is about more than ordinary low energy. If social fear is shrinking your life or making ordinary contact hard, consider speaking with a qualified professional.',
+          'Try a two-column check after the relief appears. In the first column, write what you were glad to avoid. In the second, write what you still wanted: the people, a particular conversation, a chance to laugh, or simply the feeling of being included. This keeps “I needed a different plan” separate from “I never want connection.”'
+        ],
+        bullets: [
+          'Energy question: would a shorter, quieter version have felt manageable?',
+          'Safety question: did you feel accepted, or were you bracing to be judged?',
+          'Connection question: what part of the plan did you still wish could happen?',
+          'Pattern question: is this occasional relief or your response to nearly every invitation?'
+        ],
+        image: '/blog/plans-cancelled-reschedule.png',
+        imageAlt: 'Two adult friends discussing a lower-pressure plan together',
+        imageCaption: 'A friendship can hold a practical conversation about what kind of time together feels possible.'
+      },
+      {
+        heading: 'Find the hidden work inside the invitation',
+        paragraphs: [
+          'A plan is rarely only the time written in the calendar. It may include choosing clothes, travelling across town, finding parking, answering a stream of messages, listening carefully after a stressful day, paying more than you planned, and staying longer than you want because leaving feels rude. If the invitation carries all of that, a two-hour dinner may be a five-hour commitment.',
+          'List the actual steps for the plan that keeps making you feel relieved when it disappears. Mark each one as necessary, changeable, or removable. You may discover that the problem is not friendship. It is a venue with no easy exit, an indefinite end time, or a group habit of deciding everything at the last minute.',
+          'Then redesign one variable. Meet near home. Set an end time before you arrive. Take your own transport. Ask whether one other person wants to arrive early. A small reduction in uncertainty can change the emotional cost of the whole evening.'
+        ],
+        bullets: [
+          'Travel: how long does getting there and back really take?',
+          'Time: is there a clear finish, or are you agreeing to an open-ended evening?',
+          'Money: can you participate without creating financial pressure?',
+          'Social load: are you expected to perform, mediate, or absorb everyone’s mood?'
+        ]
+      },
+      {
+        heading: 'Use a smaller plan when you want the people but not the production',
+        paragraphs: [
+          'You do not need to choose between forcing yourself through the original plan and disappearing. Offer a version with less preparation and a clear finish. “I want to see you, but I have very little social battery this week. Would you be up for a forty-minute walk instead?” gives the friendship a route forward without pretending you have unlimited energy.',
+          'Other options include a quiet breakfast, one friend visiting for tea, a voice note exchange, or joining the first hour of a larger event. The point is not to make every friendship fit your lowest-energy day. It is to create enough variation that connection does not depend on you being rested, outgoing, and available at the same time.',
+          'A realistic alternative is kinder than a bright promise you will cancel later. If you know you cannot do Saturday night, do not offer it just to soften the disappointment. Suggest a day and format you can actually imagine keeping.'
+        ],
+        bullets: [
+          '“I want to catch up, but I can only do something low-key this week.”',
+          '“Could we meet near me and keep it to an hour?”',
+          '“I am too tired for the full group tonight. I would still like a quiet coffee with you another day.”',
+          '“I cannot commit to Saturday yet. Can I confirm by Thursday once I know my workload?”'
+        ]
+      },
+      {
+        heading: 'Notice whether the group makes rest feel like a moral failure',
+        paragraphs: [
+          'Some friendships make it easy to say, “I am tired. I am going home.” Others turn ordinary limits into evidence that you do not care. If you are repeatedly teased for leaving, questioned about your availability, or expected to prove loyalty by staying uncomfortable, relief may be your response to pressure rather than to the people themselves.',
+          'You can name the pattern without making a speech. Try: “I like spending time with you. I am also going to leave when I am done for the night, and I do not want that to become a debate.” A friend may be disappointed once. That is different from making your boundary the entertainment of the group.',
+          'Watch what happens after the clear sentence. Respectful friends may ask what would work better or simply accept the answer. Persistent guilt, mockery, or punishment gives you information about how much room the relationship makes for your actual life.'
+        ],
+        image: '/blog/plans-cancelled-rest.png',
+        imageAlt: 'An adult spending a quiet evening at home with a book and tea',
+        imageCaption: 'A quiet evening can be recovery, especially when it is chosen deliberately rather than used to punish yourself.'
+      },
+      {
+        heading: 'Do not let short-term relief quietly become isolation',
+        paragraphs: [
+          'The danger is not that you enjoy one free evening. The danger is that cancellation becomes the only reliable way you get relief, while every form of contact becomes harder to restart. You decline, feel better for an hour, then feel lonely or anxious when nobody asks again. The next invitation carries even more pressure because it has to repair the distance as well as create a plan.',
+          'Build a low-pressure bridge before you need it. Send a short message, reply to a friend’s photo, attend the first part of an event, or make a plan with one person instead of a whole group. Connection does not have to be maximally social to count. It does need some repetition if you want the relationship to remain alive.',
+          'The NHS recommends breaking difficult situations into smaller parts when social anxiety is involved. Applied gently, that might mean staying for thirty minutes, travelling separately, or choosing one conversation to focus on. Do not treat the exercise as a test you must pass. Use it to learn what helps and what makes the next attempt more possible.'
+        ],
+        bullets: [
+          'Keep one easy social contact in the week.',
+          'Choose an exit time before you go.',
+          'Measure whether the plan was manageable, not whether you performed perfectly.',
+          'Increase the difficulty slowly when the smaller version becomes ordinary.'
+        ]
+      },
+      {
+        heading: 'When relief keeps pointing to the same person or setting',
+        paragraphs: [
+          'Sometimes the pattern is specific enough to deserve a closer look. You feel fine about seeing most friends but tense before one group. You feel rested after a plan with one person and depleted after a plan with another. You repeatedly hope a particular invitation will be canceled because the conversation leaves you criticised, responsible for everyone’s feelings, or unable to say no.',
+          'You do not need a dramatic incident to adjust your access. Try a shorter meeting, choose a public place, stop sharing information that gets used against you, or pause plans while you decide what you want. If the relationship includes intimidation, threats, retaliation, or pressure, seek support from someone you trust and prioritise your safety.',
+          'A useful review is simple. How do I feel before I see them? How do I feel while I am there? How do I feel the next day? One difficult evening is not a complete diagnosis. A repeated pattern across different plans is worth respecting.'
+        ]
+      },
+      {
+        heading: 'Make a plan your future self can keep',
+        paragraphs: [
+          'Before accepting the next invitation, check the version of you who will have to carry it. Ask what time you will need to leave, how much energy the plan will take, and whether you have enough recovery space around it. If the honest answer is no, change the plan while everyone still has options.',
+          'You can say: “I would like to come, but the late finish will be too much this week. Could we do an earlier dinner?” Or: “I am glad you invited me. I cannot do a full evening, but I can join for the first hour.” Clear limits give other people a real choice. They also make your yes more trustworthy because it is based on capacity rather than panic.',
+          'The goal is not to eliminate every feeling of relief when plans change. It is to understand the message early enough to design a life with both rest and connection. You can be someone who loves their friends, needs quiet, and makes plans that respect both facts.'
+        ],
+        bullets: [
+          'Choose plans with a clear start and finish.',
+          'Say what format you can manage before resentment builds.',
+          'Keep alternatives specific instead of promising to “do something soon.”',
+          'Review repeated relief with curiosity and make one practical adjustment.'
+        ]
+      }
+    ]
+  },
+  {
     slug: 'what-to-say-when-someone-keeps-interrupting-you',
     title: 'What to Say When Someone Keeps Interrupting You Without Turning It Into an Argument',
     seoTitle: 'What to Say When Someone Keeps Interrupting You',
