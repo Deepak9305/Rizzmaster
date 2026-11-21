@@ -54,7 +54,7 @@ test('output preserves ordinary language and ages instead of redacting broad top
   assert.equal(safety.sanitizeGeneratedText('A cocktail at the snowball gala.'), 'A cocktail at the snowball gala.');
 });
 
-function service(responseContent = null) {
+function service(responseContent = null, platform = 'web') {
   const calls = [];
   const reply = {
     tease: 'Sensual music and a snowball fight? Quite the evening.',
@@ -63,6 +63,7 @@ function service(responseContent = null) {
     bio: 'History fan with a 3 year old dog.',
   };
   const api = loadTs('../services/rizzService.ts', {
+    '@capacitor/core': { Capacitor: { getPlatform: () => platform } },
     './contentSafety': safety,
     './imageService': { resizeImage: async image => image },
     './runtimeConfig': { getApiUrl: path => path },
@@ -94,6 +95,20 @@ test('reply and Bio generation no longer block or censor harmless words', async 
     assert.match(call.messages[0].content, /Never sexualize minors/);
     assert.match(call.messages[0].content, /never roast a vulnerable user/);
   }
+});
+
+test('Android adds bolder double meanings to Chat Reply while web and boundaries skip that guidance', async () => {
+  const android = service(null, 'android');
+  const web = service();
+  const input = 'Them: I wish you were here.\nYou: I keep thinking about kissing you.\nThem: I feel the same.';
+  await android.api.generateRizz(input);
+  await web.api.generateRizz(input);
+  const guidance = /make a natural, context-specific double meaning the default/i;
+  assert.match(android.calls[0].messages[0].content, guidance);
+  assert.doesNotMatch(web.calls[0].messages[0].content, guidance);
+  await android.api.generateRizz(`${input}\nThem: I’m not ready. Slow down.`);
+  assert.doesNotMatch(android.calls[1].messages[0].content, guidance);
+  assert.match(android.calls[1].messages[0].content, /signals discomfort or refusal/i);
 });
 
 test('adult requests get a non-graphic Chat Reply while Bio keeps its existing block', async () => {

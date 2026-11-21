@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { RizzResponse, BioResponse, ResponseLength } from "../types";
 import { resizeImage } from "./imageService";
 import { getApiUrl } from "./runtimeConfig";
@@ -330,6 +331,10 @@ export const generateRizz = async (
 
   const isUnsafe = isBlockedChatReplyRequest(inputText);
   const conversationStage = getConversationStage(inputText);
+  const androidFlirtGuidance = Capacitor.getPlatform() === 'android' && conversationStage !== 'boundary'
+    ? `
+- For clearly mutual adult flirting, make a natural, context-specific double meaning the default in at least one reply. Pick up a word or detail from the latest message that can carry two meanings. Make Tease playful, Smooth openly attracted, and Chaotic bolder with a mischievous twist. Use non-graphic anticipation or a kiss when it fits the exchange. For tone only: “Don’t stay up too late” could get “I had every intention of being good. Then you texted.” Write a fresh line for the actual context. Keep neutral, unsure, or boundary-setting exchanges at their own tone.`
+    : '';
 
   if (isUnsafe) {
     return {
@@ -371,7 +376,7 @@ RULES:
 - Dont go out of context.
 - NO "Hey", "So", "Well", or generic bot-speak.
 - When the context is mutually flirty and adult, make the replies noticeably more seductive. Play off their exact wording, match their level of boldness, and leave a natural opening for them to flirt back. At least one reply may carry a clear double meaning, but do not force sexual subtext into a neutral message or describe sexual acts or anatomy.
-- In an already suggestive exchange, stay in the moment. Do not pivot to coffee, drinks, a first date, or a generic meetup unless the latest message is actually about those plans.
+${androidFlirtGuidance ? `${androidFlirtGuidance.trimStart()}\n` : ''}- In an already suggestive exchange, stay in the moment. Do not pivot to coffee, drinks, a first date, or a generic meetup unless the latest message is actually about those plans.
 - Match the relationship and the other person's energy. Start lightly with strangers; only build tension when their message welcomes it. Never presume they want intimacy.
 - Escalate one step at a time. If the other person welcomes a flirt, answer with a little more warmth or subtext, not a sudden jump to explicitness.
 - Keep known teen conversations age-appropriate and non-sexual. For rejection, discomfort, distress, or a non-romantic context, answer naturally without seductive escalation.
