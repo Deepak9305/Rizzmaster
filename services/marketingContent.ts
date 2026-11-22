@@ -54,6 +54,153 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'why-walking-into-a-room-alone-feels-uncomfortable',
+    title: 'Why Walking Into a Room Alone Feels So Uncomfortable, and How to Enter Without Performing',
+    seoTitle: 'Why Walking Into a Room Alone Feels Uncomfortable',
+    description: 'Learn why arriving alone can feel like everyone is watching, then use practical steps to enter a party, meetup, class, or event without pretending to be more confident than you feel.',
+    excerpt: 'The first sixty seconds can make an ordinary event feel like a performance. Use a simple arrival routine, choose a workable starting point, and let the room reveal who is open to conversation.',
+    date: '2026-11-22',
+    updatedAt: '2026-11-22',
+    readingTime: '10 min read',
+    category: 'Social confidence',
+    author: 'jake',
+    keywords: [
+      'why is walking into a room alone awkward',
+      'how to enter a room alone',
+      'how to go to an event alone',
+      'what to do when you arrive alone at a party',
+      'how to join a group conversation',
+      'how to feel less awkward at social events',
+      'social anxiety arriving alone'
+    ],
+    image: '/blog/enter-room-alone-hero.png',
+    imageAlt: 'An adult arriving alone at a warm community event and taking a breath before joining',
+    imageCaption: 'Arriving alone feels exposed for a moment, but a simple first move can make the room easier to read.',
+    resources: [
+      { label: 'NHS: Social anxiety', url: 'https://www.nhs.uk/mental-health/conditions/social-anxiety/' },
+      { label: 'Mind: Social anxiety', url: 'https://www.mind.org.uk/information-support/types-of-mental-health-problems/social-anxiety/' },
+      { label: 'Centre for Clinical Interventions: Assertiveness', url: 'https://www.cci.health.wa.gov.au/Resources/Looking-After-Yourself/Assertiveness' },
+      { label: 'American Psychological Association: Addressing loneliness', url: 'https://www.apa.org/research-practice/emerging-evidence-practitioners/addressing-loneliness' }
+    ],
+    faqs: [
+      { question: 'Why does walking into a room alone feel so awkward?', answer: 'You have a short period of uncertainty with no obvious role, so your attention turns inward. You may imagine that people are evaluating your arrival even though most are focused on their own conversation. A repeatable first step reduces the amount of meaning your mind has to invent.' },
+      { question: 'Where should I stand when I arrive alone?', answer: 'Choose a place that lets you orient yourself without hiding completely. A refreshments table, sign-in point, edge of a small group, or seat near the activity can give you a natural reason to be there and a clear next move.' },
+      { question: 'How do I join a group conversation without interrupting?', answer: 'Listen for a pause, stand at a comfortable distance, make brief eye contact, and use a question connected to the topic. You can say, “I heard you mention the workshop. Have you been to one of these before?” If the group closes ranks, step away without treating it as a verdict.' },
+      { question: 'What if I feel watched or panicked at social events?', answer: 'Use a smaller step, slow your breathing, and focus on concrete details in the room. If fear repeatedly stops you from attending or makes ordinary social situations difficult, consider speaking with a qualified mental health professional. Social anxiety can be treated, and you do not have to solve it through willpower alone.' }
+    ],
+    sections: [
+      {
+        heading: 'The doorway creates a short burst of uncertainty',
+        paragraphs: [
+          'You know the event is happening inside. You may even know one person who will be there. Still, the moment before you enter can feel strangely theatrical. Everyone seems to have a place, a conversation, or a reason for standing where they are. You feel like the only person whose arrival needs explaining.',
+          'That impression is usually a product of attention rather than evidence. Your brain is tracking your hands, face, timing, and route through the room because they belong to you. Other people are mostly tracking their own conversation, their friends, and what they want to do next. The feeling of being watched can be intense without being an accurate measurement of the room.',
+          'Give the first minute a job. Enter, orient yourself, find the sign-in point or refreshments, and identify one person who looks available for a brief exchange. You do not need to become confident before you move. You need a sequence that carries you through the part where uncertainty is loudest.'
+        ],
+        bullets: [
+          'Name the event to yourself rather than judging your performance.',
+          'Take one slow breath before you cross the doorway.',
+          'Find the practical next step, such as signing in or putting your coat away.',
+          'Look for one approachable person instead of scanning for universal approval.'
+        ]
+      },
+      {
+        heading: 'Use an arrival routine instead of waiting to feel ready',
+        paragraphs: [
+          'A routine keeps you from turning the entrance into a debate. For the first sixty seconds, do the same small actions each time. Put your phone away or keep it in your bag, notice where the activity is happening, get a drink if that fits the setting, and choose a place where you can see the room.',
+          'This is not a performance trick. It is a way to reduce unnecessary decisions while your attention is already working hard. You can adapt the routine to a class, a work event, a party, or a community group. The details matter less than having a known first move.',
+          'Avoid using your phone as a permanent shield. Looking at it for a moment can help you check a message or settle yourself, but staying absorbed in the screen tells the room you are unavailable and gives your anxious attention more material to monitor. Let your hands have a simple task instead.'
+        ],
+        bullets: [
+          'Arrive a few minutes early when possible, so you are not entering a settled room at its busiest point.',
+          'Stand somewhere connected to the event rather than hiding in a corner.',
+          'Use an object, such as a drink or name badge, for your hands.',
+          'Set a small first target, like one question or ten minutes of participation.'
+        ],
+        image: '/blog/enter-room-alone-choose-space.png',
+        imageAlt: 'An adult choosing a comfortable place to stand at a small community event',
+        imageCaption: 'A workable starting place gives you something concrete to do while you read the room.'
+      },
+      {
+        heading: 'Pick a starting point that gives the conversation a reason to exist',
+        paragraphs: [
+          'The easiest conversation is usually attached to something already happening. Ask about the event, the activity, the food, the speaker, or the shared setting. You do not need an original opening line when the room has already supplied a topic.',
+          'Try “Have you been to this group before?” “What brought you here tonight?” or “I am deciding where to start. Is this the part everyone usually joins first?” These questions are simple enough to answer and specific enough to move beyond a greeting. Listen to the answer instead of preparing your next impressive sentence.',
+          'If the person gives a short answer and turns back to their group, let the exchange end cleanly. A brief interaction is still practice and information. You are learning who has attention to offer, which is more useful than trying to make every person like you.'
+        ],
+        bullets: [
+          'Ask about the shared setting before asking for personal information.',
+          'Use a question you would be happy to answer yourself.',
+          'Follow one detail in their answer instead of firing off several questions.',
+          'Treat a short exchange as complete when the other person seems occupied.'
+        ]
+      },
+      {
+        heading: 'Join a group through the edge, not the centre',
+        paragraphs: [
+          'A group conversation has an invisible rhythm. Walk into the middle and you may feel as if you are asking everyone to pause for your arrival. Stand at a comfortable distance, listen for a few seconds, and notice whether the group is discussing something that can include another person.',
+          'When there is a pause, make a small contribution: “I have been trying that place too. What did you order?” Or introduce yourself if the context supports it: “I am Jake. I do not think we have met.” You are offering a bridge, not asking the whole group to create your evening for you.',
+          'Some groups will make space immediately. Others will not. If people keep their bodies turned inward, answer only each other, or return to a private story, step away and look for another opening. Leaving one closed conversation is social judgment, not social failure.'
+        ],
+        image: '/blog/enter-room-alone-first-conversation.png',
+        imageAlt: 'Two adults having an easy first conversation at a community event',
+        imageCaption: 'A good first conversation starts with the setting and grows through one detail at a time.'
+      },
+      {
+        heading: 'Stop trying to prove that you belong',
+        paragraphs: [
+          'Arriving alone can trigger a need to be entertaining, knowledgeable, or immediately interesting. You may speak too quickly, agree with everything, tell a story before anyone has asked, or keep the conversation going after your energy has run out. These moves are understandable attempts to secure your place, but they make the room feel like an audition.',
+          'Replace performance with three ordinary behaviours: listen, add one honest detail, and ask one useful question. If someone says they came because they are learning pottery, you can say, “I have never tried it. I like that there is something to do with your hands,” then ask what they have made. The exchange does not need a perfect punchline.',
+          'Confidence often looks less like constant speaking and more like staying present without rushing to fill every pause. Let the other person carry part of the conversation. If they do not, you have learned something about the match rather than failed to entertain them.'
+        ]
+      },
+      {
+        heading: 'Know what to do when the first conversation goes flat',
+        paragraphs: [
+          'A flat conversation can happen because the other person is tired, shy, distracted, or simply not a match for your energy. Do not turn one quiet exchange into a prediction about the whole event. Use a graceful exit and give yourself another attempt later.',
+          'Say “I am going to look around, but it was good meeting you,” or “I am going to grab a drink. Enjoy the rest of the evening.” If you genuinely want to continue, add a concrete bridge: “I will be near the workshop table if you want to compare notes later.” This leaves room without making either person responsible for immediate chemistry.',
+          'After two or three attempts, review the setting. Are people there to mingle, or are they waiting for a scheduled activity? Is there a host who can introduce you? Could you join the next exercise instead of trying to start conversations from the edge? Adjust the strategy before judging yourself.'
+        ],
+        bullets: [
+          'Exit politely before frustration turns into self-criticism.',
+          'Change your location or join the event activity.',
+          'Ask a host for one introduction if the format makes that natural.',
+          'Do not make one lukewarm conversation carry the meaning of the night.'
+        ]
+      },
+      {
+        heading: 'Make leaving part of the plan',
+        paragraphs: [
+          'People often stay too long because they believe leaving will expose the fact that they came alone. A planned exit makes arrival easier because the event no longer feels like an indefinite commitment. Decide what would make the visit worthwhile before you enter: one conversation, one activity, or thirty minutes of participation.',
+          'When you are ready, say goodbye to the people you spoke with if that feels natural. “I am heading out, but I am glad I came. See you next week?” is enough. You do not need to wait until the room is empty or invent an emergency. Leaving calmly teaches your nervous system that you can participate without becoming trapped.',
+          'Review the event using facts. What part felt easier than expected? What made the first step harder? Who seemed open? Which setting would you try again? A useful review produces one adjustment, not a long list of evidence that you are socially defective.'
+        ]
+      },
+      {
+        heading: 'When the discomfort is bigger than ordinary nerves',
+        paragraphs: [
+          'If you regularly avoid social events because you expect humiliation, feel watched, or replay every interaction for hours, the problem may deserve more support than a better opening line. The NHS describes social anxiety as fear that can affect ordinary activities and recommends professional assessment and treatment when it is interfering with life.',
+          'You can start with smaller exposures and practical support, but you do not have to handle persistent fear alone. A qualified mental health professional can help you understand the thoughts and safety behaviours that keep the fear going. Choose advice that respects your circumstances and does not turn distress into a character flaw.',
+          'The goal is not to become someone who enjoys every room. It is to have more choice. You should be able to enter a useful event, speak to one person, leave when you need to, or decide that a particular setting is not for you without your fear making every decision in advance.'
+        ]
+      },
+      {
+        heading: 'A simple field plan for the next event',
+        paragraphs: [
+          'Before you leave, choose one realistic target. You might ask the host one question, speak to one person for five minutes, or stay through the first activity. Write down one setting-based opener so you do not have to invent language at the door.',
+          'When you arrive, follow the routine. Orient yourself, put your phone away, choose a place connected to the event, and look for one available person. Ask about the shared setting, listen for a detail, and add something small from your own experience. If the exchange closes, exit politely and try another part of the room.',
+          'Afterward, record what you learned rather than whether you felt perfectly confident. Social confidence grows through accurate evidence: you entered, you handled uncertainty, and you found out who and what was available. That is enough progress for one evening.'
+        ],
+        bullets: [
+          'One arrival routine.',
+          'One setting-based opener.',
+          'One conversation or activity.',
+          'One planned exit.',
+          'One fact to carry into the next attempt.'
+        ]
+      }
+    ]
+  },
+  {
     slug: 'why-you-feel-relieved-when-plans-get-canceled',
     title: 'Why You Feel Relieved When Plans Get Canceled, Even When You Like the People',
     seoTitle: 'Why You Feel Relieved When Plans Get Canceled',
