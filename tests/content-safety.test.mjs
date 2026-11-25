@@ -141,6 +141,54 @@ test('late-stage replies do not reset the conversation to coffee or a first date
   assert.match(result.smooth, /attention/i);
 });
 
+test('neutral openings do not invent a coffee or meetup objective', async () => {
+  const genericResponse = JSON.stringify({
+    tease: 'How about coffee sometime?',
+    smooth: 'We should grab drinks and see where this goes.',
+    chaotic: 'Let’s meet up for a first date.',
+    loveScore: 75,
+    potentialStatus: 'Good',
+    analysis: 'A fun opening move.',
+  });
+  const { api, calls } = service(genericResponse);
+  const result = await api.generateRizz('Hi');
+  const prompt = calls[0].messages[0].content;
+
+  assert.match(prompt, /last few turns/i);
+  assert.match(prompt, /Do not introduce a new objective/i);
+  assert.match(prompt, /neutral opening or ordinary exchange/i);
+  assert.doesNotMatch(JSON.stringify(result), /coffee|drinks?|first date|meet up/i);
+});
+
+test('recent flirtation stays seductive while explicit planning stays logistical', async () => {
+  const genericResponse = JSON.stringify({
+    tease: 'How about we start with coffee first?',
+    smooth: 'Maybe we should get drinks and see where the chemistry leads.',
+    chaotic: "Let's meet up sometime.",
+    loveScore: 75,
+    potentialStatus: 'Good',
+    analysis: 'A fun opening move.',
+  });
+  const { api, calls } = service(genericResponse);
+  const flirting = await api.generateRizz([
+    'Them: You have been on my mind all night.',
+    'You: Then stop making me wait.',
+    'Them: I like the way you think.',
+  ].join('\n'));
+
+  assert.match(calls[0].messages[0].content, /last few turns/i);
+  assert.match(calls[0].messages[0].content, /double meaning grounded/i);
+  assert.doesNotMatch(JSON.stringify(flirting), /coffee|drinks?|meet up/i);
+
+  const planned = await api.generateRizz([
+    'Them: We should see each other.',
+    'You: Coffee Saturday at 7?',
+    'Them: That works.',
+  ].join('\n'));
+  assert.match(calls[1].messages[0].content, /A plan already exists/i);
+  assert.equal(planned.tease, 'How about we start with coffee first?');
+});
+
 test('Coach retains contextual support instructions for abuse and self-harm topics', async () => {
   const { api, calls } = service();
   for (const content of ['He pressured me for sex. How do I say no?', 'My friend mentioned suicide.']) {
