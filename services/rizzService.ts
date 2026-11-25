@@ -186,7 +186,11 @@ const cleanJson = (text: string): string => {
 // Helper to sanitize output text (Post-Processing)
 const sanitizeText = (text: string): string => {
   if (!text) return text;
-  return sanitizeGeneratedText(text);
+  return sanitizeGeneratedText(text)
+    .replace(/(\d)[ \t]*(?:-{2,}|[–—])[ \t]*(?=\d)/g, '$1 to ')
+    .replace(/^[ \t]*(?:-{2,}|[–—]+)[ \t]*/gm, '')
+    .replace(/[ \t]*(?:-{2,}|[–—]+)[ \t]*/g, (dash, offset, source) =>
+      offset + dash.length === source.length ? '' : ', ');
 };
 
 // Helper to recursively sanitize response object
@@ -388,6 +392,7 @@ SMOOTH: Be quietly seductive and direct about attraction. Use a personal detail,
 CHAOTIC: The boldest flirt: a mischievous twist, daring invitation, or unexpected admission of attraction. Create a smile and romantic tension instead of awkward jokes, random roasting, or shock value. ${length === 'short' ? '1-2 lines' : length === 'medium' ? '2-3 lines' : '3-4 sentences'}.
 
 RULES:
+- Use natural punctuation. Prefer commas or periods for pauses. Keep ordinary hyphens in words and use “to” for ranges.
 -Use easy to understand words.
 - Dont go out of context.
 - NO "Hey", "So", "Well", or generic bot-speak.

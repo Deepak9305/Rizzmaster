@@ -83,6 +83,18 @@ function service(responseContent = null) {
   return { api, calls };
 }
 
+test('generated replies remove long dash separators and preserve compound words', async () => {
+  const { api } = service(JSON.stringify({
+    tease: 'Low-key — I like that.',
+    smooth: 'Good call -- I agree.',
+    chaotic: 'Give me 2–3 guesses.',
+  }));
+  const reply = await api.generateRizz('Want to guess my favorite song?');
+  assert.equal(reply.tease, 'Low-key, I like that.');
+  assert.equal(reply.smooth, 'Good call, I agree.');
+  assert.equal(reply.chaotic, 'Give me 2 to 3 guesses.');
+});
+
 test('reply and Bio generation no longer block or censor harmless words', async () => {
   const { api, calls } = service();
   const rizz = await api.generateRizz('Madam, oral history, snowball fights and sensual music.');
