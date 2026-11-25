@@ -2426,7 +2426,12 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     const cost: 1 | 2 = (activeMode === InputMode.CHAT && activeImage) ? 2 : 1;
 
     // Insufficient credits belong to the premium/rewarded flow.
-    if (!currentProfile.is_premium && usableCredits < cost) {
+    const availableCredits = !IS_WEB_PLATFORM
+      ? currentProfile.credits ?? 0
+      : webQuota?.id === currentProfile.id
+        ? webQuota.remaining
+        : DAILY_CREDITS;
+    if (!currentProfile.is_premium && availableCredits < cost) {
       handleCreditsExhausted(cost);
       return;
     }
@@ -2557,7 +2562,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
         await syncProfile().catch(() => null);
       }
     }
-  }, [showToast, handleCreditsExhausted, updateCredits, syncProfile, recordAndroidGeneration]);
+  }, [showToast, handleCreditsExhausted, updateCredits, syncProfile, recordAndroidGeneration, webQuota]);
 
   const isSaved = useCallback((content: string) => savedItems.some(item => item.content === content), [savedItems]);
   const clear = useCallback(() => {
