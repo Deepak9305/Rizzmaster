@@ -613,7 +613,8 @@ const ARTICLE_EXAMPLES: Record<string, string[]> = {
   'build-real-connection-first-date': ['I have enjoyed talking with you. Want to continue this over coffee next week?', 'You mentioned that bookstore earlier. I would like to see your favourite section sometime.', 'I liked getting to know you, but I do not think the connection is right for me. I wanted to be clear rather than disappear.'],
   'keep-dating-fun-when-you-want-something-serious': ['I am enjoying getting to know you. Want to try that market you mentioned this weekend?', 'I am looking for something meaningful, but I also want dating to feel easy and fun. How are you feeling about the pace?', 'I have had a good time with you. Want to make a simple plan for next week?'],
   'how-to-build-trust-in-a-new-relationship': ['I am enjoying getting to know you, and I like letting trust grow through consistency rather than rushing it.', 'I like talking with you. What helps you feel comfortable and cared for when you are getting to know someone?', 'I am enjoying this pace, and I would like to keep building it with clear plans and honest communication.'],
-  'how-to-handle-jealousy-in-a-new-relationship': ['I noticed I felt insecure when that happened, and I want to ask about it instead of making assumptions. Can we talk?', 'I trust you, and I would like us to be clear about what respectful boundaries look like for both of us.', 'I am feeling activated, so I am going to take a little time and come back to this conversation when I can be fair and specific.']
+  'how-to-handle-jealousy-in-a-new-relationship': ['I noticed I felt insecure when that happened, and I want to ask about it instead of making assumptions. Can we talk?', 'I trust you, and I would like us to be clear about what respectful boundaries look like for both of us.', 'I am feeling activated, so I am going to take a little time and come back to this conversation when I can be fair and specific.'],
+  'why-you-feel-awkward-in-groups': ['I am thinking about that. What made you ask?', 'That happened to me last week too. The surprising part was...', 'That came out strangely. I mean that I was surprised, not criticising you.']
 };
 
 const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
@@ -661,7 +662,8 @@ const ARTICLE_DO_DONT: Record<string, { do: string; doNot: string }> = {
   'keep-dating-fun-when-you-want-something-serious': { do: 'Know what you want, choose shared experiences, and let clarity grow from mutual effort.', doNot: 'Turn every date into an interview, force certainty early, or abandon your life to prove interest.' },
   'how-to-build-trust-in-a-new-relationship': { do: 'Build consistency, communicate honestly, respect boundaries, and let repeated actions create confidence.', doNot: 'Rush vulnerability, use surveillance as reassurance, or ignore a pattern that makes you feel unsafe.' },
   'how-to-handle-jealousy-in-a-new-relationship': { do: 'Separate facts from fear, ask for clarity, and make requests that leave both people their freedom.', doNot: 'Check phones, set loyalty tests, or call control proof of love.' },
-  'why-socializing-leaves-you-drained': { do: 'Treat your energy as information, choose a sustainable format, and communicate limits before resentment takes over.', doNot: 'Label yourself antisocial, force a yes to avoid disappointing people, or disappear without explaining a change in plans.' }
+  'why-socializing-leaves-you-drained': { do: 'Treat your energy as information, choose a sustainable format, and communicate limits before resentment takes over.', doNot: 'Label yourself antisocial, force a yes to avoid disappointing people, or disappear without explaining a change in plans.' },
+  'why-you-feel-awkward-in-groups': { do: 'Return your attention to the room, make one relevant contribution, and review the interaction using facts instead of a harsh verdict.', doNot: 'Wait for perfect confidence, explain every pause, or treat one awkward moment as proof that you do not belong.' }
 };
 
 const ArticleQuickAnswer: React.FC<{ post: BlogPost }> = ({ post }) => (
@@ -716,6 +718,12 @@ const RelatedPosts: React.FC<{ post: BlogPost; navigate: (path: string) => void 
 };
 
 const ARTICLE_INTERNAL_LINKS: Record<string, Array<{ slug: string; label: string }>> = {
+  'why-you-feel-awkward-in-groups': [
+    { slug: 'why-group-conversations-feel-invisible', label: 'Find your place in a group conversation' },
+    { slug: 'why-socializing-leaves-you-drained', label: 'Understand social exhaustion' },
+    { slug: 'how-to-make-small-talk-when-you-have-nothing-in-common', label: 'Keep small talk moving naturally' },
+    { slug: 'why-you-overexplain-yourself', label: 'Stop explaining every pause' }
+  ],
   'what-to-say-when-someone-keeps-interrupting-you': [
     { slug: 'why-group-conversations-feel-invisible', label: 'Find your place in a group conversation' },
     { slug: 'how-to-have-a-difficult-conversation-without-getting-defensive', label: 'Discuss a recurring problem without a fight' },
