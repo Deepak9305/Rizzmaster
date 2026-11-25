@@ -1,10 +1,12 @@
 import { RizzResponse, BioResponse, ResponseLength } from "../types";
 import { resizeImage } from "./imageService";
 import { getApiUrl } from "./runtimeConfig";
+import { Capacitor } from '@capacitor/core';
 import { supabase } from "./supabaseClient";
 import { isBlockedChatReplyRequest, isBlockedRequest, sanitizeGeneratedText } from './contentSafety';
 
 const AI_ENDPOINT = getApiUrl('/api/ai');
+let guestSetup: Promise<number | null> | undefined;
 const LOGIN_REQUIRED_ERROR = 'LOGIN_REQUIRED';
 const INSUFFICIENT_CREDITS_ERROR = 'INSUFFICIENT_CREDITS';
 const PROFILE_NOT_FOUND_ERROR = 'PROFILE_NOT_FOUND';
@@ -42,6 +44,25 @@ const getAuthToken = async () => {
   return session?.access_token || 'unauthenticated';
 };
 
+async function readWebCredits(token: string): Promise<number | null> {
+  const response = await fetch(AI_ENDPOINT, {
+    headers: { Authorization: `Bearer ${token}`, 'X-Rizz-Client': 'web' },
+    cache: 'no-store',
+  });
+  if (!response.ok) throw new Error('Could not load web credits.');
+  return (await response.json()).webCreditsRemaining;
+}
+
+function ensureWebGuest() {
+  guestSetup ??= readWebCredits('unauthenticated').finally(() => { guestSetup = undefined; });
+  return guestSetup;
+}
+
+export async function getWebCreditsRemaining() {
+  const token = await getAuthToken();
+  return token === 'unauthenticated' ? ensureWebGuest() : readWebCredits(token);
+}
+
 const requestAiCompletion = async (payload: {
   model: string;
   messages: AiMessage[];
@@ -52,6 +73,7 @@ const requestAiCompletion = async (payload: {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      ...(!Capacitor.isNativePlatform() ? { 'X-Rizz-Client': 'web' } : {}),
       'Authorization': `Bearer ${token}`
     },
     body: JSON.stringify(payload),
@@ -68,6 +90,7 @@ const callAiChatCompletion = async (payload: {
   max_tokens?: number;
 }): Promise<AiCompletionResult> => {
   let token = await getAuthToken();
+  if (!Capacitor.isNativePlatform() && token === 'unauthenticated') await ensureWebGuest();
   let { response, data } = await requestAiCompletion(payload, token);
 
   if ((response.status === 401 || data?.code === LOGIN_REQUIRED_ERROR || data?.error === LOGIN_REQUIRED_ERROR) && supabase && token !== 'unauthenticated') {
@@ -80,6 +103,9 @@ const callAiChatCompletion = async (payload: {
     }
   }
 
+  if (!Capacitor.isNativePlatform() && typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('rizz-web-credits-changed'));
+  }
   if (!response.ok) {
     if (response.status === 401 || data?.code === LOGIN_REQUIRED_ERROR || data?.error === LOGIN_REQUIRED_ERROR) {
       throw new Error(LOGIN_REQUIRED_ERROR);

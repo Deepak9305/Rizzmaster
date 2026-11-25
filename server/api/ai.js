@@ -6,9 +6,10 @@ import {
   createPartFromText,
   createUserContent,
 } from "@google/genai";
-import { supabase, supabaseAdmin } from './_supabase.js';
+import { createRequestSupabaseClient, supabase, supabaseAdmin } from './_supabase.js';
 import { ensureUserProfile } from './_profiles.js';
 import { applyCors } from './_cors.js';
+import { getWebGuest, webCredits } from './_web-credits.js';
 
 const DEFAULT_BASE_URL = "https://api.groq.com/openai/v1";
 const ALLOWED_MODELS = new Set([
@@ -482,7 +483,10 @@ const buildTextOnlyMessagesFromImageRequest = async (gemini, messages) => {
 export default async function handler(req, res) {
   if (applyCors(req, res)) return;
 
-  if (req.method !== "POST") {
+  // Hosted Android and browsers can share an origin. Only the browser client opts in.
+  const isWeb = req.headers["x-rizz-client"] === "web";
+  const isWebStatus = isWeb && req.method === "GET";
+  if (req.method !== "POST" && !isWebStatus) {
     return json(res, 405, { error: "Method not allowed." });
   }
 
@@ -542,6 +546,30 @@ export default async function handler(req, res) {
     }
   }
 
+  const creditDay = new Date().toISOString().slice(0, 10);
+  const guest = isWeb && isGuest ? getWebGuest(req, res, isWebStatus) : null;
+  const account = isGuest ? null : userId;
+  if (isWeb) {
+    res.setHeader("Cache-Control", "no-store");
+    if (!supabaseAdmin) return json(res, 503, { error: "Web credits are unavailable." });
+    if (isGuest && !guest) return json(res, 400, { error: "Browser credits require cookies." });
+  }
+  if (isWebStatus) {
+    if (user) {
+      const { profile, error } = await ensureUserProfile(supabaseAdmin, user);
+      if (error || !profile) return json(res, 503, { error: "Could not load credits." });
+      if (profile.is_premium) return json(res, 200, { webCreditsRemaining: null });
+      if (!profile.last_daily_reset || profile.last_daily_reset < creditDay) {
+        const { error: resetError } = await createRequestSupabaseClient(token)
+          .rpc("claim_daily_credits_and_streak");
+        if (resetError) return json(res, 503, { error: "Could not refresh daily credits." });
+      }
+    }
+    const { data, error } = await webCredits(account, guest, creditDay, 0);
+    return error ? json(res, 503, { error: "Could not load credits." })
+      : json(res, 200, { webCreditsRemaining: data });
+  }
+
   // 2. Rate Limiting
   const identifier = isGuest
     ? getRequestIdentifier(req, req.socket?.remoteAddress || "guest_ip")
@@ -566,6 +594,8 @@ export default async function handler(req, res) {
   let cost = 1;
   let isPremium = false;
   let creditsDeducted = false;
+  let webDeducted = false;
+  let webCreditsRemaining;
 
   try {
     const body = parseJsonBody(req.body);
@@ -599,7 +629,7 @@ export default async function handler(req, res) {
 
       isPremium = !!profile.is_premium;
 
-      if (!isPremium) {
+      if (!isPremium && !isWeb) {
         if (profile.credits < cost) {
           console.warn(`[AI API] Insufficient credits for user: ${userId}. Has: ${profile.credits}, Needs: ${cost}`);
           return json(res, 403, { 
@@ -628,11 +658,24 @@ export default async function handler(req, res) {
         }
         creditsDeducted = true;
         console.log(`[AI API] Credits deducted: ${cost} for user: ${userId}.`);
-      } else {
+      } else if (isPremium) {
         console.log(`[AI API] Generation free for premium user: ${userId}.`);
       }
     } else {
       console.log(`[AI API] Guest generation allowed for IP: ${identifier}. Frontend will manage local credits.`);
+    }
+
+    if (isWeb && !isPremium) {
+      const { data, error } = await webCredits(account, guest, creditDay, cost);
+      if (error) {
+        if (isInsufficientCreditsError(error)) {
+          const remaining = await webCredits(account, guest, creditDay, 0);
+          return json(res, 403, { code: INSUFFICIENT_CREDITS_CODE, webCreditsRemaining: remaining.data });
+        }
+        return json(res, 503, { error: "Could not reserve web credits." });
+      }
+      webDeducted = true;
+      webCreditsRemaining = data;
     }
 
     const candidateModels = getModelFallbackChain(request.model, isImageRequest);
@@ -731,8 +774,12 @@ export default async function handler(req, res) {
       throw lastProviderError || new Error("AI provider returned an empty response.");
     }
 
-    return json(res, 200, { content });
+    return json(res, 200, { content, webCreditsRemaining });
   } catch (error) {
+    if (webDeducted) {
+      const refund = await webCredits(account, guest, creditDay, -cost).catch(error => ({ error }));
+      if (refund.error) console.error("[AI API] Web credit refund failed:", refund.error);
+    }
     console.error("AI endpoint error:", error);
 
     // Refund credits if deducted

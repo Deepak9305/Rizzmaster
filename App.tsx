@@ -56,8 +56,8 @@ const EbookPromotionModal = lazy(() => import('./components/EbookPromotionModal'
 import ErrorBoundary from './components/ErrorBoundary';
 import NoInternetOverlay from './components/NoInternetOverlay';
 
-const DAILY_CREDITS = 5;
 const IS_WEB_PLATFORM = !Capacitor.isNativePlatform();
+const DAILY_CREDITS = IS_WEB_PLATFORM ? 3 : 5;
 const IS_ANDROID_PLATFORM = Capacitor.getPlatform() === 'android';
 const RIZZ_SHARING_ENABLED = canUseRizzSharing();
 const STARTUP_ANIMATION_MS = IS_WEB_PLATFORM ? 2200 : 3000;
@@ -430,6 +430,40 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
   // Auth State
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [webQuota, setWebQuota] = useState<{ id: string; remaining: number } | null>(null);
+  const quotaProfileId = profile?.id;
+  const quotaPremium = profile?.is_premium;
+  const usableCredits = IS_WEB_PLATFORM
+    ? (webQuota && webQuota.id === quotaProfileId ? webQuota.remaining : Math.min(DAILY_CREDITS, profile?.credits ?? 0))
+    : profile?.credits ?? 0;
+  useEffect(() => {
+    setWebQuota(null);
+    if (!IS_WEB_PLATFORM || !quotaProfileId || quotaPremium) return;
+    let active = true;
+    let latest = 0;
+    const refresh = async () => {
+      const request = ++latest;
+      try {
+        const { getWebCreditsRemaining } = await import('./services/rizzService');
+        const remaining = await getWebCreditsRemaining();
+        if (active && request === latest && typeof remaining === 'number') {
+          setWebQuota({ id: quotaProfileId, remaining });
+        }
+      } catch {
+        // Generation still checks the server balance.
+      }
+    };
+    void refresh();
+    window.addEventListener('focus', refresh);
+    window.addEventListener('rizz-web-credits-changed', refresh);
+    const timer = window.setInterval(refresh, 60_000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      window.removeEventListener('focus', refresh);
+      window.removeEventListener('rizz-web-credits-changed', refresh);
+    };
+  }, [quotaProfileId, quotaPremium]);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [updateGateConfig, setUpdateGateConfig] = useState<UpdateGateConfig | null>(null);
 
@@ -592,7 +626,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
       const savedCredits = localStorage.getItem('rizzmaster_guest_credits');
       const parsedCredits = savedCredits !== null ? parseInt(savedCredits, 10) : NaN;
       guestCredits = Number.isFinite(parsedCredits)
-        ? Math.max(parsedCredits, 0)
+        ? Math.max(IS_WEB_PLATFORM ? Math.min(parsedCredits, DAILY_CREDITS) : parsedCredits, 0)
         : DAILY_CREDITS;
       localStorage.setItem('rizzmaster_guest_credits', guestCredits.toString());
     } else {
@@ -2392,7 +2426,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
     const cost: 1 | 2 = (activeMode === InputMode.CHAT && activeImage) ? 2 : 1;
 
     // Insufficient credits belong to the premium/rewarded flow.
-    if (!currentProfile.is_premium && (currentProfile.credits || 0) < cost) {
+    if (!currentProfile.is_premium && usableCredits < cost) {
       handleCreditsExhausted(cost);
       return;
     }
@@ -2814,7 +2848,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                 userId={profile?.id || 'guest_user'}
                 isOpen={true}
                 onClose={handleBackNavigation}
-                credits={profile?.credits || 0}
+                credits={usableCredits}
                 onUpdateCredits={updateCredits}
                 isPremium={profile?.is_premium || false}
                 onGoPremium={handleCoachGoPremium}
@@ -2928,14 +2962,14 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                   )}
 
                   <div
-                    onClick={() => showToast("Credits reset to 5 daily. Extra ad credits do not stack.", "info")}
+                    onClick={() => showToast(IS_WEB_PLATFORM ? "Web credits reset to 3 daily." : "Credits reset to 5 daily. Extra ad credits do not stack.", "info")}
                     className={`web-app-credits flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full border backdrop-blur-md cursor-pointer active:scale-95 transition-all ${profile?.is_premium ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-white/5 border-white/10'}`}
                   >
                     <span className={profile?.is_premium ? "text-yellow-400 text-lg" : "text-yellow-400 text-lg"}>
                       {profile?.is_premium ? '👑' : '⚡'}
                     </span>
                     <span className={`font-bold text-xs md:text-sm ${profile?.is_premium ? 'text-yellow-400' : 'text-white'}`}>
-                      {profile?.is_premium ? 'Unlimited' : `${profile?.credits ?? 0} Credits`}
+                      {profile?.is_premium ? 'Unlimited' : `${usableCredits} Credits`}
                     </span>
                   </div>
                 </div>
@@ -3102,7 +3136,7 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                     </div>
                   )}
 
-                  {(profile?.is_premium || (profile?.credits || 0) > 0) ? (
+                  {(profile?.is_premium || usableCredits > 0) ? (
                     <button
                       onClick={() => handleGenerate(textareaRef.current?.value || '')}
                       disabled={loading}
@@ -3141,10 +3175,10 @@ const AppContentInner: React.FC<AppProps> = ({ onNavigateToPath }) => {
                   )}
                   {!profile?.is_premium && (
                     <p
-                      onClick={() => showToast("Credits reset to 5 daily. Extra ad credits do not stack.", "info")}
+                      onClick={() => showToast(IS_WEB_PLATFORM ? "Web credits reset to 3 daily." : "Credits reset to 5 daily. Extra ad credits do not stack.", "info")}
                       className="web-app-credit-note text-center text-[10px] md:text-xs text-white/30 mt-3 md:mt-4 cursor-pointer hover:text-white transition-colors"
                     >
-                      {profile?.credits} daily credits remaining. <span className="text-yellow-500/80 cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); handleOpenPremium(); }}>Upgrade.</span>
+                      {usableCredits} daily credits remaining. <span className="text-yellow-500/80 cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); handleOpenPremium(); }}>Upgrade.</span>
                     </p>
                   )}
                 </section>

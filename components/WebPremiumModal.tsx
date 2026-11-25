@@ -89,7 +89,7 @@ export default function WebPremiumModal({ isOpen, isAuthenticated, isPremium, pr
         <div className="premium-heading text-center">
           <div aria-hidden="true" className="premium-crown mx-auto bg-yellow-500/10 rounded-full flex items-center justify-center border border-yellow-500/20">👑</div>
           <h2 id="web-premium-title" className="text-xl md:text-2xl font-bold text-white mb-1">{isPremium ? 'God Mode unlocked' : 'Unlock God Mode'}</h2>
-          <p className="text-xs text-white/50">{isPremium ? 'Your Rizz Master Premium is active.' : reason === 'credits' ? 'Keep the conversation going without daily credit limits.' : 'All premium styles. No daily credit limits.'}</p>
+          <p className="text-xs text-white/50">{isPremium ? 'Your Rizz Master Premium is active.' : 'Free includes 3 web credits per day. Premium unlocks unlimited generations.'}</p>
         </div>
         <div className="premium-web-columns">
         <PremiumBenefits />

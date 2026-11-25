@@ -63,6 +63,7 @@ function service(responseContent = null) {
     bio: 'History fan with a 3 year old dog.',
   };
   const api = loadTs('../services/rizzService.ts', {
+    '@capacitor/core': { Capacitor: { isNativePlatform: () => true } },
     './contentSafety': safety,
     './imageService': { resizeImage: async image => image },
     './runtimeConfig': { getApiUrl: path => path },
